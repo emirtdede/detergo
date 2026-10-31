@@ -1,0 +1,317 @@
+use std::collections::HashSet;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use std::time::Instant;
+
+use tokio::sync::{mpsc, Semaphore};
+use walkdir::WalkDir;
+
+use crate::catalog::TargetKind;
+use crate::platform::{facts, FileIdentity};
+use crate::scanner::cancellation::CancellationToken;
+use crate::scanner::models::{ItemStatus, MeasurementUpdate, ScanProgress};
+
+#[derive(Debug, Clone, Default)]
+pub struct PathSize {
+    pub logical_bytes: u64,
+    pub allocated_bytes: Option<u64>,
+    pub file_count: u64,
+    pub hardlink_dedup_bytes: u64,
+}
+
+/// Result of a measurement pass. A cancelled or timed-out pass never reports
+/// itself as a complete measurement.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MeasurementStop {
+    Completed,
+    Cancelled,
+    TimedOut,
+}
+
+impl MeasurementStop {
+    pub fn code(self) -> Option<&'static str> {
+        match self {
+            MeasurementStop::Completed => None,
+            MeasurementStop::Cancelled => Some("cancelled"),
+            MeasurementStop::TimedOut => Some("timeout"),
+        }
+    }
+}
+
+fn past_deadline(deadline: Option<Instant>) -> bool {
+    deadline.map(|d| Instant::now() >= d).unwrap_or(false)
+}
+
+pub fn measure_path(path: &Path, kind: TargetKind, token: &CancellationToken) -> Option<PathSize> {
+    measure_path_with_deadline(path, kind, token, None)
+}
+
+/// Measures a file or directory. Returns `None` when the path disappeared, the
+/// walk could not be completed, the scan was cancelled, or the deadline passed.
+/// Partial sizes are never reported as complete measurements.
+pub fn measure_path_with_deadline(
+    path: &Path,
+    kind: TargetKind,
+    token: &CancellationToken,
+    deadline: Option<Instant>,
+) -> Option<PathSize> {
+    if !path.exists() {
+        return None;
+    }
+    if token.is_cancelled() || past_deadline(deadline) {
+        return None;
+    }
+    // Reparse points (junctions, symlinks, cloud placeholders) can resolve to
+    // a different location and must never be measured as if they were the
+    // selected object.
+    if crate::platform::is_reparse_point(path) {
+        return None;
+    }
+    if kind != TargetKind::Directory {
+        let f = facts(path)?;
+        if token.is_cancelled() || past_deadline(deadline) {
+            return None;
+        }
+        return Some(PathSize {
+            logical_bytes: f.logical_bytes,
+            allocated_bytes: Some(f.allocated_bytes),
+            file_count: 1,
+            hardlink_dedup_bytes: 0,
+        });
+    }
+
+    let mut logical: u64 = 0;
+    let mut allocated: u64 = 0;
+    let mut files: u64 = 0;
+    let mut dedup: u64 = 0;
+    let mut all_known = true;
+    let mut seen: HashSet<FileIdentity> = HashSet::new();
+
+    let walker = WalkDir::new(path)
+        .follow_links(false)
+        .into_iter()
+        .filter_entry(|e| {
+            e.depth() == 0 || (!e.file_type().is_symlink() && !crate::platform::is_reparse_point(e.path()))
+        });
+
+    for entry in walker {
+        if token.is_cancelled() || past_deadline(deadline) {
+            return None;
+        }
+        let Ok(entry) = entry else { continue };
+        if !entry.file_type().is_file() {
+            continue;
+        }
+        files += 1;
+
+        match facts(entry.path()) {
+            Some(f) => {
+                logical = logical.saturating_add(f.logical_bytes);
+                if f.link_count > 1 && !seen.insert(f.identity) {
+                    dedup = dedup.saturating_add(f.allocated_bytes);
+                    continue;
+                }
+                allocated = allocated.saturating_add(f.allocated_bytes);
+            }
+            None => {
+                all_known = false;
+                if let Ok(meta) = entry.metadata() {
+                    logical = logical.saturating_add(meta.len());
+                }
+            }
+        }
+    }
+
+    if token.is_cancelled() || past_deadline(deadline) {
+        return None;
+    }
+
+    Some(PathSize {
+        logical_bytes: logical,
+        allocated_bytes: if all_known { Some(allocated) } else { None },
+        file_count: files,
+        hardlink_dedup_bytes: dedup,
+    })
+}
+
+pub struct MeasurementEngine {
+    cancellation_token: CancellationToken,
+    concurrency_limit: usize,
+    deadline: Option<Instant>,
+}
+
+impl MeasurementEngine {
+    pub fn new(cancellation_token: CancellationToken) -> Self {
+        let cpu_count = std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4);
+        let concurrency = (cpu_count / 2).clamp(2, 4);
+        Self {
+            cancellation_token,
+            concurrency_limit: concurrency,
+            deadline: None,
+        }
+    }
+
+    pub fn with_concurrency(mut self, limit: usize) -> Self {
+        self.concurrency_limit = limit.max(1);
+        self
+    }
+
+    /// Bounds measurement by the same wall-clock deadline the discovery phase
+    /// uses, so a huge candidate set cannot extend a scan indefinitely.
+    pub fn with_deadline(mut self, deadline: Instant) -> Self {
+        self.deadline = Some(deadline);
+        self
+    }
+
+    pub async fn measure_entries<M, P>(
+        &self,
+        entries: Vec<(String, PathBuf, TargetKind)>,
+        total_discovered: u64,
+        directories_visited: u64,
+        mut on_measured: M,
+        mut on_progress: P,
+    ) -> MeasurementStop
+    where
+        M: FnMut(Vec<MeasurementUpdate>),
+        P: FnMut(ScanProgress),
+    {
+        let (tx, mut rx) = mpsc::channel::<MeasurementUpdate>(200);
+        let semaphore = Arc::new(Semaphore::new(self.concurrency_limit));
+        let token = self.cancellation_token.clone();
+        let total = entries.len() as u64;
+        let deadline = self.deadline;
+        let mut stop = MeasurementStop::Completed;
+
+        for (id, path, kind) in entries {
+            if token.is_cancelled() {
+                stop = MeasurementStop::Cancelled;
+                break;
+            }
+            if past_deadline(deadline) {
+                stop = MeasurementStop::TimedOut;
+                break;
+            }
+            let sem = semaphore.clone();
+            let tx_clone = tx.clone();
+            let token_clone = token.clone();
+
+            tokio::spawn(async move {
+                let Ok(_permit) = sem.acquire().await else {
+                    return;
+                };
+                if token_clone.is_cancelled() || past_deadline(deadline) {
+                    return;
+                }
+                let measured = tokio::task::spawn_blocking(move || {
+                    measure_path_with_deadline(&path, kind, &token_clone, deadline)
+                })
+                .await
+                .ok()
+                .flatten();
+
+                let update = match measured {
+                    Some(size) => MeasurementUpdate {
+                        id,
+                        logical_bytes: size.logical_bytes,
+                        allocated_bytes: size.allocated_bytes,
+                        estimated_reclaim_bytes: size
+                            .allocated_bytes
+                            .unwrap_or(size.logical_bytes),
+                        file_count: size.file_count,
+                        hardlink_dedup_bytes: size.hardlink_dedup_bytes,
+                        status: ItemStatus::Ready,
+                    },
+                    None => MeasurementUpdate {
+                        id,
+                        logical_bytes: 0,
+                        allocated_bytes: None,
+                        estimated_reclaim_bytes: 0,
+                        file_count: 0,
+                        hardlink_dedup_bytes: 0,
+                        status: ItemStatus::Error,
+                    },
+                };
+                let _ = tx_clone.send(update).await;
+            });
+        }
+        drop(tx);
+
+        let mut measured = 0u64;
+        let mut bytes = 0u64;
+        let mut buffer: Vec<MeasurementUpdate> = Vec::with_capacity(100);
+        let mut last_progress = Instant::now();
+
+        while let Some(update) = rx.recv().await {
+            measured += 1;
+            bytes = bytes.saturating_add(update.estimated_reclaim_bytes);
+            buffer.push(update);
+
+            if buffer.len() >= 100 {
+                on_measured(std::mem::take(&mut buffer));
+            }
+            if last_progress.elapsed().as_millis() >= 100 || measured == total {
+                on_progress(ScanProgress {
+                    phase: "measuring".to_string(),
+                    directories_visited,
+                    entries_found: total_discovered,
+                    entries_measured: measured,
+                    bytes_measured: bytes,
+                    current_path: None,
+                    stop_reason: stop.code().map(|s| s.to_string()),
+                });
+                last_progress = Instant::now();
+            }
+        }
+
+        if !buffer.is_empty() {
+            on_measured(buffer);
+        }
+        if stop == MeasurementStop::Completed {
+            if token.is_cancelled() {
+                stop = MeasurementStop::Cancelled;
+            } else if past_deadline(deadline) {
+                stop = MeasurementStop::TimedOut;
+            }
+        }
+        on_progress(ScanProgress {
+            phase: "measuring".to_string(),
+            directories_visited,
+            entries_found: total_discovered,
+            entries_measured: measured,
+            bytes_measured: bytes,
+            current_path: None,
+            stop_reason: stop.code().map(|s| s.to_string()),
+        });
+        stop
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+
+    #[test]
+    fn cancelled_measurement_is_not_reported_as_complete() {
+        let temp = tempfile::tempdir().unwrap();
+        let dir = temp.path().join("node_modules");
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("a.bin"), vec![b'x'; 64 * 1024]).unwrap();
+        let token = CancellationToken::new();
+        token.cancel();
+        assert!(measure_path(&dir, TargetKind::Directory, &token).is_none());
+    }
+
+    #[test]
+    fn expired_deadline_is_not_reported_as_complete() {
+        let temp = tempfile::tempdir().unwrap();
+        let dir = temp.path().join("node_modules");
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("a.bin"), vec![b'x'; 1024]).unwrap();
+        let token = CancellationToken::new();
+        let deadline = Instant::now() - Duration::from_secs(1);
+        assert!(measure_path_with_deadline(&dir, TargetKind::Directory, &token, Some(deadline)).is_none());
+    }
+}
