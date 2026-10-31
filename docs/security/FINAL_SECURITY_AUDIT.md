@@ -25,13 +25,13 @@ manual, it is marked **PENDING** and blocks public production release.
 | Packaged app launch | portable EXE, 8 s | **stayed alive, stopped cleanly** |
 | Packaged IPC under CSP | WebView2 DevTools probe (see §3) | **PASS** — real `invoke` calls returned data |
 
-Packages produced on 2026-10-31:
+Packages produced on 2026-11-01:
 
 | Artifact | Size | SHA-256 |
 |---|---|---|
-| `Node-Cleaner-2.0.0-Portable.exe` | 9.93 MB | `AA14EC6CDC8F9334B163C087A38C6D85AD51F55967435C0448DE590A99E0596A` |
-| `Node-Cleaner-2.0.0-x64-Setup.exe` | 2.52 MB | `88E7D8559EC3A6B426E9A097D679760E33789C2B1A8A975D046098838EA2FBA9` |
-| `Node-Cleaner-2.0.0-x64.msi` | 3.63 MB | `8EBBDEB2284FB10C48AFB0D89D41C08A9C7053595A5FBF2ADE91D4C234CDA062` |
+| `Node-Cleaner-2.0.0-Portable.exe` | 10.83 MB | `67A1BF5690147159334303253A2177F83B88A407ED77D569F4935AC06CAAE281` |
+| `Node-Cleaner-2.0.0-x64-Setup.exe` | 2.60 MB | `0DCD93CDBBB06F6D6B14763CFC65A6723CEC5351ADC168119F492A02C15433CB` |
+| `Node-Cleaner-2.0.0-x64.msi` | 3.74 MB | `3D370E77D16EC3FB264A15037F8DFD12C58FB09C67C6A86EC24D79358F66A52F` |
 
 `release_output/SHA256SUMS.txt` is generated from these files by
 `scripts/build-release.js`.
@@ -75,9 +75,31 @@ and real Tauri commands were invoked from the running page:
 
 | Invoke | Result |
 |---|---|
-| `get_catalog` | `{ ok: true, rules: 56 }` |
-| `get_app_settings` | `{ ok: true, theme: "dark-black", maskPaths: false }` |
+| `get_catalog` | `{ ok: true, rules: 56, valid: true }` |
+| `get_app_settings` | `{ ok: true, theme: "dark-black", schemaVersion: 2 }` |
 | `get_known_locations` | `{ ok: true, count: 2 }` |
+| `get_agent_providers` | `{ ok: true, providers: 3 }` |
+
+Window functionality was verified on the same packaged process by invoking the
+core window commands directly and by replaying the drag-region matcher:
+
+| Invoke / interaction | Result |
+|---|---|
+| `plugin:window|is_maximized` | `{ ok: true }`, flips false → true → false around `toggle_maximize` |
+| `plugin:window|minimize` | `{ ok: true }`, `is_minimized` then returns `true` |
+| `plugin:window|internal_toggle_maximize` (double-click path) | `{ ok: true }` |
+| `plugin:window|close` | `{ ok: true }`, process exits |
+| `plugin:window|start_dragging` | `{ ok: true }` |
+| `mousedown` on the title bar / center bar / actions gap | drag starts (`defaultPrevented: true`) |
+| `mousedown` on brand, settings, location pill, window-control buttons | not treated as drag (click reaches the control) |
+
+These checks cover what the earlier packages got wrong: a stale build-script
+output left the compiled runtime authority empty, so every `plugin:window|*`
+call was rejected with `not allowed by ACL`. `src-tauri/build.rs` now fails the
+build if `capabilities.json` / `acl-manifests.json` are missing or the
+capability set is empty, and `scripts/build-release.js` regenerates
+`src-tauri/gen/schemas` and the package build-script output before every
+release build.
 
 This proves the production CSP does not block Tauri IPC, rather than only
 assuming it from configuration.

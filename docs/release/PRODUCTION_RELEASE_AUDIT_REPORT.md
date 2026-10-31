@@ -67,14 +67,20 @@ Gate checklist: `docs/release/RELEASE_CHECKLIST.md`.
   the reported free-space delta is signed so a decrease is never hidden.
 - Every registered Tauri command now has a real frontend consumer; the unused
   `get_storage_snapshots` command was removed.
+- Custom title-bar controls (minimize / maximize / close) and window dragging
+  were verified on the packaged build with real `plugin:window|*` invokes and a
+  drag-region replay. The ACL capability set is now guaranteed at build time:
+  `src-tauri/build.rs` fails if the generated `capabilities.json` is missing or
+  empty, and the release script regenerates `gen/schemas` and the package
+  build-script output before compiling.
 
-## 4. Packaging artifacts (2026-10-31)
+## 4. Packaging artifacts (2026-11-01)
 
 | Artifact | Size | SHA-256 |
 |---|---|---|
-| `Node-Cleaner-2.0.0-Portable.exe` | 9.93 MB | `AA14EC6CDC8F9334B163C087A38C6D85AD51F55967435C0448DE590A99E0596A` |
-| `Node-Cleaner-2.0.0-x64-Setup.exe` | 2.52 MB | `88E7D8559EC3A6B426E9A097D679760E33789C2B1A8A975D046098838EA2FBA9` |
-| `Node-Cleaner-2.0.0-x64.msi` | 3.63 MB | `8EBBDEB2284FB10C48AFB0D89D41C08A9C7053595A5FBF2ADE91D4C234CDA062` |
+| `Node-Cleaner-2.0.0-Portable.exe` | 10.83 MB | `67A1BF5690147159334303253A2177F83B88A407ED77D569F4935AC06CAAE281` |
+| `Node-Cleaner-2.0.0-x64-Setup.exe` | 2.60 MB | `0DCD93CDBBB06F6D6B14763CFC65A6723CEC5351ADC168119F492A02C15433CB` |
+| `Node-Cleaner-2.0.0-x64.msi` | 3.74 MB | `3D370E77D16EC3FB264A15037F8DFD12C58FB09C67C6A86EC24D79358F66A52F` |
 
 Checksums are regenerated into `release_output/SHA256SUMS.txt` by the release
 script; the values above match the files produced in this audit run.
