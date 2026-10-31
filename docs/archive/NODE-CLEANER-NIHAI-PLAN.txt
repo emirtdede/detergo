@@ -1,5 +1,9 @@
 # NODE CLEANER — NİHAİ ÜRÜN GELİŞTİRME VE UYGULAMA PLANI
 
+> ARŞİV — tarihsel girdi, güncel doğru değil.
+> Bu planlama belgesi 2.0 uygulamasının başlangıç girdisidir. Güncel ve
+> normatif doküman ../MASTER_SPEC.md dosyasıdır.
+
 **Belge türü:** Master Implementation Plan + PRD + SRS + Technical Architecture + WBS + Risk Register + Test Plan + Release Acceptance Criteria  
 **Tarih:** 28 Ekim 2026  
 **Ürün:** Node Cleaner  

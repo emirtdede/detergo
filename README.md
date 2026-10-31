@@ -287,7 +287,7 @@ flowchart TD
 
 ## 📦 Pre-Compiled Distribution Packages
 
-Ready-to-use production packages are generated inside the [`release_output/`](file:///d:/SOFTWARE%20DEVELOPMENT/Tools/Node-Cleaner/release_output) directory:
+Ready-to-use production packages are generated into the `release_output/` directory (git-ignored; run `npm run build:release`):
 
 - **NSIS Setup Installer**: `Node-Cleaner-1.0.0-x64-Setup.exe` *(Full installer with desktop/start menu shortcuts)*
 - **MSI Enterprise Installer**: `Node-Cleaner-1.0.0-x64.msi` *(Enterprise & GPO silent deployment)*
@@ -513,7 +513,7 @@ Node-Cleaner/
 
 ## 📦 Dağıtım Paketleri
 
-Hazır derlenmiş resmi release paketleri [`release_output/`](file:///d:/SOFTWARE%20DEVELOPMENT/Tools/Node-Cleaner/release_output) klasöründe bulunmaktadır:
+Hazır derlenmiş resmi release paketleri `release_output/` klasörüne üretilir (git-ignored; `npm run build:release`):
 
 - **NSIS Kurulum Sihirbazı**: `Node-Cleaner-1.0.0-x64-Setup.exe` *(Masaüstü ve başlat menüsü kısayolları ile)*
 - **MSI Kurumsal Installer**: `Node-Cleaner-1.0.0-x64.msi` *(Sessiz kurulum ve GPO dağıtımına uygun)*

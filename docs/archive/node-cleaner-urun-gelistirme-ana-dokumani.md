@@ -1,5 +1,10 @@
 # Node Cleaner — Ürün Geliştirme Ana Dokümanı
 
+> **ARŞİV — tarihsel girdi, güncel doğru değil.**
+> Bu doküman 2.0 geliştirmesinin planlama kaynağıdır. Uygulanan davranış ve
+> kabul kriterleri için `../MASTER_SPEC.md` esastır; buradaki bir ifade onunla
+> çelişirse spesifikasyon geçerlidir.
+
 > **Belge türü:** PRD + SRS + SAD + UI/UX + Tasarım Sistemi + Tema + Dil + Güvenlik + Performans + Risk + Test + Dağıtım + Kabul Kriterleri  
 > **Çalışma adı:** Node Cleaner  
 > **Hedef platform:** Windows 10 / Windows 11, öncelik Windows 11  

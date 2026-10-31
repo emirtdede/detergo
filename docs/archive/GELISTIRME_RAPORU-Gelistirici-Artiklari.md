@@ -1,6 +1,11 @@
 # Node Cleaner — Geliştirici Artıkları Temizleme Özelliği
 ## Kod Analizi, Araştırma ve Uygulama Yol Haritası
 
+> **ARŞİV — tarihsel girdi, güncel doğru değil.**
+> Bu rapor 2.0 öncesi kod tabanını (1.x) analiz eder; `src-tauri/src/deletion/*`
+> ve `scanner::size` gibi artık var olmayan yolları referans verir. Güncel
+> davranış için `../MASTER_SPEC.md` ve `../architecture/ARCHITECTURE.md` esas alınır.
+
 **Tarih:** 28 Ekim 2026  
 **Kapsam:** Tüm depo — Rust/Tauri backend, React/TypeScript frontend, testler, ayarlar ve release akışı  
 **Amaç:** Yalnızca `node_modules` değil; build çıktıları, cache'ler, test artefaktları ve diğer geliştirici artıklarını tespit edip güvenle silebilen bir özelliğin nasıl eklenebileceğini ortaya koymak.
