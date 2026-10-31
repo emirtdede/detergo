@@ -15,7 +15,7 @@
 | G5 | Global cache commands | **PASS (design + token tests)** — real command execution pending | argv whitelist, unknown/read-only/forged-token tests |
 | G6 | UI, i18n, migration | **PASS (EN/TR for 2.0 screens)** — legacy header keeps 75 locales; see limitation F-5 | typecheck, 26 frontend tests, v1 migration test |
 | G7 | Windows tests | **PARTIAL** — Windows 11 smoke PASS, Windows 10 not executed | packaged app launched and stayed alive |
-| G8 | Final security audit | **PASS with documented manual items** — 24/30 automated, 6 pending | `docs/audit/FINAL_SECURITY_AUDIT.md` |
+| G8 | Final security audit | **PASS with documented manual items** — 24/30 automated, 6 pending | `docs/security/FINAL_SECURITY_AUDIT.md` |
 
 ## Functional checklist
 
@@ -69,7 +69,7 @@
 - [x] Portable PASS (`Node-Cleaner-2.0.0-Portable.exe`)
 - [x] SHA-256 file generated (`release_output/SHA256SUMS.txt`)
 - [x] Versions synchronised (2.0.0)
-- [x] Package sizes/hashes recorded in `docs/audit/FINAL_SECURITY_AUDIT.md`
+- [x] Package sizes/hashes recorded in `docs/security/FINAL_SECURITY_AUDIT.md`
 - [x] Packaged IPC under production CSP verified via WebView2 probe
 - [x] README rewritten
 - [ ] Windows 10 smoke test — **NOT EXECUTED**
@@ -77,7 +77,7 @@
 
 ## Blockers for public production release
 
-1. Six manual security scenarios (see `docs/SECURITY_MODEL.md` §4 R-rows).
+1. Six manual security scenarios (see `docs/security/SECURITY_MODEL.md` §4 R-rows).
 2. Large-scale performance measurements.
 3. Windows 10 smoke test.
 4. Trash round-trip on a real machine (Recycle Bin visibility + byte accounting).

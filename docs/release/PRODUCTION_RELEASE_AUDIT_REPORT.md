@@ -40,9 +40,9 @@ been executed. No fabricated results are used in this report.
 | Packaged startup | portable EXE, 8 s | stayed alive, stopped cleanly |
 | Packaged IPC + CSP | WebView2 DevTools probe | `get_catalog` → 56 rules, `get_app_settings` → OK, `get_known_locations` → 2 |
 
-Full security detail: `docs/audit/FINAL_SECURITY_AUDIT.md`.
-Test coverage detail: `docs/TEST_MATRIX.md`.
-Gate checklist: `docs/RELEASE_CHECKLIST.md`.
+Full security detail: `docs/security/FINAL_SECURITY_AUDIT.md`.
+Test coverage detail: `docs/release/TEST_MATRIX.md`.
+Gate checklist: `docs/release/RELEASE_CHECKLIST.md`.
 
 ## 3. What changed in 2.0 that this audit covers
 

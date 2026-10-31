@@ -170,7 +170,7 @@ copied to `config.corrupt.<timestamp>.json` before defaults are used.
 | UI update rate | ≤ 10 Hz |
 | Table | 10,000+ rows, virtualized |
 
-Benchmarks on large synthetic trees are listed in `docs/TEST_MATRIX.md` with
+Benchmarks on large synthetic trees are listed in `docs/release/TEST_MATRIX.md` with
 their actual execution status.
 
 ## 12. Limits and honest reporting

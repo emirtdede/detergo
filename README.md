@@ -41,9 +41,10 @@ currently NO-GO** because six manual security scenarios, the real Recycle Bin
 round-trip, large-scale performance benchmarks and the Windows 10 smoke test
 are not yet executed. See:
 
-- `docs/RELEASE_CHECKLIST.md` — gates and remaining blockers
-- `docs/audit/FINAL_SECURITY_AUDIT.md` — executed evidence
-- `docs/TEST_MATRIX.md` — test results
+- `docs/README.md` — documentation index and reading order
+- `docs/release/RELEASE_CHECKLIST.md` — gates and remaining blockers
+- `docs/security/FINAL_SECURITY_AUDIT.md` — executed evidence
+- `docs/release/TEST_MATRIX.md` — test results
 - `docs/MASTER_SPEC.md` — normative 2.0 specification
 
 The text below is partly written for the earlier `node_modules`-only product.
@@ -128,12 +129,20 @@ Node Cleaner operates **100% locally** with zero telemetry, zero analytics, and 
 Node-Cleaner/
 ├── assets/                         # Vector brand assets & master logo
 │   └── brand/                      # app-icon.svg, logo-master.svg
+├── docs/                           # All project documentation (see docs/README.md)
+│   ├── README.md                   # Documentation index & reading order
+│   ├── MASTER_SPEC.md              # Normative 2.0 specification
+│   ├── architecture/               # ARCHITECTURE, CLEANUP_CATALOG, AGENT_PROVIDERS
+│   ├── security/                   # SECURITY_MODEL, FINAL_SECURITY_AUDIT
+│   ├── release/                    # TEST_MATRIX, RELEASE_CHECKLIST, release report
+│   ├── audit/                      # Pre-change baseline audit & test results
+│   └── archive/                    # Historical plans and research (not current truth)
 ├── public/                         # Public static web assets
 │   └── vellium.svg                 # Publisher logo
-├── release_output/                 # Production builds & distribution artifacts
-│   ├── Node-Cleaner-1.0.0-x64-Setup.exe   # NSIS Setup Installer (Single & Multi-user)
-│   ├── Node-Cleaner-1.0.0-x64.msi         # MSI Enterprise Installer
-│   ├── Node-Cleaner-1.0.0-Portable.exe    # Standalone Portable Binary
+├── release_output/                 # Production builds (git-ignored, regenerated)
+│   ├── Node-Cleaner-2.0.0-x64-Setup.exe   # NSIS Setup Installer
+│   ├── Node-Cleaner-2.0.0-x64.msi         # MSI Enterprise Installer
+│   ├── Node-Cleaner-2.0.0-Portable.exe    # Standalone Portable Binary
 │   ├── SHA256SUMS.txt                     # Cryptographic SHA-256 checksums
 │   └── verify-checksums.bat               # 1-Click SHA-256 verification tool
 ├── scripts/                        # Automated build & verification tools
@@ -141,38 +150,51 @@ Node-Cleaner/
 │   ├── check-version.js            # Cross-file version consistency validator
 │   └── verify-checksums.bat        # Windows batch checksum verifier
 ├── src/                            # Frontend application source (React 19 + TS)
-│   ├── components/                 # Shared UI primitives (Button, Dialog, Toast, SearchField)
-│   ├── features/                   # Feature-driven domain modules
-│   │   ├── deletion/               # Permanent & Recycle Bin confirmation dialogs
-│   │   ├── results/                # Virtualized table, project groups & selection action bar
-│   │   ├── scan/                   # Scan hero, scan header, directory picker & progress
-│   │   └── settings/               # Settings modal, language selector, legal & about views
-│   ├── lib/                        # Tauri IPC scanner API client & utilities
+│   ├── app/                        # App shell & layout orchestration
+│   ├── components/                 # UI primitives, layout, brand and error boundary
+│   ├── features/                   # Domain modules
+│   │   ├── agents/                 # AI agent storage view
+│   │   ├── caches/                 # Global cache / official tool actions
+│   │   ├── cleanup/                # Cleanup plan & result dialogs
+│   │   ├── history/                # Deletion history and official-action audit
+│   │   ├── items/                  # Virtualized item table & project view
+│   │   ├── overview/               # Summary / dashboard view
+│   │   ├── results/                # Selection action bar
+│   │   ├── scan/                   # Scan header, quick locations, controller
+│   │   ├── settings/               # Backend-owned settings editor
+│   │   └── shell/                  # Navigation rail
+│   ├── lib/                        # Tauri IPC client, formatters, i18n, UI text
 │   ├── locales/                    # 75-locale legacy dictionary (2.0 screens: EN/TR)
-│   │   ├── langs/                  # Language dictionaries (tr.ts, en.ts, de.ts, etc.)
-│   │   └── index.ts                # Locale management & reactive translation hook
-│   ├── stores/                     # Zustand stores (useScannerStore, useSettingsStore)
-│   ├── types/                      # Global TypeScript definitions
+│   ├── stores/                     # Zustand stores (scan, selection, prefs, ui, app)
+│   ├── styles/                     # Design tokens & global CSS
+│   ├── test/                       # Vitest suites
+│   ├── types/                      # Shared IPC DTOs
 │   ├── App.tsx                     # Main layout & orchestrator
 │   └── main.tsx                    # React DOM entry point
 ├── src-tauri/                      # Rust backend & platform engine
-│   ├── icons/                      # App icons (8-layer ICO, ICNS, PNGs, StoreLogo, Splash)
-│   ├── nsis/                       # NSIS installer bitmaps & hooks (header.bmp, hooks.nsh)
+│   ├── assets/targets.toml         # Embedded 56-rule cleanup catalog
+│   ├── icons/                      # App icons (ICO, ICNS, PNGs, StoreLogo, Splash)
+│   ├── nsis/                       # NSIS installer bitmaps & hooks
 │   ├── src/
+│   │   ├── audit/                  # Cleanup history & official-action JSONL audit
+│   │   ├── catalog/                # Rule model, matcher, project resolver
+│   │   ├── cleanup/                # Planner, coordinator, Recycle Bin, permanent, actions
 │   │   ├── commands/               # Tauri IPC command handlers
-│   │   ├── deletion/               # Safe deletion service (Recycle Bin & Permanent)
-│   │   ├── error/                  # Domain error types & result wrappers
-│   │   ├── platform/               # Windows Shell & Win32 system bindings
-│   │   ├── scanner/                # Parallel filesystem scanner & size calculator
-│   │   ├── settings/               # Settings persistence models
+│   │   ├── error/                  # Domain error types
+│   │   ├── platform/               # Win32 file identity, locking, known folders
+│   │   ├── providers/              # Agent specs, root locator, growth analysis
+│   │   ├── safety/                 # Path, process, Git and evidence guards
+│   │   ├── scanner/                # Discovery, measurement, limits, sessions
+│   │   ├── settings/               # Settings model & atomic persistence
 │   │   ├── lib.rs                  # Plugin registry & command router
-│   │   └── main.rs                 # Native application entry point
+│   │   └── main.rs                 # Native entry point
 │   ├── Cargo.toml                  # Rust dependencies & package configuration
-│   └── tauri.conf.json             # Tauri window, security & NSIS bundle metadata
+│   └── tauri.conf.json             # Tauri window, security (CSP) & bundle metadata
+├── build-release.bat               # One-click Windows release wrapper
 ├── package.json                    # Node dependencies & npm scripts
 ├── tsconfig.json                   # TypeScript compiler configuration
 ├── vite.config.ts                  # Vite build & bundler configuration
-└── README.md                       # Master Documentation
+└── README.md                       # Project overview & quick start
 ```
 
 ---
@@ -363,12 +385,20 @@ Uygulama **%100 yerel ve çevrimdışı** çalışır; hiçbir harici sunucuya b
 Node-Cleaner/
 ├── assets/                         # Vektörel marka varlıkları ve master logo
 │   └── brand/                      # app-icon.svg, logo-master.svg
+├── docs/                           # Tüm proje dokümantasyonu (bkz. docs/README.md)
+│   ├── README.md                   # Doküman indeksi ve okuma sırası
+│   ├── MASTER_SPEC.md              # Normatif 2.0 spesifikasyonu
+│   ├── architecture/               # ARCHITECTURE, CLEANUP_CATALOG, AGENT_PROVIDERS
+│   ├── security/                   # SECURITY_MODEL, FINAL_SECURITY_AUDIT
+│   ├── release/                    # TEST_MATRIX, RELEASE_CHECKLIST, release raporu
+│   ├── audit/                      # Değişiklik öncesi baseline denetimi ve test sonuçları
+│   └── archive/                    # Tarihsel plan ve araştırmalar (güncel doğru değil)
 ├── public/                         # Genel statik web varlıkları
 │   └── vellium.svg                 # Yayıncı logosu
-├── release_output/                 # Üretim paketleri ve dağıtım dosyaları
-│   ├── Node-Cleaner-1.0.0-x64-Setup.exe   # NSIS Kurulum Sihirbazı
-│   ├── Node-Cleaner-1.0.0-x64.msi         # MSI Kurumsal Kurulum Paketi
-│   ├── Node-Cleaner-1.0.0-Portable.exe    # Taşınabilir Tekil Exe
+├── release_output/                 # Üretim paketleri (git-ignored, yeniden üretilir)
+│   ├── Node-Cleaner-2.0.0-x64-Setup.exe   # NSIS Kurulum Sihirbazı
+│   ├── Node-Cleaner-2.0.0-x64.msi         # MSI Kurumsal Kurulum Paketi
+│   ├── Node-Cleaner-2.0.0-Portable.exe    # Taşınabilir Tekil Exe
 │   ├── SHA256SUMS.txt                     # Kriptografik SHA-256 sağlama özetleri
 │   └── verify-checksums.bat               # Tek tıkla hash doğrulama aracı
 ├── scripts/                        # Otomatik derleme ve doğrulama scriptleri
@@ -376,38 +406,51 @@ Node-Cleaner/
 │   ├── check-version.js            # Sürüm tutarlılık kontrol scripti
 │   └── verify-checksums.bat        # Windows batch checksum doğrulayıcı
 ├── src/                            # Ön yüz kaynak kodları (React 19 + TypeScript)
-│   ├── components/                 # Paylaşılan UI bileşenleri (Button, Dialog, Toast, SearchField)
+│   ├── app/                        # Uygulama kabuğu ve düzen orkestrasyonu
+│   ├── components/                 # UI bileşenleri, layout, marka ve hata sınırı
 │   ├── features/                   # Özellik modülleri
-│   │   ├── deletion/               # Kalıcı ve Çöp Kutusu onay diyalogları
-│   │   ├── results/                # Sanallaştırılmış tablo, proje grupları ve işlem çubuğu
-│   │   ├── scan/                   # Tarama karşılama ekranı, başlık, klasör seçici ve ilerleme
-│   │   └── settings/               # Ayarlar paneli, dil seçici, yasal metinler ve hakkında
-│   ├── lib/                        # Tauri IPC tarayıcı istemcisi ve yardımcı fonksiyonlar
+│   │   ├── agents/                 # AI ajan depolama görünümü
+│   │   ├── caches/                 # Global önbellek / resmi araç işlemleri
+│   │   ├── cleanup/                # Temizlik planı ve sonuç diyalogları
+│   │   ├── history/                # Silme geçmişi ve resmi işlem denetimi
+│   │   ├── items/                  # Sanallaştırılmış öğe tablosu ve proje görünümü
+│   │   ├── overview/               # Özet / kontrol paneli görünümü
+│   │   ├── results/                # Seçim işlem çubuğu
+│   │   ├── scan/                   # Tarama başlığı, hızlı konumlar, denetleyici
+│   │   ├── settings/               # Arka uç sahipli ayar editörü
+│   │   └── shell/                  # Navigasyon rayı
+│   ├── lib/                        # Tauri IPC istemcisi, biçimlendiriciler, i18n, UI metinleri
 │   ├── locales/                    # 75 dilli eski sözlük (2.0 ekranları: EN/TR)
-│   │   ├── langs/                  # Dil sözlükleri (tr.ts, en.ts, de.ts vb.)
-│   │   └── index.ts                # Dil yönetimi ve reaktif çeviri hook'u
-│   ├── stores/                     # Zustand durum depoları (useScannerStore, useSettingsStore)
-│   ├── types/                      # Global TypeScript tip tanımları
+│   ├── stores/                     # Zustand depoları (scan, selection, prefs, ui, app)
+│   ├── styles/                     # Tasarım token'ları ve global CSS
+│   ├── test/                       # Vitest test paketleri
+│   ├── types/                      # Paylaşılan IPC DTO'ları
 │   ├── App.tsx                     # Ana arayüz düzeni ve orkestrasyon
 │   └── main.tsx                    # React DOM giriş noktası
 ├── src-tauri/                      # Rust arka uç ve platform çekirdeği
-│   ├── icons/                      # Uygulama ikonları (8 katmanlı ICO, ICNS, PNG'ler, Splash)
-│   ├── nsis/                       # NSIS kurulum görselleri ve hook'ları (header.bmp, hooks.nsh)
+│   ├── assets/targets.toml         # Gömülü 56 kurallı temizlik kataloğu
+│   ├── icons/                      # Uygulama ikonları (ICO, ICNS, PNG'ler, StoreLogo, Splash)
+│   ├── nsis/                       # NSIS kurulum görselleri ve hook'ları
 │   ├── src/
+│   │   ├── audit/                  # Temizlik geçmişi ve resmi işlem JSONL denetimi
+│   │   ├── catalog/                # Kural modeli, eşleştirici, proje çözümleyici
+│   │   ├── cleanup/                # Planlayıcı, koordinatör, Çöp Kutusu, kalıcı silme
 │   │   ├── commands/               # Tauri IPC komut işleyicileri
-│   │   ├── deletion/               # Güvenli silme servisi (Çöp Kutusu & Kalıcı)
-│   │   ├── error/                  # Domain hata tipleri ve sonuç sarmalayıcıları
-│   │   ├── platform/               # Windows Shell ve Win32 sistem bağlayıcıları
-│   │   ├── scanner/                # Paralel dosya sistemi tarayıcısı ve boyut hesaplayıcı
-│   │   ├── settings/               # Ayar modelleri
+│   │   ├── error/                  # Domain hata tipleri
+│   │   ├── platform/               # Win32 dosya kimliği, kilitleme, bilinen klasörler
+│   │   ├── providers/              # Ajan tanımları, kök bulucu, büyüme analizi
+│   │   ├── safety/                 # Yol, süreç, Git ve kanıt koruyucuları
+│   │   ├── scanner/                # Keşif, ölçüm, limitler, oturumlar
+│   │   ├── settings/               # Ayar modeli ve atomik kalıcılık
 │   │   ├── lib.rs                  # Eklenti kaydı ve komut yönlendirici
 │   │   └── main.rs                 # Yerel yürütülebilir dosya giriş noktası
 │   ├── Cargo.toml                  # Rust bağımlılıkları ve paket yapılandırması
-│   └── tauri.conf.json             # Tauri pencere, güvenlik ve NSIS bundle ayarları
+│   └── tauri.conf.json             # Tauri pencere, güvenlik (CSP) ve bundle ayarları
+├── build-release.bat               # Tek tıkla Windows release sarmalayıcısı
 ├── package.json                    # Node bağımlılıkları ve npm scriptleri
 ├── tsconfig.json                   # TypeScript derleyici yapılandırması
 ├── vite.config.ts                  # Vite derleyici yapılandırması
-└── README.md                       # Ana Dokümantasyon
+└── README.md                       # Proje genel bakış ve hızlı başlangıç
 ```
 
 ---

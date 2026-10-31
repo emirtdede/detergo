@@ -35,4 +35,4 @@ environment issue, not a project defect.
 6. **Documentation drift.** README/docs describe features that do not exist.
 
 These issues were fixed or superseded in 2.0 (see `docs/MASTER_SPEC.md` and
-`docs/audit/FINAL_SECURITY_AUDIT.md`).
+`docs/security/FINAL_SECURITY_AUDIT.md`).

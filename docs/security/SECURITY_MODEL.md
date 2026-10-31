@@ -89,7 +89,7 @@ Status legend:
 pending (SEC-17, SEC-18, SEC-19, SEC-26, SEC-27, SEC-28).**
 
 Evidence for this result, including the packaged-app CSP/IPC probe, is recorded
-in `docs/audit/FINAL_SECURITY_AUDIT.md`.
+in `docs/security/FINAL_SECURITY_AUDIT.md`.
 
 ## 5. Known limitations (explicit)
 

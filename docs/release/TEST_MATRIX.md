@@ -71,7 +71,7 @@ issue only).
 
 ## 4. Security matrix
 
-See `docs/SECURITY_MODEL.md` §4 and `docs/audit/FINAL_SECURITY_AUDIT.md`.
+See `docs/security/SECURITY_MODEL.md` §4 and `docs/security/FINAL_SECURITY_AUDIT.md`.
 Result: 24 automated PASS, 6 verified by code review with manual execution
 pending (live recording, unsupported volume for trash, OneDrive placeholder,
 secret audit, no-telemetry audit, crash injection).

@@ -84,7 +84,7 @@ assuming it from configuration.
 
 ## 4. 30-scenario security matrix
 
-See `docs/SECURITY_MODEL.md` §4 for the full table. Current status:
+See `docs/security/SECURITY_MODEL.md` §4 for the full table. Current status:
 
 - **24 scenarios:** automated PASS.
 - **6 scenarios:** review-verified, execution **PENDING** because they need a
