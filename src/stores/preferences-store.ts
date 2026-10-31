@@ -1,13 +1,17 @@
 import { create } from "zustand";
-import { ThemeMode, FavoriteLocation, SortOption, UserPreferences, SupportedLanguage } from "@/types";
+import {
+  AppSettings,
+  FavoriteLocation,
+  SortOption,
+  SupportedLanguage,
+} from "@/types";
 import { scannerApi } from "@/lib/tauri/scanner-api";
+import { useUiStore } from "@/stores/ui-store";
 import { detectSystemLanguage, isRtlLanguage } from "@/locales/languages";
 
-interface PreferencesState extends UserPreferences {
+interface PreferencesState extends AppSettings {
   isLoaded: boolean;
-
-  // Actions
-  setTheme: (theme: ThemeMode) => void;
+  setTheme: (theme: string) => void;
   setLanguage: (language: SupportedLanguage) => void;
   setReduceMotion: (reduce: boolean) => void;
   setSort: (sort: SortOption) => void;
@@ -18,24 +22,33 @@ interface PreferencesState extends UserPreferences {
   removeRecentLocation: (path: string) => void;
   clearRecentLocations: () => void;
   setLastScanPath: (path: string | null) => void;
-  loadPreferences: (prefs: Partial<UserPreferences>) => void;
+  updateSettings: (patch: Partial<AppSettings>) => void;
+  persistSettings: () => Promise<void>;
+  loadPreferences: (prefs: Partial<AppSettings>) => void;
 }
 
-const DEFAULT_PREFERENCES: UserPreferences = {
-  schemaVersion: 1,
+const DEFAULT_SETTINGS: AppSettings = {
+  schemaVersion: 2,
   theme: "dark-black",
   language: detectSystemLanguage(),
   reduceMotion: false,
   favorites: [],
   recentLocations: [],
   lastScanPath: null,
-  sort: {
-    field: "size",
-    direction: "desc",
-  },
+  sort: { field: "size", direction: "desc" },
+  protectedPaths: [],
+  excludedNames: [],
+  scanProfile: "balanced",
+  maxDepth: 32,
+  maxCandidates: 50000,
+  timeoutMinutes: 15,
+  minSizeBytes: 0,
+  maskPaths: false,
+  historyEnabled: true,
+  agentPolicy: { allowCacheCleanup: true, protectBrowserRecordings: true },
 };
 
-function normalizeTheme(theme: ThemeMode): ThemeMode {
+export function normalizeTheme(theme: string): string {
   switch (theme) {
     case "black":
     case "dark-transparent":
@@ -49,10 +62,9 @@ function normalizeTheme(theme: ThemeMode): ThemeMode {
   }
 }
 
-function applyThemeToDom(theme: ThemeMode) {
+function applyThemeToDom(theme: string) {
   if (typeof document !== "undefined") {
-    const normalized = normalizeTheme(theme);
-    document.documentElement.setAttribute("data-theme", normalized);
+    document.documentElement.setAttribute("data-theme", normalizeTheme(theme));
   }
 }
 
@@ -69,28 +81,46 @@ function applyReduceMotionToDom(reduceMotion: boolean) {
   }
 }
 
-function syncPreferences(state: PreferencesState) {
-  if (!state.isLoaded) return;
-  const prefsToSave: UserPreferences = {
-    schemaVersion: state.schemaVersion,
+function toSettings(state: PreferencesState): AppSettings {
+  return {
+    schemaVersion: 2,
     theme: state.theme,
-    language: state.language,
+    language: state.language ?? "en",
     reduceMotion: state.reduceMotion,
     favorites: state.favorites,
     recentLocations: state.recentLocations,
     lastScanPath: state.lastScanPath,
     sort: state.sort,
+    protectedPaths: state.protectedPaths,
+    excludedNames: state.excludedNames,
+    scanProfile: state.scanProfile,
+    maxDepth: state.maxDepth,
+    maxCandidates: state.maxCandidates,
+    timeoutMinutes: state.timeoutMinutes,
+    minSizeBytes: state.minSizeBytes,
+    maskPaths: state.maskPaths,
+    historyEnabled: state.historyEnabled,
+    agentPolicy: state.agentPolicy,
   };
-  scannerApi.saveAppSettings(prefsToSave).catch((err) => {
-    console.error("Failed to auto-persist preferences:", err);
+}
+
+function syncPreferences(state: PreferencesState) {
+  if (!state.isLoaded) return;
+  scannerApi.saveAppSettings(toSettings(state)).catch((err) => {
+    console.error("Failed to persist settings:", err);
+    useUiStore.getState().showToast(
+      state.language === "tr" ? "Ayarlar kaydedilemedi" : "Could not save settings",
+      "error",
+      5000
+    );
   });
 }
 
 export const usePreferencesStore = create<PreferencesState>((set, get) => ({
-  ...DEFAULT_PREFERENCES,
+  ...DEFAULT_SETTINGS,
   isLoaded: false,
 
-  setTheme: (theme: ThemeMode) => {
+  setTheme: (theme: string) => {
     const normalized = normalizeTheme(theme);
     applyThemeToDom(normalized);
     set({ theme: normalized });
@@ -128,47 +158,37 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
       lastUsedAt: new Date().toISOString(),
     };
 
-    set((state) => ({
-      favorites: [...state.favorites, newFav],
-    }));
-
+    set((state) => ({ favorites: [...state.favorites, newFav] }));
     syncPreferences(get());
     return newFav;
   },
 
   removeFavorite: (id: string) => {
-    set((state) => ({
-      favorites: state.favorites.filter((f) => f.id !== id),
-    }));
+    set((state) => ({ favorites: state.favorites.filter((f) => f.id !== id) }));
     syncPreferences(get());
   },
 
   renameFavorite: (id: string, newLabel: string) => {
     set((state) => ({
-      favorites: state.favorites.map((f) =>
-        f.id === id ? { ...f, label: newLabel } : f
-      ),
+      favorites: state.favorites.map((f) => (f.id === id ? { ...f, label: newLabel } : f)),
     }));
     syncPreferences(get());
   },
 
   addRecentLocation: (path: string) => {
     set((state) => {
-      const filtered = state.recentLocations.filter(
-        (p) => p.toLowerCase() !== path.toLowerCase()
-      );
-      // Max 5 items
-      const nextRecent = [path, ...filtered].slice(0, 5);
-      return { recentLocations: nextRecent, lastScanPath: path };
+      const filtered = state.recentLocations.filter((p) => p.toLowerCase() !== path.toLowerCase());
+      return {
+        recentLocations: [path, ...filtered].slice(0, 20),
+        lastScanPath: path,
+      };
     });
     syncPreferences(get());
   },
 
   removeRecentLocation: (path: string) => {
     set((state) => {
-      const nextRecent = state.recentLocations.filter(
-        (p) => p.toLowerCase() !== path.toLowerCase()
-      );
+      const nextRecent = state.recentLocations.filter((p) => p.toLowerCase() !== path.toLowerCase());
       const nextLastScan =
         state.lastScanPath?.toLowerCase() === path.toLowerCase()
           ? (nextRecent[0] ?? null)
@@ -179,7 +199,7 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   },
 
   clearRecentLocations: () => {
-    set({ recentLocations: [] });
+    set({ recentLocations: [], lastScanPath: null });
     syncPreferences(get());
   },
 
@@ -188,22 +208,37 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
     syncPreferences(get());
   },
 
-  loadPreferences: (prefs) => {
-    const rawTheme = prefs.theme || DEFAULT_PREFERENCES.theme;
-    const normalizedTheme = normalizeTheme(rawTheme);
-    const resolvedLanguage = prefs.language || detectSystemLanguage();
-    const merged: UserPreferences = {
-      ...DEFAULT_PREFERENCES,
+  updateSettings: (patch: Partial<AppSettings>) => {
+    // Persistence is awaited by the settings view so the UI never reports a
+    // successful save before the backend has accepted it.
+    set(patch as Partial<PreferencesState>);
+  },
+
+  persistSettings: () => {
+    const state = get();
+    if (!state.isLoaded) return Promise.resolve();
+    return scannerApi.saveAppSettings(toSettings(state));
+  },
+
+  loadPreferences: (prefs: Partial<AppSettings>) => {
+    const resolvedLanguage = (prefs.language as SupportedLanguage) || detectSystemLanguage();
+    const merged: AppSettings = {
+      ...DEFAULT_SETTINGS,
       ...prefs,
-      theme: normalizedTheme,
+      theme: normalizeTheme(prefs.theme || DEFAULT_SETTINGS.theme),
       language: resolvedLanguage,
+      favorites: prefs.favorites ?? [],
+      recentLocations: prefs.recentLocations ?? [],
+      sort: prefs.sort ?? DEFAULT_SETTINGS.sort,
+      protectedPaths: prefs.protectedPaths ?? [],
+      excludedNames: prefs.excludedNames ?? [],
+      agentPolicy: prefs.agentPolicy ?? DEFAULT_SETTINGS.agentPolicy,
     };
-    applyThemeToDom(normalizedTheme);
+    applyThemeToDom(merged.theme);
     applyLanguageToDom(resolvedLanguage);
     applyReduceMotionToDom(merged.reduceMotion);
-    set({
-      ...merged,
-      isLoaded: true,
-    });
+    set({ ...merged, isLoaded: true });
   },
 }));
+
+export { DEFAULT_SETTINGS };

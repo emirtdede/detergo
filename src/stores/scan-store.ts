@@ -1,5 +1,12 @@
 import { create } from "zustand";
-import { NodeModuleEntry, ScanProgress, ScanSummary, AppErrorDto } from "@/types";
+import {
+  AppErrorDto,
+  CleanupItem,
+  MeasurementUpdate,
+  ScanProgress,
+  ScanScope,
+  ScanSummary,
+} from "@/types";
 
 export type ScanStatus =
   | "idle"
@@ -14,49 +21,66 @@ interface ScanState {
   scanId: string | null;
   status: ScanStatus;
   currentRootPath: string | null;
-  entriesById: Record<string, NodeModuleEntry>;
-  entryIds: string[];
-  pendingMeasurements: Record<string, number>;
+  scope: ScanScope;
+  itemsById: Record<string, CleanupItem>;
+  itemIds: string[];
+  pendingMeasurements: Record<string, MeasurementUpdate>;
   progress: ScanProgress | null;
   summary: ScanSummary | null;
   error: AppErrorDto | null;
-  warnings: Array<{ code: string; path?: string }>;
+  warnings: Array<{ code: string; path?: string | null }>;
 
-  // Actions
-  startScanState: (scanId: string, rootPath: string) => void;
+  startScanState: (scanId: string, rootPath: string, scope?: ScanScope) => void;
   updateProgress: (progress: ScanProgress) => void;
-  addCandidateEntry: (entry: NodeModuleEntry) => void;
-  addCandidateEntriesBatch: (entries: NodeModuleEntry[]) => void;
-  updateEntryMeasurement: (id: string, sizeBytes: number) => void;
-  updateEntryMeasurementBatch: (updates: Array<{ id: string; sizeBytes: number }>) => void;
-  markEntryDeleted: (ids: string[]) => void;
-  removeEntries: (ids: string[]) => void;
-  addWarning: (warning: { code: string; path?: string }) => void;
+  addItems: (items: CleanupItem[]) => void;
+  addCandidateEntriesBatch: (items: CleanupItem[]) => void;
+  applyMeasurements: (updates: MeasurementUpdate[]) => void;
+  updateEntryMeasurementBatch: (updates: MeasurementUpdate[]) => void;
+  markDeleted: (ids: string[]) => void;
+  removeItems: (ids: string[]) => void;
+  addWarning: (warning: { code: string; path?: string | null }) => void;
   completeScan: (summary: ScanSummary) => void;
   cancelScanState: (summary?: ScanSummary) => void;
   failScan: (error: AppErrorDto) => void;
   resetScan: () => void;
 }
 
-export const useScanStore = create<ScanState>((set) => ({
+function applyUpdate(item: CleanupItem, update: MeasurementUpdate): CleanupItem {
+  return {
+    ...item,
+    logicalBytes: update.logicalBytes,
+    allocatedBytes: update.allocatedBytes,
+    estimatedReclaimBytes: update.estimatedReclaimBytes,
+    status:
+      update.status === "error"
+        ? "error"
+        : item.status === "blocked"
+          ? "blocked"
+          : update.status,
+  };
+}
+
+export const useScanStore = create<ScanState>((set, get) => ({
   scanId: null,
   status: "idle",
   currentRootPath: null,
-  entriesById: {},
-  entryIds: [],
+  scope: "project",
+  itemsById: {},
+  itemIds: [],
   pendingMeasurements: {},
   progress: null,
   summary: null,
   error: null,
   warnings: [],
 
-  startScanState: (scanId, rootPath) =>
+  startScanState: (scanId, rootPath, scope = "project") =>
     set({
       scanId,
       status: "scanning",
       currentRootPath: rootPath,
-      entriesById: {},
-      entryIds: [],
+      scope,
+      itemsById: {},
+      itemIds: [],
       pendingMeasurements: {},
       progress: {
         phase: "discovering",
@@ -73,155 +97,95 @@ export const useScanStore = create<ScanState>((set) => ({
   updateProgress: (progress) =>
     set((state) => ({
       progress,
-      status: progress.phase === "measuring" && state.status === "scanning"
-        ? "measuring"
-        : state.status,
+      status:
+        state.status === "scanning" || state.status === "measuring"
+          ? progress.phase === "measuring"
+            ? "measuring"
+            : state.status
+          : state.status,
     })),
 
-  addCandidateEntry: (entry) =>
+  addItems: (items) =>
     set((state) => {
-      if (state.entriesById[entry.id]) return state;
-
-      const bufferedSize = state.pendingMeasurements[entry.id];
-      const nextEntry: NodeModuleEntry = bufferedSize !== undefined
-        ? { ...entry, sizeBytes: bufferedSize, status: "ready" }
-        : entry;
-
-      let nextPending = state.pendingMeasurements;
-      if (bufferedSize !== undefined) {
-        nextPending = { ...state.pendingMeasurements };
-        delete nextPending[entry.id];
-      }
-
-      return {
-        entriesById: { ...state.entriesById, [entry.id]: nextEntry },
-        entryIds: [...state.entryIds, entry.id],
-        pendingMeasurements: nextPending,
-      };
-    }),
-
-  addCandidateEntriesBatch: (entries) =>
-    set((state) => {
-      const nextMap = { ...state.entriesById };
-      const nextIds = [...state.entryIds];
+      const nextMap = { ...state.itemsById };
+      const nextIds = [...state.itemIds];
       const nextPending = { ...state.pendingMeasurements };
 
-      for (const entry of entries) {
-        if (!nextMap[entry.id]) {
-          const bufferedSize = nextPending[entry.id];
-          if (bufferedSize !== undefined) {
-            nextMap[entry.id] = { ...entry, sizeBytes: bufferedSize, status: "ready" };
-            delete nextPending[entry.id];
-          } else {
-            nextMap[entry.id] = entry;
-          }
-          nextIds.push(entry.id);
+      for (const incoming of items) {
+        if (nextMap[incoming.id]) continue;
+        let item = incoming;
+        const buffered = nextPending[incoming.id];
+        if (buffered) {
+          item = applyUpdate(incoming, buffered);
+          delete nextPending[incoming.id];
         }
+        nextMap[item.id] = item;
+        nextIds.push(item.id);
       }
-      return {
-        entriesById: nextMap,
-        entryIds: nextIds,
-        pendingMeasurements: nextPending,
-      };
+      return { itemsById: nextMap, itemIds: nextIds, pendingMeasurements: nextPending };
     }),
 
-  updateEntryMeasurement: (id, sizeBytes) =>
-    set((state) => {
-      const existing = state.entriesById[id];
-      if (!existing) {
-        // Buffer measurement for out-of-order candidate arrival
-        return {
-          pendingMeasurements: {
-            ...state.pendingMeasurements,
-            [id]: sizeBytes,
-          },
-        };
-      }
-      return {
-        entriesById: {
-          ...state.entriesById,
-          [id]: {
-            ...existing,
-            sizeBytes,
-            status: "ready",
-          },
-        },
-      };
-    }),
+  addCandidateEntriesBatch: (items) => {
+    get().addItems(items);
+  },
 
-  updateEntryMeasurementBatch: (updates) =>
+  applyMeasurements: (updates) =>
     set((state) => {
-      let changed = false;
-      const nextMap = { ...state.entriesById };
+      if (updates.length === 0) return state;
+      const nextMap = { ...state.itemsById };
       const nextPending = { ...state.pendingMeasurements };
 
-      for (const { id, sizeBytes } of updates) {
-        const existing = nextMap[id];
+      for (const update of updates) {
+        const existing = nextMap[update.id];
         if (existing) {
-          nextMap[id] = { ...existing, sizeBytes, status: "ready" };
-          changed = true;
+          nextMap[update.id] = applyUpdate(existing, update);
         } else {
-          nextPending[id] = sizeBytes;
-          changed = true;
+          nextPending[update.id] = update;
         }
       }
-      return changed
-        ? { entriesById: nextMap, pendingMeasurements: nextPending }
-        : state;
+      return { itemsById: nextMap, pendingMeasurements: nextPending };
     }),
 
-  markEntryDeleted: (ids) =>
+  updateEntryMeasurementBatch: (updates) => {
+    get().applyMeasurements(updates);
+  },
+
+  markDeleted: (ids) =>
     set((state) => {
-      const nextMap = { ...state.entriesById };
+      const nextMap = { ...state.itemsById };
       for (const id of ids) {
-        if (nextMap[id]) {
-          nextMap[id] = { ...nextMap[id], status: "deleted" };
-        }
+        if (nextMap[id]) nextMap[id] = { ...nextMap[id], status: "deleted" };
       }
-      return { entriesById: nextMap };
+      return { itemsById: nextMap };
     }),
 
-  removeEntries: (ids) =>
+  removeItems: (ids) =>
     set((state) => {
       const removeSet = new Set(ids);
-      const nextMap = { ...state.entriesById };
-      for (const id of ids) {
-        delete nextMap[id];
-      }
-      const nextIds = state.entryIds.filter((id) => !removeSet.has(id));
-      return { entriesById: nextMap, entryIds: nextIds };
+      const nextMap = { ...state.itemsById };
+      for (const id of ids) delete nextMap[id];
+      return {
+        itemsById: nextMap,
+        itemIds: state.itemIds.filter((id) => !removeSet.has(id)),
+      };
     }),
 
-  addWarning: (warning) =>
-    set((state) => ({
-      warnings: [...state.warnings, warning],
-    })),
+  addWarning: (warning) => set((state) => ({ warnings: [...state.warnings, warning] })),
 
-  completeScan: (summary) =>
-    set({
-      status: "completed",
-      summary,
-    }),
+  completeScan: (summary) => set({ status: "completed", summary }),
 
-  cancelScanState: (summary) =>
-    set({
-      status: "cancelled",
-      summary: summary || null,
-    }),
+  cancelScanState: (summary) => set({ status: "cancelled", summary: summary ?? null }),
 
-  failScan: (error) =>
-    set({
-      status: "failed",
-      error,
-    }),
+  failScan: (error) => set({ status: "failed", error }),
 
   resetScan: () =>
     set({
       scanId: null,
       status: "idle",
       currentRootPath: null,
-      entriesById: {},
-      entryIds: [],
+      scope: "project",
+      itemsById: {},
+      itemIds: [],
       pendingMeasurements: {},
       progress: null,
       summary: null,

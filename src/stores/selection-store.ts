@@ -12,6 +12,7 @@ interface SelectionState {
   deselectMany: (ids: string[]) => void;
   clearSelection: () => void;
   isSelected: (id: string) => boolean;
+  prune: (availableIds: string[]) => void;
 }
 
 export const useSelectionStore = create<SelectionState>((set, get) => ({
@@ -85,4 +86,14 @@ export const useSelectionStore = create<SelectionState>((set, get) => ({
   clearSelection: () => set({ selectedIds: new Set<string>() }),
 
   isSelected: (id: string) => get().selectedIds.has(id),
+
+  prune: (availableIds: string[]) =>
+    set((state) => {
+      const available = new Set(availableIds);
+      const next = new Set<string>();
+      for (const id of state.selectedIds) {
+        if (available.has(id)) next.add(id);
+      }
+      return next.size === state.selectedIds.size ? state : { selectedIds: next };
+    }),
 }));

@@ -5,16 +5,22 @@ import { usePreferencesStore } from "@/stores/preferences-store";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { KnownLocation } from "@/types";
 import { useI18n } from "@/lib/i18n";
+import { useUIText } from "@/lib/ui-text";
+import { useUiStore } from "@/stores/ui-store";
+import { maskPath } from "@/features/items/ItemTable";
 import { getKnownLocationLabel } from "./scan-helpers";
 import "./scan.css";
 
 export const QuickLocations: React.FC = () => {
   const { t } = useI18n();
+  const ui = useUIText();
+  const showToast = useUiStore((s) => s.showToast);
   const [knownLocations, setKnownLocations] = useState<KnownLocation[]>([]);
   const currentRootPath = useScanStore((s) => s.currentRootPath);
   const status = useScanStore((s) => s.status);
   const favorites = usePreferencesStore((s) => s.favorites);
   const addRecentLocation = usePreferencesStore((s) => s.addRecentLocation);
+  const maskPaths = usePreferencesStore((s) => s.maskPaths);
 
   const isScanning = status === "scanning" || status === "measuring";
 
@@ -22,8 +28,8 @@ export const QuickLocations: React.FC = () => {
     scannerApi
       .getKnownLocations()
       .then((locs) => setKnownLocations(locs))
-      .catch((err) => console.error("Known locations error:", err));
-  }, []);
+      .catch(() => showToast(ui.errors.title, "error"));
+  }, [showToast, ui.errors.title]);
 
   const handleSelect = (path: string) => {
     if (isScanning) return;
@@ -54,7 +60,7 @@ export const QuickLocations: React.FC = () => {
             className={`quick-chip ${isActive ? "active" : ""}`}
             onClick={() => handleSelect(loc.path)}
             disabled={isScanning}
-            title={loc.path}
+            title={maskPaths ? maskPath(loc.path) : loc.path}
           >
             <Folder size={12} />
             <span>{label}</span>
@@ -71,7 +77,7 @@ export const QuickLocations: React.FC = () => {
             className={`quick-chip ${isActive ? "active" : ""}`}
             onClick={() => handleSelect(fav.path)}
             disabled={isScanning}
-            title={fav.path}
+            title={maskPaths ? maskPath(fav.path) : fav.path}
           >
             <Star size={12} fill="currentColor" color="var(--warning)" />
             <span>{fav.label}</span>

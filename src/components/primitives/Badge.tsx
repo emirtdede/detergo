@@ -1,9 +1,8 @@
 import React from "react";
-import { PackageManagerType } from "@/types";
 import "./primitives.css";
 
 export interface BadgeProps {
-  type?: PackageManagerType | "default";
+  type?: string;
   children: React.ReactNode;
   className?: string;
 }

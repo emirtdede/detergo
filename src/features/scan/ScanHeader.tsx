@@ -20,28 +20,32 @@ import { WindowControls } from "@/components/layout/WindowControls";
 import { useScanStore } from "@/stores/scan-store";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
+import { useAppStore } from "@/stores/app-store";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { KnownLocation } from "@/types";
 import { useI18n } from "@/lib/i18n";
+import { useUIText } from "@/lib/ui-text";
 import { truncatePath } from "@/lib/formatters";
+import { maskPath } from "@/features/items/ItemTable";
 import { getKnownLocationLabel } from "./scan-helpers";
 import { useScanController } from "./useScanController";
 import "./scan.css";
 
 export const ScanHeader: React.FC = () => {
   const { t } = useI18n();
+  const ui = useUIText();
   const currentRootPath = useScanStore((s) => s.currentRootPath);
   const { isScanning, startScan, cancelScan } = useScanController();
 
   const favorites = usePreferencesStore((s) => s.favorites);
   const recentLocations = usePreferencesStore((s) => s.recentLocations);
+  const maskPaths = usePreferencesStore((s) => s.maskPaths);
   const addFavorite = usePreferencesStore((s) => s.addFavorite);
   const removeFavorite = usePreferencesStore((s) => s.removeFavorite);
   const addRecentLocation = usePreferencesStore((s) => s.addRecentLocation);
   const removeRecentLocation = usePreferencesStore((s) => s.removeRecentLocation);
   const clearRecentLocations = usePreferencesStore((s) => s.clearRecentLocations);
 
-  const openModal = useUiStore((s) => s.openModal);
   const showToast = useUiStore((s) => s.showToast);
 
   const [knownLocations, setKnownLocations] = useState<KnownLocation[]>([]);
@@ -53,8 +57,11 @@ export const ScanHeader: React.FC = () => {
     scannerApi
       .getKnownLocations()
       .then((locs) => setKnownLocations(locs))
-      .catch((err) => console.error("Known locations error:", err));
+      .catch(() => showToast(t.errors.invalidPath, "error"));
   }, []);
+
+  const shownPath = (path: string, maxChars: number) =>
+    truncatePath(maskPaths ? maskPath(path) : path, maxChars);
 
   // Click outside and escape key handler
   useEffect(() => {
@@ -93,8 +100,7 @@ export const ScanHeader: React.FC = () => {
         useScanStore.setState({ currentRootPath: selected });
         addRecentLocation(selected);
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       showToast(t.errors.invalidPath, "error");
     } finally {
       isSelectingFolderRef.current = false;
@@ -121,7 +127,8 @@ export const ScanHeader: React.FC = () => {
   };
 
   const handleStartScan = (pathOverride?: string) => {
-    startScan(pathOverride);
+    const scope = useAppStore.getState().view === "agents" ? "agents" : "project";
+    startScan(pathOverride, scope);
   };
 
   const handleCancelScan = () => {
@@ -150,11 +157,11 @@ export const ScanHeader: React.FC = () => {
             onClick={() => {
               if (!isScanning) setIsLocationMenuOpen((prev) => !prev);
             }}
-            title={currentRootPath || t.header.folderNotSelected}
+            title={currentRootPath ? (maskPaths ? maskPath(currentRootPath) : currentRootPath) : t.header.folderNotSelected}
           >
             <FolderOpen size={14} className="command-folder-icon" />
             <span className="command-path-text">
-              {currentRootPath ? truncatePath(currentRootPath, 34) : t.header.folderNotSelected}
+              {currentRootPath ? shownPath(currentRootPath, 34) : t.header.folderNotSelected}
             </span>
 
             {currentRootPath && !isScanning && (
@@ -226,14 +233,14 @@ export const ScanHeader: React.FC = () => {
                       type="button"
                       className={`location-menu-item ${isSelected ? "is-selected" : ""}`}
                       onClick={() => handleSelectLocation(loc.path)}
-                      title={loc.path}
+                      title={maskPaths ? maskPath(loc.path) : loc.path}
                     >
                       <div className="location-menu-item-icon">
                         <Folder size={15} />
                       </div>
                       <div className="location-menu-item-info">
                         <span className="location-menu-item-title">{label}</span>
-                        <span className="location-menu-item-path">{truncatePath(loc.path, 34)}</span>
+                        <span className="location-menu-item-path">{shownPath(loc.path, 34)}</span>
                       </div>
                       {isSelected && (
                         <div className="location-menu-item-check">
@@ -269,7 +276,7 @@ export const ScanHeader: React.FC = () => {
                         </div>
                         <div className="location-menu-item-info">
                           <span className="location-menu-item-title">{fav.label}</span>
-                          <span className="location-menu-item-path">{truncatePath(fav.path, 30)}</span>
+                          <span className="location-menu-item-path">{shownPath(fav.path, 30)}</span>
                         </div>
                         {isSelected && (
                           <div className="location-menu-item-check">
@@ -315,7 +322,7 @@ export const ScanHeader: React.FC = () => {
                         title={t.favorites.remove}
                       >
                         <Trash2 size={11} />
-                        <span>{t.table.actions ? (t.actionBar.clearSelection.includes(" ") ? t.actionBar.clearSelection.split(" ").pop() : t.actionBar.clearSelection) : "Temizle"}</span>
+                        <span>{ui.common.clear}</span>
                       </button>
                     </div>
                     {recentLocations.slice(0, 5).map((path, idx) => {
@@ -332,7 +339,7 @@ export const ScanHeader: React.FC = () => {
                           </div>
                           <div className="location-menu-item-info">
                             <span className="location-menu-item-title">{name}</span>
-                            <span className="location-menu-item-path">{truncatePath(path, 30)}</span>
+                            <span className="location-menu-item-path">{shownPath(path, 30)}</span>
                           </div>
                           {isSelected && (
                             <div className="location-menu-item-check">
@@ -389,7 +396,7 @@ export const ScanHeader: React.FC = () => {
           size="sm"
           aria-label={t.header.settings}
           tooltip={t.header.settings}
-          onClick={() => openModal("settings")}
+          onClick={() => useAppStore.getState().setView("settings")}
         >
           <Settings size={15} />
         </IconButton>

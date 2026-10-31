@@ -1,12 +1,12 @@
 import { create } from "zustand";
-import { DeletionReport } from "@/types";
+import { CleanupPlan, CleanupReport, DeleteMode } from "@/types";
 
 export type ModalType =
   | null
   | "settings"
-  | "recycle-confirm"
-  | "permanent-confirm"
-  | "partial-error";
+  | "cleanup-plan"
+  | "cleanup-result"
+  | "official-action";
 
 export interface ToastMessage {
   id: string;
@@ -20,16 +20,22 @@ interface UiState {
   searchQuery: string;
   toast: ToastMessage | null;
   pendingDeletionIds: string[];
-  partialErrorReport: DeletionReport | null;
+  pendingMode: DeleteMode;
+  plan: CleanupPlan | null;
+  report: CleanupReport | null;
 
-  // Actions
   openModal: (modal: ModalType) => void;
   closeModal: () => void;
   setSearchQuery: (query: string) => void;
-  showToast: (message: string, type?: "info" | "success" | "warning" | "error", durationMs?: number) => void;
+  showToast: (
+    message: string,
+    type?: "info" | "success" | "warning" | "error",
+    durationMs?: number
+  ) => void;
   clearToast: () => void;
-  setPendingDeletion: (ids: string[]) => void;
-  setPartialErrorReport: (report: DeletionReport | null) => void;
+  setPendingDeletion: (ids: string[], mode?: DeleteMode) => void;
+  setPlan: (plan: CleanupPlan | null) => void;
+  setReport: (report: CleanupReport | null) => void;
 }
 
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
@@ -39,26 +45,20 @@ export const useUiStore = create<UiState>((set) => ({
   searchQuery: "",
   toast: null,
   pendingDeletionIds: [],
-  partialErrorReport: null,
+  pendingMode: "recycleBin",
+  plan: null,
+  report: null,
 
   openModal: (modal) => set({ activeModal: modal }),
 
-  closeModal: () => set({ activeModal: null, pendingDeletionIds: [] }),
+  closeModal: () =>
+    set({ activeModal: null, pendingDeletionIds: [], plan: null }),
 
   setSearchQuery: (query) => set({ searchQuery: query }),
 
   showToast: (message, type = "info", durationMs = 3500) => {
     if (toastTimer) clearTimeout(toastTimer);
-
-    const toast: ToastMessage = {
-      id: "toast-" + Date.now(),
-      message,
-      type,
-      durationMs,
-    };
-
-    set({ toast });
-
+    set({ toast: { id: "toast-" + Date.now(), message, type, durationMs } });
     toastTimer = setTimeout(() => {
       set({ toast: null });
       toastTimer = null;
@@ -66,14 +66,15 @@ export const useUiStore = create<UiState>((set) => ({
   },
 
   clearToast: () => {
-    if (toastTimer) {
-      clearTimeout(toastTimer);
-      toastTimer = null;
-    }
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = null;
     set({ toast: null });
   },
 
-  setPendingDeletion: (ids) => set({ pendingDeletionIds: ids }),
+  setPendingDeletion: (ids, mode = "recycleBin") =>
+    set({ pendingDeletionIds: ids, pendingMode: mode }),
 
-  setPartialErrorReport: (report) => set({ partialErrorReport: report, activeModal: "partial-error" }),
+  setPlan: (plan) => set({ plan }),
+
+  setReport: (report) => set({ report }),
 }));

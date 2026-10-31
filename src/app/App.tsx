@@ -1,24 +1,31 @@
 import React, { useEffect } from "react";
 import { ScanHeader } from "@/features/scan/ScanHeader";
-import { ScanHero } from "@/features/scan/ScanHero";
-import { NodeModulesTable } from "@/features/results/NodeModulesTable";
+import { NavRail } from "@/features/shell/NavRail";
+import { OverviewView } from "@/features/overview/OverviewView";
+import { ProjectsView } from "@/features/items/ProjectsView";
+import { AgentsView } from "@/features/agents/AgentsView";
+import { CachesView } from "@/features/caches/CachesView";
+import { HistoryView } from "@/features/history/HistoryView";
+import { SettingsView } from "@/features/settings/SettingsView";
 import { SelectionActionBar } from "@/features/results/SelectionActionBar";
-import { RecycleConfirmDialog } from "@/features/deletion/RecycleConfirmDialog";
-import { PermanentConfirmDialog } from "@/features/deletion/PermanentConfirmDialog";
-import { PartialErrorReportDialog } from "@/features/deletion/PartialErrorReportDialog";
-import { SettingsPanel } from "@/features/settings/SettingsPanel";
+import { CleanupPlanDialog } from "@/features/cleanup/CleanupPlanDialog";
+import { CleanupResultDialog } from "@/features/cleanup/CleanupResultDialog";
 import { Toast } from "@/components/primitives/Toast";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useScanStore } from "@/stores/scan-store";
-import { useScanController } from "@/features/scan/useScanController";
+import { useAppStore } from "@/stores/app-store";
+import { useUiStore } from "@/stores/ui-store";
+import { useUIText } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import "@/styles/index.css";
+import "@/features/shell/shell.css";
 
 export const App: React.FC = () => {
   const loadPreferences = usePreferencesStore((s) => s.loadPreferences);
-  const { startScan } = useScanController();
+  const view = useAppStore((s) => s.view);
+  const showToast = useUiStore((s) => s.showToast);
+  const ui = useUIText();
 
-  // Load user settings on startup (Mount only)
   useEffect(() => {
     scannerApi
       .getAppSettings()
@@ -29,34 +36,30 @@ export const App: React.FC = () => {
           useScanStore.setState({ currentRootPath: prefs.lastScanPath });
         }
       })
-      .catch((err) => console.error("Could not load initial settings:", err));
-  }, [loadPreferences]);
-
-  const handleStartScanFromHero = () => {
-    startScan();
-  };
+      .catch((err) => {
+        // Never fail silently: the UI keeps defaults, but the user is told.
+        showToast(`${ui.errors.title}: ${String(err)}`, "error", 8000);
+      });
+  }, [loadPreferences, showToast, ui.errors.title]);
 
   return (
     <div className="app-container">
-      {/* 1. Frameless Custom Window Header (Titlebar + Brand + Location + Actions + Window Controls) */}
       <ScanHeader />
+      <div className="app-body">
+        <NavRail />
+        <main className="view-container">
+          {view === "overview" && <OverviewView />}
+          {view === "projects" && <ProjectsView />}
+          {view === "agents" && <AgentsView />}
+          {view === "caches" && <CachesView />}
+          {view === "history" && <HistoryView />}
+          {view === "settings" && <SettingsView />}
+        </main>
+      </div>
 
-      {/* 2. Main Content Canvas */}
-      <main className="app-content-canvas">
-        <ScanHero onStartScan={handleStartScanFromHero} />
-        <NodeModulesTable />
-      </main>
-
-      {/* 3. Floating Selection Action Bar */}
       <SelectionActionBar />
-
-      {/* 4. Modals */}
-      <RecycleConfirmDialog />
-      <PermanentConfirmDialog />
-      <PartialErrorReportDialog />
-      <SettingsPanel />
-
-      {/* 5. Toast Notifications */}
+      <CleanupPlanDialog />
+      <CleanupResultDialog />
       <Toast />
     </div>
   );

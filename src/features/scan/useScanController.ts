@@ -1,103 +1,120 @@
 import { useCallback } from "react";
-import { useScanStore } from "@/stores/scan-store";
-import { usePreferencesStore } from "@/stores/preferences-store";
-import { useUiStore } from "@/stores/ui-store";
 import { scannerApi } from "@/lib/tauri/scanner-api";
-import { useI18n } from "@/lib/i18n";
+import { usePreferencesStore } from "@/stores/preferences-store";
+import { useScanStore } from "@/stores/scan-store";
+import { useSelectionStore } from "@/stores/selection-store";
+import { useUiStore } from "@/stores/ui-store";
+import { AppErrorDto, ScanEvent, ScanRequest, ScanScope } from "@/types";
+
+function toAppError(err: unknown): AppErrorDto {
+  if (err && typeof err === "object" && "code" in err) {
+    const candidate = err as { code?: string; message?: string };
+    return {
+      code: (candidate.code as AppErrorDto["code"]) ?? "Unknown",
+      message: candidate.message ?? String(err),
+    };
+  }
+  return { code: "Unknown", message: typeof err === "string" ? err : String(err) };
+}
 
 export function useScanController() {
-  const { t } = useI18n();
   const status = useScanStore((s) => s.status);
-  const startScanState = useScanStore((s) => s.startScanState);
-  const updateProgress = useScanStore((s) => s.updateProgress);
-  const addCandidateEntry = useScanStore((s) => s.addCandidateEntry);
-  const updateEntryMeasurement = useScanStore((s) => s.updateEntryMeasurement);
-  const completeScan = useScanStore((s) => s.completeScan);
-  const cancelScanState = useScanStore((s) => s.cancelScanState);
-  const failScan = useScanStore((s) => s.failScan);
-  const addRecentLocation = usePreferencesStore((s) => s.addRecentLocation);
-  const showToast = useUiStore((s) => s.showToast);
+  const isScanning = status === "scanning" || status === "measuring" || status === "cancelling";
 
-  const isScanning = status === "scanning" || status === "measuring";
+  const startScan = useCallback(async (rootOverride?: string, scope: ScanScope = "project") => {
+    const current = useScanStore.getState();
+    if (
+      current.status === "scanning" ||
+      current.status === "measuring" ||
+      current.status === "cancelling"
+    ) {
+      return;
+    }
 
-  const startScan = useCallback(
-    async (pathOverride?: string) => {
-      // Concurrency guard: Prevent starting duplicate scan if already scanning
-      const activeStatus = useScanStore.getState().status;
-      if (activeStatus === "scanning" || activeStatus === "measuring") {
-        return;
-      }
+    let root =
+      rootOverride ?? current.currentRootPath ?? usePreferencesStore.getState().lastScanPath ?? "";
+    if (scope === "project" && !root) {
+      const picked = await scannerApi.selectFolderDialog();
+      if (!picked) return;
+      root = picked;
+    }
 
-      let targetPath = pathOverride || useScanStore.getState().currentRootPath;
-      if (!targetPath) {
-        targetPath = await scannerApi.selectFolderDialog();
-        if (!targetPath) return;
-        useScanStore.setState({ currentRootPath: targetPath });
-        addRecentLocation(targetPath);
-      }
+    const prefs = usePreferencesStore.getState();
+    useSelectionStore.getState().clearSelection();
+    useScanStore.getState().startScanState("pending", root, scope);
 
-      const scanId = "scan-" + Date.now();
-      startScanState(scanId, targetPath);
-
-      try {
-        await scannerApi.startScan({ rootPath: targetPath }, (event) => {
-          switch (event.type) {
-            case "candidate":
-              addCandidateEntry(event.entry);
-              break;
-            case "measured": {
-              const raw = event as unknown as Record<string, unknown>;
-              const bytes = typeof event.sizeBytes === "number" ? event.sizeBytes : Number(raw.size_bytes || 0);
-              updateEntryMeasurement(event.id, bytes);
-              break;
-            }
-            case "progress":
-              updateProgress(event.progress);
-              break;
-            case "completed":
-              completeScan(event.summary);
-              break;
-            case "cancelled":
-              cancelScanState(event.summary);
-              break;
-            case "failed":
-              failScan(event.error);
-              break;
+    const handleEvent = (event: ScanEvent) => {
+      const store = useScanStore.getState();
+      switch (event.type) {
+        case "started":
+          if (store.scanId !== event.scanId) {
+            useScanStore.setState({ scanId: event.scanId });
           }
-        });
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        failScan({ code: "ScanFailed", message: msg });
-        showToast(t.errors.scanFailed, "error");
+          break;
+        case "candidates":
+          store.addItems(event.items);
+          break;
+        case "measured":
+          store.applyMeasurements(event.updates);
+          break;
+        case "progress":
+          store.updateProgress(event.progress);
+          break;
+        case "warning":
+          store.addWarning({ code: event.code, path: event.path });
+          break;
+        case "completed":
+          store.completeScan(event.summary);
+          break;
+        case "cancelled":
+          store.cancelScanState(event.summary);
+          break;
+        case "failed":
+          store.failScan(event.error);
+          break;
       }
-    },
-    [
-      addCandidateEntry,
-      addRecentLocation,
-      cancelScanState,
-      completeScan,
-      failScan,
-      showToast,
-      startScanState,
-      t.errors.scanFailed,
-      updateEntryMeasurement,
-      updateProgress,
-    ]
-  );
+    };
+
+    const request: ScanRequest = {
+      rootPath: scope === "agents" ? "" : root,
+      scope,
+      exclusions: prefs.excludedNames,
+      protectedPaths: prefs.protectedPaths,
+      profile: prefs.scanProfile,
+      maxDepth: prefs.maxDepth,
+      maxCandidates: prefs.maxCandidates,
+      timeoutMinutes: prefs.timeoutMinutes,
+      minSizeBytes: prefs.minSizeBytes,
+    };
+
+    try {
+      const summary = await scannerApi.startScan(request, handleEvent);
+      const store = useScanStore.getState();
+      if (store.status !== "completed" && store.status !== "cancelled") {
+        if (summary.partial) store.cancelScanState(summary);
+        else store.completeScan(summary);
+      }
+      if (scope === "project" && root) {
+        prefs.addRecentLocation(root);
+      }
+    } catch (err) {
+      const error = toAppError(err);
+      useScanStore.getState().failScan(error);
+      if (error.code !== "ScanCancelled") {
+        useUiStore.getState().showToast(error.message, "error", 6000);
+      }
+    }
+  }, []);
 
   const cancelScan = useCallback(async () => {
+    if (!isScanning) return;
+    useScanStore.setState({ status: "cancelling" });
     try {
       await scannerApi.cancelScan();
-      cancelScanState();
-      showToast(t.scan.cancelled, "info");
     } catch (err) {
-      console.error("Failed to cancel scan:", err);
+      useUiStore.getState().showToast(toAppError(err).message, "error");
     }
-  }, [cancelScanState, showToast, t.scan.cancelled]);
+  }, [isScanning]);
 
-  return {
-    isScanning,
-    startScan,
-    cancelScan,
-  };
+  return { isScanning, status, startScan, cancelScan };
 }
