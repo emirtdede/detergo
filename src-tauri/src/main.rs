@@ -2,8 +2,9 @@
 
 fn main() {
     std::panic::set_hook(Box::new(|info| {
-        let msg = format!("PANIC: {}\nLocation: {:?}", info, info.location());
-        let _ = std::fs::write("C:\\Users\\emir\\Desktop\\node_cleaner\\crash.log", &msg);
+        let msg = format!("PANIC: {}\nLocation: {:?}\n", info, info.location());
+        let path = std::env::temp_dir().join("node-cleaner-crash.log");
+        let _ = std::fs::write(path, msg);
     }));
     node_cleaner_lib::run();
 }
