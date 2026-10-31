@@ -33,6 +33,30 @@ if (fs.existsSync(releaseOutputDir)) {
   fs.mkdirSync(releaseOutputDir, { recursive: true });
 }
 
+// A stale or partial build-script output previously produced a binary whose
+// runtime ACL authority was empty, so every window control and drag command was
+// rejected ("not allowed by ACL"). Regenerate the capability set on every
+// release build.
+console.log("🧹 ACL ve derleme önbelleği temizleniyor...");
+fs.rmSync(path.join(rootDir, "src-tauri", "gen", "schemas"), { recursive: true, force: true });
+
+let cargoTargetDir = path.join(rootDir, "src-tauri", "target");
+try {
+  const match = fs
+    .readFileSync(path.join(rootDir, ".cargo", "config.toml"), "utf8")
+    .match(/^target-dir\s*=\s*"(.+)"$/m);
+  if (match) cargoTargetDir = match[1].replace(/\\\\/g, "\\");
+} catch {}
+for (const profile of ["release", "debug"]) {
+  const buildDir = path.join(cargoTargetDir, profile, "build");
+  if (!fs.existsSync(buildDir)) continue;
+  for (const entry of fs.readdirSync(buildDir)) {
+    if (entry.startsWith("node-cleaner-")) {
+      fs.rmSync(path.join(buildDir, entry), { recursive: true, force: true });
+    }
+  }
+}
+
 console.log("\n📦 1. Sürüm senkronizasyonu kontrol ediliyor...");
 execSync("npm run check-version", { cwd: rootDir, stdio: "inherit" });
 
