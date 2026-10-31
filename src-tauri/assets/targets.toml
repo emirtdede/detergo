@@ -1,0 +1,755 @@
+# Node Cleaner target catalog
+#
+# Every rule is validated at startup. A rule that fails validation disables the
+# cleanup engine entirely (fail-closed). `min_evidence` counts independent
+# evidence sources: the directory/file name is always one, a project marker is
+# the second, an internal content signature is the third.
+schema_version = 1
+
+# ---------------------------------------------------------------------------
+# JavaScript / TypeScript
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "js.node_modules"
+ecosystem = "javascript"
+category = "dependencies"
+kind = "directory"
+names = ["node_modules"]
+markers = ["package.json", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb", "pnpm-workspace.yaml", "lerna.json", "nx.json", "turbo.json"]
+min_evidence = 1
+safety = "regenerate"
+confidence = "high"
+cleanup = "trash"
+regenerate = "npm install / pnpm install / yarn install / bun install"
+content = [".package-lock.json", ".pnpm", ".modules.yaml", "package.json", ".yarn-state.yml"]
+note = "Dependency tree; reconstructible only with a package manifest and lockfile."
+
+[[rules]]
+id = "js.next"
+ecosystem = "javascript"
+category = "build"
+kind = "directory"
+names = [".next"]
+markers = ["next.config.js", "next.config.mjs", "next.config.ts", "next.config.cjs"]
+min_evidence = 1
+safety = "regenerate"
+cleanup = "trash"
+regenerate = "next build"
+child_rules = ["js.next_cache"]
+
+[[rules]]
+id = "js.next_cache"
+ecosystem = "javascript"
+category = "cache"
+kind = "directory"
+names = ["cache"]
+nested_in = ["js.next"]
+markers = ["next.config.js", "next.config.mjs", "next.config.ts", "next.config.cjs"]
+min_evidence = 1
+safety = "safe"
+cleanup = "trash"
+regenerate = "next build"
+
+[[rules]]
+id = "js.nuxt"
+ecosystem = "javascript"
+category = "build"
+kind = "directory"
+names = [".nuxt"]
+markers = ["nuxt.config.js", "nuxt.config.ts", "nuxt.config.mjs"]
+min_evidence = 1
+safety = "regenerate"
+cleanup = "trash"
+regenerate = "nuxt build"
+
+[[rules]]
+id = "js.nuxt_output"
+ecosystem = "javascript"
+category = "build"
+kind = "directory"
+names = [".output"]
+markers = ["nuxt.config.js", "nuxt.config.ts", "nuxt.config.mjs"]
+min_evidence = 1
+safety = "regenerate"
+cleanup = "trash"
+regenerate = "nuxt build"
+
+[[rules]]
+id = "js.vite_cache"
+ecosystem = "javascript"
+category = "cache"
+kind = "directory"
+names = [".vite"]
+markers = ["vite.config.js", "vite.config.ts", "vite.config.mjs", "vite.config.mts"]
+min_evidence = 1
+safety = "safe"
+cleanup = "trash"
+regenerate = "vite build / vite dev"
+
+[[rules]]
+id = "js.turbo"
+ecosystem = "javascript"
+category = "cache"
+kind = "directory"
+names = [".turbo"]
+markers = ["turbo.json"]
+min_evidence = 1
+safety = "safe"
+cleanup = "trash"
+regenerate = "turbo build"
+
+[[rules]]
+id = "js.nx_cache"
+ecosystem = "javascript"
+category = "cache"
+kind = "directory"
+names = ["cache", ".nx"]
+nested_in = ["js.nx"]
+markers = ["nx.json"]
+min_evidence = 1
+safety = "safe"
+cleanup = "trash"
+regenerate = "nx build"
+
+[[rules]]
+id = "js.nx"
+ecosystem = "javascript"
+category = "tooling"
+kind = "directory"
+names = [".nx"]
+markers = ["nx.json"]
+min_evidence = 1
+safety = "review"
+cleanup = "trash"
+regenerate = "nx build"
+child_rules = ["js.nx_cache"]
+note = "May contain workspace metadata in addition to cache."
+
+[[rules]]
+id = "js.angular"
+ecosystem = "javascript"
+category = "cache"
+kind = "directory"
+names = [".angular"]
+markers = ["angular.json"]
+min_evidence = 1
+safety = "safe"
+cleanup = "trash"
+regenerate = "ng build"
+
+[[rules]]
+id = "js.sveltekit"
+ecosystem = "javascript"
+category = "build"
+kind = "directory"
+names = [".svelte-kit"]
+markers = ["svelte.config.js", "svelte.config.ts"]
+min_evidence = 1
+safety = "regenerate"
+cleanup = "trash"
+regenerate = "npm run build"
+
+[[rules]]
+id = "js.astro"
+ecosystem = "javascript"
+category = "build"
+kind = "directory"
+names = [".astro"]
+markers = ["astro.config.mjs", "astro.config.js", "astro.config.ts"]
+min_evidence = 1
+safety = "regenerate"
+cleanup = "trash"
+regenerate = "astro build"
+
+[[rules]]
+id = "js.parcel_cache"
+ecosystem = "javascript"
+category = "cache"
+kind = "directory"
+names = [".parcel-cache"]
+markers = ["package.json"]
+min_evidence = 1
+safety = "safe"
+cleanup = "trash"
+regenerate = "parcel build"
+
+[[rules]]
+id = "js.dist"
+ecosystem = "javascript"
+category = "build"
+kind = "directory"
+names = ["dist"]
+markers = ["package.json"]
+generic_name = true
+min_evidence = 2
+safety = "regenerate"
+cleanup = "trash"
+regenerate = "npm run build"
+git_policy = "denytracked"
+
+[[rules]]
+id = "js.build"
+ecosystem = "javascript"
+category = "build"
+kind = "directory"
+names = ["build"]
+markers = ["package.json"]
+generic_name = true
+min_evidence = 2
+safety = "regenerate"
+cleanup = "trash"
+regenerate = "npm run build"
+git_policy = "denytracked"
+
+[[rules]]
+id = "js.out"
+ecosystem = "javascript"
+category = "build"
+kind = "directory"
+names = ["out"]
+markers = ["package.json"]
+generic_name = true
+min_evidence = 2
+safety = "review"
+cleanup = "trash"
+regenerate = "npm run build"
+git_policy = "denytracked"
+
+[[rules]]
+id = "js.coverage"
+ecosystem = "javascript"
+category = "test"
+kind = "directory"
+names = ["coverage"]
+markers = ["package.json"]
+generic_name = true
+min_evidence = 2
+safety = "review"
+cleanup = "trash"
+regenerate = "npm test -- --coverage"
+
+[[rules]]
+id = "js.nyc_output"
+ecosystem = "javascript"
+category = "test"
+kind = "directory"
+names = [".nyc_output"]
+markers = ["package.json"]
+min_evidence = 1
+safety = "safe"
+cleanup = "trash"
+regenerate = "npm test"
+
+[[rules]]
+id = "js.storybook_static"
+ecosystem = "javascript"
+category = "build"
+kind = "directory"
+names = ["storybook-static"]
+markers = [".storybook", "package.json"]
+min_evidence = 1
+safety = "regenerate"
+cleanup = "trash"
+regenerate = "storybook build"
+
+[[rules]]
+id = "js.eslintcache"
+ecosystem = "javascript"
+category = "cache"
+kind = "file"
+names = [".eslintcache"]
+min_evidence = 1
+safety = "safe"
+cleanup = "trash"
+regenerate = "eslint ."
+
+[[rules]]
+id = "js.tsbuildinfo"
+ecosystem = "javascript"
+category = "cache"
+kind = "file"
+names = ["*.tsbuildinfo"]
+min_evidence = 1
+safety = "safe"
+cleanup = "trash"
+regenerate = "tsc -b"
+
+[[rules]]
+id = "js.yarn_cache"
+ecosystem = "javascript"
+category = "dependencies"
+kind = "directory"
+names = ["cache"]
+nested_in = ["js.yarn_folder"]
+markers = [".yarnrc.yml"]
+min_evidence = 1
+safety = "review"
+cleanup = "trash"
+regenerate = "yarn install"
+git_policy = "denytracked"
+note = "Yarn Zero-Installs commits this directory; tracked content is blocked."
+
+[[rules]]
+id = "js.yarn_folder"
+ecosystem = "javascript"
+category = "tooling"
+kind = "directory"
+names = [".yarn"]
+markers = [".yarnrc.yml"]
+min_evidence = 1
+safety = "review"
+cleanup = "trash"
+regenerate = "yarn install"
+child_rules = ["js.yarn_cache"]
+
+[[rules]]
+id = "js.vercel"
+ecosystem = "javascript"
+category = "tooling"
+kind = "directory"
+names = [".vercel"]
+markers = ["package.json"]
+min_evidence = 1
+safety = "review"
+cleanup = "trash"
+regenerate = "vercel link"
+note = "Contains project linkage data."
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "py.pycache"
+ecosystem = "python"
+category = "cache"
+kind = "directory"
+names = ["__pycache__"]
+min_evidence = 1
+safety = "safe"
+cleanup = "trash"
+regenerate = "python -m compileall"
+
+[[rules]]
+id = "py.pytest_cache"
+ecosystem = "python"
+category = "test"
+kind = "directory"
+names = [".pytest_cache"]
+min_evidence = 1
+safety = "safe"
+cleanup = "trash"
+regenerate = "pytest"
+
+[[rules]]
+id = "py.mypy_cache"
+ecosystem = "python"
+category = "cache"
+kind = "directory"
+names = [".mypy_cache"]
+min_evidence = 1
+safety = "safe"
+cleanup = "trash"
+regenerate = "mypy ."
+
+[[rules]]
+id = "py.ruff_cache"
+ecosystem = "python"
+category = "cache"
+kind = "directory"
+names = [".ruff_cache"]
+min_evidence = 1
+safety = "safe"
+cleanup = "trash"
+regenerate = "ruff check ."
+
+[[rules]]
+id = "py.htmlcov"
+ecosystem = "python"
+category = "test"
+kind = "directory"
+names = ["htmlcov"]
+min_evidence = 1
+safety = "safe"
+cleanup = "trash"
+regenerate = "coverage html"
+
+[[rules]]
+id = "py.coverage_file"
+ecosystem = "python"
+category = "test"
+kind = "file"
+names = [".coverage"]
+min_evidence = 1
+safety = "safe"
+cleanup = "trash"
+regenerate = "coverage run"
+
+[[rules]]
+id = "py.tox"
+ecosystem = "python"
+category = "tooling"
+kind = "directory"
+names = [".tox"]
+markers = ["tox.ini", "pyproject.toml"]
+min_evidence = 1
+safety = "review"
+cleanup = "trash"
+regenerate = "tox"
+note = "Recreating environments requires network access."
+
+[[rules]]
+id = "py.nox"
+ecosystem = "python"
+category = "tooling"
+kind = "directory"
+names = [".nox"]
+markers = ["noxfile.py", "pyproject.toml"]
+min_evidence = 1
+safety = "review"
+cleanup = "trash"
+regenerate = "nox"
+
+[[rules]]
+id = "py.venv"
+ecosystem = "python"
+category = "dependencies"
+kind = "directory"
+names = [".venv", "venv"]
+markers = ["pyproject.toml", "requirements.txt", "setup.py", "Pipfile", "poetry.lock"]
+min_evidence = 1
+safety = "review"
+cleanup = "trash"
+regenerate = "python -m venv .venv && pip install -r requirements.txt"
+note = "Virtual environments may contain uncommitted local state."
+
+# ---------------------------------------------------------------------------
+# Rust
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "rs.target"
+ecosystem = "rust"
+category = "build"
+kind = "directory"
+names = ["target"]
+markers = ["Cargo.toml"]
+generic_name = true
+min_evidence = 2
+safety = "regenerate"
+cleanup = "trash"
+regenerate = "cargo build"
+git_policy = "denytracked"
+
+# ---------------------------------------------------------------------------
+# .NET
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "dotnet.bin"
+ecosystem = "dotnet"
+category = "build"
+kind = "directory"
+names = ["bin"]
+markers = ["*.csproj", "*.fsproj", "*.vbproj", "*.sln"]
+generic_name = true
+min_evidence = 2
+safety = "regenerate"
+cleanup = "trash"
+regenerate = "dotnet build"
+git_policy = "denytracked"
+
+[[rules]]
+id = "dotnet.obj"
+ecosystem = "dotnet"
+category = "build"
+kind = "directory"
+names = ["obj"]
+markers = ["*.csproj", "*.fsproj", "*.vbproj", "*.sln"]
+generic_name = true
+min_evidence = 2
+safety = "regenerate"
+cleanup = "trash"
+regenerate = "dotnet restore && dotnet build"
+git_policy = "denytracked"
+
+[[rules]]
+id = "dotnet.testresults"
+ecosystem = "dotnet"
+category = "test"
+kind = "directory"
+names = ["TestResults"]
+markers = ["*.csproj", "*.sln"]
+min_evidence = 1
+safety = "review"
+cleanup = "trash"
+regenerate = "dotnet test"
+
+# ---------------------------------------------------------------------------
+# Java / Kotlin
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "java.maven_target"
+ecosystem = "java"
+category = "build"
+kind = "directory"
+names = ["target"]
+markers = ["pom.xml"]
+generic_name = true
+min_evidence = 2
+safety = "regenerate"
+cleanup = "trash"
+regenerate = "mvn package"
+git_policy = "denytracked"
+
+[[rules]]
+id = "java.gradle_build"
+ecosystem = "java"
+category = "build"
+kind = "directory"
+names = ["build"]
+markers = ["build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts"]
+generic_name = true
+min_evidence = 2
+safety = "regenerate"
+cleanup = "trash"
+regenerate = "gradle build"
+git_policy = "denytracked"
+
+[[rules]]
+id = "java.gradle_project_cache"
+ecosystem = "java"
+category = "cache"
+kind = "directory"
+names = [".gradle"]
+markers = ["build.gradle", "build.gradle.kts", "settings.gradle", "gradlew"]
+min_evidence = 1
+safety = "review"
+cleanup = "trash"
+regenerate = "gradle build"
+note = "Project-local Gradle state; global ~/.gradle is never targeted."
+
+[[rules]]
+id = "java.kotlin"
+ecosystem = "java"
+category = "cache"
+kind = "directory"
+names = [".kotlin"]
+markers = ["build.gradle", "build.gradle.kts"]
+min_evidence = 1
+safety = "review"
+cleanup = "trash"
+regenerate = "gradle build"
+
+# ---------------------------------------------------------------------------
+# Go / PHP / Dart
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "go.vendor"
+ecosystem = "go"
+category = "dependencies"
+kind = "directory"
+names = ["vendor"]
+markers = ["go.mod"]
+generic_name = true
+min_evidence = 2
+safety = "review"
+cleanup = "trash"
+regenerate = "go mod vendor"
+git_policy = "denytracked"
+note = "Vendored dependencies may be required for offline builds."
+
+[[rules]]
+id = "php.vendor"
+ecosystem = "php"
+category = "dependencies"
+kind = "directory"
+names = ["vendor"]
+markers = ["composer.json"]
+generic_name = true
+min_evidence = 2
+safety = "review"
+cleanup = "trash"
+regenerate = "composer install"
+git_policy = "denytracked"
+
+[[rules]]
+id = "dart.build"
+ecosystem = "dart"
+category = "build"
+kind = "directory"
+names = ["build"]
+markers = ["pubspec.yaml"]
+generic_name = true
+min_evidence = 2
+safety = "regenerate"
+cleanup = "trash"
+regenerate = "flutter build"
+git_policy = "denytracked"
+
+[[rules]]
+id = "dart.dart_tool"
+ecosystem = "dart"
+category = "cache"
+kind = "directory"
+names = [".dart_tool"]
+markers = ["pubspec.yaml"]
+min_evidence = 1
+safety = "review"
+cleanup = "trash"
+regenerate = "flutter pub get"
+
+# ---------------------------------------------------------------------------
+# C / C++
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "cpp.cmake_files"
+ecosystem = "cpp"
+category = "cache"
+kind = "directory"
+names = ["CMakeFiles"]
+markers = ["CMakeLists.txt"]
+min_evidence = 1
+safety = "safe"
+cleanup = "trash"
+regenerate = "cmake --build"
+
+[[rules]]
+id = "cpp.cmake_build"
+ecosystem = "cpp"
+category = "build"
+kind = "directory"
+names = ["cmake-build-*"]
+markers = ["CMakeLists.txt"]
+min_evidence = 1
+safety = "regenerate"
+cleanup = "trash"
+regenerate = "cmake --build"
+
+# ---------------------------------------------------------------------------
+# Unity / Unreal
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "unity.library"
+ecosystem = "unity"
+category = "build"
+kind = "directory"
+names = ["Library"]
+markers = ["Assets", "ProjectSettings"]
+marker_mode = "all"
+generic_name = true
+min_evidence = 2
+safety = "review"
+cleanup = "trash"
+regenerate = "Unity Editor asset reimport"
+note = "Reimport can take a long time."
+
+[[rules]]
+id = "unity.temp"
+ecosystem = "unity"
+category = "cache"
+kind = "directory"
+names = ["Temp"]
+markers = ["Assets", "ProjectSettings"]
+marker_mode = "all"
+generic_name = true
+min_evidence = 2
+safety = "review"
+cleanup = "trash"
+regenerate = "Unity Editor restart"
+
+[[rules]]
+id = "unreal.intermediate"
+ecosystem = "unreal"
+category = "build"
+kind = "directory"
+names = ["Intermediate"]
+markers = ["*.uproject"]
+min_evidence = 1
+safety = "review"
+cleanup = "trash"
+regenerate = "Unreal Build Tool"
+
+[[rules]]
+id = "unreal.ddc"
+ecosystem = "unreal"
+category = "cache"
+kind = "directory"
+names = ["DerivedDataCache"]
+markers = ["*.uproject"]
+min_evidence = 1
+safety = "review"
+cleanup = "trash"
+regenerate = "Unreal Editor shader compile"
+note = "Rebuilding the DDC is expensive."
+
+[[rules]]
+id = "unreal.saved"
+ecosystem = "unreal"
+category = "protected"
+kind = "directory"
+names = ["Saved"]
+markers = ["*.uproject"]
+min_evidence = 1
+safety = "keep"
+cleanup = "none"
+protected = true
+note = "Contains logs, autosaves and user-authored assets."
+
+# ---------------------------------------------------------------------------
+# Ruby / Elixir / Swift / Godot
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "elixir.build"
+ecosystem = "elixir"
+category = "build"
+kind = "directory"
+names = ["_build"]
+markers = ["mix.exs"]
+min_evidence = 1
+safety = "regenerate"
+cleanup = "trash"
+regenerate = "mix compile"
+
+[[rules]]
+id = "elixir.deps"
+ecosystem = "elixir"
+category = "dependencies"
+kind = "directory"
+names = ["deps"]
+markers = ["mix.exs"]
+generic_name = true
+min_evidence = 2
+safety = "review"
+cleanup = "trash"
+regenerate = "mix deps.get"
+
+[[rules]]
+id = "swift.build"
+ecosystem = "swift"
+category = "build"
+kind = "directory"
+names = [".build"]
+markers = ["Package.swift"]
+min_evidence = 1
+safety = "regenerate"
+cleanup = "trash"
+regenerate = "swift build"
+
+[[rules]]
+id = "godot.imported"
+ecosystem = "godot"
+category = "cache"
+kind = "directory"
+names = [".godot"]
+markers = ["project.godot"]
+min_evidence = 1
+safety = "review"
+cleanup = "trash"
+regenerate = "Godot editor reimport"
