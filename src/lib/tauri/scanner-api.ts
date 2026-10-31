@@ -1,104 +1,125 @@
 import { invoke, Channel } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import {
+  ActionAuditRecord,
+  AgentProviderInfo,
+  AppSettings,
+  AuditRecord,
+  CacheProviderInfo,
+  CatalogDto,
+  CleanupPlan,
+  CleanupReport,
+  DeleteMode,
+  GrowthReport,
+  KnownLocation,
+  OfficialActionPreview,
+  OfficialActionResult,
+  ScanEvent,
   ScanRequest,
   ScanSummary,
-  ScanEvent,
-  KnownLocation,
-  DeleteMode,
-  DeletionReport,
-  UserPreferences,
 } from "@/types";
 
+const DESKTOP_ONLY = "Bu özellik yalnızca masaüstü uygulamasında kullanılabilir.";
+
 export function isTauriEnvironment(): boolean {
-  return typeof window !== "undefined" && Boolean((window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__);
+  return (
+    typeof window !== "undefined" &&
+    Boolean((window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__)
+  );
 }
 
 export interface ScannerApi {
-  startScan(
-    request: ScanRequest,
-    onEvent: (event: ScanEvent) => void
-  ): Promise<ScanSummary>;
+  startScan(request: ScanRequest, onEvent: (event: ScanEvent) => void): Promise<ScanSummary>;
   cancelScan(): Promise<void>;
+  getCatalog(): Promise<CatalogDto>;
+  getScanSummary(scanSessionId?: string): Promise<ScanSummary | null>;
+  getAgentProviders(): Promise<AgentProviderInfo[]>;
   getKnownLocations(): Promise<KnownLocation[]>;
   openPathInExplorer(path: string): Promise<void>;
   openUrl(url: string): Promise<void>;
   selectFolderDialog(): Promise<string | null>;
-  deleteNodeModules(paths: string[], mode: DeleteMode): Promise<DeletionReport>;
-  getAppSettings(): Promise<UserPreferences>;
-  saveAppSettings(settings: UserPreferences): Promise<void>;
+  previewCleanup(
+    scanSessionId: string,
+    targetIds: string[],
+    mode: DeleteMode
+  ): Promise<CleanupPlan>;
+  executeCleanup(
+    planId: string,
+    confirmationToken: string,
+    permanentAcknowledged: boolean
+  ): Promise<CleanupReport>;
+  getGlobalCacheProviders(): Promise<CacheProviderInfo[]>;
+  previewOfficialAction(providerId: string, actionId: string): Promise<OfficialActionPreview>;
+  executeOfficialAction(token: string): Promise<OfficialActionResult>;
+  getCleanupHistory(limit?: number): Promise<AuditRecord[]>;
+  getOfficialActionHistory(limit?: number): Promise<ActionAuditRecord[]>;
+  clearCleanupHistory(): Promise<void>;
+  getGrowthReport(): Promise<GrowthReport>;
+  getAppSettings(): Promise<AppSettings>;
+  saveAppSettings(settings: AppSettings): Promise<void>;
 }
 
 let isFolderDialogOpen = false;
 
 export const scannerApi: ScannerApi = {
   async startScan(request: ScanRequest, onEvent: (event: ScanEvent) => void): Promise<ScanSummary> {
-    if (isTauriEnvironment()) {
-      const channel = new Channel<ScanEvent>();
-      channel.onmessage = (rawEvent: unknown) => {
-        const ev = rawEvent as Record<string, unknown>;
-        if (ev && typeof ev === "object") {
-          // Normalize Measured event size_bytes -> sizeBytes
-          if (ev.type === "measured" && typeof ev.size_bytes === "number" && typeof ev.sizeBytes !== "number") {
-            ev.sizeBytes = ev.size_bytes;
-          }
-          // Normalize Candidate entry fields if needed
-          if (ev.type === "candidate" && ev.entry && typeof ev.entry === "object") {
-            const entry = ev.entry as Record<string, unknown>;
-            if (typeof entry.size_bytes === "number" && typeof entry.sizeBytes !== "number") {
-              entry.sizeBytes = entry.size_bytes;
-            }
-          }
-        }
-        onEvent(ev as unknown as ScanEvent);
-      };
-
-      return await invoke<ScanSummary>("start_scan", {
-        request,
-        onEvent: channel,
-      });
-    } else if (import.meta.env.DEV) {
-      // Browser fallback simulation for local web preview
-      return simulateBrowserScan(request, onEvent);
-    } else {
-      throw new Error("Tauri masaüstü ortamı bulunamadı.");
+    if (!isTauriEnvironment()) {
+      throw new Error("Tarama yalnızca masaüstü uygulamasında kullanılabilir.");
     }
+    const channel = new Channel<ScanEvent>();
+    channel.onmessage = (event: ScanEvent) => onEvent(event);
+    return await invoke<ScanSummary>("start_scan", { request, onEvent: channel });
   },
 
   async cancelScan(): Promise<void> {
-    if (isTauriEnvironment()) {
-      await invoke("cancel_scan");
+    if (!isTauriEnvironment()) {
+      throw new Error(DESKTOP_ONLY);
     }
+    await invoke("cancel_scan");
+  },
+
+  async getCatalog(): Promise<CatalogDto> {
+    if (isTauriEnvironment()) {
+      return await invoke<CatalogDto>("get_catalog");
+    }
+    return { schemaVersion: 0, rules: [], valid: false, error: "Masaüstü ortamı gerekli." };
+  },
+
+  async getScanSummary(scanSessionId?: string): Promise<ScanSummary | null> {
+    if (isTauriEnvironment()) {
+      return await invoke<ScanSummary | null>("get_scan_summary", { scanSessionId: scanSessionId ?? null });
+    }
+    return null;
+  },
+
+  async getAgentProviders(): Promise<AgentProviderInfo[]> {
+    if (isTauriEnvironment()) {
+      return await invoke<AgentProviderInfo[]>("get_agent_providers");
+    }
+    return [];
   },
 
   async getKnownLocations(): Promise<KnownLocation[]> {
     if (isTauriEnvironment()) {
       return await invoke<KnownLocation[]>("get_known_locations");
     }
-    return [
-      { id: "loc-projects", path: "C:\\Users\\emir\\Desktop\\node_cleaner", label: "Projeler", source: "default" },
-      { id: "loc-desktop", path: "C:\\Users\\emir\\Desktop", label: "Masaüstü", source: "default" },
-      { id: "loc-documents", path: "C:\\Users\\emir\\Documents", label: "Belgeler", source: "default" },
-    ];
+    return [];
   },
 
   async openPathInExplorer(path: string): Promise<void> {
-    if (isTauriEnvironment()) {
-      await invoke("open_path_in_explorer", { path });
-    } else {
-      console.log("[Explorer]", path);
+    if (!isTauriEnvironment()) {
+      throw new Error(DESKTOP_ONLY);
     }
+    await invoke("open_path_in_explorer", { path });
   },
 
   async openUrl(url: string): Promise<void> {
     if (isTauriEnvironment()) {
-      try {
-        await invoke("open_url", { url });
-        return;
-      } catch (err) {
-        console.error("[openUrl error]", err);
-      }
+      await invoke("open_url", { url });
+      return;
     }
+    // Browser fallback for the web preview; it is an explicit user action and
+    // opens a new tab rather than pretending a desktop handler ran.
     if (typeof window !== "undefined") {
       window.open(url, "_blank", "noopener,noreferrer");
     }
@@ -112,133 +133,90 @@ export const scannerApi: ScannerApi = {
         const selected = await open({
           directory: true,
           multiple: false,
-          title: "Taranacak Klasörü Seçin",
+          title: "Taranacak klasörü seçin",
         });
-        if (typeof selected === "string") return selected;
-        return null;
+        return typeof selected === "string" ? selected : null;
       }
-      return prompt("Klasör yolu girin:", "C:\\Projects") || null;
+      return null;
     } finally {
       isFolderDialogOpen = false;
     }
   },
 
-  async deleteNodeModules(paths: string[], mode: DeleteMode): Promise<DeletionReport> {
-    if (isTauriEnvironment()) {
-      return await invoke<DeletionReport>("delete_node_modules", {
-        paths,
-        mode,
-      });
-    }
-
-    return {
-      mode,
-      totalRequested: paths.length,
-      successCount: paths.length,
-      errorCount: 0,
-      reclaimedBytes: paths.length * 500 * 1024 * 1024,
-      results: paths.map((p) => ({ path: p, success: true })),
-    };
+  async previewCleanup(
+    scanSessionId: string,
+    targetIds: string[],
+    mode: DeleteMode
+  ): Promise<CleanupPlan> {
+    return await invoke<CleanupPlan>("preview_cleanup", { scanSessionId, targetIds, mode });
   },
 
-  async getAppSettings(): Promise<UserPreferences> {
-    if (isTauriEnvironment()) {
-      return await invoke<UserPreferences>("get_app_settings");
-    }
-    return {
-      schemaVersion: 1,
-      theme: "dark-transparent",
-      language: "en",
-      reduceMotion: false,
-      favorites: [],
-      recentLocations: [],
-      lastScanPath: null,
-      sort: { field: "size", direction: "desc" },
-    };
+  async executeCleanup(
+    planId: string,
+    confirmationToken: string,
+    permanentAcknowledged: boolean
+  ): Promise<CleanupReport> {
+    return await invoke<CleanupReport>("execute_cleanup", {
+      planId,
+      confirmationToken,
+      permanentAcknowledged,
+    });
   },
 
-  async saveAppSettings(settings: UserPreferences): Promise<void> {
+  async getGlobalCacheProviders(): Promise<CacheProviderInfo[]> {
     if (isTauriEnvironment()) {
-      await invoke("save_app_settings", { settings });
+      return await invoke<CacheProviderInfo[]>("get_global_cache_providers");
     }
+    return [];
+  },
+
+  async previewOfficialAction(providerId: string, actionId: string): Promise<OfficialActionPreview> {
+    return await invoke<OfficialActionPreview>("preview_official_action", { providerId, actionId });
+  },
+
+  async executeOfficialAction(token: string): Promise<OfficialActionResult> {
+    return await invoke<OfficialActionResult>("execute_official_action", { token });
+  },
+
+  async getCleanupHistory(limit = 200): Promise<AuditRecord[]> {
+    if (!isTauriEnvironment()) {
+      throw new Error(DESKTOP_ONLY);
+    }
+    return await invoke<AuditRecord[]>("get_cleanup_history", { limit });
+  },
+
+  async getOfficialActionHistory(limit = 200): Promise<ActionAuditRecord[]> {
+    if (!isTauriEnvironment()) {
+      throw new Error(DESKTOP_ONLY);
+    }
+    return await invoke<ActionAuditRecord[]>("get_official_action_history", { limit });
+  },
+
+  async clearCleanupHistory(): Promise<void> {
+    if (!isTauriEnvironment()) {
+      throw new Error(DESKTOP_ONLY);
+    }
+    await invoke("clear_cleanup_history");
+  },
+
+  async getGrowthReport(): Promise<GrowthReport> {
+    if (!isTauriEnvironment()) {
+      return { entries: [], singleFileThresholdBytes: 1073741824 };
+    }
+    return await invoke<GrowthReport>("get_growth_report");
+  },
+
+  async getAppSettings(): Promise<AppSettings> {
+    if (!isTauriEnvironment()) {
+      throw new Error("Ayar yönetimi masaüstü ortamı gerektirir.");
+    }
+    return await invoke<AppSettings>("get_app_settings");
+  },
+
+  async saveAppSettings(settings: AppSettings): Promise<void> {
+    if (!isTauriEnvironment()) {
+      throw new Error("Ayar kaydı masaüstü ortamı gerektirir.");
+    }
+    await invoke("save_app_settings", { settings });
   },
 };
-
-async function simulateBrowserScan(
-  request: ScanRequest,
-  onEvent: (event: ScanEvent) => void
-): Promise<ScanSummary> {
-  const scanId = "sim-scan-" + Date.now();
-  onEvent({ type: "started", scanId });
-
-  const samplePackages = [
-    { name: "web-portal", pm: "pnpm" as const, size: 845000000 },
-    { name: "api-backend", pm: "npm" as const, size: 1450000000 },
-    { name: "mobile-client", pm: "yarn" as const, size: 2100000000 },
-    { name: "analytics-tool", pm: "bun" as const, size: 420000000 },
-  ];
-
-  let totalBytes = 0;
-  for (let i = 0; i < samplePackages.length; i++) {
-    const pkg = samplePackages[i];
-    const id = `nm-${i}`;
-    const nmPath = `${request.rootPath}\\${pkg.name}\\node_modules`;
-    const projPath = `${request.rootPath}\\${pkg.name}`;
-
-    onEvent({
-      type: "candidate",
-      entry: {
-        id,
-        nodeModulesPath: nmPath,
-        projectPath: projPath,
-        projectName: pkg.name,
-        packageManager: pkg.pm,
-        sizeBytes: null,
-        modifiedAt: new Date(Date.now() - (i + 1) * 86400000 * 5).toISOString(),
-        packageJsonFound: true,
-        status: "measuring",
-      },
-    });
-
-    onEvent({
-      type: "progress",
-      progress: {
-        phase: "discovering",
-        directoriesVisited: (i + 1) * 45,
-        entriesFound: i + 1,
-        entriesMeasured: 0,
-        bytesMeasured: 0,
-      },
-    });
-  }
-
-  for (let i = 0; i < samplePackages.length; i++) {
-    const pkg = samplePackages[i];
-    const id = `nm-${i}`;
-    totalBytes += pkg.size;
-
-    onEvent({ type: "measured", id, sizeBytes: pkg.size });
-    onEvent({
-      type: "progress",
-      progress: {
-        phase: "measuring",
-        directoriesVisited: 200,
-        entriesFound: samplePackages.length,
-        entriesMeasured: i + 1,
-        bytesMeasured: totalBytes,
-      },
-    });
-  }
-
-  const summary: ScanSummary = {
-    scanId,
-    rootPath: request.rootPath,
-    totalEntries: samplePackages.length,
-    totalBytes,
-    durationMs: 450,
-    errorsCount: 0,
-  };
-
-  onEvent({ type: "completed", summary });
-  return summary;
-}

@@ -1,5 +1,4 @@
 export type ThemeMode =
-  // Koyu Temalar (Dark Themes)
   | "dark-black"
   | "dark-gray"
   | "dark-blue"
@@ -8,7 +7,6 @@ export type ThemeMode =
   | "dark-red"
   | "dark-orange"
   | "dark-yellow"
-  // Açık Temalar (Light Themes)
   | "light-white"
   | "light-gray"
   | "light-blue"
@@ -17,69 +15,21 @@ export type ThemeMode =
   | "light-red"
   | "light-orange"
   | "light-yellow"
-  // Legacy aliases for backward compatibility
   | "dark-transparent"
   | "white-transparent"
   | "transparent"
   | "black"
   | "white";
 
-export type PackageManagerType = "npm" | "pnpm" | "yarn" | "bun" | "unknown";
-
-export type EntryStatus = "ready" | "measuring" | "error" | "deleted";
-
-export interface NodeModuleEntry {
-  id: string;
-  nodeModulesPath: string;
-  projectPath: string;
-  projectName: string;
-  rootProjectPath?: string;
-  rootProjectName?: string;
-  packageManager: PackageManagerType;
-  sizeBytes: number | null;
-  modifiedAt: string | null;
-  packageJsonFound: boolean;
-  lockfile?: string;
-  status: EntryStatus;
-  errorCode?: string;
-}
-
-export interface ScanRoot {
-  id: string;
-  path: string;
-  label: string;
-  source: "manual" | "default" | "favorite" | "recent";
-}
-
-export interface ScanRequest {
-  rootPath: string;
-  exclusions?: string[];
-}
-
-export interface ScanProgress {
-  phase: "discovering" | "measuring";
-  directoriesVisited: number;
-  entriesFound: number;
-  entriesMeasured: number;
-  bytesMeasured: number;
-  currentPath?: string;
-}
-
-export interface ScanSummary {
-  scanId: string;
-  rootPath: string;
-  totalEntries: number;
-  totalBytes: number;
-  durationMs: number;
-  errorsCount: number;
-}
-
-export interface KnownLocation {
-  id: string;
-  path: string;
-  label: string;
-  source: string;
-}
+export type SupportedLanguage =
+  | "tr" | "en" | "de" | "es" | "fr" | "it" | "pt" | "nl" | "pl" | "ru"
+  | "ja" | "ko" | "zh" | "zh-tw" | "sv" | "ar" | "hi" | "id" | "vi" | "uk"
+  | "el" | "cs" | "da" | "fi" | "no" | "hu" | "ro" | "th" | "ms" | "fil"
+  | "bn" | "he" | "fa" | "ur" | "az" | "kk" | "uz" | "bg" | "sk" | "hr"
+  | "et" | "ta" | "te" | "mr" | "kn" | "gu" | "ml" | "pa" | "lt" | "lv"
+  | "sr" | "sl" | "bs" | "sq" | "mk" | "is" | "sw" | "am" | "ha" | "yo"
+  | "af" | "ka" | "hy" | "ky" | "tk" | "mn" | "ca" | "eu" | "gl" | "ga"
+  | "my" | "km" | "si";
 
 export interface FavoriteLocation {
   id: string;
@@ -89,146 +39,410 @@ export interface FavoriteLocation {
   lastUsedAt: string | null;
 }
 
-export interface RecentLocation {
-  path: string;
-  lastUsedAt: string;
-}
-
-export type SortField = "size" | "modified" | "name";
-export type SortDirection = "asc" | "desc";
-
 export interface SortOption {
-  field: SortField;
-  direction: SortDirection;
+  field: "size" | "modified" | "name";
+  direction: "asc" | "desc";
 }
 
-export type SupportedLanguage =
-  | "tr" // Türkçe
-  | "en" // English
-  | "de" // Deutsch
-  | "es" // Español
-  | "fr" // Français
-  | "it" // Italiano
-  | "pt" // Português
-  | "nl" // Nederlands
-  | "pl" // Polski
-  | "ru" // Русский
-  | "ja" // 日本語
-  | "ko" // 한국어
-  | "zh" // 简体中文
-  | "zh-tw" // 繁體中文
-  | "sv" // Svenska
-  | "ar" // العربية
-  | "hi" // हिन्दी
-  | "id" // Bahasa Indonesia
-  | "vi" // Tiếng Việt
-  | "uk" // Українська
-  | "el" // Ελληνικά
-  | "cs" // Čeština
-  | "da" // Dansk
-  | "fi" // Suomi
-  | "no" // Norsk
-  | "hu" // Magyar
-  | "ro" // Română
-  | "th" // ไทย
-  | "ms" // Bahasa Melayu
-  | "fil" // Filipino
-  | "bn" // বাংলা
-  | "he" // עברית
-  | "fa" // فارسی
-  | "ur" // اردو
-  | "az" // Azərbaycan dili
-  | "kk" // Қазақша
-  | "uz" // Oʻzbekcha
-  | "bg" // Български
-  | "sk" // Slovenčina
-  | "hr" // Hrvatski
-  | "et" // Eesti
-  | "ta" // தமிழ்
-  | "te" // తెలుగు
-  | "mr" // मराठी
-  | "kn" // ಕನ್ನಡ
-  | "gu" // ગુજરાતી
-  | "ml" // മലയാളം
-  | "pa" // ਪੰਜਾਬੀ
-  | "lt" // Lietuvių
-  | "lv" // Latviešu
-  | "sr" // Srpski
-  | "sl" // Slovenščina
-  | "bs" // Bosanski
-  | "sq" // Shqip
-  | "mk" // Македонски
-  | "is" // Íslenska
-  | "sw" // Kiswahili
-  | "am" // አማርኛ
-  | "ha" // Hausa
-  | "yo" // Yorùbá
-  | "af" // Afrikaans
-  | "ka" // ქართული
-  | "hy" // Հայերեն
-  | "ky" // Кыргызча
-  | "tk" // Türkmençe
-  | "mn" // Монгол
-  | "ca" // Català
-  | "eu" // Euskara
-  | "gl" // Galego
-  | "ga" // Gaeilge
-  | "my" // မြန်မာစာ
-  | "km" // ភាសាខ្មែរ
-  | "si"; // සිංහල
+export type SafetyClass = "safe" | "regenerate" | "review" | "keep";
+export type Confidence = "high" | "medium" | "low";
+export type ActiveUse = "yes" | "no" | "unknown";
+export type CleanupMethod = "trash" | "permanent" | "officialTool" | "none";
+export type TargetKind = "directory" | "file" | "fileGroup";
+export type ItemStatus = "discovered" | "measuring" | "ready" | "blocked" | "error" | "deleted";
+export type ScanScope = "project" | "agents" | "globalCaches";
 
-export interface UserPreferences {
+export interface CleanupItem {
+  id: string;
+  scanSessionId: string;
+  ruleId: string;
+  provider: string;
+  ecosystem: string;
+  category: string;
+  kind: TargetKind;
+  projectId?: string | null;
+  projectName?: string | null;
+  projectRoot?: string | null;
+  displayName: string;
+  displayPath: string;
+  logicalBytes: number | null;
+  allocatedBytes: number | null;
+  estimatedReclaimBytes: number | null;
+  safetyClass: SafetyClass;
+  confidence: Confidence;
+  activeUse: ActiveUse;
+  evidenceCodes: string[];
+  warningCodes: string[];
+  cleanupMethod: CleanupMethod;
+  regenerateHint?: string | null;
+  protected: boolean;
+  selectable: boolean;
+  autoSelectable: boolean;
+  lastModifiedAt?: string | null;
+  status: ItemStatus;
+  parentItemId?: string | null;
+  note?: string | null;
+}
+
+export interface MeasurementUpdate {
+  id: string;
+  logicalBytes: number;
+  allocatedBytes: number | null;
+  estimatedReclaimBytes: number;
+  fileCount: number;
+  hardlinkDedupBytes: number;
+  status: ItemStatus;
+}
+
+export interface ScanRequest {
+  rootPath: string;
+  exclusions?: string[];
+  scope?: ScanScope;
+  profile?: string;
+  maxDepth?: number;
+  maxCandidates?: number;
+  timeoutMinutes?: number;
+  minSizeBytes?: number;
+  protectedPaths?: string[];
+}
+
+export interface ScanProgress {
+  phase: string;
+  directoriesVisited: number;
+  entriesFound: number;
+  entriesMeasured: number;
+  bytesMeasured: number;
+  currentPath?: string | null;
+  stopReason?: string | null;
+}
+
+export interface ProviderTotal {
+  provider: string;
+  logicalBytes: number;
+  allocatedBytes: number;
+  itemCount: number;
+  protectedBytes: number;
+}
+
+export interface ScanSummary {
+  scanId: string;
+  rootPath: string;
+  scope: ScanScope;
+  totalEntries: number;
+  totalBytes: number;
+  totalAllocatedBytes: number;
+  protectedBytes: number;
+  durationMs: number;
+  errorsCount: number;
+  warningsCount: number;
+  directoriesVisited: number;
+  partial: boolean;
+  stopReason?: string | null;
+  providerTotals: ProviderTotal[];
+}
+
+export type ScanEvent =
+  | { type: "started"; scanId: string }
+  | { type: "candidates"; items: CleanupItem[] }
+  | { type: "measured"; updates: MeasurementUpdate[] }
+  | { type: "progress"; progress: ScanProgress }
+  | { type: "warning"; code: string; path?: string | null }
+  | { type: "completed"; summary: ScanSummary }
+  | { type: "cancelled"; summary: ScanSummary }
+  | { type: "failed"; error: AppErrorDto };
+
+export interface CatalogRule {
+  id: string;
+  ecosystem: string;
+  category: string;
+  kind: TargetKind;
+  names: string[];
+  markers: string[];
+  markerMode: "any" | "all";
+  content: string[];
+  minEvidence: number;
+  safety: SafetyClass;
+  confidence: Confidence;
+  cleanup: CleanupMethod;
+  regenerate?: string | null;
+  genericName: boolean;
+  protected: boolean;
+  nestedIn: string[];
+  childRules: string[];
+  gitPolicy: string;
+  requiresIdle: boolean;
+  maxDepth?: number | null;
+  note?: string | null;
+}
+
+export interface CatalogDto {
   schemaVersion: number;
-  theme: ThemeMode;
-  language: SupportedLanguage;
+  rules: CatalogRule[];
+  valid: boolean;
+  error?: string | null;
+}
+
+export type DeleteMode = "recycleBin" | "permanent";
+
+export interface TargetSnapshot {
+  exists: boolean;
+  logicalBytes: number;
+  modifiedSecs?: number | null;
+  fileId?: string | null;
+}
+
+export interface PlanItem {
+  targetId: string;
+  displayPath: string;
+  displayName: string;
+  ruleId: string;
+  provider: string;
+  projectName?: string | null;
+  safetyClass: SafetyClass;
+  cleanupMethod: CleanupMethod;
+  logicalBytes: number;
+  estimatedReclaimBytes: number;
+  activeUse: ActiveUse;
+  eligible: boolean;
+  blockedCode?: string | null;
+  blockedReason?: string | null;
+  regenerateHint?: string | null;
+  snapshot: TargetSnapshot;
+}
+
+export interface CleanupPlan {
+  id: string;
+  sessionId: string;
+  mode: DeleteMode;
+  createdMs: number;
+  expiresMs: number;
+  items: PlanItem[];
+  totalLogicalBytes: number;
+  totalEstimatedBytes: number;
+  eligibleCount: number;
+  blockedCount: number;
+  confirmationToken: string;
+}
+
+export interface CleanupResultItem {
+  targetId: string;
+  displayPath: string;
+  ruleId: string;
+  success: boolean;
+  verified: boolean;
+  errorCode?: string | null;
+  error?: string | null;
+  measuredBytes: number;
+  reclaimBytes: number;
+}
+
+export interface CleanupReport {
+  planId: string;
+  mode: DeleteMode;
+  successCount: number;
+  errorCount: number;
+  estimatedBytes: number;
+  movedBytes: number;
+  reclaimBytes: number;
+  volumeFreeBefore?: number | null;
+  volumeFreeAfter?: number | null;
+  volumeFreeDelta?: number | null;
+  durationMs: number;
+  results: CleanupResultItem[];
+  startedAt: string;
+  finishedAt: string;
+  auditError?: string | null;
+}
+
+export interface AgentRootInfo {
+  path: string;
+  kind: string;
+  source: string;
+  exists: boolean;
+}
+
+export interface AgentProviderInfo {
+  id: string;
+  name: string;
+  installed: boolean;
+  roots: AgentRootInfo[];
+  readOnly: boolean;
+  note?: string | null;
+}
+
+export interface CachePathInfo {
+  path: string;
+  exists: boolean;
+  bytes: number | null;
+}
+
+export interface OfficialActionInfo {
+  id: string;
+  label: string;
+  description: string;
+  executable?: string | null;
+  args: string[];
+  available: boolean;
+  unavailableReason?: string | null;
+  requiresNetwork: boolean;
+  impact: string;
+}
+
+export interface CacheProviderInfo {
+  id: string;
+  name: string;
+  detected: boolean;
+  version?: string | null;
+  cachePaths: CachePathInfo[];
+  totalBytes: number;
+  actions: OfficialActionInfo[];
+  readOnly: boolean;
+  note?: string | null;
+}
+
+export interface OfficialActionPreview {
+  token: string;
+  providerId: string;
+  actionId: string;
+  executable: string;
+  args: string[];
+  beforeBytes: number;
+  warning: string;
+  expiresMs: number;
+}
+
+export interface OfficialActionResult {
+  success: boolean;
+  exitCode?: number | null;
+  providerId: string;
+  actionId: string;
+  label: string;
+  beforeBytes: number;
+  afterBytes: number;
+  deltaBytes: number;
+  durationMs: number;
+  stdoutTail: string;
+  stderrTail: string;
+  note?: string | null;
+  auditError?: string | null;
+}
+
+export interface GrowthEntry {
+  provider: string;
+  category: string;
+  currentBytes: number;
+  previousBytes: number;
+  deltaBytes: number;
+  windowSeconds: number;
+  ratePerHour: number;
+  level: "ok" | "attention" | "critical";
+}
+
+export interface GrowthReport {
+  entries: GrowthEntry[];
+  singleFileThresholdBytes: number;
+}
+
+export interface AuditEntry {
+  targetId: string;
+  ruleId: string;
+  path: string;
+  success: boolean;
+  verified: boolean;
+  errorCode?: string | null;
+  bytes: number;
+}
+
+export interface AuditRecord {
+  id: string;
+  timestamp: string;
+  sessionId: string;
+  planId: string;
+  mode: DeleteMode;
+  successCount: number;
+  errorCount: number;
+  reclaimBytes: number;
+  movedBytes: number;
+  durationMs: number;
+  entries: AuditEntry[];
+}
+
+export interface StorageSnapshot {
+  timestamp: string;
+  provider: string;
+  category: string;
+  bytes: number;
+  itemCount: number;
+}
+
+export interface ActionAuditRecord {
+  id: string;
+  timestamp: string;
+  providerId: string;
+  actionId: string;
+  label: string;
+  success: boolean;
+  exitCode?: number | null;
+  beforeBytes: number;
+  afterBytes: number;
+  deltaBytes: number;
+  durationMs: number;
+}
+
+export interface AgentPolicy {
+  allowCacheCleanup: boolean;
+  protectBrowserRecordings: boolean;
+}
+
+export interface AppSettings {
+  schemaVersion: number;
+  theme: string;
   reduceMotion: boolean;
   favorites: FavoriteLocation[];
   recentLocations: string[];
   lastScanPath: string | null;
   sort: SortOption;
+  language?: SupportedLanguage | null;
+  protectedPaths: string[];
+  excludedNames: string[];
+  scanProfile: string;
+  maxDepth: number;
+  maxCandidates: number;
+  timeoutMinutes: number;
+  minSizeBytes: number;
+  maskPaths: boolean;
+  historyEnabled: boolean;
+  agentPolicy: AgentPolicy;
 }
 
-export type DeleteMode = "recycleBin" | "permanent";
-
-export interface DeletionPathResult {
+export interface KnownLocation {
+  id: string;
   path: string;
-  success: boolean;
-  error?: string;
+  label: string;
+  source: string;
 }
 
-export interface DeletionReport {
-  mode: DeleteMode;
-  totalRequested: number;
-  successCount: number;
-  errorCount: number;
-  reclaimedBytes: number;
-  results: DeletionPathResult[];
-}
+export type AppErrorCode =
+  | "InvalidPath"
+  | "AccessDenied"
+  | "PathNotFound"
+  | "ScanCancelled"
+  | "ScanFailed"
+  | "UnsafeDeleteTarget"
+  | "RecycleBinFailed"
+  | "PermanentDeleteFailed"
+  | "SettingsReadFailed"
+  | "SettingsWriteFailed"
+  | "PlatformUnsupported"
+  | "SessionInvalid"
+  | "SessionExpired"
+  | "PlanInvalid"
+  | "PlanExpired"
+  | "PlanChanged"
+  | "Blocked"
+  | "Unknown";
 
 export interface AppErrorDto {
-  code:
-    | "InvalidPath"
-    | "AccessDenied"
-    | "PathNotFound"
-    | "ScanCancelled"
-    | "ScanFailed"
-    | "UnsafeDeleteTarget"
-    | "RecycleBinFailed"
-    | "PermanentDeleteFailed"
-    | "SettingsReadFailed"
-    | "SettingsWriteFailed"
-    | "PlatformUnsupported"
-    | "Unknown";
+  code: AppErrorCode;
   message: string;
-  details?: string;
 }
-
-export type ScanEvent =
-  | { type: "started"; scanId: string }
-  | { type: "candidate"; entry: NodeModuleEntry }
-  | { type: "measured"; id: string; sizeBytes: number }
-  | { type: "progress"; progress: ScanProgress }
-  | { type: "warning"; code: string; path?: string }
-  | { type: "completed"; summary: ScanSummary }
-  | { type: "cancelled"; summary: ScanSummary }
-  | { type: "failed"; error: AppErrorDto };
