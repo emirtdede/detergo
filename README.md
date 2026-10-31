@@ -20,7 +20,7 @@
 
 ![Tauri](https://img.shields.io/badge/Tauri-2.2+-24C8D8?style=for-the-badge&logo=tauri&logoColor=white)
 ![Rust](https://img.shields.io/badge/Rust-2021-DEA584?style=for-the-badge&logo=rust&logoColor=black)
-![React](https://img.shields.io/badge/React-18.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![React](https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-6.2-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![Zustand](https://img.shields.io/badge/Zustand-5.0-4338CA?style=for-the-badge)
@@ -29,6 +29,25 @@
 ![License](https://img.shields.io/badge/License-Proprietary-yellow?style=for-the-badge)
 
 </div>
+
+---
+
+## ⚠️ Release status (2.0.0)
+
+This repository contains Node Cleaner 2.0: a catalog-driven, multi-ecosystem
+developer-artifact and AI-agent storage cleaner. The destructive path is
+Rust-backed and guarded by automated tests, but **public production release is
+currently NO-GO** because six manual security scenarios, the real Recycle Bin
+round-trip, large-scale performance benchmarks and the Windows 10 smoke test
+are not yet executed. See:
+
+- `docs/RELEASE_CHECKLIST.md` — gates and remaining blockers
+- `docs/audit/FINAL_SECURITY_AUDIT.md` — executed evidence
+- `docs/TEST_MATRIX.md` — test results
+- `docs/MASTER_SPEC.md` — normative 2.0 specification
+
+The text below is partly written for the earlier `node_modules`-only product.
+Where it conflicts with `docs/MASTER_SPEC.md`, the specification wins.
 
 ---
 
@@ -46,7 +65,7 @@
 
 ## 💻 Project Overview
 
-**Node Cleaner** is an enterprise-grade, high-performance Windows desktop application built with **Tauri 2.0 (Rust)** and **React 18 (TypeScript)**. It empowers web developers, software engineers, and DevOps teams to instantly discover forgotten, bloated `node_modules` folders across multiple hard drives and workspaces, calculate exact disk footprints asynchronously, and safely delete them to reclaim gigabytes of storage space.
+**Node Cleaner** is a Windows desktop application built with **Tauri 2 (Rust)** and **React 19 (TypeScript)**. Version 2.0 discovers reproducible developer artifacts across JavaScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart and other ecosystems, analyses AI coding-agent storage (Codex, Claude Code, Antigravity) without reading file contents, and safely cleans selected targets. Every scan, measurement, classification and deletion runs in the Rust backend; the frontend only presents and selects backend-owned target IDs.
 
 Traditional filesystem scanners freeze system I/O by recursing deep into nested dependency subfolders. **Node Cleaner** solves this with an **Optimized Pruning Directory Traversal Engine**: as soon as a `node_modules` directory is discovered, deep recursive traversal is bypassed, and size calculation is offloaded to asynchronous worker pools.
 
@@ -65,7 +84,7 @@ Node Cleaner operates **100% locally** with zero telemetry, zero analytics, and 
   - **Recycle Bin (Reversible)**: Native Win32 Shell API integration (`IFileOperation`) allowing instant recovery from Windows Recycle Bin.
   - **Permanent Deletion**: Asynchronous high-throughput directory purge with double confirmation dialogs.
 - **📊 60 FPS Virtualized Grid**: TanStack Virtualizer powers buttery-smooth 60 FPS scrolling and rendering even across 10,000+ discovered project entries with zero DOM overhead.
-- **🌐 73-Language Localization (i18n)**: 100% full translation coverage across 73 independent regional languages with instant in-app switching and zero reload time.
+- **🌐 Localization (i18n)**: The legacy header uses a 75-locale dictionary with instant in-app switching. The 2.0 screens (Overview, Projects, AI Tools, Tool Caches, History, Settings) are localized in **English and Turkish only**; full 75-locale coverage for these screens is not claimed.
 - **🎨 Modern Dark-Transparent Glassmorphism UI**: Custom frameless window styling with curated dark aesthetic design tokens, smooth animations, and responsive layouts.
 - **🔍 Real-Time Search & Sorting**: Filter projects by name, filesystem path, or package manager (`npm`, `pnpm`, `yarn`, `bun`), and sort by largest disk size or oldest modified date.
 - **🔒 100% Offline & Private**: Zero telemetry, zero analytics, zero external network requests.
@@ -95,7 +114,7 @@ Node Cleaner operates **100% locally** with zero telemetry, zero analytics, and 
 - **Single Instance Plugin**: `tauri-plugin-single-instance` for single-process mutex enforcement
 
 ### Frontend & User Interface (React & TypeScript)
-- **React 18 & TypeScript 5.7**: Component-driven reactive user interface with strict typing
+- **React 19 & TypeScript 5.7**: Component-driven reactive user interface with strict typing
 - **TanStack React Virtual 3.13**: Window-level DOM virtualization for high-density tabular data
 - **Zustand 5.0**: Reactive state management (`useScannerStore`, `useSettingsStore`)
 - **Lucide React**: Clean, modern SVG icon set
@@ -121,7 +140,7 @@ Node-Cleaner/
 │   ├── build-release.js            # Release builder (Clean -> Build -> Package -> Hash)
 │   ├── check-version.js            # Cross-file version consistency validator
 │   └── verify-checksums.bat        # Windows batch checksum verifier
-├── src/                            # Frontend application source (React 18 + TS)
+├── src/                            # Frontend application source (React 19 + TS)
 │   ├── components/                 # Shared UI primitives (Button, Dialog, Toast, SearchField)
 │   ├── features/                   # Feature-driven domain modules
 │   │   ├── deletion/               # Permanent & Recycle Bin confirmation dialogs
@@ -129,7 +148,7 @@ Node-Cleaner/
 │   │   ├── scan/                   # Scan hero, scan header, directory picker & progress
 │   │   └── settings/               # Settings modal, language selector, legal & about views
 │   ├── lib/                        # Tauri IPC scanner API client & utilities
-│   ├── locales/                    # 73-language localization engine (i18n)
+│   ├── locales/                    # 75-locale legacy dictionary (2.0 screens: EN/TR)
 │   │   ├── langs/                  # Language dictionaries (tr.ts, en.ts, de.ts, etc.)
 │   │   └── index.ts                # Locale management & reactive translation hook
 │   ├── stores/                     # Zustand stores (useScannerStore, useSettingsStore)
@@ -162,7 +181,7 @@ Node-Cleaner/
 
 ```mermaid
 flowchart TD
-    subgraph Frontend["Frontend UI (React 18 & Virtualizer)"]
+    subgraph Frontend["Frontend UI (React 19 & Virtualizer)"]
         UI_Scan["Directory Picker / Scan Trigger"]
         UI_Table["TanStack Virtualized Grid (60 FPS)"]
         UI_Action["Action Bar: Recycle Bin / Delete"]
@@ -281,7 +300,7 @@ Distributed under the **Proprietary License**. Copyright &copy; 2026 Vellium. Al
 
 ## 💻 Project Overview (Proje Genel Bakışı)
 
-**Node Cleaner**, **Tauri 2.0 (Rust)** ve **React 18 (TypeScript)** teknolojileriyle geliştirilmiş, modern web geliştiricileri, yazılım mühendisleri ve dijital ajanslar için tasarlanmış yüksek performanslı bir Windows masaüstü uygulamasıdır. Sabit disklerinizde ve çalışma alanlarınızda birikerek gigabaytlarca yer kaplayan unutulmuş `node_modules` klasörlerini milisaniyeler içinde tespit eder, disk boyutlarını asenkron olarak hesaplar ve güvenle silerek disk alanınızı geri kazandırır.
+**Node Cleaner**, **Tauri 2 (Rust)** ve **React 19 (TypeScript)** ile geliştirilmiş bir Windows masaüstü uygulamasıdır. 2.0 sürümü JavaScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart ve diğer ekosistemlerdeki yeniden üretilebilir geliştirici artıklarını bulur; Codex, Claude Code ve Antigravity gibi AI kodlama ajanlarının depolamasını dosya içeriğini okumadan analiz eder ve seçilen hedefleri güvenle temizler. Tarama, ölçüm, sınıflandırma ve silme tamamen Rust arka ucunda çalışır; ön yüz yalnızca arka ucun ürettiği hedef kimliklerini gösterir ve seçer.
 
 Geleneksel dosya tarayıcıları iç içe geçmiş bağımlılık ağaçlarında takılarak sistemi kilitler. **Node Cleaner**, geliştirdiği **Budamalı Dizin Tarama Motoru** ile `node_modules` klasörüne ulaştığı anda derin özyinelemeli taramayı durdurarak boyutu arka plan iş parçacığı havuzlarına devreder ve yüzlerce projeyi saniyeler içinde listeler.
 
@@ -300,7 +319,7 @@ Uygulama **%100 yerel ve çevrimdışı** çalışır; hiçbir harici sunucuya b
   - **Çöp Kutusu (Geri Alınabilir)**: Yerel Win32 Shell API (`IFileOperation`) entegrasyonu ile klasörleri Windows Çöp Kutusu'na taşır.
   - **Kalıcı Silme**: Asenkron yüksek hızlı doğrudan disk temizliği (çift onaylı modal ile).
 - **📊 60 FPS Sanallaştırılmış Liste**: TanStack Virtualizer mimarisi ile 10.000+ proje listelense bile DOM şişmesi yaşanmaz, 60 FPS akıcı kaydırma sağlanır.
-- **🌐 73 Dilde Eksiksiz Yerelleştirme (i18n)**: 73 farklı dünya dilinde %100 çeviri desteği; uygulama içinden anında, sayfayı yenilemeden dil değiştirme.
+- **🌐 Yerelleştirme (i18n)**: Eski başlık alanı 75 dilli sözlüğü kullanır ve dil anında değiştirilebilir. 2.0 ekranları (Genel Bakış, Projeler, AI Araçları, Araç Önbellekleri, Geçmiş, Ayarlar) yalnızca **İngilizce ve Türkçe** olarak yerelleştirilmiştir; bu ekranlar için 75 dilde tam kapsam iddia edilmemektedir.
 - **🎨 Modern Karanlık Cam Efektli (Glassmorphism) Arayüz**: Özel çerçevesiz pencere tasarımı, estetik karanlık renk paleti ve akıcı mikro animasyonlar.
 - **🔍 Gerçek Zamanlı Arama ve Sıralama**: Proje adı veya dosya yoluna göre anında filtreleme; en büyük boyuta veya en eski değiştirilme tarihine göre sıralama.
 - **🔒 Tamamen Çevrimdışı ve Gizli**: Sıfır telemetri, sıfır analiz, sıfır dış ağ bağlantısı.
@@ -330,7 +349,7 @@ Uygulama **%100 yerel ve çevrimdışı** çalışır; hiçbir harici sunucuya b
 - **Tekil Süreç Eklentisi**: `tauri-plugin-single-instance` ile tekil process kilidi
 
 ### Ön Yüz ve Kullanıcı Arayüzü (React & TypeScript)
-- **React 18 & TypeScript 5.7**: Bileşen odaklı, tip güvenli reaktif kullanıcı arayüzü
+- **React 19 & TypeScript 5.7**: Bileşen odaklı, tip güvenli reaktif kullanıcı arayüzü
 - **TanStack React Virtual 3.13**: Yüksek yoğunluklu veriler için pencereleme ve DOM sanallaştırma motoru
 - **Zustand 5.0**: Reaktif durum yönetimi (`useScannerStore`, `useSettingsStore`)
 - **Lucide React**: Tutarlı ve modern SVG ikon seti
@@ -356,7 +375,7 @@ Node-Cleaner/
 │   ├── build-release.js            # Release derleyici (Temizlik -> Derleme -> Paket -> Hash)
 │   ├── check-version.js            # Sürüm tutarlılık kontrol scripti
 │   └── verify-checksums.bat        # Windows batch checksum doğrulayıcı
-├── src/                            # Ön yüz kaynak kodları (React 18 + TypeScript)
+├── src/                            # Ön yüz kaynak kodları (React 19 + TypeScript)
 │   ├── components/                 # Paylaşılan UI bileşenleri (Button, Dialog, Toast, SearchField)
 │   ├── features/                   # Özellik modülleri
 │   │   ├── deletion/               # Kalıcı ve Çöp Kutusu onay diyalogları
@@ -364,7 +383,7 @@ Node-Cleaner/
 │   │   ├── scan/                   # Tarama karşılama ekranı, başlık, klasör seçici ve ilerleme
 │   │   └── settings/               # Ayarlar paneli, dil seçici, yasal metinler ve hakkında
 │   ├── lib/                        # Tauri IPC tarayıcı istemcisi ve yardımcı fonksiyonlar
-│   ├── locales/                    # 73 dilli yerelleştirme motoru (i18n)
+│   ├── locales/                    # 75 dilli eski sözlük (2.0 ekranları: EN/TR)
 │   │   ├── langs/                  # Dil sözlükleri (tr.ts, en.ts, de.ts vb.)
 │   │   └── index.ts                # Dil yönetimi ve reaktif çeviri hook'u
 │   ├── stores/                     # Zustand durum depoları (useScannerStore, useSettingsStore)
