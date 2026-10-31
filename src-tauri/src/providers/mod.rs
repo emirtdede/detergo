@@ -1,0 +1,303 @@
+pub mod agent_spec;
+pub mod growth;
+pub mod root_locator;
+
+#[cfg(test)]
+mod tests;
+
+use serde::Serialize;
+use std::time::Instant;
+
+use crate::audit::StorageSnapshot;
+use crate::catalog::model::{CleanupMethod, Confidence, SafetyClass, TargetKind};
+use crate::catalog::project::stable_path_id;
+use crate::scanner::cancellation::CancellationToken;
+use crate::scanner::limits::{ScanLimits, StopReason};
+use crate::scanner::measurement::measure_path_with_deadline;
+use crate::scanner::models::{CleanupItem, ItemStatus, StoredTarget};
+use crate::safety::evidence_guard::EvidenceSnapshot;
+use crate::safety::{active_use_for_provider, ActiveUse};
+
+use agent_spec::{provider_display_name, specs_for};
+use root_locator::{locate_agent_roots, root_exists};
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentRootInfo {
+    pub path: String,
+    pub kind: String,
+    pub source: String,
+    pub exists: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentProviderInfo {
+    pub id: String,
+    pub name: String,
+    pub installed: bool,
+    pub roots: Vec<AgentRootInfo>,
+    pub read_only: bool,
+    pub note: Option<String>,
+}
+
+pub fn list_agent_providers() -> Vec<AgentProviderInfo> {
+    let roots = locate_agent_roots();
+    let mut providers = Vec::new();
+    for (id, note) in [
+        (
+            "codex",
+            Some("Oturumlar, worktree'ler ve SQLite tanılama verisi salt okunur görüntülenir."),
+        ),
+        (
+            "claude-code",
+            Some("Konuşmalar ve file-history korunur; yalnızca doğrulanmış cache/görev çıktıları temizlenebilir."),
+        ),
+        (
+            "antigravity",
+            Some("Brain ve konuşmalar korunur; tarayıcı kayıtları yalnızca kayıt durduğunda temizlenebilir."),
+        ),
+    ] {
+        let provider_roots: Vec<AgentRootInfo> = roots
+            .iter()
+            .filter(|r| r.provider == id)
+            .map(|r| AgentRootInfo {
+                path: r.path.to_string_lossy().to_string(),
+                kind: r.kind.to_string(),
+                source: r.source.clone(),
+                exists: root_exists(r),
+            })
+            .collect();
+        providers.push(AgentProviderInfo {
+            id: id.to_string(),
+            name: provider_display_name(id).to_string(),
+            installed: provider_roots.iter().any(|r| r.exists),
+            roots: provider_roots,
+            read_only: id == "codex",
+            note: note.map(|n| n.to_string()),
+        });
+    }
+    providers
+}
+
+pub struct AgentScanOutcome {
+    pub items: Vec<CleanupItem>,
+    pub targets: Vec<StoredTarget>,
+    pub snapshots: Vec<StorageSnapshot>,
+    pub warnings: Vec<(String, Option<String>)>,
+    pub entries_scanned: u64,
+    pub stop_reason: Option<StopReason>,
+}
+
+/// Metadata-only scan of agent storage. Chat contents are never read; sizes and
+/// timestamps are obtained from the filesystem.
+pub fn scan_agents(
+    session_id: &str,
+    token: &CancellationToken,
+    policy: &crate::cleanup::CleanupPolicy,
+    limits: ScanLimits,
+) -> AgentScanOutcome {
+    let roots = locate_agent_roots();
+    let mut items = Vec::new();
+    let mut targets = Vec::new();
+    let mut snapshots = Vec::new();
+    let mut warnings = Vec::new();
+    let mut entries_scanned = 0u64;
+    let mut stop_reason: Option<StopReason> = None;
+    let deadline = Some(Instant::now() + limits.timeout);
+
+    let mut provider_active: std::collections::HashMap<&str, ActiveUse> =
+        std::collections::HashMap::new();
+
+    for root in &roots {
+        if token.is_cancelled() {
+            stop_reason = Some(StopReason::Cancelled);
+            break;
+        }
+        if deadline.map(|d| Instant::now() >= d).unwrap_or(false) {
+            stop_reason = Some(StopReason::Timeout);
+            break;
+        }
+        if !root_exists(root) {
+            continue;
+        }
+        let active = *provider_active
+            .entry(root.provider)
+            .or_insert_with(|| active_use_for_provider(root.provider, &root.path));
+
+        for spec in specs_for(root.kind) {
+            if token.is_cancelled() {
+                stop_reason = Some(StopReason::Cancelled);
+                break;
+            }
+            if deadline.map(|d| Instant::now() >= d).unwrap_or(false) {
+                stop_reason = Some(StopReason::Timeout);
+                break;
+            }
+            if entries_scanned >= limits.max_candidates {
+                stop_reason = Some(StopReason::CandidateLimit);
+                break;
+            }
+            let path = root.path.join(spec.rel);
+            if !path.exists() {
+                continue;
+            }
+            entries_scanned += 1;
+            let kind = if path.is_dir() {
+                TargetKind::Directory
+            } else {
+                TargetKind::File
+            };
+            let size = measure_path_with_deadline(&path, kind, token, deadline);
+            let logical = size.as_ref().map(|s| s.logical_bytes).unwrap_or(0);
+            let allocated = size.as_ref().and_then(|s| s.allocated_bytes);
+
+            let path_key = crate::safety::path_guard::normalize_key(&path);
+            let user_protected = policy.protected_paths.iter().any(|raw| {
+                let key = crate::safety::path_guard::normalize_key(std::path::Path::new(raw));
+                !key.is_empty()
+                    && (path_key == key
+                        || crate::safety::path_guard::is_within(&path_key, &key))
+            });
+            let cache_disabled = spec.category == "cache" && !policy.allow_agent_cache_cleanup;
+            let recording_active = spec.requires_idle
+                && policy.protect_browser_recordings
+                && root_locator::recently_modified(&path, 120);
+            if recording_active {
+                warnings.push((
+                    "RECORDING_ACTIVE".to_string(),
+                    Some(path.to_string_lossy().to_string()),
+                ));
+            }
+
+            let mut item_warnings: Vec<String> = Vec::new();
+            if active == ActiveUse::Yes {
+                item_warnings.push("PROVIDER_ACTIVE".to_string());
+            }
+            if recording_active {
+                item_warnings.push("RECORDING_ACTIVE".to_string());
+            }
+            if cache_disabled {
+                item_warnings.push("AGENT_CACHE_DISABLED".to_string());
+            }
+            if user_protected {
+                item_warnings.push("USER_PROTECTED".to_string());
+            }
+            if spec.protected {
+                item_warnings.push("PROTECTED_TARGET".to_string());
+            }
+
+            let selectable = !spec.protected
+                && !user_protected
+                && active == ActiveUse::No
+                && !recording_active
+                && !cache_disabled
+                && spec.cleanup != CleanupMethod::None;
+
+            let id = format!("t{}", &uuid::Uuid::new_v4().simple().to_string()[..24]);
+            let display_name = spec.rel.to_string();
+            let modified_at = std::fs::metadata(&path)
+                .ok()
+                .and_then(|m| m.modified().ok())
+                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                .map(|d| {
+                    chrono::DateTime::from_timestamp(d.as_secs() as i64, 0)
+                        .map(|dt| dt.format("%Y-%m-%dT%H:%M:%SZ").to_string())
+                        .unwrap_or_default()
+                });
+
+            let evidence = EvidenceSnapshot {
+                rule_id: spec.rule_id.to_string(),
+                target_name: display_name.clone(),
+                project_root: Some(root.path.to_string_lossy().to_string()),
+                workspace_root: None,
+                marker_hits: Vec::new(),
+                content_hits: Vec::new(),
+            };
+
+            items.push(CleanupItem {
+                id: id.clone(),
+                scan_session_id: session_id.to_string(),
+                rule_id: spec.rule_id.to_string(),
+                provider: root.provider.to_string(),
+                ecosystem: "ai".to_string(),
+                category: spec.category.to_string(),
+                kind,
+                project_id: Some(stable_path_id(&root.path)),
+                project_name: Some(provider_display_name(root.provider).to_string()),
+                project_root: Some(root.path.to_string_lossy().to_string()),
+                display_name,
+                display_path: path.to_string_lossy().to_string(),
+                logical_bytes: Some(logical),
+                allocated_bytes: allocated,
+                estimated_reclaim_bytes: Some(allocated.unwrap_or(logical)),
+                safety_class: if spec.protected || user_protected {
+                    SafetyClass::Keep
+                } else {
+                    spec.safety
+                },
+                confidence: Confidence::High,
+                active_use: active,
+                evidence_codes: vec!["PROVIDER_ROOT".to_string(), "CATALOG_TARGET".to_string()],
+                warning_codes: item_warnings,
+                cleanup_method: spec.cleanup,
+                regenerate_hint: None,
+                protected: spec.protected || user_protected,
+                selectable,
+                auto_selectable: false,
+                last_modified_at: modified_at,
+                status: if selectable {
+                    ItemStatus::Ready
+                } else {
+                    ItemStatus::Blocked
+                },
+                parent_item_id: None,
+                note: spec.note.map(|n| n.to_string()),
+            });
+
+            targets.push(StoredTarget {
+                id,
+                path,
+                rule_id: spec.rule_id.to_string(),
+                provider: root.provider.to_string(),
+                category: spec.category.to_string(),
+                kind,
+                safety_class: if spec.protected || user_protected {
+                    SafetyClass::Keep
+                } else {
+                    spec.safety
+                },
+                cleanup_method: spec.cleanup,
+                project_root: Some(root.path.to_string_lossy().to_string()),
+                evidence,
+                logical_bytes: Some(logical),
+                allocated_bytes: allocated,
+                modified_at: None,
+                active_use: active,
+                parent_id: None,
+                protected: spec.protected || user_protected,
+            });
+
+            snapshots.push(StorageSnapshot {
+                timestamp: chrono::Local::now().to_rfc3339(),
+                provider: root.provider.to_string(),
+                category: spec.category.to_string(),
+                bytes: allocated.unwrap_or(logical),
+                item_count: 1,
+            });
+        }
+    }
+
+    if stop_reason.is_none() && token.is_cancelled() {
+        stop_reason = Some(StopReason::Cancelled);
+    }
+
+    AgentScanOutcome {
+        items,
+        targets,
+        snapshots,
+        warnings,
+        entries_scanned,
+        stop_reason,
+    }
+}
