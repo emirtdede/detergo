@@ -136,7 +136,7 @@ export const ScanHeader: React.FC = () => {
   };
 
   return (
-    <header className="top-command-bar" data-tauri-drag-region>
+    <header className="top-command-bar" data-tauri-drag-region="deep">
       {/* 1. Left: Single Brand Title */}
       <div
         className="command-brand"
@@ -149,7 +149,7 @@ export const ScanHeader: React.FC = () => {
       </div>
 
       {/* 2. Center: Single Location Dropdown Trigger & Popover Menu */}
-      <div className="command-center" data-tauri-drag-region>
+      <div className="command-center">
         <div className="location-dropdown-container" ref={menuContainerRef} data-tauri-drag-region="false">
           <button
             type="button"
@@ -369,7 +369,7 @@ export const ScanHeader: React.FC = () => {
       </div>
 
       {/* 3. Right: Actions + Window Controls */}
-      <div className="command-actions" data-tauri-drag-region="false">
+      <div className="command-actions">
         {isScanning ? (
           <Button
             variant="danger-outline"
