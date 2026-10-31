@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Plus, ShieldCheck, X } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
 import { Checkbox } from "@/components/primitives/Checkbox";
@@ -7,6 +7,7 @@ import { useUiStore } from "@/stores/ui-store";
 import { useUIText } from "@/lib/ui-text";
 import { LANGUAGES_LIST } from "@/locales/languages";
 import { scannerApi } from "@/lib/tauri/scanner-api";
+import { countCatalogStats } from "@/lib/catalog-stats";
 import { CatalogDto, SupportedLanguage, ThemeMode } from "@/types";
 import "../items/items.css";
 import "../shell/shell.css";
@@ -38,6 +39,10 @@ export const SettingsView: React.FC = () => {
       .then(setCatalog)
       .catch(() => showToast(ui.errors.title, "error"));
   }, [showToast, ui.errors.title]);
+
+  // The catalog holds one entry per cleanup rule; ecosystems and categories are
+  // distinct values across those rules, not the rule count itself.
+  const catalogStats = useMemo(() => countCatalogStats(catalog?.rules ?? []), [catalog]);
 
   const save = async (patch: Parameters<typeof prefs.updateSettings>[0]) => {
     prefs.updateSettings(patch);
@@ -216,7 +221,17 @@ export const SettingsView: React.FC = () => {
           <div className="form-row"><span>{ui.settings.version}</span><strong>2.0.0</strong></div>
           <div className="form-row"><span>Node Cleaner</span><span>Vellium</span></div>
           {catalog && (
-            <div className="form-row"><span>{ui.table.category}</span><span>{catalog.rules.length}</span></div>
+            <>
+              <div className="form-row"><span>{ui.settings.rules}</span><span>{catalogStats.rules}</span></div>
+              <div className="form-row">
+                <span>{ui.settings.ecosystems}</span>
+                <span>{catalogStats.ecosystems}</span>
+              </div>
+              <div className="form-row">
+                <span>{ui.settings.categories}</span>
+                <span>{catalogStats.categories}</span>
+              </div>
+            </>
           )}
         </section>
       </div>

@@ -185,6 +185,9 @@ export const TR: UIText = {
     saveError: "Ayarlar kaydedilemedi",
     about: "Hakkında",
     version: "Sürüm",
+    rules: "Kural",
+    ecosystems: "Ekosistem",
+    categories: "Kategori",
   },
   errors: {
     title: "Bir sorun oluştu",

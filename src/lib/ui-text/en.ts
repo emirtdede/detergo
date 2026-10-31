@@ -185,6 +185,9 @@ export const EN: UIText = {
     saveError: "Could not save settings",
     about: "About",
     version: "Version",
+    rules: "Rules",
+    ecosystems: "Ecosystems",
+    categories: "Categories",
   },
   errors: {
     title: "Something went wrong",

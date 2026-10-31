@@ -59,6 +59,7 @@ export interface UIText {
     historyEnabled: string; protectedPaths: string; addPath: string; remove: string;
     excludedNames: string; agentCacheCleanup: string; browserRecordings: string;
     saved: string; saveError: string; about: string; version: string;
+    rules: string; ecosystems: string; categories: string;
   };
   errors: { title: string; blocked: string; retry: string };
   warnings: {
