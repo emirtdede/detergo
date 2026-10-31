@@ -1,4 +1,5 @@
 #[cfg(test)]
+#[allow(clippy::module_inception, clippy::field_reassign_with_default)]
 mod tests {
     use crate::settings::*;
     use std::fs::File;
@@ -8,24 +9,23 @@ mod tests {
     #[test]
     fn test_settings_default_on_non_existent() {
         let temp = tempdir().unwrap();
-        let config_path = temp.path().join("config.json");
-        let repo = SettingsRepository::with_path(config_path);
-
+        let repo = SettingsRepository::with_path(temp.path().join("config.json"));
         let settings = repo.load();
-        assert_eq!(settings.schema_version, 1);
+        assert_eq!(settings.schema_version, 2);
         assert_eq!(settings.theme, "dark-transparent");
         assert!(!settings.reduce_motion);
+        assert_eq!(settings.scan_profile, "balanced");
     }
 
     #[test]
     fn test_settings_save_and_load_roundtrip() {
         let temp = tempdir().unwrap();
-        let config_path = temp.path().join("config.json");
-        let repo = SettingsRepository::with_path(config_path);
+        let repo = SettingsRepository::with_path(temp.path().join("config.json"));
 
         let mut settings = AppSettings::default();
         settings.theme = "white".to_string();
         settings.reduce_motion = true;
+        settings.protected_paths.push("D:\\Work\\important".to_string());
         settings.favorites.push(FavoriteItem {
             id: "fav-1".to_string(),
             label: "My Code".to_string(),
@@ -35,16 +35,40 @@ mod tests {
         });
 
         repo.save(&settings).expect("Failed to save settings");
-
         let loaded = repo.load();
         assert_eq!(loaded.theme, "white");
         assert!(loaded.reduce_motion);
         assert_eq!(loaded.favorites.len(), 1);
-        assert_eq!(loaded.favorites[0].label, "My Code");
+        assert_eq!(loaded.protected_paths, vec!["D:\\Work\\important".to_string()]);
     }
 
     #[test]
-    fn test_settings_corrupt_json_fallback() {
+    fn test_settings_save_replaces_existing_file() {
+        let temp = tempdir().unwrap();
+        let repo = SettingsRepository::with_path(temp.path().join("config.json"));
+
+        let mut first = AppSettings::default();
+        first.theme = "white".to_string();
+        repo.save(&first).unwrap();
+
+        let mut second = AppSettings::default();
+        second.theme = "dark-transparent".to_string();
+        second.history_enabled = false;
+        repo.save(&second).unwrap();
+
+        let loaded = repo.load();
+        assert_eq!(loaded.theme, "dark-transparent");
+        assert!(!loaded.history_enabled);
+        let temp_files: Vec<_> = std::fs::read_dir(temp.path())
+            .unwrap()
+            .filter_map(Result::ok)
+            .filter(|e| e.file_name().to_string_lossy().starts_with("config.tmp."))
+            .collect();
+        assert!(temp_files.is_empty(), "temp files must not be left behind");
+    }
+
+    #[test]
+    fn test_settings_corrupt_json_fallback_preserves_file() {
         let temp = tempdir().unwrap();
         let config_path = temp.path().join("config.json");
         {
@@ -52,11 +76,106 @@ mod tests {
             file.write_all(b"{ this is invalid JSON garbage ---").unwrap();
         }
 
-        let repo = SettingsRepository::with_path(config_path);
+        let repo = SettingsRepository::with_path(config_path.clone());
         let settings = repo.load();
 
-        // Must gracefully return default settings
-        assert_eq!(settings.schema_version, 1);
+        assert_eq!(settings.schema_version, 2);
         assert_eq!(settings.theme, "dark-transparent");
+        let backups: Vec<_> = std::fs::read_dir(temp.path())
+            .unwrap()
+            .filter_map(Result::ok)
+            .filter(|e| e.file_name().to_string_lossy().contains("corrupt"))
+            .collect();
+        assert_eq!(backups.len(), 1, "corrupt config must be preserved");
+    }
+
+    #[test]
+    fn test_v1_settings_migrate_without_data_loss() {
+        let temp = tempdir().unwrap();
+        let config_path = temp.path().join("config.json");
+        {
+            let mut file = File::create(&config_path).unwrap();
+            file.write_all(
+                br#"{
+                    "schemaVersion": 1,
+                    "theme": "dark-gray",
+                    "reduceMotion": true,
+                    "favorites": [{"id":"f1","label":"Code","path":"C:\\Code","createdAt":"2026-01-01T00:00:00Z","lastUsedAt":null}],
+                    "recentLocations": ["C:\\Code"],
+                    "lastScanPath": "C:\\Code",
+                    "sort": {"field":"size","direction":"desc"}
+                }"#,
+            )
+            .unwrap();
+        }
+
+        let repo = SettingsRepository::with_path(config_path);
+        let loaded = repo.load();
+        assert_eq!(loaded.schema_version, 2);
+        assert_eq!(loaded.theme, "dark-gray");
+        assert!(loaded.reduce_motion);
+        assert_eq!(loaded.favorites.len(), 1);
+        assert_eq!(loaded.recent_locations, vec!["C:\\Code".to_string()]);
+        assert_eq!(loaded.max_depth, 32);
+        assert!(loaded.agent_policy.allow_cache_cleanup);
+    }
+
+    #[test]
+    fn test_limits_are_clamped() {
+        let mut settings = AppSettings::default();
+        settings.max_depth = 0;
+        settings.max_candidates = 10;
+        settings.timeout_minutes = 999;
+        settings.migrate();
+        assert_eq!(settings.max_depth, 1);
+        assert_eq!(settings.max_candidates, 1_000);
+        assert_eq!(settings.timeout_minutes, 120);
+    }
+
+    #[test]
+    fn protected_paths_are_made_absolute_and_deduplicated() {
+        let temp = tempdir().unwrap();
+        let dir = temp.path().join("important");
+        std::fs::create_dir_all(&dir).unwrap();
+
+        let mut settings = AppSettings::default();
+        settings.protected_paths = vec![
+            dir.to_string_lossy().to_string(),
+            format!("{}\\", dir.to_string_lossy()),
+            format!("{}\\..\\important", dir.to_string_lossy()),
+            "   ".to_string(),
+        ];
+        settings.normalize();
+
+        assert_eq!(
+            settings.protected_paths.len(),
+            1,
+            "duplicate and blank entries must collapse: {:?}",
+            settings.protected_paths
+        );
+        assert!(std::path::Path::new(&settings.protected_paths[0]).is_absolute());
+        assert!(!settings.protected_paths[0].contains(".."));
+    }
+
+    #[test]
+    fn relative_protected_path_is_anchored_to_the_working_directory() {
+        let mut settings = AppSettings::default();
+        settings.protected_paths = vec!["relative-protected-folder".to_string()];
+        settings.normalize();
+        assert_eq!(settings.protected_paths.len(), 1);
+        assert!(std::path::Path::new(&settings.protected_paths[0]).is_absolute());
+    }
+
+    #[test]
+    fn excluded_names_are_lowercased_and_deduplicated() {
+        let mut settings = AppSettings::default();
+        settings.excluded_names = vec![
+            "node_modules".to_string(),
+            "NODE_MODULES".to_string(),
+            "  ".to_string(),
+            " Target ".to_string(),
+        ];
+        settings.normalize();
+        assert_eq!(settings.excluded_names, vec!["node_modules", "target"]);
     }
 }

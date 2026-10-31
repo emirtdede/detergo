@@ -15,6 +15,12 @@ pub enum AppError {
     SettingsReadFailed(String),
     SettingsWriteFailed(String),
     PlatformUnsupported(String),
+    SessionInvalid(String),
+    SessionExpired(String),
+    PlanInvalid(String),
+    PlanExpired(String),
+    PlanChanged(String),
+    Blocked(String),
     Unknown(String),
 }
 
@@ -32,6 +38,12 @@ impl fmt::Display for AppError {
             AppError::SettingsReadFailed(msg) => write!(f, "Ayar okuma hatası: {}", msg),
             AppError::SettingsWriteFailed(msg) => write!(f, "Ayar yazma hatası: {}", msg),
             AppError::PlatformUnsupported(msg) => write!(f, "Platform desteklenmiyor: {}", msg),
+            AppError::SessionInvalid(msg) => write!(f, "Geçersiz tarama oturumu: {}", msg),
+            AppError::SessionExpired(msg) => write!(f, "Tarama oturumu süresi doldu: {}", msg),
+            AppError::PlanInvalid(msg) => write!(f, "Geçersiz temizlik planı: {}", msg),
+            AppError::PlanExpired(msg) => write!(f, "Temizlik planı süresi doldu: {}", msg),
+            AppError::PlanChanged(msg) => write!(f, "Temizlik planı değişti: {}", msg),
+            AppError::Blocked(msg) => write!(f, "İşlem güvenlik nedeniyle engellendi: {}", msg),
             AppError::Unknown(msg) => write!(f, "Bilinmeyen hata: {}", msg),
         }
     }

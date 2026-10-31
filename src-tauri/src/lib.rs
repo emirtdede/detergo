@@ -1,7 +1,11 @@
+pub mod audit;
+pub mod catalog;
+pub mod cleanup;
 pub mod commands;
-pub mod deletion;
 pub mod error;
 pub mod platform;
+pub mod providers;
+pub mod safety;
 pub mod scanner;
 pub mod settings;
 
@@ -28,14 +32,11 @@ pub fn run() {
         .setup(|app| {
             use tauri::Manager;
             let windows = app.webview_windows();
-            println!("[Node Cleaner] Webview Windows Count: {}", windows.len());
-            for (key, win) in &windows {
-                println!("[Node Cleaner] Window: {}", key);
+            for win in windows.values() {
                 let _ = win.show();
                 let _ = win.set_focus();
             }
             if windows.is_empty() {
-                println!("[Node Cleaner] Creating main window manually...");
                 let win = tauri::WebviewWindowBuilder::new(
                     app,
                     "main",
@@ -49,17 +50,27 @@ pub fn run() {
                 let _ = win.show();
                 let _ = win.set_focus();
             }
-            println!("[Node Cleaner] Setup completed successfully.");
             Ok(())
         })
-        .manage(commands::scan_commands::ScanState::new())
+        .manage(AppState::new())
         .invoke_handler(tauri::generate_handler![
             start_scan,
             cancel_scan,
+            get_catalog,
+            get_scan_summary,
+            get_agent_providers,
             get_known_locations,
             open_path_in_explorer,
             open_url,
-            delete_node_modules,
+            preview_cleanup,
+            execute_cleanup,
+            get_global_cache_providers,
+            preview_official_action,
+            execute_official_action,
+            get_cleanup_history,
+            get_growth_report,
+            get_official_action_history,
+            clear_cleanup_history,
             get_app_settings,
             save_app_settings
         ])

@@ -1,7 +1,13 @@
+pub mod app_state;
+pub mod cache_commands;
 pub mod deletion_commands;
+pub mod history_commands;
 pub mod scan_commands;
 pub mod settings_commands;
 
+pub use app_state::AppState;
+pub use cache_commands::*;
 pub use deletion_commands::*;
+pub use history_commands::*;
 pub use scan_commands::*;
 pub use settings_commands::*;
