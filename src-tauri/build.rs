@@ -49,11 +49,10 @@ fn embed_build_identity() {
     let commit = env_override("NC_BUILD_COMMIT")
         .or_else(|| git(&repo_root, &["rev-parse", "HEAD"]))
         .unwrap_or_else(|| "unknown".to_string());
-    let dirty = env_override("NC_BUILD_DIRTY").unwrap_or_else(|| {
-        match git(&repo_root, &["status", "--porcelain"]) {
-            Some(status) => (!status.is_empty()).to_string(),
-            None => "unknown".to_string(),
-        }
+    let dirty = env_override("NC_BUILD_DIRTY").unwrap_or_else(|| match git_is_dirty(&repo_root) {
+        Some(true) => "true".to_string(),
+        Some(false) => "false".to_string(),
+        None => "unknown".to_string(),
     });
     let built_at = env_override("NC_BUILD_TIME").unwrap_or_else(|| {
         let secs = std::time::SystemTime::now()
@@ -76,6 +75,25 @@ fn embed_build_identity() {
 
 fn env_override(key: &str) -> Option<String> {
     std::env::var(key).ok().filter(|v| !v.trim().is_empty())
+}
+
+/// `Some(true)` = tree has changes, `Some(false)` = tree is clean, `None` = git
+/// could not be read at all.
+///
+/// This must not go through `git()`: a clean tree produces empty stdout, and
+/// `git()` maps empty output to `None`. That made every plain `cargo build` on a
+/// committed tree stamp itself `unknown`, which the app reports as dirty and the
+/// IPC probe rejects as a provenance mismatch.
+fn git_is_dirty(repo_root: &std::path::Path) -> Option<bool> {
+    let output = Command::new("git")
+        .current_dir(repo_root)
+        .args(["status", "--porcelain"])
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    Some(!String::from_utf8_lossy(&output.stdout).trim().is_empty())
 }
 
 fn git(repo_root: &std::path::Path, args: &[&str]) -> Option<String> {
