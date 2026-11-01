@@ -58,10 +58,19 @@ if (dirty !== "false") {
 }
 
 console.log("\n🧹 1. Eski çıktılar temizleniyor...");
+// Only stop copies that would lock the artefacts we are about to replace: the
+// installed app and a previously unpacked portable build. A blanket
+// `taskkill /IM node-cleaner.exe` also killed the debug binary that
+// `tauri dev` runs, so every release build silently took the dev session down
+// with it (cargo reported "exit code: 0xffffffff").
 try {
-  execSync(`taskkill /F /IM node-cleaner.exe /IM Node-Cleaner-${version}-Portable.exe 2>nul`, {
-    stdio: "ignore",
-  });
+  execSync(
+    `powershell -NoProfile -ExecutionPolicy Bypass -Command "` +
+      `Get-Process -Name node-cleaner,'Node-Cleaner-${version}-Portable' -ErrorAction SilentlyContinue | ` +
+      `Where-Object { $_.Path -and $_.Path -notlike '*node_cleaner_target*' -and $_.Path -notlike '*\\target\\*' } | ` +
+      `Stop-Process -Force; exit 0"`,
+    { stdio: "ignore" }
+  );
 } catch {}
 
 if (fs.existsSync(releaseOutputDir)) {

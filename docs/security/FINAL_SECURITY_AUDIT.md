@@ -177,15 +177,16 @@ and the package build-script output before every release build.
 
 See `docs/security/SECURITY_MODEL.md` §4 for the full table. Current status:
 
-- **28 scenarios:** executed (automated, or automated + packaged-app probe).
-- **2 scenarios:** **NOT EXECUTED**:
-  - **SEC-19** — a cloud-only OneDrive placeholder was not available on the audit
-    machine (the OneDrive folder exists but is empty). The reparse-point hard
-    block that defends this case *is* executed
-    (`discovery_does_not_descend_into_junctions`), but a real placeholder was not
-    placed on disk.
-  - **Windows 10 clean-install smoke test** — no Windows 10 machine was available;
-    the audit host runs 10.0.26200.
+- **29 scenarios:** executed (automated, or automated + packaged-app probe).
+- **1 scenario NOT EXECUTED:** **SEC-19** — a cloud-only OneDrive placeholder was
+  not available on the audit machine (the OneDrive folder exists but is empty).
+  The reparse-point hard block that defends this case *is* executed
+  (`discovery_does_not_descend_into_junctions`), but a real placeholder was not
+  placed on disk.
+
+Outside the 30-scenario matrix: the **Windows 10 clean-install smoke test** was
+not executed — no Windows 10 machine was available; the audit host runs
+10.0.26200 (finding F-4).
 
 No scenario is claimed as executed when it was not.
 
