@@ -1,18 +1,74 @@
+use tauri::ipc::Channel;
 use tauri::State;
 
 use crate::cleanup::official_actions::{
-    execute_action, list_cache_providers, preview_action, CacheProviderInfo, OfficialActionPreview,
+    execute_action, list_cache_providers, measure_cache_providers as measure_providers_blocking,
+    preview_action, CacheMeasureEvent, CacheProviderInfo, OfficialActionPreview,
     OfficialActionResult,
 };
 use crate::commands::AppState;
 use crate::error::AppError;
 use crate::scanner::cancellation::CancellationToken;
 
+/// Fast path: provider list, paths and versions without walking directories.
 #[tauri::command]
-pub async fn get_global_cache_providers() -> Result<Vec<CacheProviderInfo>, AppError> {
-    tokio::task::spawn_blocking(|| list_cache_providers(&CancellationToken::new()))
+pub async fn get_cache_providers() -> Result<Vec<CacheProviderInfo>, AppError> {
+    tokio::task::spawn_blocking(list_cache_providers)
         .await
-        .map_err(|e| AppError::Unknown(format!("Önbellek taraması başarısız: {}", e)))
+        .map_err(|e| AppError::Unknown(format!("Önbellek listesi başarısız: {}", e)))
+}
+
+/// Streams measured sizes one path at a time so the UI can show progress and
+/// let the user cancel. The scan runs on a blocking worker thread.
+#[tauri::command]
+pub async fn measure_cache_providers(
+    on_event: Channel<CacheMeasureEvent>,
+    state: State<'_, AppState>,
+) -> Result<(), AppError> {
+    let token = CancellationToken::new();
+    {
+        let mut current = state
+            .cache_token
+            .lock()
+            .map_err(|_| AppError::Unknown("Önbellek durumu kilitli.".to_string()))?;
+        if let Some(old) = current.take() {
+            old.cancel();
+        }
+        *current = Some(token.clone());
+    }
+
+    let worker_token = token.clone();
+    let result = tokio::task::spawn_blocking(move || {
+        measure_providers_blocking(&worker_token, move |event| {
+            let _ = on_event.send(event);
+        });
+    })
+    .await
+    .map_err(|e| AppError::Unknown(format!("Önbellek ölçümü başarısız: {}", e)));
+
+    if let Ok(mut current) = state.cache_token.lock() {
+        if current
+            .as_ref()
+            .map(|t| t.same(&token))
+            .unwrap_or(false)
+        {
+            *current = None;
+        }
+    }
+
+    result
+}
+
+#[tauri::command]
+pub fn cancel_cache_measurement(state: State<'_, AppState>) -> Result<(), AppError> {
+    let mut current = state
+        .cache_token
+        .lock()
+        .map_err(|_| AppError::Unknown("Önbellek durumu kilitli.".to_string()))?;
+    if let Some(token) = current.take() {
+        token.cancel();
+    }
+    Ok(())
 }
 
 #[tauri::command]

@@ -47,6 +47,27 @@ pub struct CacheProviderInfo {
     pub actions: Vec<OfficialActionInfo>,
     pub read_only: bool,
     pub note: Option<String>,
+    /// False until the streaming measurement pass has reported a value.
+    pub measured: bool,
+}
+
+/// Progress events for the asynchronous cache measurement pass.
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "type", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum CacheMeasureEvent {
+    Started { provider_count: usize },
+    PathMeasured {
+        provider_id: String,
+        path: String,
+        exists: bool,
+        bytes: Option<u64>,
+    },
+    ProviderFinished {
+        provider_id: String,
+        total_bytes: u64,
+    },
+    Finished,
+    Cancelled,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -375,21 +396,108 @@ fn command_for_executable(exe: &Path, args: &[String]) -> Command {
     }
 }
 
+fn version_args(name: &str) -> &'static [&'static str] {
+    match name {
+        // `go --version` is not a valid flag; the tool wants the subcommand.
+        "go" => &["version"],
+        _ => &["--version"],
+    }
+}
+
+/// Decodes tool output that may be UTF-16LE (WSL on Windows writes UTF-16).
+fn decode_output(bytes: &[u8]) -> String {
+    let nul = bytes.iter().filter(|b| **b == 0).count();
+    if bytes.len() >= 2 && nul * 3 >= bytes.len() {
+        let units: Vec<u16> = bytes
+            .chunks_exact(2)
+            .map(|chunk| u16::from_le_bytes([chunk[0], chunk[1]]))
+            .collect();
+        String::from_utf16_lossy(&units)
+    } else {
+        String::from_utf8_lossy(bytes).to_string()
+    }
+}
+
 fn tool_version(name: &str) -> Option<String> {
     let exe = find_executable(name)?;
-    let cmd = command_for_executable(&exe, &["--version".to_string()]);
+    let args: Vec<String> = version_args(name).iter().map(|s| s.to_string()).collect();
+    let cmd = command_for_executable(&exe, &args);
     let output = run_command_with_timeout(cmd, VERSION_TIMEOUT).ok()?;
     let text = if output.stdout.is_empty() {
-        String::from_utf8_lossy(&output.stderr).to_string()
+        decode_output(&output.stderr)
     } else {
-        String::from_utf8_lossy(&output.stdout).to_string()
+        decode_output(&output.stdout)
     };
-    let first = text.lines().next().unwrap_or("").trim();
-    if first.is_empty() {
+    let first = text.lines().map(str::trim).find(|line| !line.is_empty())?;
+    let cleaned = first.trim_start_matches('\u{feff}').trim();
+    if cleaned.is_empty() {
         None
     } else {
-        Some(first.chars().take(80).collect())
+        Some(cleaned.chars().take(96).collect::<String>().trim_end().to_string())
     }
+}
+
+fn action_infos(def: &ProviderDef) -> Vec<OfficialActionInfo> {
+    def.actions
+        .iter()
+        .map(|a| {
+            let exe = find_executable(a.exe);
+            OfficialActionInfo {
+                id: a.id.to_string(),
+                label: a.label.to_string(),
+                description: a.description.to_string(),
+                executable: exe.as_ref().map(|p| p.to_string_lossy().to_string()),
+                args: a.args.iter().map(|s| s.to_string()).collect(),
+                available: exe.is_some(),
+                unavailable_reason: if exe.is_none() {
+                    Some(format!("'{}' sistem PATH üzerinde bulunamadı.", a.exe))
+                } else {
+                    None
+                },
+                requires_network: a.requires_network,
+                impact: a.impact.to_string(),
+            }
+        })
+        .collect()
+}
+
+/// Lists providers and their paths without walking any directory. This is the
+/// fast call the UI renders first; sizes arrive later from
+/// [`measure_cache_providers`].
+pub fn list_cache_providers() -> Vec<CacheProviderInfo> {
+    ACTIONS
+        .iter()
+        .map(|def| {
+            let paths: Vec<CachePathInfo> = def
+                .cache_paths
+                .iter()
+                .map(|p| {
+                    let expanded = expand(p);
+                    CachePathInfo {
+                        path: expanded.to_string_lossy().to_string(),
+                        exists: expanded.exists(),
+                        bytes: None,
+                    }
+                })
+                .collect();
+
+            let detected =
+                paths.iter().any(|p| p.exists) || find_executable(def.version_exe).is_some();
+
+            CacheProviderInfo {
+                id: def.id.to_string(),
+                name: def.name.to_string(),
+                detected,
+                version: tool_version(def.version_exe),
+                cache_paths: paths,
+                total_bytes: 0,
+                actions: action_infos(def),
+                read_only: def.read_only,
+                note: def.note.map(|n| n.to_string()),
+                measured: false,
+            }
+        })
+        .collect()
 }
 
 fn measure_dirs(paths: &[CachePathInfo], token: &CancellationToken, files_only: bool) -> Vec<CachePathInfo> {
@@ -412,63 +520,72 @@ fn measure_dirs(paths: &[CachePathInfo], token: &CancellationToken, files_only: 
         .collect()
 }
 
-pub fn list_cache_providers(token: &CancellationToken) -> Vec<CacheProviderInfo> {
-    ACTIONS
-        .iter()
-        .map(|def| {
-            let paths: Vec<CachePathInfo> = def
-                .cache_paths
-                .iter()
-                .map(|p| {
-                    let expanded = expand(p);
-                    CachePathInfo {
-                        path: expanded.to_string_lossy().to_string(),
-                        exists: expanded.exists(),
-                        bytes: None,
-                    }
-                })
-                .collect();
-            let paths = measure_dirs(&paths, token, def.read_only);
-            let total_bytes: u64 = paths.iter().filter_map(|p| p.bytes).sum();
+/// Measures one cache path. A plain file (e.g. a Docker VHDX) is read from its
+/// metadata instead of being walked, and read-only providers never walk
+/// directories: those trees belong to another tool and walking them took
+/// minutes on real machines without producing an actionable number.
+fn measure_cache_path(
+    def: &ProviderDef,
+    path: &Path,
+    token: &CancellationToken,
+) -> Option<u64> {
+    if !path.exists() {
+        return None;
+    }
+    if path.is_file() {
+        return std::fs::metadata(path).ok().map(|m| m.len());
+    }
+    if def.read_only {
+        return None;
+    }
+    measure_path(path, TargetKind::Directory, token)
+        .map(|s| s.allocated_bytes.unwrap_or(s.logical_bytes))
+}
 
-            let actions = def
-                .actions
-                .iter()
-                .map(|a| {
-                    let exe = find_executable(a.exe);
-                    OfficialActionInfo {
-                        id: a.id.to_string(),
-                        label: a.label.to_string(),
-                        description: a.description.to_string(),
-                        executable: exe.as_ref().map(|p| p.to_string_lossy().to_string()),
-                        args: a.args.iter().map(|s| s.to_string()).collect(),
-                        available: exe.is_some(),
-                        unavailable_reason: if exe.is_none() {
-                            Some(format!("'{}' sistem PATH üzerinde bulunamadı.", a.exe))
-                        } else {
-                            None
-                        },
-                        requires_network: a.requires_network,
-                        impact: a.impact.to_string(),
-                    }
-                })
-                .collect();
+/// Streams one event per measured path so the UI can show progress and cancel.
+pub fn measure_cache_providers<F>(token: &CancellationToken, mut emit: F)
+where
+    F: FnMut(CacheMeasureEvent),
+{
+    emit(CacheMeasureEvent::Started {
+        provider_count: ACTIONS.len(),
+    });
 
-            let detected = paths.iter().any(|p| p.exists) || find_executable(def.version_exe).is_some();
-
-            CacheProviderInfo {
-                id: def.id.to_string(),
-                name: def.name.to_string(),
-                detected,
-                version: tool_version(def.version_exe),
-                cache_paths: paths,
-                total_bytes,
-                actions,
-                read_only: def.read_only,
-                note: def.note.map(|n| n.to_string()),
+    for def in ACTIONS {
+        if token.is_cancelled() {
+            emit(CacheMeasureEvent::Cancelled);
+            return;
+        }
+        let mut total_bytes = 0u64;
+        for raw in def.cache_paths {
+            if token.is_cancelled() {
+                emit(CacheMeasureEvent::Cancelled);
+                return;
             }
-        })
-        .collect()
+            let path = expand(raw);
+            let exists = path.exists();
+            let bytes = measure_cache_path(def, &path, token);
+            if let Some(bytes) = bytes {
+                total_bytes = total_bytes.saturating_add(bytes);
+            }
+            emit(CacheMeasureEvent::PathMeasured {
+                provider_id: def.id.to_string(),
+                path: path.to_string_lossy().to_string(),
+                exists,
+                bytes,
+            });
+        }
+        if token.is_cancelled() {
+            emit(CacheMeasureEvent::Cancelled);
+            return;
+        }
+        emit(CacheMeasureEvent::ProviderFinished {
+            provider_id: def.id.to_string(),
+            total_bytes,
+        });
+    }
+
+    emit(CacheMeasureEvent::Finished);
 }
 
 struct PendingAction {
@@ -656,7 +773,7 @@ pub fn _path_display(path: &Path) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::tail;
+    use super::{tail, CacheMeasureEvent};
 
     #[test]
     fn tail_is_utf8_safe() {
@@ -669,5 +786,28 @@ mod tests {
     #[test]
     fn tail_keeps_short_text() {
         assert_eq!(tail("  kısa çıktı  ", 100), "kısa çıktı");
+    }
+
+    #[test]
+    fn cache_measure_events_serialize_as_camel_case() {
+        // The frontend switches on these exact keys; a snake_case regression
+        // would silently freeze the progress display.
+        let started = serde_json::to_value(CacheMeasureEvent::Started {
+            provider_count: 5,
+        })
+        .unwrap();
+        assert_eq!(started["type"], "started");
+        assert_eq!(started["providerCount"], 5);
+
+        let path = serde_json::to_value(CacheMeasureEvent::PathMeasured {
+            provider_id: "pnpm".to_string(),
+            path: "C:\\cache".to_string(),
+            exists: true,
+            bytes: Some(42),
+        })
+        .unwrap();
+        assert_eq!(path["type"], "pathMeasured");
+        assert_eq!(path["providerId"], "pnpm");
+        assert_eq!(path["bytes"], 42);
     }
 }

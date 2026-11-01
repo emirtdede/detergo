@@ -30,6 +30,8 @@ pub struct CleanupPolicy {
     pub min_size_bytes: u64,
     /// When false, no cleanup history or storage snapshots are persisted.
     pub record_history: bool,
+    /// User-defined AI tools. Their roots are reported as `KEEP` only.
+    pub custom_agent_providers: Vec<crate::settings::CustomAgentProvider>,
 }
 
 impl Default for CleanupPolicy {
@@ -40,6 +42,7 @@ impl Default for CleanupPolicy {
             protect_browser_recordings: true,
             min_size_bytes: 0,
             record_history: true,
+            custom_agent_providers: Vec::new(),
         }
     }
 }
@@ -52,6 +55,7 @@ impl From<&crate::settings::AppSettings> for CleanupPolicy {
             protect_browser_recordings: settings.agent_policy.protect_browser_recordings,
             min_size_bytes: settings.min_size_bytes,
             record_history: settings.history_enabled,
+            custom_agent_providers: settings.custom_agent_providers.clone(),
         }
     }
 }

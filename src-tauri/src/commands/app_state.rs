@@ -16,6 +16,7 @@ pub struct AppState {
     pub catalog: Option<Arc<CatalogIndex>>,
     pub catalog_error: Option<String>,
     pub scan_token: Mutex<Option<CancellationToken>>,
+    pub cache_token: Mutex<Option<CancellationToken>>,
 }
 
 impl AppState {
@@ -32,6 +33,7 @@ impl AppState {
             catalog,
             catalog_error,
             scan_token: Mutex::new(None),
+            cache_token: Mutex::new(None),
         }
     }
 

@@ -6,6 +6,7 @@ pub mod root_locator;
 mod tests;
 
 use serde::Serialize;
+use std::path::PathBuf;
 use std::time::Instant;
 
 use crate::audit::StorageSnapshot;
@@ -17,6 +18,7 @@ use crate::scanner::measurement::measure_path_with_deadline;
 use crate::scanner::models::{CleanupItem, ItemStatus, StoredTarget};
 use crate::safety::evidence_guard::EvidenceSnapshot;
 use crate::safety::{active_use_for_provider, ActiveUse};
+use crate::settings::AppSettings;
 
 use agent_spec::{provider_display_name, specs_for};
 use root_locator::{locate_agent_roots, root_exists};
@@ -41,8 +43,9 @@ pub struct AgentProviderInfo {
     pub note: Option<String>,
 }
 
-pub fn list_agent_providers() -> Vec<AgentProviderInfo> {
+pub fn list_agent_providers(settings: &AppSettings) -> Vec<AgentProviderInfo> {
     let roots = locate_agent_roots();
+    let hidden = &settings.hidden_builtin_providers;
     let mut providers = Vec::new();
     for (id, note) in [
         (
@@ -58,6 +61,9 @@ pub fn list_agent_providers() -> Vec<AgentProviderInfo> {
             Some("Brain ve konuşmalar korunur; tarayıcı kayıtları yalnızca kayıt durduğunda temizlenebilir."),
         ),
     ] {
+        if hidden.iter().any(|h| h == id) {
+            continue;
+        }
         let provider_roots: Vec<AgentRootInfo> = roots
             .iter()
             .filter(|r| r.provider == id)
@@ -77,6 +83,35 @@ pub fn list_agent_providers() -> Vec<AgentProviderInfo> {
             note: note.map(|n| n.to_string()),
         });
     }
+
+    // User-defined tools. They are listed and scanned, but every target is
+    // reported as KEEP because Node Cleaner has no verified rule set for them.
+    for custom in &settings.custom_agent_providers {
+        let provider_roots: Vec<AgentRootInfo> = custom
+            .root_paths
+            .iter()
+            .map(|raw| {
+                let path = PathBuf::from(raw);
+                AgentRootInfo {
+                    path: raw.clone(),
+                    kind: "custom-root".to_string(),
+                    source: "user".to_string(),
+                    exists: path.is_dir(),
+                }
+            })
+            .collect();
+        providers.push(AgentProviderInfo {
+            id: format!("custom:{}", custom.id),
+            name: custom.name.clone(),
+            installed: provider_roots.iter().any(|r| r.exists),
+            roots: provider_roots,
+            read_only: true,
+            note: Some(
+                "Kullanıcı tanımlı araç: hedefler yalnızca KEEP olarak raporlanır.".to_string(),
+            ),
+        });
+    }
+
     providers
 }
 
@@ -282,6 +317,97 @@ pub fn scan_agents(
                 timestamp: chrono::Local::now().to_rfc3339(),
                 provider: root.provider.to_string(),
                 category: spec.category.to_string(),
+                bytes: allocated.unwrap_or(logical),
+                item_count: 1,
+            });
+        }
+    }
+
+    // User-defined providers: metadata only, always KEEP.
+    for custom in &policy.custom_agent_providers {
+        let provider_id = format!("custom:{}", custom.id);
+        for raw in &custom.root_paths {
+            if token.is_cancelled() {
+                stop_reason = Some(StopReason::Cancelled);
+                break;
+            }
+            if deadline.map(|d| Instant::now() >= d).unwrap_or(false) {
+                stop_reason = Some(StopReason::Timeout);
+                break;
+            }
+            let path = PathBuf::from(raw);
+            if !path.is_dir() {
+                continue;
+            }
+            entries_scanned += 1;
+            let size = measure_path_with_deadline(&path, TargetKind::Directory, token, deadline);
+            let logical = size.as_ref().map(|s| s.logical_bytes).unwrap_or(0);
+            let allocated = size.as_ref().and_then(|s| s.allocated_bytes);
+            let id = format!("t{}", &uuid::Uuid::new_v4().simple().to_string()[..24]);
+            let rule_id = format!("custom.{}.keep", custom.id);
+
+            items.push(CleanupItem {
+                id: id.clone(),
+                scan_session_id: session_id.to_string(),
+                rule_id: rule_id.clone(),
+                provider: provider_id.clone(),
+                ecosystem: "ai".to_string(),
+                category: "custom".to_string(),
+                kind: TargetKind::Directory,
+                project_id: Some(stable_path_id(&path)),
+                project_name: Some(custom.name.clone()),
+                project_root: Some(path.to_string_lossy().to_string()),
+                display_name: custom.name.clone(),
+                display_path: path.to_string_lossy().to_string(),
+                logical_bytes: Some(logical),
+                allocated_bytes: allocated,
+                estimated_reclaim_bytes: Some(allocated.unwrap_or(logical)),
+                safety_class: SafetyClass::Keep,
+                confidence: Confidence::High,
+                active_use: ActiveUse::Unknown,
+                evidence_codes: vec!["USER_PROVIDER_ROOT".to_string()],
+                warning_codes: vec!["PROTECTED_TARGET".to_string()],
+                cleanup_method: CleanupMethod::None,
+                regenerate_hint: None,
+                protected: true,
+                selectable: false,
+                auto_selectable: false,
+                last_modified_at: None,
+                status: ItemStatus::Blocked,
+                parent_item_id: None,
+                note: Some("Kullanıcı tanımlı araç; otomatik temizlik yapılmaz.".to_string()),
+            });
+
+            targets.push(StoredTarget {
+                id,
+                path: path.clone(),
+                rule_id,
+                provider: provider_id.clone(),
+                category: "custom".to_string(),
+                kind: TargetKind::Directory,
+                safety_class: SafetyClass::Keep,
+                cleanup_method: CleanupMethod::None,
+                project_root: Some(path.to_string_lossy().to_string()),
+                evidence: EvidenceSnapshot {
+                    rule_id: format!("custom.{}.keep", custom.id),
+                    target_name: custom.name.clone(),
+                    project_root: Some(path.to_string_lossy().to_string()),
+                    workspace_root: None,
+                    marker_hits: Vec::new(),
+                    content_hits: Vec::new(),
+                },
+                logical_bytes: Some(logical),
+                allocated_bytes: allocated,
+                modified_at: None,
+                active_use: ActiveUse::Unknown,
+                parent_id: None,
+                protected: true,
+            });
+
+            snapshots.push(StorageSnapshot {
+                timestamp: chrono::Local::now().to_rfc3339(),
+                provider: provider_id.clone(),
+                category: "custom".to_string(),
                 bytes: allocated.unwrap_or(logical),
                 item_count: 1,
             });
