@@ -11,6 +11,8 @@ pub enum ScanScope {
     Project,
     Agents,
     GlobalCaches,
+    /// Full-disk scan across every local volume.
+    AllDrives,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

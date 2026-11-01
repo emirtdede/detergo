@@ -9,7 +9,6 @@ use crate::catalog::Rule;
 use crate::commands::AppState;
 use crate::error::AppError;
 use crate::platform::{get_known_dev_locations, KnownLocation};
-use crate::providers::AgentProviderInfo;
 use crate::scanner::cancellation::CancellationToken;
 use crate::scanner::models::{ScanEvent, ScanRequest, ScanSummary};
 use crate::scanner::run_scan;
@@ -52,6 +51,11 @@ pub async fn start_scan(
     let mut allowed_roots: Vec<PathBuf> = Vec::new();
     if !request.root_path.trim().is_empty() {
         allowed_roots.push(PathBuf::from(&request.root_path));
+    }
+    if request.scope == crate::scanner::models::ScanScope::AllDrives {
+        for root in crate::platform::fixed_drive_roots() {
+            allowed_roots.push(PathBuf::from(root));
+        }
     }
     if request.scope == crate::scanner::models::ScanScope::Agents {
         for root in crate::providers::root_locator::locate_agent_roots() {
@@ -137,11 +141,6 @@ pub fn get_scan_summary(
         return Ok(handle.lock().unwrap().summary.clone());
     }
     Ok(None)
-}
-
-#[tauri::command]
-pub fn get_agent_providers() -> Vec<AgentProviderInfo> {
-    crate::providers::list_agent_providers()
 }
 
 #[tauri::command]

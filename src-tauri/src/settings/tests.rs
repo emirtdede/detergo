@@ -11,10 +11,12 @@ mod tests {
         let temp = tempdir().unwrap();
         let repo = SettingsRepository::with_path(temp.path().join("config.json"));
         let settings = repo.load();
-        assert_eq!(settings.schema_version, 2);
+        assert_eq!(settings.schema_version, 3);
         assert_eq!(settings.theme, "dark-transparent");
         assert!(!settings.reduce_motion);
         assert_eq!(settings.scan_profile, "balanced");
+        assert_eq!(settings.sidebar_mode, "expanded");
+        assert_eq!(settings.cache_measure_mode, "fast");
     }
 
     #[test]
@@ -79,7 +81,7 @@ mod tests {
         let repo = SettingsRepository::with_path(config_path.clone());
         let settings = repo.load();
 
-        assert_eq!(settings.schema_version, 2);
+        assert_eq!(settings.schema_version, 3);
         assert_eq!(settings.theme, "dark-transparent");
         let backups: Vec<_> = std::fs::read_dir(temp.path())
             .unwrap()
@@ -111,13 +113,15 @@ mod tests {
 
         let repo = SettingsRepository::with_path(config_path);
         let loaded = repo.load();
-        assert_eq!(loaded.schema_version, 2);
+        assert_eq!(loaded.schema_version, 3);
         assert_eq!(loaded.theme, "dark-gray");
         assert!(loaded.reduce_motion);
         assert_eq!(loaded.favorites.len(), 1);
         assert_eq!(loaded.recent_locations, vec!["C:\\Code".to_string()]);
         assert_eq!(loaded.max_depth, 32);
         assert!(loaded.agent_policy.allow_cache_cleanup);
+        assert_eq!(loaded.sidebar_mode, "expanded");
+        assert!(loaded.custom_agent_providers.is_empty());
     }
 
     #[test]
@@ -177,5 +181,70 @@ mod tests {
         ];
         settings.normalize();
         assert_eq!(settings.excluded_names, vec!["node_modules", "target"]);
+    }
+
+    #[test]
+    fn custom_agent_providers_are_sanitized() {
+        let temp = tempdir().unwrap();
+        let dir = temp.path().join("cursor-data");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.to_string_lossy().to_string();
+
+        let mut settings = AppSettings::default();
+        settings.custom_agent_providers = vec![
+            CustomAgentProvider {
+                id: " u1 ".to_string(),
+                name: " Cursor ".to_string(),
+                root_paths: vec![path.clone(), format!("{}\\", path), "  ".to_string()],
+                created_at: String::new(),
+            },
+            CustomAgentProvider {
+                id: "u1".to_string(),
+                name: "Duplicate id".to_string(),
+                root_paths: vec![path.clone()],
+                created_at: String::new(),
+            },
+            CustomAgentProvider {
+                id: String::new(),
+                name: "No id".to_string(),
+                root_paths: vec![path.clone()],
+                created_at: String::new(),
+            },
+            CustomAgentProvider {
+                id: "u2".to_string(),
+                name: "No roots".to_string(),
+                root_paths: vec!["   ".to_string()],
+                created_at: String::new(),
+            },
+        ];
+        settings.normalize();
+
+        assert_eq!(settings.custom_agent_providers.len(), 1);
+        let provider = &settings.custom_agent_providers[0];
+        assert_eq!(provider.id, "u1");
+        assert_eq!(provider.name, "Cursor");
+        assert_eq!(
+            provider.root_paths.len(),
+            1,
+            "duplicate and blank roots must collapse: {:?}",
+            provider.root_paths
+        );
+    }
+
+    #[test]
+    fn enum_like_setting_fields_reject_unknown_values() {
+        let mut settings = AppSettings::default();
+        settings.sidebar_mode = "sideways".to_string();
+        settings.cache_measure_mode = "turbo".to_string();
+        settings.hidden_builtin_providers = vec![
+            " Codex ".to_string(),
+            "codex".to_string(),
+            String::new(),
+        ];
+        settings.normalize();
+
+        assert_eq!(settings.sidebar_mode, "expanded");
+        assert_eq!(settings.cache_measure_mode, "fast");
+        assert_eq!(settings.hidden_builtin_providers, vec!["codex"]);
     }
 }

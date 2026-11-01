@@ -17,6 +17,18 @@ pub struct SortConfig {
     pub direction: String,
 }
 
+/// A user-defined AI tool. Node Cleaner never invents cleanup rules for these
+/// roots: every discovered target is reported as `KEEP`.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct CustomAgentProvider {
+    pub id: String,
+    pub name: String,
+    pub root_paths: Vec<String>,
+    #[serde(default)]
+    pub created_at: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentPolicy {
@@ -36,7 +48,15 @@ impl Default for AgentPolicy {
 }
 
 fn default_schema_version() -> u32 {
-    2
+    3
+}
+
+fn default_sidebar_mode() -> String {
+    "expanded".to_string()
+}
+
+fn default_cache_measure_mode() -> String {
+    "fast".to_string()
 }
 
 fn default_scan_profile() -> String {
@@ -88,6 +108,14 @@ pub struct AppSettings {
     pub history_enabled: bool,
     #[serde(default)]
     pub agent_policy: AgentPolicy,
+    #[serde(default = "default_sidebar_mode")]
+    pub sidebar_mode: String,
+    #[serde(default = "default_cache_measure_mode")]
+    pub cache_measure_mode: String,
+    #[serde(default)]
+    pub custom_agent_providers: Vec<CustomAgentProvider>,
+    #[serde(default)]
+    pub hidden_builtin_providers: Vec<String>,
 }
 
 fn default_true() -> bool {
@@ -97,7 +125,7 @@ fn default_true() -> bool {
 impl Default for AppSettings {
     fn default() -> Self {
         Self {
-            schema_version: 2,
+            schema_version: 3,
             theme: "dark-transparent".to_string(),
             reduce_motion: false,
             favorites: Vec::new(),
@@ -118,6 +146,10 @@ impl Default for AppSettings {
             mask_paths: false,
             history_enabled: true,
             agent_policy: AgentPolicy::default(),
+            sidebar_mode: default_sidebar_mode(),
+            cache_measure_mode: default_cache_measure_mode(),
+            custom_agent_providers: Vec::new(),
+            hidden_builtin_providers: Vec::new(),
         }
     }
 }
@@ -125,8 +157,8 @@ impl Default for AppSettings {
 impl AppSettings {
     /// Applies version migrations without dropping user data.
     pub fn migrate(&mut self) {
-        if self.schema_version < 2 {
-            self.schema_version = 2;
+        if self.schema_version < 3 {
+            self.schema_version = 3;
         }
         self.normalize();
     }
@@ -161,6 +193,49 @@ impl AppSettings {
             .map(|name| name.trim().to_lowercase())
             .filter(|name| !name.is_empty() && seen_names.insert(name.clone()))
             .collect();
+
+        if self.sidebar_mode != "collapsed" {
+            self.sidebar_mode = default_sidebar_mode();
+        }
+        if self.cache_measure_mode != "full" {
+            self.cache_measure_mode = default_cache_measure_mode();
+        }
+
+        let mut seen_providers = std::collections::HashSet::new();
+        self.custom_agent_providers = std::mem::take(&mut self.custom_agent_providers)
+            .into_iter()
+            .filter_map(|mut provider| {
+                provider.id = provider.id.trim().to_string();
+                provider.name = provider.name.trim().to_string();
+                provider.root_paths = provider
+                    .root_paths
+                    .iter()
+                    .filter_map(|raw| normalize_protected_path(raw))
+                    .collect();
+                let mut seen_paths = std::collections::HashSet::new();
+                provider.root_paths.retain(|path| {
+                    seen_paths.insert(
+                        crate::safety::path_guard::normalize_key(std::path::Path::new(path)),
+                    )
+                });
+                if provider.id.is_empty() || provider.name.is_empty() || provider.root_paths.is_empty()
+                {
+                    return None;
+                }
+                if !seen_providers.insert(provider.id.clone()) {
+                    return None;
+                }
+                Some(provider)
+            })
+            .collect();
+
+        let mut seen_hidden = std::collections::HashSet::new();
+        self.hidden_builtin_providers = std::mem::take(&mut self.hidden_builtin_providers)
+            .into_iter()
+            .map(|id| id.trim().to_lowercase())
+            .filter(|id| !id.is_empty() && seen_hidden.insert(id.clone()))
+            .collect();
+
         self.recent_locations.truncate(20);
     }
 

@@ -1,5 +1,8 @@
+pub mod drives;
 pub mod fs_meta;
 pub mod known_folders;
+
+pub use drives::{fixed_drive_roots, list_fixed_drives, DriveInfo};
 
 pub use fs_meta::{
     facts, identity, is_in_use, is_remote_path, is_reparse_point, process_running_under,

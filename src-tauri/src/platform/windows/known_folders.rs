@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -17,6 +17,25 @@ pub fn get_known_dev_locations() -> Vec<KnownLocation> {
         Ok(p) => PathBuf::from(p),
         Err(_) => return locations,
     };
+
+    // 0. Full-disk scan entry. The empty path is intentional: it is a virtual
+    // location, not a directory, and the scan backend enumerates local drives.
+    locations.push(KnownLocation {
+        id: "loc-all-drives".to_string(),
+        path: String::new(),
+        label: "Tüm sürücüler (tam tarama)".to_string(),
+        source: "all-drives".to_string(),
+    });
+
+    // 0b. One entry per local volume, plus common dev folders on that volume.
+    for drive in crate::platform::list_fixed_drives() {
+        locations.push(KnownLocation {
+            id: format!("loc-drive-root-{}", drive.label.replace(':', "")),
+            path: drive.root.clone(),
+            label: format!("{} sürücüsü (tam)", drive.label),
+            source: "drive".to_string(),
+        });
+    }
 
     // 1. Desktop
     let desktop = user_profile.join("Desktop");
@@ -63,26 +82,28 @@ pub fn get_known_dev_locations() -> Vec<KnownLocation> {
         }
     }
 
-    // 4. Drive root common dev folders (e.g. C:\Projects, D:\Projects)
-    let drive_candidates = [
-        r"C:\Projects",
-        r"C:\Code",
-        r"C:\Dev",
-        r"D:\Projects",
-        r"D:\Code",
-        r"D:\Dev",
-    ];
-
-    for path_str in &drive_candidates {
-        let p = Path::new(path_str);
-        if p.is_dir() {
-            let label = p.file_name().unwrap_or_default().to_string_lossy().to_string();
-            locations.push(KnownLocation {
-                id: format!("loc-drive-{}", path_str.replace([':', '\\'], "-")),
-                path: path_str.to_string(),
-                label: format!("{} ({})", label, &path_str[..2]),
-                source: "default".to_string(),
-            });
+    // 4. Drive root common dev folders, derived from the drives the machine
+    // actually has instead of a hard-coded C:/D: list.
+    for drive in crate::platform::list_fixed_drives() {
+        for (name, label) in [
+            ("Projects", "Projeler"),
+            ("Code", "Kod (Code)"),
+            ("Dev", "Geliştirme (Dev)"),
+            ("Development", "Development"),
+        ] {
+            let path = PathBuf::from(&drive.root).join(name);
+            if path.is_dir() {
+                locations.push(KnownLocation {
+                    id: format!(
+                        "loc-drive-{}-{}",
+                        drive.label.replace(':', ""),
+                        name.to_lowercase()
+                    ),
+                    path: path.to_string_lossy().to_string(),
+                    label: format!("{} ({})", label, drive.label),
+                    source: "default".to_string(),
+                });
+            }
         }
     }
 

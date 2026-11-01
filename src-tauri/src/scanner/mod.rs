@@ -223,56 +223,118 @@ where
         return Ok(summary);
     }
 
-    // Project scan ---------------------------------------------------------
-    let root_path = PathBuf::from(&request.root_path);
-    if !root_path.exists() {
+    // Project or full-disk scan --------------------------------------------
+    let all_drives = request.scope == ScanScope::AllDrives;
+    let scan_roots: Vec<PathBuf> = if all_drives {
+        crate::platform::fixed_drive_roots()
+            .into_iter()
+            .map(PathBuf::from)
+            .collect()
+    } else {
+        vec![PathBuf::from(&request.root_path)]
+    };
+
+    if scan_roots.is_empty() {
         drop(tx);
         let _ = forwarder.await;
-        return Err(AppError::PathNotFound(request.root_path));
+        return Err(AppError::InvalidPath(
+            "Taranacak yerel sürücü bulunamadı.".to_string(),
+        ));
+    }
+    for root in &scan_roots {
+        if !root.exists() {
+            drop(tx);
+            let _ = forwarder.await;
+            return Err(AppError::PathNotFound(root.to_string_lossy().to_string()));
+        }
     }
 
-    let root_for_discovery = root_path.clone();
-    let exclusions = request.exclusions.clone();
-    let protected_paths = request.protected_paths.clone();
-    let session_id = scan_id.clone();
-    let token_discovery = token.clone();
-    let catalog_discovery = catalog.clone();
-    let tx_discovery = tx.clone();
+    let mut items: Vec<CleanupItem> = Vec::new();
+    let mut targets: Vec<StoredTarget> = Vec::new();
+    let mut warnings: Vec<(String, Option<String>)> = Vec::new();
+    let mut directories_visited = 0u64;
+    let mut stop_reason: Option<StopReason> = None;
 
-    let discovery_task = tokio::task::spawn_blocking(move || {
-        let mut engine = DiscoveryEngine::new(&catalog_discovery, token_discovery, limits);
-        engine.discover(
-            DiscoveryConfig {
-                root: &root_for_discovery,
-                exclusions: &exclusions,
-                protected_paths: &protected_paths,
-                scan_session_id: &session_id,
-                limits,
-            },
-            |batch| {
-                let _ = tx_discovery.send(ScanEvent::Candidates {
-                    items: batch.to_vec(),
-                });
-            },
-            |progress| {
-                let _ = tx_discovery.send(ScanEvent::Progress { progress });
-            },
-        )
-    });
+    for root in &scan_roots {
+        if token.is_cancelled() {
+            stop_reason = Some(StopReason::Cancelled);
+            break;
+        }
+        if stop_reason.is_some() {
+            break;
+        }
+        if items.len() as u64 >= limits.max_candidates {
+            stop_reason = Some(StopReason::CandidateLimit);
+            break;
+        }
 
-    let outcome = discovery_task
-        .await
-        .map_err(|e| AppError::ScanFailed(format!("Tarama görevi başarısız: {}", e)))??;
+        let root_for_discovery = root.clone();
+        let exclusions = request.exclusions.clone();
+        let protected_paths = request.protected_paths.clone();
+        let session_id = scan_id.clone();
+        let token_discovery = token.clone();
+        let catalog_discovery = catalog.clone();
+        let tx_discovery = tx.clone();
 
-    for warning in &outcome.warnings {
+        let discovery_task = tokio::task::spawn_blocking(move || {
+            let mut engine = DiscoveryEngine::new(&catalog_discovery, token_discovery, limits);
+            engine.discover(
+                DiscoveryConfig {
+                    root: &root_for_discovery,
+                    exclusions: &exclusions,
+                    protected_paths: &protected_paths,
+                    scan_session_id: &session_id,
+                    limits,
+                },
+                |batch| {
+                    let _ = tx_discovery.send(ScanEvent::Candidates {
+                        items: batch.to_vec(),
+                    });
+                },
+                |progress| {
+                    let _ = tx_discovery.send(ScanEvent::Progress { progress });
+                },
+            )
+        });
+
+        let outcome = match discovery_task.await {
+            Ok(Ok(outcome)) => outcome,
+            // A single unreadable volume must not abort a full-disk scan.
+            Ok(Err(err)) if all_drives => {
+                warnings.push((
+                    "DRIVE_SCAN_FAILED".to_string(),
+                    Some(format!("{}: {}", root.display(), err)),
+                ));
+                continue;
+            }
+            Ok(Err(err)) => {
+                drop(tx);
+                let _ = forwarder.await;
+                return Err(err);
+            }
+            Err(err) => {
+                drop(tx);
+                let _ = forwarder.await;
+                return Err(AppError::ScanFailed(format!(
+                    "Tarama görevi başarısız: {}",
+                    err
+                )));
+            }
+        };
+
+        warnings.extend(outcome.warnings);
+        directories_visited += outcome.directories_visited;
+        stop_reason = stop_reason.or(outcome.stop_reason);
+        items.extend(outcome.items);
+        targets.extend(outcome.targets);
+    }
+
+    for warning in &warnings {
         let _ = tx.send(ScanEvent::Warning {
             code: warning.0.clone(),
             path: warning.1.clone(),
         });
     }
-
-    let mut items = outcome.items;
-    let mut targets = outcome.targets;
 
     {
         let mut guard = session.lock().unwrap();
@@ -281,8 +343,6 @@ where
         }
         guard.items = items.clone();
     }
-
-    let mut stop_reason = outcome.stop_reason;
 
     if stop_reason != Some(StopReason::Cancelled)
         && stop_reason != Some(StopReason::Timeout)
@@ -309,7 +369,7 @@ where
             .measure_entries(
                 tasks,
                 items.len() as u64,
-                outcome.directories_visited,
+                directories_visited,
                 move |updates| {
                     {
                         let mut map = measured_writer.lock().unwrap();
@@ -367,11 +427,20 @@ where
         stop_reason = Some(StopReason::Cancelled);
     }
 
+    let mut summary_request = request.clone();
+    if all_drives {
+        summary_request.root_path = scan_roots
+            .iter()
+            .map(|root| root.to_string_lossy().to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+    }
+
     let summary = build_summary(
-        &request,
+        &summary_request,
         &scan_id,
         &items,
-        outcome.directories_visited,
+        directories_visited,
         started.elapsed().as_millis() as u64,
         stop_reason,
     );
