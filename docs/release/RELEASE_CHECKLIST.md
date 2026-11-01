@@ -2,7 +2,8 @@
 
 **Version:** 2.0.0
 **Date:** 2026-11-01
-**Source revision:** `71c298eadf85d5d5cfc741e86fa90763a401969a`
+**Source revision:** the commit recorded in `release_output/BUILD_INFO.json`, which
+must equal `git rev-parse HEAD` at build time
 **Deployment mode:** DIRECT-LIVE (local Windows desktop; NSIS / MSI / portable go
 straight to users; no staging, no canary)
 
@@ -120,7 +121,7 @@ Accepted residual risk (needs owner sign-off, does not block the code):
 ## Decision
 
 - **Internal / controlled beta:** GO.
-- **Public production (DIRECT-LIVE, rev `71c298e`, clean packages):** **GO**.
+- **Public production (DIRECT-LIVE, clean commit-stamped packages):** **GO**.
   Every automated gate passes, the destructive path is guarded and tested, the
   previously pending scenarios are executed, the packaged binary was probed under
   the production CSP, and the shipped packages were built from a clean tree with

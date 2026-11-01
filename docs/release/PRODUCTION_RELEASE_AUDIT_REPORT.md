@@ -2,7 +2,8 @@
 
 **Application:** Node Cleaner (Windows desktop)
 **Version:** 2.0.0
-**Source revision:** `71c298eadf85d5d5cfc741e86fa90763a401969a` (`feat/2.0-multi-ecosystem-engine`)
+**Source revision:** the commit recorded in `release_output/BUILD_INFO.json`, which
+must equal `git rev-parse HEAD` at build time (`feat/2.0-multi-ecosystem-engine`)
 **Stack:** Tauri 2 · Rust · React 19 · TypeScript · Vite 6
 **Publisher / identifier:** Vellium · `com.vellium.nodecleaner`
 **Audit date:** 2026-11-01
@@ -26,7 +27,7 @@ channel.
 
 ```text
 Internal / controlled beta:   GO
-Public production (DIRECT-LIVE, rev 71c298e, clean packages):  GO
+Public production (DIRECT-LIVE, clean commit-stamped packages):  GO
 ```
 
 The application is buildable, launches, performs real IPC under its production
@@ -124,7 +125,7 @@ executed the latter:
 - **New:** the compiled revision is embedded in the binary and surfaced in the
   About card, so a support report can be matched to the audited commit.
 
-## 4. Packaging artifacts (2026-11-01, clean build of `71c298e`)
+## 4. Packaging artifacts (2026-11-01, clean build)
 
 The authoritative record is **`release_output/BUILD_INFO.json`**, written by
 `scripts/build-release.js` on every build. It contains the commit, branch, dirty
