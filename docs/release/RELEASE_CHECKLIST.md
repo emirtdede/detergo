@@ -19,7 +19,7 @@ straight to users; no staging, no canary)
 | G5 | Global cache commands | **PASS** | argv whitelist, unknown/read-only/forged-token tests, read-only providers rejected |
 | G6 | UI, i18n, migration | **PASS (EN/TR for 2.0 screens)** — legacy header keeps 75 locales; limitation F-5 | `npm run typecheck`, 29 frontend tests, v1→v3 migration test |
 | G7 | Windows tests | **PARTIAL** — Windows 11 install/launch/uninstall PASS, Windows 10 not executed (F-4) | `scripts/verify-installer.ps1` NSIS + MSI |
-| G8 | Final security audit | **PASS with 2 documented gaps** — 28/30 executed | `docs/security/FINAL_SECURITY_AUDIT.md` |
+| G8 | Final security audit | **PASS with 1 documented gap** — 29/30 executed (SEC-19) | `docs/security/FINAL_SECURITY_AUDIT.md` |
 
 ## Functional checklist
 
@@ -40,7 +40,7 @@ straight to users; no staging, no canary)
 
 ## Security checklist
 
-- [x] 28/30 scenarios executed PASS
+- [x] 29/30 scenarios executed PASS
 - [x] SEC-19 (OneDrive cloud-only placeholder) **NOT EXECUTED** — no placeholder
       available; the reparse-point hard block that defends it *is* executed
 - [x] No root escape in tests
@@ -86,7 +86,7 @@ All numbers measured on this machine; commands and fixtures are in
 - [x] Packaged IPC under production CSP verified — 14/14 checks (`scripts/verify-ipc.mjs`)
 - [x] README rewritten
 - [ ] Windows 10 install smoke test — **NOT EXECUTED** (F-4; no Windows 10 host)
-- [ ] Publishable packages rebuilt from a **clean** commit — current binary set is `dirty: true`
+- [x] Publishable packages built from a **clean** commit — `BUILD_INFO.json` reports `"dirty": false`
 - [x] No known critical/high-severity deletion defect
 
 ### MSI scope note

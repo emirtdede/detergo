@@ -12,7 +12,7 @@ evidence and release status. Documents are grouped by purpose, not by date.
 | 3 | [`architecture/CLEANUP_CATALOG.md`](architecture/CLEANUP_CATALOG.md) | The 56-rule target catalog and its evidence model. |
 | 4 | [`architecture/AGENT_PROVIDERS.md`](architecture/AGENT_PROVIDERS.md) | Codex / Claude Code / Antigravity storage classes and KEEP rules. |
 | 5 | [`security/SECURITY_MODEL.md`](security/SECURITY_MODEL.md) | Threat model, guards and the 30-scenario security matrix. |
-| 6 | [`security/FINAL_SECURITY_AUDIT.md`](security/FINAL_SECURITY_AUDIT.md) | What was actually executed, findings F-1…F-13, GO/NO-GO decision. |
+| 6 | [`security/FINAL_SECURITY_AUDIT.md`](security/FINAL_SECURITY_AUDIT.md) | What was actually executed, findings F-1…F-14, GO/NO-GO decision. |
 | 7 | [`release/TEST_MATRIX.md`](release/TEST_MATRIX.md) | Recorded test results and the tests' scope. |
 | 8 | [`release/RELEASE_CHECKLIST.md`](release/RELEASE_CHECKLIST.md) | Release gates and the blockers that are still open. |
 | 9 | [`release/PRODUCTION_RELEASE_AUDIT_REPORT.md`](release/PRODUCTION_RELEASE_AUDIT_REPORT.md) | Consolidated release report and artifact hashes. |

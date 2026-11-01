@@ -58,7 +58,7 @@ the commit into the binary, and records an artifact manifest:
 | Runtime proof | `get_build_info` command; the About card shows short commit, profile and a dirty marker |
 | Freshness | the script refuses to package a binary/NSIS/MSI whose mtime predates the current run |
 | Manifest | `release_output/BUILD_INFO.json` — commit, branch, dirty flag, build time, size + SHA-256 per artifact |
-| Reproducibility | `.cargo/config.toml` no longer pins a developer-specific `target-dir` or MSVC/SDK `LIBPATH` values |
+| Reproducibility | `.cargo/config.toml` no longer pins a developer-specific `target-dir` or MSVC/SDK `LIBPATH` values; the machine-specific `src-tauri/.cargo/config.toml` is removed entirely |
 
 `scripts/verify-ipc.mjs` cross-checks the running binary's `get_build_info`
 against `BUILD_INFO.json`, so a mismatch between shipped bytes and the manifest
@@ -205,7 +205,7 @@ No scenario is claimed as executed when it was not.
 | F-9 | Info | Snapshot identity fails closed when the Windows file id cannot be read | **FIXED** — `snapshot_identity_fails_closed_when_file_id_is_unknown` |
 | F-10 | Info | `get_storage_snapshots` was registered but never called by the UI; removed so every registered command has a real consumer | **FIXED** |
 | F-11 | **High** | Shipped artifacts were built from a revision other than the audited HEAD (02:42 vs 06:37), with no provenance record | **FIXED (process)** — clean-tree gate, embedded commit, freshness check, `BUILD_INFO.json`, `get_build_info`; artifacts must be rebuilt from a clean commit (§1.1) |
-| F-12 | Medium | `.cargo/config.toml` pinned a developer-specific `target-dir` and MSVC/SDK `LIBPATH`, so the release build was only reproducible on one workstation | **FIXED** — minimal machine-independent config |
+| F-12 | Medium | `.cargo/config.toml` pinned a developer-specific `target-dir` and MSVC/SDK `LIBPATH`, so the release build was only reproducible on one workstation. The first fix only cleaned the repo-root file; `src-tauri/.cargo/config.toml` — the one cargo actually reads when it runs from `src-tauri` — still pinned the same paths | **FIXED** — `src-tauri/.cargo/config.toml` removed, root file reduced to an empty `[build]` table; a clean `cargo build --release` links and builds with no machine-specific path |
 | F-13 | Low | MSI is generated `perMachine`; a standard user gets error 1925 | **DOCUMENTED** — NSIS is the consumer channel, MSI is the elevated/enterprise channel (§1.2) |
 | F-14 | Medium | The first provenance implementation watched only `.git/HEAD`, which holds a ref and does not change on commit, so an incremental build kept embedding the *previous* commit — the exact stale-provenance class the gate exists to prevent. Caught by `verify-ipc.mjs` reporting a binary/manifest commit mismatch | **FIXED** — re-run triggers now cover `.git/logs/HEAD`, `.git/index` and every `NC_BUILD_*` override; the probe re-run reports a matching commit and `dirty=false` |
 

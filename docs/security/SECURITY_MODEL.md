@@ -126,8 +126,9 @@ Also outstanding, and outside the security matrix:
 
 - Windows 10 clean-install smoke test (F-4) — no Windows 10 host was available.
   Run `scripts/verify-installer.ps1` there if Windows 10 is supported.
-- Publishing step: the current `release_output/` packages report
-  `dirty: true` and must be rebuilt from a committed tree.
+- Publishing step: publish only an artifact set whose
+  `release_output/BUILD_INFO.json` shows `"dirty": false` and a commit equal to
+  the audited `HEAD`. The current set satisfies both.
 
 Everything else in §4 is executed; see `docs/release/TEST_MATRIX.md` for the
 commands and results.
