@@ -17,8 +17,17 @@ export default defineConfig({
     port: 1425,
     strictPort: true,
     watch: {
-      // 3. tell vite to ignore watching `src-tauri`
-      ignored: ["**/src-tauri/**"],
+      // Dev only needs to track the frontend sources. Native build output and
+      // release artefacts must be ignored: a release build keeps
+      // `release_output\Node-Cleaner-*.exe` locked, and the watcher used to die
+      // with "EBUSY: resource busy or locked, watch" the moment those appeared,
+      // which took the whole `tauri dev` session down with it.
+      ignored: [
+        "**/src-tauri/**",
+        "**/release_output/**",
+        "**/dist/**",
+        "**/.git/**",
+      ],
     },
   },
   build: {
