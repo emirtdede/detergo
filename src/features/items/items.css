@@ -2,8 +2,26 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  min-width: 0;
   min-height: 0;
   height: 100%;
+}
+
+/* Document-style pages (caches, agents, history) grow with their content and
+   let the outer .view-container scroll. They must not be pinned to 100% height
+   like the virtualized item table, or long content gets clipped. */
+.page-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+/* The item table is virtualized and needs a definite box to scroll inside.
+   Embedded under a document page it takes a fixed minimum instead of 100%. */
+.page-view .items-view {
+  height: auto;
+  min-height: 360px;
 }
 
 .items-toolbar {
@@ -51,10 +69,17 @@
 .items-head,
 .items-row {
   display: grid;
-  grid-template-columns: 36px minmax(220px, 2.4fr) minmax(120px, 1.2fr) 110px 110px 100px 96px 40px;
+  /* The narrowest supported window (980px with the 208px rail) leaves ~700px
+     of content. These minimums add up to 716px including gaps and padding, so
+     columns never overlap or get clipped at that size. */
+  grid-template-columns: 36px minmax(140px, 2.4fr) minmax(84px, 1.2fr) 92px 82px 82px 88px 32px;
   align-items: center;
   gap: var(--space-2);
   padding: 0 var(--space-3);
+}
+
+.items-row > div {
+  min-width: 0;
 }
 
 .items-head {
@@ -200,6 +225,25 @@
   align-items: center;
 }
 
+/* Inside a table row the warning shares a single narrow cell with the name and
+   path, so it has to ellipsize instead of spilling over the next column. */
+.items-name .items-warning {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.items-name .items-warning svg {
+  flex: 0 0 auto;
+}
+
+.items-name .items-warning-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .items-actions {
   display: flex;
   justify-content: flex-end;
@@ -212,12 +256,25 @@
   justify-content: space-between;
   gap: var(--space-4);
   margin-bottom: var(--space-4);
+  /* Header actions wrap under the title instead of colliding with it on
+     narrow windows. */
+  flex-wrap: wrap;
+}
+
+.view-header > div:first-child {
+  min-width: 0;
+}
+
+.view-header > div:last-child {
+  flex: 0 0 auto;
+  flex-wrap: wrap;
 }
 
 .view-title {
   font-size: var(--text-xl);
   font-weight: 650;
   margin: 0 0 4px;
+  overflow-wrap: anywhere;
 }
 
 .view-subtitle {
@@ -225,6 +282,7 @@
   color: var(--text-secondary);
   font-size: var(--text-sm);
   max-width: 760px;
+  overflow-wrap: anywhere;
 }
 
 .plan-modes {

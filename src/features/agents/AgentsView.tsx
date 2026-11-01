@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import {
   Bot,
   EyeOff,
@@ -152,7 +152,7 @@ export const AgentsView: React.FC = () => {
   };
 
   return (
-    <div className="items-view">
+    <div className="page-view">
       <header className="view-header">
         <div>
           <h1 className="view-title">{ui.agents.title}</h1>
@@ -220,7 +220,9 @@ export const AgentsView: React.FC = () => {
             return (
               <article key={provider.id} className="provider-card">
                 <h3>
-                  {provider.name}
+                  <span className="provider-card-name" title={provider.name}>
+                    {provider.name}
+                  </span>
                   {isCustom && <span className="chip">{ui.agents.customTool}</span>}
                   {provider.readOnly && <span className="chip">{ui.agents.readOnly}</span>}
                   {isCustom && <span className="chip ok">{ui.agents.keepOnly}</span>}

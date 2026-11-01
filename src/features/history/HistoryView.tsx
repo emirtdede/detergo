@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { RefreshCw, History, Trash2, Terminal, TrendingDown } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
 import { useUIText } from "@/lib/ui-text";
@@ -20,7 +20,7 @@ function describeError(err: unknown): string {
 
 function formatSignedBytes(bytes: number): string {
   if (bytes === 0) return formatBytes(0);
-  return `${bytes > 0 ? "+" : "−"}${formatBytes(Math.abs(bytes))}`;
+  return `${bytes > 0 ? "+" : "âˆ’"}${formatBytes(Math.abs(bytes))}`;
 }
 
 function parseTimestamp(value: string): number {
@@ -90,7 +90,7 @@ export const HistoryView: React.FC = () => {
   const activeCount = tab === "cleanups" ? records.length : actions.length;
 
   return (
-    <div className="items-view">
+    <div className="page-view">
       <header className="view-header">
         <div>
           <h1 className="view-title">{ui.history.title}</h1>

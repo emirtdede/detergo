@@ -158,11 +158,12 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
     });
   };
 
-  const SortHeader: React.FC<{ field: SortOption["field"]; label: string; numeric?: boolean }> = ({
-    field,
-    label,
-    numeric,
-  }) => {
+  const SortHeader: React.FC<{
+    field: SortOption["field"];
+    label: string;
+    numeric?: boolean;
+    hint?: string;
+  }> = ({ field, label, numeric, hint }) => {
     const active = sort.field === field;
     return (
       <div className={numeric ? "items-col-num" : undefined}>
@@ -172,7 +173,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
           onClick={() => toggleSort(field)}
           aria-label={`${label} — ${ui.table.sortHint}`}
           aria-sort={active ? (sort.direction === "asc" ? "ascending" : "descending") : "none"}
-          title={ui.table.sortHint}
+          title={hint ? `${hint} — ${ui.table.sortHint}` : ui.table.sortHint}
         >
           <span>{label}</span>
           {active &&
@@ -261,8 +262,8 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
             <SortHeader field="category" label={ui.table.category} />
           )}
           <SortHeader field="safety" label={ui.table.safety} />
-          <SortHeader field="size" label={ui.table.size} numeric />
-          <SortHeader field="reclaim" label={ui.table.reclaim} numeric />
+          <SortHeader field="size" label={ui.table.size} numeric hint={ui.table.sizeHint} />
+          <SortHeader field="reclaim" label={ui.table.reclaim} numeric hint={ui.table.reclaimHint} />
           <SortHeader field="method" label={ui.table.method} />
           <div />
         </div>
@@ -308,8 +309,9 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
                       <strong>{item.displayName}</strong>
                       <span className="items-path">{displayPath(item.displayPath)}</span>
                       {warnings && (
-                        <span className="items-warning">
-                          <AlertTriangle size={11} /> {warnings}
+                        <span className="items-warning" title={warnings}>
+                          <AlertTriangle size={11} />
+                          <span className="items-warning-text">{warnings}</span>
                         </span>
                       )}
                     </div>

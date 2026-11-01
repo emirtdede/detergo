@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import { Gauge, Package, RefreshCw, Square, Terminal } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
 import { Dialog } from "@/components/primitives/Dialog";
@@ -26,7 +26,7 @@ function describeError(err: unknown): string {
 
 function formatSignedBytes(bytes: number): string {
   if (bytes === 0) return formatBytes(0);
-  return `${bytes > 0 ? "+" : "−"}${formatBytes(Math.abs(bytes))}`;
+  return `${bytes > 0 ? "+" : "âˆ’"}${formatBytes(Math.abs(bytes))}`;
 }
 
 export const CachesView: React.FC = () => {
@@ -170,7 +170,7 @@ export const CachesView: React.FC = () => {
   const measuredAny = providers.some((provider) => provider.measured);
 
   return (
-    <div className="items-view">
+    <div className="page-view">
       <header className="view-header">
         <div>
           <h1 className="view-title">{ui.caches.title}</h1>
@@ -214,12 +214,12 @@ export const CachesView: React.FC = () => {
       {measuring && (
         <p className="plan-note" aria-live="polite">
           {ui.caches.measuring}{" "}
-          {measureTotal > 0 ? `· ${ui.caches.measureProgress(measureDone, measureTotal)}` : ""}
+          {measureTotal > 0 ? `Â· ${ui.caches.measureProgress(measureDone, measureTotal)}` : ""}
         </p>
       )}
       {!measuring && measuredAny && (
         <p className="plan-note">
-          {ui.caches.measured} · {ui.caches.measureHint}
+          {ui.caches.measured} Â· {ui.caches.measureHint}
         </p>
       )}
 
@@ -227,17 +227,22 @@ export const CachesView: React.FC = () => {
         {providers.map((provider) => (
           <article key={provider.id} className="provider-card">
             <h3>
-              <Package size={14} /> {provider.name}
-              {provider.version && <span className="chip">{provider.version}</span>}
+              <Package size={14} className="provider-card-icon" />
+              <span className="provider-card-name">{provider.name}</span>
+              {provider.version && (
+                <span className="chip" title={provider.version}>
+                  {provider.version}
+                </span>
+              )}
               {provider.readOnly && <span className="chip">{ui.caches.readOnly}</span>}
               {!provider.detected && <span className="chip">{ui.caches.notFound}</span>}
             </h3>
             <div className="provider-paths">
               {provider.cachePaths.map((path) => (
-                <span key={path.path}>
+                <span key={path.path} title={maskPaths ? maskPath(path.path) : path.path}>
                   {maskPaths ? maskPath(path.path) : path.path}{" "}
                   {path.exists && path.bytes !== null && path.bytes !== undefined
-                    ? `· ${formatBytes(path.bytes)}`
+                    ? `Â· ${formatBytes(path.bytes)}`
                     : ""}
                 </span>
               ))}
@@ -245,28 +250,29 @@ export const CachesView: React.FC = () => {
             <div className="form-row">
               <span>{ui.table.size}</span>
               {provider.measured ? (
-                <strong>{formatBytes(provider.totalBytes)}</strong>
+                <strong className="provider-card-size">{formatBytes(provider.totalBytes)}</strong>
               ) : (
                 <span className="chip">{ui.caches.notMeasured}</span>
               )}
             </div>
             {provider.note && <p className="plan-note">{provider.note}</p>}
-            <div className="provider-actions">
-              {provider.actions.map((action) => (
-                <Button
-                  key={action.id}
-                  variant="secondary"
-                  size="sm"
-                  icon={<Terminal size={12} />}
-                  disabled={!action.available}
-                  title={action.available ? action.description : action.unavailableReason ?? ""}
-                  onClick={() => openPreview(provider.id, action.id)}
-                >
-                  {action.label}
-                </Button>
-              ))}
-              {provider.actions.length === 0 && <span className="chip">{ui.caches.readOnly}</span>}
-            </div>
+            {provider.actions.length > 0 && (
+              <div className="provider-actions">
+                {provider.actions.map((action) => (
+                  <Button
+                    key={action.id}
+                    variant="secondary"
+                    size="sm"
+                    icon={<Terminal size={12} />}
+                    disabled={!action.available}
+                    title={action.available ? action.description : action.unavailableReason ?? ""}
+                    onClick={() => openPreview(provider.id, action.id)}
+                  >
+                    {action.label}
+                  </Button>
+                ))}
+              </div>
+            )}
           </article>
         ))}
         {!loading && loaded && providers.length === 0 && !loadError && (

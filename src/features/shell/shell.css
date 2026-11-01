@@ -22,6 +22,8 @@
   gap: 2px;
   flex: 1;
   min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .nav-rail.collapsed {
@@ -42,6 +44,109 @@
 .nav-collapse-toggle {
   margin-top: auto;
   opacity: 0.75;
+}
+
+/* Settings expands inline inside the rail, directly under its own button, so
+   the submenu belongs to the same vertical stack as the main navigation.
+   It is always mounted and animates open/closed with a grid-rows transition,
+   which keeps the height animation smooth without hard-coding a max-height. */
+.nav-settings-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.nav-item-chevron {
+  margin-left: auto;
+  opacity: 0.55;
+  transition: transform 240ms var(--ease-standard);
+}
+
+.nav-item-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.nav-rail.collapsed .nav-item-chevron {
+  display: none;
+}
+
+.nav-submenu {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition:
+    grid-template-rows 240ms var(--ease-standard),
+    opacity 180ms var(--ease-standard),
+    transform 240ms var(--ease-standard);
+}
+
+.nav-submenu.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.nav-submenu-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-height: 0;
+  margin-left: 10px;
+  padding-left: var(--space-2);
+  border-left: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.nav-submenu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 7px var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.nav-submenu-item:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.nav-submenu-item.active {
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.nav-rail.collapsed .nav-submenu-inner {
+  margin-left: 0;
+  padding-left: 0;
+  border-left: none;
+}
+
+.nav-rail.collapsed .nav-submenu-item {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-submenu,
+  .nav-item-chevron,
+  .nav-submenu-item {
+    transition: none;
+  }
 }
 
 .nav-item {
@@ -84,6 +189,7 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
   min-height: 0;
 }
 
@@ -95,6 +201,9 @@
 }
 
 .provider-card {
+  /* Cards live in a grid; without this a long unbreakable path sets the
+     min-content width and pushes the whole column past the viewport. */
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface);
@@ -104,29 +213,102 @@
   gap: var(--space-2);
 }
 
+.provider-card > * {
+  min-width: 0;
+}
+
+.provider-card-icon {
+  flex: 0 0 auto;
+  opacity: 0.7;
+}
+
+.provider-card-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.provider-card .form-row {
+  min-width: 0;
+}
+
+.provider-card .form-row > * {
+  min-width: 0;
+}
+
+.provider-card .form-row > span {
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.provider-card-size {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.provider-card .plan-note {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .provider-card h3 {
   margin: 0;
   font-size: var(--text-base);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Chips must never stretch or push the card wider than its column. */
+.provider-card h3 .chip {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .provider-paths {
   font-family: var(--font-mono);
   font-size: 11px;
+  line-height: 1.5;
   color: var(--text-muted);
   display: flex;
   flex-direction: column;
   gap: 2px;
-  word-break: break-all;
+  min-width: 0;
+  /* `anywhere` also shrinks the min-content size, which `break-word` does not;
+     that is what stopped long pip/docker paths from widening the card. */
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
+.provider-paths span {
+  min-width: 0;
+}
+
+/* Actions sit at the bottom so cards in one row line up even when the note
+   above them wraps to a different number of lines. */
 .provider-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 4px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.provider-actions .btn {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chip {
@@ -154,50 +336,13 @@
 }
 
 /* Secondary page navigation used by Settings and History. It keeps each page
-   focused on one topic instead of one long scrolling form. */
+   focused on one topic instead of one long scrolling form. Settings picks its
+   topic from the sidebar flyout, so the content here is a single column. */
 .subpage-layout {
   display: grid;
-  grid-template-columns: minmax(160px, 200px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
   align-items: start;
-}
-
-.subpage-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  position: sticky;
-  top: 0;
-  padding: var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface-alt);
-}
-
-.subpage-nav-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 8px 10px;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  text-align: left;
-  cursor: pointer;
-}
-
-.subpage-nav-item:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
-}
-
-.subpage-nav-item.active {
-  background: var(--accent-subtle);
-  color: var(--accent-text);
-  font-weight: 600;
 }
 
 .subpage-content {
@@ -294,12 +439,6 @@
 @media (max-width: 720px) {
   .subpage-layout {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .subpage-nav {
-    position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
   }
 }
 

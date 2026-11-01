@@ -22,7 +22,7 @@ export interface UIText {
     allSafety: string; selectSafe: string; clearSelection: string; openFolder: string;
     selectRow: string; unmeasured: string; details: string;
     allProjects: string; allCategories: string; projectFilter: string; categoryFilter: string;
-    sortHint: string; officialTool: string;
+    sortHint: string; officialTool: string; sizeHint: string; reclaimHint: string;
   };
   safety: { safe: string; regenerate: string; review: string; keep: string };
   plan: {

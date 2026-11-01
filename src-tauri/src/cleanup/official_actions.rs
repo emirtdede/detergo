@@ -253,7 +253,7 @@ const ACTIONS: &[ProviderDef] = &[
     },
     ProviderDef {
         id: "docker",
-        name: "Docker (salt okunur)",
+        name: "Docker",
         cache_paths: &[
             "%LOCALAPPDATA%\\Docker\\wsl\\disk\\docker_data.vhdx",
             "%USERPROFILE%\\.docker",
@@ -267,7 +267,7 @@ const ACTIONS: &[ProviderDef] = &[
     },
     ProviderDef {
         id: "wsl",
-        name: "WSL (salt okunur)",
+        name: "WSL",
         cache_paths: &["%LOCALAPPDATA%\\Packages"],
         version_exe: "wsl",
         read_only: true,
@@ -418,6 +418,35 @@ fn decode_output(bytes: &[u8]) -> String {
     }
 }
 
+/// Pulls just the version token out of a tool banner. Tools are not consistent:
+/// `pip --version` prints "pip 26.2.1 from C:\...\packages\pip (python 3.12)",
+/// Docker prints "Docker version 29.9.2, build a82e528" and Go prints
+/// "go version go1.27.0 windows/amd64". Showing the whole first line blows up
+/// the version chip and forces the card grid to overflow, so only the numeric
+/// part is kept.
+fn extract_version(line: &str) -> Option<String> {
+    for raw in line.split_whitespace() {
+        let token = raw.trim_matches(|c: char| !c.is_ascii_alphanumeric() && c != '.' && c != '-');
+        // Strip a product name glued to the number, e.g. "go1.27.0".
+        let token = match token.find(|c: char| c.is_ascii_digit()) {
+            Some(0) => token,
+            Some(index) if token[..index].chars().all(|c| c.is_ascii_alphabetic()) => &token[index..],
+            _ => continue,
+        };
+        let token = token.trim_start_matches(['v', 'V']).trim_matches('.');
+        if token.is_empty() || !token.contains('.') {
+            continue;
+        }
+        if token
+            .chars()
+            .all(|c| c.is_ascii_digit() || c == '.')
+        {
+            return Some(token.to_string());
+        }
+    }
+    None
+}
+
 fn tool_version(name: &str) -> Option<String> {
     let exe = find_executable(name)?;
     let args: Vec<String> = version_args(name).iter().map(|s| s.to_string()).collect();
@@ -432,8 +461,12 @@ fn tool_version(name: &str) -> Option<String> {
     let cleaned = first.trim_start_matches('\u{feff}').trim();
     if cleaned.is_empty() {
         None
+    } else if let Some(version) = extract_version(cleaned) {
+        Some(version)
     } else {
-        Some(cleaned.chars().take(96).collect::<String>().trim_end().to_string())
+        // Unrecognised banner: keep a short, single-line fallback rather than
+        // letting an arbitrary long line into the chip.
+        Some(cleaned.chars().take(24).collect::<String>().trim_end().to_string())
     }
 }
 
@@ -773,7 +806,7 @@ pub fn _path_display(path: &Path) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{tail, CacheMeasureEvent};
+    use super::{extract_version, tail, CacheMeasureEvent};
 
     #[test]
     fn tail_is_utf8_safe() {
@@ -786,6 +819,34 @@ mod tests {
     #[test]
     fn tail_keeps_short_text() {
         assert_eq!(tail("  kısa çıktı  ", 100), "kısa çıktı");
+    }
+
+    #[test]
+    fn version_banners_reduce_to_the_numeric_part() {
+        // Real-world banners: keeping the whole line overflowed the card grid.
+        assert_eq!(
+            extract_version("pip 26.2.1 from C:\\Users\\emir\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\pip (python 3.12)").as_deref(),
+            Some("26.2.1")
+        );
+        assert_eq!(
+            extract_version("Docker version 29.9.2, build a82e528").as_deref(),
+            Some("29.9.2")
+        );
+        assert_eq!(
+            extract_version("go version go1.27.0 windows/amd64").as_deref(),
+            Some("1.27.0")
+        );
+        assert_eq!(extract_version("npm 11.9.1").as_deref(), Some("11.9.1"));
+        assert_eq!(extract_version("10.0.403").as_deref(), Some("10.0.403"));
+        assert_eq!(extract_version("WSL sürümü: 2.7.14.0").as_deref(), Some("2.7.14.0"));
+        assert_eq!(extract_version("Yarn 1.22.22").as_deref(), Some("1.22.22"));
+    }
+
+    #[test]
+    fn version_extraction_rejects_non_versions() {
+        assert_eq!(extract_version("command not found"), None);
+        assert_eq!(extract_version("v2"), None);
+        assert_eq!(extract_version(""), None);
     }
 
     #[test]
