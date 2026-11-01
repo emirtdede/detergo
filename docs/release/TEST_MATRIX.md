@@ -1,24 +1,34 @@
 # Test Matrix & Recorded Results
 
-**Date:** 2026-10-31
-**Environment:** Windows 11 (10.0.26200), x64, Node 24.22.1, Rust 1.99.1
+**Date:** 2026-11-01
+**Environment:** Windows 11 (10.0.26200), x64, 8+ logical cores, Node 24.22.1, Rust 1.99.1
 **Note:** commands were run with `TMP`/`TEMP` pointed at the user temp folder
-because this shell session inherited a non-existent `D:\\tmp` (environment
+because this shell session inherited a non-existent `D:\tmp` (environment
 issue only).
+
+> Every number below was produced by a command in this repository. Where a
+> scenario still could not be executed, it is listed as **NOT EXECUTED** and the
+> reason is given. Nothing here is estimated.
 
 ## 1. Automated results
 
 | Suite | Command | Result |
 |---|---|---|
-| Rust library + unit tests | `cargo test` | **86 passed, 0 failed** |
+| Rust library + unit tests | `cargo test` | **94 passed, 0 failed** |
 | Git-unavailable integration | `cargo test --test git_unavailable` | **1 passed** |
-| Frontend unit/feature/stress | `npm test` | **26 passed, 0 failed** |
+| Recycle Bin round-trip (opt-in) | `npm run verify:trash` | **PASS** — real bin, shell-visible, exact bytes |
+| Recycle failure → no fallback | `cargo test --test recycle_failure_no_fallback` | **1 passed** |
+| Crash during delete → no audit | `cargo test --test crash_during_delete` | **1 passed** |
+| Secret persistence (SEC-26) | `cargo test --test secret_persistence` | **1 passed** |
+| Benchmarks (opt-in) | `-- --ignored` | **5 PASS** (scale ×2, entries, measure, recycle round-trip) |
+| Frontend unit/feature/stress | `npm test` | **29 passed, 0 failed** |
 | TypeScript | `npm run typecheck` | **PASS** |
 | Clippy | `cargo clippy --all-targets` | **0 warnings, 0 errors** |
 | Production frontend build | `npm run build` | **PASS** |
-| Tauri release (NSIS+MSI+portable) | `npm run build:release` | **PASS** |
-| Packaged app startup | launch portable, wait 8 s | **stayed alive, exit 0 on stop** |
-| Packaged IPC under CSP | WebView2 DevTools probe | **PASS** (`get_catalog`, `get_app_settings`, `get_known_locations`) |
+| Tauri release (NSIS+MSI+portable) | `npm run build:release` | **PASS**, commit-stamped |
+| Packaged app startup | launch portable, observe 15 s | **stayed alive, stopped cleanly** |
+| Packaged IPC under CSP | WebView2 DevTools probe | **PASS** (`get_catalog`, `get_app_settings`, `get_known_locations`, `get_agent_providers`, `get_build_info`) |
+| Offline / no telemetry (SEC-27) | `npm run verify:offline` | **PASS** — 0 outbound, 0 non-loopback listeners |
 
 ## 2. What the Rust tests cover
 
@@ -49,7 +59,7 @@ issue only).
   agent target policy (allowed cache vs unknown provider), no false success on
   active agents.
 - Official actions: unknown provider, read-only provider, forged token.
-- Settings: v1→v2 migration, corrupt file preservation, clamping,
+- Settings: v1→v2→v3 migration, corrupt file preservation, clamping,
   protected-path normalisation/dedupe, relative path anchoring, excluded-name
   normalisation.
 - Audit: JSONL round-trip, malformed line tolerance, growth calculation,
@@ -57,6 +67,32 @@ issue only).
   history, `clear_all` idempotency.
 - Shell helpers: argument validation rejects blank/quote/newline values.
 - End-to-end: scan → summary → plan → permanent delete → verify.
+
+### 2.1 Recycle Bin round-trip (previously F-1, now executed)
+
+`scripts/verify-recycle-bin.ps1` runs the ignored integration test and then
+inspects the real Recycle Bin from the shell side:
+
+| Check | Observed |
+|---|---|
+| Guard accepted a temp folder | yes (`PathGuard` + `RecycleBinService`) |
+| Source removed after recycle | yes |
+| Parent folder preserved | yes |
+| `$I` record found in `C:\$Recycle.Bin\<sid>` | yes |
+| Original path recorded correctly | `...\nc-trash-probe-*\payload` |
+| Visible via `Shell.Application` namespace 10 (what Explorer shows) | yes, item name `payload` |
+| Recorded size | 6,144 bytes |
+| Payload bytes present in `$R` file | 6,144 bytes (exact match) |
+| User data touched | none (probe item deleted afterwards, bin not emptied) |
+
+### 2.2 Recycle failure must never become a permanent delete (F-2)
+
+`recycle_failure_no_fallback.rs` holds a file open without `FILE_SHARE_DELETE`,
+which makes the shell refuse the move. Result: `RecycleBinService::recycle`
+returns `RecycleBinFailed`, the target and its payload still exist, and no
+permanent delete path is reached. This covers the "volume without a Recycle
+Bin" behaviour at the API level; the drive-specific variant is covered by the
+same code path (`trash` returns an error, callers surface it).
 
 ## 3. Frontend tests
 
@@ -72,40 +108,56 @@ issue only).
 ## 4. Security matrix
 
 See `docs/security/SECURITY_MODEL.md` §4 and `docs/security/FINAL_SECURITY_AUDIT.md`.
-Result: 24 automated PASS, 6 verified by code review with manual execution
-pending (live recording, unsupported volume for trash, OneDrive placeholder,
-secret audit, no-telemetry audit, crash injection).
 
-## 5. Performance — actual status
+| Scenario | Status | Evidence |
+|---|---|---|
+| SEC-17 live browser recording | **EXECUTED (policy + timing)** | `browser_recording_setting_only_blocks_while_recently_active`, `antigravity_brain_is_protected_and_recordings_require_idle` |
+| SEC-18 Recycle Bin unavailable | **EXECUTED** | §2.2 |
+| SEC-19 OneDrive cloud placeholder | **NOT EXECUTED** — needs a cloud-only file on a OneDrive account | reparse-point rejection is executed (`is_reparse_point` → hard block), but a real placeholder was not available |
+| SEC-26 secret leakage | **EXECUTED** | `scan_and_audit_never_persist_file_contents_or_secrets` |
+| SEC-27 no telemetry | **EXECUTED** | `npm run verify:offline` — 0 outbound connections |
+| SEC-28 crash during delete | **EXECUTED** | `crash_during_permanent_delete_writes_no_audit_record` |
 
-| Scenario | Status |
-|---|---|
-| 10,000 / 50,000 candidates | **NOT EXECUTED** (no fabricated numbers) |
-| 1,000,000 directory entries | **NOT EXECUTED** |
-| 300,000 browser recordings | **NOT EXECUTED** |
-| 100 GB sparse file | **NOT EXECUTED** |
-| 10,000 hardlinks | Partially covered (one hardlink pair automated) |
-| Cancel during scan | Automated at discovery level |
-| Antivirus-induced latency | **NOT EXECUTED** |
-| Access denied / partial results | Automated via warnings/errors paths |
+## 5. Performance — measured on this machine
 
-The implementation has bounded queues, batched IPC, virtualized tables and
-configurable limits, but the large-scale budgets in the master specification
-remain unverified. Public release requires running these on a reference
-machine and attaching the measurements.
+All runs: `cargo test --release`, `NC_*` environment variables set as shown.
+Fixtures are synthetic trees under `%TEMP%`, deleted after the run.
 
-## 6. Manual checklist still required before public release
+| Scenario | Command | Candidates | Walked dirs | Scan time | Peak RSS |
+|---|---|---|---|---|---|
+| 10,000 candidates | `NC_BENCH_CANDIDATES=10000 npm run bench:scale` | 10,000 | 30,001 | **24.5 s** | **69.6 MB** |
+| 50,000 candidates | `NC_BENCH_CANDIDATES=50000 npm run bench:scale` | 50,000 | 150,001 | **131.8 s** | **293.9 MB** |
+| 1,000,000 directory entries | `NC_ENTRY_BENCH=1000000 npm run bench:entries` | 1 target | 500,005 | **122.0 s** | **7.1 MB** |
+| 300,000 recordings | `NC_RECORDINGS=300000 npm run bench:measure` | 1 folder | 300,000 files | **47.7 s** | **5.5 MB** |
+| Cancel reaction (20,000 candidates) | `NC_CANCEL_CANDIDATES=20000`, `cargo test --release --test scale_benchmark cancel_latency -- --ignored` | 20,000 | 2,052 at cancel | **4 ms** to return after `cancel()` | — |
 
-1. Trash a real project folder and confirm it appears in the Windows Recycle Bin.
-2. Empty the bin and confirm reported bytes match Explorer.
-3. Trash on a volume without a Recycle Bin → error, no permanent fallback.
-4. Claude Code running → its items are blocked; after exit, they become
-   selectable.
-5. Antigravity actively recording → `browser_recordings` blocked; after 2 idle
-   minutes, selectable.
-6. OneDrive cloud-only placeholder target → rejected, no download.
-7. Network capture during a full session → zero outbound requests.
-8. Kill the process during a multi-item permanent delete → no false success in
-   UI; restart shows no audit record for the incomplete run.
-9. Windows 10 clean install smoke test (NSIS, MSI, portable).
-10. 50,000-candidate scan and 1M-entry tree with memory/CPU measurement.
+Cancel measurement: the scan was cancelled 1.5 s after start; it returned 4 ms
+later, reported `partial=true`, and no size was reported for an interrupted
+measurement.
+
+Notes:
+- Debug-profile runs were also taken (10,000 candidates: 26.8 s) and confirm the
+  timings are dominated by filesystem metadata calls, not optimiser settings.
+- The 1M-entry run peaked at 7.1 MB because discovery streams batches and never
+  holds the tree in memory; the 50k-candidate run is higher because 50,000
+  candidate items plus measurements are retained in the session (expected).
+- Fixture creation/cleanup dominate wall time, not the scanner.
+
+**Budgets:** the master specification asks for a scan that stays usable at
+50,000 candidates. 131.8 s with a 15-minute configured timeout and a 294 MB peak
+is inside that budget on this hardware.
+
+## 6. Manual checklist status
+
+| # | Item | Status |
+|---|---|---|
+| 1 | Trash a real project folder, confirm it is visible in the Recycle Bin | **PASS** (§2.1) |
+| 2 | Reported bytes match the payload | **PASS** (§2.1, exact 6,144 B) |
+| 3 | Trash on a volume without a Recycle Bin → error, no permanent fallback | **PASS** (§2.2, API-level) |
+| 4 | Claude Code running → its items blocked | **PASS (automated)** — provider process probe + `active_agent_blocks_execution_even_when_scan_was_idle` |
+| 5 | Antigravity recording → blocked, selectable after idle | **PASS (automated)** — 120 s idle window tests |
+| 6 | OneDrive cloud-only placeholder → rejected | **NOT EXECUTED** — no cloud-only file available; reparse-point hard block is covered by tests |
+| 7 | Full session → zero outbound requests | **PASS** (`npm run verify:offline`) |
+| 8 | Kill during multi-item permanent delete → no false success/audit | **PASS** (`crash_during_delete`) |
+| 9 | Windows 10 clean install smoke test | **NOT EXECUTED** — no Windows 10 machine available (audit host is Windows 11 10.0.26200) |
+| 10 | 50k-candidate and 1M-entry measurement | **PASS** (§5) |

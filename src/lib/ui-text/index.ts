@@ -72,6 +72,7 @@ export interface UIText {
     historyEnabled: string; protectedPaths: string; addPath: string; remove: string;
     excludedNames: string; agentCacheCleanup: string; browserRecordings: string;
     saved: string; saveError: string; about: string; version: string;
+    buildCommit: string; buildProfile: string; buildDirty: string;
     rules: string; ecosystems: string; categories: string;
     subtitle: string; generalHint: string; scanHint: string; protectionsHint: string;
     agentsHint: string; privacyHint: string; aboutHint: string;

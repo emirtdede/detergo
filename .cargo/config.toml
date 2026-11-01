@@ -1,9 +1,9 @@
+# Intentionally minimal and machine-independent.
+#
+# An earlier revision pinned `target-dir` to a developer-specific temp folder and
+# hard-coded MSVC/SDK `LIBPATH` entries. That made the release build
+# unreproducible on any other machine: cargo wrote outside the repo and the
+# linker searched paths that only existed on one workstation. The toolchain is
+# now discovered the normal way, and a non-default artifact directory can still
+# be requested with the standard `CARGO_TARGET_DIR` environment variable.
 [build]
-target-dir = "C:\\Users\\emir\\AppData\\Local\\Temp\\node_cleaner_target"
-
-[target.x86_64-pc-windows-msvc]
-rustflags = [
-    "-C", "link-arg=/LIBPATH:C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.26100.0\\um\\x64",
-    "-C", "link-arg=/LIBPATH:C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.26100.0\\ucrt\\x64",
-    "-C", "link-arg=/LIBPATH:C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC\\14.44.35207\\lib\\x64"
-]

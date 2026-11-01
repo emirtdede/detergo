@@ -458,6 +458,16 @@ export interface KnownLocation {
   source: string;
 }
 
+/** Identity of the compiled build, embedded by the Rust build script. */
+export interface BuildInfo {
+  version: string;
+  commit: string;
+  commitShort: string;
+  dirty: boolean;
+  profile: "debug" | "release";
+  builtAt: string;
+}
+
 export type AppErrorCode =
   | "InvalidPath"
   | "AccessDenied"

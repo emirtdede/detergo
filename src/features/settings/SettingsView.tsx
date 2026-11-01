@@ -15,7 +15,7 @@ import { useUIText } from "@/lib/ui-text";
 import { LANGUAGES_LIST } from "@/locales/languages";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { countCatalogStats } from "@/lib/catalog-stats";
-import { CatalogDto, SupportedLanguage, ThemeMode } from "@/types";
+import { CatalogDto, BuildInfo, SupportedLanguage, ThemeMode } from "@/types";
 import { UIText } from "@/lib/ui-text";
 import { useSettingsSections } from "./settings-sections";
 import "../items/items.css";
@@ -64,6 +64,7 @@ export const SettingsView: React.FC = () => {
   const [protectedInput, setProtectedInput] = useState("");
   const [excludedInput, setExcludedInput] = useState("");
   const [catalog, setCatalog] = useState<CatalogDto | null>(null);
+  const [buildInfo, setBuildInfo] = useState<BuildInfo | null>(null);
 
   useEffect(() => {
     scannerApi
@@ -71,6 +72,15 @@ export const SettingsView: React.FC = () => {
       .then(setCatalog)
       .catch(() => showToast(ui.errors.title, "error"));
   }, [showToast, ui.errors.title]);
+
+  // Which commit this binary was compiled from. Shown in About so a support
+  // report and the audited revision can be compared without guessing.
+  useEffect(() => {
+    scannerApi
+      .getBuildInfo()
+      .then(setBuildInfo)
+      .catch(() => setBuildInfo(null));
+  }, []);
 
   // The catalog holds one entry per cleanup rule; ecosystems and categories are
   // distinct values across those rules, not the rule count itself.
@@ -350,6 +360,20 @@ export const SettingsView: React.FC = () => {
         {activeSection.id === "about" && (
           <section className="settings-card">
             <div className="form-row"><span>{ui.settings.version}</span><strong>2.0.0</strong></div>
+            <div className="form-row">
+              <span>{ui.settings.buildCommit}</span>
+              <span>
+                {buildInfo
+                  ? `${buildInfo.commitShort}${buildInfo.dirty ? ` (${ui.settings.buildDirty})` : ""}`
+                  : "—"}
+              </span>
+            </div>
+            {buildInfo && (
+              <div className="form-row">
+                <span>{ui.settings.buildProfile}</span>
+                <span>{buildInfo.profile}</span>
+              </div>
+            )}
             <div className="form-row">
               <span><Sparkles size={12} /> Node Cleaner</span>
               <span>Vellium</span>

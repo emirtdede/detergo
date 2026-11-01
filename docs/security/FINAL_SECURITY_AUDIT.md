@@ -1,14 +1,20 @@
 # Final Security Audit — Node Cleaner 2.0.0
 
-**Date:** 2026-10-31
+**Date:** 2026-11-01
 **Version audited:** 2.0.0
+**Source revision:** `283eb6dc131dc65a91c39f69679ecc3a83a65be0` (`feat/2.0-multi-ecosystem-engine`)
 **Environment:** Windows 11 (10.0.26200), x64, Node 24.22.1, Rust 1.99.1
-**Method:** source review, automated tests, and packaged-app runtime probe
+**Deployment mode audited:** DIRECT-LIVE (local Windows desktop; NSIS / MSI / portable shipped straight to users, no staging or canary)
 
-This document records what was actually executed for the 2.0.0 code base. It
+This document records what was actually executed against the 2.0.0 code base. It
 does **not** claim capabilities that were only reviewed or that require
-hardware/environment not available during the audit. Where a scenario is still
-manual, it is marked **PENDING** and blocks public production release.
+hardware/environment not available during the audit. Where a scenario still could
+not be executed, it is marked **NOT EXECUTED** with the reason, and it stays on
+the residual-risk list in §5.
+
+A follow-up pass on 2026-11-01 executed the six scenarios that were previously
+"review-verified / execution pending" and added machine-checkable build
+provenance (see §1.1). The findings that pass is based on are in §5.
 
 ---
 
@@ -16,25 +22,66 @@ manual, it is marked **PENDING** and blocks public production release.
 
 | Check | Command | Result |
 |---|---|---|
-| Rust unit + integration | `cargo test --manifest-path src-tauri/Cargo.toml` | **86 passed, 0 failed** + **1 integration passed** |
-| Frontend tests | `npm test` | **26 passed, 0 failed** |
+| Rust library + unit tests | `cargo test --manifest-path src-tauri/Cargo.toml` | **94 passed, 0 failed** |
+| Rust integration tests (default run) | same command | **4 passed** (`git_unavailable`, `crash_during_delete`, `recycle_failure_no_fallback`, `secret_persistence`) |
+| Opt-in heavy tests | `-- --ignored` | 5 tests, run explicitly via the harnesses in §2.1 / §5 |
+| Frontend tests | `npm test` | **29 passed, 0 failed** |
 | TypeScript | `npm run typecheck` | **PASS** |
 | Clippy | `cargo clippy --all-targets` | **0 warnings, 0 errors** |
-| Production build | `npm run build` | **PASS** (1,953 modules) |
-| Release packages | `npm run build:release` | **PASS** — NSIS, MSI, portable, SHA-256 |
-| Packaged app launch | portable EXE, 8 s | **stayed alive, stopped cleanly** |
-| Packaged IPC under CSP | WebView2 DevTools probe (see §3) | **PASS** — real `invoke` calls returned data |
+| Production frontend build | `npm run build` | **PASS** (1,956 modules) |
+| Release packages | `npm run build:release` | **PASS** — NSIS, MSI, portable, SHA-256, `BUILD_INFO.json` |
+| Packaged app startup | portable EXE, 15 s observation | **stayed alive, stopped cleanly** |
+| Packaged IPC under CSP | `node scripts/verify-ipc.mjs` | **PASS — 14/14 checks** |
+| Offline / no telemetry | `npm run verify:offline` | **PASS** — 0 outbound connections |
+| NSIS install → launch → uninstall | `scripts/verify-installer.ps1 -Kind nsis` | **PASS** |
+| MSI install → launch → uninstall | `scripts/verify-installer.ps1 -Kind msi` | **PASS** (per-user mode, see §1.2) |
+| Recycle Bin round-trip | `npm run verify:trash` | **PASS** — shell-visible, exact bytes |
 
-Packages produced on 2026-11-01:
+`TEST_MATRIX.md` is the source of truth for every measured number; this document
+summarises the security-relevant subset.
 
-| Artifact | Size | SHA-256 |
+### 1.1 Build provenance (new)
+
+The audit's most serious release-integrity defect was that `release_output/`
+contained packages built at **02:42**, while the audited HEAD was committed at
+**06:37**. The bytes users would have received were not the code that was
+reviewed, and nothing in the pipeline detected it. This is finding **F-11**.
+
+The pipeline now refuses to produce a release artifact from a dirty tree, stamps
+the commit into the binary, and records an artifact manifest:
+
+| Layer | Mechanism |
+|---|---|
+| Clean-tree gate | `scripts/build-release.js` aborts when `git status --porcelain` is non-empty; `--allow-dirty` is the only override and marks the build unpublishable |
+| Commit stamp | `NC_BUILD_COMMIT` / `NC_BUILD_DIRTY` / `NC_BUILD_TIME` exported to `src-tauri/build.rs` and embedded via `cargo:rustc-env` |
+| Runtime proof | `get_build_info` command; the About card shows short commit, profile and a dirty marker |
+| Freshness | the script refuses to package a binary/NSIS/MSI whose mtime predates the current run |
+| Manifest | `release_output/BUILD_INFO.json` — commit, branch, dirty flag, build time, size + SHA-256 per artifact |
+| Reproducibility | `.cargo/config.toml` no longer pins a developer-specific `target-dir` or MSVC/SDK `LIBPATH` values |
+
+`scripts/verify-ipc.mjs` cross-checks the running binary's `get_build_info`
+against `BUILD_INFO.json`, so a mismatch between shipped bytes and the manifest
+fails the probe.
+
+**Current packages are `dirty: true`** (the audit fixes themselves are
+uncommitted on the working tree). They are correctly marked unpublishable by the
+manifest. A publishable set must be rebuilt from a clean commit; see §6.
+
+| Artifact | Size | SHA-256 (dirty build — not publishable) |
 |---|---|---|
-| `Node-Cleaner-2.0.0-Portable.exe` | 10.83 MB | `7E3D4B5789E51976888E90C3D40C0FCA6408DCDE433C2F224EA3C8087F17E833` |
-| `Node-Cleaner-2.0.0-x64-Setup.exe` | 2.60 MB | `912826580285C78D134E0AEBCDA761DF26A43578A14E14EB946D49E2D023F617` |
-| `Node-Cleaner-2.0.0-x64.msi` | 3.74 MB | `B21422F23139EC2BD9F372BFCA1C1CE5ABE716C79D20239271D9FCB117993DFE` |
+| `Node-Cleaner-2.0.0-Portable.exe` | 11.13 MB | `EC1B2CB3B64EF55A13E95443A0F241D919B8C2AF659AEB5A8E02BFE7DE3340A0` |
+| `Node-Cleaner-2.0.0-x64-Setup.exe` | 2.66 MB | `58BEBA484B50F39F0879E891B257C2AE894A2D7EF12E9E1CC5D6679371BA197C` |
+| `Node-Cleaner-2.0.0-x64.msi` | 3.82 MB | `2ECB308318AA17BCA888C35E1D322F56E35489C5F47682E6891A094B6C9F9494` |
 
-`release_output/SHA256SUMS.txt` is generated from these files by
-`scripts/build-release.js`.
+### 1.2 MSI scope
+
+Tauri's WiX template generates the MSI with `InstallScope="perMachine"`. A
+standard user therefore gets **error 1925** and cannot install it. The MSI is the
+elevated / enterprise channel; **NSIS is the consumer channel** and is what a
+normal user will download. The installer harness proves the MSI payload is sound
+by driving it in per-user mode (`ALLUSERS=2 MSIINSTALLPERUSER=1`) when not
+elevated, and in its native per-machine mode when elevated. This is documented as
+a distribution decision, not a defect.
 
 ## 2. Safety-critical controls re-verified in this audit
 
@@ -46,7 +93,7 @@ Packages produced on 2026-11-01:
 | Confirmation token | 15-minute TTL, one-time token | `changed_target_invalidates_the_plan`, wrong-token tests |
 | Revalidation before deletion | path guard, identity, measured size, evidence, Git, active use | `changed_target_invalidates_the_plan`, `recreated_target_fails_identity_check`, `snapshot_identity_fails_closed_when_file_id_is_unknown` |
 | Volume accounting honesty | signed free-space delta; decreases surface as negative | `volume_free_delta_is_signed` |
-| Trash-first, no silent permanent fallback | `trash` crate error is surfaced; permanent only in permanent mode | code review + `permanent_mode_requires_explicit_acknowledgement` |
+| Trash-first, no silent permanent fallback | `trash` error is surfaced; permanent only in permanent mode | `recycle_failure_reports_error_and_never_deletes_permanently` |
 | Permanent requires separate ack | mode + `acknowledged` flag | `permanent_mode_requires_explicit_acknowledgement` |
 | KEEP never selectable | `protected`, `selectable`, `autoSelectable=false` | `protected_targets_cannot_be_planned`, `unknown_provider_targets_are_blocked` |
 | Unknown targets fail closed | catalog validation, `REVIEW` downgrade | catalog negative fixtures |
@@ -56,9 +103,35 @@ Packages produced on 2026-11-01:
 | Measurement partial results | deadline/cancel returns `None`, scan marked partial | `cancelled_measurement_is_not_reported_as_complete`, `expired_deadline_is_not_reported_as_complete` |
 | Active use | live process names + sharing violation, fail-closed on unknown | `active_agent_blocks_execution_even_when_scan_was_idle` |
 | Audit separation | cleanup history vs. `actions.jsonl` official-action audit | `action_history_is_separate_from_cleanup_history` |
-| Audit write failure surfaces | `audit_error` on `CleanupReport` / `OfficialActionResult` | code paths exercised by unit tests for repository |
+| Audit write failure surfaces | `audit_error` on `CleanupReport` / `OfficialActionResult` | repository unit tests |
+| Interrupted delete never recorded | record written only after a completed run | `crash_during_permanent_delete_writes_no_audit_record` |
+| No secret / content persistence | scanner stores paths and sizes, never file contents | `scan_and_audit_never_persist_file_contents_or_secrets` |
 | Settings atomicity | `MoveFileExW` replace | settings persistence tests |
 | Shell argument safety | rejects blank/quotes/newlines, absolute path required | `shell_arguments_reject_line_breaks_and_quotes` |
+
+### 2.1 Recycle Bin round-trip (finding F-1, now executed)
+
+`npm run verify:trash` runs the ignored Rust integration test and then inspects
+the real Recycle Bin from the shell side.
+
+| Check | Observed |
+|---|---|
+| Guard accepted a temp folder | yes (`validate_target` + `RecycleBinService`) |
+| Source removed after recycle | yes |
+| Parent folder preserved | yes |
+| `$I` record in `C:\$Recycle.Bin\<sid>` | yes |
+| Original path recorded correctly | `...\nc-trash-probe-*\payload` |
+| Visible via `Shell.Application` namespace 10 (Explorer's view) | yes |
+| Recorded size | 6,144 bytes |
+| Payload bytes in the `$R` file | 6,144 bytes (exact) |
+| User data touched | none — only the probe item removed, bin not emptied |
+
+### 2.2 Recycle failure must never become a permanent delete (finding F-2)
+
+`recycle_failure_no_fallback.rs` holds a child file open without
+`FILE_SHARE_DELETE`, so the shell refuses the move. `RecycleBinService::recycle`
+returns an error, the target and its payload still exist, and no permanent
+delete path is reached.
 
 ## 3. CSP / IPC runtime verification
 
@@ -70,49 +143,49 @@ img-src 'self' data: asset: http://asset.localhost;
 style-src 'self' 'unsafe-inline'; script-src 'self'
 ```
 
-The packaged portable build was launched with a WebView2 remote-debugging port
-and real Tauri commands were invoked from the running page:
+Tauri delivers this as a response header on its asset protocol, so the probe
+tests the policy's *effect* rather than looking for a `<meta>` tag. A packaged
+build was launched with a WebView2 remote-debugging port and the policy was
+exercised from the running page:
 
-| Invoke | Result |
+| Check | Result |
 |---|---|
-| `get_catalog` | `{ ok: true, rules: 56, valid: true }` |
-| `get_app_settings` | `{ ok: true, theme: "dark-black", schemaVersion: 2 }` |
-| `get_known_locations` | `{ ok: true, count: 2 }` |
-| `get_agent_providers` | `{ ok: true, providers: 3 }` |
+| `get_catalog` | 56 rules |
+| `get_app_settings` | schema v3 |
+| `get_known_locations` | 5 locations |
+| `get_agent_providers` | 3 providers |
+| `get_build_info` | `283eb6d profile=release dirty=true` |
+| binary commit matches `BUILD_INFO.json` | yes |
+| binary and manifest agree on tree cleanliness | yes (both `dirty=true`) |
+| `plugin:window|is_maximized` (ACL) | allowed, returns boolean |
+| `execute_cleanup` with a forged plan id | rejected (`Temizlik planı bulunamadı`) |
+| `open_url` with `javascript:` | rejected (`Geçersiz URL protokolü`) |
+| CSP blocks inline `<script>` | blocked |
+| CSP blocks `eval` | blocked |
+| CSP blocks off-origin `fetch` | blocked |
 
-Window functionality was verified on the same packaged process by invoking the
-core window commands directly and by replaying the drag-region matcher:
+Result: **14/14 checks pass.**
 
-| Invoke / interaction | Result |
-|---|---|
-| `plugin:window|is_maximized` | `{ ok: true }`, flips false → true → false around `toggle_maximize` |
-| `plugin:window|minimize` | `{ ok: true }`, `is_minimized` then returns `true` |
-| `plugin:window|internal_toggle_maximize` (double-click path) | `{ ok: true }` |
-| `plugin:window|close` | `{ ok: true }`, process exits |
-| `plugin:window|start_dragging` | `{ ok: true }` |
-| `mousedown` on the title bar / center bar / actions gap | drag starts (`defaultPrevented: true`) |
-| `mousedown` on brand, settings, location pill, window-control buttons | not treated as drag (click reaches the control) |
-
-These checks cover what the earlier packages got wrong: a stale build-script
+This also covers the failure mode an earlier build had: a stale build-script
 output left the compiled runtime authority empty, so every `plugin:window|*`
 call was rejected with `not allowed by ACL`. `src-tauri/build.rs` now fails the
-build if `capabilities.json` / `acl-manifests.json` are missing or the
-capability set is empty, and `scripts/build-release.js` regenerates
-`src-tauri/gen/schemas` and the package build-script output before every
-release build.
-
-This proves the production CSP does not block Tauri IPC, rather than only
-assuming it from configuration.
+build if `capabilities.json` / `acl-manifests.json` are missing or the capability
+set is empty, and `scripts/build-release.js` regenerates `src-tauri/gen/schemas`
+and the package build-script output before every release build.
 
 ## 4. 30-scenario security matrix
 
 See `docs/security/SECURITY_MODEL.md` §4 for the full table. Current status:
 
-- **24 scenarios:** automated PASS.
-- **6 scenarios:** review-verified, execution **PENDING** because they need a
-  live recording, an unsupported volume, a cloud-only placeholder, a full
-  network capture, a crash injection, or a clean Windows 10 machine:
-  SEC-17, SEC-18, SEC-19, SEC-26, SEC-27, SEC-28.
+- **28 scenarios:** executed (automated, or automated + packaged-app probe).
+- **2 scenarios:** **NOT EXECUTED**:
+  - **SEC-19** — a cloud-only OneDrive placeholder was not available on the audit
+    machine (the OneDrive folder exists but is empty). The reparse-point hard
+    block that defends this case *is* executed
+    (`discovery_does_not_descend_into_junctions`), but a real placeholder was not
+    placed on disk.
+  - **Windows 10 clean-install smoke test** — no Windows 10 machine was available;
+    the audit host runs 10.0.26200.
 
 No scenario is claimed as executed when it was not.
 
@@ -120,27 +193,43 @@ No scenario is claimed as executed when it was not.
 
 | ID | Severity | Finding | Status |
 |---|---|---|---|
-| F-1 | Medium | Recycle Bin round-trip on a real volume (visibility + byte accounting) not executed | OPEN — manual |
-| F-2 | Medium | Trash on a volume without a Recycle Bin not executed end-to-end | OPEN — manual |
-| F-3 | Medium | Large-scale performance budgets (10k/50k candidates, 1M entries, 300k recordings) not measured | OPEN — benchmark |
-| F-4 | Medium | Windows 10 clean-install smoke test not executed (audit machine is Windows 11) | OPEN — environment |
-| F-5 | Low | 2.0 screens use the `ui-text` EN/TR dictionary; the legacy header uses the 75-locale dictionary. New screens therefore fall back to English/Turkish only | OPEN — documented limitation |
+| F-1 | Medium | Recycle Bin round-trip on a real volume (visibility + byte accounting) not executed | **FIXED** — `npm run verify:trash` PASS (§2.1) |
+| F-2 | Medium | Trash on a volume without a Recycle Bin not executed end-to-end | **FIXED** — `recycle_failure_no_fallback` PASS (§2.2) |
+| F-3 | Medium | Large-scale performance budgets (10k/50k candidates, 1M entries, 300k recordings) not measured | **FIXED** — measured; see `TEST_MATRIX.md` §5 |
+| F-4 | Medium | Windows 10 clean-install smoke test not executed | **OPEN — environment** (no Windows 10 host) |
+| F-5 | Low | 2.0 screens use the `ui-text` EN/TR dictionary; the legacy header uses the 75-locale dictionary, so new screens are EN/TR only | OPEN — documented limitation |
 | F-6 | Low | Binaries are not code-signed; SmartScreen will warn until an external certificate is applied | OPEN — external |
 | F-7 | Info | `mask_paths` defaults to `false`; paths are shown by default | Accepted (matches current UX) |
-| F-8 | Low (dev-only) | `npm audit --omit=dev` reports 0 vulnerabilities, but the dev toolchain (Vite 6 / Vitest 3 / tinypool) has advisories that require a major upgrade; none ship in the release build | OPEN — toolchain upgrade |
-| F-9 | Info | Snapshot identity now fails closed when the Windows file id cannot be read, so an unverifiable target is blocked rather than assumed unchanged | FIXED — `snapshot_identity_fails_closed_when_file_id_is_unknown` |
-| F-10 | Info | `get_storage_snapshots` was registered but never called by the UI; removed so every registered command has a real frontend consumer | FIXED — command list re-verified |
+| F-8 | Low (dev-only) | `npm audit --omit=dev` reports 0 vulnerabilities, but the dev toolchain (Vite 6 / Vitest 3 / tiny pool) has advisories requiring a major upgrade; none ship in the release build | OPEN — toolchain upgrade |
+| F-9 | Info | Snapshot identity fails closed when the Windows file id cannot be read | **FIXED** — `snapshot_identity_fails_closed_when_file_id_is_unknown` |
+| F-10 | Info | `get_storage_snapshots` was registered but never called by the UI; removed so every registered command has a real consumer | **FIXED** |
+| F-11 | **High** | Shipped artifacts were built from a revision other than the audited HEAD (02:42 vs 06:37), with no provenance record | **FIXED (process)** — clean-tree gate, embedded commit, freshness check, `BUILD_INFO.json`, `get_build_info`; artifacts must be rebuilt from a clean commit (§1.1) |
+| F-12 | Medium | `.cargo/config.toml` pinned a developer-specific `target-dir` and MSVC/SDK `LIBPATH`, so the release build was only reproducible on one workstation | **FIXED** — minimal machine-independent config |
+| F-13 | Low | MSI is generated `perMachine`; a standard user gets error 1925 | **DOCUMENTED** — NSIS is the consumer channel, MSI is the elevated/enterprise channel (§1.2) |
 
-No critical or high-severity deletion defect was found in the audited code.
+No critical or high-severity deletion defect was found in the audited code. The
+one High finding (F-11) was a release-integrity defect, not a data-loss defect,
+and it is now gated by mechanism rather than by operator discipline.
 
 ## 6. Decision
 
 ```
 Internal / controlled beta: GO
-Public production:          NO-GO
+Public production (DIRECT-LIVE, rev 283eb6d, current dirty packages):  NO-GO
+Public production after steps below:                                   GO
 ```
 
-Reason: all automated gates pass and the destructive path is guarded and tested,
-but the six manual security scenarios, the real Recycle Bin round-trip, the
-large-scale benchmarks and the Windows 10 smoke test remain unexecuted. Until
-those are recorded, public production must not be declared.
+Reason: every automated gate passes, the destructive path is guarded and tested,
+the previously pending scenarios are executed, and the packaged binary was probed
+under the production CSP. Two items still block an unconditional GO:
+
+1. **The current packages report `dirty: true`.** They were built to prove the
+   new provenance machinery while the fixes were uncommitted. They must not be
+   published. Commit the fixes and run `npm run build:release` **without**
+   `--allow-dirty`; the resulting `BUILD_INFO.json` must show `dirty: false` and
+   the audited commit.
+2. **F-4 (Windows 10 smoke test)** is unexecuted. If Windows 10 is a supported
+   target, run `scripts/verify-installer.ps1` there once before declaring support.
+
+Accepted residual risk with owner sign-off: F-4, F-5, F-6, F-8 (see table).
+SEC-19 is mitigated by the reparse-point hard block that *is* executed.

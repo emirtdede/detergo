@@ -1,6 +1,13 @@
+use std::process::Command;
+
 fn main() {
     println!("cargo:rerun-if-changed=icons/icon.ico");
     println!("cargo:rerun-if-changed=tauri.conf.json");
+    // The release artifact must be traceable to a commit. Re-run when the git
+    // head moves so the embedded stamp never goes stale.
+    println!("cargo:rerun-if-changed=../.git/HEAD");
+    println!("cargo:rerun-if-env-changed=NC_BUILD_COMMIT");
+
     tauri_build::build();
 
     // Guard against a build where the ACL capability set never reached OUT_DIR.
@@ -21,4 +28,59 @@ fn main() {
         capabilities.len() > 2,
         "Generated capabilities.json is empty; the app would ship without any capability."
     );
+
+    embed_build_identity();
+}
+
+/// Embeds the exact commit (and whether the tree was dirty) into the binary so
+/// an installed build can be compared with the audited source revision.
+fn embed_build_identity() {
+    let repo_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
+    let commit = env_override("NC_BUILD_COMMIT")
+        .or_else(|| git(&repo_root, &["rev-parse", "HEAD"]))
+        .unwrap_or_else(|| "unknown".to_string());
+    let dirty = env_override("NC_BUILD_DIRTY").unwrap_or_else(|| {
+        match git(&repo_root, &["status", "--porcelain"]) {
+            Some(status) => (!status.is_empty()).to_string(),
+            None => "unknown".to_string(),
+        }
+    });
+    let built_at = env_override("NC_BUILD_TIME").unwrap_or_else(|| {
+        let secs = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0);
+        secs.to_string()
+    });
+    let short = if commit.len() >= 7 && commit != "unknown" {
+        commit[..7].to_string()
+    } else {
+        commit.clone()
+    };
+
+    println!("cargo:rustc-env=NC_BUILD_COMMIT={commit}");
+    println!("cargo:rustc-env=NC_BUILD_COMMIT_SHORT={short}");
+    println!("cargo:rustc-env=NC_BUILD_DIRTY={dirty}");
+    println!("cargo:rustc-env=NC_BUILD_TIME={built_at}");
+}
+
+fn env_override(key: &str) -> Option<String> {
+    std::env::var(key).ok().filter(|v| !v.trim().is_empty())
+}
+
+fn git(repo_root: &std::path::Path, args: &[&str]) -> Option<String> {
+    let output = Command::new("git")
+        .current_dir(repo_root)
+        .args(args)
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let text = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    if text.is_empty() {
+        None
+    } else {
+        Some(text)
+    }
 }

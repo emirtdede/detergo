@@ -5,6 +5,7 @@ import {
   AgentProviderInfo,
   AppSettings,
   AuditRecord,
+  BuildInfo,
   CacheMeasureEvent,
   CacheProviderInfo,
   CatalogDto,
@@ -63,6 +64,7 @@ export interface ScannerApi {
   getGrowthReport(): Promise<GrowthReport>;
   getAppSettings(): Promise<AppSettings>;
   saveAppSettings(settings: AppSettings): Promise<void>;
+  getBuildInfo(): Promise<BuildInfo>;
 }
 
 let isFolderDialogOpen = false;
@@ -261,5 +263,19 @@ export const scannerApi: ScannerApi = {
       throw new Error("Ayar kaydı masaüstü ortamı gerektirir.");
     }
     await invoke("save_app_settings", { settings });
+  },
+
+  async getBuildInfo(): Promise<BuildInfo> {
+    if (!isTauriEnvironment()) {
+      return {
+        version: "2.0.0",
+        commit: "unknown",
+        commitShort: "unknown",
+        dirty: true,
+        profile: "debug",
+        builtAt: "",
+      };
+    }
+    return await invoke<BuildInfo>("get_build_info");
   },
 };

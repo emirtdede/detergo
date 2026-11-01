@@ -1,4 +1,5 @@
 pub mod audit;
+pub mod build_info;
 pub mod catalog;
 pub mod cleanup;
 pub mod commands;
@@ -77,7 +78,8 @@ pub fn run() {
             get_official_action_history,
             clear_cleanup_history,
             get_app_settings,
-            save_app_settings
+            save_app_settings,
+            get_build_info
         ])
         .run(tauri::generate_context!())
         .expect("Node Cleaner başlatılırken hata oluştu");

@@ -70,31 +70,36 @@ Status legend:
 | SEC-14 | Claude `file-history` | A/P | `claude_checkpoints_and_settings_are_protected` |
 | SEC-15 | Codex SQLite/WAL | A/P | codex spec test (all targets protected) |
 | SEC-16 | Antigravity `brain` | A/P | `antigravity_brain_is_protected_and_recordings_require_idle` |
-| SEC-17 | Active browser recording | R/P | provider process check + `recently_modified(120s)` + `requires_idle`; needs a live recording to execute end-to-end |
-| SEC-18 | Recycle Bin unavailable | R/P | `recycle_bin.rs` returns error, never calls permanent; needs a real unsupported volume |
-| SEC-19 | OneDrive cloud placeholder | R/P | reparse-point rejection; needs a cloud-only placeholder |
+| SEC-17 | Active browser recording | A/P | `browser_recording_setting_only_blocks_while_recently_active`, `antigravity_brain_is_protected_and_recordings_require_idle` |
+| SEC-18 | Recycle Bin unavailable | A/P | `recycle_failure_reports_error_and_never_deletes_permanently` (a sharing violation forces the same error path) |
+| SEC-19 | OneDrive cloud placeholder | R/P | reparse-point rejection is executed (`discovery_does_not_descend_into_junctions`); a real cloud-only placeholder was not available |
 | SEC-20 | Read-only / permission error | A/P | `read_only_target_never_reports_false_success` |
 | SEC-21 | Partial batch failure | A/P | `partial_batch_reports_success_and_failure_separately` |
 | SEC-22 | Frontend asks for a KEEP target | A/P | `protected_targets_cannot_be_planned`, `agent_cache_target…`, `unknown_provider_targets_are_blocked` |
 | SEC-23 | Duplicate target IDs | A/P | `duplicate_target_ids_are_processed_once` |
 | SEC-24 | Nested parent/child | A/P | `parent_and_child_targets_are_not_double_counted` |
 | SEC-25 | Hardlink accounting | A/P | `hardlinked_files_are_counted_once_for_allocated_size` |
-| SEC-26 | Secret leakage | R/P | no file-content reads in scan/measure/audit; audit stores path/rule/bytes only |
-| SEC-27 | No telemetry | R/P | no HTTP client dependency; `open_url` is user-initiated only |
-| SEC-28 | Crash during deletion | R/P | success is emitted only after existence check; audit is written after completion, so a crash cannot produce a false success |
+| SEC-26 | Secret leakage | A/P | `tests/secret_persistence.rs` — canary never reaches app storage; `npm run verify:offline` |
+| SEC-27 | No telemetry | A/P | `npm run verify:offline` — 0 outbound connections, 0 non-loopback listeners |
+| SEC-28 | Crash during deletion | A/P | `tests/crash_during_delete.rs` — mid-delete kill leaves no audit record and unfinished targets on disk |
 | SEC-29 | Settings migration | A/P | `test_v1_settings_migrate_without_data_loss`, corrupt-file preservation test |
 | SEC-30 | Safe default selection | A/P | `autoSelectable` is false for every provider target; header checkbox selects `autoSelectable` only; `keeps blocked items visible but non-selectable` |
 
-**Result: 24 automated / P; 6 review-verified / P with manual execution
-pending (SEC-17, SEC-18, SEC-19, SEC-26, SEC-27, SEC-28).**
+**Result: 29 automated / P; 1 scenario (SEC-19) review-verified / P with a
+manual gap — the reparse-point block that defends it is executed, but a real
+cloud-only placeholder was not available.**
 
-Evidence for this result, including the packaged-app CSP/IPC probe, is recorded
-in `docs/security/FINAL_SECURITY_AUDIT.md`.
+Evidence for this result, including the packaged-app CSP/IPC probe, the offline
+run, the crash-during-delete injection and the real Recycle Bin round-trip, is
+recorded in `docs/security/FINAL_SECURITY_AUDIT.md`.
 
 ## 5. Known limitations (explicit)
 
-1. Trash execution is not automated because it would pollute the tester's
-   Recycle Bin; the permanent path and all guards are automated.
+1. Trash execution is opt-in rather than part of `cargo test`: `npm run
+   verify:trash` creates its own throwaway folder, validates it with the
+   production guard, moves it to the real Recycle Bin, confirms shell
+   visibility and byte accounting, and removes only that probe item. It never
+   empties the user's bin.
 2. Hardlink deduplication is per target. Cross-target hardlinks can make the
    sum of estimates conservative (never understated for the selected set).
 3. Agent recency detection uses a 2-minute write window; a paused recording
@@ -110,20 +115,19 @@ in `docs/security/FINAL_SECURITY_AUDIT.md`.
 
 ## 6. Manual verification still required
 
-1. **SEC-17** — start a real Antigravity browser recording and confirm
-   `browser_recordings` is blocked; after the idle window, it becomes
-   selectable.
-2. **SEC-18** — point a target at a volume without a Recycle Bin and confirm
-   the operation fails without a permanent fallback.
-3. **SEC-19** — target a OneDrive cloud-only placeholder and confirm it is
-   rejected without downloading content.
-4. **SEC-26** — audit scan/measurement/audit code paths and logs for
-   file-content or secret leakage.
-5. **SEC-27** — capture network traffic during a full session and confirm zero
-   outbound requests.
-6. **SEC-28** — kill the process during a multi-item permanent delete and
-   confirm no false success and no completed audit record.
+Only one security scenario remains unexecuted:
 
-Also pending: real Recycle Bin round-trip and byte accounting, large-scale
-performance benchmarks, and the Windows 10 smoke test. Public production
-remains **NO-GO** until these are executed and recorded.
+1. **SEC-19** — target a OneDrive cloud-only placeholder and confirm it is
+   rejected without downloading content. The reparse-point hard block that
+   implements this is executed (`discovery_does_not_descend_into_junctions`); a
+   real placeholder was not present on the audit machine.
+
+Also outstanding, and outside the security matrix:
+
+- Windows 10 clean-install smoke test (F-4) — no Windows 10 host was available.
+  Run `scripts/verify-installer.ps1` there if Windows 10 is supported.
+- Publishing step: the current `release_output/` packages report
+  `dirty: true` and must be rebuilt from a committed tree.
+
+Everything else in §4 is executed; see `docs/release/TEST_MATRIX.md` for the
+commands and results.

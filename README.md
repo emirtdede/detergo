@@ -36,10 +36,16 @@
 
 This repository contains Node Cleaner 2.0: a catalog-driven, multi-ecosystem
 developer-artifact and AI-agent storage cleaner. The destructive path is
-Rust-backed and guarded by automated tests, but **public production release is
-currently NO-GO** because six manual security scenarios, the real Recycle Bin
-round-trip, large-scale performance benchmarks and the Windows 10 smoke test
-are not yet executed. See:
+Rust-backed and guarded by automated tests, and the previously pending verification
+work has been executed (real Recycle Bin round-trip, 10k/50k/1M-entry/300k-recording
+benchmarks, crash-during-delete, offline/no-telemetry, installer round-trips).
+
+**Public production is NO-GO for the current packages only because they were
+built from an uncommitted tree** — `release_output/BUILD_INFO.json` marks them
+`"dirty": true`. Commit and re-run `npm run build:release` to produce a
+publishable, commit-stamped artifact set. Two non-code gaps remain documented:
+the Windows 10 clean-install smoke test and the OneDrive cloud-only placeholder.
+See:
 
 - `docs/README.md` — documentation index and reading order
 - `docs/release/RELEASE_CHECKLIST.md` — gates and remaining blockers
@@ -143,11 +149,16 @@ Node-Cleaner/
 │   ├── Node-Cleaner-2.0.0-x64-Setup.exe   # NSIS Setup Installer
 │   ├── Node-Cleaner-2.0.0-x64.msi         # MSI Enterprise Installer
 │   ├── Node-Cleaner-2.0.0-Portable.exe    # Standalone Portable Binary
+│   ├── BUILD_INFO.json                    # Commit, dirty flag and per-artifact hashes
 │   ├── SHA256SUMS.txt                     # Cryptographic SHA-256 checksums
 │   └── verify-checksums.bat               # 1-Click SHA-256 verification tool
 ├── scripts/                        # Automated build & verification tools
-│   ├── build-release.js            # Release builder (Clean -> Build -> Package -> Hash)
+│   ├── build-release.js            # Release builder (provenance gate -> Build -> Package -> Hash)
 │   ├── check-version.js            # Cross-file version consistency validator
+│   ├── verify-ipc.mjs              # CSP + IPC + build-provenance probe on the packaged app
+│   ├── verify-offline.ps1          # No-telemetry / no-secret-persistence check
+│   ├── verify-recycle-bin.ps1      # Real Recycle Bin round-trip
+│   ├── verify-installer.ps1        # NSIS/MSI install -> launch -> uninstall
 │   └── verify-checksums.bat        # Windows batch checksum verifier
 ├── src/                            # Frontend application source (React 19 + TS)
 │   ├── app/                        # App shell & layout orchestration
@@ -399,11 +410,16 @@ Node-Cleaner/
 │   ├── Node-Cleaner-2.0.0-x64-Setup.exe   # NSIS Kurulum Sihirbazı
 │   ├── Node-Cleaner-2.0.0-x64.msi         # MSI Kurumsal Kurulum Paketi
 │   ├── Node-Cleaner-2.0.0-Portable.exe    # Taşınabilir Tekil Exe
+│   ├── BUILD_INFO.json                    # Commit, dirty bayrağı ve artefakt hash'leri
 │   ├── SHA256SUMS.txt                     # Kriptografik SHA-256 sağlama özetleri
 │   └── verify-checksums.bat               # Tek tıkla hash doğrulama aracı
 ├── scripts/                        # Otomatik derleme ve doğrulama scriptleri
-│   ├── build-release.js            # Release derleyici (Temizlik -> Derleme -> Paket -> Hash)
+│   ├── build-release.js            # Release derleyici (köken kapısı -> Derleme -> Paket -> Hash)
 │   ├── check-version.js            # Sürüm tutarlılık kontrol scripti
+│   ├── verify-ipc.mjs              # Paketlenmiş uygulamada CSP + IPC + derleme kökeni kontrolü
+│   ├── verify-offline.ps1          # Telemetri yok / sır sızıntısı yok kontrolü
+│   ├── verify-recycle-bin.ps1      # Gerçek Geri Dönüşüm Kutusu gidiş-dönüşü
+│   ├── verify-installer.ps1        # NSIS/MSI kur -> çalıştır -> kaldır
 │   └── verify-checksums.bat        # Windows batch checksum doğrulayıcı
 ├── src/                            # Ön yüz kaynak kodları (React 19 + TypeScript)
 │   ├── app/                        # Uygulama kabuğu ve düzen orkestrasyonu

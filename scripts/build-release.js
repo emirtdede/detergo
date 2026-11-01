@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import { execSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -16,7 +16,48 @@ console.log("=================================================");
 console.log(`🚀 Node Cleaner ${version} — Release build`);
 console.log("=================================================\n");
 
-console.log("🧹 0. Eski çıktılar temizleniyor...");
+// ---------------------------------------------------------
+// 0. Build provenance gate
+//
+// A release artifact is only meaningful if it can be traced back to an exact
+// commit. Until 2.0.0 the pipeline stamped nothing, so `release_output/` could
+// (and did) contain binaries built from a different revision than the audited
+// HEAD. Refuse to build from a dirty tree unless the operator explicitly
+// accepts a non-traceable build.
+// ---------------------------------------------------------
+function git(args) {
+  return execFileSync("git", args, { cwd: rootDir, encoding: "utf8" }).trim();
+}
+
+let commit = "unknown";
+let dirty = "unknown";
+let branch = "unknown";
+try {
+  commit = git(["rev-parse", "HEAD"]);
+  branch = git(["rev-parse", "--abbrev-ref", "HEAD"]);
+  dirty = git(["status", "--porcelain"]).length > 0 ? "true" : "false";
+} catch {
+  console.warn("⚠️  git bilgisi okunamadı; derleme izlenebilirliği garanti edilemez.");
+}
+
+const allowDirty = process.argv.includes("--allow-dirty");
+console.log(`🔖 Commit: ${commit}`);
+console.log(`🌿 Branch: ${branch}`);
+console.log(`🧾 Dirty:  ${dirty}`);
+
+if (dirty !== "false" && !allowDirty) {
+  console.error(
+    "\n❌ Çalışma ağacı temiz değil. Yayın artefaktı yalnızca commit edilmiş bir\n" +
+      "   kaynaktan üretilebilir. Değişiklikleri commit edin veya (yalnızca yerel\n" +
+      "   test için) `npm run build:release -- --allow-dirty` kullanın.\n"
+  );
+  process.exit(1);
+}
+if (dirty !== "false") {
+  console.warn("⚠️  --allow-dirty: bu derleme yayınlanamaz, yalnızca yerel test içindir.");
+}
+
+console.log("\n🧹 1. Eski çıktılar temizleniyor...");
 try {
   execSync(`taskkill /F /IM node-cleaner.exe /IM Node-Cleaner-${version}-Portable.exe 2>nul`, {
     stdio: "ignore",
@@ -40,13 +81,13 @@ if (fs.existsSync(releaseOutputDir)) {
 console.log("🧹 ACL ve derleme önbelleği temizleniyor...");
 fs.rmSync(path.join(rootDir, "src-tauri", "gen", "schemas"), { recursive: true, force: true });
 
-let cargoTargetDir = path.join(rootDir, "src-tauri", "target");
-try {
-  const match = fs
-    .readFileSync(path.join(rootDir, ".cargo", "config.toml"), "utf8")
-    .match(/^target-dir\s*=\s*"(.+)"$/m);
-  if (match) cargoTargetDir = match[1].replace(/\\\\/g, "\\");
-} catch {}
+// Artifact directory: standard Cargo location unless the caller overrides it
+// with CARGO_TARGET_DIR. No developer-specific absolute path is baked in.
+const cargoTargetDir = process.env.CARGO_TARGET_DIR
+  ? path.resolve(process.env.CARGO_TARGET_DIR)
+  : path.join(rootDir, "src-tauri", "target");
+console.log(`📁 Cargo target-dir: ${cargoTargetDir}`);
+
 for (const profile of ["release", "debug"]) {
   const buildDir = path.join(cargoTargetDir, profile, "build");
   if (!fs.existsSync(buildDir)) continue;
@@ -57,21 +98,33 @@ for (const profile of ["release", "debug"]) {
   }
 }
 
-console.log("\n📦 1. Sürüm senkronizasyonu kontrol ediliyor...");
+console.log("\n📦 2. Sürüm senkronizasyonu kontrol ediliyor...");
 execSync("npm run check-version", { cwd: rootDir, stdio: "inherit" });
 
-console.log("\n🔨 2. Tauri release derlemesi başlatılıyor...");
-execSync("npm run tauri build", { cwd: rootDir, stdio: "inherit" });
+const startedAt = Date.now();
+const buildEnv = {
+  ...process.env,
+  CARGO_TARGET_DIR: cargoTargetDir,
+  NC_BUILD_COMMIT: commit,
+  NC_BUILD_DIRTY: dirty,
+  NC_BUILD_TIME: String(Math.floor(startedAt / 1000)),
+};
 
-const candidates = [
-  "C:\\Users\\emir\\AppData\\Local\\Temp\\node_cleaner_target\\release",
-  path.join(rootDir, "src-tauri", "target", "release"),
-];
-const targetDir = candidates.find((dir) =>
-  fs.existsSync(path.join(dir, "node-cleaner.exe"))
-);
-if (!targetDir) {
-  console.error("❌ Derleme çıktısı (node-cleaner.exe) bulunamadı!");
+console.log("\n🔨 3. Tauri release derlemesi başlatılıyor...");
+execSync("npm run tauri build", { cwd: rootDir, stdio: "inherit", env: buildEnv });
+
+const targetDir = path.join(cargoTargetDir, "release");
+const binary = path.join(targetDir, "node-cleaner.exe");
+if (!fs.existsSync(binary)) {
+  console.error(`❌ Derleme çıktısı bulunamadı: ${binary}`);
+  process.exit(1);
+}
+if (fs.statSync(binary).mtimeMs < startedAt - 1000) {
+  console.error(
+    `❌ Derleme çıktısı bu çalıştırmada üretilmedi (mtime: ${new Date(
+      fs.statSync(binary).mtimeMs
+    ).toISOString()}). Eski bir binary paketlenmesin.`
+  );
   process.exit(1);
 }
 
@@ -83,7 +136,7 @@ function firstMatch(dir, pattern) {
 
 const artifacts = [
   {
-    src: path.join(targetDir, "node-cleaner.exe"),
+    src: binary,
     destName: `Node-Cleaner-${version}-Portable.exe`,
   },
   {
@@ -96,11 +149,16 @@ const artifacts = [
   },
 ];
 
-console.log("\n📂 3. Paketler release_output klasörüne aktarılıyor...");
+console.log("\n📂 4. Paketler release_output klasörüne aktarılıyor...");
 const copiedFiles = [];
 
 for (const art of artifacts) {
   if (art.src && fs.existsSync(art.src)) {
+    // A bundle from an earlier run must never be mixed with this build.
+    if (fs.statSync(art.src).mtimeMs < startedAt - 1000) {
+      console.error(`❌ Eski paket atlandı (bu çalıştırmada üretilmedi): ${art.src}`);
+      process.exit(1);
+    }
     const destPath = path.join(releaseOutputDir, art.destName);
     fs.copyFileSync(art.src, destPath);
     copiedFiles.push(art.destName);
@@ -108,6 +166,7 @@ for (const art of artifacts) {
     console.log(`  ✓ ${art.destName} (${sizeMb} MB)`);
   } else {
     console.warn(`  ⚠️ Kaynak bulunamadı: ${art.destName}`);
+    process.exit(1);
   }
 }
 
@@ -116,7 +175,7 @@ if (fs.existsSync(verifyScript)) {
   fs.copyFileSync(verifyScript, path.join(releaseOutputDir, "verify-checksums.bat"));
 }
 
-console.log("\n🔐 4. SHA-256 özetleri hesaplanıyor...");
+console.log("\n🔐 5. SHA-256 özetleri hesaplanıyor...");
 const checksumLines = [];
 for (const fileName of copiedFiles) {
   const filePath = path.join(releaseOutputDir, fileName);
@@ -126,7 +185,37 @@ for (const fileName of copiedFiles) {
 }
 fs.writeFileSync(path.join(releaseOutputDir, "SHA256SUMS.txt"), checksumLines.join("\n") + "\n", "utf8");
 
+// Provenance record shipped next to the packages so a download can be matched
+// to the source revision without reading the binary.
+const buildInfo = {
+  product: "Node Cleaner",
+  version,
+  commit,
+  branch,
+  dirty: dirty === "true",
+  builtAt: new Date(startedAt).toISOString(),
+  buildTimeEpochSecs: Math.floor(startedAt / 1000),
+  artifacts: copiedFiles.map((name) => {
+    const p = path.join(releaseOutputDir, name);
+    return {
+      name,
+      bytes: fs.statSync(p).size,
+      sha256: crypto.createHash("sha256").update(fs.readFileSync(p)).digest("hex").toUpperCase(),
+    };
+  }),
+};
+fs.writeFileSync(
+  path.join(releaseOutputDir, "BUILD_INFO.json"),
+  JSON.stringify(buildInfo, null, 2) + "\n",
+  "utf8"
+);
+
+if (dirty !== "false") {
+  console.log("\n⚠️  BU UYARI: kaynak ağacı kirliydi; bu paketler yayınlanamaz.");
+}
+
 console.log("\n=================================================");
 console.log("🎉 RELEASE DERLEMESİ VE DOĞRULAMA TAMAMLANDI!");
 console.log(`📁 ${releaseOutputDir}`);
+console.log(`🔖 ${commit.slice(0, 7)} (${branch})`);
 console.log("=================================================\n");
