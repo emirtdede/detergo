@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
 import { Checkbox } from "@/components/primitives/Checkbox";
+import { NumberField } from "@/components/primitives/NumberField";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
 import { useUIText } from "@/lib/ui-text";
@@ -15,6 +16,7 @@ import { LANGUAGES_LIST } from "@/locales/languages";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { countCatalogStats } from "@/lib/catalog-stats";
 import { CatalogDto, SupportedLanguage, ThemeMode } from "@/types";
+import { UIText } from "@/lib/ui-text";
 import { useSettingsSections } from "./settings-sections";
 import "../items/items.css";
 import "../shell/shell.css";
@@ -25,6 +27,28 @@ const THEMES: ThemeMode[] = [
   "light-white", "light-gray", "light-blue", "light-purple", "light-green",
   "light-red", "light-orange", "light-yellow",
 ];
+
+/**
+ * Turns a theme id such as `dark-blue` into a readable label. The raw ids were
+ * shown in the select, which read like configuration keys rather than choices.
+ */
+function themeLabel(theme: ThemeMode, ui: UIText): string {
+  const t = ui.settings;
+  const colorMap: Record<string, string> = {
+    black: t.themeBlack,
+    gray: t.themeGray,
+    white: t.themeWhite,
+    blue: t.themeBlue,
+    purple: t.themePurple,
+    green: t.themeGreen,
+    red: t.themeRed,
+    orange: t.themeOrange,
+    yellow: t.themeYellow,
+  };
+  const [mode, color] = theme.split("-");
+  const modeLabel = mode === "dark" ? t.themeDark : t.themeLight;
+  return `${modeLabel} · ${colorMap[color] ?? color}`;
+}
 
 const PROFILE_DEFAULTS: Record<string, { maxDepth: number; maxCandidates: number; timeoutMinutes: number }> = {
   fast: { maxDepth: 16, maxCandidates: 10000, timeoutMinutes: 5 },
@@ -79,13 +103,6 @@ export const SettingsView: React.FC = () => {
 
   return (
     <div>
-      <header className="view-header">
-        <div>
-          <h1 className="view-title">{ui.nav.settings}</h1>
-          <p className="view-subtitle">{ui.settings.subtitle}</p>
-        </div>
-      </header>
-
       {catalog && !catalog.valid && (
         <p className="items-warning" style={{ marginBottom: 12 }}>
           <AlertTriangle size={13} /> {catalog.error}
@@ -93,16 +110,22 @@ export const SettingsView: React.FC = () => {
       )}
 
       <div className="subpage-content">
-        <p className="subpage-hint">{activeSection.hint}</p>
+        <header className="subpage-header">
+          <span className="subpage-header-icon" aria-hidden="true">{activeSection.icon}</span>
+          <div className="subpage-header-text">
+            <span className="subpage-eyebrow">{ui.nav.settings}</span>
+            <h1 className="subpage-title">{activeSection.label}</h1>
+            <p className="subpage-hint">{activeSection.hint}</p>
+          </div>
+        </header>
 
         {activeSection.id === "general" && (
           <section className="settings-card">
-            <h2>{ui.settings.general}</h2>
             <label className="form-row">
               <span>{ui.settings.theme}</span>
               <select value={prefs.theme} onChange={(e) => prefs.setTheme(e.target.value)}>
                 {THEMES.map((theme) => (
-                  <option key={theme} value={theme}>{theme}</option>
+                  <option key={theme} value={theme}>{themeLabel(theme, ui)}</option>
                 ))}
               </select>
             </label>
@@ -117,10 +140,14 @@ export const SettingsView: React.FC = () => {
                 ))}
               </select>
             </label>
-            <label className="form-row">
+            <div className="form-row">
               <span>{ui.settings.reduceMotion}</span>
-              <Checkbox checked={prefs.reduceMotion} onChange={(v) => prefs.setReduceMotion(v)} />
-            </label>
+              <Checkbox
+                checked={prefs.reduceMotion}
+                aria-label={ui.settings.reduceMotion}
+                onChange={(v) => prefs.setReduceMotion(v)}
+              />
+            </div>
             <label className="form-row">
               <span>{ui.settings.sidebar}</span>
               <select
@@ -146,7 +173,6 @@ export const SettingsView: React.FC = () => {
 
         {activeSection.id === "scan" && (
           <section className="settings-card">
-            <h2>{ui.settings.scan}</h2>
             <label className="form-row">
               <span>{ui.settings.scanProfile}</span>
               <select value={prefs.scanProfile} onChange={(e) => setProfile(e.target.value)}>
@@ -155,95 +181,144 @@ export const SettingsView: React.FC = () => {
                 <option value="deep">{ui.settings.profileDeep}</option>
               </select>
             </label>
-            <label className="form-row">
+            <div className="form-row">
               <span>{ui.settings.maxDepth}</span>
-              <input type="number" min={1} max={128} value={prefs.maxDepth}
-                onChange={(e) => save({ maxDepth: Number(e.target.value) || 1 })} />
-            </label>
-            <label className="form-row">
+              <NumberField
+                value={prefs.maxDepth}
+                min={1}
+                max={128}
+                ariaLabel={ui.settings.maxDepth}
+                increaseLabel={ui.common.increase}
+                decreaseLabel={ui.common.decrease}
+                onCommit={(v) => save({ maxDepth: v })}
+              />
+            </div>
+            <div className="form-row">
               <span>{ui.settings.maxCandidates}</span>
-              <input type="number" min={1000} max={500000} step={1000} value={prefs.maxCandidates}
-                onChange={(e) => save({ maxCandidates: Number(e.target.value) || 1000 })} />
-            </label>
-            <label className="form-row">
+              <NumberField
+                value={prefs.maxCandidates}
+                min={1000}
+                max={500000}
+                step={1000}
+                ariaLabel={ui.settings.maxCandidates}
+                increaseLabel={ui.common.increase}
+                decreaseLabel={ui.common.decrease}
+                onCommit={(v) => save({ maxCandidates: v })}
+              />
+            </div>
+            <div className="form-row">
               <span>{ui.settings.timeout}</span>
-              <input type="number" min={1} max={120} value={prefs.timeoutMinutes}
-                onChange={(e) => save({ timeoutMinutes: Number(e.target.value) || 1 })} />
-            </label>
-            <label className="form-row">
+              <NumberField
+                value={prefs.timeoutMinutes}
+                min={1}
+                max={120}
+                ariaLabel={ui.settings.timeout}
+                increaseLabel={ui.common.increase}
+                decreaseLabel={ui.common.decrease}
+                onCommit={(v) => save({ timeoutMinutes: v })}
+              />
+            </div>
+            <div className="form-row">
               <span>{ui.settings.minSize}</span>
-              <input type="number" min={0} value={Math.round(prefs.minSizeBytes / (1024 * 1024))}
-                onChange={(e) => save({ minSizeBytes: (Number(e.target.value) || 0) * 1024 * 1024 })} />
-            </label>
+              <NumberField
+                value={Math.round(prefs.minSizeBytes / (1024 * 1024))}
+                min={0}
+                max={1024 * 1024}
+                ariaLabel={ui.settings.minSize}
+                increaseLabel={ui.common.increase}
+                decreaseLabel={ui.common.decrease}
+                onCommit={(v) => save({ minSizeBytes: v * 1024 * 1024 })}
+              />
+            </div>
           </section>
         )}
 
         {activeSection.id === "protections" && (
-          <section className="settings-card">
-            <h2>{ui.settings.protections}</h2>
-            <div className="form-row">
-              <input type="text" placeholder={ui.settings.addPath} value={protectedInput}
-                onChange={(e) => setProtectedInput(e.target.value)} style={{ flex: 1 }} />
-              <Button variant="secondary" size="sm" icon={<Plus size={12} />} onClick={() => {
-                const value = protectedInput.trim();
-                if (!value) return;
-                if (!prefs.protectedPaths.some((p) => p.toLowerCase() === value.toLowerCase())) {
-                  save({ protectedPaths: [...prefs.protectedPaths, value] });
-                }
-                setProtectedInput("");
-              }}>{ui.settings.addPath}</Button>
-            </div>
-            <div className="list-editor">
-              {prefs.protectedPaths.length === 0 && <span className="plan-note">{ui.common.none}</span>}
-              {prefs.protectedPaths.map((path) => (
-                <div key={path} className="list-row">
-                  <span>{path}</span>
-                  <button type="button" className="icon-btn icon-btn-sm" aria-label={ui.settings.remove}
-                    onClick={() => save({ protectedPaths: prefs.protectedPaths.filter((p) => p !== path) })}>
-                    <X size={12} />
-                  </button>
-                </div>
-              ))}
-            </div>
+          <>
+            <section className="settings-card">
+              <h3 className="settings-group-title">{ui.settings.protectedPaths}</h3>
+              <div className="form-row form-row--stretch">
+                <input
+                  type="text"
+                  placeholder={ui.settings.addPath}
+                  value={protectedInput}
+                  aria-label={ui.settings.protectedPaths}
+                  onChange={(e) => setProtectedInput(e.target.value)}
+                />
+                <Button variant="secondary" size="sm" icon={<Plus size={12} />} onClick={() => {
+                  const value = protectedInput.trim();
+                  if (!value) return;
+                  if (!prefs.protectedPaths.some((p) => p.toLowerCase() === value.toLowerCase())) {
+                    save({ protectedPaths: [...prefs.protectedPaths, value] });
+                  }
+                  setProtectedInput("");
+                }}>{ui.common.add}</Button>
+              </div>
+              <div className="list-editor">
+                {prefs.protectedPaths.length === 0 && <span className="plan-note">{ui.common.none}</span>}
+                {prefs.protectedPaths.map((path) => (
+                  <div key={path} className="list-row">
+                    <span>{path}</span>
+                    <button type="button" className="icon-btn icon-btn-sm" aria-label={ui.settings.remove}
+                      onClick={() => save({ protectedPaths: prefs.protectedPaths.filter((p) => p !== path) })}>
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
 
-            <div className="form-row">
-              <input type="text" placeholder={ui.settings.excludedNames} value={excludedInput}
-                onChange={(e) => setExcludedInput(e.target.value)} style={{ flex: 1 }} />
-              <Button variant="secondary" size="sm" icon={<Plus size={12} />} onClick={() => {
-                const value = excludedInput.trim();
-                if (!value) return;
-                save({ excludedNames: [...prefs.excludedNames, value] });
-                setExcludedInput("");
-              }}>{ui.settings.addPath}</Button>
-            </div>
-            <div className="list-editor">
-              {prefs.excludedNames.length === 0 && <span className="plan-note">{ui.common.none}</span>}
-              {prefs.excludedNames.map((name) => (
-                <div key={name} className="list-row">
-                  <span>{name}</span>
-                  <button type="button" className="icon-btn icon-btn-sm" aria-label={ui.settings.remove}
-                    onClick={() => save({ excludedNames: prefs.excludedNames.filter((n) => n !== name) })}>
-                    <X size={12} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </section>
+            <section className="settings-card">
+              <h3 className="settings-group-title">{ui.settings.excludedNames}</h3>
+              <div className="form-row form-row--stretch">
+                <input
+                  type="text"
+                  placeholder={ui.settings.excludedNames}
+                  value={excludedInput}
+                  aria-label={ui.settings.excludedNames}
+                  onChange={(e) => setExcludedInput(e.target.value)}
+                />
+                <Button variant="secondary" size="sm" icon={<Plus size={12} />} onClick={() => {
+                  const value = excludedInput.trim();
+                  if (!value) return;
+                  save({ excludedNames: [...prefs.excludedNames, value] });
+                  setExcludedInput("");
+                }}>{ui.common.add}</Button>
+              </div>
+              <div className="list-editor">
+                {prefs.excludedNames.length === 0 && <span className="plan-note">{ui.common.none}</span>}
+                {prefs.excludedNames.map((name) => (
+                  <div key={name} className="list-row">
+                    <span>{name}</span>
+                    <button type="button" className="icon-btn icon-btn-sm" aria-label={ui.settings.remove}
+                      onClick={() => save({ excludedNames: prefs.excludedNames.filter((n) => n !== name) })}>
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </>
         )}
 
         {activeSection.id === "agents" && (
           <section className="settings-card">
-            <h2>{ui.settings.agents}</h2>
-            <label className="form-row">
+            <div className="form-row">
               <span>{ui.settings.agentCacheCleanup}</span>
-              <Checkbox checked={prefs.agentPolicy.allowCacheCleanup}
-                onChange={(v) => save({ agentPolicy: { ...prefs.agentPolicy, allowCacheCleanup: v } })} />
-            </label>
-            <label className="form-row">
+              <Checkbox
+                checked={prefs.agentPolicy.allowCacheCleanup}
+                aria-label={ui.settings.agentCacheCleanup}
+                onChange={(v) => save({ agentPolicy: { ...prefs.agentPolicy, allowCacheCleanup: v } })}
+              />
+            </div>
+            <div className="form-row">
               <span>{ui.settings.browserRecordings}</span>
-              <Checkbox checked={prefs.agentPolicy.protectBrowserRecordings}
-                onChange={(v) => save({ agentPolicy: { ...prefs.agentPolicy, protectBrowserRecordings: v } })} />
-            </label>
+              <Checkbox
+                checked={prefs.agentPolicy.protectBrowserRecordings}
+                aria-label={ui.settings.browserRecordings}
+                onChange={(v) => save({ agentPolicy: { ...prefs.agentPolicy, protectBrowserRecordings: v } })}
+              />
+            </div>
             <div className="plan-note" style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
               <ShieldCheck size={14} /> {ui.agents.subtitle}
             </div>
@@ -252,22 +327,28 @@ export const SettingsView: React.FC = () => {
 
         {activeSection.id === "privacy" && (
           <section className="settings-card">
-            <h2>{ui.settings.privacy}</h2>
-            <label className="form-row">
+            <div className="form-row">
               <span>{ui.settings.maskPaths}</span>
-              <Checkbox checked={prefs.maskPaths} onChange={(v) => save({ maskPaths: v })} />
-            </label>
-            <label className="form-row">
+              <Checkbox
+                checked={prefs.maskPaths}
+                aria-label={ui.settings.maskPaths}
+                onChange={(v) => save({ maskPaths: v })}
+              />
+            </div>
+            <div className="form-row">
               <span>{ui.settings.historyEnabled}</span>
-              <Checkbox checked={prefs.historyEnabled} onChange={(v) => save({ historyEnabled: v })} />
-            </label>
+              <Checkbox
+                checked={prefs.historyEnabled}
+                aria-label={ui.settings.historyEnabled}
+                onChange={(v) => save({ historyEnabled: v })}
+              />
+            </div>
             <p className="plan-note">{ui.history.clearHint}</p>
           </section>
         )}
 
         {activeSection.id === "about" && (
           <section className="settings-card">
-            <h2>{ui.settings.about}</h2>
             <div className="form-row"><span>{ui.settings.version}</span><strong>2.0.0</strong></div>
             <div className="form-row">
               <span><Sparkles size={12} /> Node Cleaner</span>

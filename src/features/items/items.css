@@ -31,13 +31,32 @@
   flex-wrap: wrap;
 }
 
+/* Toolbar controls share one 32px height so the search box, filters and
+   buttons sit on a single baseline instead of stepping up and down. */
+.items-toolbar .btn,
+.items-toolbar .search-field-input,
+.items-toolbar .search-field {
+  height: 32px;
+}
+
+.items-toolbar .btn {
+  padding: 0 var(--space-3);
+}
+
+/* Page-header actions use the same height as toolbar controls; mixed 28/32px
+   row heights were what made the header look misaligned. */
+.view-header .btn {
+  height: 32px;
+  padding: 0 var(--space-3);
+}
+
 .items-toolbar .search-field {
   min-width: 260px;
   flex: 1;
 }
 
 .items-filter-select {
-  height: 34px;
+  height: 32px;
   padding: 0 var(--space-3);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);

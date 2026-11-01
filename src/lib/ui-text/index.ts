@@ -8,6 +8,7 @@ export interface UIText {
     scan: string; scanning: string; cancel: string; rescan: string; chooseFolder: string;
     refresh: string; open: string; close: string; confirm: string; loading: string; none: string;
     clear: string; allDrives: string; save: string; add: string; remove: string;
+    increase: string; decrease: string;
     items: (n: number) => string; showing: (n: number) => string;
   };
   overview: {
@@ -76,6 +77,9 @@ export interface UIText {
     agentsHint: string; privacyHint: string; aboutHint: string;
     sidebar: string; sidebarExpanded: string; sidebarCollapsed: string;
     cacheMeasure: string; cacheMeasureFast: string; cacheMeasureFull: string;
+    themeDark: string; themeLight: string; themeBlack: string; themeGray: string;
+    themeWhite: string; themeBlue: string; themePurple: string; themeGreen: string;
+    themeRed: string; themeOrange: string; themeYellow: string;
   };
   errors: { title: string; blocked: string; retry: string };
   warnings: {

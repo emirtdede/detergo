@@ -185,6 +185,98 @@
   border-color: var(--accent);
 }
 
+/* Number Field
+   The native spinner is a white square that ignores the theme and sizes itself
+   differently per platform. Custom chevrons keep every numeric setting the same
+   32px control as selects and text inputs. */
+.number-field {
+  display: inline-flex;
+  align-items: stretch;
+  height: 32px;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface-alt);
+  overflow: hidden;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.number-field:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-subtle);
+}
+
+.number-field-input {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0 var(--space-2);
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.number-field-input:focus {
+  outline: none;
+}
+
+.number-field-input::-webkit-outer-spin-button,
+.number-field-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+.number-field-stepper {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.number-field-step {
+  display: flex;
+  flex: 1 1 50%;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  width: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.number-field-step:first-child {
+  border-bottom: 1px solid var(--border);
+}
+
+.number-field-step:hover {
+  background: var(--surface-hover);
+  color: var(--accent);
+}
+
+.number-field-step:active {
+  background: var(--surface-active);
+  color: var(--accent-hover);
+}
+
+.number-field-step svg {
+  /* Chevrons read as tiny arrows at 11px; 12px with a heavier stroke keeps
+     them crisp without turning into toggle-looking triangles. */
+  stroke-width: 2.6;
+}
+
 /* Search Field */
 .search-field-container {
   position: relative;
