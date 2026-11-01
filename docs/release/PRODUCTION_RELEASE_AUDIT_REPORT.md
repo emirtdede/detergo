@@ -58,7 +58,7 @@ No fabricated or estimated result is used in this report.
 | Release packaging | `npm run build:release` | PASS — commit-stamped, `BUILD_INFO.json` written |
 | Version sync | `npm run check-version` | 2.0.0 in package.json, tauri.conf.json, Cargo.toml |
 | Packaged startup | portable EXE, 15 s | stayed alive, stopped cleanly |
-| Packaged IPC + CSP | `node scripts/verify-ipc.mjs` | **14/14 PASS** |
+| Packaged IPC + CSP | `node scripts/verify-ipc.mjs` | **15/15 PASS** |
 | Offline / telemetry | `npm run verify:offline` | 0 outbound, 0 listeners, no secret persisted |
 | Recycle Bin round-trip | `npm run verify:trash` | PASS — shell-visible, 6,144 B exact |
 | NSIS install/launch/uninstall | `scripts/verify-installer.ps1 -Kind nsis` | PASS |
@@ -145,7 +145,7 @@ Current build facts:
 
 | Artifact | Size | Verified |
 |---|---|---|
-| `Node-Cleaner-2.0.0-Portable.exe` | 11.13 MB | launched, IPC 14/14, offline PASS |
+| `Node-Cleaner-2.0.0-Portable.exe` | 11.13 MB | launched, IPC 15/15, offline PASS |
 | `Node-Cleaner-2.0.0-x64-Setup.exe` | 2.66 MB | install → launch → uninstall PASS |
 | `Node-Cleaner-2.0.0-x64.msi` | 3.82 MB | install → launch → uninstall PASS (per-user) |
 

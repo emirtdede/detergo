@@ -83,7 +83,7 @@ All numbers measured on this machine; commands and fixtures are in
 - [x] SHA-256 file generated (`release_output/SHA256SUMS.txt`)
 - [x] Versions synchronised (2.0.0)
 - [x] Package sizes/hashes recorded in `release_output/BUILD_INFO.json` (authoritative, regenerated per build)
-- [x] Packaged IPC under production CSP verified — 14/14 checks (`scripts/verify-ipc.mjs`)
+- [x] Packaged IPC under production CSP verified — 15/15 checks (`scripts/verify-ipc.mjs`)
 - [x] README rewritten
 - [ ] Windows 10 install smoke test — **NOT EXECUTED** (F-4; no Windows 10 host)
 - [x] Publishable packages built from a **clean** commit — `BUILD_INFO.json` reports `"dirty": false`

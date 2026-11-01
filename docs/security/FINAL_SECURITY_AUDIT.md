@@ -32,7 +32,7 @@ provenance (see §1.1). The findings that pass is based on are in §5.
 | Production frontend build | `npm run build` | **PASS** (1,956 modules) |
 | Release packages | `npm run build:release` | **PASS** — NSIS, MSI, portable, SHA-256, `BUILD_INFO.json` |
 | Packaged app startup | portable EXE, 15 s observation | **stayed alive, stopped cleanly** |
-| Packaged IPC under CSP | `node scripts/verify-ipc.mjs` | **PASS — 14/14 checks** |
+| Packaged IPC under CSP | `node scripts/verify-ipc.mjs` | **PASS — 15/15 checks** |
 | Offline / no telemetry | `npm run verify:offline` | **PASS** — 0 outbound connections |
 | NSIS install → launch → uninstall | `scripts/verify-installer.ps1 -Kind nsis` | **PASS** |
 | MSI install → launch → uninstall | `scripts/verify-installer.ps1 -Kind msi` | **PASS** (per-user mode, see §1.2) |
@@ -156,7 +156,8 @@ exercised from the running page:
 | `get_agent_providers` | 3 providers |
 | `get_build_info` | commit matches the manifest, `profile=release`, `dirty=false` |
 | binary commit matches `BUILD_INFO.json` | yes |
-| binary and manifest agree on tree cleanliness | yes (both `dirty=true`) |
+| binary and manifest agree on tree cleanliness | yes (both `dirty=false`) |
+| build was from a clean tree | yes (`dirty=false`) |
 | `plugin:window|is_maximized` (ACL) | allowed, returns boolean |
 | `execute_cleanup` with a forged plan id | rejected (`Temizlik planı bulunamadı`) |
 | `open_url` with `javascript:` | rejected (`Geçersiz URL protokolü`) |
@@ -164,7 +165,7 @@ exercised from the running page:
 | CSP blocks `eval` | blocked |
 | CSP blocks off-origin `fetch` | blocked |
 
-Result: **14/14 checks pass.**
+Result: **15/15 checks pass.**
 
 This also covers the failure mode an earlier build had: a stale build-script
 output left the compiled runtime authority empty, so every `plugin:window|*`
@@ -208,6 +209,8 @@ No scenario is claimed as executed when it was not.
 | F-12 | Medium | `.cargo/config.toml` pinned a developer-specific `target-dir` and MSVC/SDK `LIBPATH`, so the release build was only reproducible on one workstation. The first fix only cleaned the repo-root file; `src-tauri/.cargo/config.toml` — the one cargo actually reads when it runs from `src-tauri` — still pinned the same paths | **FIXED** — `src-tauri/.cargo/config.toml` removed, root file reduced to an empty `[build]` table; a clean `cargo build --release` links and builds with no machine-specific path |
 | F-13 | Low | MSI is generated `perMachine`; a standard user gets error 1925 | **DOCUMENTED** — NSIS is the consumer channel, MSI is the elevated/enterprise channel (§1.2) |
 | F-14 | Medium | The first provenance implementation watched only `.git/HEAD`, which holds a ref and does not change on commit, so an incremental build kept embedding the *previous* commit — the exact stale-provenance class the gate exists to prevent. Caught by `verify-ipc.mjs` reporting a binary/manifest commit mismatch | **FIXED** — re-run triggers now cover `.git/logs/HEAD`, `.git/index` and every `NC_BUILD_*` override; the probe re-run reports a matching commit and `dirty=false` |
+| F-15 | Medium | The dirty check reused a helper that maps empty stdout to "no value". A clean `git status --porcelain` is empty, so every plain `cargo build` / `tauri build` of a committed tree stamped `dirty=unknown`, which the app reports as dirty and the IPC probe rejects as a provenance mismatch. Only `npm run build:release` (which sets `NC_BUILD_DIRTY`) produced a correct stamp | **FIXED** — `git_is_dirty` returns `Some(false)` for a clean tree; `verify-ipc.mjs` now reports `dirty=false` for a plain build |
+| F-16 | Low (dev-only) | A release build killed the running `tauri dev` session: `taskkill /IM node-cleaner.exe` matched the debug binary too, and the Vite watcher watched `release_output/`, where a locked artifact raised `EBUSY` and killed the dev server. Release builds looked flaky and unrelated sessions died | **FIXED** — the shutdown step only stops processes outside the cargo target dirs, and the watcher ignores `release_output/`, `dist/` and `.git/` |
 
 No critical or high-severity deletion defect was found in the audited code. The
 one High finding (F-11) was a release-integrity defect, not a data-loss defect,
