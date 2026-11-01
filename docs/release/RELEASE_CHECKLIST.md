@@ -2,7 +2,7 @@
 
 **Version:** 2.0.0
 **Date:** 2026-11-01
-**Source revision:** `283eb6dc131dc65a91c39f69679ecc3a83a65be0`
+**Source revision:** `71c298eadf85d5d5cfc741e86fa90763a401969a`
 **Deployment mode:** DIRECT-LIVE (local Windows desktop; NSIS / MSI / portable go
 straight to users; no staging, no canary)
 
@@ -75,13 +75,13 @@ All numbers measured on this machine; commands and fixtures are in
 - [x] Typecheck PASS
 - [x] Clippy PASS (0 warnings, all targets)
 - [x] Build provenance present — clean-tree gate, embedded commit, `BUILD_INFO.json`
-- [x] Release build PASS (2026-11-01, commit-stamped)
+- [x] Release build PASS (2026-11-01) — clean tree, `dirty: false`, commit-stamped
 - [x] NSIS install → launch → uninstall PASS
 - [x] MSI install → launch → uninstall PASS (per-user mode; see below)
 - [x] Portable PASS
 - [x] SHA-256 file generated (`release_output/SHA256SUMS.txt`)
 - [x] Versions synchronised (2.0.0)
-- [x] Package sizes/hashes recorded in `docs/security/FINAL_SECURITY_AUDIT.md` §1.1
+- [x] Package sizes/hashes recorded in `release_output/BUILD_INFO.json` (authoritative, regenerated per build)
 - [x] Packaged IPC under production CSP verified — 14/14 checks (`scripts/verify-ipc.mjs`)
 - [x] README rewritten
 - [ ] Windows 10 install smoke test — **NOT EXECUTED** (F-4; no Windows 10 host)
@@ -99,14 +99,15 @@ it elevated to exercise the native per-machine path.
 
 ## Blockers for public production release
 
-1. **Artifacts must be rebuilt from a clean commit.** The packages currently in
-   `release_output/` were produced with `--allow-dirty` to exercise the new
-   provenance pipeline, and `BUILD_INFO.json` correctly marks them
-   `"dirty": true`. Commit the audit fixes and re-run
-   `npm run build:release` (no flag); `BUILD_INFO.json` must show
-   `"dirty": false` and commit `283eb6d…` (or the new HEAD).
-2. **Windows 10 smoke test** (F-4) — run `scripts/verify-installer.ps1` on a
-   Windows 10 host if Windows 10 is a supported target.
+None block the code. Two environmental items remain:
+
+1. **Windows 10 smoke test** (F-4) — run `scripts/verify-installer.ps1` on a
+   Windows 10 host if Windows 10 is a supported target. The audit host is
+   Windows 11 (10.0.26200).
+2. **Re-verify after any rebuild** — `release_output/BUILD_INFO.json` must show
+   `"dirty": false`. Never publish an artifact whose manifest says otherwise;
+   `scripts/build-release.js` refuses to produce one unless `--allow-dirty` was
+   passed explicitly.
 
 Accepted residual risk (needs owner sign-off, does not block the code):
 
@@ -119,9 +120,10 @@ Accepted residual risk (needs owner sign-off, does not block the code):
 ## Decision
 
 - **Internal / controlled beta:** GO.
-- **Public production with the current packages:** **NO-GO** — they are marked
-  `dirty: true` and must be rebuilt from a committed tree.
-- **Public production after step 1 (and step 2 if Windows 10 is supported):**
-  **GO**. Every automated gate passes, the destructive path is guarded and
-  tested, the previously pending scenarios are executed, and the packaged binary
-  was probed under the production CSP.
+- **Public production (DIRECT-LIVE, rev `71c298e`, clean packages):** **GO**.
+  Every automated gate passes, the destructive path is guarded and tested, the
+  previously pending scenarios are executed, the packaged binary was probed under
+  the production CSP, and the shipped packages were built from a clean tree with
+  a commit stamp the runtime reports.
+- If Windows 10 is a supported target, run the installer harness there once
+  before advertising that support (F-4).

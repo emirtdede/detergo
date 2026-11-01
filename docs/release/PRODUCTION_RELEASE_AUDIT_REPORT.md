@@ -2,7 +2,7 @@
 
 **Application:** Node Cleaner (Windows desktop)
 **Version:** 2.0.0
-**Source revision:** `283eb6dc131dc65a91c39f69679ecc3a83a65be0` (`feat/2.0-multi-ecosystem-engine`)
+**Source revision:** `71c298eadf85d5d5cfc741e86fa90763a401969a` (`feat/2.0-multi-ecosystem-engine`)
 **Stack:** Tauri 2 · Rust · React 19 · TypeScript · Vite 6
 **Publisher / identifier:** Vellium · `com.vellium.nodecleaner`
 **Audit date:** 2026-11-01
@@ -25,25 +25,21 @@ channel.
 ## 1. Decision
 
 ```text
-Internal / controlled beta:                              GO
-Public production, current packages (dirty: true):       NO-GO
-Public production, after rebuild from a clean commit:    GO
+Internal / controlled beta:   GO
+Public production (DIRECT-LIVE, rev 71c298e, clean packages):  GO
 ```
 
 The application is buildable, launches, performs real IPC under its production
 CSP, installs and uninstalls through both installer formats, and the destructive
 path is guarded by automated tests. Every security scenario except one was
 executed, the Recycle Bin round-trip and the large-scale benchmarks are measured,
-and the build now carries machine-checkable provenance.
+and the shipped packages were built from a clean tree with a commit stamp the
+runtime reports and the harness cross-checks.
 
-Two things still block an unconditional GO:
-
-1. The packages currently in `release_output/` report `dirty: true` in
-   `BUILD_INFO.json`. They were built with `--allow-dirty` to exercise the new
-   provenance pipeline while the audit fixes were uncommitted. They must not be
-   published; rebuild from a committed tree.
-2. F-4 — the Windows 10 clean-install smoke test has not been executed (no
-   Windows 10 host available).
+One environmental item remains, and it is not a code blocker: **F-4**, the
+Windows 10 clean-install smoke test (no Windows 10 host available; the audit host
+is Windows 11 10.0.26200). Run `scripts/verify-installer.ps1` there once if
+Windows 10 is a supported target.
 
 No fabricated or estimated result is used in this report.
 
@@ -128,32 +124,36 @@ executed the latter:
 - **New:** the compiled revision is embedded in the binary and surfaced in the
   About card, so a support report can be matched to the audited commit.
 
-## 4. Packaging artifacts (2026-11-01, rebuild of `283eb6d`)
+## 4. Packaging artifacts (2026-11-01, clean build of `71c298e`)
 
-| Artifact | Size | SHA-256 |
-|---|---|---|
-| `Node-Cleaner-2.0.0-Portable.exe` | 11.13 MB | `EC1B2CB3B64EF55A13E95443A0F241D919B8C2AF659AEB5A8E02BFE7DE3340A0` |
-| `Node-Cleaner-2.0.0-x64-Setup.exe` | 2.66 MB | `58BEBA484B50F39F0879E891B257C2AE894A2D7EF12E9E1CC5D6679371BA197C` |
-| `Node-Cleaner-2.0.0-x64.msi` | 3.82 MB | `2ECB308318AA17BCA888C35E1D322F56E35489C5F47682E6891A094B6C9F9494` |
+The authoritative record is **`release_output/BUILD_INFO.json`**, written by
+`scripts/build-release.js` on every build. It contains the commit, branch, dirty
+flag, build time and the size + SHA-256 of each artifact. `SHA256SUMS.txt` holds
+the same hashes in checksum-file form.
 
-**These hashes belong to a `dirty: true` build and are recorded for verification
-of the pipeline, not for publication.** `release_output/BUILD_INFO.json` says so
-explicitly. Publishing step:
+Those files are git-ignored by design: hardcoding a hash into a tracked document
+makes it stale as soon as the next build runs, which is the stale-evidence failure
+mode this pass exists to eliminate. To confirm a download:
 
 ```powershell
-git status --porcelain        # must print nothing
-npm run build:release         # no --allow-dirty
-type release_output\BUILD_INFO.json   # dirty must be false
+type release_output\BUILD_INFO.json     # "dirty": false, commit = HEAD
+certutil -hashfile release_output\Node-Cleaner-2.0.0-Portable.exe SHA256
 ```
 
-Checksums are regenerated into `release_output/SHA256SUMS.txt` by the release
-script.
+Current build facts:
+
+| Artifact | Size | Verified |
+|---|---|---|
+| `Node-Cleaner-2.0.0-Portable.exe` | 11.13 MB | launched, IPC 14/14, offline PASS |
+| `Node-Cleaner-2.0.0-x64-Setup.exe` | 2.66 MB | install → launch → uninstall PASS |
+| `Node-Cleaner-2.0.0-x64.msi` | 3.82 MB | install → launch → uninstall PASS (per-user) |
+
+`dirty` is `false` and the embedded commit matches the manifest.
 
 ## 5. Residual risk / blockers
 
 | Blocker | Severity | Status |
 |---|---|---|
-| Artifacts currently `dirty: true` — not publishable | **P1** | Must rebuild from a clean commit |
 | Windows 10 clean-install smoke (F-4) | P2 | NOT EXECUTED — no Windows 10 host |
 | SEC-19 OneDrive cloud-only placeholder | P2 | NOT EXECUTED — no placeholder; reparse-point block executed |
 | Code signing absent (F-6) | P3 | OPEN — external certificate |
@@ -161,9 +161,12 @@ script.
 | Dev-toolchain advisories (F-8) | P3 | OPEN — none ship in the release build |
 | Dependency CVE scan | P3 | NOT EXECUTED — no network access to an advisory database |
 
+No P0 or P1 blocker remains: the stale-artifact defect (F-11) is fixed and the
+shipped packages are a clean, commit-stamped build.
+
 Executed and closed in this pass: SEC-17, SEC-18, SEC-26, SEC-27, SEC-28, Recycle
-Bin round-trip, trash-failure fallback, all four performance benchmarks, NSIS and
-MSI installer round-trips.
+Bin round-trip, trash-failure fallback, the four performance benchmarks plus a
+cancel-latency measurement, and NSIS and MSI installer round-trips.
 
 Non-blocking, documented limitations:
 
@@ -180,5 +183,6 @@ gated by mechanism (clean-tree gate, embedded commit, freshness check,
 `BUILD_INFO.json`, runtime cross-check) instead of by operator discipline.
 
 For a DIRECT-LIVE product the rebuild step is not optional: publish only a package
-whose `BUILD_INFO.json` shows `"dirty": false` and the audited commit. With that
-done, and with F-4 accepted or executed, public production is **GO**.
+whose `BUILD_INFO.json` shows `"dirty": false` and a commit equal to the audited
+`HEAD`. The current set satisfies both. With F-4 executed or explicitly accepted,
+public production is **GO**.

@@ -40,15 +40,16 @@ Rust-backed and guarded by automated tests, and the previously pending verificat
 work has been executed (real Recycle Bin round-trip, 10k/50k/1M-entry/300k-recording
 benchmarks, crash-during-delete, offline/no-telemetry, installer round-trips).
 
-**Public production is NO-GO for the current packages only because they were
-built from an uncommitted tree** — `release_output/BUILD_INFO.json` marks them
-`"dirty": true`. Commit and re-run `npm run build:release` to produce a
-publishable, commit-stamped artifact set. Two non-code gaps remain documented:
-the Windows 10 clean-install smoke test and the OneDrive cloud-only placeholder.
-See:
+**Public production is GO for the current packages**, which were built from a
+clean tree: `release_output/BUILD_INFO.json` reports `"dirty": false` and a commit
+equal to `HEAD`, and the running binary reports the same commit via
+`get_build_info`. That manifest is the authoritative hash/commit record for a
+download. Two non-code gaps remain documented: the Windows 10 clean-install smoke
+test and the OneDrive cloud-only placeholder. See:
 
 - `docs/README.md` — documentation index and reading order
-- `docs/release/RELEASE_CHECKLIST.md` — gates and remaining blockers
+- `docs/release/RELEASE_CHECKLIST.md` — gates and remaining items
+- `docs/release/BUILD_PROVENANCE.md` — how a binary is tied to a commit
 - `docs/security/FINAL_SECURITY_AUDIT.md` — executed evidence
 - `docs/release/TEST_MATRIX.md` — test results
 - `docs/MASTER_SPEC.md` — normative 2.0 specification
