@@ -5,8 +5,18 @@ fn main() {
     println!("cargo:rerun-if-changed=tauri.conf.json");
     // The release artifact must be traceable to a commit. Re-run when the git
     // head moves so the embedded stamp never goes stale.
+    //
+    // `.git/HEAD` alone is not enough: on a normal branch it contains a ref
+    // (`ref: refs/heads/...`) and does not change when a commit is created, so an
+    // incremental build kept embedding the previous commit. The reflog and the
+    // index both change on commit/checkout/stage, which is what actually needs to
+    // invalidate this script.
     println!("cargo:rerun-if-changed=../.git/HEAD");
-    println!("cargo:rerun-if-env-changed=NC_BUILD_COMMIT");
+    println!("cargo:rerun-if-changed=../.git/logs/HEAD");
+    println!("cargo:rerun-if-changed=../.git/index");
+    for var in ["NC_BUILD_COMMIT", "NC_BUILD_DIRTY", "NC_BUILD_TIME"] {
+        println!("cargo:rerun-if-env-changed={var}");
+    }
 
     tauri_build::build();
 
