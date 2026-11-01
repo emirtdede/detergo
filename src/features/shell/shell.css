@@ -13,6 +13,35 @@
   padding: var(--space-3);
   border-right: 1px solid var(--border);
   background: var(--surface-alt);
+  transition: width var(--duration-fast) var(--ease-standard);
+}
+
+.nav-rail-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-height: 0;
+}
+
+.nav-rail.collapsed {
+  width: 56px;
+  padding: var(--space-2);
+}
+
+.nav-rail.collapsed .nav-item {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.nav-rail.collapsed .nav-item-label {
+  display: none;
+}
+
+.nav-collapse-toggle {
+  margin-top: auto;
+  opacity: 0.75;
 }
 
 .nav-item {
@@ -122,6 +151,156 @@
   grid-template-columns: 1fr 1fr;
   gap: var(--space-4);
   align-items: start;
+}
+
+/* Secondary page navigation used by Settings and History. It keeps each page
+   focused on one topic instead of one long scrolling form. */
+.subpage-layout {
+  display: grid;
+  grid-template-columns: minmax(160px, 200px) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.subpage-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: sticky;
+  top: 0;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-alt);
+}
+
+.subpage-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.subpage-nav-item:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.subpage-nav-item.active {
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.subpage-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.subpage-hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.subpage-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.history-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.history-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.history-summary-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.history-summary-value {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-summary-value--text {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.history-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.history-tab:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.history-tab.active {
+  background: var(--accent-subtle);
+  border-color: var(--accent-subtle);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.history-tab-count {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.history-tab.active .history-tab-count {
+  color: inherit;
+}
+
+@media (max-width: 720px) {
+  .subpage-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .subpage-nav {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
 }
 
 .settings-card {

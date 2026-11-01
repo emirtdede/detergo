@@ -5,6 +5,7 @@ import {
   AgentProviderInfo,
   AppSettings,
   AuditRecord,
+  CacheMeasureEvent,
   CacheProviderInfo,
   CatalogDto,
   CleanupPlan,
@@ -34,6 +35,9 @@ export interface ScannerApi {
   getCatalog(): Promise<CatalogDto>;
   getScanSummary(scanSessionId?: string): Promise<ScanSummary | null>;
   getAgentProviders(): Promise<AgentProviderInfo[]>;
+  addCustomAgentProvider(name: string, rootPaths: string[]): Promise<AppSettings>;
+  removeCustomAgentProvider(id: string): Promise<AppSettings>;
+  setAgentProviderHidden(id: string, hidden: boolean): Promise<AppSettings>;
   getKnownLocations(): Promise<KnownLocation[]>;
   openPathInExplorer(path: string): Promise<void>;
   openUrl(url: string): Promise<void>;
@@ -48,7 +52,9 @@ export interface ScannerApi {
     confirmationToken: string,
     permanentAcknowledged: boolean
   ): Promise<CleanupReport>;
-  getGlobalCacheProviders(): Promise<CacheProviderInfo[]>;
+  getCacheProviders(): Promise<CacheProviderInfo[]>;
+  measureCacheProviders(onEvent: (event: CacheMeasureEvent) => void): Promise<void>;
+  cancelCacheMeasurement(): Promise<void>;
   previewOfficialAction(providerId: string, actionId: string): Promise<OfficialActionPreview>;
   executeOfficialAction(token: string): Promise<OfficialActionResult>;
   getCleanupHistory(limit?: number): Promise<AuditRecord[]>;
@@ -97,6 +103,27 @@ export const scannerApi: ScannerApi = {
       return await invoke<AgentProviderInfo[]>("get_agent_providers");
     }
     return [];
+  },
+
+  async addCustomAgentProvider(name: string, rootPaths: string[]): Promise<AppSettings> {
+    if (!isTauriEnvironment()) {
+      throw new Error(DESKTOP_ONLY);
+    }
+    return await invoke<AppSettings>("add_custom_agent_provider", { name, rootPaths });
+  },
+
+  async removeCustomAgentProvider(id: string): Promise<AppSettings> {
+    if (!isTauriEnvironment()) {
+      throw new Error(DESKTOP_ONLY);
+    }
+    return await invoke<AppSettings>("remove_custom_agent_provider", { id });
+  },
+
+  async setAgentProviderHidden(id: string, hidden: boolean): Promise<AppSettings> {
+    if (!isTauriEnvironment()) {
+      throw new Error(DESKTOP_ONLY);
+    }
+    return await invoke<AppSettings>("set_agent_provider_hidden", { id, hidden });
   },
 
   async getKnownLocations(): Promise<KnownLocation[]> {
@@ -163,11 +190,27 @@ export const scannerApi: ScannerApi = {
     });
   },
 
-  async getGlobalCacheProviders(): Promise<CacheProviderInfo[]> {
+  async getCacheProviders(): Promise<CacheProviderInfo[]> {
     if (isTauriEnvironment()) {
-      return await invoke<CacheProviderInfo[]>("get_global_cache_providers");
+      return await invoke<CacheProviderInfo[]>("get_cache_providers");
     }
     return [];
+  },
+
+  async measureCacheProviders(onEvent: (event: CacheMeasureEvent) => void): Promise<void> {
+    if (!isTauriEnvironment()) {
+      return;
+    }
+    const channel = new Channel<CacheMeasureEvent>();
+    channel.onmessage = (event: CacheMeasureEvent) => onEvent(event);
+    await invoke("measure_cache_providers", { onEvent: channel });
+  },
+
+  async cancelCacheMeasurement(): Promise<void> {
+    if (!isTauriEnvironment()) {
+      return;
+    }
+    await invoke("cancel_cache_measurement");
   },
 
   async previewOfficialAction(providerId: string, actionId: string): Promise<OfficialActionPreview> {

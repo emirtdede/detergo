@@ -7,7 +7,7 @@ export interface UIText {
   common: {
     scan: string; scanning: string; cancel: string; rescan: string; chooseFolder: string;
     refresh: string; open: string; close: string; confirm: string; loading: string; none: string;
-    clear: string;
+    clear: string; allDrives: string; save: string; add: string; remove: string;
     items: (n: number) => string; showing: (n: number) => string;
   };
   overview: {
@@ -21,6 +21,8 @@ export interface UIText {
     selected: (n: number) => string; noResults: string; searchPlaceholder: string;
     allSafety: string; selectSafe: string; clearSelection: string; openFolder: string;
     selectRow: string; unmeasured: string; details: string;
+    allProjects: string; allCategories: string; projectFilter: string; categoryFilter: string;
+    sortHint: string; officialTool: string;
   };
   safety: { safe: string; regenerate: string; review: string; keep: string };
   plan: {
@@ -37,6 +39,11 @@ export interface UIText {
     title: string; subtitle: string; scan: string; active: string; readOnly: string;
     protectedBytes: string; growth: string; noProviders: string; notInstalled: string;
     providerNote: string; growthEmpty: string; loadError: string;
+    addTool: string; addToolHint: string; toolName: string; toolNamePlaceholder: string;
+    toolRoots: string; addRoot: string; removeTool: string; removeToolConfirm: string;
+    hide: string; showHidden: string; hiddenTools: string; customTool: string;
+    keepOnly: string; manageTitle: string; saveError: string; added: string;
+    removed: string; hidden: string; shown: string;
   };
   caches: {
     title: string; subtitle: string; refresh: string; notFound: string; runAction: string;
@@ -44,12 +51,17 @@ export interface UIText {
     after: string; delta: string; readOnly: string; detectorNote: string;
     executable: string; networkWarning: string; succeeded: string; failed: string;
     exitCode: string; loadError: string; auditError: string; noProviders: string;
+    measure: string; measuring: string; measureProgress: (done: number, total: number) => string;
+    cancelMeasure: string; measured: string; notMeasured: string; measureHint: string;
+    measureCancelled: string;
   };
   history: {
     title: string; empty: string; timestamp: string; mode: string; success: string;
     errors: string; reclaim: string; duration: string; details: string; records: (n: number) => string;
     loadError: string; moved: string; clear: string; clearConfirm: string; clearHint: string;
     actions: string; actionLabel: string; actionsEmpty: string;
+    subtitle: string; tabCleanups: string; tabActions: string; totalReclaimed: string;
+    totalRuns: string; lastRun: string;
   };
   settings: {
     general: string; scan: string; protections: string; agents: string; privacy: string;
@@ -60,6 +72,10 @@ export interface UIText {
     excludedNames: string; agentCacheCleanup: string; browserRecordings: string;
     saved: string; saveError: string; about: string; version: string;
     rules: string; ecosystems: string; categories: string;
+    subtitle: string; generalHint: string; scanHint: string; protectionsHint: string;
+    agentsHint: string; privacyHint: string; aboutHint: string;
+    sidebar: string; sidebarExpanded: string; sidebarCollapsed: string;
+    cacheMeasure: string; cacheMeasureFast: string; cacheMeasureFull: string;
   };
   errors: { title: string; blocked: string; retry: string };
   warnings: {

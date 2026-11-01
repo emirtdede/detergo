@@ -38,6 +38,11 @@ export function useScanController() {
       if (!picked) return;
       root = picked;
     }
+    // A full-disk scan is virtual: the backend enumerates local volumes itself,
+    // so there is no single root path to send.
+    if (scope === "allDrives") {
+      root = "";
+    }
 
     const prefs = usePreferencesStore.getState();
     useSelectionStore.getState().clearSelection();

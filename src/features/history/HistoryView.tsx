@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { RefreshCw, History, Trash2, Terminal } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { RefreshCw, History, Trash2, Terminal, TrendingDown } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
 import { useUIText } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { formatBytes } from "@/lib/formatters";
 import { usePreferencesStore } from "@/stores/preferences-store";
+import { useUiStore, HistoryTab } from "@/stores/ui-store";
 import { maskPath } from "@/features/items/ItemTable";
 import { ActionAuditRecord, AuditRecord } from "@/types";
 import "../items/items.css";
@@ -22,6 +23,11 @@ function formatSignedBytes(bytes: number): string {
   return `${bytes > 0 ? "+" : "−"}${formatBytes(Math.abs(bytes))}`;
 }
 
+function parseTimestamp(value: string): number {
+  const time = new Date(value).getTime();
+  return Number.isNaN(time) ? 0 : time;
+}
+
 export const HistoryView: React.FC = () => {
   const ui = useUIText();
   const [records, setRecords] = useState<AuditRecord[]>([]);
@@ -30,6 +36,8 @@ export const HistoryView: React.FC = () => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const maskPaths = usePreferencesStore((s) => s.maskPaths);
+  const tab = useUiStore((s) => s.historyTab);
+  const setTab = useUiStore((s) => s.setHistoryTab);
 
   const load = () => {
     setLoading(true);
@@ -62,12 +70,31 @@ export const HistoryView: React.FC = () => {
     }
   };
 
+  const summary = useMemo(() => {
+    const reclaimed = records.reduce((total, record) => total + record.reclaimBytes, 0);
+    const timestamps = [...records, ...actions].map((entry) => parseTimestamp(entry.timestamp));
+    const last = timestamps.length > 0 ? Math.max(...timestamps) : 0;
+    return {
+      reclaimed,
+      runs: records.length + actions.length,
+      last: last > 0 ? new Date(last).toLocaleString() : ui.common.none,
+    };
+  }, [records, actions, ui.common.none]);
+
+  const tabs: Array<{ id: HistoryTab; label: string; icon: React.ReactNode }> = [
+    { id: "cleanups", label: ui.history.tabCleanups, icon: <History size={14} /> },
+    { id: "actions", label: ui.history.tabActions, icon: <Terminal size={14} /> },
+  ];
+
+  const activeEmpty = tab === "cleanups" ? ui.history.empty : ui.history.actionsEmpty;
+  const activeCount = tab === "cleanups" ? records.length : actions.length;
+
   return (
     <div className="items-view">
       <header className="view-header">
         <div>
           <h1 className="view-title">{ui.history.title}</h1>
-          <p className="view-subtitle">{ui.history.records(records.length)}</p>
+          <p className="view-subtitle">{ui.history.subtitle}</p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <Button variant="secondary" size="sm" icon={<Trash2 size={13} />} onClick={clearHistory} disabled={loading}>
@@ -79,15 +106,58 @@ export const HistoryView: React.FC = () => {
         </div>
       </header>
 
+      <div className="history-summary">
+        <div className="history-summary-card">
+          <span className="history-summary-label">
+            <TrendingDown size={13} /> {ui.history.totalReclaimed}
+          </span>
+          <strong className="history-summary-value">{formatBytes(summary.reclaimed)}</strong>
+        </div>
+        <div className="history-summary-card">
+          <span className="history-summary-label">{ui.history.totalRuns}</span>
+          <strong className="history-summary-value">{summary.runs}</strong>
+        </div>
+        <div className="history-summary-card">
+          <span className="history-summary-label">{ui.history.lastRun}</span>
+          <strong className="history-summary-value history-summary-value--text">{summary.last}</strong>
+        </div>
+      </div>
+
+      <div className="subpage-toolbar" role="tablist" aria-label={ui.history.title}>
+        {tabs.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === item.id}
+            className={`history-tab ${tab === item.id ? "active" : ""}`}
+            onClick={() => {
+              setTab(item.id);
+              setExpanded(null);
+            }}
+          >
+            {item.icon}
+            <span>{item.label}</span>
+            <span className="history-tab-count">
+              {item.id === "cleanups" ? records.length : actions.length}
+            </span>
+          </button>
+        ))}
+      </div>
+
       <p className="plan-note">{ui.history.clearHint}</p>
       {error && <p className="items-warning">{ui.history.loadError} {error}</p>}
 
-      {records.length === 0 ? (
+      {activeCount === 0 ? (
         <div className="items-empty">
-          <History size={22} style={{ marginBottom: 8 }} />
-          <div>{loading ? ui.common.loading : ui.history.empty}</div>
+          {tab === "cleanups" ? (
+            <History size={22} style={{ marginBottom: 8 }} />
+          ) : (
+            <Terminal size={22} style={{ marginBottom: 8 }} />
+          )}
+          <div>{loading ? ui.common.loading : activeEmpty}</div>
         </div>
-      ) : (
+      ) : tab === "cleanups" ? (
         <table className="table-simple">
           <thead>
             <tr>
@@ -154,19 +224,6 @@ export const HistoryView: React.FC = () => {
             ))}
           </tbody>
         </table>
-      )}
-
-      <header className="view-header" style={{ marginTop: 24 }}>
-        <div>
-          <h2 className="view-title" style={{ fontSize: 18 }}>
-            <Terminal size={15} /> {ui.history.actions}
-          </h2>
-          <p className="view-subtitle">{ui.history.records(actions.length)}</p>
-        </div>
-      </header>
-
-      {actions.length === 0 ? (
-        <p className="items-empty">{loading ? ui.common.loading : ui.history.actionsEmpty}</p>
       ) : (
         <table className="table-simple">
           <thead>

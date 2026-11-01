@@ -40,7 +40,15 @@ export interface FavoriteLocation {
 }
 
 export interface SortOption {
-  field: "size" | "modified" | "name";
+  field:
+    | "size"
+    | "modified"
+    | "name"
+    | "reclaim"
+    | "safety"
+    | "project"
+    | "category"
+    | "method";
   direction: "asc" | "desc";
 }
 
@@ -50,7 +58,7 @@ export type ActiveUse = "yes" | "no" | "unknown";
 export type CleanupMethod = "trash" | "permanent" | "officialTool" | "none";
 export type TargetKind = "directory" | "file" | "fileGroup";
 export type ItemStatus = "discovered" | "measuring" | "ready" | "blocked" | "error" | "deleted";
-export type ScanScope = "project" | "agents" | "globalCaches";
+export type ScanScope = "project" | "agents" | "globalCaches" | "allDrives";
 
 export interface CleanupItem {
   id: string;
@@ -298,7 +306,21 @@ export interface CacheProviderInfo {
   actions: OfficialActionInfo[];
   readOnly: boolean;
   note?: string | null;
+  measured: boolean;
 }
+
+export type CacheMeasureEvent =
+  | { type: "started"; providerCount: number }
+  | {
+      type: "pathMeasured";
+      providerId: string;
+      path: string;
+      exists: boolean;
+      bytes: number | null;
+    }
+  | { type: "providerFinished"; providerId: string; totalBytes: number }
+  | { type: "finished" }
+  | { type: "cancelled" };
 
 export interface OfficialActionPreview {
   token: string;
@@ -394,6 +416,16 @@ export interface AgentPolicy {
   protectBrowserRecordings: boolean;
 }
 
+export interface CustomAgentProvider {
+  id: string;
+  name: string;
+  rootPaths: string[];
+  createdAt?: string | null;
+}
+
+export type SidebarMode = "expanded" | "collapsed";
+export type CacheMeasureMode = "fast" | "full";
+
 export interface AppSettings {
   schemaVersion: number;
   theme: string;
@@ -413,6 +445,10 @@ export interface AppSettings {
   maskPaths: boolean;
   historyEnabled: boolean;
   agentPolicy: AgentPolicy;
+  sidebarMode: SidebarMode;
+  cacheMeasureMode: CacheMeasureMode;
+  customAgentProviders: CustomAgentProvider[];
+  hiddenBuiltinProviders: string[];
 }
 
 export interface KnownLocation {

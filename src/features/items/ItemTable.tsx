@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { AlertTriangle, FolderOpen, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp, FolderOpen, ShieldCheck } from "lucide-react";
 import { Checkbox } from "@/components/primitives/Checkbox";
 import { IconButton } from "@/components/primitives/IconButton";
 import { SearchField } from "@/components/primitives/SearchField";
@@ -11,7 +11,7 @@ import { useUIText } from "@/lib/ui-text";
 import { useUiStore } from "@/stores/ui-store";
 import { formatBytes } from "@/lib/formatters";
 import { scannerApi } from "@/lib/tauri/scanner-api";
-import { CleanupItem, SafetyClass } from "@/types";
+import { CleanupItem, SafetyClass, SortOption } from "@/types";
 import "./items.css";
 
 export function maskPath(path: string): string {
@@ -24,17 +24,52 @@ interface ItemTableProps {
   emptyText?: string;
 }
 
+const SAFETY_RANK: Record<SafetyClass, number> = {
+  safe: 0,
+  regenerate: 1,
+  review: 2,
+  keep: 3,
+};
+
+function compareItems(a: CleanupItem, b: CleanupItem, sort: SortOption): number {
+  switch (sort.field) {
+    case "size":
+      return (a.logicalBytes ?? -1) - (b.logicalBytes ?? -1);
+    case "reclaim":
+      return (a.estimatedReclaimBytes ?? -1) - (b.estimatedReclaimBytes ?? -1);
+    case "modified":
+      return (
+        new Date(a.lastModifiedAt ?? 0).getTime() - new Date(b.lastModifiedAt ?? 0).getTime()
+      );
+    case "safety":
+      return SAFETY_RANK[a.safetyClass] - SAFETY_RANK[b.safetyClass];
+    case "project":
+      return (a.projectName ?? "").localeCompare(b.projectName ?? "");
+    case "category":
+      return a.category.localeCompare(b.category);
+    case "method":
+      return a.cleanupMethod.localeCompare(b.cleanupMethod);
+    case "name":
+    default:
+      return a.displayName.localeCompare(b.displayName);
+  }
+}
+
 export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true, emptyText }) => {
   const ui = useUIText();
   const searchQuery = useUiStore((s) => s.searchQuery);
   const setSearchQuery = useUiStore((s) => s.setSearchQuery);
   const [safetyFilter, setSafetyFilter] = useState<SafetyClass | "all">("all");
+  const [projectFilter, setProjectFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const selectedIds = useSelectionStore((s) => s.selectedIds);
   const toggleSelection = useSelectionStore((s) => s.toggleSelection);
   const deselectMany = useSelectionStore((s) => s.deselectMany);
   const selectMany = useSelectionStore((s) => s.selectMany);
   const maskPaths = usePreferencesStore((s) => s.maskPaths);
   const minSizeBytes = usePreferencesStore((s) => s.minSizeBytes);
+  const sort = usePreferencesStore((s) => s.sort);
+  const setSort = usePreferencesStore((s) => s.setSort);
   const showToast = useUiStore((s) => s.showToast);
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -59,10 +94,26 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
     }
   };
 
+  const projectOptions = useMemo(() => {
+    const values = new Set<string>();
+    for (const item of items) {
+      if (item.projectName) values.add(item.projectName);
+    }
+    return Array.from(values).sort((a, b) => a.localeCompare(b));
+  }, [items]);
+
+  const categoryOptions = useMemo(() => {
+    const values = new Set<string>();
+    for (const item of items) values.add(item.category);
+    return Array.from(values).sort((a, b) => a.localeCompare(b));
+  }, [items]);
+
   const filtered = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
-    return items.filter((item) => {
+    const matches = items.filter((item) => {
       if (safetyFilter !== "all" && item.safetyClass !== safetyFilter) return false;
+      if (projectFilter !== "all" && (item.projectName ?? "") !== projectFilter) return false;
+      if (categoryFilter !== "all" && item.category !== categoryFilter) return false;
       if (
         minSizeBytes > 0 &&
         item.estimatedReclaimBytes !== null &&
@@ -79,7 +130,10 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
         item.ruleId.toLowerCase().includes(query)
       );
     });
-  }, [items, searchQuery, safetyFilter, minSizeBytes]);
+
+    const direction = sort.direction === "asc" ? 1 : -1;
+    return matches.sort((a, b) => compareItems(a, b, sort) * direction);
+  }, [items, searchQuery, safetyFilter, projectFilter, categoryFilter, minSizeBytes, sort]);
 
   const safeIds = useMemo(
     () => filtered.filter((item) => item.autoSelectable).map((item) => item.id),
@@ -97,10 +151,65 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
 
   const displayPath = (path: string) => (maskPaths ? maskPath(path) : path);
 
+  const toggleSort = (field: SortOption["field"]) => {
+    setSort({
+      field,
+      direction: sort.field === field && sort.direction === "desc" ? "asc" : "desc",
+    });
+  };
+
+  const SortHeader: React.FC<{ field: SortOption["field"]; label: string; numeric?: boolean }> = ({
+    field,
+    label,
+    numeric,
+  }) => {
+    const active = sort.field === field;
+    return (
+      <div className={numeric ? "items-col-num" : undefined}>
+        <button
+          type="button"
+          className={`items-sort ${active ? "active" : ""}`}
+          onClick={() => toggleSort(field)}
+          aria-label={`${label} — ${ui.table.sortHint}`}
+          aria-sort={active ? (sort.direction === "asc" ? "ascending" : "descending") : "none"}
+          title={ui.table.sortHint}
+        >
+          <span>{label}</span>
+          {active &&
+            (sort.direction === "asc" ? <ChevronUp size={11} /> : <ChevronDown size={11} />)}
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div className="items-view">
       <div className="items-toolbar">
         <SearchField value={searchQuery} onChange={setSearchQuery} placeholder={ui.table.searchPlaceholder} />
+        {showProject && (
+          <select
+            className="items-filter-select"
+            value={projectFilter}
+            onChange={(e) => setProjectFilter(e.target.value)}
+            aria-label={ui.table.projectFilter}
+          >
+            <option value="all">{ui.table.allProjects}</option>
+            {projectOptions.map((project) => (
+              <option key={project} value={project}>{project}</option>
+            ))}
+          </select>
+        )}
+        <select
+          className="items-filter-select"
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          aria-label={ui.table.categoryFilter}
+        >
+          <option value="all">{ui.table.allCategories}</option>
+          {categoryOptions.map((category) => (
+            <option key={category} value={category}>{category}</option>
+          ))}
+        </select>
         <select
           className="items-filter-select"
           value={safetyFilter}
@@ -145,13 +254,16 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
               disabled={safeIds.length === 0}
             />
           </div>
-          <div>{ui.table.name}</div>
-          {showProject && <div>{ui.table.project}</div>}
-          {!showProject && <div>{ui.table.category}</div>}
-          <div>{ui.table.safety}</div>
-          <div>{ui.table.size}</div>
-          <div>{ui.table.reclaim}</div>
-          <div>{ui.table.method}</div>
+          <SortHeader field="name" label={ui.table.name} />
+          {showProject ? (
+            <SortHeader field="project" label={ui.table.project} />
+          ) : (
+            <SortHeader field="category" label={ui.table.category} />
+          )}
+          <SortHeader field="safety" label={ui.table.safety} />
+          <SortHeader field="size" label={ui.table.size} numeric />
+          <SortHeader field="reclaim" label={ui.table.reclaim} numeric />
+          <SortHeader field="method" label={ui.table.method} />
           <div />
         </div>
 
@@ -225,7 +337,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
                         : item.cleanupMethod === "permanent"
                           ? ui.plan.permanent
                           : item.cleanupMethod === "officialTool"
-                            ? ui.caches.runAction
+                            ? ui.table.officialTool
                             : "-"}
                     </div>
                     <div className="items-actions">

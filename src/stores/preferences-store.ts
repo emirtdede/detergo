@@ -1,7 +1,9 @@
 import { create } from "zustand";
 import {
   AppSettings,
+  CacheMeasureMode,
   FavoriteLocation,
+  SidebarMode,
   SortOption,
   SupportedLanguage,
 } from "@/types";
@@ -15,6 +17,8 @@ interface PreferencesState extends AppSettings {
   setLanguage: (language: SupportedLanguage) => void;
   setReduceMotion: (reduce: boolean) => void;
   setSort: (sort: SortOption) => void;
+  setSidebarMode: (mode: SidebarMode) => void;
+  setCacheMeasureMode: (mode: CacheMeasureMode) => void;
   addFavorite: (path: string, label?: string) => FavoriteLocation;
   removeFavorite: (id: string) => void;
   renameFavorite: (id: string, newLabel: string) => void;
@@ -28,7 +32,7 @@ interface PreferencesState extends AppSettings {
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   theme: "dark-black",
   language: detectSystemLanguage(),
   reduceMotion: false,
@@ -46,6 +50,10 @@ const DEFAULT_SETTINGS: AppSettings = {
   maskPaths: false,
   historyEnabled: true,
   agentPolicy: { allowCacheCleanup: true, protectBrowserRecordings: true },
+  sidebarMode: "expanded",
+  cacheMeasureMode: "fast",
+  customAgentProviders: [],
+  hiddenBuiltinProviders: [],
 };
 
 export function normalizeTheme(theme: string): string {
@@ -83,7 +91,7 @@ function applyReduceMotionToDom(reduceMotion: boolean) {
 
 function toSettings(state: PreferencesState): AppSettings {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     theme: state.theme,
     language: state.language ?? "en",
     reduceMotion: state.reduceMotion,
@@ -101,6 +109,10 @@ function toSettings(state: PreferencesState): AppSettings {
     maskPaths: state.maskPaths,
     historyEnabled: state.historyEnabled,
     agentPolicy: state.agentPolicy,
+    sidebarMode: state.sidebarMode,
+    cacheMeasureMode: state.cacheMeasureMode,
+    customAgentProviders: state.customAgentProviders,
+    hiddenBuiltinProviders: state.hiddenBuiltinProviders,
   };
 }
 
@@ -141,6 +153,16 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
 
   setSort: (sort: SortOption) => {
     set({ sort });
+    syncPreferences(get());
+  },
+
+  setSidebarMode: (sidebarMode: SidebarMode) => {
+    set({ sidebarMode });
+    syncPreferences(get());
+  },
+
+  setCacheMeasureMode: (cacheMeasureMode: CacheMeasureMode) => {
+    set({ cacheMeasureMode });
     syncPreferences(get());
   },
 
@@ -233,6 +255,10 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
       protectedPaths: prefs.protectedPaths ?? [],
       excludedNames: prefs.excludedNames ?? [],
       agentPolicy: prefs.agentPolicy ?? DEFAULT_SETTINGS.agentPolicy,
+      sidebarMode: prefs.sidebarMode === "collapsed" ? "collapsed" : "expanded",
+      cacheMeasureMode: prefs.cacheMeasureMode === "full" ? "full" : "fast",
+      customAgentProviders: prefs.customAgentProviders ?? [],
+      hiddenBuiltinProviders: prefs.hiddenBuiltinProviders ?? [],
     };
     applyThemeToDom(merged.theme);
     applyLanguageToDom(resolvedLanguage);

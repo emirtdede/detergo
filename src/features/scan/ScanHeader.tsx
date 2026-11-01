@@ -22,7 +22,7 @@ import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
 import { useAppStore } from "@/stores/app-store";
 import { scannerApi } from "@/lib/tauri/scanner-api";
-import { KnownLocation } from "@/types";
+import { KnownLocation, ScanScope } from "@/types";
 import { useI18n } from "@/lib/i18n";
 import { useUIText } from "@/lib/ui-text";
 import { truncatePath } from "@/lib/formatters";
@@ -35,6 +35,7 @@ export const ScanHeader: React.FC = () => {
   const { t } = useI18n();
   const ui = useUIText();
   const currentRootPath = useScanStore((s) => s.currentRootPath);
+  const scanScope = useScanStore((s) => s.scope);
   const { isScanning, startScan, cancelScan } = useScanController();
 
   const favorites = usePreferencesStore((s) => s.favorites);
@@ -59,6 +60,21 @@ export const ScanHeader: React.FC = () => {
       .then((locs) => setKnownLocations(locs))
       .catch(() => showToast(t.errors.invalidPath, "error"));
   }, []);
+
+  // Volumes can be mounted or unmounted while the app runs, so refresh the
+  // list every time the location menu opens.
+  const refreshKnownLocations = () => {
+    scannerApi
+      .getKnownLocations()
+      .then((locs) => setKnownLocations(locs))
+      .catch(() => {
+        /* keep the previous list on transient failures */
+      });
+  };
+
+  const isAllDrives = scanScope === "allDrives";
+  const allDrivesLabel =
+    knownLocations.find((loc) => loc.source === "all-drives")?.label ?? ui.common.allDrives;
 
   const shownPath = (path: string, maxChars: number) =>
     truncatePath(maskPaths ? maskPath(path) : path, maxChars);
@@ -107,11 +123,15 @@ export const ScanHeader: React.FC = () => {
     }
   };
 
-  const handleSelectLocation = (path: string) => {
+  const handleSelectLocation = (path: string, source?: string) => {
     if (isScanning) return;
     setIsLocationMenuOpen(false);
     useScanStore.getState().resetScan();
-    useScanStore.setState({ currentRootPath: path });
+    if (source === "all-drives") {
+      useScanStore.setState({ scope: "allDrives" });
+      return;
+    }
+    useScanStore.setState({ currentRootPath: path, scope: "project" });
     addRecentLocation(path);
   };
 
@@ -127,8 +147,10 @@ export const ScanHeader: React.FC = () => {
   };
 
   const handleStartScan = (pathOverride?: string) => {
-    const scope = useAppStore.getState().view === "agents" ? "agents" : "project";
-    startScan(pathOverride, scope);
+    const view = useAppStore.getState().view;
+    const scope: ScanScope =
+      view === "agents" ? "agents" : isAllDrives ? "allDrives" : "project";
+    startScan(scope === "allDrives" ? undefined : pathOverride, scope);
   };
 
   const handleCancelScan = () => {
@@ -155,13 +177,27 @@ export const ScanHeader: React.FC = () => {
             type="button"
             className={`command-location-pill ${isScanning ? "is-scanning" : ""} ${isLocationMenuOpen ? "menu-open" : ""}`}
             onClick={() => {
-              if (!isScanning) setIsLocationMenuOpen((prev) => !prev);
+              if (isScanning) return;
+              if (!isLocationMenuOpen) refreshKnownLocations();
+              setIsLocationMenuOpen((prev) => !prev);
             }}
-            title={currentRootPath ? (maskPaths ? maskPath(currentRootPath) : currentRootPath) : t.header.folderNotSelected}
+            title={
+              isAllDrives
+                ? allDrivesLabel
+                : currentRootPath
+                  ? maskPaths
+                    ? maskPath(currentRootPath)
+                    : currentRootPath
+                  : t.header.folderNotSelected
+            }
           >
             <FolderOpen size={14} className="command-folder-icon" />
             <span className="command-path-text">
-              {currentRootPath ? shownPath(currentRootPath, 34) : t.header.folderNotSelected}
+              {isAllDrives
+                ? allDrivesLabel
+                : currentRootPath
+                  ? shownPath(currentRootPath, 34)
+                  : t.header.folderNotSelected}
             </span>
 
             {currentRootPath && !isScanning && (
@@ -225,22 +261,35 @@ export const ScanHeader: React.FC = () => {
                   <span>{t.header.defaultLocations}</span>
                 </div>
                 {knownLocations.map((loc) => {
-                  const isSelected = currentRootPath?.toLowerCase() === loc.path.toLowerCase();
+                  const isVirtual = loc.source === "all-drives";
+                  const isSelected = isVirtual
+                    ? isAllDrives
+                    : !isAllDrives &&
+                      Boolean(currentRootPath) &&
+                      currentRootPath?.toLowerCase() === loc.path.toLowerCase();
                   const label = getKnownLocationLabel(loc, t);
                   return (
                     <button
                       key={loc.id}
                       type="button"
                       className={`location-menu-item ${isSelected ? "is-selected" : ""}`}
-                      onClick={() => handleSelectLocation(loc.path)}
-                      title={maskPaths ? maskPath(loc.path) : loc.path}
+                      onClick={() => handleSelectLocation(loc.path, loc.source)}
+                      title={
+                        isVirtual
+                          ? label
+                          : maskPaths
+                            ? maskPath(loc.path)
+                            : loc.path
+                      }
                     >
                       <div className="location-menu-item-icon">
                         <Folder size={15} />
                       </div>
                       <div className="location-menu-item-info">
                         <span className="location-menu-item-title">{label}</span>
-                        <span className="location-menu-item-path">{shownPath(loc.path, 34)}</span>
+                        {!isVirtual && (
+                          <span className="location-menu-item-path">{shownPath(loc.path, 34)}</span>
+                        )}
                       </div>
                       {isSelected && (
                         <div className="location-menu-item-check">

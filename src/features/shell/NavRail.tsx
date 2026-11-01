@@ -6,8 +6,11 @@ import {
   Package,
   History,
   Settings,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { useAppStore, AppView } from "@/stores/app-store";
+import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUIText, UIText } from "@/lib/ui-text";
 import "./shell.css";
 
@@ -24,22 +27,46 @@ export const NavRail: React.FC = () => {
   const ui = useUIText();
   const view = useAppStore((s) => s.view);
   const setView = useAppStore((s) => s.setView);
+  const sidebarMode = usePreferencesStore((s) => s.sidebarMode);
+  const setSidebarMode = usePreferencesStore((s) => s.setSidebarMode);
+  const isCollapsed = sidebarMode === "collapsed";
+
+  const toggleSidebar = () => setSidebarMode(isCollapsed ? "expanded" : "collapsed");
+  const toggleLabel = isCollapsed ? ui.settings.sidebarExpanded : ui.settings.sidebarCollapsed;
 
   return (
-    <nav className="nav-rail" aria-label={ui.nav.overview}>
-      {ITEMS.map((item) => (
-        <button
-          key={item.view}
-          type="button"
-          className={`nav-item ${view === item.view ? "active" : ""}`}
-          onClick={() => setView(item.view)}
-          title={ui.nav[item.key]}
-          aria-current={view === item.view ? "page" : undefined}
-        >
-          {item.icon}
-          <span>{ui.nav[item.key]}</span>
-        </button>
-      ))}
+    <nav
+      className={`nav-rail ${isCollapsed ? "collapsed" : ""}`}
+      aria-label={ui.nav.overview}
+    >
+      <div className="nav-rail-items">
+        {ITEMS.map((item) => (
+          <button
+            key={item.view}
+            type="button"
+            className={`nav-item ${view === item.view ? "active" : ""}`}
+            onClick={() => setView(item.view)}
+            title={isCollapsed ? ui.nav[item.key] : undefined}
+            aria-label={ui.nav[item.key]}
+            aria-current={view === item.view ? "page" : undefined}
+          >
+            {item.icon}
+            <span className="nav-item-label">{ui.nav[item.key]}</span>
+          </button>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        className="nav-item nav-collapse-toggle"
+        onClick={toggleSidebar}
+        title={toggleLabel}
+        aria-label={toggleLabel}
+        aria-expanded={!isCollapsed}
+      >
+        {isCollapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
+        <span className="nav-item-label">{ui.settings.sidebar}</span>
+      </button>
     </nav>
   );
 };

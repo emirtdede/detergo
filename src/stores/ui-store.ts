@@ -8,6 +8,16 @@ export type ModalType =
   | "cleanup-result"
   | "official-action";
 
+export type SettingsSection =
+  | "general"
+  | "scan"
+  | "protections"
+  | "agents"
+  | "privacy"
+  | "about";
+
+export type HistoryTab = "cleanups" | "actions";
+
 export interface ToastMessage {
   id: string;
   message: string;
@@ -23,10 +33,14 @@ interface UiState {
   pendingMode: DeleteMode;
   plan: CleanupPlan | null;
   report: CleanupReport | null;
+  settingsSection: SettingsSection;
+  historyTab: HistoryTab;
 
   openModal: (modal: ModalType) => void;
   closeModal: () => void;
   setSearchQuery: (query: string) => void;
+  setSettingsSection: (section: SettingsSection) => void;
+  setHistoryTab: (tab: HistoryTab) => void;
   showToast: (
     message: string,
     type?: "info" | "success" | "warning" | "error",
@@ -48,6 +62,8 @@ export const useUiStore = create<UiState>((set) => ({
   pendingMode: "recycleBin",
   plan: null,
   report: null,
+  settingsSection: "general",
+  historyTab: "cleanups",
 
   openModal: (modal) => set({ activeModal: modal }),
 
@@ -55,6 +71,10 @@ export const useUiStore = create<UiState>((set) => ({
     set({ activeModal: null, pendingDeletionIds: [], plan: null }),
 
   setSearchQuery: (query) => set({ searchQuery: query }),
+
+  setSettingsSection: (section) => set({ settingsSection: section }),
+
+  setHistoryTab: (tab) => set({ historyTab: tab }),
 
   showToast: (message, type = "info", durationMs = 3500) => {
     if (toastTimer) clearTimeout(toastTimer);

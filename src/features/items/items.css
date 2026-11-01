@@ -66,6 +66,46 @@
   background: var(--surface-alt);
 }
 
+.items-head > div {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.items-col-num {
+  justify-content: flex-end;
+}
+
+.items-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  max-width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.items-sort span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.items-sort:hover,
+.items-sort.active {
+  color: var(--text-primary);
+}
+
+.items-col-num .items-sort {
+  justify-content: flex-end;
+}
+
 .items-viewport {
   flex: 1;
   min-height: 0;
@@ -125,6 +165,7 @@
 .items-size {
   font-variant-numeric: tabular-nums;
   color: var(--text-primary);
+  text-align: right;
 }
 
 .safety-badge {

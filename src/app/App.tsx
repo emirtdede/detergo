@@ -42,6 +42,22 @@ export const App: React.FC = () => {
       });
   }, [loadPreferences, showToast, ui.errors.title]);
 
+  // Ctrl/Cmd+B toggles the sidebar between expanded and compact modes.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+      if (event.key.toLowerCase() !== "b") return;
+      const target = event.target as HTMLElement | null;
+      if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+      if (target?.isContentEditable) return;
+      event.preventDefault();
+      const prefs = usePreferencesStore.getState();
+      prefs.setSidebarMode(prefs.sidebarMode === "collapsed" ? "expanded" : "collapsed");
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   return (
     <div className="app-container">
       <ScanHeader />

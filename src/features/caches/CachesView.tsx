@@ -1,12 +1,18 @@
-import React, { useEffect, useState } from "react";
-import { Package, RefreshCw, Terminal } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Gauge, Package, RefreshCw, Square, Terminal } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
 import { Dialog } from "@/components/primitives/Dialog";
 import { useUIText } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { formatBytes } from "@/lib/formatters";
-import { CacheProviderInfo, OfficialActionPreview, OfficialActionResult } from "@/types";
+import {
+  CacheMeasureEvent,
+  CacheProviderInfo,
+  OfficialActionPreview,
+  OfficialActionResult,
+} from "@/types";
 import { usePreferencesStore } from "@/stores/preferences-store";
+import { useUiStore } from "@/stores/ui-store";
 import { maskPath } from "@/features/items/ItemTable";
 import "../items/items.css";
 import "../shell/shell.css";
@@ -33,13 +39,19 @@ export const CachesView: React.FC = () => {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [measuring, setMeasuring] = useState(false);
+  const [measureDone, setMeasureDone] = useState(0);
+  const [measureTotal, setMeasureTotal] = useState(0);
   const maskPaths = usePreferencesStore((s) => s.maskPaths);
+  const measureMode = usePreferencesStore((s) => s.cacheMeasureMode);
+  const showToast = useUiStore((s) => s.showToast);
+  const measuringRef = useRef(false);
 
   const load = () => {
     setLoading(true);
     setLoadError(null);
     scannerApi
-      .getGlobalCacheProviders()
+      .getCacheProviders()
       .then((next) => {
         setProviders(next);
         setLoaded(true);
@@ -48,9 +60,76 @@ export const CachesView: React.FC = () => {
       .finally(() => setLoading(false));
   };
 
+  const applyEvent = (event: CacheMeasureEvent) => {
+    switch (event.type) {
+      case "started":
+        setMeasureTotal(event.providerCount);
+        setMeasureDone(0);
+        break;
+      case "pathMeasured":
+        setProviders((prev) =>
+          prev.map((provider) => {
+            if (provider.id !== event.providerId) return provider;
+            const cachePaths = provider.cachePaths.map((path) =>
+              path.path === event.path
+                ? { ...path, exists: event.exists, bytes: event.bytes }
+                : path
+            );
+            return { ...provider, cachePaths };
+          })
+        );
+        break;
+      case "providerFinished":
+        setMeasureDone((done) => done + 1);
+        setProviders((prev) =>
+          prev.map((provider) =>
+            provider.id === event.providerId
+              ? { ...provider, totalBytes: event.totalBytes, measured: true }
+              : provider
+          )
+        );
+        break;
+      case "finished":
+      case "cancelled":
+        break;
+    }
+  };
+
+  const startMeasure = async () => {
+    if (measuringRef.current) return;
+    measuringRef.current = true;
+    setMeasuring(true);
+    setMeasureDone(0);
+    setMeasureTotal(0);
+    try {
+      await scannerApi.measureCacheProviders(applyEvent);
+    } catch (err) {
+      setLoadError(describeError(err));
+    } finally {
+      measuringRef.current = false;
+      setMeasuring(false);
+    }
+  };
+
+  const cancelMeasure = async () => {
+    try {
+      await scannerApi.cancelCacheMeasurement();
+    } catch (err) {
+      showToast(describeError(err), "error");
+    }
+  };
+
   useEffect(() => {
     load();
   }, []);
+
+  // "Full" mode measures on open; "fast" lets the user decide.
+  useEffect(() => {
+    if (loaded && measureMode === "full" && !measuringRef.current) {
+      startMeasure();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, measureMode]);
 
   const openPreview = async (providerId: string, actionId: string) => {
     setError(null);
@@ -88,6 +167,8 @@ export const CachesView: React.FC = () => {
     setError(null);
   };
 
+  const measuredAny = providers.some((provider) => provider.measured);
+
   return (
     <div className="items-view">
       <header className="view-header">
@@ -95,12 +176,52 @@ export const CachesView: React.FC = () => {
           <h1 className="view-title">{ui.caches.title}</h1>
           <p className="view-subtitle">{ui.caches.subtitle}</p>
         </div>
-        <Button variant="secondary" size="sm" icon={<RefreshCw size={13} />} onClick={load} disabled={loading}>
-          {ui.caches.refresh}
-        </Button>
+        <div style={{ display: "flex", gap: 8 }}>
+          {measuring ? (
+            <Button
+              variant="danger-outline"
+              size="sm"
+              icon={<Square size={11} fill="currentColor" />}
+              onClick={cancelMeasure}
+            >
+              {ui.caches.cancelMeasure}
+            </Button>
+          ) : (
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Gauge size={13} />}
+              onClick={startMeasure}
+              disabled={loading || providers.length === 0}
+            >
+              {ui.caches.measure}
+            </Button>
+          )}
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={<RefreshCw size={13} />}
+            onClick={load}
+            disabled={loading || measuring}
+          >
+            {ui.caches.refresh}
+          </Button>
+        </div>
       </header>
 
       {loadError && <p className="items-warning">{ui.caches.loadError} {loadError}</p>}
+
+      {measuring && (
+        <p className="plan-note" aria-live="polite">
+          {ui.caches.measuring}{" "}
+          {measureTotal > 0 ? `· ${ui.caches.measureProgress(measureDone, measureTotal)}` : ""}
+        </p>
+      )}
+      {!measuring && measuredAny && (
+        <p className="plan-note">
+          {ui.caches.measured} · {ui.caches.measureHint}
+        </p>
+      )}
 
       <div className="provider-grid">
         {providers.map((provider) => (
@@ -115,13 +236,19 @@ export const CachesView: React.FC = () => {
               {provider.cachePaths.map((path) => (
                 <span key={path.path}>
                   {maskPaths ? maskPath(path.path) : path.path}{" "}
-                  {path.exists && path.bytes !== null ? `· ${formatBytes(path.bytes)}` : ""}
+                  {path.exists && path.bytes !== null && path.bytes !== undefined
+                    ? `· ${formatBytes(path.bytes)}`
+                    : ""}
                 </span>
               ))}
             </div>
             <div className="form-row">
               <span>{ui.table.size}</span>
-              <strong>{formatBytes(provider.totalBytes)}</strong>
+              {provider.measured ? (
+                <strong>{formatBytes(provider.totalBytes)}</strong>
+              ) : (
+                <span className="chip">{ui.caches.notMeasured}</span>
+              )}
             </div>
             {provider.note && <p className="plan-note">{provider.note}</p>}
             <div className="provider-actions">
