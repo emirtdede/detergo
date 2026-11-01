@@ -206,6 +206,7 @@ No scenario is claimed as executed when it was not.
 | F-11 | **High** | Shipped artifacts were built from a revision other than the audited HEAD (02:42 vs 06:37), with no provenance record | **FIXED (process)** — clean-tree gate, embedded commit, freshness check, `BUILD_INFO.json`, `get_build_info`; artifacts must be rebuilt from a clean commit (§1.1) |
 | F-12 | Medium | `.cargo/config.toml` pinned a developer-specific `target-dir` and MSVC/SDK `LIBPATH`, so the release build was only reproducible on one workstation | **FIXED** — minimal machine-independent config |
 | F-13 | Low | MSI is generated `perMachine`; a standard user gets error 1925 | **DOCUMENTED** — NSIS is the consumer channel, MSI is the elevated/enterprise channel (§1.2) |
+| F-14 | Medium | The first provenance implementation watched only `.git/HEAD`, which holds a ref and does not change on commit, so an incremental build kept embedding the *previous* commit — the exact stale-provenance class the gate exists to prevent. Caught by `verify-ipc.mjs` reporting a binary/manifest commit mismatch | **FIXED** — re-run triggers now cover `.git/logs/HEAD`, `.git/index` and every `NC_BUILD_*` override; the probe re-run reports a matching commit and `dirty=false` |
 
 No critical or high-severity deletion defect was found in the audited code. The
 one High finding (F-11) was a release-integrity defect, not a data-loss defect,
