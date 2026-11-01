@@ -27,7 +27,7 @@ issue only).
 | Production frontend build | `npm run build` | **PASS** |
 | Tauri release (NSIS+MSI+portable) | `npm run build:release` | **PASS**, commit-stamped |
 | Packaged app startup | launch portable, observe 15 s | **stayed alive, stopped cleanly** |
-| Packaged IPC under CSP | WebView2 DevTools probe | **PASS** (`get_catalog`, `get_app_settings`, `get_known_locations`, `get_agent_providers`, `get_build_info`) |
+| Packaged IPC under CSP | `node scripts/verify-ipc.mjs` | **PASS — 15/15** (CSP effects, 5 commands, ACL, plan/URL rejection, commit + cleanliness cross-check) |
 | Offline / no telemetry (SEC-27) | `npm run verify:offline` | **PASS** — 0 outbound, 0 non-loopback listeners |
 
 ## 2. What the Rust tests cover

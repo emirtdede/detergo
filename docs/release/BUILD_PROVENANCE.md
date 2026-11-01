@@ -37,8 +37,11 @@ packages are published.
 
 `NC_BUILD_COMMIT`, `NC_BUILD_DIRTY`, and `NC_BUILD_TIME` exist for CI systems
 that build without a `.git` directory. When git metadata is unavailable and no
-override is supplied, the build reports `unknown`/`dirty: true` — the app never
-claims a clean, traceable build it cannot prove.
+override is supplied, the build reports `unknown`, which the runtime surfaces as
+dirty — the app never claims a clean, traceable build it cannot prove. (A tree
+that *is* clean but has no override reads `dirty: false`, because the build
+script asks git for the status directly rather than inferring it from output that
+is legitimately empty.)
 
 ## Remaining limitation
 
