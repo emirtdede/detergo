@@ -14,14 +14,14 @@ issue only).
 
 | Suite | Command | Result |
 |---|---|---|
-| Rust library + unit tests | `cargo test` | **94 passed, 0 failed** |
+| Rust library + unit tests | `cargo test` | **96 passed, 0 failed** |
 | Git-unavailable integration | `cargo test --test git_unavailable` | **1 passed** |
 | Recycle Bin round-trip (opt-in) | `npm run verify:trash` | **PASS** — real bin, shell-visible, exact bytes |
 | Recycle failure → no fallback | `cargo test --test recycle_failure_no_fallback` | **1 passed** |
 | Crash during delete → no audit | `cargo test --test crash_during_delete` | **1 passed** |
 | Secret persistence (SEC-26) | `cargo test --test secret_persistence` | **1 passed** |
 | Benchmarks (opt-in) | `-- --ignored` | **5 PASS** (scale ×2, entries, measure, recycle round-trip) |
-| Frontend unit/feature/stress | `npm test` | **29 passed, 0 failed** |
+| Frontend unit/feature/stress | `npm test` | **31 passed, 0 failed** |
 | TypeScript | `npm run typecheck` | **PASS** |
 | Clippy | `cargo clippy --all-targets` | **0 warnings, 0 errors** |
 | Production frontend build | `npm run build` | **PASS** |
@@ -100,6 +100,10 @@ same code path (`trash` returns an error, callers surface it).
 - Scan store: batches, buffered out-of-order measurements, statuses,
   blocked/non-selectable flags, deletion transitions.
 - Selection store: toggle/select-many/prune/clear.
+- Bulk select: filtered provider rows stay selectable even when
+  `autoSelectable` is false, while protected/non-selectable rows are excluded.
+- Cache store: measurement progress keeps accumulating after the Tool Caches
+  view unmounts.
 - Preferences: 16 themes, legacy aliases, settings update, DOM theme.
 - UI store: modals, plans, toasts.
 - Stress: 1,000 items filter < 15 ms, sort < 10 ms, total < 5 ms, set < 5 ms.
@@ -161,3 +165,7 @@ is inside that budget on this hardware.
 | 8 | Kill during multi-item permanent delete → no false success/audit | **PASS** (`crash_during_delete`) |
 | 9 | Windows 10 clean install smoke test | **NOT EXECUTED** — no Windows 10 machine available (audit host is Windows 11 10.0.26200) |
 | 10 | 50k-candidate and 1M-entry measurement | **PASS** (§5) |
+| 11 | Close the window during a scan → guard dialog, process survives | **PASS** — packaged build, native `WM_CLOSE` (2026-11-02) |
+| 12 | Tray: minimize to tray, restore, and quit from the tray/dialog | **PASS** — packaged build (`hide_to_tray` keeps the process alive; "Tamamen çık" exits) |
+| 13 | Restart restores the last scan, with a stale warning before acting | **PASS** — packaged build with a seeded `last-scan.json` |
+| 14 | Cache measurement continues after leaving Tool Caches | **PASS (automated)** — `cache-store` test |

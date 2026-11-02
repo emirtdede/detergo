@@ -48,10 +48,10 @@ No fabricated or estimated result is used in this report.
 
 | Check | Command / method | Result |
 |---|---|---|
-| Rust library + unit | `cargo test` | **94 passed**, 0 failed |
+| Rust library + unit | `cargo test` | **96 passed**, 0 failed |
 | Rust integration (default) | `cargo test` | **4 passed** — `git_unavailable`, `crash_during_delete`, `recycle_failure_no_fallback`, `secret_persistence` |
 | Opt-in heavy tests | 5 × `--ignored` | Recycle round-trip + 4 benchmarks (incl. cancel latency) — all PASS |
-| Frontend | `npm test` | **29 passed**, 0 failed |
+| Frontend | `npm test` | **31 passed**, 0 failed |
 | TypeScript | `npm run typecheck` | PASS |
 | Lint/static | `cargo clippy --all-targets` | 0 warnings, 0 errors |
 | Frontend build | `npm run build` | PASS (1,956 modules) |
@@ -145,9 +145,9 @@ Current build facts:
 
 | Artifact | Size | Verified |
 |---|---|---|
-| `Node-Cleaner-2.0.0-Portable.exe` | 11.13 MB | launched, IPC 15/15, offline PASS |
-| `Node-Cleaner-2.0.0-x64-Setup.exe` | 2.66 MB | install → launch → uninstall PASS |
-| `Node-Cleaner-2.0.0-x64.msi` | 3.82 MB | install → launch → uninstall PASS (per-user) |
+| `Node-Cleaner-2.0.0-Portable.exe` | 11.71 MB | launched, IPC 15/15, offline PASS, close-guard/tray/last-scan probes PASS |
+| `Node-Cleaner-2.0.0-x64-Setup.exe` | 2.77 MB | install → launch → uninstall PASS |
+| `Node-Cleaner-2.0.0-x64.msi` | 3.99 MB | install → launch → uninstall PASS (per-user) |
 
 `dirty` is `false` and the embedded commit matches the manifest.
 
@@ -187,3 +187,28 @@ For a DIRECT-LIVE product the rebuild step is not optional: publish only a packa
 whose `BUILD_INFO.json` shows `"dirty": false` and a commit equal to the audited
 `HEAD`. The current set satisfies both. With F-4 executed or explicitly accepted,
 public production is **GO**.
+
+## 7. Post-audit UX/safety batch (2026-11-02)
+
+Nine user-reported defects were fixed on top of the audited HEAD and verified on
+the packaged build. No deletion-path, catalog, plan or permission logic changed:
+the batch is UI behaviour plus one new read-mostly local snapshot file.
+
+| Report | Fix | Evidence |
+|---|---|---|
+| Closing the window killed a running scan with no warning | Rust intercepts `CloseRequested`, emits `close-requested`, and the UI asks: minimize to tray (default) / quit / cancel | Native `WM_CLOSE` keeps the process alive and shows the three-choice dialog; "Vazgeç" dismisses it, a second close reopens it, "Tamamen çık" exits (packaged build) |
+| No tray presence | Tray icon with Göster/Çıkış, left-click restores, single-instance launch restores | `hide_to_tray` hides the window and the process stays alive (packaged CDP probe) |
+| Method/reclaim columns carried little value | Both columns and their sort fields removed; stored settings holding the old fields are normalized | Header renders six cells: checkbox, target, project/category, safety, size, actions |
+| "Tümünü seç" did nothing after filtering | Bulk select targets every `selectable && !protected` row, not only `autoSelectable`; provider targets keep `autoSelectable = false` and are never pre-selected | Filtering to a single row leaves the button enabled and selects exactly that row; `bulk selection covers manually selectable rows…` unit test; SEC-30 / FR-S8 amended |
+| Garbled characters next to "Ölçülüyor…" | One `formatSignedBytes` helper using U+2212; literal `Â·` replaced with `·` | Repo-wide mojibake grep returns nothing; dev build renders `·` |
+| Cache measurement stopped when leaving the page | Measurement state and events moved to a global `cache-store` | `keeps cache measurement progress outside the caches view` unit test; store keeps accumulating after the view unmounts |
+| Settings submenu snapped open and never animated closed | `grid-template-rows` transition with `min-block-size: 0` + `overflow: clip`, `ease-in-out`, delayed `visibility`; leaving Settings now collapses it | Computed frames: 0 → 123.7px (mid) → 202px (open), then an animated close ending in `visibility: hidden` |
+| Results vanished on restart | Single `%APPDATA%\node-cleaner\last-scan.json` (schema v1, 64 MiB cap, `MoveFileExW` atomic replace); restored at startup; deleted rows are never persisted | Packaged build with a seeded snapshot: banner + 140 MB / 3 targets restored, `save_last_scan` replaces it, `clear_last_scan` removes it |
+| Acting on old numbers felt unsafe | Stale banner on restored data, a warning before a cleanup plan with "rescan first", and a previous-scan comparison | Packaged probe: banner present; dev probe: the plan dialog shows the warning, "Yine de devam et" acknowledges it |
+| Overview/Settings looked plain | Hero surface, stat cards, comparison strip, settings tab strip and card treatment | Rendered at 1180×760 with no horizontal overflow on any page |
+
+Verification for this batch: `npm run typecheck`, `npm test` (31 tests),
+`cargo test --lib` (96 tests), `cargo clippy --all-targets -D warnings`,
+`npm run build`, `npm run build:release` from a clean tree, plus the packaged
+close-guard, tray and last-scan probes. The tree was clean at build time, so
+`BUILD_INFO.json` carries the batch commit.
