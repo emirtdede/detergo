@@ -1,7 +1,7 @@
 # Release Checklist & Gates
 
 **Version:** 2.0.0
-**Date:** 2026-11-01
+**Date:** 2026-11-02
 **Source revision:** the commit recorded in `release_output/BUILD_INFO.json`, which
 must equal `git rev-parse HEAD` at build time
 **Deployment mode:** DIRECT-LIVE (local Windows desktop; NSIS / MSI / portable go
@@ -17,7 +17,7 @@ straight to users; no staging, no canary)
 | G3 | Ecosystem rules | **PASS** | table-driven test across every rule |
 | G4 | AI provider safety | **PASS** | provider policy tests, active-use probe, 120 s idle-window tests |
 | G5 | Global cache commands | **PASS** | argv whitelist, unknown/read-only/forged-token tests, read-only providers rejected |
-| G6 | UI, i18n, migration | **PASS (EN/TR for 2.0 screens)** — legacy header keeps 75 locales; limitation F-5 | `npm run typecheck`, 29 frontend tests, v1→v3 migration test |
+| G6 | UI, i18n, migration | **PASS (EN/TR for 2.0 screens)** - legacy header keeps 75 locales; limitation F-5 | `npm run typecheck`, 31 frontend tests, v1→v3 migration test |
 | G7 | Windows tests | **PARTIAL** — Windows 11 install/launch/uninstall PASS, Windows 10 not executed (F-4) | `scripts/verify-installer.ps1` NSIS + MSI |
 | G8 | Final security audit | **PASS with 1 documented gap** — 29/30 executed (SEC-19) | `docs/security/FINAL_SECURITY_AUDIT.md` |
 
@@ -37,6 +37,9 @@ straight to users; no staging, no canary)
 - [x] No deletion without user selection and plan confirmation
 - [x] Recycle Bin default, permanent requires separate ack
 - [x] Local audit/history and growth snapshots
+- [x] Last scan restored on startup, with a stale warning before acting on it
+- [x] Close guard + tray: closing asks first, work can continue in the tray
+- [x] Bulk select works after filtering without auto-selecting provider targets
 
 ## Security checklist
 
@@ -71,12 +74,12 @@ All numbers measured on this machine; commands and fixtures are in
 
 ## Packaging checklist
 
-- [x] Rust tests PASS (94 lib + 4 integration, 5 opt-in heavy tests)
-- [x] Frontend tests PASS (29)
+- [x] Rust tests PASS (96 lib + 4 integration, 5 opt-in heavy tests)
+- [x] Frontend tests PASS (31)
 - [x] Typecheck PASS
 - [x] Clippy PASS (0 warnings, all targets)
 - [x] Build provenance present — clean-tree gate, embedded commit, `BUILD_INFO.json`
-- [x] Release build PASS (2026-11-01) — clean tree, `dirty: false`, commit-stamped
+- [x] Release build PASS (2026-11-02) — clean tree, `dirty: false`, commit-stamped
 - [x] NSIS install → launch → uninstall PASS
 - [x] MSI install → launch → uninstall PASS (per-user mode; see below)
 - [x] Portable PASS
