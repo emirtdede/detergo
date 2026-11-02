@@ -102,6 +102,8 @@ same code path (`trash` returns an error, callers surface it).
 - Selection store: toggle/select-many/prune/clear.
 - Bulk select: filtered provider rows stay selectable even when
   `autoSelectable` is false, while protected/non-selectable rows are excluded.
+- Close guard: `closeAction` defaults to `ask`, remembers `tray`/`quit`, and
+  rejects unknown values so the guard can never be disabled by a bad file.
 - Cache store: measurement progress keeps accumulating after the Tool Caches
   view unmounts.
 - Preferences: 16 themes, legacy aliases, settings update, DOM theme.
@@ -169,3 +171,4 @@ is inside that budget on this hardware.
 | 12 | Tray: minimize to tray, restore, and quit from the tray/dialog | **PASS** — packaged build (`hide_to_tray` keeps the process alive; "Tamamen çık" exits) |
 | 13 | Restart restores the last scan, with a stale warning before acting | **PASS** — packaged build with a seeded `last-scan.json` |
 | 14 | Cache measurement continues after leaving Tool Caches | **PASS (automated)** — `cache-store` test |
+| 15 | Close choice is remembered and reversible from Settings | **PASS** — packaged build: dialog checkbox and Settings select both persist `closeAction`; native close then follows it, and `ask` restores the dialog |
