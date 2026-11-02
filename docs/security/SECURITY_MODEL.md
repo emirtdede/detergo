@@ -83,7 +83,7 @@ Status legend:
 | SEC-27 | No telemetry | A/P | `npm run verify:offline` — 0 outbound connections, 0 non-loopback listeners |
 | SEC-28 | Crash during deletion | A/P | `tests/crash_during_delete.rs` — mid-delete kill leaves no audit record and unfinished targets on disk |
 | SEC-29 | Settings migration | A/P | `test_v1_settings_migrate_without_data_loss`, corrupt-file preservation test |
-| SEC-30 | Safe default selection | A/P | `autoSelectable` is false for every provider target; header checkbox selects `autoSelectable` only; `keeps blocked items visible but non-selectable` |
+| SEC-30 | Safe default selection | A/P | `autoSelectable` is false for every provider target; no target is selected automatically at scan time. Bulk-select (header checkbox and the visible-rows button) is an explicit user action and selects only rows the backend marked `selectable` and not `protected`; `keeps blocked items visible but non-selectable` |
 
 **Result: 29 automated / P; 1 scenario (SEC-19) review-verified / P with a
 manual gap — the reparse-point block that defends it is executed, but a real

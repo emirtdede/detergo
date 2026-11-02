@@ -89,6 +89,26 @@ function applyReduceMotionToDom(reduceMotion: boolean) {
   }
 }
 
+const SORT_FIELDS: Array<SortOption["field"]> = [
+  "size",
+  "modified",
+  "name",
+  "safety",
+  "project",
+  "category",
+];
+
+/** Persisted settings may still contain the removed reclaim/method columns. */
+function normalizeSort(sort?: SortOption): SortOption {
+  if (!sort || !SORT_FIELDS.includes(sort.field)) {
+    return DEFAULT_SETTINGS.sort;
+  }
+  return {
+    field: sort.field,
+    direction: sort.direction === "asc" ? "asc" : "desc",
+  };
+}
+
 function toSettings(state: PreferencesState): AppSettings {
   return {
     schemaVersion: 3,
@@ -251,7 +271,7 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
       language: resolvedLanguage,
       favorites: prefs.favorites ?? [],
       recentLocations: prefs.recentLocations ?? [],
-      sort: prefs.sort ?? DEFAULT_SETTINGS.sort,
+      sort: normalizeSort(prefs.sort),
       protectedPaths: prefs.protectedPaths ?? [],
       excludedNames: prefs.excludedNames ?? [],
       agentPolicy: prefs.agentPolicy ?? DEFAULT_SETTINGS.agentPolicy,

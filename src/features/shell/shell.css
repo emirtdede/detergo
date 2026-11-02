@@ -74,19 +74,30 @@
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
-  transform: translateY(-4px);
+  visibility: hidden;
+  transform: translateY(-6px);
   pointer-events: none;
+  /* `grid-template-rows` is the only way to animate to intrinsic height. The
+     inner element must own the clipping and `min-block-size: 0`, otherwise the
+     collapse stutters and the closing frame snaps. */
   transition:
-    grid-template-rows 240ms var(--ease-standard),
-    opacity 180ms var(--ease-standard),
-    transform 240ms var(--ease-standard);
+    grid-template-rows 240ms var(--ease-in-out),
+    opacity 160ms var(--ease-standard),
+    transform 240ms var(--ease-in-out),
+    visibility 0s linear 240ms;
 }
 
 .nav-submenu.is-open {
   grid-template-rows: 1fr;
   opacity: 1;
+  visibility: visible;
   transform: translateY(0);
   pointer-events: auto;
+  transition:
+    grid-template-rows 240ms var(--ease-in-out),
+    opacity 200ms var(--ease-standard) 30ms,
+    transform 240ms var(--ease-in-out),
+    visibility 0s linear 0s;
 }
 
 .nav-submenu-inner {
@@ -94,10 +105,12 @@
   flex-direction: column;
   gap: 1px;
   min-height: 0;
+  min-block-size: 0;
   margin-left: 10px;
   padding-left: var(--space-2);
   border-left: 1px solid var(--border);
   overflow: hidden;
+  overflow: clip;
 }
 
 .nav-submenu-item {

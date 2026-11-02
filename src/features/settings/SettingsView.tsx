@@ -20,6 +20,7 @@ import { UIText } from "@/lib/ui-text";
 import { useSettingsSections } from "./settings-sections";
 import "../items/items.css";
 import "../shell/shell.css";
+import "./settings.css";
 
 const THEMES: ThemeMode[] = [
   "dark-black", "dark-gray", "dark-blue", "dark-purple", "dark-green",
@@ -61,6 +62,7 @@ export const SettingsView: React.FC = () => {
   const prefs = usePreferencesStore();
   const showToast = useUiStore((s) => s.showToast);
   const section = useUiStore((s) => s.settingsSection);
+  const setSettingsSection = useUiStore((s) => s.setSettingsSection);
   const [protectedInput, setProtectedInput] = useState("");
   const [excludedInput, setExcludedInput] = useState("");
   const [catalog, setCatalog] = useState<CatalogDto | null>(null);
@@ -119,15 +121,32 @@ export const SettingsView: React.FC = () => {
         </p>
       )}
 
-      <div className="subpage-content">
-        <header className="subpage-header">
-          <span className="subpage-header-icon" aria-hidden="true">{activeSection.icon}</span>
-          <div className="subpage-header-text">
-            <span className="subpage-eyebrow">{ui.nav.settings}</span>
-            <h1 className="subpage-title">{activeSection.label}</h1>
-            <p className="subpage-hint">{activeSection.hint}</p>
+      <div className="settings-page">
+        <nav className="settings-tabs" aria-label={ui.nav.settings}>
+          {sections.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`settings-tab ${item.id === activeSection.id ? "is-active" : ""}`}
+              onClick={() => setSettingsSection(item.id)}
+              aria-current={item.id === activeSection.id ? "page" : undefined}
+            >
+              <span className="settings-tab-icon" aria-hidden="true">{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <header className="settings-hero">
+          <span className="settings-hero-icon" aria-hidden="true">{activeSection.icon}</span>
+          <div className="settings-hero-copy">
+            <span className="settings-eyebrow">{ui.nav.settings}</span>
+            <h1 className="settings-title">{activeSection.label}</h1>
+            <p className="settings-hint">{activeSection.hint}</p>
           </div>
         </header>
+
+        <div className="settings-body">
 
         {activeSection.id === "general" && (
           <section className="settings-card">
@@ -393,6 +412,7 @@ export const SettingsView: React.FC = () => {
             )}
           </section>
         )}
+        </div>
       </div>
     </div>
   );

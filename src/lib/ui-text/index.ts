@@ -24,6 +24,17 @@ export interface UIText {
     selectRow: string; unmeasured: string; details: string;
     allProjects: string; allCategories: string; projectFilter: string; categoryFilter: string;
     sortHint: string; officialTool: string; sizeHint: string; reclaimHint: string;
+    selectVisible: string;
+  };
+  stale: {
+    bannerTitle: string; bannerBody: (date: string) => string; warningTitle: string;
+    warningBody: (date: string) => string; rescan: string; continueAnyway: string;
+    dismiss: string; previousComparison: string; cleanableDelta: (value: string) => string;
+    itemsDelta: (delta: number) => string; restoredAt: (date: string) => string;
+    savedLocally: string;
+  };
+  closeGuard: {
+    title: string; body: string; minimize: string; quit: string; stay: string; trayHint: string;
   };
   safety: { safe: string; regenerate: string; review: string; keep: string };
   plan: {

@@ -89,9 +89,9 @@
 .items-row {
   display: grid;
   /* The narrowest supported window (980px with the 208px rail) leaves ~700px
-     of content. These minimums add up to 716px including gaps and padding, so
-     columns never overlap or get clipped at that size. */
-  grid-template-columns: 36px minmax(140px, 2.4fr) minmax(84px, 1.2fr) 92px 82px 82px 88px 32px;
+     of content. Six columns: checkbox, target, project/category, safety, size,
+     row actions. */
+  grid-template-columns: 36px minmax(160px, 2.6fr) minmax(96px, 1.2fr) 96px 88px 32px;
   align-items: center;
   gap: var(--space-2);
   padding: 0 var(--space-3);

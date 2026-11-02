@@ -14,6 +14,7 @@ import {
   DeleteMode,
   GrowthReport,
   KnownLocation,
+  LastScanSnapshot,
   OfficialActionPreview,
   OfficialActionResult,
   ScanEvent,
@@ -64,6 +65,11 @@ export interface ScannerApi {
   getGrowthReport(): Promise<GrowthReport>;
   getAppSettings(): Promise<AppSettings>;
   saveAppSettings(settings: AppSettings): Promise<void>;
+  getLastScan(): Promise<LastScanSnapshot | null>;
+  saveLastScan(snapshot: LastScanSnapshot): Promise<void>;
+  clearLastScan(): Promise<void>;
+  hideToTray(): Promise<void>;
+  quitApp(): Promise<void>;
   getBuildInfo(): Promise<BuildInfo>;
 }
 
@@ -265,8 +271,32 @@ export const scannerApi: ScannerApi = {
     await invoke("save_app_settings", { settings });
   },
 
-  async getBuildInfo(): Promise<BuildInfo> {
-    if (!isTauriEnvironment()) {
+  async saveLastScan(snapshot: LastScanSnapshot): Promise<void> {
+    if (!isTauriEnvironment()) return;
+    await invoke("save_last_scan", { snapshot });
+  },
+
+  async getLastScan(): Promise<LastScanSnapshot | null> {
+    if (!isTauriEnvironment()) return null;
+    return await invoke<LastScanSnapshot | null>("get_last_scan");
+  },
+
+  async clearLastScan(): Promise<void> {
+    if (!isTauriEnvironment()) return;
+    await invoke("clear_last_scan");
+  },
+
+  async hideToTray(): Promise<void> {
+    if (!isTauriEnvironment()) return;
+    await invoke("hide_to_tray");
+  },
+
+  async quitApp(): Promise<void> {
+    if (!isTauriEnvironment()) return;
+    await invoke("quit_app");
+  },
+
+  async getBuildInfo(): Promise<BuildInfo> {    if (!isTauriEnvironment()) {
       return {
         version: "2.0.0",
         commit: "unknown",

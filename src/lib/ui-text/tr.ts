@@ -77,6 +77,31 @@ export const TR: UIText = {
     officialTool: "Resmî komut",
     sizeHint: "Mantıksal boyut",
     reclaimHint: "Tahmini kazanım",
+    selectVisible: "Görünenleri seç",
+  },
+  stale: {
+    bannerTitle: "Son tarama sonuçları gösteriliyor",
+    bannerBody: (date) =>
+      `${date} tarihli son taramadan geri yüklendi. Dosyalar bu yana değişmiş olabilir.`,
+    warningTitle: "Önceki tarama sonuçları",
+    warningBody: (date) =>
+      `Bu sonuçlar ${date} tarihli son taramadan geldi. Silme işleminden önce güncel durumu görmek için yeniden taramanız önerilir.`,
+    rescan: "Yeniden tara",
+    continueAnyway: "Yine de devam et",
+    dismiss: "Gizle",
+    previousComparison: "Önceki taramaya göre",
+    cleanableDelta: (value) => `temizlenebilir alan ${value}`,
+    itemsDelta: (delta) => `${delta >= 0 ? "+" : "−"}${Math.abs(delta)} hedef`,
+    restoredAt: (date) => `Son tarama: ${date}`,
+    savedLocally: "Yalnızca en son tarama bu cihazda saklanır.",
+  },
+  closeGuard: {
+    title: "Uygulamadan çıkılsın mı?",
+    body: "Pencereyi kapatmak işlemi durdurmaz. Uygulamayı sistem tepsisinde çalışır durumda bırakabilir veya tamamen çıkabilirsiniz.",
+    minimize: "Tepsiye küçült",
+    quit: "Tamamen çık",
+    stay: "Vazgeç",
+    trayHint: "Node Cleaner sistem tepsisinde çalışmaya devam eder.",
   },
   safety: { safe: "Güvenli", regenerate: "Yeniden üret", review: "İncele", keep: "Koru" },
   plan: {

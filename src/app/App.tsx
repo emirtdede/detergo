@@ -11,6 +11,8 @@ import { SelectionActionBar } from "@/features/results/SelectionActionBar";
 import { CleanupPlanDialog } from "@/features/cleanup/CleanupPlanDialog";
 import { CleanupResultDialog } from "@/features/cleanup/CleanupResultDialog";
 import { Toast } from "@/components/primitives/Toast";
+import { CloseGuardDialog } from "@/features/shell/CloseGuardDialog";
+import { StaleScanBanner } from "@/features/shell/StaleScanBanner";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useScanStore } from "@/stores/scan-store";
 import { useAppStore } from "@/stores/app-store";
@@ -42,6 +44,25 @@ export const App: React.FC = () => {
       });
   }, [loadPreferences, showToast, ui.errors.title]);
 
+  // Reopen with the last scan instead of an empty screen. The snapshot is
+  // intentionally restored after settings so a concurrently running scan can
+  // never be overwritten.
+  useEffect(() => {
+    let cancelled = false;
+    scannerApi
+      .getLastScan()
+      .then((snapshot) => {
+        if (cancelled || !snapshot) return;
+        const store = useScanStore.getState();
+        if (store.status !== "idle" || store.itemIds.length > 0) return;
+        store.restoreScan(snapshot);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Ctrl/Cmd+B toggles the sidebar between expanded and compact modes.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -64,6 +85,7 @@ export const App: React.FC = () => {
       <div className="app-body">
         <NavRail />
         <main className="view-container">
+          <StaleScanBanner />
           {view === "overview" && <OverviewView />}
           {view === "projects" && <ProjectsView />}
           {view === "agents" && <AgentsView />}
@@ -76,6 +98,7 @@ export const App: React.FC = () => {
       <SelectionActionBar />
       <CleanupPlanDialog />
       <CleanupResultDialog />
+      <CloseGuardDialog />
       <Toast />
     </div>
   );

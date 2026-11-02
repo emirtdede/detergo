@@ -44,11 +44,9 @@ export interface SortOption {
     | "size"
     | "modified"
     | "name"
-    | "reclaim"
     | "safety"
     | "project"
-    | "category"
-    | "method";
+    | "category";
   direction: "asc" | "desc";
 }
 
@@ -147,6 +145,14 @@ export interface ScanSummary {
   partial: boolean;
   stopReason?: string | null;
   providerTotals: ProviderTotal[];
+}
+
+/** Only the most recent scan is persisted, so the app never opens empty. */
+export interface LastScanSnapshot {
+  schemaVersion: number;
+  savedAt: string;
+  summary: ScanSummary;
+  items: CleanupItem[];
 }
 
 export type ScanEvent =

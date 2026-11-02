@@ -46,7 +46,8 @@ Go, PHP, Dart/Flutter, C/C++ (CMake), Unity, Unreal, Ruby/Elixir/Swift/Godot
 - **FR-S7** AI agent sessions, worktrees, credentials, memory, checkpoints,
   conversations, brain data and SQLite databases are `KEEP`.
 - **FR-S8** Provider storage is never auto-selected; AI targets have
-  `autoSelectable = false`.
+  `autoSelectable = false`. Bulk-select operates only on rows explicitly marked
+  `selectable` after a user action, never automatically.
 - **FR-S9** Unknown or under-evidenced targets are `REVIEW`, never `SAFE`.
 - **FR-S10** Git-tracked content is never removed by a generic rule.
 - **FR-S11** Report success only after verifying the path is gone; report

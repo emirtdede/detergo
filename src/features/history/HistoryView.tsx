@@ -3,7 +3,7 @@ import { RefreshCw, History, Trash2, Terminal, TrendingDown } from "lucide-react
 import { Button } from "@/components/primitives/Button";
 import { useUIText } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
-import { formatBytes } from "@/lib/formatters";
+import { formatBytes, formatSignedBytes } from "@/lib/formatters";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore, HistoryTab } from "@/stores/ui-store";
 import { maskPath } from "@/features/items/ItemTable";
@@ -16,11 +16,6 @@ function describeError(err: unknown): string {
     return String((err as { message: string }).message);
   }
   return String(err);
-}
-
-function formatSignedBytes(bytes: number): string {
-  if (bytes === 0) return formatBytes(0);
-  return `${bytes > 0 ? "+" : "âˆ’"}${formatBytes(Math.abs(bytes))}`;
 }
 
 function parseTimestamp(value: string): number {

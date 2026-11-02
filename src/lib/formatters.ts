@@ -32,6 +32,15 @@ export function formatBytes(bytes: number | null | undefined, locale = "tr"): st
 }
 
 /**
+ * Signed byte delta with a real minus sign (U+2212). The old duplicated
+ * helpers in the caches/history views carried a mojibake literal instead.
+ */
+export function formatSignedBytes(bytes: number): string {
+  if (bytes === 0) return formatBytes(0);
+  return `${bytes > 0 ? "+" : "−"}${formatBytes(Math.abs(bytes))}`;
+}
+
+/**
  * Format date string into relative localized string and exact localized date for tooltips.
  */
 export function formatDate(

@@ -3,6 +3,7 @@ import { useScanStore } from "../stores/scan-store";
 import { useSelectionStore } from "../stores/selection-store";
 import { usePreferencesStore } from "../stores/preferences-store";
 import { useUiStore } from "../stores/ui-store";
+import { bulkSelectableIds } from "../features/items/selection-helpers";
 import { makeItem, makeUpdate } from "./fixtures";
 
 describe("WP-3..6: Feature & workflow unit tests", () => {
@@ -49,6 +50,30 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
     expect(useScanStore.getState().itemsById["late"].logicalBytes).toBe(734003200);
     expect(useScanStore.getState().itemsById["late"].status).toBe("ready");
     expect(useScanStore.getState().pendingMeasurements["late"]).toBeUndefined();
+  });
+
+  it("bulk selection covers manually selectable rows, not only auto-selectable ones", () => {
+    const items = [
+      makeItem({
+        id: "provider",
+        autoSelectable: false,
+        selectable: true,
+        protected: false,
+      }),
+      makeItem({
+        id: "keep",
+        autoSelectable: false,
+        selectable: false,
+        protected: true,
+      }),
+      makeItem({ id: "safe", autoSelectable: true, selectable: true }),
+    ];
+
+    // Filtering to provider targets leaves autoSelectable empty; the bulk
+    // action must still select the visible selectable row.
+    const filteredProviderRows = items.filter((item) => item.id === "provider");
+    expect(bulkSelectableIds(filteredProviderRows)).toEqual(["provider"]);
+    expect(bulkSelectableIds(items)).toEqual(["provider", "safe"]);
   });
 
   it("keeps blocked items visible but non-selectable", () => {

@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { usePreferencesStore } from "@/stores/preferences-store";
-import { useScanStore } from "@/stores/scan-store";
+import { useScanStore, persistLastScanNow } from "@/stores/scan-store";
 import { useSelectionStore } from "@/stores/selection-store";
 import { useUiStore } from "@/stores/ui-store";
 import { AppErrorDto, ScanEvent, ScanRequest, ScanScope } from "@/types";
@@ -101,6 +101,12 @@ export function useScanController() {
       }
       if (scope === "project" && root) {
         prefs.addRecentLocation(root);
+      }
+      // Persist only completed/cancelled results; failures keep the previous
+      // snapshot untouched so the user still opens to something useful.
+      const finished = useScanStore.getState();
+      if (finished.status === "completed" || finished.status === "cancelled") {
+        void persistLastScanNow();
       }
     } catch (err) {
       const error = toAppError(err);

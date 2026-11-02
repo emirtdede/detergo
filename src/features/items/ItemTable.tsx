@@ -12,6 +12,7 @@ import { useUiStore } from "@/stores/ui-store";
 import { formatBytes } from "@/lib/formatters";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { CleanupItem, SafetyClass, SortOption } from "@/types";
+import { bulkSelectableIds } from "./selection-helpers";
 import "./items.css";
 
 export function maskPath(path: string): string {
@@ -35,8 +36,6 @@ function compareItems(a: CleanupItem, b: CleanupItem, sort: SortOption): number 
   switch (sort.field) {
     case "size":
       return (a.logicalBytes ?? -1) - (b.logicalBytes ?? -1);
-    case "reclaim":
-      return (a.estimatedReclaimBytes ?? -1) - (b.estimatedReclaimBytes ?? -1);
     case "modified":
       return (
         new Date(a.lastModifiedAt ?? 0).getTime() - new Date(b.lastModifiedAt ?? 0).getTime()
@@ -47,8 +46,6 @@ function compareItems(a: CleanupItem, b: CleanupItem, sort: SortOption): number 
       return (a.projectName ?? "").localeCompare(b.projectName ?? "");
     case "category":
       return a.category.localeCompare(b.category);
-    case "method":
-      return a.cleanupMethod.localeCompare(b.cleanupMethod);
     case "name":
     default:
       return a.displayName.localeCompare(b.displayName);
@@ -135,12 +132,13 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
     return matches.sort((a, b) => compareItems(a, b, sort) * direction);
   }, [items, searchQuery, safetyFilter, projectFilter, categoryFilter, minSizeBytes, sort]);
 
-  const safeIds = useMemo(
-    () => filtered.filter((item) => item.autoSelectable).map((item) => item.id),
-    [filtered]
-  );
-  const allSafeSelected = safeIds.length > 0 && safeIds.every((id) => selectedIds.has(id));
-  const someSelected = filtered.some((item) => selectedIds.has(item.id));
+  // Selecting rows is always an explicit user action. `autoSelectable` stays
+  // false for provider/agent targets (safe default), but filtering must not
+  // leave the bulk-select button disabled: every row the backend marked as
+  // selectable can be picked deliberately.
+  const selectableIds = useMemo(() => bulkSelectableIds(filtered), [filtered]);
+  const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
+  const someSelected = selectableIds.some((id) => selectedIds.has(id));
 
   const rowVirtualizer = useVirtualizer({
     count: filtered.length,
@@ -227,12 +225,12 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
           type="button"
           className="btn btn-secondary btn-sm"
           onClick={() => {
-            if (safeIds.length === 0) return;
-            selectMany(safeIds);
+            if (selectableIds.length === 0) return;
+            selectMany(selectableIds);
           }}
-          disabled={safeIds.length === 0}
+          disabled={selectableIds.length === 0}
         >
-          <ShieldCheck size={13} /> {ui.table.selectSafe}
+          <ShieldCheck size={13} /> {ui.table.selectVisible}
         </button>
       </div>
 
@@ -245,14 +243,14 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
         <div className="items-head" role="row">
           <div>
             <Checkbox
-              checked={allSafeSelected}
-              indeterminate={!allSafeSelected && someSelected}
+              checked={allSelected}
+              indeterminate={!allSelected && someSelected}
               onChange={() => {
-                if (allSafeSelected) deselectMany(safeIds);
-                else selectMany(safeIds);
+                if (allSelected) deselectMany(selectableIds);
+                else selectMany(selectableIds);
               }}
               aria-label={ui.table.selectAll}
-              disabled={safeIds.length === 0}
+              disabled={selectableIds.length === 0}
             />
           </div>
           <SortHeader field="name" label={ui.table.name} />
@@ -263,8 +261,6 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
           )}
           <SortHeader field="safety" label={ui.table.safety} />
           <SortHeader field="size" label={ui.table.size} numeric hint={ui.table.sizeHint} />
-          <SortHeader field="reclaim" label={ui.table.reclaim} numeric hint={ui.table.reclaimHint} />
-          <SortHeader field="method" label={ui.table.method} />
           <div />
         </div>
 
@@ -327,20 +323,6 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
                       {item.logicalBytes === null
                         ? ui.table.unmeasured
                         : formatBytes(item.logicalBytes)}
-                    </div>
-                    <div className="items-cell items-size">
-                      {item.estimatedReclaimBytes === null
-                        ? "-"
-                        : formatBytes(item.estimatedReclaimBytes)}
-                    </div>
-                    <div className="items-cell">
-                      {item.cleanupMethod === "trash"
-                        ? ui.plan.trash
-                        : item.cleanupMethod === "permanent"
-                          ? ui.plan.permanent
-                          : item.cleanupMethod === "officialTool"
-                            ? ui.table.officialTool
-                            : "-"}
                     </div>
                     <div className="items-actions">
                       <IconButton

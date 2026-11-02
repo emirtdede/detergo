@@ -77,6 +77,31 @@ export const EN: UIText = {
     officialTool: "Official command",
     sizeHint: "Logical size",
     reclaimHint: "Estimated reclaim",
+    selectVisible: "Select visible",
+  },
+  stale: {
+    bannerTitle: "Showing the last scan",
+    bannerBody: (date) =>
+      `Restored from the scan saved on ${date}. Files may have changed since then.`,
+    warningTitle: "Previous scan results",
+    warningBody: (date) =>
+      `These results came from the scan saved on ${date}. Rescan for the current state before deleting anything.`,
+    rescan: "Scan again",
+    continueAnyway: "Continue anyway",
+    dismiss: "Hide",
+    previousComparison: "Compared to previous scan",
+    cleanableDelta: (value) => `cleanable space ${value}`,
+    itemsDelta: (delta) => `${delta >= 0 ? "+" : "−"}${Math.abs(delta)} targets`,
+    restoredAt: (date) => `Last scan: ${date}`,
+    savedLocally: "Only the most recent scan is stored on this device.",
+  },
+  closeGuard: {
+    title: "Close Node Cleaner?",
+    body: "Closing the window does not stop work. You can keep the app running in the system tray or quit completely.",
+    minimize: "Minimize to tray",
+    quit: "Quit completely",
+    stay: "Cancel",
+    trayHint: "Node Cleaner keeps running in the system tray.",
   },
   safety: { safe: "Safe", regenerate: "Regenerate", review: "Review", keep: "Keep" },
   plan: {

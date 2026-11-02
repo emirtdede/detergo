@@ -2,11 +2,13 @@ import { create } from "zustand";
 import {
   AppErrorDto,
   CleanupItem,
+  LastScanSnapshot,
   MeasurementUpdate,
   ScanProgress,
   ScanScope,
   ScanSummary,
 } from "@/types";
+import { isTauriEnvironment, scannerApi } from "@/lib/tauri/scanner-api";
 
 export type ScanStatus =
   | "idle"
@@ -16,6 +18,9 @@ export type ScanStatus =
   | "completed"
   | "cancelled"
   | "failed";
+
+const LAST_SCAN_SCHEMA_VERSION = 1;
+const PERSIST_DEBOUNCE_MS = 600;
 
 interface ScanState {
   scanId: string | null;
@@ -30,7 +35,18 @@ interface ScanState {
   error: AppErrorDto | null;
   warnings: Array<{ code: string; path?: string | null }>;
 
+  /** True while the visible results come from the persisted last scan. */
+  restored: boolean;
+  lastSavedAt: string | null;
+  /** Previous scan kept in memory so a fresh scan can be compared to it. */
+  previousSummary: ScanSummary | null;
+  previousCleanableBytes: number;
+  previousItemCount: number;
+  staleBannerDismissed: boolean;
+  staleAcknowledged: boolean;
+
   startScanState: (scanId: string, rootPath: string, scope?: ScanScope) => void;
+  restoreScan: (snapshot: LastScanSnapshot) => void;
   updateProgress: (progress: ScanProgress) => void;
   addItems: (items: CleanupItem[]) => void;
   addCandidateEntriesBatch: (items: CleanupItem[]) => void;
@@ -42,6 +58,8 @@ interface ScanState {
   completeScan: (summary: ScanSummary) => void;
   cancelScanState: (summary?: ScanSummary) => void;
   failScan: (error: AppErrorDto) => void;
+  dismissStaleBanner: () => void;
+  acknowledgeStale: () => void;
   resetScan: () => void;
 }
 
@@ -60,6 +78,61 @@ function applyUpdate(item: CleanupItem, update: MeasurementUpdate): CleanupItem 
   };
 }
 
+function cleanableBytes(state: Pick<ScanState, "itemIds" | "itemsById">): number {
+  let total = 0;
+  for (const id of state.itemIds) {
+    const item = state.itemsById[id];
+    if (!item) continue;
+    if (item.protected || item.safetyClass === "keep" || !item.selectable) continue;
+    total += item.estimatedReclaimBytes ?? 0;
+  }
+  return total;
+}
+
+function toSnapshot(state: ScanState): LastScanSnapshot | null {
+  // An empty result is still a result: after cleaning everything the stored
+  // snapshot must shrink too, otherwise deleted targets resurrect on restart.
+  if (!state.summary) return null;
+  return {
+    schemaVersion: LAST_SCAN_SCHEMA_VERSION,
+    savedAt: new Date().toISOString(),
+    summary: state.summary,
+    // Already-deleted rows must not come back on restart as selectable targets.
+    items: state.itemIds
+      .map((id) => state.itemsById[id])
+      .filter((item) => item && item.status !== "deleted"),
+  };
+}
+
+let persistTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Writes the current results as the "last scan". Errors are intentionally
+ * silent: a failed convenience cache must never interrupt a scan or a cleanup.
+ */
+export async function persistLastScanNow(): Promise<void> {
+  const snapshot = toSnapshot(useScanStore.getState());
+  if (!snapshot) return;
+  try {
+    await scannerApi.saveLastScan(snapshot);
+    useScanStore.setState({ lastSavedAt: snapshot.savedAt });
+  } catch (err) {
+    console.warn("Last scan could not be saved:", err);
+  }
+}
+
+/** Coalesces rapid item mutations (cleanup deletes many rows at once). */
+export function scheduleLastScanPersist(): void {
+  if (!isTauriEnvironment()) return;
+  if (persistTimer !== null) {
+    clearTimeout(persistTimer);
+  }
+  persistTimer = setTimeout(() => {
+    persistTimer = null;
+    void persistLastScanNow();
+  }, PERSIST_DEBOUNCE_MS);
+}
+
 export const useScanStore = create<ScanState>((set, get) => ({
   scanId: null,
   status: "idle",
@@ -73,25 +146,75 @@ export const useScanStore = create<ScanState>((set, get) => ({
   error: null,
   warnings: [],
 
+  restored: false,
+  lastSavedAt: null,
+  previousSummary: null,
+  previousCleanableBytes: 0,
+  previousItemCount: 0,
+  staleBannerDismissed: false,
+  staleAcknowledged: false,
+
   startScanState: (scanId, rootPath, scope = "project") =>
-    set({
-      scanId,
-      status: "scanning",
-      currentRootPath: rootPath,
-      scope,
-      itemsById: {},
-      itemIds: [],
-      pendingMeasurements: {},
-      progress: {
-        phase: "discovering",
-        directoriesVisited: 0,
-        entriesFound: 0,
-        entriesMeasured: 0,
-        bytesMeasured: 0,
-      },
-      summary: null,
-      error: null,
-      warnings: [],
+    set((state) => {
+      // Keep a compact copy of the previous results before replacing them so
+      // the overview can compare the new scan against the old one.
+      const hasPrevious = state.itemIds.length > 0 && state.summary !== null;
+      return {
+        scanId,
+        status: "scanning",
+        currentRootPath: rootPath,
+        scope,
+        itemsById: {},
+        itemIds: [],
+        pendingMeasurements: {},
+        progress: {
+          phase: "discovering",
+          directoriesVisited: 0,
+          entriesFound: 0,
+          entriesMeasured: 0,
+          bytesMeasured: 0,
+        },
+        summary: null,
+        error: null,
+        warnings: [],
+        restored: false,
+        lastSavedAt: null,
+        previousSummary: hasPrevious ? state.summary : state.previousSummary,
+        previousCleanableBytes: hasPrevious
+          ? cleanableBytes(state)
+          : state.previousCleanableBytes,
+        previousItemCount: hasPrevious ? state.itemIds.length : state.previousItemCount,
+        staleBannerDismissed: false,
+        staleAcknowledged: false,
+      };
+    }),
+
+  restoreScan: (snapshot) =>
+    set(() => {
+      const itemsById: Record<string, CleanupItem> = {};
+      const itemIds: string[] = [];
+      for (const item of snapshot.items) {
+        if (!item || !item.id) continue;
+        itemsById[item.id] = item;
+        itemIds.push(item.id);
+      }
+      return {
+        scanId: snapshot.summary.scanId,
+        status: (snapshot.summary.partial ? "cancelled" : "completed") as ScanStatus,
+        currentRootPath: snapshot.summary.rootPath || null,
+        scope: snapshot.summary.scope,
+        itemsById,
+        itemIds,
+        pendingMeasurements: {},
+        progress: null,
+        summary: snapshot.summary,
+        error: null,
+        warnings: [],
+        restored: true,
+        lastSavedAt: snapshot.savedAt,
+        staleBannerDismissed: false,
+        staleAcknowledged: false,
+      };
     }),
 
   updateProgress: (progress) =>
@@ -150,16 +273,18 @@ export const useScanStore = create<ScanState>((set, get) => ({
     get().applyMeasurements(updates);
   },
 
-  markDeleted: (ids) =>
+  markDeleted: (ids) => {
     set((state) => {
       const nextMap = { ...state.itemsById };
       for (const id of ids) {
         if (nextMap[id]) nextMap[id] = { ...nextMap[id], status: "deleted" };
       }
       return { itemsById: nextMap };
-    }),
+    });
+    scheduleLastScanPersist();
+  },
 
-  removeItems: (ids) =>
+  removeItems: (ids) => {
     set((state) => {
       const removeSet = new Set(ids);
       const nextMap = { ...state.itemsById };
@@ -168,7 +293,9 @@ export const useScanStore = create<ScanState>((set, get) => ({
         itemsById: nextMap,
         itemIds: state.itemIds.filter((id) => !removeSet.has(id)),
       };
-    }),
+    });
+    scheduleLastScanPersist();
+  },
 
   addWarning: (warning) => set((state) => ({ warnings: [...state.warnings, warning] })),
 
@@ -177,6 +304,10 @@ export const useScanStore = create<ScanState>((set, get) => ({
   cancelScanState: (summary) => set({ status: "cancelled", summary: summary ?? null }),
 
   failScan: (error) => set({ status: "failed", error }),
+
+  dismissStaleBanner: () => set({ staleBannerDismissed: true }),
+
+  acknowledgeStale: () => set({ staleAcknowledged: true, staleBannerDismissed: true }),
 
   resetScan: () =>
     set({
@@ -191,5 +322,9 @@ export const useScanStore = create<ScanState>((set, get) => ({
       summary: null,
       error: null,
       warnings: [],
+      restored: false,
+      lastSavedAt: null,
+      staleBannerDismissed: false,
+      staleAcknowledged: false,
     }),
 }));

@@ -4,6 +4,7 @@ use crate::audit::AuditRepository;
 use crate::catalog::{load_embedded, CatalogIndex};
 use crate::cleanup::official_actions::OfficialActionRegistry;
 use crate::error::AppError;
+use crate::last_scan::LastScanRepository;
 use crate::scanner::cancellation::CancellationToken;
 use crate::scanner::session::ScanRegistry;
 use crate::settings::SettingsRepository;
@@ -13,6 +14,7 @@ pub struct AppState {
     pub official: Arc<OfficialActionRegistry>,
     pub settings: SettingsRepository,
     pub audit: AuditRepository,
+    pub last_scan: LastScanRepository,
     pub catalog: Option<Arc<CatalogIndex>>,
     pub catalog_error: Option<String>,
     pub scan_token: Mutex<Option<CancellationToken>>,
@@ -30,6 +32,7 @@ impl AppState {
             official: Arc::new(OfficialActionRegistry::new()),
             settings: SettingsRepository::new(),
             audit: AuditRepository::new(),
+            last_scan: LastScanRepository::new(),
             catalog,
             catalog_error,
             scan_token: Mutex::new(None),
