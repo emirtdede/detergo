@@ -172,3 +172,5 @@ is inside that budget on this hardware.
 | 13 | Restart restores the last scan, with a stale warning before acting | **PASS** — packaged build with a seeded `last-scan.json` |
 | 14 | Cache measurement continues after leaving Tool Caches | **PASS (automated)** — `cache-store` test |
 | 15 | Close choice is remembered and reversible from Settings | **PASS** — packaged build: dialog checkbox and Settings select both persist `closeAction`; native close then follows it, and `ask` restores the dialog |
+| 16 | Layout holds from 640px to 2560px | **PASS** — packaged CDP sweep, 11 widths × 8 views: zero horizontal overflow, no header collisions, screenshots reviewed (audit report §9) |
+| 17 | Settings submenu close mirrors the open animation | **PASS** — packaged CDP height sampling, both directions match within 0.002 (audit report §8.1) |

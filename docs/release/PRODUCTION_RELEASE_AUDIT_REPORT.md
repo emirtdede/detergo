@@ -267,3 +267,30 @@ links hand exactly `https://vellium.dev`, `https://vellium.dev` and
 through the `open_url` command, whose scheme validation is covered by
 `verify-ipc.mjs` (15/15).
 
+## 9. Full responsive pass (2026-11-02)
+
+Goal: the whole UI stays premium and readable at every window width, not just
+at the 1180×760 default. Measured with the same packaged CDP probe
+(`Emulation.setDeviceMetricsOverride`) at 640/700/820/980/1024/1180/1280/1440/
+1680/1920/2560px, every view plus all seven settings tabs.
+
+| Breakpoint | Fix | Evidence |
+|---|---|---|
+| ≤ 900px | `top-command-bar` becomes a three-track grid (`auto / 1fr / auto`) instead of absolutely centering the location pill, which used to slide under the Scan/Settings/window-control cluster | `headerOverlapCenterActions` was `true` at 700px and 640px before the fix, `false` everywhere after |
+| ≤ 900px | The nav rail folds to its 56px icon track automatically (matchMedia, not a persisted preference) so content keeps its width; the manual expand control is hidden while narrow | 640px screenshots show the icon rail with full-width content |
+| ≤ 900px | Item table and results grids get tighter gutters; the path pill caps at `clamp(110px, 22vw, 240px)` and ellipsizes | `bad` (out-of-viewport) list empty for Projects |
+| ≤ 720px | Item table drops the project/category column (its filter stays in the toolbar); `plan-summary` goes 4 → 2 columns; `location-dropdown-menu` caps at `calc(100vw − 40px)`; view gutters drop to `space-4` | 640px Projects screenshot: Target / Safety / Size only, no clipping |
+| ≤ 600px | Scan CTA collapses to its icon (label stays in the DOM for screen readers) | 640px header screenshot |
+| Ultra-wide | `overview-page`, `page-view`, `items-view` cap at 1240px and `settings-page` at 1080px, all centered with `margin-inline: auto` | At 2560px the overview column stays 1240px centered instead of stretching to 2304px at the left edge |
+| Short windows | `@media (max-height: 720px)` trims the About and Settings hero padding/mark so content reaches the fold sooner | 980×640 About screenshot: legal card visible after one scroll instead of three |
+| Window floor | `minWidth` 980 → 760, `minHeight` 640 → 560 in `tauri.conf.json` so the responsive rules are actually reachable | `tauri.conf.json` |
+
+Verification: all 88 probes (11 widths × 8 views) report
+`body.scrollWidth − viewport = 0`; the only out-of-viewport boxes are the
+decorative `overview-hero-glow` / `about-hero-glow` blurs, which are clipped by
+`overflow: hidden` on their card. Submenu curve unchanged (235.9px; both
+directions reach 99% height at ~230 ms and mirror each other within 0.002).
+`npm run typecheck`, `npm test` (43) and `cargo test --lib` (97) pass;
+`build:release` from clean tree `9a53eae` and `verify-ipc.mjs` 15/15.
+
+
