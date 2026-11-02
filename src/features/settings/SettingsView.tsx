@@ -188,6 +188,23 @@ export const SettingsView: React.FC = () => {
               </select>
             </label>
             <label className="form-row">
+              <span>{ui.settings.closeAction}</span>
+              <select
+                value={prefs.closeAction}
+                onChange={(e) =>
+                  prefs.setCloseAction(
+                    e.target.value === "tray" || e.target.value === "quit"
+                      ? e.target.value
+                      : "ask"
+                  )
+                }
+              >
+                <option value="ask">{ui.settings.closeAsk}</option>
+                <option value="tray">{ui.settings.closeTray}</option>
+                <option value="quit">{ui.settings.closeQuit}</option>
+              </select>
+            </label>
+            <label className="form-row">
               <span>{ui.settings.cacheMeasure}</span>
               <select
                 value={prefs.cacheMeasureMode}

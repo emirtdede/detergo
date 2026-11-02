@@ -48,10 +48,10 @@ No fabricated or estimated result is used in this report.
 
 | Check | Command / method | Result |
 |---|---|---|
-| Rust library + unit | `cargo test` | **96 passed**, 0 failed |
+| Rust library + unit | `cargo test` | **97 passed**, 0 failed |
 | Rust integration (default) | `cargo test` | **4 passed** — `git_unavailable`, `crash_during_delete`, `recycle_failure_no_fallback`, `secret_persistence` |
 | Opt-in heavy tests | 5 × `--ignored` | Recycle round-trip + 4 benchmarks (incl. cancel latency) — all PASS |
-| Frontend | `npm test` | **31 passed**, 0 failed |
+| Frontend | `npm test` | **32 passed**, 0 failed |
 | TypeScript | `npm run typecheck` | PASS |
 | Lint/static | `cargo clippy --all-targets` | 0 warnings, 0 errors |
 | Frontend build | `npm run build` | PASS (1,956 modules) |
@@ -206,9 +206,10 @@ the batch is UI behaviour plus one new read-mostly local snapshot file.
 | Results vanished on restart | Single `%APPDATA%\node-cleaner\last-scan.json` (schema v1, 64 MiB cap, `MoveFileExW` atomic replace); restored at startup; deleted rows are never persisted | Packaged build with a seeded snapshot: banner + 140 MB / 3 targets restored, `save_last_scan` replaces it, `clear_last_scan` removes it |
 | Acting on old numbers felt unsafe | Stale banner on restored data, a warning before a cleanup plan with "rescan first", and a previous-scan comparison | Packaged probe: banner present; dev probe: the plan dialog shows the warning, "Yine de devam et" acknowledges it |
 | Overview/Settings looked plain | Hero surface, stat cards, comparison strip, settings tab strip and card treatment | Rendered at 1180×760 with no horizontal overflow on any page |
+| The close guard asked on every close | "Remember my choice" stores `closeAction` (`tray`/`quit`) in settings; new Settings → General row switches between ask/tray/quit; the three dialog buttons share one width | Unit test: unknown values fall back to `ask`; rendered dialog buttons measure 156 px each; config round-trips |
 
-Verification for this batch: `npm run typecheck`, `npm test` (31 tests),
-`cargo test --lib` (96 tests), `cargo clippy --all-targets -D warnings`,
+Verification for this batch: `npm run typecheck`, `npm test` (32 tests),
+`cargo test --lib` (97 tests), `cargo clippy --all-targets -D warnings`,
 `npm run build`, `npm run build:release` from a clean tree, plus the packaged
 close-guard, tray and last-scan probes. The tree was clean at build time, so
 `BUILD_INFO.json` carries the batch commit.

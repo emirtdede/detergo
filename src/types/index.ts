@@ -432,6 +432,9 @@ export interface CustomAgentProvider {
 export type SidebarMode = "expanded" | "collapsed";
 export type CacheMeasureMode = "fast" | "full";
 
+/** What the window close button does: ask every time, or apply a remembered choice. */
+export type CloseAction = "ask" | "tray" | "quit";
+
 export interface AppSettings {
   schemaVersion: number;
   theme: string;
@@ -453,6 +456,7 @@ export interface AppSettings {
   agentPolicy: AgentPolicy;
   sidebarMode: SidebarMode;
   cacheMeasureMode: CacheMeasureMode;
+  closeAction: CloseAction;
   customAgentProviders: CustomAgentProvider[];
   hiddenBuiltinProviders: string[];
 }

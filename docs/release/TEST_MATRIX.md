@@ -14,14 +14,14 @@ issue only).
 
 | Suite | Command | Result |
 |---|---|---|
-| Rust library + unit tests | `cargo test` | **96 passed, 0 failed** |
+| Rust library + unit tests | `cargo test` | **97 passed, 0 failed** |
 | Git-unavailable integration | `cargo test --test git_unavailable` | **1 passed** |
 | Recycle Bin round-trip (opt-in) | `npm run verify:trash` | **PASS** — real bin, shell-visible, exact bytes |
 | Recycle failure → no fallback | `cargo test --test recycle_failure_no_fallback` | **1 passed** |
 | Crash during delete → no audit | `cargo test --test crash_during_delete` | **1 passed** |
 | Secret persistence (SEC-26) | `cargo test --test secret_persistence` | **1 passed** |
 | Benchmarks (opt-in) | `-- --ignored` | **5 PASS** (scale ×2, entries, measure, recycle round-trip) |
-| Frontend unit/feature/stress | `npm test` | **31 passed, 0 failed** |
+| Frontend unit/feature/stress | `npm test` | **32 passed, 0 failed** |
 | TypeScript | `npm run typecheck` | **PASS** |
 | Clippy | `cargo clippy --all-targets` | **0 warnings, 0 errors** |
 | Production frontend build | `npm run build` | **PASS** |

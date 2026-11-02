@@ -23,10 +23,10 @@ provenance (see §1.1). The findings that pass is based on are in §5.
 
 | Check | Command | Result |
 |---|---|---|
-| Rust library + unit tests | `cargo test --manifest-path src-tauri/Cargo.toml` | **96 passed, 0 failed** |
+| Rust library + unit tests | `cargo test --manifest-path src-tauri/Cargo.toml` | **97 passed, 0 failed** |
 | Rust integration tests (default run) | same command | **4 passed** (`git_unavailable`, `crash_during_delete`, `recycle_failure_no_fallback`, `secret_persistence`) |
 | Opt-in heavy tests | `-- --ignored` | 5 tests, run explicitly via the harnesses in §2.1 / §5 |
-| Frontend tests | `npm test` | **31 passed, 0 failed** |
+| Frontend tests | `npm test` | **32 passed, 0 failed** |
 | TypeScript | `npm run typecheck` | **PASS** |
 | Clippy | `cargo clippy --all-targets` | **0 warnings, 0 errors** |
 | Production frontend build | `npm run build` | **PASS** (1,956 modules) |

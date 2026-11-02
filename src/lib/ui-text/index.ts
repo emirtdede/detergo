@@ -35,6 +35,7 @@ export interface UIText {
   };
   closeGuard: {
     title: string; body: string; minimize: string; quit: string; stay: string; trayHint: string;
+    remember: string; rememberHint: string;
   };
   safety: { safe: string; regenerate: string; review: string; keep: string };
   plan: {
@@ -88,6 +89,7 @@ export interface UIText {
     subtitle: string; generalHint: string; scanHint: string; protectionsHint: string;
     agentsHint: string; privacyHint: string; aboutHint: string;
     sidebar: string; sidebarExpanded: string; sidebarCollapsed: string;
+    closeAction: string; closeAsk: string; closeTray: string; closeQuit: string;
     cacheMeasure: string; cacheMeasureFast: string; cacheMeasureFull: string;
     themeDark: string; themeLight: string; themeBlack: string; themeGray: string;
     themeWhite: string; themeBlue: string; themePurple: string; themeGreen: string;

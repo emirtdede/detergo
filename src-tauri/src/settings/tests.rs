@@ -236,6 +236,7 @@ mod tests {
         let mut settings = AppSettings::default();
         settings.sidebar_mode = "sideways".to_string();
         settings.cache_measure_mode = "turbo".to_string();
+        settings.close_action = "explode".to_string();
         settings.hidden_builtin_providers = vec![
             " Codex ".to_string(),
             "codex".to_string(),
@@ -245,6 +246,23 @@ mod tests {
 
         assert_eq!(settings.sidebar_mode, "expanded");
         assert_eq!(settings.cache_measure_mode, "fast");
+        assert_eq!(settings.close_action, "ask");
         assert_eq!(settings.hidden_builtin_providers, vec!["codex"]);
+    }
+
+    #[test]
+    fn remembered_close_action_round_trips_and_defaults_to_ask() {
+        let mut settings = AppSettings::default();
+        assert_eq!(settings.close_action, "ask");
+
+        settings.close_action = "tray".to_string();
+        settings.normalize();
+        assert_eq!(settings.close_action, "tray");
+
+        // Old config files predate the field: serde must fill the safe default.
+        let legacy: AppSettings =
+            serde_json::from_str(r#"{"theme":"dark-black","reduceMotion":false,"favorites":[],"recentLocations":[],"lastScanPath":null,"sort":{"field":"size","direction":"desc"}}"#)
+                .expect("legacy settings must still deserialize");
+        assert_eq!(legacy.close_action, "ask");
     }
 }

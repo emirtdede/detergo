@@ -147,6 +147,27 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
     expect(usePreferencesStore.getState().theme).toBe("dark-black");
   });
 
+  it("remembers the window close choice and falls back to asking", () => {
+    const prefStore = usePreferencesStore.getState();
+
+    // Settings written before the field existed must keep the guard dialog.
+    prefStore.loadPreferences({});
+    expect(usePreferencesStore.getState().closeAction).toBe("ask");
+
+    prefStore.loadPreferences({ closeAction: "tray" });
+    expect(usePreferencesStore.getState().closeAction).toBe("tray");
+
+    prefStore.loadPreferences({ closeAction: "quit" });
+    expect(usePreferencesStore.getState().closeAction).toBe("quit");
+
+    // A change made from Settings reaches the same field without a reload.
+    usePreferencesStore.getState().updateSettings({ closeAction: "tray" });
+    expect(usePreferencesStore.getState().closeAction).toBe("tray");
+
+    // An unknown value from a hand-edited file must not disable the guard.
+    prefStore.loadPreferences({ closeAction: "explode" as never });
+    expect(usePreferencesStore.getState().closeAction).toBe("ask");  });
+
   it("stores cleanup plans and reports for the dialogs", () => {
     const ui = useUiStore.getState();
     ui.setPendingDeletion(["a", "b"], "permanent");

@@ -59,6 +59,12 @@ fn default_cache_measure_mode() -> String {
     "fast".to_string()
 }
 
+/// What the window close button does. `ask` keeps the three-choice guard;
+/// `tray` and `quit` apply the user's remembered choice without a dialog.
+fn default_close_action() -> String {
+    "ask".to_string()
+}
+
 fn default_scan_profile() -> String {
     "balanced".to_string()
 }
@@ -112,6 +118,8 @@ pub struct AppSettings {
     pub sidebar_mode: String,
     #[serde(default = "default_cache_measure_mode")]
     pub cache_measure_mode: String,
+    #[serde(default = "default_close_action")]
+    pub close_action: String,
     #[serde(default)]
     pub custom_agent_providers: Vec<CustomAgentProvider>,
     #[serde(default)]
@@ -148,6 +156,7 @@ impl Default for AppSettings {
             agent_policy: AgentPolicy::default(),
             sidebar_mode: default_sidebar_mode(),
             cache_measure_mode: default_cache_measure_mode(),
+            close_action: default_close_action(),
             custom_agent_providers: Vec::new(),
             hidden_builtin_providers: Vec::new(),
         }
@@ -199,6 +208,9 @@ impl AppSettings {
         }
         if self.cache_measure_mode != "full" {
             self.cache_measure_mode = default_cache_measure_mode();
+        }
+        if !matches!(self.close_action.as_str(), "ask" | "tray" | "quit") {
+            self.close_action = default_close_action();
         }
 
         let mut seen_providers = std::collections::HashSet::new();

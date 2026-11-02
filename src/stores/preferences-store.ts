@@ -2,6 +2,7 @@ import { create } from "zustand";
 import {
   AppSettings,
   CacheMeasureMode,
+  CloseAction,
   FavoriteLocation,
   SidebarMode,
   SortOption,
@@ -19,6 +20,7 @@ interface PreferencesState extends AppSettings {
   setSort: (sort: SortOption) => void;
   setSidebarMode: (mode: SidebarMode) => void;
   setCacheMeasureMode: (mode: CacheMeasureMode) => void;
+  setCloseAction: (action: CloseAction) => void;
   addFavorite: (path: string, label?: string) => FavoriteLocation;
   removeFavorite: (id: string) => void;
   renameFavorite: (id: string, newLabel: string) => void;
@@ -52,6 +54,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   agentPolicy: { allowCacheCleanup: true, protectBrowserRecordings: true },
   sidebarMode: "expanded",
   cacheMeasureMode: "fast",
+  closeAction: "ask",
   customAgentProviders: [],
   hiddenBuiltinProviders: [],
 };
@@ -131,6 +134,7 @@ function toSettings(state: PreferencesState): AppSettings {
     agentPolicy: state.agentPolicy,
     sidebarMode: state.sidebarMode,
     cacheMeasureMode: state.cacheMeasureMode,
+    closeAction: state.closeAction,
     customAgentProviders: state.customAgentProviders,
     hiddenBuiltinProviders: state.hiddenBuiltinProviders,
   };
@@ -183,6 +187,11 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
 
   setCacheMeasureMode: (cacheMeasureMode: CacheMeasureMode) => {
     set({ cacheMeasureMode });
+    syncPreferences(get());
+  },
+
+  setCloseAction: (closeAction: CloseAction) => {
+    set({ closeAction });
     syncPreferences(get());
   },
 
@@ -277,6 +286,10 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
       agentPolicy: prefs.agentPolicy ?? DEFAULT_SETTINGS.agentPolicy,
       sidebarMode: prefs.sidebarMode === "collapsed" ? "collapsed" : "expanded",
       cacheMeasureMode: prefs.cacheMeasureMode === "full" ? "full" : "fast",
+      closeAction:
+        prefs.closeAction === "tray" || prefs.closeAction === "quit"
+          ? prefs.closeAction
+          : "ask",
       customAgentProviders: prefs.customAgentProviders ?? [],
       hiddenBuiltinProviders: prefs.hiddenBuiltinProviders ?? [],
     };
