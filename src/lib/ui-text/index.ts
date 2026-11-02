@@ -78,6 +78,7 @@ export interface UIText {
   };
   settings: {
     general: string; scan: string; protections: string; agents: string; privacy: string;
+    legal: string;
     theme: string; language: string; reduceMotion: string; scanProfile: string;
     profileBalanced: string; profileFast: string; profileDeep: string; maxDepth: string;
     maxCandidates: string; timeout: string; minSize: string; maskPaths: string;
@@ -94,6 +95,17 @@ export interface UIText {
     themeDark: string; themeLight: string; themeBlack: string; themeGray: string;
     themeWhite: string; themeBlue: string; themePurple: string; themeGreen: string;
     themeRed: string; themeOrange: string; themeYellow: string;
+    legalHint: string;
+    aboutTagline: string; aboutMadeBy: string; aboutVisit: string;
+    aboutBuildTitle: string; aboutCatalogTitle: string; aboutLegalTitle: string;
+    aboutLegalHint: string; aboutLocalFirst: string; aboutCopyright: string;
+    aboutBuiltAt: string; aboutLegalRevision: string; aboutOpenDoc: string;
+  };
+  legal: {
+    docTabsLabel: string; contact: string; rights: string;
+    directTitle: string; directHint: string;
+    colEcosystem: string; colComponent: string; colVersion: string; colLicense: string;
+    groupsTitle: string; groupsHint: string; groupsRust: string; groupsNpm: string;
   };
   errors: { title: string; blocked: string; retry: string };
   warnings: {

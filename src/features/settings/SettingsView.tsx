@@ -3,7 +3,6 @@ import {
   AlertTriangle,
   Plus,
   ShieldCheck,
-  Sparkles,
   X,
 } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
@@ -18,6 +17,8 @@ import { countCatalogStats } from "@/lib/catalog-stats";
 import { CatalogDto, BuildInfo, SupportedLanguage, ThemeMode } from "@/types";
 import { UIText } from "@/lib/ui-text";
 import { useSettingsSections } from "./settings-sections";
+import { AboutView } from "./AboutView";
+import { LegalView } from "../legal/LegalView";
 import "../items/items.css";
 import "../shell/shell.css";
 import "./settings.css";
@@ -393,41 +394,10 @@ export const SettingsView: React.FC = () => {
           </section>
         )}
 
+        {activeSection.id === "legal" && <LegalView />}
+
         {activeSection.id === "about" && (
-          <section className="settings-card">
-            <div className="form-row"><span>{ui.settings.version}</span><strong>2.0.0</strong></div>
-            <div className="form-row">
-              <span>{ui.settings.buildCommit}</span>
-              <span>
-                {buildInfo
-                  ? `${buildInfo.commitShort}${buildInfo.dirty ? ` (${ui.settings.buildDirty})` : ""}`
-                  : "—"}
-              </span>
-            </div>
-            {buildInfo && (
-              <div className="form-row">
-                <span>{ui.settings.buildProfile}</span>
-                <span>{buildInfo.profile}</span>
-              </div>
-            )}
-            <div className="form-row">
-              <span><Sparkles size={12} /> Node Cleaner</span>
-              <span>Vellium</span>
-            </div>
-            {catalog && (
-              <>
-                <div className="form-row"><span>{ui.settings.rules}</span><span>{catalogStats.rules}</span></div>
-                <div className="form-row">
-                  <span>{ui.settings.ecosystems}</span>
-                  <span>{catalogStats.ecosystems}</span>
-                </div>
-                <div className="form-row">
-                  <span>{ui.settings.categories}</span>
-                  <span>{catalogStats.categories}</span>
-                </div>
-              </>
-            )}
-          </section>
+          <AboutView buildInfo={buildInfo} catalog={catalog} catalogStats={catalogStats} />
         )}
         </div>
       </div>

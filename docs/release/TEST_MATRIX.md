@@ -1,6 +1,6 @@
 # Test Matrix & Recorded Results
 
-**Date:** 2026-11-01
+**Date:** 2026-11-02
 **Environment:** Windows 11 (10.0.26200), x64, 8+ logical cores, Node 24.22.1, Rust 1.99.1
 **Note:** commands were run with `TMP`/`TEMP` pointed at the user temp folder
 because this shell session inherited a non-existent `D:\tmp` (environment
@@ -21,7 +21,7 @@ issue only).
 | Crash during delete → no audit | `cargo test --test crash_during_delete` | **1 passed** |
 | Secret persistence (SEC-26) | `cargo test --test secret_persistence` | **1 passed** |
 | Benchmarks (opt-in) | `-- --ignored` | **5 PASS** (scale ×2, entries, measure, recycle round-trip) |
-| Frontend unit/feature/stress | `npm test` | **32 passed, 0 failed** |
+| Frontend unit/feature/stress | `npm test` | **43 passed, 0 failed** |
 | TypeScript | `npm run typecheck` | **PASS** |
 | Clippy | `cargo clippy --all-targets` | **0 warnings, 0 errors** |
 | Production frontend build | `npm run build` | **PASS** |

@@ -71,30 +71,32 @@
 }
 
 .nav-submenu {
-  display: grid;
-  grid-template-rows: 0fr;
+  /* A `grid-template-rows: 1fr` collapse is unreliable here: the submenu is a
+     flex item inside the rail's nested column flexbox, and Chromium resolves
+     the `fr` track to 0 in that context, so the closing half of the animation
+     silently vanished. `max-height` is driven by a measured CSS variable
+     instead (see NavRail), which interpolates identically in both directions. */
+  max-height: 0;
+  overflow: hidden;
   opacity: 0;
   visibility: hidden;
   transform: translateY(-6px);
   pointer-events: none;
-  /* `grid-template-rows` is the only way to animate to intrinsic height. The
-     inner element must own the clipping and `min-block-size: 0`, otherwise the
-     collapse stutters and the closing frame snaps. */
   transition:
-    grid-template-rows 240ms var(--ease-in-out),
+    max-height 240ms var(--ease-in-out),
     opacity 160ms var(--ease-standard),
     transform 240ms var(--ease-in-out),
     visibility 0s linear 240ms;
 }
 
 .nav-submenu.is-open {
-  grid-template-rows: 1fr;
+  max-height: var(--nav-submenu-height, 320px);
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
   pointer-events: auto;
   transition:
-    grid-template-rows 240ms var(--ease-in-out),
+    max-height 240ms var(--ease-in-out),
     opacity 200ms var(--ease-standard) 30ms,
     transform 240ms var(--ease-in-out),
     visibility 0s linear 0s;
@@ -104,13 +106,9 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
-  min-height: 0;
-  min-block-size: 0;
   margin-left: 10px;
   padding-left: var(--space-2);
   border-left: 1px solid var(--border);
-  overflow: hidden;
-  overflow: clip;
 }
 
 .nav-submenu-item {

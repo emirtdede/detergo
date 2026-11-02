@@ -3,6 +3,7 @@ import {
   Cpu,
   Info,
   ListChecks,
+  Scale,
   ShieldCheck,
   SlidersHorizontal,
   UserRoundCog,
@@ -54,6 +55,12 @@ export function useSettingsSections(): SettingsSectionDef[] {
       label: ui.settings.privacy,
       hint: ui.settings.privacyHint,
       icon: <ListChecks size={15} />,
+    },
+    {
+      id: "legal",
+      label: ui.settings.legal,
+      hint: ui.settings.legalHint,
+      icon: <Scale size={15} />,
     },
     {
       id: "about",

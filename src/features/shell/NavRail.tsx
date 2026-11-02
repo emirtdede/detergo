@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   LayoutDashboard,
   FolderTree,
@@ -40,6 +40,37 @@ export const NavRail: React.FC = () => {
   // on that click, so it stays out while the user moves between pages.
   const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
 
+  // The open/close animation needs the real content height. A grid `fr`
+  // collapse resolves to 0 inside the rail's nested flex column, so the panel
+  // measures its own content and hands the height to CSS via a custom property.
+  const submenuInnerRef = useRef<HTMLDivElement | null>(null);
+  const [submenuHeight, setSubmenuHeight] = useState(0);
+
+  useEffect(() => {
+    const inner = submenuInnerRef.current;
+    if (!inner) return;
+    const measure = () => setSubmenuHeight(inner.scrollHeight);
+    measure();
+    // Layout may still be settling on the first paint; one frame later the
+    // content height is reliable. ResizeObserver keeps it right on zoom and
+    // language changes afterwards.
+    const raf = requestAnimationFrame(measure);
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver(measure);
+      observer.observe(inner);
+    }
+    return () => {
+      cancelAnimationFrame(raf);
+      observer?.disconnect();
+    };
+  }, [sections.length, isCollapsed]);
+
+  const measureSubmenu = () => {
+    const inner = submenuInnerRef.current;
+    if (inner) setSubmenuHeight(inner.scrollHeight);
+  };
+
   const toggleSidebar = () => setSidebarMode(isCollapsed ? "expanded" : "collapsed");
   const toggleLabel = isCollapsed ? ui.settings.sidebarExpanded : ui.settings.sidebarCollapsed;
 
@@ -50,6 +81,9 @@ export const NavRail: React.FC = () => {
   }, [view]);
 
   const openSettings = () => {
+    // Measure before toggling so the height variable is already correct in the
+    // render that adds `is-open`, avoiding a one-frame jump.
+    measureSubmenu();
     // Already on Settings: the button acts as a pure toggle. Coming from another
     // page it opens the submenu and shows Settings at the same time.
     if (view === "settings") {
@@ -113,8 +147,9 @@ export const NavRail: React.FC = () => {
             role="menu"
             aria-label={ui.nav.settings}
             aria-hidden={!settingsMenuOpen}
+            style={{ "--nav-submenu-height": `${submenuHeight}px` } as React.CSSProperties}
           >
-            <div className="nav-submenu-inner">
+            <div className="nav-submenu-inner" ref={submenuInnerRef}>
               {sections.map((section) => (
                 <button
                   key={section.id}

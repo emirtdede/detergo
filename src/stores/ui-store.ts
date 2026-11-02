@@ -14,9 +14,13 @@ export type SettingsSection =
   | "protections"
   | "agents"
   | "privacy"
+  | "legal"
   | "about";
 
 export type HistoryTab = "cleanups" | "actions";
+
+/** Documents hosted on the Legal page; the value survives tab switches. */
+export type LegalDoc = "eula" | "privacy" | "thirdParty";
 
 export interface ToastMessage {
   id: string;
@@ -35,12 +39,16 @@ interface UiState {
   report: CleanupReport | null;
   settingsSection: SettingsSection;
   historyTab: HistoryTab;
+  legalDoc: LegalDoc;
 
   openModal: (modal: ModalType) => void;
   closeModal: () => void;
   setSearchQuery: (query: string) => void;
   setSettingsSection: (section: SettingsSection) => void;
   setHistoryTab: (tab: HistoryTab) => void;
+  /** Switches the Legal page to a document and opens that section. */
+  openLegalDoc: (doc: LegalDoc) => void;
+  setLegalDoc: (doc: LegalDoc) => void;
   showToast: (
     message: string,
     type?: "info" | "success" | "warning" | "error",
@@ -64,6 +72,7 @@ export const useUiStore = create<UiState>((set) => ({
   report: null,
   settingsSection: "general",
   historyTab: "cleanups",
+  legalDoc: "eula",
 
   openModal: (modal) => set({ activeModal: modal }),
 
@@ -75,6 +84,10 @@ export const useUiStore = create<UiState>((set) => ({
   setSettingsSection: (section) => set({ settingsSection: section }),
 
   setHistoryTab: (tab) => set({ historyTab: tab }),
+
+  openLegalDoc: (doc) => set({ legalDoc: doc, settingsSection: "legal" }),
+
+  setLegalDoc: (doc) => set({ legalDoc: doc }),
 
   showToast: (message, type = "info", durationMs = 3500) => {
     if (toastTimer) clearTimeout(toastTimer);

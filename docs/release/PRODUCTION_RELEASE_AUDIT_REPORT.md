@@ -202,7 +202,7 @@ the batch is UI behaviour plus one new read-mostly local snapshot file.
 | "Tümünü seç" did nothing after filtering | Bulk select targets every `selectable && !protected` row, not only `autoSelectable`; provider targets keep `autoSelectable = false` and are never pre-selected | Filtering to a single row leaves the button enabled and selects exactly that row; `bulk selection covers manually selectable rows…` unit test; SEC-30 / FR-S8 amended |
 | Garbled characters next to "Ölçülüyor…" | One `formatSignedBytes` helper using U+2212; literal `Â·` replaced with `·` | Repo-wide mojibake grep returns nothing; dev build renders `·` |
 | Cache measurement stopped when leaving the page | Measurement state and events moved to a global `cache-store` | `keeps cache measurement progress outside the caches view` unit test; store keeps accumulating after the view unmounts |
-| Settings submenu snapped open and never animated closed | `grid-template-rows` transition with `min-block-size: 0` + `overflow: clip`, `ease-in-out`, delayed `visibility`; leaving Settings now collapses it | Computed frames: 0 → 123.7px (mid) → 202px (open), then an animated close ending in `visibility: hidden` |
+| Settings submenu snapped open and never animated closed | `max-height` transition driven by a measured `--nav-submenu-height` (ResizeObserver + one rAF), `ease-in-out`, delayed `visibility`; leaving Settings now collapses it | The previous fix used `grid-template-rows: 1fr`, which Chromium resolves to 0 for this flex item: the closing half never played, and an expansion measured 0 → 0px. Now the same panel measures 202px closed→open and open→closed symmetrically (dev probe; packaged verification in §8) |
 | Results vanished on restart | Single `%APPDATA%\node-cleaner\last-scan.json` (schema v1, 64 MiB cap, `MoveFileExW` atomic replace); restored at startup; deleted rows are never persisted | Packaged build with a seeded snapshot: banner + 140 MB / 3 targets restored, `save_last_scan` replaces it, `clear_last_scan` removes it |
 | Acting on old numbers felt unsafe | Stale banner on restored data, a warning before a cleanup plan with "rescan first", and a previous-scan comparison | Packaged probe: banner present; dev probe: the plan dialog shows the warning, "Yine de devam et" acknowledges it |
 | Overview/Settings looked plain | Hero surface, stat cards, comparison strip, settings tab strip and card treatment | Rendered at 1180×760 with no horizontal overflow on any page |
@@ -213,3 +213,24 @@ Verification for this batch: `npm run typecheck`, `npm test` (32 tests),
 `npm run build`, `npm run build:release` from a clean tree, plus the packaged
 close-guard, tray and last-scan probes. The tree was clean at build time, so
 `BUILD_INFO.json` carries the batch commit.
+
+## 8. Legal pages, About rebuild and submenu fix (2026-11-02)
+
+| Change | Implementation | Evidence |
+|---|---|---|
+| No in-app legal pages | New `legal` settings section with three documents (EULA, Privacy Policy, Third-Party Licenses) embedded in `src/features/legal/legal-content.ts` in Turkish and English; other UI languages fall back to English, as the documents state | `npm test` → `legal.test.ts` (11 tests): every document exists in both languages, the EULA/privacy policy carry ≥10 clauses, no empty or duplicate clause, Vellium + contact channel appear in every document, non-Turkish languages resolve to English |
+| Third-party notices were hand-written and stale (React 18.3.1, Tauri 2.2.0) | `scripts/generate-license-data.mjs` walks `cargo metadata` (Windows target, from the workspace root) and the installed npm tree, then writes `src/features/legal/license-data.ts`: 285 Rust crates, 10 npm packages, 21 direct dependencies | The page renders 285 crates in 21 SPDX groups and the npm packages in 4 groups; a group expands to its full component list; unit tests assert the group sums equal the component counts and that every direct dependency sits in its own license group |
+| Attribution obligations were not documented | Notices page names the MIT/ISC/BSD/Apache-2.0 notice duty, the MPL-2.0 source-availability duty (cssparser, selectors, dtoa-short, option-ext), the Unicode-3.0 notice and the Apache NOTICE clause; unit test fails if a scan ever drops MPL-2.0 or Unicode-3.0 | `carries the licenses that require attribution` test; the MPL/Unicode components are listed under their groups on the page |
+| Privacy policy could have contradicted the code | Every claim was checked against the source: `%APPDATA%\node-cleaner\config.json`, `history.jsonl`, `snapshots.jsonl`, `actions.jsonl` and `last-scan.json` (single snapshot, 64 MiB cap) exist with those names; masking is display-only; no network calls (SEC-27) | File names read from `settings/repository.rs`, `audit/repository.rs`, `last_scan.rs`; `npm run verify:offline` still reports zero outbound |
+| About page was a plain key/value card | Rebuilt as a brand hero (Vellium mark + `vellium.dev` link), build provenance, catalog counters and three legal entry points that deep-link into the Legal section | Dev probe: hero 980×188, two 484px cards plus a full-width legal card, `About → Privacy` opens the Legal section on the Privacy document; 980px max width leaves no horizontal overflow (body scrollWidth = clientWidth) |
+| Settings submenu animated open but snapped closed | Root cause: `grid-template-rows: 1fr` resolves to 0 for this flex item, so the closing half never played. Replaced with a `max-height` transition driven by `--nav-submenu-height`, measured with `ResizeObserver` plus one `requestAnimationFrame` and re-measured before each toggle | Packaged CDP probe samples the panel height on both directions (§8.1) |
+
+### 8.1 Submenu animation probe
+
+`docs/release` keeps the numbers only; the probe itself is reproducible by
+focusing the window, clicking Settings and sampling
+`document.querySelector('.nav-submenu').getBoundingClientRect().height` every
+40 ms. The dev preview tab cannot be used: its `document.timeline.currentTime`
+stays at 0, so CSS transitions never advance in that tab (a plain
+`width: 0 → 200px` probe div freezes at 0 there as well).
+
