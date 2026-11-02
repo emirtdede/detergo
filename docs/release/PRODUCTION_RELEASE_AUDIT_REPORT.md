@@ -141,12 +141,12 @@ type release_output\BUILD_INFO.json     # "dirty": false, commit = HEAD
 certutil -hashfile release_output\Node-Cleaner-2.0.0-Portable.exe SHA256
 ```
 
-Current build facts:
+Current build facts (commit `b4f4a71`, clean tree):
 
 | Artifact | Size | Verified |
 |---|---|---|
-| `Node-Cleaner-2.0.0-Portable.exe` | 11.71 MB | launched, IPC 15/15, offline PASS, close-guard/tray/last-scan probes PASS |
-| `Node-Cleaner-2.0.0-x64-Setup.exe` | 2.77 MB | install → launch → uninstall PASS |
+| `Node-Cleaner-2.0.0-Portable.exe` | 11.64 MB | launched, IPC 15/15, legal/About/EN probes PASS, submenu curve PASS (§8.1) |
+| `Node-Cleaner-2.0.0-x64-Setup.exe` | 2.78 MB | install → launch → uninstall PASS |
 | `Node-Cleaner-2.0.0-x64.msi` | 3.99 MB | install → launch → uninstall PASS (per-user) |
 
 `dirty` is `false` and the embedded commit matches the manifest.
@@ -225,12 +225,45 @@ close-guard, tray and last-scan probes. The tree was clean at build time, so
 | About page was a plain key/value card | Rebuilt as a brand hero (Vellium mark + `vellium.dev` link), build provenance, catalog counters and three legal entry points that deep-link into the Legal section | Dev probe: hero 980×188, two 484px cards plus a full-width legal card, `About → Privacy` opens the Legal section on the Privacy document; 980px max width leaves no horizontal overflow (body scrollWidth = clientWidth) |
 | Settings submenu animated open but snapped closed | Root cause: `grid-template-rows: 1fr` resolves to 0 for this flex item, so the closing half never played. Replaced with a `max-height` transition driven by `--nav-submenu-height`, measured with `ResizeObserver` plus one `requestAnimationFrame` and re-measured before each toggle | Packaged CDP probe samples the panel height on both directions (§8.1) |
 
-### 8.1 Submenu animation probe
+### 8.1 Packaged probes (release_output, commit b4f4a71)
 
-`docs/release` keeps the numbers only; the probe itself is reproducible by
-focusing the window, clicking Settings and sampling
+Run against `Node-Cleaner-2.0.0-Portable.exe` with `APPDATA` pointed at a
+throwaway folder and the WebView2 remote-debugging port enabled; no real user
+data was touched.
+
+**Submenu curve.** `--nav-submenu-height` measured 236px. Sampling
 `document.querySelector('.nav-submenu').getBoundingClientRect().height` every
-40 ms. The dev preview tab cannot be used: its `document.timeline.currentTime`
-stays at 0, so CSS transitions never advance in that tab (a plain
-`width: 0 → 200px` probe div freezes at 0 there as well).
+20 ms after a warm-up open/close pair gives, as a fraction of full height:
+
+| t (ms) | 20 | 41 | 62 | 83 | 104 | 124 | 145 | 166 | 187 | 208 | 229 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| open | 0.019 | 0.096 | 0.265 | 0.496 | 0.680 | 0.802 | 0.883 | 0.936 | 0.971 | 0.991 | 1.000 |
+| close (mirrored) | 0.019 | 0.095 | 0.266 | 0.496 | 0.680 | 0.803 | 0.883 | 0.936 | 0.970 | 0.990 | 0.999 |
+
+The two directions agree within 0.002 at every sample and both settle in about
+240 ms, so closing is the reverse of opening rather than a snap. The dev
+preview tab cannot be used for this measurement: its
+`document.timeline.currentTime` stays at 0, so CSS transitions never advance
+there (a plain `width: 0 → 200px` probe div freezes at 0 as well).
+
+**Legal page.** EULA renders 13 clauses (5 bullet items), Privacy Policy 12
+clauses, Third-Party Notices 4 clauses plus the generated data: 285 Rust crates /
+10 npm packages / 21 direct dependencies, a 21-row table, 25 SPDX groups; the
+largest group ("MIT OR Apache-2.0", 144 components) expands from 38px to 988px
+with 144 list items. Footer offers `vellium.dev` and contact. Body
+`scrollWidth − clientWidth = 0` on every document.
+
+**About page.** Hero 916×186 with the Vellium mark and `vellium.dev` link, two
+452×204 cards (version/build `b4f4a71`, profile `release`, built at 2 Nov 2026
+07:14; catalog 56 rules / 14 ecosystems / 6 categories) and a full-width
+916×145 legal card. "Hakkında → Üçüncü Taraf" deep-links to the Legal section
+with the Third-Party document and its 25 groups. Switching the UI to English
+translates every label and both document sets (`© 2026 Vellium. All rights
+reserved.`), with no horizontal overflow.
+
+**Link wiring.** In the browser fallback the About link and both legal footer
+links hand exactly `https://vellium.dev`, `https://vellium.dev` and
+`https://vellium.dev/contact` to `openUrl`. The packaged build routes that
+through the `open_url` command, whose scheme validation is covered by
+`verify-ipc.mjs` (15/15).
 
