@@ -7,6 +7,11 @@
   flex-direction: column;
   gap: var(--space-4);
   min-width: 0;
+  width: 100%;
+  /* Keep the dashboard readable on ultra-wide windows instead of stretching
+     hero copy and stat cards across 2300px; the column centers itself. */
+  max-width: 1240px;
+  margin-inline: auto;
   padding-bottom: var(--space-8);
 }
 

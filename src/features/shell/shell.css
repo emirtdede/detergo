@@ -46,6 +46,12 @@
   opacity: 0.75;
 }
 
+/* The rail folds itself under 900px (see NavRail); while it does, the manual
+   expand control would fight the automatic behaviour, so it is hidden. */
+.nav-rail.is-narrow .nav-collapse-toggle {
+  display: none;
+}
+
 /* Settings expands inline inside the rail, directly under its own button, so
    the submenu belongs to the same vertical stack as the main navigation.
    It is always mounted and animates open/closed with a grid-rows transition,
@@ -194,6 +200,14 @@
   min-height: 0;
   overflow: auto;
   padding: var(--space-6);
+}
+
+/* Narrower windows get tighter gutters so the content column keeps its
+   breathing room instead of being eaten by page padding. */
+@media (max-width: 760px) {
+  .view-container {
+    padding: var(--space-4);
+  }
 }
 
 .app-content-canvas {

@@ -375,6 +375,23 @@
   }
 }
 
+/* Short windows: trim the hero so the first content cards reach the fold
+   instead of the page opening on a single oversized banner. */
+@media (max-height: 720px) {
+  .about-hero {
+    padding: var(--space-4) var(--space-5);
+  }
+
+  .about-mark {
+    width: 58px;
+    height: 58px;
+  }
+
+  .about-tagline {
+    line-height: var(--leading-normal);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .about-card,
   .about-legal-item,

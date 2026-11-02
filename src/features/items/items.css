@@ -5,6 +5,9 @@
   min-width: 0;
   min-height: 0;
   height: 100%;
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
 }
 
 /* Document-style pages (caches, agents, history) grow with their content and
@@ -15,6 +18,11 @@
   flex-direction: column;
   gap: var(--space-3);
   min-width: 0;
+  width: 100%;
+  /* Document pages share the dashboard's readable column width on ultra-wide
+     windows instead of hugging the left edge. */
+  max-width: 1240px;
+  margin-inline: auto;
 }
 
 /* The item table is virtualized and needs a definite box to scroll inside.
@@ -400,4 +408,69 @@
   gap: var(--space-2);
   font-size: var(--text-sm);
   margin-top: var(--space-2);
+}
+
+/* ==========================================================================
+   RESPONSIVE ITEM TABLE
+   The rail folds to 56px under 900px; the table then trims its gutters, and
+   below 720px drops the project/category column so the remaining cells keep a
+   comfortable hit area instead of overflowing the card.
+   ========================================================================== */
+@media (max-width: 900px) {
+  .items-head,
+  .items-row {
+    grid-template-columns: 34px minmax(140px, 2.4fr) minmax(80px, 1fr) 88px 78px 30px;
+    gap: 6px;
+    padding: 0 10px;
+  }
+
+  .items-toolbar .search-field {
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 720px) {
+  .items-head,
+  .items-row {
+    grid-template-columns: 32px minmax(120px, 1fr) 84px 76px 30px;
+  }
+
+  /* Column 3 is project (Projects) or category (Agents/Caches). Its filter is
+     still available in the toolbar, so hiding the cell loses no functionality. */
+  .items-head > div:nth-child(3),
+  .items-row > div:nth-child(3) {
+    display: none;
+  }
+
+  .plan-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .plan-modes {
+    flex-wrap: wrap;
+  }
+
+  .plan-mode {
+    min-width: 140px;
+  }
+}
+
+@media (max-width: 560px) {
+  .items-head,
+  .items-row {
+    grid-template-columns: 30px minmax(100px, 1fr) 74px;
+    gap: 5px;
+    padding: 0 8px;
+  }
+
+  .items-head > div:nth-child(4),
+  .items-row > div:nth-child(4),
+  .items-head > div:nth-child(6),
+  .items-row > div:nth-child(6) {
+    display: none;
+  }
+
+  .items-toolbar .search-field {
+    min-width: 0;
+  }
 }

@@ -117,7 +117,10 @@
   font-size: 12px;
   font-weight: 500;
   color: var(--text-primary);
-  max-width: 240px;
+  /* The pill shrinks with the window instead of holding a hard 240px, so the
+     centered command area never reaches the action cluster on small screens. */
+  max-width: clamp(110px, 22vw, 240px);
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -538,4 +541,90 @@
   border-radius: var(--radius-md) !important;
   font-weight: 600 !important;
   font-size: 12px !important;
+}
+
+/* ==========================================================================
+   RESPONSIVE COMMAND BAR
+   On narrow windows the mathematically viewport-centered pill runs underneath
+   the action cluster, because brand + actions take more than half the width.
+   Below 900px the bar becomes a three-track grid: brand and actions keep their
+   intrinsic size and the location pill takes whatever is left, ellipsizing its
+   path instead of colliding.
+   ========================================================================== */
+@media (max-width: 900px) {
+  .top-command-bar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 0 12px;
+  }
+
+  .command-center {
+    position: static;
+    transform: none;
+    justify-content: stretch;
+    min-width: 0;
+  }
+
+  .location-dropdown-container {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .command-location-pill {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .command-path-text {
+    flex: 1 1 auto;
+    max-width: none;
+  }
+
+  .command-star-btn,
+  .command-chevron-icon,
+  .command-folder-icon {
+    flex: 0 0 auto;
+  }
+
+  .command-actions {
+    gap: 6px;
+  }
+
+  /* The popover must stay inside the viewport even when the pill is narrow. */
+  .location-dropdown-menu {
+    width: min(360px, calc(100vw - 40px));
+  }
+}
+
+@media (max-width: 720px) {
+  .top-command-bar {
+    gap: 8px;
+    padding: 0 8px;
+  }
+
+  .command-brand {
+    gap: 0;
+  }
+
+  .command-brand-title {
+    display: none;
+  }
+
+  .command-actions {
+    gap: 4px;
+  }
+
+  .command-scan-btn {
+    padding: 0 10px !important;
+  }
+}
+
+/* Very narrow: the scan CTA keeps its icon and loses its label so the header
+   stays on one line. Text stays in the DOM for assistive tech. */
+@media (max-width: 600px) {
+  .command-scan-btn > span:not(.btn-icon) {
+    display: none;
+  }
 }

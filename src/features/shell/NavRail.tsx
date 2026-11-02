@@ -36,6 +36,23 @@ export const NavRail: React.FC = () => {
   const sections = useSettingsSections();
   const isCollapsed = sidebarMode === "collapsed";
 
+  // Below 900px a full-width rail would eat a third of the window. The rail
+  // folds to its icon track automatically there, without overwriting the
+  // user's saved preference: widening the window restores their choice.
+  const [isNarrow, setIsNarrow] = useState(
+    () => typeof window !== "undefined" && window.innerWidth <= 900
+  );
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 900px)");
+    const sync = () => setIsNarrow(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+
+  const railCollapsed = isCollapsed || isNarrow;
+
   // The submenu is owned by the Settings button alone: it opens and closes only
   // on that click, so it stays out while the user moves between pages.
   const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
@@ -64,7 +81,7 @@ export const NavRail: React.FC = () => {
       cancelAnimationFrame(raf);
       observer?.disconnect();
     };
-  }, [sections.length, isCollapsed]);
+  }, [sections.length, railCollapsed]);
 
   const measureSubmenu = () => {
     const inner = submenuInnerRef.current;
@@ -103,7 +120,7 @@ export const NavRail: React.FC = () => {
 
   return (
     <nav
-      className={`nav-rail ${isCollapsed ? "collapsed" : ""}`}
+      className={`nav-rail ${railCollapsed ? "collapsed" : ""} ${isNarrow ? "is-narrow" : ""}`}
       aria-label={ui.nav.overview}
     >
       <div className="nav-rail-items">
@@ -113,7 +130,7 @@ export const NavRail: React.FC = () => {
             type="button"
             className={`nav-item ${view === item.view ? "active" : ""}`}
             onClick={() => setView(item.view)}
-            title={isCollapsed ? ui.nav[item.key] : undefined}
+            title={railCollapsed ? ui.nav[item.key] : undefined}
             aria-label={ui.nav[item.key]}
             aria-current={view === item.view ? "page" : undefined}
           >
@@ -127,7 +144,7 @@ export const NavRail: React.FC = () => {
             type="button"
             className={`nav-item ${view === "settings" ? "active" : ""}`}
             onClick={openSettings}
-            title={isCollapsed ? ui.nav.settings : undefined}
+            title={railCollapsed ? ui.nav.settings : undefined}
             aria-label={ui.nav.settings}
             aria-expanded={settingsMenuOpen}
             aria-controls="nav-settings-submenu"
@@ -160,7 +177,7 @@ export const NavRail: React.FC = () => {
                     view === "settings" && section.id === activeSection.id ? "active" : ""
                   }`}
                   onClick={() => chooseSection(section.id)}
-                  title={isCollapsed ? section.label : section.hint}
+                  title={railCollapsed ? section.label : section.hint}
                   aria-current={
                     view === "settings" && section.id === activeSection.id ? "page" : undefined
                   }
