@@ -3,6 +3,7 @@ import { useScanStore } from "../stores/scan-store";
 import { useSelectionStore } from "../stores/selection-store";
 import { usePreferencesStore } from "../stores/preferences-store";
 import { useUiStore } from "../stores/ui-store";
+import { useCacheStore } from "../stores/cache-store";
 import { bulkSelectableIds } from "../features/items/selection-helpers";
 import { makeItem, makeUpdate } from "./fixtures";
 
@@ -158,5 +159,44 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
       protectedPaths: ["C:\\Work\\important"],
     });
     expect(usePreferencesStore.getState().protectedPaths).toEqual(["C:\\Work\\important"]);
+  });
+
+  it("keeps cache measurement progress outside the caches view", () => {
+    const cache = useCacheStore.getState();
+    useCacheStore.setState({
+      providers: [
+        {
+          id: "npm",
+          name: "npm",
+          detected: true,
+          cachePaths: [{ path: "C:\\npm-cache", exists: true, bytes: 0 }],
+          totalBytes: 0,
+          actions: [],
+          readOnly: false,
+          measured: false,
+        },
+      ],
+      measureDone: 0,
+      measureTotal: 0,
+    });
+
+    cache.applyMeasureEvent({ type: "started", providerCount: 1 });
+
+    // Leaving the Tool Caches page unmounts the view but must not lose the
+    // running run: events still land in the global store.
+    cache.applyMeasureEvent({
+      type: "pathMeasured",
+      providerId: "npm",
+      path: "C:\\npm-cache",
+      exists: true,
+      bytes: 4096,
+    });
+    cache.applyMeasureEvent({ type: "providerFinished", providerId: "npm", totalBytes: 4096 });
+
+    const state = useCacheStore.getState();
+    expect(state.measureDone).toBe(1);
+    expect(state.providers[0].measured).toBe(true);
+    expect(state.providers[0].totalBytes).toBe(4096);
+    expect(state.providers[0].cachePaths[0].bytes).toBe(4096);
   });
 });

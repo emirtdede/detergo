@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   FolderTree,
@@ -42,6 +42,12 @@ export const NavRail: React.FC = () => {
 
   const toggleSidebar = () => setSidebarMode(isCollapsed ? "expanded" : "collapsed");
   const toggleLabel = isCollapsed ? ui.settings.sidebarExpanded : ui.settings.sidebarCollapsed;
+
+  // Leaving Settings collapses the submenu through the same animated path as a
+  // manual toggle, so it never stays expanded over an unrelated page.
+  useEffect(() => {
+    if (view !== "settings") setSettingsMenuOpen(false);
+  }, [view]);
 
   const openSettings = () => {
     // Already on Settings: the button acts as a pure toggle. Coming from another
