@@ -92,13 +92,19 @@ describe("legal documents", () => {
 
     ui.openLegalDoc("thirdParty");
     expect(useUiStore.getState().legalDoc).toBe("thirdParty");
-    expect(useUiStore.getState().settingsSection).toBe("legal");
+    expect(useUiStore.getState().settingsSection).toBe("about");
+    expect(useUiStore.getState().aboutPane).toBe("legal");
 
     // Merely switching tabs must not yank the user out of another section.
     useUiStore.getState().setSettingsSection("about");
     useUiStore.getState().setLegalDoc("privacy");
     expect(useUiStore.getState().legalDoc).toBe("privacy");
     expect(useUiStore.getState().settingsSection).toBe("about");
+
+    // Back returns to the About overview without losing the chosen document.
+    useUiStore.getState().closeLegalDoc();
+    expect(useUiStore.getState().aboutPane).toBe("overview");
+    expect(useUiStore.getState().legalDoc).toBe("privacy");
   });
 });
 

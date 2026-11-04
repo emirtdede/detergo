@@ -1,7 +1,15 @@
 import React, { useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { AlertTriangle, ChevronDown, ChevronUp, FolderOpen, ShieldCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  FolderOpen,
+  Search,
+  ShieldCheck,
+} from "lucide-react";
 import { Checkbox } from "@/components/primitives/Checkbox";
+import { EmptyState } from "@/components/primitives/EmptyState";
 import { IconButton } from "@/components/primitives/IconButton";
 import { SearchField } from "@/components/primitives/SearchField";
 import { SafetyBadge } from "./SafetyBadge";
@@ -163,14 +171,22 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
     hint?: string;
   }> = ({ field, label, numeric, hint }) => {
     const active = sort.field === field;
+    const sortState = active
+      ? sort.direction === "asc"
+        ? "ascending"
+        : "descending"
+      : "none";
     return (
-      <div className={numeric ? "items-col-num" : undefined}>
+      <div
+        role="columnheader"
+        aria-sort={sortState}
+        className={numeric ? "items-col-num" : undefined}
+      >
         <button
           type="button"
           className={`items-sort ${active ? "active" : ""}`}
           onClick={() => toggleSort(field)}
           aria-label={`${label} — ${ui.table.sortHint}`}
-          aria-sort={active ? (sort.direction === "asc" ? "ascending" : "descending") : "none"}
           title={hint ? `${hint} — ${ui.table.sortHint}` : ui.table.sortHint}
         >
           <span>{label}</span>
@@ -179,6 +195,13 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
         </button>
       </div>
     );
+  };
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSafetyFilter("all");
+    setProjectFilter("all");
+    setCategoryFilter("all");
   };
 
   return (
@@ -239,36 +262,72 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
         <span>{ui.table.selected(selectedIds.size)}</span>
       </div>
 
-      <div className="items-table">
-        <div className="items-head" role="row">
-          <div>
-            <Checkbox
-              checked={allSelected}
-              indeterminate={!allSelected && someSelected}
-              onChange={() => {
-                if (allSelected) deselectMany(selectableIds);
-                else selectMany(selectableIds);
-              }}
-              aria-label={ui.table.selectAll}
-              disabled={selectableIds.length === 0}
-            />
+      {filtered.length === 0 ? (
+        <EmptyState
+          variant="compact"
+          live
+          icon={<Search size={20} />}
+          title={emptyText ?? (items.length === 0 ? ui.table.noItems : ui.table.noResults)}
+          description={
+            items.length === 0
+              ? undefined
+              : searchQuery.trim() ||
+                  safetyFilter !== "all" ||
+                  projectFilter !== "all" ||
+                  categoryFilter !== "all"
+                ? ui.table.noResults
+                : undefined
+          }
+          actions={
+            items.length > 0 &&
+            (searchQuery.trim() ||
+              safetyFilter !== "all" ||
+              projectFilter !== "all" ||
+              categoryFilter !== "all") ? (
+              <button type="button" className="btn btn-secondary btn-sm" onClick={clearFilters}>
+                {ui.table.clearFilters}
+              </button>
+            ) : undefined
+          }
+        />
+      ) : (
+        <div
+          className="items-table"
+          role="table"
+          aria-label={ui.table.label}
+          aria-rowcount={filtered.length + 1}
+        >
+          <div className="items-head" role="rowgroup">
+            <div className="items-head-row" role="row" aria-rowindex={1}>
+              <div role="columnheader">
+                <Checkbox
+                  checked={allSelected}
+                  indeterminate={!allSelected && someSelected}
+                  onChange={() => {
+                    if (allSelected) deselectMany(selectableIds);
+                    else selectMany(selectableIds);
+                  }}
+                  aria-label={ui.table.selectAll}
+                  disabled={selectableIds.length === 0}
+                />
+              </div>
+              <SortHeader field="name" label={ui.table.name} />
+              {showProject ? (
+                <SortHeader field="project" label={ui.table.project} />
+              ) : (
+                <SortHeader field="category" label={ui.table.category} />
+              )}
+              <SortHeader field="safety" label={ui.table.safety} />
+              <SortHeader field="size" label={ui.table.size} numeric hint={ui.table.sizeHint} />
+              <div role="columnheader" aria-label={ui.table.actions} />
+            </div>
           </div>
-          <SortHeader field="name" label={ui.table.name} />
-          {showProject ? (
-            <SortHeader field="project" label={ui.table.project} />
-          ) : (
-            <SortHeader field="category" label={ui.table.category} />
-          )}
-          <SortHeader field="safety" label={ui.table.safety} />
-          <SortHeader field="size" label={ui.table.size} numeric hint={ui.table.sizeHint} />
-          <div />
-        </div>
 
-        <div className="items-viewport" ref={parentRef} role="grid">
-          {filtered.length === 0 ? (
-            <div className="items-empty">{emptyText ?? ui.table.noResults}</div>
-          ) : (
-            <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
+          <div className="items-viewport" ref={parentRef} role="rowgroup">
+            <div
+              role="presentation"
+              style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}
+            >
               {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                 const item = filtered[virtualRow.index];
                 const isSelected = selectedIds.has(item.id);
@@ -288,9 +347,10 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
                       transform: `translateY(${virtualRow.start}px)`,
                     }}
                     role="row"
+                    aria-rowindex={virtualRow.index + 2}
                     title={[item.note, warnings, item.regenerateHint].filter(Boolean).join("\n")}
                   >
-                    <div>
+                    <div role="cell">
                       <Checkbox
                         checked={isSelected}
                         onChange={() => {
@@ -298,10 +358,10 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
                           toggleSelection(item.id);
                         }}
                         disabled={!item.selectable}
-                        aria-label={ui.table.selectRow}
+                        aria-label={`${ui.table.selectRow}: ${item.displayName}`}
                       />
                     </div>
-                    <div className="items-name">
+                    <div className="items-name" role="cell">
                       <strong>{item.displayName}</strong>
                       <span className="items-path">{displayPath(item.displayPath)}</span>
                       {warnings && (
@@ -312,22 +372,22 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
                       )}
                     </div>
                     {showProject ? (
-                      <div className="items-cell">{item.projectName ?? "-"}</div>
+                      <div className="items-cell" role="cell">{item.projectName ?? "-"}</div>
                     ) : (
-                      <div className="items-cell">{item.category}</div>
+                      <div className="items-cell" role="cell">{item.category}</div>
                     )}
-                    <div>
+                    <div role="cell">
                       <SafetyBadge safety={item.safetyClass} />
                     </div>
-                    <div className="items-cell items-size">
+                    <div className="items-cell items-size" role="cell">
                       {item.logicalBytes === null
                         ? ui.table.unmeasured
                         : formatBytes(item.logicalBytes)}
                     </div>
-                    <div className="items-actions">
+                    <div className="items-actions" role="cell">
                       <IconButton
                         size="sm"
-                        aria-label={ui.table.openFolder}
+                        aria-label={`${ui.table.openFolder}: ${item.displayName}`}
                         tooltip={ui.table.openFolder}
                         onClick={async () => {
                           try {
@@ -344,9 +404,9 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
                 );
               })}
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -457,6 +457,10 @@
   white-space: nowrap;
 }
 
+.selection-total {
+  color: var(--accent-foreground);
+}
+
 .selection-divider {
   width: 1px;
   height: 18px;

@@ -8,9 +8,8 @@
   gap: var(--space-4);
   min-width: 0;
   width: 100%;
-  /* Cap the reading column and center it, so ultra-wide windows do not leave
-     the settings rail pinned to the left of a mostly empty canvas. */
-  max-width: 1080px;
+  /* A settings form is read as label → control, not as a dashboard. */
+  max-width: 760px;
   margin-inline: auto;
   padding-bottom: var(--space-8);
 }
@@ -30,6 +29,7 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  min-height: 36px;
   padding: 7px 12px;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
@@ -62,6 +62,21 @@
   justify-content: center;
   color: inherit;
   opacity: 0.9;
+}
+
+.settings-tabs-mobile {
+  display: none;
+}
+
+.settings-tabs-mobile select {
+  width: 100%;
+  height: 38px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
 }
 
 /* Hero -------------------------------------------------------------------- */
@@ -153,13 +168,45 @@
 }
 
 .settings-body .form-row {
-  min-height: 34px;
-  padding: 2px 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
+  align-items: center;
+  gap: var(--space-6);
+  min-height: 44px;
+  padding: var(--space-2) 0;
 }
 
 .settings-body .form-row + .form-row {
   border-top: 1px solid var(--separator);
   padding-top: var(--space-3);
+}
+
+.settings-body .form-row > select,
+.settings-body .form-row > input[type="text"],
+.settings-body .form-row > input[type="number"],
+.settings-body .form-row > .number-field,
+.settings-body .form-row > .checkbox-container {
+  width: 100%;
+  max-width: 220px;
+  justify-self: end;
+}
+
+.settings-body .form-row > .checkbox-container {
+  justify-content: flex-end;
+}
+
+.settings-body .form-row--stretch {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: var(--space-2);
+}
+
+.settings-body .form-row--stretch > input[type="text"] {
+  max-width: none;
+  width: 100%;
+}
+
+.settings-body .list-row {
+  overflow-wrap: anywhere;
 }
 
 .settings-body .settings-group-title {
@@ -175,6 +222,16 @@
   padding: 2px var(--space-2);
 }
 
+@media (max-width: 899px) {
+  .settings-tabs {
+    display: none;
+  }
+
+  .settings-tabs-mobile {
+    display: block;
+  }
+}
+
 @media (max-width: 720px) {
   .settings-hero {
     padding: var(--space-4);
@@ -183,6 +240,21 @@
   .settings-hero-icon {
     width: 36px;
     height: 36px;
+  }
+
+  .settings-body .form-row,
+  .settings-body .form-row--stretch {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+
+  .settings-body .form-row > select,
+  .settings-body .form-row > input[type="text"],
+  .settings-body .form-row > input[type="number"],
+  .settings-body .form-row > .number-field,
+  .settings-body .form-row > .checkbox-container {
+    max-width: none;
+    justify-self: stretch;
   }
 }
 

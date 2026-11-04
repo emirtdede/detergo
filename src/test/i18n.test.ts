@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { LANGUAGES_LIST, detectSystemLanguage, isRtlLanguage, getTranslation } from "../lib/i18n";
+import { getUIText } from "../lib/ui-text";
 import { DICTIONARIES } from "../locales/dictionaries";
 import { usePreferencesStore } from "../stores/preferences-store";
 
@@ -42,23 +43,24 @@ describe("73-Language i18n Engine & Localization Tests", () => {
     }
   });
 
-  it("switches language and dynamically resolves translations through preferences store", () => {
+  it("clamps unsupported UI languages to English and keeps Turkish", () => {
     const store = usePreferencesStore.getState();
 
+    // Only tr/en have a complete UI string catalogue. Persisted values for the
+    // other 71 dictionaries must not leak an untranslated interface into the app.
     store.setLanguage("de");
-    expect(usePreferencesStore.getState().language).toBe("de");
-    let t = getTranslation("de");
-    expect(t.header.scan).toBe("Scannen");
+    expect(usePreferencesStore.getState().language).toBe("en");
 
     store.setLanguage("ja");
-    expect(usePreferencesStore.getState().language).toBe("ja");
-    t = getTranslation("ja");
-    expect(t.header.scan).toBe("スキャン");
+    expect(usePreferencesStore.getState().language).toBe("en");
 
     store.setLanguage("tr");
     expect(usePreferencesStore.getState().language).toBe("tr");
-    t = getTranslation("tr");
-    expect(t.header.scan).toBe("Tara");
+    expect(getUIText(usePreferencesStore.getState().language).common.scan).toBe("Tara");
+
+    store.setLanguage("en");
+    expect(usePreferencesStore.getState().language).toBe("en");
+    expect(getUIText(usePreferencesStore.getState().language).common.scan).toBe("Scan");
   });
 
   it("provides comprehensive legal and Vellium company translations with fallback", () => {

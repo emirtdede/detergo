@@ -23,7 +23,6 @@ import { useUiStore } from "@/stores/ui-store";
 import { useAppStore } from "@/stores/app-store";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { KnownLocation, ScanScope } from "@/types";
-import { useI18n } from "@/lib/i18n";
 import { useUIText } from "@/lib/ui-text";
 import { truncatePath } from "@/lib/formatters";
 import { maskPath } from "@/features/items/ItemTable";
@@ -32,7 +31,6 @@ import { useScanController } from "./useScanController";
 import "./scan.css";
 
 export const ScanHeader: React.FC = () => {
-  const { t } = useI18n();
   const ui = useUIText();
   const currentRootPath = useScanStore((s) => s.currentRootPath);
   const scanScope = useScanStore((s) => s.scope);
@@ -52,14 +50,15 @@ export const ScanHeader: React.FC = () => {
   const [knownLocations, setKnownLocations] = useState<KnownLocation[]>([]);
   const [isLocationMenuOpen, setIsLocationMenuOpen] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
+  const locationTriggerRef = useRef<HTMLButtonElement>(null);
   const isSelectingFolderRef = useRef(false);
 
   useEffect(() => {
     scannerApi
       .getKnownLocations()
       .then((locs) => setKnownLocations(locs))
-      .catch(() => showToast(t.errors.invalidPath, "error"));
-  }, []);
+      .catch(() => showToast(ui.errors.title, "error"));
+  }, [showToast, ui.errors.title]);
 
   // Volumes can be mounted or unmounted while the app runs, so refresh the
   // list every time the location menu opens.
@@ -90,6 +89,7 @@ export const ScanHeader: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setIsLocationMenuOpen(false);
+        locationTriggerRef.current?.focus();
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -99,6 +99,12 @@ export const ScanHeader: React.FC = () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isLocationMenuOpen]);
+
+  // A running scan owns the location, so the menu must not stay open with
+  // selectable entries that are now inert.
+  useEffect(() => {
+    if (isScanning) setIsLocationMenuOpen(false);
+  }, [isScanning]);
 
   const currentFavorite = currentRootPath
     ? favorites.find((f) => f.path.toLowerCase() === currentRootPath.toLowerCase())
@@ -117,7 +123,7 @@ export const ScanHeader: React.FC = () => {
         addRecentLocation(selected);
       }
     } catch {
-      showToast(t.errors.invalidPath, "error");
+      showToast(ui.errors.title, "error");
     } finally {
       isSelectingFolderRef.current = false;
     }
@@ -139,10 +145,10 @@ export const ScanHeader: React.FC = () => {
     if (!currentRootPath) return;
     if (currentFavorite) {
       removeFavorite(currentFavorite.id);
-      showToast(t.settings.favoriteRemoved, "info");
+      showToast(ui.header.favoriteRemoved, "info");
     } else {
       addFavorite(currentRootPath);
-      showToast(t.settings.favoriteAdded, "success");
+      showToast(ui.header.favoriteAdded, "success");
     }
   };
 
@@ -162,8 +168,6 @@ export const ScanHeader: React.FC = () => {
       {/* 1. Left: Single Brand Title */}
       <div
         className="command-brand"
-        onClick={() => useScanStore.getState().resetScan()}
-        title="Node Cleaner"
         data-tauri-drag-region="false"
       >
         <Logo size={18} showWordmark={false} />
@@ -172,70 +176,77 @@ export const ScanHeader: React.FC = () => {
 
       {/* 2. Center: Single Location Dropdown Trigger & Popover Menu */}
       <div className="command-center">
-        <div className="location-dropdown-container" ref={menuContainerRef} data-tauri-drag-region="false">
-          <button
-            type="button"
-            className={`command-location-pill ${isScanning ? "is-scanning" : ""} ${isLocationMenuOpen ? "menu-open" : ""}`}
-            onClick={() => {
-              if (isScanning) return;
-              if (!isLocationMenuOpen) refreshKnownLocations();
-              setIsLocationMenuOpen((prev) => !prev);
-            }}
-            title={
-              isAllDrives
-                ? allDrivesLabel
-                : currentRootPath
-                  ? maskPaths
-                    ? maskPath(currentRootPath)
-                    : currentRootPath
-                  : t.header.folderNotSelected
-            }
-          >
-            <FolderOpen size={14} className="command-folder-icon" />
-            <span className="command-path-text">
-              {isAllDrives
-                ? allDrivesLabel
-                : currentRootPath
-                  ? shownPath(currentRootPath, 34)
-                  : t.header.folderNotSelected}
-            </span>
+        <div
+          className={`location-dropdown-container ${isLocationMenuOpen ? "menu-open" : ""}`}
+          ref={menuContainerRef}
+          data-tauri-drag-region="false"
+        >
+          <div className={`command-location-group ${isScanning ? "is-scanning" : ""}`}>
+            <button
+              ref={locationTriggerRef}
+              type="button"
+              className="command-location-pill"
+              onClick={() => {
+                if (isScanning) return;
+                if (!isLocationMenuOpen) refreshKnownLocations();
+                setIsLocationMenuOpen((prev) => !prev);
+              }}
+              disabled={isScanning}
+              aria-label={ui.header.changeLocation}
+              aria-expanded={isLocationMenuOpen}
+              aria-controls={isLocationMenuOpen ? "location-menu" : undefined}
+              title={
+                isAllDrives
+                  ? allDrivesLabel
+                  : currentRootPath
+                    ? maskPaths
+                      ? maskPath(currentRootPath)
+                      : currentRootPath
+                    : ui.header.folderNotSelected
+              }
+            >
+              <FolderOpen size={14} className="command-folder-icon" />
+              <span className="command-path-text">
+                {isAllDrives
+                  ? allDrivesLabel
+                  : currentRootPath
+                    ? shownPath(currentRootPath, 34)
+                    : ui.header.folderNotSelected}
+              </span>
+
+              {!isScanning && (
+                <ChevronDown
+                  size={13}
+                  className={`command-chevron-icon ${isLocationMenuOpen ? "open" : ""}`}
+                />
+              )}
+            </button>
 
             {currentRootPath && !isScanning && (
-              <span
-                role="button"
-                tabIndex={0}
+              <button
+                type="button"
                 className={`command-star-btn ${isFavorite ? "active" : ""}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleFavorite();
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.stopPropagation();
-                    toggleFavorite();
-                  }
-                }}
-                title={isFavorite ? t.favorites.remove : t.favorites.addCurrent}
+                onClick={toggleFavorite}
+                aria-pressed={isFavorite}
+                aria-label={isFavorite ? ui.header.removeFavorite : ui.header.addFavorite}
+                title={isFavorite ? ui.header.removeFavorite : ui.header.addFavorite}
               >
                 <Star
                   size={12}
                   fill={isFavorite ? "#FFB800" : "none"}
                   color={isFavorite ? "#FFB800" : "var(--text-muted)"}
                 />
-              </span>
+              </button>
             )}
+          </div>
 
-            {!isScanning && (
-              <ChevronDown
-                size={13}
-                className={`command-chevron-icon ${isLocationMenuOpen ? "open" : ""}`}
-              />
-            )}
-          </button>
-
-          {/* Location Dropdown Menu */}
+          {/* Location Dropdown Menu — disclosure, not a menu widget */}
           {isLocationMenuOpen && !isScanning && (
-            <div className="location-dropdown-menu" data-tauri-drag-region="false">
+            <div
+              id="location-menu"
+              className="location-dropdown-menu"
+              data-tauri-drag-region="false"
+            >
               {/* 1. En Başta: Farklı Bir Konum Seç */}
               <div className="location-menu-section">
                 <button
@@ -247,8 +258,8 @@ export const ScanHeader: React.FC = () => {
                     <FolderPlus size={16} />
                   </div>
                   <div className="location-menu-item-info">
-                    <span className="location-menu-item-title">{t.header.chooseFolder}</span>
-                    <span className="location-menu-item-path">{t.header.chooseFolderSub}</span>
+                    <span className="location-menu-item-title">{ui.common.chooseFolder}</span>
+                    <span className="location-menu-item-path">{ui.header.chooseFolderSub}</span>
                   </div>
                 </button>
               </div>
@@ -258,7 +269,7 @@ export const ScanHeader: React.FC = () => {
               {/* 2. Varsayılan Konumlar */}
               <div className="location-menu-section">
                 <div className="location-menu-section-header">
-                  <span>{t.header.defaultLocations}</span>
+                  <span>{ui.header.defaultLocations}</span>
                 </div>
                 {knownLocations.map((loc) => {
                   const isVirtual = loc.source === "all-drives";
@@ -267,7 +278,7 @@ export const ScanHeader: React.FC = () => {
                     : !isAllDrives &&
                       Boolean(currentRootPath) &&
                       currentRootPath?.toLowerCase() === loc.path.toLowerCase();
-                  const label = getKnownLocationLabel(loc, t);
+                  const label = getKnownLocationLabel(loc, ui);
                   return (
                     <button
                       key={loc.id}
@@ -305,7 +316,7 @@ export const ScanHeader: React.FC = () => {
               <div className="location-menu-divider" />
               <div className="location-menu-section">
                 <div className="location-menu-section-header">
-                  <span>{t.header.favorites}</span>
+                  <span>{ui.header.favorites}</span>
                   {favorites.length > 0 && (
                     <span className="location-menu-badge">{favorites.length}</span>
                   )}
@@ -318,29 +329,35 @@ export const ScanHeader: React.FC = () => {
                       <div
                         key={fav.id}
                         className={`location-menu-item-row ${isSelected ? "is-selected" : ""}`}
-                        onClick={() => handleSelectLocation(fav.path)}
                       >
-                        <div className="location-menu-item-icon fav-icon">
-                          <Star size={15} fill="#FFB800" color="#FFB800" />
-                        </div>
-                        <div className="location-menu-item-info">
-                          <span className="location-menu-item-title">{fav.label}</span>
-                          <span className="location-menu-item-path">{shownPath(fav.path, 30)}</span>
-                        </div>
-                        {isSelected && (
-                          <div className="location-menu-item-check">
-                            <Check size={14} />
+                        <button
+                          type="button"
+                          className="location-menu-item-select"
+                          onClick={() => handleSelectLocation(fav.path)}
+                        >
+                          <div className="location-menu-item-icon fav-icon">
+                            <Star size={15} fill="#FFB800" color="#FFB800" />
                           </div>
-                        )}
+                          <div className="location-menu-item-info">
+                            <span className="location-menu-item-title">{fav.label}</span>
+                            <span className="location-menu-item-path">{shownPath(fav.path, 30)}</span>
+                          </div>
+                          {isSelected && (
+                            <div className="location-menu-item-check">
+                              <Check size={14} />
+                            </div>
+                          )}
+                        </button>
                         <button
                           type="button"
                           className="location-menu-item-remove"
                           onClick={(e) => {
                             e.stopPropagation();
                             removeFavorite(fav.id);
-                            showToast(t.settings.favoriteRemoved, "info");
+                            showToast(ui.header.favoriteRemoved, "info");
                           }}
-                          title={t.favorites.remove}
+                          aria-label={`${ui.header.removeFavorite}: ${fav.label}`}
+                          title={ui.header.removeFavorite}
                         >
                           <X size={13} />
                         </button>
@@ -349,7 +366,7 @@ export const ScanHeader: React.FC = () => {
                   })
                 ) : (
                   <div className="location-menu-empty">
-                    <span>{t.header.noFavorites}</span>
+                    <span>{ui.header.noFavorites}</span>
                   </div>
                 )}
               </div>
@@ -360,7 +377,7 @@ export const ScanHeader: React.FC = () => {
                   <div className="location-menu-divider" />
                   <div className="location-menu-section">
                     <div className="location-menu-section-header">
-                      <span>{t.header.recent}</span>
+                      <span>{ui.header.recent}</span>
                       <button
                         type="button"
                         className="location-menu-clear-btn"
@@ -368,7 +385,7 @@ export const ScanHeader: React.FC = () => {
                           e.stopPropagation();
                           clearRecentLocations();
                         }}
-                        title={t.favorites.remove}
+                        title={ui.common.clear}
                       >
                         <Trash2 size={11} />
                         <span>{ui.common.clear}</span>
@@ -381,20 +398,25 @@ export const ScanHeader: React.FC = () => {
                         <div
                           key={idx}
                           className={`location-menu-item-row ${isSelected ? "is-selected" : ""}`}
-                          onClick={() => handleSelectLocation(path)}
                         >
-                          <div className="location-menu-item-icon recent-icon">
-                            <History size={14} />
-                          </div>
-                          <div className="location-menu-item-info">
-                            <span className="location-menu-item-title">{name}</span>
-                            <span className="location-menu-item-path">{shownPath(path, 30)}</span>
-                          </div>
-                          {isSelected && (
-                            <div className="location-menu-item-check">
-                              <Check size={14} />
+                          <button
+                            type="button"
+                            className="location-menu-item-select"
+                            onClick={() => handleSelectLocation(path)}
+                          >
+                            <div className="location-menu-item-icon recent-icon">
+                              <History size={14} />
                             </div>
-                          )}
+                            <div className="location-menu-item-info">
+                              <span className="location-menu-item-title">{name}</span>
+                              <span className="location-menu-item-path">{shownPath(path, 30)}</span>
+                            </div>
+                            {isSelected && (
+                              <div className="location-menu-item-check">
+                                <Check size={14} />
+                              </div>
+                            )}
+                          </button>
                           <button
                             type="button"
                             className="location-menu-item-remove"
@@ -402,7 +424,8 @@ export const ScanHeader: React.FC = () => {
                               e.stopPropagation();
                               removeRecentLocation(path);
                             }}
-                            title={t.favorites.remove}
+                            aria-label={`${ui.common.remove}: ${name}`}
+                            title={ui.common.remove}
                           >
                             <X size={13} />
                           </button>
@@ -427,7 +450,7 @@ export const ScanHeader: React.FC = () => {
             icon={<Square size={11} fill="currentColor" />}
             onClick={handleCancelScan}
           >
-            {t.header.stopScan}
+            {ui.common.stop}
           </Button>
         ) : (
           <Button
@@ -437,14 +460,14 @@ export const ScanHeader: React.FC = () => {
             icon={<Play size={11} fill="currentColor" />}
             onClick={() => handleStartScan()}
           >
-            {t.header.scan}
+            {ui.common.scan}
           </Button>
         )}
 
         <IconButton
           size="sm"
-          aria-label={t.header.settings}
-          tooltip={t.header.settings}
+          aria-label={ui.nav.settings}
+          tooltip={ui.nav.settings}
           onClick={() => useAppStore.getState().setView("settings")}
         >
           <Settings size={15} />

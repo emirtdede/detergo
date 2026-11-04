@@ -22,15 +22,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  cursor: pointer;
   padding: 4px;
   border-radius: var(--radius-sm);
-  transition: opacity var(--duration-fast);
   flex-shrink: 0;
   z-index: 2;
-}
-.command-brand:hover {
-  opacity: 0.85;
 }
 
 .command-brand-title {
@@ -76,35 +71,57 @@
   justify-content: center;
 }
 
-.command-location-pill {
+/* The pill is a group: the disclosure trigger and the favorite toggle are
+   siblings, never a button inside a button. */
+.command-location-group {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 2px;
   height: 32px;
-  padding: 0 12px;
+  padding-right: 6px;
   background: var(--surface-strong);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-control);
   border-radius: var(--radius-full);
-  cursor: pointer;
-  transition: all var(--duration-fast) var(--ease-standard);
-  user-select: none;
-  color: var(--text-primary);
+  transition: background var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
   max-width: 380px;
+  min-width: 0;
 }
-.command-location-pill:hover {
+
+.command-location-group:hover {
   background: var(--surface-hover);
   border-color: var(--border-strong);
 }
-.command-location-pill.menu-open {
+
+.location-dropdown-container.menu-open .command-location-group {
   background: var(--surface-hover);
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent-subtle);
 }
 
-.command-location-pill.is-scanning {
-  cursor: default;
+.command-location-group.is-scanning {
   border-color: rgba(10, 132, 255, 0.35);
   background: rgba(10, 132, 255, 0.08);
+}
+
+.command-location-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  min-width: 0;
+  padding: 0 12px;
+  background: transparent;
+  border: none;
+  border-radius: inherit;
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-standard);
+  user-select: none;
+  color: var(--text-primary);
+}
+
+.command-location-pill:disabled {
+  cursor: default;
 }
 
 .command-folder-icon {
@@ -133,10 +150,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px;
-  border-radius: var(--radius-xs);
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: var(--radius-full);
   color: var(--text-muted);
-  flex-shrink: 0;
+  flex: 0 0 auto;
   transition: transform var(--duration-fast), color var(--duration-fast);
 }
 .command-star-btn:hover {
@@ -244,8 +263,7 @@
   margin: 4px 0;
 }
 
-.location-menu-item,
-.location-menu-item-row {
+.location-menu-item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -259,6 +277,39 @@
   cursor: pointer;
   transition: all var(--duration-fast);
   user-select: none;
+}
+
+.location-menu-item-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  padding: 2px 4px 2px 0;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  user-select: none;
+}
+
+/* The row is a container, not the control: its select action and its remove
+   action are sibling buttons so keyboard users can reach both. */
+.location-menu-item-select {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
 }
 
 .location-menu-item:hover,
@@ -571,9 +622,16 @@
     min-width: 0;
   }
 
-  .command-location-pill {
+  .command-location-group {
     width: 100%;
     max-width: 100%;
+    min-width: 0;
+  }
+
+  .command-location-pill {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: none;
     min-width: 0;
   }
 

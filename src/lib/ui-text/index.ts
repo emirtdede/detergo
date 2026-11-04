@@ -2,14 +2,41 @@ import { usePreferencesStore } from "@/stores/preferences-store";
 import { EN } from "./en";
 import { TR } from "./tr";
 
+export {
+  SUPPORTED_UI_LOCALES,
+  resolveUiLocale,
+  type UiLocale,
+} from "@/lib/ui-locale";
+
+import { resolveUiLocale } from "@/lib/ui-locale";
+
 export interface UIText {
-  nav: { overview: string; projects: string; agents: string; caches: string; history: string; settings: string };
+  nav: {
+    primary: string;
+    overview: string;
+    projects: string;
+    agents: string;
+    caches: string;
+    history: string;
+    settings: string;
+  };
   common: {
     scan: string; scanning: string; cancel: string; rescan: string; chooseFolder: string;
-    refresh: string; open: string; close: string; confirm: string; loading: string; none: string;
+    refresh: string; open: string; close: string; back: string; browse: string; skipToContent: string; confirm: string; loading: string; none: string;
     clear: string; allDrives: string; save: string; add: string; remove: string;
-    increase: string; decrease: string;
+    stop: string; increase: string; decrease: string;
     items: (n: number) => string; showing: (n: number) => string;
+  };
+  header: {
+    changeLocation: string; folderNotSelected: string; chooseFolderSub: string;
+    defaultLocations: string; favorites: string; recent: string; noFavorites: string;
+    addFavorite: string; removeFavorite: string;
+    favoriteAdded: string; favoriteRemoved: string;
+  };
+  window: { minimize: string; maximize: string; restore: string; close: string };
+  locations: {
+    desktop: string; documents: string; projects: string;
+    code: string; dev: string; repos: string;
   };
   overview: {
     title: string; subtitle: string; cleanable: string; protected: string; candidates: string;
@@ -17,9 +44,11 @@ export interface UIText {
     noScan: string; startHint: string; stopReason: string; warnings: string; errors: string;
   };
   table: {
+    label: string;
     name: string; project: string; category: string; size: string; reclaim: string;
     safety: string; method: string; modified: string; actions: string; selectAll: string;
-    selected: (n: number) => string; noResults: string; searchPlaceholder: string;
+    selected: (n: number) => string; noResults: string; noItems: string;
+    clearFilters: string; searchPlaceholder: string;
     allSafety: string; selectSafe: string; clearSelection: string; openFolder: string;
     selectRow: string; unmeasured: string; details: string;
     allProjects: string; allCategories: string; projectFilter: string; categoryFilter: string;
@@ -115,11 +144,11 @@ export interface UIText {
   };
 }
 
-export function getUIText(language?: string): UIText {
-  return language === "tr" ? TR : EN;
+export function getUIText(language?: string | null): UIText {
+  return resolveUiLocale(language) === "tr" ? TR : EN;
 }
 
 export function useUIText(): UIText {
   const language = usePreferencesStore((s) => s.language);
-  return getUIText(language ?? undefined);
+  return getUIText(language);
 }

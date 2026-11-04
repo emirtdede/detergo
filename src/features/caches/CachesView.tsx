@@ -2,6 +2,8 @@
 import { Gauge, Package, RefreshCw, Square, Terminal } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
 import { Dialog } from "@/components/primitives/Dialog";
+import { EmptyState } from "@/components/primitives/EmptyState";
+import { PageHeader } from "@/components/primitives/PageHeader";
 import { useUIText } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { formatBytes, formatSignedBytes } from "@/lib/formatters";
@@ -106,43 +108,43 @@ export const CachesView: React.FC = () => {
 
   return (
     <div className="page-view">
-      <header className="view-header">
-        <div>
-          <h1 className="view-title">{ui.caches.title}</h1>
-          <p className="view-subtitle">{ui.caches.subtitle}</p>
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          {measuring ? (
-            <Button
-              variant="danger-outline"
-              size="sm"
-              icon={<Square size={11} fill="currentColor" />}
-              onClick={() => void cancelMeasure()}
-            >
-              {ui.caches.cancelMeasure}
-            </Button>
-          ) : (
+      <PageHeader
+        title={ui.caches.title}
+        description={ui.caches.subtitle}
+        actions={
+          <>
+            {measuring ? (
+              <Button
+                variant="danger-outline"
+                size="sm"
+                icon={<Square size={11} fill="currentColor" />}
+                onClick={() => void cancelMeasure()}
+              >
+                {ui.caches.cancelMeasure}
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<Gauge size={13} />}
+                onClick={() => void startMeasure()}
+                disabled={loading || providers.length === 0}
+              >
+                {ui.caches.measure}
+              </Button>
+            )}
             <Button
               variant="secondary"
               size="sm"
-              icon={<Gauge size={13} />}
-              onClick={() => void startMeasure()}
-              disabled={loading || providers.length === 0}
+              icon={<RefreshCw size={13} />}
+              onClick={load}
+              disabled={loading || measuring}
             >
-              {ui.caches.measure}
+              {ui.caches.refresh}
             </Button>
-          )}
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={<RefreshCw size={13} />}
-            onClick={load}
-            disabled={loading || measuring}
-          >
-            {ui.caches.refresh}
-          </Button>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       {loadError && <p className="items-warning">{ui.caches.loadError} {loadError}</p>}
       {measureError && <p className="items-warning">{measureError}</p>}
@@ -212,12 +214,24 @@ export const CachesView: React.FC = () => {
           </article>
         ))}
         {!loading && loaded && providers.length === 0 && !loadError && (
-          <p className="items-empty">{ui.caches.noProviders}</p>
+          <EmptyState
+            variant="compact"
+            icon={<Package size={20} />}
+            title={ui.caches.noProviders}
+            description={ui.caches.detectorNote}
+          />
         )}
-        {loading && providers.length === 0 && <p className="items-empty">{ui.common.loading}</p>}
+        {loading && providers.length === 0 && (
+          <EmptyState
+            variant="compact"
+            live
+            icon={<RefreshCw size={20} />}
+            title={ui.common.loading}
+          />
+        )}
       </div>
 
-      <p className="plan-note">{ui.caches.detectorNote}</p>
+      {providers.length > 0 && <p className="plan-note">{ui.caches.detectorNote}</p>}
 
       <Dialog
         isOpen={preview !== null}

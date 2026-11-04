@@ -1,6 +1,8 @@
 import React, { useMemo } from "react";
-import { FolderOpen, Play } from "lucide-react";
+import { FolderOpen, FolderTree, Play } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
+import { EmptyState } from "@/components/primitives/EmptyState";
+import { PageHeader } from "@/components/primitives/PageHeader";
 import { useScanStore } from "@/stores/scan-store";
 import { useScanController } from "@/features/scan/useScanController";
 import { useUIText } from "@/lib/ui-text";
@@ -17,7 +19,10 @@ export const ProjectsView: React.FC = () => {
   const itemsById = useScanStore((s) => s.itemsById);
   const itemIds = useScanStore((s) => s.itemIds);
   const rootPath = useScanStore((s) => s.currentRootPath);
+  const scope = useScanStore((s) => s.scope);
   const status = useScanStore((s) => s.status);
+  const error = useScanStore((s) => s.error);
+  const progress = useScanStore((s) => s.progress);
   const maskPaths = usePreferencesStore((s) => s.maskPaths);
   const showToast = useUiStore((s) => s.showToast);
 
@@ -38,41 +43,72 @@ export const ProjectsView: React.FC = () => {
     }
   };
 
+  // Four distinct states used to collapse into one "no results" line: never
+  // scanned, scanning, failed, and a completed scan with nothing to clean.
+  const emptyTitle = isScanning
+    ? ui.common.scanning
+    : status === "failed"
+      ? ui.errors.title
+      : status === "idle"
+        ? ui.overview.noScan
+        : ui.table.noItems;
+  const emptyDescription = isScanning
+    ? `${progress?.entriesFound ?? 0} / ${progress?.entriesMeasured ?? 0}`
+    : status === "failed"
+      ? error?.message ?? ui.overview.startHint
+      : ui.overview.startHint;
+
+  const subtitle =
+    scope === "allDrives"
+      ? ui.common.allDrives
+      : rootPath
+        ? truncatePath(maskPaths ? maskPath(rootPath) : rootPath, 90)
+        : ui.overview.scanFirst;
+
   return (
     <div className="items-view">
-      <header className="view-header">
-        <div>
-          <h1 className="view-title">{ui.nav.projects}</h1>
-          <p className="view-subtitle" title={rootPath ? (maskPaths ? maskPath(rootPath) : rootPath) : undefined}>
-            {rootPath
-              ? truncatePath(maskPaths ? maskPath(rootPath) : rootPath, 90)
-              : ui.overview.scanFirst}
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          {rootPath && (
+      <PageHeader
+        title={ui.nav.projects}
+        description={subtitle}
+        actions={
+          <>
+            {rootPath && (
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<FolderOpen size={13} />}
+                onClick={openRoot}
+              >
+                {ui.common.open}
+              </Button>
+            )}
             <Button
-              variant="secondary"
+              variant="primary"
               size="sm"
-              icon={<FolderOpen size={13} />}
-              onClick={openRoot}
+              icon={<Play size={12} fill="currentColor" />}
+              onClick={() => startScan()}
+              disabled={isScanning}
             >
-              {ui.common.open}
+              {isScanning
+                ? ui.common.scanning
+                : status === "idle"
+                  ? ui.common.chooseFolder
+                  : ui.common.rescan}
             </Button>
-          )}
-          <Button
-            variant="primary"
-            size="sm"
-            icon={<Play size={12} fill="currentColor" />}
-            onClick={() => startScan()}
-            disabled={isScanning}
-          >
-            {status === "idle" ? ui.common.chooseFolder : ui.common.rescan}
-          </Button>
-        </div>
-      </header>
+          </>
+        }
+      />
 
-      <ItemTable items={items} />
+      {items.length === 0 ? (
+        <EmptyState
+          live={isScanning}
+          icon={<FolderTree size={22} />}
+          title={emptyTitle}
+          description={emptyDescription}
+        />
+      ) : (
+        <ItemTable items={items} />
+      )}
     </div>
   );
 };

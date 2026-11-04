@@ -10,7 +10,8 @@ import {
 } from "@/types";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { useUiStore } from "@/stores/ui-store";
-import { detectSystemLanguage, isRtlLanguage } from "@/locales/languages";
+import { detectSystemLanguage } from "@/locales/languages";
+import { resolveUiLocale } from "@/lib/ui-locale";
 
 interface PreferencesState extends AppSettings {
   isLoaded: boolean;
@@ -36,7 +37,7 @@ interface PreferencesState extends AppSettings {
 const DEFAULT_SETTINGS: AppSettings = {
   schemaVersion: 3,
   theme: "dark-black",
-  language: detectSystemLanguage(),
+  language: resolveUiLocale(detectSystemLanguage()),
   reduceMotion: false,
   favorites: [],
   recentLocations: [],
@@ -59,18 +60,36 @@ const DEFAULT_SETTINGS: AppSettings = {
   hiddenBuiltinProviders: [],
 };
 
+const LEGACY_THEME_MAP: Record<string, string> = {
+  black: "dark-black",
+  "dark-transparent": "dark-black",
+  transparent: "dark-black",
+  "dark-blue": "dark-gray",
+  "dark-purple": "dark-gray",
+  "dark-green": "dark-gray",
+  "dark-red": "dark-gray",
+  "dark-orange": "dark-gray",
+  "dark-yellow": "dark-gray",
+  white: "light-white",
+  "white-transparent": "light-white",
+  "light-blue": "light-gray",
+  "light-purple": "light-gray",
+  "light-green": "light-gray",
+  "light-red": "light-gray",
+  "light-orange": "light-gray",
+  "light-yellow": "light-gray",
+};
+
+const VERIFIED_THEMES = new Set([
+  "dark-black",
+  "dark-gray",
+  "light-white",
+  "light-gray",
+]);
+
 export function normalizeTheme(theme: string): string {
-  switch (theme) {
-    case "black":
-    case "dark-transparent":
-    case "transparent":
-      return "dark-black";
-    case "white":
-    case "white-transparent":
-      return "light-white";
-    default:
-      return theme;
-  }
+  const mapped = LEGACY_THEME_MAP[theme] ?? theme;
+  return VERIFIED_THEMES.has(mapped) ? mapped : "dark-black";
 }
 
 function applyThemeToDom(theme: string) {
@@ -81,8 +100,11 @@ function applyThemeToDom(theme: string) {
 
 function applyLanguageToDom(language: SupportedLanguage) {
   if (typeof document !== "undefined") {
-    document.documentElement.lang = language;
-    document.documentElement.dir = isRtlLanguage(language) ? "rtl" : "ltr";
+    // The document language must describe the language the UI is actually
+    // rendered in, not a locale whose dictionary is incomplete.
+    const uiLanguage = resolveUiLocale(language);
+    document.documentElement.lang = uiLanguage;
+    document.documentElement.dir = "ltr";
   }
 }
 
@@ -164,8 +186,9 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   },
 
   setLanguage: (language: SupportedLanguage) => {
-    applyLanguageToDom(language);
-    set({ language });
+    const uiLanguage = resolveUiLocale(language) as SupportedLanguage;
+    applyLanguageToDom(uiLanguage);
+    set({ language: uiLanguage });
     syncPreferences(get());
   },
 
@@ -272,7 +295,9 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   },
 
   loadPreferences: (prefs: Partial<AppSettings>) => {
-    const resolvedLanguage = (prefs.language as SupportedLanguage) || detectSystemLanguage();
+    const resolvedLanguage = resolveUiLocale(
+      (prefs.language as SupportedLanguage) || detectSystemLanguage()
+    ) as SupportedLanguage;
     const merged: AppSettings = {
       ...DEFAULT_SETTINGS,
       ...prefs,

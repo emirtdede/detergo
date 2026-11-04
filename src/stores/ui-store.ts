@@ -14,8 +14,10 @@ export type SettingsSection =
   | "protections"
   | "agents"
   | "privacy"
-  | "legal"
   | "about";
+
+/** About hosts the legal documents as a subview rather than a settings page. */
+export type AboutPane = "overview" | "legal";
 
 export type HistoryTab = "cleanups" | "actions";
 
@@ -38,6 +40,7 @@ interface UiState {
   plan: CleanupPlan | null;
   report: CleanupReport | null;
   settingsSection: SettingsSection;
+  aboutPane: AboutPane;
   historyTab: HistoryTab;
   legalDoc: LegalDoc;
 
@@ -45,9 +48,11 @@ interface UiState {
   closeModal: () => void;
   setSearchQuery: (query: string) => void;
   setSettingsSection: (section: SettingsSection) => void;
+  setAboutPane: (pane: AboutPane) => void;
   setHistoryTab: (tab: HistoryTab) => void;
-  /** Switches the Legal page to a document and opens that section. */
+  /** Opens the legal subview inside About and selects a document. */
   openLegalDoc: (doc: LegalDoc) => void;
+  closeLegalDoc: () => void;
   setLegalDoc: (doc: LegalDoc) => void;
   showToast: (
     message: string,
@@ -71,6 +76,7 @@ export const useUiStore = create<UiState>((set) => ({
   plan: null,
   report: null,
   settingsSection: "general",
+  aboutPane: "overview",
   historyTab: "cleanups",
   legalDoc: "eula",
 
@@ -81,11 +87,20 @@ export const useUiStore = create<UiState>((set) => ({
 
   setSearchQuery: (query) => set({ searchQuery: query }),
 
-  setSettingsSection: (section) => set({ settingsSection: section }),
+  setSettingsSection: (section) =>
+    set({
+      settingsSection: section,
+      ...(section === "about" ? {} : { aboutPane: "overview" as AboutPane }),
+    }),
+
+  setAboutPane: (aboutPane) => set({ aboutPane }),
 
   setHistoryTab: (tab) => set({ historyTab: tab }),
 
-  openLegalDoc: (doc) => set({ legalDoc: doc, settingsSection: "legal" }),
+  openLegalDoc: (doc) =>
+    set({ legalDoc: doc, settingsSection: "about", aboutPane: "legal" }),
+
+  closeLegalDoc: () => set({ aboutPane: "overview" }),
 
   setLegalDoc: (doc) => set({ legalDoc: doc }),
 

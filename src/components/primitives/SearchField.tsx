@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import { Search, X } from "lucide-react";
-import { useI18n } from "@/lib/i18n";
+import { useUIText } from "@/lib/ui-text";
 import "./primitives.css";
 
 export interface SearchFieldProps {
@@ -16,8 +16,8 @@ export const SearchField: React.FC<SearchFieldProps> = ({
   placeholder,
   className = "",
 }) => {
-  const { t } = useI18n();
-  const resolvedPlaceholder = placeholder || t.table.searchPlaceholder;
+  const ui = useUIText();
+  const resolvedPlaceholder = placeholder || ui.table.searchPlaceholder;
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Keyboard shortcut: Ctrl + F focuses the search field (UX-009)
@@ -38,7 +38,7 @@ export const SearchField: React.FC<SearchFieldProps> = ({
       <Search size={16} className="search-field-icon" strokeWidth={2} />
       <input
         ref={inputRef}
-        type="text"
+        type="search"
         className="search-field-input"
         placeholder={resolvedPlaceholder}
         value={value}
@@ -53,7 +53,7 @@ export const SearchField: React.FC<SearchFieldProps> = ({
             onChange("");
             inputRef.current?.focus();
           }}
-          aria-label={t.actionBar.clearSelection}
+          aria-label={ui.common.clear}
         >
           <X size={14} />
         </button>

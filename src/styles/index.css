@@ -17,6 +17,22 @@ body,
   height: 100%;
   width: 100%;
   overflow: hidden;
+}
+
+body {
+  user-select: text;
+}
+
+button,
+select,
+input,
+textarea,
+[role="button"],
+[role="tab"],
+[role="switch"],
+.btn,
+.icon-btn,
+.nav-item {
   user-select: none;
 }
 
@@ -51,8 +67,44 @@ body {
 
 /* Keyboard Accessible Focus Rings */
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Filled controls need a separation ring so the focus outline does not merge
+   into the accent fill. */
+.btn-primary:focus-visible,
+.btn-danger:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--focus-ring);
+}
+
+[id] {
+  scroll-margin-block-start: 96px;
+}
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Typography elements */
@@ -112,6 +164,26 @@ button:disabled {
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+}
+
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 3000;
+  padding: 10px 14px;
+  border: 2px solid var(--focus-ring);
+  border-radius: var(--radius-sm);
+  background: var(--surface-strong);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  transform: translateY(-160%);
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
 }
 
 .sr-only {

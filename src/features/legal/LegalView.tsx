@@ -122,7 +122,7 @@ export const LegalView: React.FC = () => {
   const language = usePreferencesStore((s) => s.language);
   const legalDoc = useUiStore((s) => s.legalDoc);
   const setLegalDoc = useUiStore((s) => s.setLegalDoc);
-  const document = getLegalDocument(language, legalDoc);
+  const legalDocument = getLegalDocument(language, legalDoc);
   const docs = getLegalDocMeta(language);
   const tr = language === "tr";
 
@@ -130,40 +130,66 @@ export const LegalView: React.FC = () => {
     void scannerApi.openUrl(url);
   };
 
+  const moveDoc = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    let next = index;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") next = (index + 1) % docs.length;
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = (index - 1 + docs.length) % docs.length;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = docs.length - 1;
+    else return;
+    event.preventDefault();
+    const doc = docs[next];
+    setLegalDoc(doc.id);
+    document.getElementById(`legal-tab-${doc.id}`)?.focus();
+  };
+
   return (
     <div className="legal-view">
-      <nav className="legal-doc-tabs" aria-label={ui.legal.docTabsLabel}>
-        {docs.map((doc) => (
-          <button
-            key={doc.id}
-            type="button"
-            className={`legal-doc-tab ${doc.id === legalDoc ? "is-active" : ""}`}
-            onClick={() => setLegalDoc(doc.id)}
-            aria-current={doc.id === legalDoc ? "page" : undefined}
-          >
-            <span className="legal-doc-tab-label">{doc.label}</span>
-            <span className="legal-doc-tab-hint">{doc.hint}</span>
-          </button>
-        ))}
-      </nav>
+      <div className="legal-doc-tabs" role="tablist" aria-label={ui.legal.docTabsLabel}>
+        {docs.map((doc, index) => {
+          const active = doc.id === legalDoc;
+          return (
+            <button
+              key={doc.id}
+              id={`legal-tab-${doc.id}`}
+              type="button"
+              role="tab"
+              className={`legal-doc-tab ${active ? "is-active" : ""}`}
+              onClick={() => setLegalDoc(doc.id)}
+              onKeyDown={(event) => moveDoc(event, index)}
+              aria-selected={active}
+              aria-controls="legal-panel"
+              tabIndex={active ? 0 : -1}
+            >
+              <span className="legal-doc-tab-label">{doc.label}</span>
+              <span className="legal-doc-tab-hint">{doc.hint}</span>
+            </button>
+          );
+        })}
+      </div>
 
-      <article className="legal-document">
+      <article
+        className="legal-document"
+        id="legal-panel"
+        role="tabpanel"
+        aria-labelledby={`legal-tab-${legalDoc}`}
+      >
         <header className="legal-doc-header">
           <span className="legal-doc-icon" aria-hidden="true">
             <ScrollText size={20} />
           </span>
           <div className="legal-doc-header-copy">
-            <h2 className="legal-doc-title">{document.title}</h2>
-            <p className="legal-doc-summary">{document.summary}</p>
+            <h2 className="legal-doc-title">{legalDocument.title}</h2>
+            <p className="legal-doc-summary">{legalDocument.summary}</p>
           </div>
           <span className="legal-doc-revision">
             <CalendarClock size={12} />
-            {tr ? `Son güncelleme: ${document.updated}` : `Last updated: ${document.updated}`}
+            {tr ? `Son güncelleme: ${legalDocument.updated}` : `Last updated: ${legalDocument.updated}`}
           </span>
         </header>
 
         <ol className="legal-clauses">
-          {document.clauses.map((clause) => (
+          {legalDocument.clauses.map((clause) => (
             <li key={clause.heading} className="legal-clause">
               <h3 className="legal-clause-heading">{clause.heading}</h3>
               {clause.paragraphs?.map((paragraph) => (

@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { Minus, Square, Copy, X } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { useI18n } from "@/locales";
+import { useUIText } from "@/lib/ui-text";
 import "./window-controls.css";
 
 export const WindowControls: React.FC = () => {
-  const { t } = useI18n();
+  const ui = useUIText();
   const [isMaximized, setIsMaximized] = useState(false);
 
   useEffect(() => {
     try {
       const appWindow = getCurrentWindow();
       appWindow.isMaximized().then(setIsMaximized).catch(() => {});
-      
+
       const unlisten = appWindow.onResized(async () => {
         try {
           const max = await appWindow.isMaximized();
@@ -52,7 +52,7 @@ export const WindowControls: React.FC = () => {
     }
   };
 
-  const maximizeTitle = isMaximized ? t.windowControls.restore : t.windowControls.maximize;
+  const maximizeTitle = isMaximized ? ui.window.restore : ui.window.maximize;
 
   return (
     <div className="window-controls" data-tauri-drag-region="false">
@@ -60,8 +60,8 @@ export const WindowControls: React.FC = () => {
         type="button"
         className="win-btn win-minimize"
         onClick={handleMinimize}
-        title={t.windowControls.minimize}
-        aria-label={t.windowControls.minimize}
+        title={ui.window.minimize}
+        aria-label={ui.window.minimize}
       >
         <Minus size={11} strokeWidth={2} />
       </button>
@@ -82,8 +82,8 @@ export const WindowControls: React.FC = () => {
         type="button"
         className="win-btn win-close"
         onClick={handleClose}
-        title={t.windowControls.close}
-        aria-label={t.windowControls.close}
+        title={ui.window.close}
+        aria-label={ui.window.close}
       >
         <X size={12} strokeWidth={2} />
       </button>

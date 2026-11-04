@@ -1,11 +1,11 @@
 import React from "react";
 import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from "lucide-react";
 import { useUiStore } from "@/stores/ui-store";
-import { useI18n } from "@/locales";
+import { useUIText } from "@/lib/ui-text";
 import "./primitives.css";
 
 export const Toast: React.FC = () => {
-  const { t } = useI18n();
+  const ui = useUIText();
   const toast = useUiStore((s) => s.toast);
   const clearToast = useUiStore((s) => s.clearToast);
 
@@ -25,14 +25,21 @@ export const Toast: React.FC = () => {
     }
   };
 
+  const isError = toast.type === "error";
+
   return (
-    <div className={`toast-container toast-${toast.type}`} role="status" aria-live="polite">
+    <div
+      className={`toast-container toast-${toast.type}`}
+      role={isError ? "alert" : "status"}
+      aria-live={isError ? "assertive" : "polite"}
+    >
       {renderIcon()}
       <span>{toast.message}</span>
       <button
+        type="button"
         className="icon-btn icon-btn-sm"
         onClick={clearToast}
-        aria-label={t.settings.close}
+        aria-label={ui.common.close}
       >
         <X size={14} />
       </button>

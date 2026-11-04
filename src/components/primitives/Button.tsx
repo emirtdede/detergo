@@ -19,6 +19,7 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   return (
     <button
+      type="button"
       className={`btn btn-${variant} btn-${size} ${className}`}
       disabled={disabled}
       {...props}

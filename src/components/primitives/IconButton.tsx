@@ -19,6 +19,7 @@ export const IconButton: React.FC<IconButtonProps> = ({
 }) => {
   return (
     <button
+      type="button"
       className={`icon-btn icon-btn-${size} ${className}`}
       aria-label={ariaLabel}
       title={tooltip || ariaLabel}

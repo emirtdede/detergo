@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
+  ArrowLeft,
   Boxes,
+  ChevronRight,
   Copyright,
   ExternalLink,
   Globe,
@@ -11,11 +13,12 @@ import {
 import { VelliumLogo } from "@/components/brand/VelliumLogo";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
-import { useUIText } from "@/lib/ui-text";
+import { useUIText, resolveUiLocale } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import type { CatalogStats } from "@/lib/catalog-stats";
 import type { BuildInfo, CatalogDto } from "@/types";
 import { getLegalDocMeta, LEGAL_REVISION } from "@/features/legal/legal-content";
+import { LegalView } from "@/features/legal/LegalView";
 import "./about.css";
 
 const VELLIUM_URL = "https://vellium.dev";
@@ -37,38 +40,81 @@ function formatBuiltAt(value: string | undefined, locale: string): string | null
   }
 }
 
-/**
- * About is the one place that speaks for the product rather than for a
- * setting: brand, build provenance, catalog size, and the entry points to the
- * legal documents. Everything shown here is read from the running binary, not
- * hard-coded, so a support report and the audited revision can be compared.
- */
 export const AboutView: React.FC<AboutViewProps> = ({ buildInfo, catalog, catalogStats }) => {
   const ui = useUIText();
   const language = usePreferencesStore((s) => s.language);
+  const aboutPane = useUiStore((s) => s.aboutPane);
   const openLegalDoc = useUiStore((s) => s.openLegalDoc);
-  const tr = language === "tr";
-  const legalDocs = getLegalDocMeta(language);
+  const closeLegalDoc = useUiStore((s) => s.closeLegalDoc);
+  const locale = resolveUiLocale(language);
+  const tr = locale === "tr";
+  const legalDocs = getLegalDocMeta(locale);
   const builtAt = formatBuiltAt(buildInfo?.builtAt, tr ? "tr-TR" : "en-US");
+  const backButtonRef = useRef<HTMLButtonElement | null>(null);
+  const returnFocusDocRef = useRef<string | null>(null);
+  const wasLegalRef = useRef(false);
+
+  useEffect(() => {
+    if (aboutPane === "legal") {
+      wasLegalRef.current = true;
+      // The overview that held focus has just been replaced by the document
+      // subview; move focus into it instead of letting it fall to <body>.
+      backButtonRef.current?.focus();
+      return;
+    }
+    if (wasLegalRef.current) {
+      wasLegalRef.current = false;
+      // The originating button was unmounted while the document pane was open,
+      // so its element cannot be refocused. Re-query the freshly mounted row
+      // by document id instead of keeping a stale node reference.
+      const docId = returnFocusDocRef.current;
+      returnFocusDocRef.current = null;
+      if (docId) {
+        document
+          .querySelector<HTMLButtonElement>(`[data-legal-doc="${docId}"]`)
+          ?.focus();
+      }
+    }
+  }, [aboutPane]);
 
   const openUrl = (url: string) => {
     void scannerApi.openUrl(url);
   };
 
+  const profileLabel = buildInfo
+    ? buildInfo.profile === "release"
+      ? tr ? "Kararlı" : "Stable"
+      : tr ? "Geliştirme" : "Development"
+    : tr ? "Bilinmiyor" : "Unknown";
+
+  if (aboutPane === "legal") {
+    return (
+      <div className="about-view">
+        <div className="about-subview-header">
+          <button type="button" className="btn btn-ghost btn-sm" onClick={closeLegalDoc} ref={backButtonRef}>
+            <ArrowLeft size={14} />
+            {ui.common.back}
+          </button>
+          <span>{ui.settings.aboutLegalTitle}</span>
+        </div>
+        <LegalView />
+      </div>
+    );
+  }
+
   return (
     <div className="about-view">
-      <section className="about-hero">
-        <div className="about-hero-glow" aria-hidden="true" />
-        <div className="about-mark">
-          <VelliumLogo size={46} />
+      <header className="about-intro">
+        <div className="about-mark" aria-hidden="true">
+          <VelliumLogo size={36} />
         </div>
-        <div className="about-hero-copy">
+        <div className="about-intro-copy">
           <span className="about-eyebrow">{ui.settings.aboutMadeBy}</span>
           <h2 className="about-name">Node Cleaner</h2>
           <p className="about-tagline">{ui.settings.aboutTagline}</p>
           <div className="about-hero-meta">
-            <span className="about-pill about-pill--accent">v{buildInfo?.version ?? "2.0.0"}</span>
-            {buildInfo && <span className="about-pill">{buildInfo.profile}</span>}
+            <span className="about-pill about-pill--accent">v{buildInfo?.version ?? "—"}</span>
+            <span className="about-pill">{profileLabel}</span>
             <button
               type="button"
               className="about-site-link"
@@ -81,7 +127,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ buildInfo, catalog, catalo
             </button>
           </div>
         </div>
-      </section>
+      </header>
 
       <div className="about-grid">
         <section className="about-card">
@@ -92,7 +138,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ buildInfo, catalog, catalo
           <dl className="about-rows">
             <div className="about-row">
               <dt>{ui.settings.version}</dt>
-              <dd>{buildInfo?.version ?? "2.0.0"}</dd>
+              <dd>{buildInfo?.version ?? "—"}</dd>
             </div>
             <div className="about-row">
               <dt>{ui.settings.buildCommit}</dt>
@@ -104,7 +150,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ buildInfo, catalog, catalo
             </div>
             <div className="about-row">
               <dt>{ui.settings.buildProfile}</dt>
-              <dd>{buildInfo?.profile ?? "—"}</dd>
+              <dd>{profileLabel}</dd>
             </div>
             {builtAt && (
               <div className="about-row">
@@ -152,16 +198,20 @@ export const AboutView: React.FC<AboutViewProps> = ({ buildInfo, catalog, catalo
                 key={doc.id}
                 type="button"
                 className="about-legal-item"
-                onClick={() => openLegalDoc(doc.id)}
+                data-legal-doc={doc.id}
+                onClick={() => {
+                  returnFocusDocRef.current = doc.id;
+                  openLegalDoc(doc.id);
+                }}
               >
                 <span className="about-legal-copy">
                   <span className="about-legal-label">{doc.label}</span>
                   <span className="about-legal-hint">{doc.hint}</span>
                 </span>
                 <span className="about-legal-revision">
-                  {ui.settings.aboutLegalRevision} · {LEGAL_REVISION[tr ? "tr" : "en"]}
+                  {ui.settings.aboutLegalRevision} · {LEGAL_REVISION[locale]}
                 </span>
-                <ExternalLink size={12} className="about-legal-arrow" />
+                <ChevronRight size={14} className="about-legal-arrow" aria-hidden="true" />
               </button>
             ))}
           </div>

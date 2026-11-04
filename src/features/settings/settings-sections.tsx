@@ -3,7 +3,6 @@ import {
   Cpu,
   Info,
   ListChecks,
-  Scale,
   ShieldCheck,
   SlidersHorizontal,
   UserRoundCog,
@@ -19,9 +18,8 @@ export interface SettingsSectionDef {
 }
 
 /**
- * Single source of truth for the settings subpages. The sidebar renders them
- * as a flyout menu and the settings view renders the matching content, so the
- * two lists can never drift apart.
+ * Single source of truth for the settings subpages. The settings view owns the
+ * only section navigation; the side rail no longer duplicates this list.
  */
 export function useSettingsSections(): SettingsSectionDef[] {
   const ui = useUIText();
@@ -55,12 +53,6 @@ export function useSettingsSections(): SettingsSectionDef[] {
       label: ui.settings.privacy,
       hint: ui.settings.privacyHint,
       icon: <ListChecks size={15} />,
-    },
-    {
-      id: "legal",
-      label: ui.settings.legal,
-      hint: ui.settings.legalHint,
-      icon: <Scale size={15} />,
     },
     {
       id: "about",

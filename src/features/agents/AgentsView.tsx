@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
 import { Dialog } from "@/components/primitives/Dialog";
+import { EmptyState } from "@/components/primitives/EmptyState";
+import { PageHeader } from "@/components/primitives/PageHeader";
 import { useScanStore } from "@/stores/scan-store";
 import { useScanController } from "@/features/scan/useScanController";
 import { useUIText } from "@/lib/ui-text";
@@ -41,6 +43,9 @@ export const AgentsView: React.FC = () => {
   const { startScan, isScanning } = useScanController();
   const itemsById = useScanStore((s) => s.itemsById);
   const itemIds = useScanStore((s) => s.itemIds);
+  const status = useScanStore((s) => s.status);
+  const error = useScanStore((s) => s.error);
+  const progress = useScanStore((s) => s.progress);
   const [providers, setProviders] = useState<AgentProviderInfo[]>([]);
   const [growth, setGrowth] = useState<GrowthEntry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -104,7 +109,7 @@ export const AgentsView: React.FC = () => {
 
   const pickRoot = async () => {
     try {
-      const selected = await scannerApi.selectFolderDialog();
+      const selected = await scannerApi.selectFolderDialog(ui.agents.toolRoots);
       if (selected && !toolRoots.some((root) => root.toLowerCase() === selected.toLowerCase())) {
         setToolRoots((prev) => [...prev, selected]);
       }
@@ -151,39 +156,60 @@ export const AgentsView: React.FC = () => {
     }
   };
 
+  // The AI storage table distinguishes the same four scan states as Projects,
+  // so "nothing scanned yet" is not shown after a failed or empty scan.
+  const emptyTitle = isScanning
+    ? ui.common.scanning
+    : status === "failed"
+      ? ui.errors.title
+      : status === "idle"
+        ? ui.overview.noScan
+        : ui.table.noItems;
+  const emptyDescription = isScanning
+    ? `${progress?.entriesFound ?? 0} / ${progress?.entriesMeasured ?? 0}`
+    : status === "failed"
+      ? error?.message ?? ui.overview.startHint
+      : ui.overview.scanFirst;
+
   return (
     <div className="page-view">
-      <header className="view-header">
-        <div>
-          <h1 className="view-title">{ui.agents.title}</h1>
-          <p className="view-subtitle">{ui.agents.subtitle}</p>
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={<Plus size={13} />}
-            onClick={() => {
-              resetAddForm();
-              setAddOpen(true);
-            }}
-          >
-            {ui.agents.addTool}
-          </Button>
-          <Button variant="secondary" size="sm" icon={<RefreshCw size={13} />} onClick={loadProviders} disabled={loading}>
-            {ui.common.refresh}
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            icon={<Bot size={13} />}
-            onClick={() => startScan(undefined, "agents")}
-            disabled={isScanning}
-          >
-            {ui.agents.scan}
-          </Button>
-        </div>
-      </header>
+      <PageHeader
+        title={ui.agents.title}
+        description={ui.agents.subtitle}
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Plus size={13} />}
+              onClick={() => {
+                resetAddForm();
+                setAddOpen(true);
+              }}
+            >
+              {ui.agents.addTool}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<RefreshCw size={13} />}
+              onClick={loadProviders}
+              disabled={loading}
+            >
+              {ui.common.refresh}
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Bot size={13} />}
+              onClick={() => startScan(undefined, "agents")}
+              disabled={isScanning}
+            >
+              {ui.agents.scan}
+            </Button>
+          </>
+        }
+      />
 
       {loadError && (
         <p className="items-warning">
@@ -211,7 +237,11 @@ export const AgentsView: React.FC = () => {
       )}
 
       {providers.length === 0 ? (
-        <p className="items-empty">{loading ? ui.common.loading : ui.agents.noProviders}</p>
+        <EmptyState
+          live={loading}
+          icon={<Bot size={22} />}
+          title={loading ? ui.common.loading : ui.agents.noProviders}
+        />
       ) : (
         <div className="provider-grid">
           {providers.map((provider) => {
@@ -315,9 +345,13 @@ export const AgentsView: React.FC = () => {
       {items.length > 0 ? (
         <ItemTable items={items} showProject={false} />
       ) : (
-        <p className="plan-note">
-          <ShieldAlert size={13} /> {ui.overview.scanFirst}
-        </p>
+        <EmptyState
+          variant="compact"
+          live={isScanning}
+          icon={<ShieldAlert size={20} />}
+          title={emptyTitle}
+          description={emptyDescription}
+        />
       )}
 
       <Dialog
@@ -364,7 +398,7 @@ export const AgentsView: React.FC = () => {
               <button
                 type="button"
                 className="icon-btn icon-btn-sm"
-                aria-label={ui.settings.remove}
+                aria-label={`${ui.settings.remove}: ${maskPaths ? maskPath(root) : root}`}
                 onClick={() => setToolRoots((prev) => prev.filter((item) => item !== root))}
               >
                 <Trash2 size={12} />

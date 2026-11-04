@@ -1,14 +1,17 @@
 export type ThemeMode =
   | "dark-black"
   | "dark-gray"
+  | "light-white"
+  | "light-gray";
+
+/** Theme ids persisted by releases before the four-theme consolidation. */
+export type LegacyThemeMode =
   | "dark-blue"
   | "dark-purple"
   | "dark-green"
   | "dark-red"
   | "dark-orange"
   | "dark-yellow"
-  | "light-white"
-  | "light-gray"
   | "light-blue"
   | "light-purple"
   | "light-green"

@@ -180,10 +180,14 @@ export const CleanupPlanDialog: React.FC = () => {
           <p className="plan-note">{ui.plan.expires}</p>
 
           {mode === "permanent" && (
-            <label className="plan-ack">
-              <Checkbox checked={ack} onChange={() => setAck((v) => !v)} />
+            <div className="plan-ack">
+              <Checkbox
+                checked={ack}
+                onChange={() => setAck((v) => !v)}
+                aria-label={ui.plan.permanentAck}
+              />
               <span>{ui.plan.permanentAck}</span>
-            </label>
+            </div>
           )}
         </>
       )}

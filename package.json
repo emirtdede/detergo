@@ -9,6 +9,8 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "test": "vitest run",
+    "test:a11y": "npm run check:contrast && playwright test",
+    "check:contrast": "node scripts/check-contrast.mjs",
     "typecheck": "tsc --noEmit",
     "check-version": "node scripts/check-version.js",
     "build:release": "node scripts/build-release.js",
@@ -29,6 +31,8 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.64.1",
     "@tauri-apps/cli": "^2.2.0",
     "@types/node": "^22.13.9",
     "@types/react": "^19.0.10",

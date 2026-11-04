@@ -81,10 +81,11 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-container">
+      <a className="skip-link" href="#main">{ui.common.skipToContent}</a>
       <ScanHeader />
       <div className="app-body">
         <NavRail />
-        <main className="view-container">
+        <main id="main" tabIndex={-1} className="view-container">
           <StaleScanBanner />
           {view === "overview" && <OverviewView />}
           {view === "projects" && <ProjectsView />}

@@ -1,6 +1,7 @@
 ﻿import React, { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
+  FolderOpen,
   Plus,
   ShieldCheck,
   X,
@@ -10,46 +11,38 @@ import { Checkbox } from "@/components/primitives/Checkbox";
 import { NumberField } from "@/components/primitives/NumberField";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
-import { useUIText } from "@/lib/ui-text";
+import { useUIText, resolveUiLocale, UIText } from "@/lib/ui-text";
 import { LANGUAGES_LIST } from "@/locales/languages";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { countCatalogStats } from "@/lib/catalog-stats";
 import { CatalogDto, BuildInfo, SupportedLanguage, ThemeMode } from "@/types";
-import { UIText } from "@/lib/ui-text";
 import { useSettingsSections } from "./settings-sections";
 import { AboutView } from "./AboutView";
-import { LegalView } from "../legal/LegalView";
 import "../items/items.css";
 import "../shell/shell.css";
 import "./settings.css";
 
 const THEMES: ThemeMode[] = [
-  "dark-black", "dark-gray", "dark-blue", "dark-purple", "dark-green",
-  "dark-red", "dark-orange", "dark-yellow",
-  "light-white", "light-gray", "light-blue", "light-purple", "light-green",
-  "light-red", "light-orange", "light-yellow",
+  "dark-black",
+  "dark-gray",
+  "light-white",
+  "light-gray",
 ];
 
 /**
- * Turns a theme id such as `dark-blue` into a readable label. The raw ids were
- * shown in the select, which read like configuration keys rather than choices.
+ * Turns a verified theme id into a readable label. Legacy ids are rewritten by
+ * normalizeTheme() before they reach this list.
  */
 function themeLabel(theme: ThemeMode, ui: UIText): string {
   const t = ui.settings;
-  const colorMap: Record<string, string> = {
-    black: t.themeBlack,
-    gray: t.themeGray,
-    white: t.themeWhite,
-    blue: t.themeBlue,
-    purple: t.themePurple,
-    green: t.themeGreen,
-    red: t.themeRed,
-    orange: t.themeOrange,
-    yellow: t.themeYellow,
+  const colorMap: Record<ThemeMode, string> = {
+    "dark-black": t.themeBlack,
+    "dark-gray": t.themeGray,
+    "light-white": t.themeWhite,
+    "light-gray": t.themeGray,
   };
-  const [mode, color] = theme.split("-");
-  const modeLabel = mode === "dark" ? t.themeDark : t.themeLight;
-  return `${modeLabel} · ${colorMap[color] ?? color}`;
+  const modeLabel = theme.startsWith("dark") ? t.themeDark : t.themeLight;
+  return `${modeLabel} · ${colorMap[theme]}`;
 }
 
 const PROFILE_DEFAULTS: Record<string, { maxDepth: number; maxCandidates: number; timeoutMinutes: number }> = {
@@ -89,11 +82,27 @@ export const SettingsView: React.FC = () => {
   // distinct values across those rules, not the rule count itself.
   const catalogStats = useMemo(() => countCatalogStats(catalog?.rules ?? []), [catalog]);
 
-  // The section list lives in the sidebar flyout; the view only needs the
-  // active entry for its heading and hint.
+  // The section list is owned by this view; the side rail no longer duplicates
+  // it. The active entry only feeds the heading and hint.
   const sections = useSettingsSections();
+  const uiLanguages = useMemo(
+    () => LANGUAGES_LIST.filter((language) => language.id === "tr" || language.id === "en"),
+    []
+  );
 
   const activeSection = sections.find((s) => s.id === section) ?? sections[0];
+
+  const moveTab = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    let next = index;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") next = (index + 1) % sections.length;
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = (index - 1 + sections.length) % sections.length;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = sections.length - 1;
+    else return;
+    event.preventDefault();
+    setSettingsSection(sections[next].id);
+    document.getElementById(`settings-tab-${sections[next].id}`)?.focus();
+  };
 
   const save = async (patch: Parameters<typeof prefs.updateSettings>[0]) => {
     prefs.updateSettings(patch);
@@ -123,20 +132,43 @@ export const SettingsView: React.FC = () => {
       )}
 
       <div className="settings-page">
-        <nav className="settings-tabs" aria-label={ui.nav.settings}>
-          {sections.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`settings-tab ${item.id === activeSection.id ? "is-active" : ""}`}
-              onClick={() => setSettingsSection(item.id)}
-              aria-current={item.id === activeSection.id ? "page" : undefined}
-            >
-              <span className="settings-tab-icon" aria-hidden="true">{item.icon}</span>
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </nav>
+        <div className="settings-tabs" role="tablist" aria-label={ui.nav.settings}>
+          {sections.map((item, index) => {
+            const active = item.id === activeSection.id;
+            return (
+              <button
+                key={item.id}
+                id={`settings-tab-${item.id}`}
+                type="button"
+                role="tab"
+                className={`settings-tab ${active ? "is-active" : ""}`}
+                onClick={() => setSettingsSection(item.id)}
+                onKeyDown={(event) => moveTab(event, index)}
+                aria-selected={active}
+                aria-controls="settings-panel"
+                tabIndex={active ? 0 : -1}
+              >
+                <span className="settings-tab-icon" aria-hidden="true">{item.icon}</span>
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="settings-tabs-mobile">
+          <label className="sr-only" htmlFor="settings-section-select">
+            {ui.nav.settings}
+          </label>
+          <select
+            id="settings-section-select"
+            value={activeSection.id}
+            onChange={(event) => setSettingsSection(event.target.value as (typeof sections)[number]["id"])}
+          >
+            {sections.map((item) => (
+              <option key={item.id} value={item.id}>{item.label}</option>
+            ))}
+          </select>
+        </div>
 
         <header className="settings-hero">
           <span className="settings-hero-icon" aria-hidden="true">{activeSection.icon}</span>
@@ -147,7 +179,12 @@ export const SettingsView: React.FC = () => {
           </div>
         </header>
 
-        <div className="settings-body">
+        <div
+          className="settings-body"
+          id="settings-panel"
+          role="tabpanel"
+          aria-labelledby={`settings-tab-${activeSection.id}`}
+        >
 
         {activeSection.id === "general" && (
           <section className="settings-card">
@@ -162,10 +199,10 @@ export const SettingsView: React.FC = () => {
             <label className="form-row">
               <span>{ui.settings.language}</span>
               <select
-                value={prefs.language ?? "en"}
+                value={resolveUiLocale(prefs.language)}
                 onChange={(e) => prefs.setLanguage(e.target.value as SupportedLanguage)}
               >
-                {LANGUAGES_LIST.map((language) => (
+                {uiLanguages.map((language) => (
                   <option key={language.id} value={language.id}>{language.nativeName}</option>
                 ))}
               </select>
@@ -292,6 +329,17 @@ export const SettingsView: React.FC = () => {
                   aria-label={ui.settings.protectedPaths}
                   onChange={(e) => setProtectedInput(e.target.value)}
                 />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={<FolderOpen size={12} />}
+                  onClick={async () => {
+                    const selected = await scannerApi.selectFolderDialog(ui.settings.protectedPaths);
+                    if (selected) setProtectedInput(selected);
+                  }}
+                >
+                  {ui.common.browse}
+                </Button>
                 <Button variant="secondary" size="sm" icon={<Plus size={12} />} onClick={() => {
                   const value = protectedInput.trim();
                   if (!value) return;
@@ -306,7 +354,7 @@ export const SettingsView: React.FC = () => {
                 {prefs.protectedPaths.map((path) => (
                   <div key={path} className="list-row">
                     <span>{path}</span>
-                    <button type="button" className="icon-btn icon-btn-sm" aria-label={ui.settings.remove}
+                    <button type="button" className="icon-btn icon-btn-sm" aria-label={`${ui.settings.remove}: ${path}`}
                       onClick={() => save({ protectedPaths: prefs.protectedPaths.filter((p) => p !== path) })}>
                       <X size={12} />
                     </button>
@@ -337,7 +385,7 @@ export const SettingsView: React.FC = () => {
                 {prefs.excludedNames.map((name) => (
                   <div key={name} className="list-row">
                     <span>{name}</span>
-                    <button type="button" className="icon-btn icon-btn-sm" aria-label={ui.settings.remove}
+                    <button type="button" className="icon-btn icon-btn-sm" aria-label={`${ui.settings.remove}: ${name}`}
                       onClick={() => save({ excludedNames: prefs.excludedNames.filter((n) => n !== name) })}>
                       <X size={12} />
                     </button>
@@ -393,8 +441,6 @@ export const SettingsView: React.FC = () => {
             <p className="plan-note">{ui.history.clearHint}</p>
           </section>
         )}
-
-        {activeSection.id === "legal" && <LegalView />}
 
         {activeSection.id === "about" && (
           <AboutView buildInfo={buildInfo} catalog={catalog} catalogStats={catalogStats} />

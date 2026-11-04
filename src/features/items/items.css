@@ -67,7 +67,7 @@
   height: 32px;
   padding: 0 var(--space-3);
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-control);
   background: var(--surface);
   color: var(--text-primary);
   font-size: var(--text-sm);
@@ -93,7 +93,7 @@
   background: var(--surface);
 }
 
-.items-head,
+.items-head-row,
 .items-row {
   display: grid;
   /* The narrowest supported window (980px with the 208px rail) leaves ~700px
@@ -110,15 +110,18 @@
 }
 
 .items-head {
-  height: 40px;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--text-secondary);
   border-bottom: 1px solid var(--border);
   background: var(--surface-alt);
 }
 
-.items-head > div {
+.items-head-row {
+  height: 40px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.items-head-row > div {
   display: flex;
   align-items: center;
   min-width: 0;
@@ -180,7 +183,7 @@
 }
 
 .items-row.is-blocked {
-  opacity: 0.72;
+  background: var(--surface-alt);
 }
 
 .items-name {
@@ -204,6 +207,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* The tinted selected/blocked backgrounds lower the contrast of the muted path
+   text below 4.5:1; the secondary tone keeps the row readable while still
+   reading as a de-emphasised subtitle. */
+.items-row.is-selected .items-path,
+.items-row.is-blocked .items-path {
+  color: var(--text-secondary);
 }
 
 .items-cell {
@@ -232,9 +243,9 @@
   width: fit-content;
 }
 
-.safety-badge.safe { color: #2e9b63; background: rgba(46, 155, 99, 0.12); border-color: rgba(46, 155, 99, 0.3); }
-.safety-badge.regenerate { color: #3d8bfd; background: rgba(61, 139, 253, 0.12); border-color: rgba(61, 139, 253, 0.3); }
-.safety-badge.review { color: #d99a00; background: rgba(217, 154, 0, 0.12); border-color: rgba(217, 154, 0, 0.32); }
+.safety-badge.safe { color: var(--success-text); background: var(--success-subtle); border-color: var(--success); }
+.safety-badge.regenerate { color: var(--accent-foreground); background: var(--accent-subtle); border-color: var(--accent); }
+.safety-badge.review { color: var(--warning-text); background: var(--warning-subtle); border-color: var(--warning); }
 .safety-badge.keep { color: var(--text-muted); background: var(--surface-alt); border-color: var(--border); }
 
 .items-empty {
@@ -245,7 +256,7 @@
 }
 
 .items-warning {
-  color: #d99a00;
+  color: var(--warning-text);
   font-size: 11px;
   display: flex;
   gap: 4px;
@@ -324,7 +335,7 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-3);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-control);
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--text-sm);
@@ -417,7 +428,7 @@
    comfortable hit area instead of overflowing the card.
    ========================================================================== */
 @media (max-width: 900px) {
-  .items-head,
+  .items-head-row,
   .items-row {
     grid-template-columns: 34px minmax(140px, 2.4fr) minmax(80px, 1fr) 88px 78px 30px;
     gap: 6px;
@@ -430,14 +441,14 @@
 }
 
 @media (max-width: 720px) {
-  .items-head,
+  .items-head-row,
   .items-row {
     grid-template-columns: 32px minmax(120px, 1fr) 84px 76px 30px;
   }
 
   /* Column 3 is project (Projects) or category (Agents/Caches). Its filter is
      still available in the toolbar, so hiding the cell loses no functionality. */
-  .items-head > div:nth-child(3),
+  .items-head-row > div:nth-child(3),
   .items-row > div:nth-child(3) {
     display: none;
   }
@@ -456,16 +467,16 @@
 }
 
 @media (max-width: 560px) {
-  .items-head,
+  .items-head-row,
   .items-row {
     grid-template-columns: 30px minmax(100px, 1fr) 74px;
     gap: 5px;
     padding: 0 8px;
   }
 
-  .items-head > div:nth-child(4),
+  .items-head-row > div:nth-child(4),
   .items-row > div:nth-child(4),
-  .items-head > div:nth-child(6),
+  .items-head-row > div:nth-child(6),
   .items-row > div:nth-child(6) {
     display: none;
   }

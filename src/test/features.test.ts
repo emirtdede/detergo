@@ -122,28 +122,34 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
     expect(usePreferencesStore.getState().favorites.some((f) => f.id === fav.id)).toBe(false);
   });
 
-  it("supports switching all 16 flat colour themes", () => {
+  it("supports switching the four verified colour themes", () => {
     const prefStore = usePreferencesStore.getState();
-    const allThemes = [
-      "dark-black", "dark-gray", "dark-blue", "dark-purple", "dark-green",
-      "dark-red", "dark-orange", "dark-yellow",
-      "light-white", "light-gray", "light-blue", "light-purple", "light-green",
-      "light-red", "light-orange", "light-yellow",
+    const verifiedThemes = [
+      "dark-black",
+      "dark-gray",
+      "light-white",
+      "light-gray",
     ] as const;
 
-    for (const theme of allThemes) {
+    for (const theme of verifiedThemes) {
       prefStore.setTheme(theme);
       expect(usePreferencesStore.getState().theme).toBe(theme);
     }
   });
 
-  it("normalizes legacy theme names", () => {
+  it("normalizes every legacy theme id onto a verified theme", () => {
     const prefStore = usePreferencesStore.getState();
     prefStore.loadPreferences({ theme: "black" });
     expect(usePreferencesStore.getState().theme).toBe("dark-black");
     prefStore.loadPreferences({ theme: "white" });
     expect(usePreferencesStore.getState().theme).toBe("light-white");
     prefStore.loadPreferences({ theme: "dark-transparent" });
+    expect(usePreferencesStore.getState().theme).toBe("dark-black");
+    prefStore.loadPreferences({ theme: "dark-blue" });
+    expect(usePreferencesStore.getState().theme).toBe("dark-gray");
+    prefStore.loadPreferences({ theme: "light-yellow" });
+    expect(usePreferencesStore.getState().theme).toBe("light-gray");
+    prefStore.loadPreferences({ theme: "not-a-theme" });
     expect(usePreferencesStore.getState().theme).toBe("dark-black");
   });
 

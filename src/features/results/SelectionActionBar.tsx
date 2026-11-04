@@ -81,7 +81,7 @@ export const SelectionActionBar: React.FC = () => {
         <div className="selection-info">
           <span>{ui.table.selected(selectedIds.size)}</span>
           <span style={{ color: "var(--text-muted)" }}>•</span>
-          <span style={{ color: "#5AC8FA" }}>{formatBytes(totalBytes)}</span>
+          <span className="selection-total">{formatBytes(totalBytes)}</span>
         </div>
 
         <div className="selection-divider" />

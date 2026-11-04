@@ -43,7 +43,6 @@
 
 .nav-collapse-toggle {
   margin-top: auto;
-  opacity: 0.75;
 }
 
 /* The rail folds itself under 900px (see NavRail); while it does, the manual
@@ -52,124 +51,11 @@
   display: none;
 }
 
-/* Settings expands inline inside the rail, directly under its own button, so
-   the submenu belongs to the same vertical stack as the main navigation.
-   It is always mounted and animates open/closed with a grid-rows transition,
-   which keeps the height animation smooth without hard-coding a max-height. */
-.nav-settings-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.nav-item-chevron {
-  margin-left: auto;
-  opacity: 0.55;
-  transition: transform 240ms var(--ease-standard);
-}
-
-.nav-item-chevron.is-open {
-  transform: rotate(180deg);
-}
-
-.nav-rail.collapsed .nav-item-chevron {
-  display: none;
-}
-
-.nav-submenu {
-  /* A `grid-template-rows: 1fr` collapse is unreliable here: the submenu is a
-     flex item inside the rail's nested column flexbox, and Chromium resolves
-     the `fr` track to 0 in that context, so the closing half of the animation
-     silently vanished. `max-height` is driven by a measured CSS variable
-     instead (see NavRail), which interpolates identically in both directions. */
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-6px);
-  pointer-events: none;
-  transition:
-    max-height 240ms var(--ease-in-out),
-    opacity 160ms var(--ease-standard),
-    transform 240ms var(--ease-in-out),
-    visibility 0s linear 240ms;
-}
-
-.nav-submenu.is-open {
-  max-height: var(--nav-submenu-height, 320px);
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-  pointer-events: auto;
-  transition:
-    max-height 240ms var(--ease-in-out),
-    opacity 200ms var(--ease-standard) 30ms,
-    transform 240ms var(--ease-in-out),
-    visibility 0s linear 0s;
-}
-
-.nav-submenu-inner {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  margin-left: 10px;
-  padding-left: var(--space-2);
-  border-left: 1px solid var(--border);
-}
-
-.nav-submenu-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 7px var(--space-2);
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  text-align: left;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-standard),
-    color var(--duration-fast) var(--ease-standard);
-}
-
-.nav-submenu-item:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
-}
-
-.nav-submenu-item.active {
-  background: var(--accent-subtle);
-  color: var(--accent-text);
-  font-weight: 600;
-}
-
-.nav-rail.collapsed .nav-submenu-inner {
-  margin-left: 0;
-  padding-left: 0;
-  border-left: none;
-}
-
-.nav-rail.collapsed .nav-submenu-item {
-  justify-content: center;
-  padding-left: 0;
-  padding-right: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .nav-submenu,
-  .nav-item-chevron,
-  .nav-submenu-item {
-    transition: none;
-  }
-}
-
 .nav-item {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  min-height: 40px;
   padding: 10px var(--space-3);
   border: none;
   border-radius: var(--radius-sm);
@@ -190,7 +76,7 @@
 
 .nav-item.active {
   background: var(--accent-subtle);
-  color: var(--accent-text);
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -220,9 +106,15 @@
 
 .provider-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  /* `min(280px, 100%)` lets the track shrink below its ideal width instead of
+     forcing horizontal scrolling when the viewport is narrower than a card. */
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
   gap: var(--space-3);
   margin-bottom: var(--space-4);
+}
+
+.provider-grid > .empty-state {
+  grid-column: 1 / -1;
 }
 
 .provider-card {
@@ -349,9 +241,9 @@
   color: var(--text-secondary);
 }
 
-.chip.ok { color: var(--success); border-color: rgba(46, 155, 99, 0.35); }
-.chip.warn { color: #d99a00; border-color: rgba(217, 154, 0, 0.35); }
-.chip.danger { color: var(--danger); border-color: rgba(229, 72, 77, 0.35); }
+.chip.ok { color: var(--success-text); border-color: var(--success); }
+.chip.warn { color: var(--warning-text); border-color: var(--warning); }
+.chip.danger { color: var(--danger-foreground); border-color: var(--danger); }
 
 .settings-grid {
   display: grid;
@@ -481,7 +373,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-control);
   border-radius: var(--radius-full);
   background: transparent;
   color: var(--text-secondary);
@@ -498,7 +390,7 @@
 .history-tab.active {
   background: var(--accent-subtle);
   border-color: var(--accent-subtle);
-  color: var(--accent-text);
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -571,7 +463,7 @@
   height: 32px;
   padding: 0 var(--space-2);
   border-radius: var(--radius-xs);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-control);
   background: var(--surface-alt);
   color: var(--text-primary);
   font-size: var(--text-sm);
@@ -604,9 +496,7 @@
 
 .form-row > select:focus,
 .form-row > input[type="text"]:focus {
-  outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-subtle);
 }
 
 /* A 28px button next to a 32px input looked misaligned; match the control

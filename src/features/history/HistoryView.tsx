@@ -1,6 +1,8 @@
 ﻿import React, { useEffect, useMemo, useState } from "react";
 import { RefreshCw, History, Trash2, Terminal, TrendingDown } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
+import { EmptyState } from "@/components/primitives/EmptyState";
+import { PageHeader } from "@/components/primitives/PageHeader";
 import { useUIText } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { formatBytes, formatSignedBytes } from "@/lib/formatters";
@@ -84,22 +86,48 @@ export const HistoryView: React.FC = () => {
   const activeEmpty = tab === "cleanups" ? ui.history.empty : ui.history.actionsEmpty;
   const activeCount = tab === "cleanups" ? records.length : actions.length;
 
+  const moveTab = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    let next = index;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") next = (index + 1) % tabs.length;
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = (index - 1 + tabs.length) % tabs.length;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = tabs.length - 1;
+    else return;
+    event.preventDefault();
+    const target = tabs[next];
+    setTab(target.id);
+    setExpanded(null);
+    document.getElementById(`history-tab-${target.id}`)?.focus();
+  };
+
   return (
     <div className="page-view">
-      <header className="view-header">
-        <div>
-          <h1 className="view-title">{ui.history.title}</h1>
-          <p className="view-subtitle">{ui.history.subtitle}</p>
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <Button variant="secondary" size="sm" icon={<Trash2 size={13} />} onClick={clearHistory} disabled={loading}>
-            {ui.history.clear}
-          </Button>
-          <Button variant="secondary" size="sm" icon={<RefreshCw size={13} />} onClick={load} disabled={loading}>
-            {ui.common.refresh}
-          </Button>
-        </div>
-      </header>
+      <PageHeader
+        title={ui.history.title}
+        description={ui.history.subtitle}
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Trash2 size={13} />}
+              onClick={clearHistory}
+              disabled={loading}
+            >
+              {ui.history.clear}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<RefreshCw size={13} />}
+              onClick={load}
+              disabled={loading}
+            >
+              {ui.common.refresh}
+            </Button>
+          </>
+        }
+      />
 
       <div className="history-summary">
         <div className="history-summary-card">
@@ -119,39 +147,48 @@ export const HistoryView: React.FC = () => {
       </div>
 
       <div className="subpage-toolbar" role="tablist" aria-label={ui.history.title}>
-        {tabs.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === item.id}
-            className={`history-tab ${tab === item.id ? "active" : ""}`}
-            onClick={() => {
-              setTab(item.id);
-              setExpanded(null);
-            }}
-          >
-            {item.icon}
-            <span>{item.label}</span>
-            <span className="history-tab-count">
-              {item.id === "cleanups" ? records.length : actions.length}
-            </span>
-          </button>
-        ))}
+        {tabs.map((item, index) => {
+          const active = tab === item.id;
+          return (
+            <button
+              key={item.id}
+              id={`history-tab-${item.id}`}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              aria-controls="history-panel"
+              tabIndex={active ? 0 : -1}
+              className={`history-tab ${active ? "active" : ""}`}
+              onClick={() => {
+                setTab(item.id);
+                setExpanded(null);
+              }}
+              onKeyDown={(event) => moveTab(event, index)}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+              <span className="history-tab-count">
+                {item.id === "cleanups" ? records.length : actions.length}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       <p className="plan-note">{ui.history.clearHint}</p>
       {error && <p className="items-warning">{ui.history.loadError} {error}</p>}
 
+      <div
+        id="history-panel"
+        role="tabpanel"
+        aria-labelledby={`history-tab-${tab}`}
+      >
       {activeCount === 0 ? (
-        <div className="items-empty">
-          {tab === "cleanups" ? (
-            <History size={22} style={{ marginBottom: 8 }} />
-          ) : (
-            <Terminal size={22} style={{ marginBottom: 8 }} />
-          )}
-          <div>{loading ? ui.common.loading : activeEmpty}</div>
-        </div>
+        <EmptyState
+          live={loading}
+          icon={tab === "cleanups" ? <History size={22} /> : <Terminal size={22} />}
+          title={loading ? ui.common.loading : activeEmpty}
+        />
       ) : tab === "cleanups" ? (
         <table className="table-simple">
           <thead>
@@ -181,6 +218,13 @@ export const HistoryView: React.FC = () => {
                     <button
                       type="button"
                       className="btn btn-secondary btn-sm"
+                      aria-expanded={expanded === record.id}
+                      aria-controls={
+                        expanded === record.id ? `history-detail-${record.id}` : undefined
+                      }
+                      aria-label={`${ui.history.details}: ${new Date(
+                        record.timestamp
+                      ).toLocaleString()}`}
                       onClick={() => setExpanded((prev) => (prev === record.id ? null : record.id))}
                     >
                       {ui.history.details}
@@ -188,7 +232,7 @@ export const HistoryView: React.FC = () => {
                   </td>
                 </tr>
                 {expanded === record.id && (
-                  <tr>
+                  <tr id={`history-detail-${record.id}`}>
                     <td colSpan={8}>
                       <div className="plan-list" style={{ margin: 0 }}>
                         {record.entries.map((entry) => (
@@ -243,6 +287,7 @@ export const HistoryView: React.FC = () => {
           </tbody>
         </table>
       )}
+      </div>
     </div>
   );
 };

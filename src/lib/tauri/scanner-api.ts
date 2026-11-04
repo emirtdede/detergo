@@ -43,7 +43,7 @@ export interface ScannerApi {
   getKnownLocations(): Promise<KnownLocation[]>;
   openPathInExplorer(path: string): Promise<void>;
   openUrl(url: string): Promise<void>;
-  selectFolderDialog(): Promise<string | null>;
+  selectFolderDialog(title?: string): Promise<string | null>;
   previewCleanup(
     scanSessionId: string,
     targetIds: string[],
@@ -160,7 +160,7 @@ export const scannerApi: ScannerApi = {
     }
   },
 
-  async selectFolderDialog(): Promise<string | null> {
+  async selectFolderDialog(title?: string): Promise<string | null> {
     if (isFolderDialogOpen) return null;
     isFolderDialogOpen = true;
     try {
@@ -168,7 +168,7 @@ export const scannerApi: ScannerApi = {
         const selected = await open({
           directory: true,
           multiple: false,
-          title: "Taranacak klasörü seçin",
+          title: title ?? "Select folder",
         });
         return typeof selected === "string" ? selected : null;
       }
