@@ -83,6 +83,11 @@ export const TR: UIText = {
     stopReason: "Durma nedeni",
     warnings: "Uyarılar",
     errors: "Hatalar",
+    resetUi: "Arayüzü ve tarama verilerini sıfırla",
+    restoreLastScan: "Son tarama sonuçlarını geri yükle",
+    resetToast: "Arayüz ve tarama verileri sıfırlandı",
+    restoreSuccessToast: "Son tarama sonuçları başarıyla geri yüklendi",
+    noLastScanToast: "Kayıtlı son tarama anlık görüntüsü bulunamadı",
   },
   table: {
     label: "Temizlik hedefleri",

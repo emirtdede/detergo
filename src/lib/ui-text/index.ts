@@ -46,6 +46,7 @@ export interface UIText {
     title: string; subtitle: string; cleanable: string; protected: string; candidates: string;
     projects: string; scanFirst: string; topItems: string; breakdown: string; partial: string;
     noScan: string; startHint: string; stopReason: string; warnings: string; errors: string;
+    resetUi: string; restoreLastScan: string; resetToast: string; restoreSuccessToast: string; noLastScanToast: string;
   };
   table: {
     label: string;

@@ -11,6 +11,7 @@ import {
   Zap,
   Sparkles,
   History,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
 import { useScanStore } from "@/stores/scan-store";
@@ -20,6 +21,8 @@ import { formatBytes, formatSignedBytes, truncatePath } from "@/lib/formatters";
 import { maskPath } from "@/features/items/ItemTable";
 import { SafetyBadge } from "@/features/items/SafetyBadge";
 import { usePreferencesStore } from "@/stores/preferences-store";
+import { useUiStore } from "@/stores/ui-store";
+import { useSelectionStore } from "@/stores/selection-store";
 import { useAppStore } from "@/stores/app-store";
 import { useCacheStore } from "@/stores/cache-store";
 import { scannerApi } from "@/lib/tauri/scanner-api";
@@ -38,6 +41,28 @@ export const OverviewView: React.FC = () => {
   const setView = useAppStore((s) => s.setView);
   const cacheProviders = useCacheStore((s) => s.providers);
   const loadCacheProviders = useCacheStore((s) => s.loadProviders);
+  const showToast = useUiStore((s) => s.showToast);
+  const restored = useScanStore((s) => s.restored);
+
+  const handleReset = () => {
+    useScanStore.getState().resetScan();
+    useSelectionStore.getState().clearSelection();
+    showToast(ui.overview.resetToast, "info");
+  };
+
+  const handleRestoreLastScan = async () => {
+    try {
+      const snapshot = await scannerApi.getLastScan();
+      if (snapshot && snapshot.summary) {
+        useScanStore.getState().restoreScan(snapshot);
+        showToast(ui.overview.restoreSuccessToast, "success");
+      } else {
+        showToast(ui.overview.noLastScanToast, "error");
+      }
+    } catch (err) {
+      showToast(`Geri yükleme başarısız: ${err instanceof Error ? err.message : String(err)}`, "error");
+    }
+  };
 
     const [lifetimeReclaimed, setLifetimeReclaimed] = useState<number>(0);
   const [lifetimeRuns, setLifetimeRuns] = useState<number>(0);
@@ -202,6 +227,29 @@ export const OverviewView: React.FC = () => {
                 ? "Analiz Hazır"
                 : "Sistem Hazır"}
             </span>
+          </div>
+
+          <div className="overview-header-actions" role="toolbar" aria-label={ui.overview.title}>
+            <button
+              type="button"
+              className="overview-header-btn"
+              onClick={handleReset}
+              disabled={isScanning || (items.length === 0 && !restored)}
+              title={ui.overview.resetUi}
+              aria-label={ui.overview.resetUi}
+            >
+              <RotateCcw size={14} />
+            </button>
+            <button
+              type="button"
+              className="overview-header-btn"
+              onClick={handleRestoreLastScan}
+              disabled={isScanning}
+              title={ui.overview.restoreLastScan}
+              aria-label={ui.overview.restoreLastScan}
+            >
+              <History size={14} />
+            </button>
           </div>
         </div>
       </header>

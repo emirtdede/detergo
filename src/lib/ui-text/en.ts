@@ -83,6 +83,11 @@ export const EN: UIText = {
     stopReason: "Stop reason",
     warnings: "Warnings",
     errors: "Errors",
+    resetUi: "Reset interface and scan data",
+    restoreLastScan: "Restore last scan results",
+    resetToast: "Interface and scan data have been reset",
+    restoreSuccessToast: "Last scan results successfully restored",
+    noLastScanToast: "No saved last scan snapshot found",
   },
   table: {
     label: "Cleanup targets",

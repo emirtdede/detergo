@@ -269,4 +269,51 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
     expect(isStaleScanBannerVisible("settings", true, false)).toBe(false);
     expect(isStaleScanBannerVisible("about", true, false)).toBe(false);
   });
+
+  it("resets interface scan data and restores snapshot correctly", () => {
+    const scanStore = useScanStore.getState();
+    const selStore = useSelectionStore.getState();
+
+    // Populate data
+    scanStore.startScanState("scan-test", "C:\\Projects");
+    scanStore.addItems([makeItem({ id: "item-1" })]);
+    selStore.toggleSelection("item-1");
+    expect(useScanStore.getState().itemIds).toHaveLength(1);
+    expect(useSelectionStore.getState().selectedIds.has("item-1")).toBe(true);
+
+    // Reset scan
+    scanStore.resetScan();
+    selStore.clearSelection();
+    expect(useScanStore.getState().itemIds).toHaveLength(0);
+    expect(useScanStore.getState().itemsById).toEqual({});
+    expect(useScanStore.getState().status).toBe("idle");
+    expect(useSelectionStore.getState().selectedIds.size).toBe(0);
+
+    // Restore snapshot
+    scanStore.restoreScan({
+      schemaVersion: 2,
+      savedAt: "2026-11-06T00:00:00Z",
+      summary: {
+        scanId: "restored-1",
+        rootPath: "C:\\Projects",
+        scope: "project",
+        totalEntries: 1,
+        totalBytes: 1000,
+        totalAllocatedBytes: 1000,
+        protectedBytes: 0,
+        durationMs: 50,
+        errorsCount: 0,
+        warningsCount: 0,
+        directoriesVisited: 1,
+        partial: false,
+        stopReason: null,
+        providerTotals: [],
+      },
+      items: [makeItem({ id: "restored-item", estimatedReclaimBytes: 1000 })],
+    });
+
+    expect(useScanStore.getState().restored).toBe(true);
+    expect(useScanStore.getState().itemIds).toContain("restored-item");
+    expect(useScanStore.getState().itemsById["restored-item"].estimatedReclaimBytes).toBe(1000);
+  });
 });
