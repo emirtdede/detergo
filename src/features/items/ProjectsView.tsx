@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-import { FolderTree, ShieldCheck, Boxes } from "lucide-react";
+import { FolderTree, ShieldCheck, Boxes, Play } from "lucide-react";
+import { Button } from "@/components/primitives/Button";
 import { EmptyState } from "@/components/primitives/EmptyState";
 import { PageHeader } from "@/components/primitives/PageHeader";
 import { useScanStore } from "@/stores/scan-store";
@@ -12,7 +13,7 @@ import "./items.css";
 
 export const ProjectsView: React.FC = () => {
   const ui = useUIText();
-  const { isScanning } = useScanController();
+  const { isScanning, startScan } = useScanController();
   const itemsById = useScanStore((s) => s.itemsById);
   const itemIds = useScanStore((s) => s.itemIds);
   const rootPath = useScanStore((s) => s.currentRootPath);
@@ -71,6 +72,21 @@ export const ProjectsView: React.FC = () => {
       <PageHeader
         title={ui.nav.projects}
         description={subtitle}
+        actions={
+          <Button
+            variant="primary"
+            size="sm"
+            icon={<Play size={12} fill="currentColor" />}
+            onClick={() => startScan(undefined, "project")}
+            disabled={isScanning}
+          >
+            {isScanning
+              ? ui.common.scanning
+              : status === "idle"
+                ? ui.common.chooseFolder
+                : ui.common.rescan}
+          </Button>
+        }
       />
 
       {/* Shared Bento KPI Strip for Projects */}
@@ -125,6 +141,18 @@ export const ProjectsView: React.FC = () => {
           icon={<FolderTree size={22} />}
           title={emptyTitle}
           description={emptyDescription}
+          actions={
+            !isScanning ? (
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<Play size={12} fill="currentColor" />}
+                onClick={() => startScan(undefined, "project")}
+              >
+                {status === "idle" ? ui.common.chooseFolder : ui.common.rescan}
+              </Button>
+            ) : undefined
+          }
         />
       ) : (
         <ItemTable items={items} />

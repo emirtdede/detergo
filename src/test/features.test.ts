@@ -5,6 +5,7 @@ import { usePreferencesStore } from "../stores/preferences-store";
 import { useUiStore } from "../stores/ui-store";
 import { useCacheStore } from "../stores/cache-store";
 import { useAppStore } from "../stores/app-store";
+import { isStaleScanBannerVisible } from "../features/shell/StaleScanBanner";
 import { bulkSelectableIds } from "../features/items/selection-helpers";
 import { makeItem, makeUpdate } from "./fixtures";
 
@@ -247,5 +248,25 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
 
     appStore.setView("overview");
     expect(useAppStore.getState().view).toBe("overview");
+  });
+
+  it("shows stale scan banner strictly on scannable views (projects and agents), not on other views", () => {
+    // When restored is false or dismissed is true, never visible
+    expect(isStaleScanBannerVisible("projects", false, false)).toBe(false);
+    expect(isStaleScanBannerVisible("projects", true, true)).toBe(false);
+    expect(isStaleScanBannerVisible("agents", false, false)).toBe(false);
+
+    // When restored is true and not dismissed:
+    // Only 'projects' and 'agents' (the views where scanning can be initiated) are allowed
+    expect(isStaleScanBannerVisible("projects", true, false)).toBe(true);
+    expect(isStaleScanBannerVisible("agents", true, false)).toBe(true);
+
+    // Global top bar scan button is excluded, so other views must NEVER show the banner
+    expect(isStaleScanBannerVisible("overview", true, false)).toBe(false);
+    expect(isStaleScanBannerVisible("caches", true, false)).toBe(false);
+    expect(isStaleScanBannerVisible("docs", true, false)).toBe(false);
+    expect(isStaleScanBannerVisible("history", true, false)).toBe(false);
+    expect(isStaleScanBannerVisible("settings", true, false)).toBe(false);
+    expect(isStaleScanBannerVisible("about", true, false)).toBe(false);
   });
 });

@@ -16,6 +16,21 @@ function formatSavedAt(value: string | null): string {
 }
 
 /**
+ * Predicate to decide if the stale scan banner should be visible.
+ * Rule: Only visible on views where a scan can be initiated from within the view
+ * itself (projects, agents), explicitly excluding the global top command bar.
+ */
+export function isStaleScanBannerVisible(
+  view: string,
+  restored: boolean,
+  dismissed: boolean
+): boolean {
+  if (!restored || dismissed) return false;
+  // Sadece sayfa içinde tarama başlatılabilen sayfalarda gözüksün (üst bardaki tarama butonu dahil değil)
+  return view === "projects" || view === "agents";
+}
+
+/**
  * A persistent, non-blocking reminder that the visible rows are a restored
  * snapshot. It disappears as soon as a fresh scan replaces the data.
  */
@@ -29,8 +44,7 @@ export const StaleScanBanner: React.FC = () => {
   const view = useAppStore((s) => s.view);
   const { startScan, isScanning } = useScanController();
 
-  if (!restored || dismissed) return null;
-  if (view === "settings" || view === "history" || view === "caches") return null;
+  if (!isStaleScanBannerVisible(view, restored, dismissed)) return null;
 
   return (
     <div className="stale-scan-banner" role="status">
@@ -46,7 +60,7 @@ export const StaleScanBanner: React.FC = () => {
           variant="primary"
           size="sm"
           icon={<Play size={11} fill="currentColor" />}
-          onClick={() => startScan(undefined, scope)}
+          onClick={() => startScan(undefined, view === "agents" ? "agents" : scope)}
           disabled={isScanning}
         >
           {ui.stale.rescan}
