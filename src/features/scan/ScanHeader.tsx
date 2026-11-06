@@ -5,7 +5,6 @@ import {
   FolderPlus,
   Play,
   Square,
-  Settings,
   Star,
   ChevronDown,
   Check,
@@ -14,7 +13,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
-import { IconButton } from "@/components/primitives/IconButton";
 import { Logo } from "@/components/brand/Logo";
 import { WindowControls } from "@/components/layout/WindowControls";
 import { useScanStore } from "@/stores/scan-store";
@@ -29,6 +27,7 @@ import { maskPath } from "@/features/items/ItemTable";
 import { getKnownLocationLabel } from "./scan-helpers";
 import { useScanController } from "./useScanController";
 import "./scan.css";
+import { useCacheStore } from "@/stores/cache-store";
 
 export const ScanHeader: React.FC = () => {
   const ui = useUIText();
@@ -156,7 +155,22 @@ export const ScanHeader: React.FC = () => {
     const view = useAppStore.getState().view;
     const scope: ScanScope =
       view === "agents" ? "agents" : isAllDrives ? "allDrives" : "project";
+    if (view === "caches") {
+      void useCacheStore.getState().startMeasure();
+      return;
+    }
     startScan(scope === "allDrives" ? undefined : pathOverride, scope);
+
+    // Birleşik Tam Tarama: Proje taramasıyla birlikte araç önbelleklerini de ölç
+    if (view !== "agents" && !useCacheStore.getState().measuring) {
+      if (!useCacheStore.getState().loaded) {
+        useCacheStore.getState().loadProviders().then(() => {
+          void useCacheStore.getState().startMeasure();
+        });
+      } else {
+        void useCacheStore.getState().startMeasure();
+      }
+    }
   };
 
   const handleCancelScan = () => {
@@ -171,7 +185,7 @@ export const ScanHeader: React.FC = () => {
         data-tauri-drag-region="false"
       >
         <Logo size={18} showWordmark={false} />
-        <span className="command-brand-title">Node Cleaner</span>
+        <span className="command-brand-title">Dev Cleaner</span>
       </div>
 
       {/* 2. Center: Single Location Dropdown Trigger & Popover Menu */}
@@ -463,15 +477,6 @@ export const ScanHeader: React.FC = () => {
             {ui.common.scan}
           </Button>
         )}
-
-        <IconButton
-          size="sm"
-          aria-label={ui.nav.settings}
-          tooltip={ui.nav.settings}
-          onClick={() => useAppStore.getState().setView("settings")}
-        >
-          <Settings size={15} />
-        </IconButton>
 
         <WindowControls />
       </div>

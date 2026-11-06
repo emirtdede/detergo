@@ -330,6 +330,12 @@ fn validate_agent_target(target: &crate::scanner::models::StoredTarget) -> Resul
         "codex" => "codex.",
         "claude-code" => "claude.",
         "antigravity" => "antigravity.",
+        "opencode" => "opencode.",
+        "t3code" => "t3code.",
+        "bionic" => "bionic.",
+        "cursor" => "cursor.",
+        "windsurf" => "windsurf.",
+        "ollama" => "ollama.",
         _ => return Err("Bilinmeyen sağlayıcı hedefi.".to_string()),
     };
     if !target.rule_id.starts_with(prefix) {

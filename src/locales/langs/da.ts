@@ -2,7 +2,7 @@ import { TranslationSchema } from "../types";
 
 export const da: TranslationSchema = {
   app: {
-    title: "Node Cleaner",
+    title: "Dev Cleaner",
     tagline: "node_modules Renser",
     description: "Genvind udviklerdiskplads øjeblikkeligt.",
   },

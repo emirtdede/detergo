@@ -6,7 +6,6 @@ import {
   ChevronUp,
   FolderOpen,
   Search,
-  ShieldCheck,
 } from "lucide-react";
 import { Checkbox } from "@/components/primitives/Checkbox";
 import { EmptyState } from "@/components/primitives/EmptyState";
@@ -17,7 +16,7 @@ import { useSelectionStore } from "@/stores/selection-store";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUIText } from "@/lib/ui-text";
 import { useUiStore } from "@/stores/ui-store";
-import { formatBytes } from "@/lib/formatters";
+import { formatBytes, truncatePath } from "@/lib/formatters";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { CleanupItem, SafetyClass, SortOption } from "@/types";
 import { bulkSelectableIds } from "./selection-helpers";
@@ -45,18 +44,18 @@ function compareItems(a: CleanupItem, b: CleanupItem, sort: SortOption): number 
     case "size":
       return (a.logicalBytes ?? -1) - (b.logicalBytes ?? -1);
     case "modified":
-      return (
-        new Date(a.lastModifiedAt ?? 0).getTime() - new Date(b.lastModifiedAt ?? 0).getTime()
-      );
+      const aTime = a.lastModifiedMs ?? (a.lastModifiedAt ? new Date(a.lastModifiedAt).getTime() : 0);
+      const bTime = b.lastModifiedMs ?? (b.lastModifiedAt ? new Date(b.lastModifiedAt).getTime() : 0);
+      return aTime - bTime;
     case "safety":
       return SAFETY_RANK[a.safetyClass] - SAFETY_RANK[b.safetyClass];
     case "project":
-      return (a.projectName ?? "").localeCompare(b.projectName ?? "");
+      return (a.projectName ?? "") < (b.projectName ?? "") ? -1 : (a.projectName ?? "") > (b.projectName ?? "") ? 1 : 0;
     case "category":
-      return a.category.localeCompare(b.category);
+      return a.category < b.category ? -1 : a.category > b.category ? 1 : 0;
     case "name":
     default:
-      return a.displayName.localeCompare(b.displayName);
+      return a.displayName < b.displayName ? -1 : a.displayName > b.displayName ? 1 : 0;
   }
 }
 
@@ -127,13 +126,8 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
         return false;
       }
       if (!query) return true;
-      return (
-        item.displayPath.toLowerCase().includes(query) ||
-        item.displayName.toLowerCase().includes(query) ||
-        (item.projectName ?? "").toLowerCase().includes(query) ||
-        item.category.toLowerCase().includes(query) ||
-        item.ruleId.toLowerCase().includes(query)
-      );
+      const haystack = (item as any)._searchHaystack ??= `${item.displayPath} ${item.displayName} ${item.projectName ?? ""} ${item.category} ${item.ruleId}`.toLowerCase();
+      return haystack.includes(query);
     });
 
     const direction = sort.direction === "asc" ? 1 : -1;
@@ -244,17 +238,6 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
           <option value="review">{ui.safety.review}</option>
           <option value="keep">{ui.safety.keep}</option>
         </select>
-        <button
-          type="button"
-          className="btn btn-secondary btn-sm"
-          onClick={() => {
-            if (selectableIds.length === 0) return;
-            selectMany(selectableIds);
-          }}
-          disabled={selectableIds.length === 0}
-        >
-          <ShieldCheck size={13} /> {ui.table.selectVisible}
-        </button>
       </div>
 
       <div className="items-meta">
@@ -363,7 +346,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
                     </div>
                     <div className="items-name" role="cell">
                       <strong>{item.displayName}</strong>
-                      <span className="items-path">{displayPath(item.displayPath)}</span>
+                      <span className="items-path" title={item.displayPath}>{truncatePath(displayPath(item.displayPath), 52)}</span>
                       {warnings && (
                         <span className="items-warning" title={warnings}>
                           <AlertTriangle size={11} />

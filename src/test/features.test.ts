@@ -4,6 +4,7 @@ import { useSelectionStore } from "../stores/selection-store";
 import { usePreferencesStore } from "../stores/preferences-store";
 import { useUiStore } from "../stores/ui-store";
 import { useCacheStore } from "../stores/cache-store";
+import { useAppStore } from "../stores/app-store";
 import { bulkSelectableIds } from "../features/items/selection-helpers";
 import { makeItem, makeUpdate } from "./fixtures";
 
@@ -122,13 +123,25 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
     expect(usePreferencesStore.getState().favorites.some((f) => f.id === fav.id)).toBe(false);
   });
 
-  it("supports switching the four verified colour themes", () => {
+  it("supports switching all verified colour themes", () => {
     const prefStore = usePreferencesStore.getState();
     const verifiedThemes = [
       "dark-black",
       "dark-gray",
+      "dark-blue",
+      "dark-purple",
+      "dark-green",
+      "dark-red",
+      "dark-orange",
+      "dark-yellow",
       "light-white",
       "light-gray",
+      "light-blue",
+      "light-purple",
+      "light-green",
+      "light-red",
+      "light-orange",
+      "light-yellow",
     ] as const;
 
     for (const theme of verifiedThemes) {
@@ -143,12 +156,12 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
     expect(usePreferencesStore.getState().theme).toBe("dark-black");
     prefStore.loadPreferences({ theme: "white" });
     expect(usePreferencesStore.getState().theme).toBe("light-white");
-    prefStore.loadPreferences({ theme: "dark-transparent" });
+    prefStore.loadPreferences({ theme: "transparent" });
     expect(usePreferencesStore.getState().theme).toBe("dark-black");
     prefStore.loadPreferences({ theme: "dark-blue" });
-    expect(usePreferencesStore.getState().theme).toBe("dark-gray");
+    expect(usePreferencesStore.getState().theme).toBe("dark-blue");
     prefStore.loadPreferences({ theme: "light-yellow" });
-    expect(usePreferencesStore.getState().theme).toBe("light-gray");
+    expect(usePreferencesStore.getState().theme).toBe("light-yellow");
     prefStore.loadPreferences({ theme: "not-a-theme" });
     expect(usePreferencesStore.getState().theme).toBe("dark-black");
   });
@@ -225,5 +238,14 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
     expect(state.providers[0].measured).toBe(true);
     expect(state.providers[0].totalBytes).toBe(4096);
     expect(state.providers[0].cachePaths[0].bytes).toBe(4096);
+  });
+
+  it("activates docs view in app state and supports navigation", () => {
+    const appStore = useAppStore.getState();
+    appStore.setView("docs");
+    expect(useAppStore.getState().view).toBe("docs");
+
+    appStore.setView("overview");
+    expect(useAppStore.getState().view).toBe("overview");
   });
 });

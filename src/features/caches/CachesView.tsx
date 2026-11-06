@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Gauge, Package, RefreshCw, Square, Terminal } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
 import { Dialog } from "@/components/primitives/Dialog";
@@ -104,6 +104,13 @@ export const CachesView: React.FC = () => {
     setError(null);
   };
 
+  const cacheTotals = useMemo(() => {
+    const totalBytes = providers.reduce((acc, p) => acc + (p.totalBytes || 0), 0);
+    const measuredCount = providers.filter((p) => p.measured).length;
+    const actionsCount = providers.reduce((acc, p) => acc + p.actions.length, 0);
+    return { totalBytes, measuredCount, actionsCount };
+  }, [providers]);
+
   const measuredAny = providers.some((provider) => provider.measured);
 
   return (
@@ -146,6 +153,62 @@ export const CachesView: React.FC = () => {
         }
       />
 
+      {/* Shared Bento KPI Strip for Caches */}
+      <div className="nc-bento-strip nc-bento-strip--3">
+        <div className="nc-kpi-card">
+          <div className="nc-kpi-card-header">
+            <span className="nc-kpi-card-label">Toplam Önbellek</span>
+            <span className="nc-kpi-card-icon nc-kpi-card-icon--accent">
+              <Package size={14} />
+            </span>
+          </div>
+          <div className="nc-kpi-card-body">
+            <span className="nc-kpi-card-value">
+              {cacheTotals.measuredCount > 0
+                ? formatBytes(cacheTotals.totalBytes)
+                : measuring
+                  ? "Ölçülüyor..."
+                  : "Ölçülmedi"}
+            </span>
+            <span className="nc-kpi-card-sub">
+              {cacheTotals.measuredCount > 0
+                ? `${cacheTotals.measuredCount} / ${providers.length} Araç ölçüldü`
+                : "Sağ üstten 'Boyutları ölç'e tıklayın"}
+            </span>
+          </div>
+        </div>
+
+        <div className="nc-kpi-card">
+          <div className="nc-kpi-card-header">
+            <span className="nc-kpi-card-label">Ölçülen Araçlar</span>
+            <span className="nc-kpi-card-icon nc-kpi-card-icon--success">
+              <Gauge size={14} />
+            </span>
+          </div>
+          <div className="nc-kpi-card-body">
+            <span className="nc-kpi-card-value">
+              {cacheTotals.measuredCount} / {providers.length} Araç
+            </span>
+            <span className="nc-kpi-card-sub">npm, Cargo, Pip, Yarn...</span>
+          </div>
+        </div>
+
+        <div className="nc-kpi-card">
+          <div className="nc-kpi-card-header">
+            <span className="nc-kpi-card-label">Resmi CLI Eylemleri</span>
+            <span className="nc-kpi-card-icon nc-kpi-card-icon--warning">
+              <Terminal size={14} />
+            </span>
+          </div>
+          <div className="nc-kpi-card-body">
+            <span className="nc-kpi-card-value">
+              {cacheTotals.actionsCount} Eylem Hazır
+            </span>
+            <span className="nc-kpi-card-sub">Resmi paket yöneticisi komutları</span>
+          </div>
+        </div>
+      </div>
+
       {loadError && <p className="items-warning">{ui.caches.loadError} {loadError}</p>}
       {measureError && <p className="items-warning">{measureError}</p>}
 
@@ -164,7 +227,7 @@ export const CachesView: React.FC = () => {
       <div className="provider-grid">
         {providers.map((provider) => (
           <article key={provider.id} className="provider-card">
-            <h3>
+            <header className="provider-card-header">
               <Package size={14} className="provider-card-icon" />
               <span className="provider-card-name">{provider.name}</span>
               {provider.version && (
@@ -174,9 +237,9 @@ export const CachesView: React.FC = () => {
               )}
               {provider.readOnly && <span className="chip">{ui.caches.readOnly}</span>}
               {!provider.detected && <span className="chip">{ui.caches.notFound}</span>}
-            </h3>
+            </header>
             <div className="provider-paths">
-              {provider.cachePaths.map((path) => (
+              {provider.cachePaths.slice(0, 2).map((path) => (
                 <span key={path.path} title={maskPaths ? maskPath(path.path) : path.path}>
                   {maskPaths ? maskPath(path.path) : path.path}{" "}
                   {path.exists && path.bytes !== null && path.bytes !== undefined
@@ -185,7 +248,7 @@ export const CachesView: React.FC = () => {
                 </span>
               ))}
             </div>
-            <div className="form-row">
+            <div className="form-row provider-card-size-row">
               <span>{ui.table.size}</span>
               {provider.measured ? (
                 <strong className="provider-card-size">{formatBytes(provider.totalBytes)}</strong>
@@ -193,24 +256,26 @@ export const CachesView: React.FC = () => {
                 <span className="chip">{ui.caches.notMeasured}</span>
               )}
             </div>
-            {provider.note && <p className="plan-note">{provider.note}</p>}
-            {provider.actions.length > 0 && (
-              <div className="provider-actions">
-                {provider.actions.map((action) => (
-                  <Button
-                    key={action.id}
-                    variant="secondary"
-                    size="sm"
-                    icon={<Terminal size={12} />}
-                    disabled={!action.available}
-                    title={action.available ? action.description : action.unavailableReason ?? ""}
-                    onClick={() => openPreview(provider.id, action.id)}
-                  >
-                    {action.label}
-                  </Button>
-                ))}
-              </div>
-            )}
+            <div className="provider-card-footer">
+              {provider.note && <p className="plan-note provider-card-note">{provider.note}</p>}
+              {provider.actions.length > 0 && (
+                <div className="provider-actions">
+                  {provider.actions.map((action) => (
+                    <Button
+                      key={action.id}
+                      variant="secondary"
+                      size="sm"
+                      icon={<Terminal size={12} />}
+                      disabled={!action.available}
+                      title={action.available ? action.description : action.unavailableReason ?? ""}
+                      onClick={() => openPreview(provider.id, action.id)}
+                    >
+                      {action.label}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
           </article>
         ))}
         {!loading && loaded && providers.length === 0 && !loadError && (
@@ -263,10 +328,64 @@ export const CachesView: React.FC = () => {
                 </strong>
               </div>
             </div>
-            <p className="plan-note" style={{ fontFamily: "var(--font-mono)" }}>
-              {preview.executable} {preview.args.join(" ")}
-            </p>
-            <p className="plan-note">
+            {/* Dev Terminal Console */}
+            <div
+              style={{
+                marginTop: 14,
+                borderRadius: 8,
+                background: "#080c14",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                overflow: "hidden",
+                fontFamily: "var(--font-mono, monospace)",
+                fontSize: 12,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "6px 12px",
+                  background: "#0d131f",
+                  borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+                  color: "#94a3b8",
+                  fontSize: 11,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <Terminal size={12} color="#00f0ff" />
+                  <span>Dev Cleaner Terminal</span>
+                </div>
+                <span>{result ? (result.success ? "✓ Tamamlandı" : "✗ Hata") : running ? "⚡ Çalışıyor..." : "Hazır"}</span>
+              </div>
+              <div style={{ padding: "10px 12px", color: "#e2e8f0", lineHeight: 1.5, maxHeight: 180, overflowY: "auto" }}>
+                <div style={{ color: "#38bdf8" }}>
+                  <span style={{ color: "#a855f7" }}>$</span> {preview.executable} {preview.args.join(" ")}
+                </div>
+                {running && (
+                  <div style={{ color: "#94a3b8", fontStyle: "italic", marginTop: 4 }}>
+                    Komut arka planda çalıştırılıyor...
+                  </div>
+                )}
+                {result?.stdoutTail && (
+                  <pre style={{ margin: "6px 0", color: "#cbd5e1", whiteSpace: "pre-wrap" }}>
+                    {result.stdoutTail}
+                  </pre>
+                )}
+                {result?.stderrTail && (
+                  <pre style={{ margin: "6px 0", color: "#f87171", whiteSpace: "pre-wrap" }}>
+                    {result.stderrTail}
+                  </pre>
+                )}
+                {result && (
+                  <div style={{ color: result.success ? "#4ade80" : "#f87171", marginTop: 6, fontSize: 11 }}>
+                    [İşlem {result.durationMs}ms içinde exit_code {result.exitCode ?? 0} ile sonlandı]
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <p className="plan-note" style={{ marginTop: 12 }}>
               <strong>{ui.caches.warning}: </strong>
               {preview.warning}
             </p>
@@ -277,7 +396,7 @@ export const CachesView: React.FC = () => {
             )}
             {result && (
               <>
-                <div className="plan-summary" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
+                <div className="plan-summary" style={{ gridTemplateColumns: "1fr 1fr 1fr", marginTop: 10 }}>
                   <div>
                     <span>{ui.caches.result}</span>
                     <strong>{result.success ? ui.caches.succeeded : ui.caches.failed}</strong>
@@ -298,11 +417,6 @@ export const CachesView: React.FC = () => {
                 )}
                 {result.auditError && <p className="items-warning">{ui.caches.auditError}</p>}
               </>
-            )}
-            {result?.stderrTail && (
-              <pre className="items-path" style={{ whiteSpace: "pre-wrap", maxHeight: 140, overflow: "auto" }}>
-                {result.stderrTail}
-              </pre>
             )}
             {error && <p className="items-warning">{error}</p>}
           </>

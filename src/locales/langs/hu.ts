@@ -2,7 +2,7 @@ import { TranslationSchema } from "../types";
 
 export const hu: TranslationSchema = {
   app: {
-    title: "Node Cleaner",
+    title: "Dev Cleaner",
     tagline: "node_modules Tisztító",
     description: "Nyerjen vissza fejlesztői tárhelyet azonnal.",
   },

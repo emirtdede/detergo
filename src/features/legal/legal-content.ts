@@ -39,12 +39,12 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
     title: "Son Kullanıcı Lisans Sözleşmesi",
     updated: UPDATED_TR,
     summary:
-      "Node Cleaner'ı indirerek, kurarak veya kullanarak bu sözleşmenin tamamını kabul etmiş olursunuz.",
+      "Dev Cleaner'ı indirerek, kurarak veya kullanarak bu sözleşmenin tamamını kabul etmiş olursunuz.",
     clauses: [
       {
         heading: "1. Taraflar ve kapsam",
         paragraphs: [
-          "Bu Son Kullanıcı Lisans Sözleşmesi (\"Sözleşme\"), Vellium (\"Vellium\", \"biz\") ile Node Cleaner yazılımını kullanan gerçek veya tüzel kişi (\"siz\", \"Kullanıcı\") arasında kurulur. Sözleşme; Node Cleaner'ın kurulum paketini, yürütülebilir dosyalarını, arayüzünü, yerleşik kataloğunu ve beraberinde sunulan belgeleri (birlikte \"Yazılım\") kapsar.",
+          "Bu Son Kullanıcı Lisans Sözleşmesi (\"Sözleşme\"), Vellium (\"Vellium\", \"biz\") ile Dev Cleaner yazılımını kullanan gerçek veya tüzel kişi (\"siz\", \"Kullanıcı\") arasında kurulur. Sözleşme; Dev Cleaner'ın kurulum paketini, yürütülebilir dosyalarını, arayüzünü, yerleşik kataloğunu ve beraberinde sunulan belgeleri (birlikte \"Yazılım\") kapsar.",
           "Yazılımı kurmadan önce bu Sözleşmeyi okumanız gerekir. Kurulum, çalıştırma veya herhangi bir biçimde kullanım, bu Sözleşmenin tüm hükümlerini kabul ettiğiniz anlamına gelir. Koşulları kabul etmiyorsanız Yazılımı kullanmayın ve kurulu kopyayı kaldırın.",
           "Yazılımı bir kuruluş adına kullanıyorsanız, bu Sözleşmeyi o kuruluş adına kabul etmeye yetkili olduğunuzu beyan edersiniz.",
         ],
@@ -64,7 +64,7 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
           "Yazılımı kopyalayamaz, satamaz, kiralayamaz, dağıtamaz veya alt lisans veremezsiniz.",
           "Yazılımı tersine mühendislik, kaynak koda dönüştürme veya parçalara ayırma işlemlerine tabi tutamazsınız; ancak yürürlükteki hukukun bu tür kısıtlamalara izin verdiği ölçüde bunu yapabilirsiniz.",
           "Lisans, kopya koruma veya güvenlik denetimlerini kaldıramaz, atlatamaz veya devre dışı bırakamazsınız.",
-          "Yazılımı, Vellium'un yazılı izni olmadan Vellium veya Node Cleaner adını, logosunu ya da markasını taşıyan türev bir ürün oluşturmak için kullanamazsınız.",
+          "Yazılımı, Vellium'un yazılı izni olmadan Vellium veya Dev Cleaner adını, logosunu ya da markasını taşıyan türev bir ürün oluşturmak için kullanamazsınız.",
           "Yazılımı yasa dışı amaçlarla, üçüncü kişilerin sistemlerine izinsiz erişmek için veya kullanma yetkiniz bulunmayan dosya ve klasörlere işlem yapmak için kullanamazsınız.",
         ],
       },
@@ -143,12 +143,12 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
     title: "Gizlilik Politikası",
     updated: UPDATED_TR,
     summary:
-      "Node Cleaner verilerinizi cihazınızda tutar. Hesap, telemetri, reklam ve bulut senkronizasyonu yoktur.",
+      "Dev Cleaner verilerinizi cihazınızda tutar. Hesap, telemetri, reklam ve bulut senkronizasyonu yoktur.",
     clauses: [
       {
         heading: "1. Kısa özet",
         paragraphs: [
-          "Node Cleaner yerel öncelikli bir masaüstü uygulamasıdır. Çalışması için hesap açmanız, oturum açmanız veya internet bağlantısı kurmanız gerekmez. Vellium'un işlettiği bir sunucu yoktur; uygulama hiçbir kullanım verisini bize otomatik olarak göndermez.",
+          "Dev Cleaner yerel öncelikli bir masaüstü uygulamasıdır. Çalışması için hesap açmanız, oturum açmanız veya internet bağlantısı kurmanız gerekmez. Vellium'un işlettiği bir sunucu yoktur; uygulama hiçbir kullanım verisini bize otomatik olarak göndermez.",
           "Bu politika; hangi bilgilerin okunduğunu, nerede saklandığını, ne kadar süre tutulduğunu ve bunlar üzerinde hangi haklara sahip olduğunuzu açıklar. Yürürlükteki sürüm her zaman uygulama içindeki bu sayfadır.",
         ],
       },
@@ -170,10 +170,10 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
           "Tüm kalıcı veriler kendi bilgisayarınızda, Windows kullanıcı profilinizin içinde tutulur:",
         ],
         bullets: [
-          "%APPDATA%\\node-cleaner\\config.json — uygulama tercihleri.",
-          "%APPDATA%\\node-cleaner\\last-scan.json — son tamamlanan veya iptal edilen taramanın aday listesi (yol, boyut, sınıflandırma) ve özeti. Tek bir anlık görüntü tutulur, geçmiş biriktirilmez; 64 MB sınırı aşılırsa dosya yazılmaz. Bir sonraki tarama dosyanın üzerine yazar; kalıcı olarak kaldırmak için bu dosyayı silebilirsiniz.",
-          "%APPDATA%\\node-cleaner\\history.jsonl — temizlik geçmişi.",
-          "%APPDATA%\\node-cleaner\\snapshots.jsonl ve actions.jsonl — sürücü doluluk anlık görüntüleri ve resmî araç kayıtları.",
+          "%APPDATA%\\dev-cleaner\\config.json — uygulama tercihleri.",
+          "%APPDATA%\\dev-cleaner\\last-scan.json — son tamamlanan veya iptal edilen taramanın aday listesi (yol, boyut, sınıflandırma) ve özeti. Tek bir anlık görüntü tutulur, geçmiş biriktirilmez; 64 MB sınırı aşılırsa dosya yazılmaz. Bir sonraki tarama dosyanın üzerine yazar; kalıcı olarak kaldırmak için bu dosyayı silebilirsiniz.",
+          "%APPDATA%\\dev-cleaner\\history.jsonl — temizlik geçmişi.",
+          "%APPDATA%\\dev-cleaner\\snapshots.jsonl ve actions.jsonl — sürücü doluluk anlık görüntüleri ve resmî araç kayıtları.",
           "Windows Geri Dönüşüm Kutusu — varsayılan silme yönteminde taşınan dosyalar.",
         ],
       },
@@ -244,7 +244,7 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
     title: "Üçüncü Taraf Lisanslar",
     updated: UPDATED_TR,
     summary:
-      "Node Cleaner, açık kaynak topluluğunun ürettiği bileşenler üzerine kuruludur. Bu sayfa kullanılan her bileşeni ve lisansını listeler.",
+      "Dev Cleaner, açık kaynak topluluğunun ürettiği bileşenler üzerine kuruludur. Bu sayfa kullanılan her bileşeni ve lisansını listeler.",
     clauses: [
       {
         heading: "1. Bu liste nasıl üretilir?",
@@ -268,7 +268,7 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: "3. Garanti ve sorumluluk",
         paragraphs: [
-          "Üçüncü taraf bileşenleri, kendi lisanslarında belirtildiği şekilde \"olduğu gibi\" sunulur. Bileşenlerin yazarları, bu uygulamadaki kullanımlarından doğan zararlardan sorumlu değildir. Bu bileşenlerin listelenmesi, ilgili projelerin Vellium'u veya Node Cleaner'ı onayladığı anlamına gelmez.",
+          "Üçüncü taraf bileşenleri, kendi lisanslarında belirtildiği şekilde \"olduğu gibi\" sunulur. Bileşenlerin yazarları, bu uygulamadaki kullanımlarından doğan zararlardan sorumlu değildir. Bu bileşenlerin listelenmesi, ilgili projelerin Vellium'u veya Dev Cleaner'ı onayladığı anlamına gelmez.",
         ],
       },
       {
@@ -286,12 +286,12 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
     title: "End User License Agreement",
     updated: UPDATED_EN,
     summary:
-      "By downloading, installing or using Node Cleaner you accept this agreement in full.",
+      "By downloading, installing or using Dev Cleaner you accept this agreement in full.",
     clauses: [
       {
         heading: "1. Parties and scope",
         paragraphs: [
-          "This End User License Agreement (\"Agreement\") is entered into between Vellium (\"Vellium\", \"we\") and the natural or legal person using the Node Cleaner software (\"you\", \"User\"). The Agreement covers the installer, the executable files, the user interface, the built-in catalog and the accompanying documentation (together, the \"Software\").",
+          "This End User License Agreement (\"Agreement\") is entered into between Vellium (\"Vellium\", \"we\") and the natural or legal person using the Dev Cleaner software (\"you\", \"User\"). The Agreement covers the installer, the executable files, the user interface, the built-in catalog and the accompanying documentation (together, the \"Software\").",
           "You must read this Agreement before installing the Software. Installing, running or otherwise using the Software means you accept all of its terms. If you do not accept them, do not use the Software and remove any installed copy.",
           "If you use the Software on behalf of an organisation, you represent that you are authorised to accept this Agreement for that organisation.",
         ],
@@ -311,7 +311,7 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
           "You may not copy, sell, rent, distribute or sublicense the Software.",
           "You may not reverse engineer, decompile or disassemble the Software, except to the extent applicable law permits despite this restriction.",
           "You may not remove, bypass or disable license, copy-protection or security checks.",
-          "You may not use the Software to create a derivative product bearing the Vellium or Node Cleaner name, logo or trademarks without written permission from Vellium.",
+          "You may not use the Software to create a derivative product bearing the Vellium or Dev Cleaner name, logo or trademarks without written permission from Vellium.",
           "You may not use the Software for unlawful purposes, to gain unauthorised access to third-party systems, or to act on files and folders you are not authorised to modify.",
         ],
       },
@@ -390,12 +390,12 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
     title: "Privacy Policy",
     updated: UPDATED_EN,
     summary:
-      "Node Cleaner keeps your data on your device. No accounts, no telemetry, no advertising, no cloud sync.",
+      "Dev Cleaner keeps your data on your device. No accounts, no telemetry, no advertising, no cloud sync.",
     clauses: [
       {
         heading: "1. Summary",
         paragraphs: [
-          "Node Cleaner is a local-first desktop application. It needs no account, no sign-in and no internet connection to work. Vellium operates no server for it, and the application never automatically transmits usage data to us.",
+          "Dev Cleaner is a local-first desktop application. It needs no account, no sign-in and no internet connection to work. Vellium operates no server for it, and the application never automatically transmits usage data to us.",
           "This policy explains what information is read, where it is stored, how long it is kept and what rights you have. The version published inside the application is always the current one.",
         ],
       },
@@ -413,10 +413,10 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         heading: "3. Where the data is stored",
         paragraphs: ["All persistent data stays on your own computer, inside your Windows user profile:"],
         bullets: [
-          "%APPDATA%\\node-cleaner\\config.json — application preferences.",
-          "%APPDATA%\\node-cleaner\\last-scan.json — the candidate list (path, size, classification) and summary of the last completed or cancelled scan. Only one snapshot is kept, never a history; writes over 64 MB are refused. Your next scan replaces the file; delete it to remove it permanently.",
-          "%APPDATA%\\node-cleaner\\history.jsonl — cleanup history.",
-          "%APPDATA%\\node-cleaner\\snapshots.jsonl and actions.jsonl — drive-usage snapshots and official tool records.",
+          "%APPDATA%\\dev-cleaner\\config.json — application preferences.",
+          "%APPDATA%\\dev-cleaner\\last-scan.json — the candidate list (path, size, classification) and summary of the last completed or cancelled scan. Only one snapshot is kept, never a history; writes over 64 MB are refused. Your next scan replaces the file; delete it to remove it permanently.",
+          "%APPDATA%\\dev-cleaner\\history.jsonl — cleanup history.",
+          "%APPDATA%\\dev-cleaner\\snapshots.jsonl and actions.jsonl — drive-usage snapshots and official tool records.",
           "The Windows Recycle Bin — files moved there by the default deletion method.",
         ],
       },
@@ -487,7 +487,7 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
     title: "Third-Party Licenses",
     updated: UPDATED_EN,
     summary:
-      "Node Cleaner is built on components produced by the open-source community. This page lists every component and its license.",
+      "Dev Cleaner is built on components produced by the open-source community. This page lists every component and its license.",
     clauses: [
       {
         heading: "1. How this list is produced",
@@ -511,7 +511,7 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: "3. Warranty and liability",
         paragraphs: [
-          "Third-party components are provided \"as is\" under their own licenses. Their authors are not liable for damages arising from their use in this application. Listing these components does not imply that their projects endorse Vellium or Node Cleaner.",
+          "Third-party components are provided \"as is\" under their own licenses. Their authors are not liable for damages arising from their use in this application. Listing these components does not imply that their projects endorse Vellium or Dev Cleaner.",
         ],
       },
       {

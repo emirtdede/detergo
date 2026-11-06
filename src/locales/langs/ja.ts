@@ -2,7 +2,7 @@ import { TranslationSchema } from "../types";
 
 export const ja: TranslationSchema = {
   app: {
-    title: "Node Cleaner",
+    title: "Dev Cleaner",
     tagline: "node_modules クリーナー",
     description: "開発者のディスク容量を即座に解放します。",
   },

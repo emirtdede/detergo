@@ -128,6 +128,126 @@ pub fn locate_agent_roots() -> Vec<AgentRoot> {
         });
     }
 
+    // OpenCode
+    if let Some(home) = home() {
+        roots.push(AgentRoot {
+            provider: "opencode",
+            kind: "opencode-config",
+            path: home.join(".config\\opencode"),
+            source: "default".to_string(),
+        });
+        roots.push(AgentRoot {
+            provider: "opencode",
+            kind: "opencode-share",
+            path: home.join(".local\\share\\opencode"),
+            source: "default".to_string(),
+        });
+    }
+    if let Some(appdata) = env_path("APPDATA") {
+        roots.push(AgentRoot {
+            provider: "opencode",
+            kind: "opencode-app",
+            path: appdata.join("ai.opencode.desktop"),
+            source: "default".to_string(),
+        });
+    }
+    if let Some(local) = env_path("LOCALAPPDATA") {
+        roots.push(AgentRoot {
+            provider: "opencode",
+            kind: "opencode-updater",
+            path: local.join("@opencodedesktop-updater"),
+            source: "default".to_string(),
+        });
+    }
+
+    // T3 Code
+    if let Some(appdata) = env_path("APPDATA") {
+        roots.push(AgentRoot {
+            provider: "t3code",
+            kind: "t3code-app",
+            path: appdata.join("t3code-v2"),
+            source: "default".to_string(),
+        });
+    }
+    if let Some(local) = env_path("LOCALAPPDATA") {
+        roots.push(AgentRoot {
+            provider: "t3code",
+            kind: "t3code-updater",
+            path: local.join("t3code-updater"),
+            source: "default".to_string(),
+        });
+    }
+
+    // Bionic
+    if let Some(appdata) = env_path("APPDATA") {
+        roots.push(AgentRoot {
+            provider: "bionic",
+            kind: "bionic-app",
+            path: appdata.join("Bionic"),
+            source: "default".to_string(),
+        });
+    }
+
+    // Cursor
+    if let Some(home) = home() {
+        roots.push(AgentRoot {
+            provider: "cursor",
+            kind: "cursor-user",
+            path: home.join(".cursor"),
+            source: "default".to_string(),
+        });
+    }
+    if let Some(appdata) = env_path("APPDATA") {
+        roots.push(AgentRoot {
+            provider: "cursor",
+            kind: "cursor-app",
+            path: appdata.join("Cursor"),
+            source: "default".to_string(),
+        });
+    }
+
+    // Windsurf
+    if let Some(home) = home() {
+        roots.push(AgentRoot {
+            provider: "windsurf",
+            kind: "windsurf-codeium",
+            path: home.join(".codeium\\windsurf"),
+            source: "default".to_string(),
+        });
+        roots.push(AgentRoot {
+            provider: "windsurf",
+            kind: "windsurf-user",
+            path: home.join(".windsurf"),
+            source: "default".to_string(),
+        });
+    }
+    if let Some(appdata) = env_path("APPDATA") {
+        roots.push(AgentRoot {
+            provider: "windsurf",
+            kind: "windsurf-app",
+            path: appdata.join("Windsurf"),
+            source: "default".to_string(),
+        });
+    }
+
+    // Ollama
+    if let Some(home) = home() {
+        roots.push(AgentRoot {
+            provider: "ollama",
+            kind: "ollama-user",
+            path: home.join(".ollama"),
+            source: "default".to_string(),
+        });
+    }
+    if let Some(local) = env_path("LOCALAPPDATA") {
+        roots.push(AgentRoot {
+            provider: "ollama",
+            kind: "ollama-local",
+            path: local.join("Ollama"),
+            source: "default".to_string(),
+        });
+    }
+
     let mut seen = std::collections::HashSet::new();
     roots.retain(|r| seen.insert(normalize(&r.path)));
     roots

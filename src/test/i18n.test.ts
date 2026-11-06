@@ -32,7 +32,7 @@ describe("73-Language i18n Engine & Localization Tests", () => {
     for (const meta of LANGUAGES_LIST) {
       const dict = DICTIONARIES[meta.id];
       expect(dict).toBeDefined();
-      expect(dict.app.title).toBe("Node Cleaner");
+      expect(dict.app.title).toBe("Dev Cleaner");
       expect(dict.header.scan).toBeTruthy();
       expect(dict.header.settings).toBeTruthy();
       expect(dict.scan.idleTitle).toBeTruthy();
@@ -43,24 +43,29 @@ describe("73-Language i18n Engine & Localization Tests", () => {
     }
   });
 
-  it("clamps unsupported UI languages to English and keeps Turkish", () => {
+  it("supports all 73 UI languages and clamps completely invalid locales to English", () => {
     const store = usePreferencesStore.getState();
 
-    // Only tr/en have a complete UI string catalogue. Persisted values for the
-    // other 71 dictionaries must not leak an untranslated interface into the app.
+    // Valid 73 languages are fully recognized and supported
     store.setLanguage("de");
-    expect(usePreferencesStore.getState().language).toBe("en");
+    expect(usePreferencesStore.getState().language).toBe("de");
+    expect(getUIText("de").common.scan).toBe("Scannen");
 
     store.setLanguage("ja");
-    expect(usePreferencesStore.getState().language).toBe("en");
+    expect(usePreferencesStore.getState().language).toBe("ja");
+    expect(getUIText("ja").common.scan).toBeTruthy();
 
     store.setLanguage("tr");
     expect(usePreferencesStore.getState().language).toBe("tr");
-    expect(getUIText(usePreferencesStore.getState().language).common.scan).toBe("Tara");
+    expect(getUIText("tr").common.scan).toBe("Tara");
 
     store.setLanguage("en");
     expect(usePreferencesStore.getState().language).toBe("en");
-    expect(getUIText(usePreferencesStore.getState().language).common.scan).toBe("Scan");
+    expect(getUIText("en").common.scan).toBe("Scan");
+
+    // Completely unknown/invalid language strings clamp safely to English
+    store.setLanguage("unknown-xyz" as any);
+    expect(usePreferencesStore.getState().language).toBe("en");
   });
 
   it("provides comprehensive legal and Vellium company translations with fallback", () => {

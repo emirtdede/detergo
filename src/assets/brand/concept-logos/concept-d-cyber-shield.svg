@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <radialGradient id="cs-bg" cx="50%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#061a14" />
+      <stop offset="100%" stop-color="#020806" />
+    </radialGradient>
+
+    <!-- Shield Border Gradient -->
+    <linearGradient id="cs-border-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="50%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+
+    <!-- Core Sweep Gradient -->
+    <linearGradient id="cs-sweep-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="60%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+
+    <filter id="cs-bloom" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="9" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Container Squircle -->
+  <rect x="24" y="24" width="464" height="464" rx="108" fill="url(#cs-bg)" stroke="#132e24" stroke-width="4" />
+
+  <g filter="url(#cs-bloom)">
+    <!-- Aerodynamic Security Shield Contour -->
+    <path d="M 256 96 
+             L 376 144 
+             C 376 270 326 360 256 416 
+             C 186 360 136 270 136 144 
+             Z" 
+          fill="#061a14" 
+          stroke="url(#cs-border-grad)" 
+          stroke-width="10" 
+          stroke-linejoin="round" />
+
+    <!-- Terminal Code Prompt Chevron > Merged with Dynamic Clean Blade -->
+    <path d="M 204 180 
+             L 286 248 
+             L 204 316 
+             L 236 344 
+             L 344 248 
+             L 236 152 Z" 
+          fill="url(#cs-sweep-grad)" />
+
+    <!-- Pure Safety Core Pulse (Recycle Bin / Zero Loss Guarantee) -->
+    <circle cx="204" cy="248" r="8" fill="#34D399" />
+    <circle cx="204" cy="248" r="3" fill="#FFFFFF" />
+
+    <!-- High-Precision Sparkle at Apex -->
+    <path d="M 330 140 Q 342 140 342 128 Q 342 140 354 140 Q 342 140 342 152 Q 342 140 330 140 Z" fill="#FFFFFF" />
+  </g>
+</svg>
+

@@ -5,7 +5,17 @@ use crate::error::AppError;
 use crate::providers::AgentProviderInfo;
 use crate::settings::{AppSettings, CustomAgentProvider};
 
-const BUILTIN_PROVIDERS: &[&str] = &["codex", "claude-code", "antigravity"];
+const BUILTIN_PROVIDERS: &[&str] = &[
+    "codex",
+    "claude-code",
+    "antigravity",
+    "opencode",
+    "t3code",
+    "bionic",
+    "cursor",
+    "windsurf",
+    "ollama",
+];
 
 /// Lists built-in providers (minus hidden ones) plus user-defined tools.
 #[tauri::command]

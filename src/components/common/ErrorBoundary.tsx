@@ -30,7 +30,8 @@ export class ErrorBoundary extends Component<Props, State> {
 
   private getTranslation() {
     try {
-      const stored = localStorage.getItem("node_cleaner_language") as SupportedLanguage;
+      const stored = (localStorage.getItem("dev_cleaner_language") ||
+        localStorage.getItem("node_cleaner_language")) as SupportedLanguage;
       if (stored && DICTIONARIES[stored]) {
         return DICTIONARIES[stored].errorBoundary;
       }

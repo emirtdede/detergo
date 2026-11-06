@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="qs-bg-glow" cx="50%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#0a192f" />
+      <stop offset="100%" stop-color="#030712" />
+    </radialGradient>
+
+    <!-- Facet Gradients -->
+    <linearGradient id="qs-left-facet" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F0FF" stop-opacity="0.95" />
+      <stop offset="60%" stop-color="#0072F5" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#002E7A" stop-opacity="0.8" />
+    </linearGradient>
+
+    <linearGradient id="qs-right-facet" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.9" />
+      <stop offset="50%" stop-color="#0284C7" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#082F49" stop-opacity="0.8" />
+    </linearGradient>
+
+    <linearGradient id="qs-top-facet" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#E0F2FE" />
+      <stop offset="100%" stop-color="#38BDF8" />
+    </linearGradient>
+
+    <linearGradient id="qs-core-beam" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="40%" stop-color="#67E8F9" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+
+    <!-- Clean Glow Filter -->
+    <filter id="qs-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Container Rounded Squircle -->
+  <rect x="24" y="24" width="464" height="464" rx="108" fill="url(#qs-bg-glow)" stroke="#1e293b" stroke-width="4" />
+
+  <!-- Crystalline Quantum Shard Base -->
+  <g filter="url(#qs-glow)">
+    <!-- Top Apex Facet -->
+    <polygon points="256,92 344,168 256,220 168,168" fill="url(#qs-top-facet)" opacity="0.95" />
+
+    <!-- Left Main Facet (D shape subtle hint) -->
+    <polygon points="168,168 256,220 256,416 144,304" fill="url(#qs-left-facet)" />
+
+    <!-- Right Main Facet (V shape subtle hint) -->
+    <polygon points="344,168 256,220 256,416 368,304" fill="url(#qs-right-facet)" />
+
+    <!-- Central Laser Clean Ridge -->
+    <line x1="256" y1="100" x2="256" y2="416" stroke="url(#qs-core-beam)" stroke-width="4.5" stroke-linecap="round" />
+
+    <!-- Dynamic Sweep Shards (Clean Action) -->
+    <path d="M 120 248 L 168 220 L 152 276 Z" fill="#00F0FF" opacity="0.6" />
+    <path d="M 392 248 L 344 220 L 360 276 Z" fill="#38BDF8" opacity="0.6" />
+
+    <!-- Luminous Sparkle of Purity -->
+    <path d="M 370 120 Q 386 120 386 104 Q 386 120 402 120 Q 386 120 386 136 Q 386 120 370 120 Z" fill="#FFFFFF" />
+    <circle cx="386" cy="120" r="3" fill="#00F0FF" />
+  </g>
+</svg>
+

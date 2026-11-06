@@ -13,7 +13,7 @@ const pkg = JSON.parse(fs.readFileSync(path.join(rootDir, "package.json"), "utf8
 const version = pkg.version;
 
 console.log("=================================================");
-console.log(`🚀 Node Cleaner ${version} — Release build`);
+console.log(`🚀 Dev Cleaner ${version} — Release build`);
 console.log("=================================================\n");
 
 // ---------------------------------------------------------
@@ -146,15 +146,15 @@ function firstMatch(dir, pattern) {
 const artifacts = [
   {
     src: binary,
-    destName: `Node-Cleaner-${version}-Portable.exe`,
+    destName: `Dev-Cleaner-${version}-Portable.exe`,
   },
   {
     src: firstMatch(path.join(targetDir, "bundle", "nsis"), /-setup\.exe$/i),
-    destName: `Node-Cleaner-${version}-x64-Setup.exe`,
+    destName: `Dev-Cleaner-${version}-x64-Setup.exe`,
   },
   {
     src: firstMatch(path.join(targetDir, "bundle", "msi"), /\.msi$/i),
-    destName: `Node-Cleaner-${version}-x64.msi`,
+    destName: `Dev-Cleaner-${version}-x64.msi`,
   },
 ];
 
@@ -197,7 +197,7 @@ fs.writeFileSync(path.join(releaseOutputDir, "SHA256SUMS.txt"), checksumLines.jo
 // Provenance record shipped next to the packages so a download can be matched
 // to the source revision without reading the binary.
 const buildInfo = {
-  product: "Node Cleaner",
+  product: "Dev Cleaner",
   version,
   commit,
   branch,

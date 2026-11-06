@@ -130,6 +130,31 @@ const BUN_CACHE: &[&str] = &["%USERPROFILE%\\.bun\\install\\cache"];
 const PIP_CACHE: &[&str] = &["%LOCALAPPDATA%\\pip\\Cache"];
 const NUGET_CACHE: &[&str] = &["%USERPROFILE%\\.nuget\\packages"];
 const GO_CACHE: &[&str] = &["%USERPROFILE%\\go\\pkg\\mod", "%LOCALAPPDATA%\\go-build"];
+const UV_CACHE: &[&str] = &["%LOCALAPPDATA%\\uv\\cache"];
+const CARGO_CACHE: &[&str] = &[
+    "%USERPROFILE%\\.cargo\\registry\\cache",
+    "%USERPROFILE%\\.cargo\\git\\db",
+];
+const GRADLE_CACHE: &[&str] = &[
+    "%USERPROFILE%\\.gradle\\caches",
+    "%USERPROFILE%\\.gradle\\wrapper\\dists",
+];
+const MAVEN_CACHE: &[&str] = &["%USERPROFILE%\\.m2\\repository"];
+const COMPOSER_CACHE: &[&str] = &[
+    "%LOCALAPPDATA%\\Composer\\repo",
+    "%APPDATA%\\Composer\\cache",
+];
+const CONDA_CACHE: &[&str] = &[
+    "%USERPROFILE%\\.conda\\pkgs",
+    "%USERPROFILE%\\miniconda3\\pkgs",
+    "%USERPROFILE%\\anaconda3\\pkgs",
+];
+const PLAYWRIGHT_CACHE: &[&str] = &["%LOCALAPPDATA%\\ms-playwright"];
+const CYPRESS_CACHE: &[&str] = &["%LOCALAPPDATA%\\Cypress\\Cache"];
+const VCPKG_CACHE: &[&str] = &["%LOCALAPPDATA%\\vcpkg\\archives"];
+const HUGGINGFACE_CACHE: &[&str] = &["%USERPROFILE%\\.cache\\huggingface\\hub"];
+const PUB_CACHE: &[&str] = &["%LOCALAPPDATA%\\Pub\\Cache"];
+const ELECTRON_CACHE: &[&str] = &["%LOCALAPPDATA%\\electron\\Cache"];
 
 const ACTIONS: &[ProviderDef] = &[
     ProviderDef {
@@ -218,6 +243,152 @@ const ACTIONS: &[ProviderDef] = &[
         }],
     },
     ProviderDef {
+        id: "uv",
+        name: "uv",
+        cache_paths: UV_CACHE,
+        version_exe: "uv",
+        read_only: false,
+        note: None,
+        actions: &[ActionDef {
+            id: "uv.cache.clean",
+            exe: "uv",
+            args: &["cache", "clean"],
+            label: "uv cache clean",
+            description: "uv paket ve wheel önbelleğini resmî komutla temizler.",
+            requires_network: false,
+            impact: "Sonraki sanal ortam kurulumlarında paketler ihtiyaç halinde yeniden indirilir.",
+        }],
+    },
+    ProviderDef {
+        id: "cargo",
+        name: "Cargo",
+        cache_paths: CARGO_CACHE,
+        version_exe: "cargo",
+        read_only: false,
+        note: Some(
+            "İndirilen .crate arşivleri ve git depoları önbelleğidir. Gerektiğinde derleme sırasında yeniden indirilir.",
+        ),
+        actions: &[],
+    },
+    ProviderDef {
+        id: "gradle",
+        name: "Gradle",
+        cache_paths: GRADLE_CACHE,
+        version_exe: "gradle",
+        read_only: false,
+        note: Some(
+            "Gradle bağımlılık ve wrapper önbelleğidir. Android/Java derlemelerinde otomatik yeniden indirilir.",
+        ),
+        actions: &[],
+    },
+    ProviderDef {
+        id: "maven",
+        name: "Maven",
+        cache_paths: MAVEN_CACHE,
+        version_exe: "mvn",
+        read_only: false,
+        note: Some(
+            "Global .m2 yerel depo kütüphane önbelleğidir. Projeler build edildiğinde eksikler yeniden çekilir.",
+        ),
+        actions: &[],
+    },
+    ProviderDef {
+        id: "composer",
+        name: "Composer",
+        cache_paths: COMPOSER_CACHE,
+        version_exe: "composer",
+        read_only: false,
+        note: None,
+        actions: &[ActionDef {
+            id: "composer.clear-cache",
+            exe: "composer",
+            args: &["clear-cache"],
+            label: "composer clear-cache",
+            description: "Composer indirme ve paket metaveri önbelleğini resmî komutla temizler.",
+            requires_network: false,
+            impact: "Sonraki bağımlılık kurulumlarında paketler yeniden indirebilir.",
+        }],
+    },
+    ProviderDef {
+        id: "conda",
+        name: "Conda",
+        cache_paths: CONDA_CACHE,
+        version_exe: "conda",
+        read_only: false,
+        note: Some(
+            "Paket tarball ve indeks önbelleği temizlenir; mevcut sanal ortamlar korunur.",
+        ),
+        actions: &[ActionDef {
+            id: "conda.clean.all",
+            exe: "conda",
+            args: &["clean", "--all", "-y"],
+            label: "conda clean --all -y",
+            description: "Kullanılmayan Conda paket tarball'larını ve geçici önbellekleri temizler.",
+            requires_network: false,
+            impact: "Yalnızca paket önbelleği temizlenir; kurulu ortamlar etkilenmez.",
+        }],
+    },
+    ProviderDef {
+        id: "playwright",
+        name: "Playwright",
+        cache_paths: PLAYWRIGHT_CACHE,
+        version_exe: "playwright",
+        read_only: false,
+        note: Some(
+            "Test tarayıcıları (Chromium, Firefox, WebKit) temizlenir; npx playwright install ile yeniden yüklenir.",
+        ),
+        actions: &[ActionDef {
+            id: "playwright.uninstall.all",
+            exe: "npx",
+            args: &["playwright", "uninstall", "--all"],
+            label: "npx playwright uninstall --all",
+            description: "İndirilmiş Playwright test tarayıcılarını resmî komutla temizler.",
+            requires_network: false,
+            impact: "Tarayıcı ikilileri kaldırılır; testler çalıştırıldığında yeniden indirilir.",
+        }],
+    },
+    ProviderDef {
+        id: "cypress",
+        name: "Cypress",
+        cache_paths: CYPRESS_CACHE,
+        version_exe: "cypress",
+        read_only: false,
+        note: Some(
+            "Önbelleğe alınmış Cypress çalışma sürümleri temizlenir; test çalıştırıldığında tekrar indirilir.",
+        ),
+        actions: &[ActionDef {
+            id: "cypress.cache.clear",
+            exe: "npx",
+            args: &["cypress", "cache", "clear"],
+            label: "npx cypress cache clear",
+            description: "İndirilmiş Cypress çalışma zamanı sürümlerini resmî komutla temizler.",
+            requires_network: false,
+            impact: "Cypress ikilileri silinir; sonraki test çalıştırmasında yeniden indirilir.",
+        }],
+    },
+    ProviderDef {
+        id: "vcpkg",
+        name: "vcpkg",
+        cache_paths: VCPKG_CACHE,
+        version_exe: "vcpkg",
+        read_only: false,
+        note: Some(
+            "vcpkg ikili paket arşivleri önbelleğidir. Paketler yeniden derlendiğinde arşivler tekrar oluşur.",
+        ),
+        actions: &[],
+    },
+    ProviderDef {
+        id: "huggingface",
+        name: "Hugging Face",
+        cache_paths: HUGGINGFACE_CACHE,
+        version_exe: "huggingface-cli",
+        read_only: false,
+        note: Some(
+            "İndirilen yerel yapay zeka model ağırlıkları ve tokenizer önbelleğidir. Kod çalıştırıldığında model tekrar çekilir.",
+        ),
+        actions: &[],
+    },
+    ProviderDef {
         id: "nuget",
         name: "NuGet / .NET",
         cache_paths: NUGET_CACHE,
@@ -261,7 +432,7 @@ const ACTIONS: &[ProviderDef] = &[
         version_exe: "docker",
         read_only: true,
         note: Some(
-            "Docker imaj/volume verisi Node Cleaner tarafından silinmez. Yönetim için Docker Desktop kullanın.",
+            "Docker imaj/volume verisi Dev Cleaner tarafından silinmez. Yönetim için Docker Desktop kullanın.",
         ),
         actions: &[],
     },
@@ -272,7 +443,35 @@ const ACTIONS: &[ProviderDef] = &[
         version_exe: "wsl",
         read_only: true,
         note: Some(
-            "WSL sanal disk (VHDX) boyutu gerçek boş alan değildir; Node Cleaner bu dosyayı silmez veya küçültmez.",
+            "WSL sanal disk (VHDX) boyutu gerçek boş alan değildir; Dev Cleaner bu dosyayı silmez veya küçültmez.",
+        ),
+        actions: &[],
+    },
+    ProviderDef {
+        id: "pub",
+        name: "Dart / Flutter (Pub)",
+        cache_paths: PUB_CACHE,
+        version_exe: "dart",
+        read_only: false,
+        note: None,
+        actions: &[ActionDef {
+            id: "dart.pub.cache.clean",
+            exe: "dart",
+            args: &["pub", "cache", "clean", "--force"],
+            label: "dart pub cache clean",
+            description: "Dart ve Flutter paket önbelleğini resmî komutla temizler.",
+            requires_network: false,
+            impact: "Sonraki build işlemlerinde paketler yeniden indirilebilir.",
+        }],
+    },
+    ProviderDef {
+        id: "electron",
+        name: "Electron",
+        cache_paths: ELECTRON_CACHE,
+        version_exe: "electron",
+        read_only: false,
+        note: Some(
+            "İndirilmiş Electron ikili dosyaları ve çalışma zamanı önbelleğidir. Proje derlendiğinde yeniden çekilir.",
         ),
         actions: &[],
     },

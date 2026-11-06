@@ -2,7 +2,7 @@ import { TranslationSchema } from "../types";
 
 export const ga: TranslationSchema = {
   app: {
-    title: "Node Cleaner",
+    title: "Dev Cleaner",
     tagline: "Glanantóir node_modules",
     description: "Faigh spás diosca forbróra ar ais láithreach.",
   },

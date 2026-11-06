@@ -5,7 +5,9 @@ import {
   Bot,
   Package,
   History,
+  BookOpen,
   Settings,
+  Info,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
@@ -19,6 +21,7 @@ const ITEMS: Array<{ view: AppView; icon: React.ReactNode; key: keyof UIText["na
   { view: "projects", icon: <FolderTree size={17} />, key: "projects" },
   { view: "agents", icon: <Bot size={17} />, key: "agents" },
   { view: "caches", icon: <Package size={17} />, key: "caches" },
+  { view: "docs", icon: <BookOpen size={17} />, key: "docs" },
   { view: "history", icon: <History size={17} />, key: "history" },
 ];
 
@@ -58,6 +61,7 @@ export const NavRail: React.FC = () => {
         {ITEMS.map((item) => (
           <button
             key={item.view}
+            data-view={item.view}
             type="button"
             className={`nav-item ${view === item.view ? "active" : ""}`}
             onClick={() => setView(item.view)}
@@ -71,6 +75,7 @@ export const NavRail: React.FC = () => {
         ))}
 
         <button
+          data-view="settings"
           type="button"
           className={`nav-item ${view === "settings" ? "active" : ""}`}
           onClick={() => setView("settings")}
@@ -80,6 +85,19 @@ export const NavRail: React.FC = () => {
         >
           <Settings size={17} />
           <span className="nav-item-label">{ui.nav.settings}</span>
+        </button>
+
+        <button
+          data-view="about"
+          type="button"
+          className={`nav-item ${view === "about" ? "active" : ""}`}
+          onClick={() => setView("about")}
+          title={railCollapsed ? ui.nav.about : undefined}
+          aria-label={ui.nav.about}
+          aria-current={view === "about" ? "page" : undefined}
+        >
+          <Info size={17} />
+          <span className="nav-item-label">{ui.nav.about}</span>
         </button>
       </div>
 

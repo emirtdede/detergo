@@ -1,6 +1,7 @@
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { EN } from "./en";
 import { TR } from "./tr";
+import { DICTIONARIES } from "@/locales/dictionaries";
 
 export {
   SUPPORTED_UI_LOCALES,
@@ -17,14 +18,17 @@ export interface UIText {
     projects: string;
     agents: string;
     caches: string;
+    docs: string;
     history: string;
     settings: string;
+    about: string;
   };
   common: {
     scan: string; scanning: string; cancel: string; rescan: string; chooseFolder: string;
     refresh: string; open: string; close: string; back: string; browse: string; skipToContent: string; confirm: string; loading: string; none: string;
     clear: string; allDrives: string; save: string; add: string; remove: string;
     stop: string; increase: string; decrease: string;
+    on: string; off: string;
     items: (n: number) => string; showing: (n: number) => string;
   };
   header: {
@@ -144,8 +148,122 @@ export interface UIText {
   };
 }
 
+function createFallbackProxy<T extends object>(target: any, fallback: T): T {
+  return new Proxy(target, {
+    get(obj, prop: string | symbol) {
+      if (typeof prop === "symbol") return obj[prop];
+      const val = obj[prop];
+      const fallbackVal = (fallback as any)[prop];
+      if (val === undefined || val === null || val === "") {
+        return fallbackVal;
+      }
+      if (typeof val === "object" && val !== null && !Array.isArray(val) && typeof fallbackVal === "object") {
+        return createFallbackProxy(val, fallbackVal);
+      }
+      return val;
+    },
+  });
+}
+
+function adaptDictionaryToUIText(dict: any, fallback: UIText): UIText {
+  if (!dict) return fallback;
+
+  const adapted: any = {
+    nav: {
+      primary: dict.app?.title || fallback.nav.primary,
+      overview: dict.scan?.idleTitle || fallback.nav.overview,
+      projects: dict.table?.project || fallback.nav.projects,
+      agents: fallback.nav.agents,
+      caches: fallback.nav.caches,
+      docs: fallback.nav.docs,
+      history: dict.recent?.title || fallback.nav.history,
+      settings: dict.header?.settings || fallback.nav.settings,
+      about: dict.legal?.title || fallback.nav.about,
+    },
+    common: {
+      ...fallback.common,
+      scan: dict.header?.scan || fallback.common.scan,
+      scanning: dict.header?.scanning || fallback.common.scanning,
+      cancel: dict.header?.stopScan || fallback.common.cancel,
+      rescan: dict.header?.rescan || fallback.common.rescan,
+      chooseFolder: dict.header?.chooseFolder || fallback.common.chooseFolder,
+      clear: dict.common?.clear || fallback.common.clear,
+      save: dict.settings?.save || fallback.common.save,
+      stop: dict.header?.stopScan || fallback.common.stop,
+    },
+    header: {
+      ...fallback.header,
+      changeLocation: dict.header?.changeLocation || fallback.header.changeLocation,
+      folderNotSelected: dict.header?.folderNotSelected || fallback.header.folderNotSelected,
+      chooseFolderSub: dict.header?.chooseFolderSub || fallback.header.chooseFolderSub,
+      defaultLocations: dict.header?.defaultLocations || fallback.header.defaultLocations,
+      favorites: dict.header?.favorites || fallback.header.favorites,
+      recent: dict.header?.recent || fallback.header.recent,
+      noFavorites: dict.header?.noFavorites || fallback.header.noFavorites,
+    },
+    window: {
+      minimize: dict.window?.minimize || fallback.window.minimize,
+      maximize: dict.window?.maximize || fallback.window.maximize,
+      restore: dict.window?.restore || fallback.window.restore,
+      close: dict.window?.close || fallback.window.close,
+    },
+    locations: {
+      desktop: dict.quickLocations?.desktop || fallback.locations.desktop,
+      documents: dict.quickLocations?.documents || fallback.locations.documents,
+      projects: dict.quickLocations?.projects || fallback.locations.projects,
+      code: dict.quickLocations?.code || fallback.locations.code,
+      dev: dict.quickLocations?.dev || fallback.locations.dev,
+      repos: dict.quickLocations?.repos || fallback.locations.repos,
+    },
+    overview: {
+      ...fallback.overview,
+      title: dict.scan?.idleTitle || fallback.overview.title,
+      subtitle: dict.scan?.idleSubtitle || fallback.overview.subtitle,
+      cleanable: dict.overview?.cleanable || fallback.overview.cleanable,
+      protected: dict.overview?.protected || fallback.overview.protected,
+      candidates: dict.overview?.candidates || fallback.overview.candidates,
+      projects: dict.overview?.projects || fallback.overview.projects,
+    },
+    table: {
+      ...fallback.table,
+      selectAll: dict.table?.selectAll || fallback.table.selectAll,
+      selectRow: dict.table?.selectRow || fallback.table.selectRow,
+      project: dict.table?.project || fallback.table.project,
+      size: dict.table?.size || fallback.table.size,
+      modified: dict.table?.modified || fallback.table.modified,
+      actions: dict.table?.actions || fallback.table.actions,
+      searchPlaceholder: dict.table?.searchPlaceholder || fallback.table.searchPlaceholder,
+    },
+    settings: {
+      ...fallback.settings,
+      general: dict.settings?.general || fallback.settings.general,
+      theme: dict.settings?.theme || fallback.settings.theme,
+      themeDark: dict.settings?.themeDark || fallback.settings.themeDark,
+      themeLight: dict.settings?.themeLight || fallback.settings.themeLight,
+      language: dict.settings?.language || fallback.settings.language,
+      scan: dict.settings?.scan || fallback.settings.scan,
+    },
+  };
+
+  return createFallbackProxy(adapted, fallback);
+}
+
+const UI_TEXT_CACHE = new Map<string, UIText>();
+UI_TEXT_CACHE.set("tr", TR);
+UI_TEXT_CACHE.set("en", EN);
+
 export function getUIText(language?: string | null): UIText {
-  return resolveUiLocale(language) === "tr" ? TR : EN;
+  const resolved = resolveUiLocale(language);
+  if (resolved === "tr") return TR;
+  if (resolved === "en") return EN;
+
+  let cached = UI_TEXT_CACHE.get(resolved);
+  if (!cached) {
+    const dict = DICTIONARIES[resolved];
+    cached = adaptDictionaryToUIText(dict, EN);
+    UI_TEXT_CACHE.set(resolved, cached);
+  }
+  return cached;
 }
 
 export function useUIText(): UIText {

@@ -182,6 +182,115 @@ pub const ANTIGRAVITY_LOCAL_TARGETS: &[AgentTargetSpec] = &[
     review("CachedData", "antigravity.cached_data", "cache", None),
 ];
 
+pub const OPENCODE_CONFIG_TARGETS: &[AgentTargetSpec] = &[
+    keep("opencode.json", "opencode.config", "configuration", Some("Kullanıcı ayarları ve API anahtarları.")),
+    keep("opencode.jsonc", "opencode.config_jsonc", "configuration", Some("Kullanıcı ayarları.")),
+    keep("tui.json", "opencode.tui_config", "configuration", None),
+];
+
+pub const OPENCODE_SHARE_TARGETS: &[AgentTargetSpec] = &[
+    keep("opencode.db", "opencode.db", "sessions", Some("Oturum ve mesaj geçmişi veritabanı; korunur.")),
+    keep("opencode.db-wal", "opencode.db_wal", "sessions", None),
+    keep("opencode.db-shm", "opencode.db_shm", "sessions", None),
+    review("log", "opencode.logs", "diagnostics", Some("Tanılama günlükleri.")),
+    review("shell", "opencode.shell", "cache", Some("Shell çalıştırma anlık görüntüleri.")),
+    review("snapshot", "opencode.snapshot", "cache", Some("Kod anlık görüntüleri.")),
+    review("tool-output", "opencode.tool_output", "task-output", Some("Büyük araç ve görev çıktıları; temizlenebilir.")),
+    review("repos", "opencode.repos", "cache", Some("Önbelleğe alınmış depo kopyaları.")),
+];
+
+pub const OPENCODE_APP_TARGETS: &[AgentTargetSpec] = &[
+    keep("drafts.sqlite", "opencode.drafts", "sessions", Some("Taslaklar korunur.")),
+    safe("Cache", "opencode.cache", "cache"),
+    safe("Code Cache", "opencode.code_cache", "cache"),
+    safe("GPUCache", "opencode.gpu_cache", "cache"),
+    safe("DawnGraphiteCache", "opencode.graphite_cache", "cache"),
+    safe("DawnWebGPUCache", "opencode.webgpu_cache", "cache"),
+    safe("compile-cache", "opencode.compile_cache", "cache"),
+    review("Crashpad", "opencode.crashpad", "diagnostics", None),
+];
+
+pub const OPENCODE_UPDATER_TARGETS: &[AgentTargetSpec] = &[
+    safe("pending", "opencode.updater_pending", "cache"),
+];
+
+pub const T3CODE_APP_TARGETS: &[AgentTargetSpec] = &[
+    keep("Local Storage", "t3code.local_storage", "configuration", Some("Kullanıcı tercihleri ve oturum bağlantıları.")),
+    keep("IndexedDB", "t3code.indexed_db", "sessions", Some("Oturum ve iş parçacığı geçmişi.")),
+    safe("Cache", "t3code.cache", "cache"),
+    safe("Code Cache", "t3code.code_cache", "cache"),
+    safe("GPUCache", "t3code.gpu_cache", "cache"),
+    safe("GPUPersistentCache", "t3code.gpu_persistent", "cache"),
+    safe("GrShaderCache", "t3code.gr_shader", "cache"),
+    safe("DawnGraphiteCache", "t3code.graphite_cache", "cache"),
+    safe("DawnWebGPUCache", "t3code.webgpu_cache", "cache"),
+];
+
+pub const T3CODE_UPDATER_TARGETS: &[AgentTargetSpec] = &[
+    safe("pending", "t3code.updater_pending", "cache"),
+];
+
+pub const BIONIC_APP_TARGETS: &[AgentTargetSpec] = &[
+    keep("Preferences", "bionic.preferences", "configuration", Some("Kullanıcı yapılandırması ve ayarları.")),
+    keep("Local Storage", "bionic.local_storage", "configuration", None),
+    keep("Network", "bionic.network", "configuration", None),
+    safe("Cache", "bionic.cache", "cache"),
+    safe("Code Cache", "bionic.code_cache", "cache"),
+    review("Crashpad", "bionic.crashpad", "diagnostics", None),
+    review("logs", "bionic.logs", "diagnostics", None),
+];
+
+pub const CURSOR_USER_TARGETS: &[AgentTargetSpec] = &[
+    keep("rules", "cursor.rules", "configuration", Some("Kullanıcı ve proje AI kuralları.")),
+    keep("tunnels", "cursor.tunnels", "configuration", None),
+    review("projects", "cursor.projects_cache", "cache", Some("Proje bağlam önbellekleri.")),
+    review("logs", "cursor.user_logs", "diagnostics", None),
+];
+
+pub const CURSOR_APP_TARGETS: &[AgentTargetSpec] = &[
+    keep("User", "cursor.user_settings", "configuration", Some("Kullanıcı ayarları, tuş atamaları ve eklentiler.")),
+    keep("workspaceStorage", "cursor.workspace_storage", "sessions", Some("Çalışma alanı oturumları ve sohbet geçmişleri.")),
+    safe("Cache", "cursor.cache", "cache"),
+    safe("Code Cache", "cursor.code_cache", "cache"),
+    safe("GPUCache", "cursor.gpu_cache", "cache"),
+    safe("CachedData", "cursor.cached_data", "cache"),
+    review("Crashpad", "cursor.crashpad", "diagnostics", None),
+    review("logs", "cursor.app_logs", "diagnostics", None),
+];
+
+pub const WINDSURF_CODEIUM_TARGETS: &[AgentTargetSpec] = &[
+    keep("cascade", "windsurf.cascade_history", "sessions", Some("Cascade sohbet geçmişi ve konuşma belleği.")),
+    review("logs", "windsurf.codeium_logs", "diagnostics", None),
+];
+
+pub const WINDSURF_USER_TARGETS: &[AgentTargetSpec] = &[
+    keep("extensions", "windsurf.extensions", "configuration", None),
+];
+
+pub const WINDSURF_APP_TARGETS: &[AgentTargetSpec] = &[
+    keep("User", "windsurf.user_settings", "configuration", Some("Kullanıcı ayarları ve çalışma alanı verisi.")),
+    keep("workspaceStorage", "windsurf.workspace_storage", "sessions", None),
+    safe("Cache", "windsurf.cache", "cache"),
+    safe("Code Cache", "windsurf.code_cache", "cache"),
+    safe("GPUCache", "windsurf.gpu_cache", "cache"),
+    safe("CachedData", "windsurf.cached_data", "cache"),
+    review("Crashpad", "windsurf.crashpad", "diagnostics", None),
+    review("logs", "windsurf.app_logs", "diagnostics", None),
+];
+
+pub const OLLAMA_USER_TARGETS: &[AgentTargetSpec] = &[
+    keep("models", "ollama.models", "models", Some("İndirilmiş yerel yapay zeka model ağırlıkları ve manifestoları.")),
+    keep("id_ed25519", "ollama.key", "credentials", None),
+    keep("id_ed25519.pub", "ollama.pubkey", "credentials", None),
+];
+
+pub const OLLAMA_LOCAL_TARGETS: &[AgentTargetSpec] = &[
+    review("server.log", "ollama.server_log", "diagnostics", Some("Sunucu günlük dosyası.")),
+    review("logs", "ollama.logs", "diagnostics", None),
+    safe("temp", "ollama.temp", "cache"),
+    safe("updates", "ollama.updates", "cache"),
+];
+
 pub fn specs_for(kind: &str) -> &'static [AgentTargetSpec] {
     match kind {
         "codex-home" => CODEX_TARGETS,
@@ -191,6 +300,20 @@ pub fn specs_for(kind: &str) -> &'static [AgentTargetSpec] {
         "antigravity-backup" => ANTIGRAVITY_BACKUP_TARGETS,
         "antigravity-app" => ANTIGRAVITY_APP_TARGETS,
         "antigravity-local" => ANTIGRAVITY_LOCAL_TARGETS,
+        "opencode-config" => OPENCODE_CONFIG_TARGETS,
+        "opencode-share" => OPENCODE_SHARE_TARGETS,
+        "opencode-app" => OPENCODE_APP_TARGETS,
+        "opencode-updater" => OPENCODE_UPDATER_TARGETS,
+        "t3code-app" => T3CODE_APP_TARGETS,
+        "t3code-updater" => T3CODE_UPDATER_TARGETS,
+        "bionic-app" => BIONIC_APP_TARGETS,
+        "cursor-user" => CURSOR_USER_TARGETS,
+        "cursor-app" => CURSOR_APP_TARGETS,
+        "windsurf-codeium" => WINDSURF_CODEIUM_TARGETS,
+        "windsurf-user" => WINDSURF_USER_TARGETS,
+        "windsurf-app" => WINDSURF_APP_TARGETS,
+        "ollama-user" => OLLAMA_USER_TARGETS,
+        "ollama-local" => OLLAMA_LOCAL_TARGETS,
         _ => &[],
     }
 }
@@ -200,6 +323,12 @@ pub fn provider_display_name(provider: &str) -> &'static str {
         "codex" => "OpenAI Codex",
         "claude-code" => "Claude Code",
         "antigravity" => "Google Antigravity",
+        "opencode" => "OpenCode",
+        "t3code" => "T3 Code",
+        "bionic" => "Bionic",
+        "cursor" => "Cursor",
+        "windsurf" => "Windsurf",
+        "ollama" => "Ollama",
         _ => "Bilinmeyen sağlayıcı",
     }
 }

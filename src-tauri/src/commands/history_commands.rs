@@ -43,3 +43,13 @@ pub fn get_official_action_history(
 pub fn clear_cleanup_history(state: State<'_, AppState>) -> Result<(), AppError> {
     state.audit.clear_all()
 }
+
+#[tauri::command]
+pub fn clear_cleanups_history(state: State<'_, AppState>) -> Result<(), AppError> {
+    state.audit.clear_cleanups()
+}
+
+#[tauri::command]
+pub fn clear_actions_history(state: State<'_, AppState>) -> Result<(), AppError> {
+    state.audit.clear_actions()
+}

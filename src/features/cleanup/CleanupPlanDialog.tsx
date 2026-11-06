@@ -11,6 +11,7 @@ import { formatBytes } from "@/lib/formatters";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { maskPath } from "@/features/items/ItemTable";
 import { DeleteMode } from "@/types";
+import { notificationService } from "@/lib/notifications/notification-service";
 import "../items/items.css";
 
 export const CleanupPlanDialog: React.FC = () => {
@@ -92,6 +93,11 @@ export const CleanupPlanDialog: React.FC = () => {
       setReport(report);
       setPlan(null);
       openModal("cleanup-result");
+      notificationService.notifyCleanComplete({
+        count: report.successCount,
+        bytes: report.reclaimBytes,
+        destination: mode === "permanent" ? "Kalıcı Olarak Silindi" : "Geri Dönüşüm Kutusuna",
+      });
       if (report.auditError) showToast(report.auditError, "error", 8000);
     } catch (err) {
       const message = err && typeof err === "object" && "message" in err

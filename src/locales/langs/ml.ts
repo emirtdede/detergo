@@ -2,7 +2,7 @@ import { TranslationSchema } from "../types";
 
 export const ml: TranslationSchema = {
   app: {
-    title: "Node Cleaner",
+    title: "Dev Cleaner",
     tagline: "node_modules ക്ലീനർ",
     description: "ഡെവലപ്പർ ഡിസ്ക് സ്പേസ് തൽക്ഷണം വീണ്ടെടുക്കുക.",
   },

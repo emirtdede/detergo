@@ -1,12 +1,15 @@
 import React, { useEffect } from "react";
+import { ConceptContainer } from "@/features/concepts/ConceptContainer";
 import { ScanHeader } from "@/features/scan/ScanHeader";
 import { NavRail } from "@/features/shell/NavRail";
 import { OverviewView } from "@/features/overview/OverviewView";
 import { ProjectsView } from "@/features/items/ProjectsView";
 import { AgentsView } from "@/features/agents/AgentsView";
 import { CachesView } from "@/features/caches/CachesView";
+import { DocsView } from "@/features/docs/DocsView";
 import { HistoryView } from "@/features/history/HistoryView";
 import { SettingsView } from "@/features/settings/SettingsView";
+import { AboutView } from "@/features/settings/AboutView";
 import { SelectionActionBar } from "@/features/results/SelectionActionBar";
 import { CleanupPlanDialog } from "@/features/cleanup/CleanupPlanDialog";
 import { CleanupResultDialog } from "@/features/cleanup/CleanupResultDialog";
@@ -19,10 +22,45 @@ import { useAppStore } from "@/stores/app-store";
 import { useUiStore } from "@/stores/ui-store";
 import { useUIText } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
+import { DEFAULT_SHORTCUTS } from "@/types";
 import "@/styles/index.css";
 import "@/features/shell/shell.css";
 
+function matchesShortcut(event: KeyboardEvent, combo?: string): boolean {
+  if (!combo) return false;
+  const parts = combo.split("+").map((p) => p.trim().toLowerCase());
+  const needsCtrl = parts.includes("ctrl");
+  const needsAlt = parts.includes("alt");
+  const needsShift = parts.includes("shift");
+  const needsMeta = parts.includes("meta");
+
+  const keyPart = parts.find((p) => !["ctrl", "alt", "shift", "meta"].includes(p));
+  if (!keyPart) return false;
+
+  const hasCtrl = event.ctrlKey || (needsCtrl && event.metaKey);
+  const hasAlt = event.altKey;
+  const hasShift = event.shiftKey;
+  const hasMeta = event.metaKey;
+
+  if (needsCtrl !== hasCtrl) return false;
+  if (needsAlt !== hasAlt) return false;
+  if (needsShift !== hasShift) return false;
+  if (!needsCtrl && needsMeta !== hasMeta) return false;
+
+  let eventKey = event.key.toLowerCase();
+  if (eventKey === " ") eventKey = "space";
+  return eventKey === keyPart;
+}
+
 export const App: React.FC = () => {
+  const isConceptMode =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("concept");
+
+  if (isConceptMode) {
+    return <ConceptContainer />;
+  }
+
   const loadPreferences = usePreferencesStore((s) => s.loadPreferences);
   const view = useAppStore((s) => s.view);
   const showToast = useUiStore((s) => s.showToast);
@@ -63,17 +101,57 @@ export const App: React.FC = () => {
     };
   }, []);
 
-  // Ctrl/Cmd+B toggles the sidebar between expanded and compact modes.
+  // RTL Language handling
+  const currentLang = usePreferencesStore((s) => s.language);
+  useEffect(() => {
+    const lang = currentLang ?? "en";
+    const rtlLanguages = new Set(["ar", "he", "fa", "ur"]);
+    document.documentElement.dir = rtlLanguages.has(lang) ? "rtl" : "ltr";
+  }, [currentLang]);
+
+  // Global Dynamic Keyboard Shortcuts Listener
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
-      if (event.key.toLowerCase() !== "b") return;
       const target = event.target as HTMLElement | null;
       if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
       if (target?.isContentEditable) return;
-      event.preventDefault();
+
       const prefs = usePreferencesStore.getState();
-      prefs.setSidebarMode(prefs.sidebarMode === "collapsed" ? "expanded" : "collapsed");
+      const shortcuts = prefs.shortcuts ?? DEFAULT_SHORTCUTS;
+
+      if (matchesShortcut(event, shortcuts.toggleSidebar)) {
+        event.preventDefault();
+        prefs.setSidebarMode(prefs.sidebarMode === "collapsed" ? "expanded" : "collapsed");
+        return;
+      }
+
+      if (matchesShortcut(event, shortcuts.focusSearch)) {
+        event.preventDefault();
+        const searchInput = document.querySelector<HTMLInputElement>(
+          'input[type="search"], .search-field-input, #search-input'
+        );
+        searchInput?.focus();
+        return;
+      }
+
+      const appStore = useAppStore.getState();
+      const navMap: Record<string, string> = {
+        navOverview: "overview",
+        navProjects: "projects",
+        navAgents: "agents",
+        navCaches: "caches",
+        navDocs: "docs",
+        navHistory: "history",
+        navSettings: "settings",
+      };
+
+      for (const [actionId, viewName] of Object.entries(navMap)) {
+        if (matchesShortcut(event, shortcuts[actionId])) {
+          event.preventDefault();
+          appStore.setView(viewName as any);
+          return;
+        }
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -85,14 +163,16 @@ export const App: React.FC = () => {
       <ScanHeader />
       <div className="app-body">
         <NavRail />
-        <main id="main" tabIndex={-1} className="view-container">
+        <main id="main" tabIndex={-1} className={`view-container ${view === "docs" ? "view-container--docs" : ""}`}>
           <StaleScanBanner />
           {view === "overview" && <OverviewView />}
           {view === "projects" && <ProjectsView />}
           {view === "agents" && <AgentsView />}
           {view === "caches" && <CachesView />}
+          {view === "docs" && <DocsView />}
           {view === "history" && <HistoryView />}
           {view === "settings" && <SettingsView />}
+          {view === "about" && <AboutView />}
         </main>
       </div>
 

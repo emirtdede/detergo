@@ -1,8 +1,20 @@
 export type ThemeMode =
   | "dark-black"
   | "dark-gray"
+  | "dark-blue"
+  | "dark-purple"
+  | "dark-green"
+  | "dark-red"
+  | "dark-orange"
+  | "dark-yellow"
   | "light-white"
-  | "light-gray";
+  | "light-gray"
+  | "light-blue"
+  | "light-purple"
+  | "light-green"
+  | "light-red"
+  | "light-orange"
+  | "light-yellow";
 
 /** Theme ids persisted by releases before the four-theme consolidation. */
 export type LegacyThemeMode =
@@ -88,6 +100,8 @@ export interface CleanupItem {
   selectable: boolean;
   autoSelectable: boolean;
   lastModifiedAt?: string | null;
+  lastModifiedMs?: number | null;
+  _searchHaystack?: string;
   status: ItemStatus;
   parentItemId?: string | null;
   note?: string | null;
@@ -438,6 +452,17 @@ export type CacheMeasureMode = "fast" | "full";
 /** What the window close button does: ask every time, or apply a remembered choice. */
 export type CloseAction = "ask" | "tray" | "quit";
 
+export type NotificationChannel = "both" | "in_app" | "desktop" | "none";
+
+export interface NotificationPreferences {
+  scanComplete: NotificationChannel;
+  cleanComplete: NotificationChannel;
+  diskPressure: NotificationChannel;
+  processLock: NotificationChannel;
+  automationWebhook: NotificationChannel;
+  soundEnabled: boolean;
+}
+
 export interface AppSettings {
   schemaVersion: number;
   theme: string;
@@ -462,7 +487,35 @@ export interface AppSettings {
   closeAction: CloseAction;
   customAgentProviders: CustomAgentProvider[];
   hiddenBuiltinProviders: string[];
+  notifications?: NotificationPreferences;
+  webhookUrl?: string | null;
+  webhookOnScan?: boolean;
+  webhookOnClean?: boolean;
+  shortcuts?: Record<string, string>;
 }
+
+export const DEFAULT_SHORTCUTS: Record<string, string> = {
+  toggleSidebar: 'Ctrl+B',
+  focusSearch: 'Ctrl+K',
+  startStopScan: 'Ctrl+Enter',
+  navOverview: 'Alt+1',
+  navProjects: 'Alt+2',
+  navAgents: 'Alt+3',
+  navCaches: 'Alt+4',
+  navDocs: 'Alt+5',
+  navHistory: 'Alt+6',
+  navSettings: 'Alt+7',
+};
+
+export const RESERVED_SHORTCUTS = new Set([
+  'Ctrl+W',
+  'Ctrl+R',
+  'Ctrl+Shift+R',
+  'F5',
+  'Alt+F4',
+  'F11',
+  'F12',
+]);
 
 export interface KnownLocation {
   id: string;

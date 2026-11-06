@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Node Cleaner",
+  "productName": "Dev Cleaner",
   "version": "2.0.0",
-  "identifier": "com.vellium.nodecleaner",
+  "identifier": "com.vellium.devcleaner",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1425",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Node Cleaner",
+        "title": "Dev Cleaner",
         "url": "index.html",
         "width": 1180,
         "height": 760,
@@ -42,7 +42,7 @@
     "category": "DeveloperTool",
     "copyright": "© 2026 Vellium. Tüm hakları saklıdır.",
     "shortDescription": "Geliştirici artıklarını ve AI ajan depolamasını güvenle analiz edin ve temizleyin.",
-    "longDescription": "Node Cleaner, Node.js/Python/Rust/.NET/Java/Go gibi ekosistemlerin yeniden üretilebilir bağımlılık, derleme ve önbellek çıktılarını ve Codex, Claude Code, Antigravity gibi AI kodlama ajanlarının yerel depolamasını tek yerden analiz eden yerel bir Windows uygulamasıdır. Yalnızca doğrulanmış ve açıkça seçilmiş hedefler Windows Çöp Kutusuna taşınır; kalıcı silme ayrı onay gerektirir. Uygulama tamamen çevrimdışı çalışır, telemetri göndermez.",
+    "longDescription": "Dev Cleaner, Node.js/Python/Rust/.NET/Java/Go gibi ekosistemlerin yeniden üretilebilir bağımlılık, derleme ve önbellek çıktılarını ve Codex, Claude Code, Antigravity gibi AI kodlama ajanlarının yerel depolamasını tek yerden analiz eden yerel bir Windows uygulamasıdır. Yalnızca doğrulanmış ve açıkça seçilmiş hedefler Windows Çöp Kutusuna taşınır; kalıcı silme ayrı onay gerektirir. Uygulama tamamen çevrimdışı çalışır, telemetri göndermez.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -58,7 +58,7 @@
         ]
       },
       "nsis": {
-        "displayLanguageSelector": false,
+        "displayLanguageSelector": true,
         "installerIcon": "icons/icon.ico",
         "uninstallerIcon": "icons/icon.ico",
         "headerImage": "nsis/header.bmp",

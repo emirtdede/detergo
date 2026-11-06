@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Dev Cleaner by Vellium — Yeni Logo Konseptleri Vitrini</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --border: #1f293d;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #00f0ff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 48px 24px; min-height: 100vh; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 48px; }
+    .badge { display: inline-block; padding: 6px 14px; background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 999px; color: var(--accent); font-size: 13px; font-weight: 600; margin-bottom: 16px; letter-spacing: 0.5px; }
+    h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 12px; background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    p.lead { font-size: 16px; color: var(--text-muted); max-width: 680px; margin: 0 auto; line-height: 1.6; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 24px; margin-top: 40px; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; transition: transform 0.2s ease, border-color 0.2s ease; }
+    .card:hover { transform: translateY(-4px); border-color: rgba(0, 240, 255, 0.4); }
+    .preview-box { background: #030712; border: 1px solid #1e293b; border-radius: 16px; padding: 28px; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
+    .preview-box img { width: 160px; height: 160px; display: block; filter: drop-shadow(0 10px 25px rgba(0,0,0,0.5)); }
+    .sizes-strip { display: flex; align-items: center; justify-content: center; gap: 16px; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 12px; margin-bottom: 18px; }
+    .sizes-strip img.s48 { width: 44px; height: 44px; }
+    .sizes-strip img.s24 { width: 24px; height: 24px; }
+    .card-title { font-size: 19px; font-weight: 700; margin-bottom: 6px; color: #fff; }
+    .card-subtitle { font-size: 13px; color: var(--accent); font-weight: 600; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .card-desc { font-size: 14px; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px; flex-grow: 1; }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { font-size: 11px; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px; color: #cbd5e1; }
+    .footer-note { text-align: center; margin-top: 50px; font-size: 14px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">VELLIUM DESIGN LAB</div>
+      <h1>Dev Cleaner — Yeni Nesil Logo Konseptleri</h1>
+      <p class="lead">Geliştirici ruhu, disk arındırma gücü ve Vellium'un siber-estetik standartları ile tasarlanan 4 yeni SVG konsepti.</p>
+    </header>
+
+    <div class="grid">
+      <!-- Konsept A -->
+      <div class="card">
+        <div class="preview-box">
+          <img src="concept-a-quantum-shard.svg" alt="Konsept A: Quantum Shard">
+        </div>
+        <div class="sizes-strip">
+          <span style="font-size: 11px; color: var(--text-muted);">Ölçekler:</span>
+          <img src="concept-a-quantum-shard.svg" class="s48" alt="48px">
+          <img src="concept-a-quantum-shard.svg" class="s24" alt="24px">
+        </div>
+        <div class="card-subtitle">Konsept A</div>
+        <h2 class="card-title">Quantum Shard</h2>
+        <p class="card-desc">Fasetli kristal elmas monolit. Merkezden geçen lazer temizlik ışını disk üzerindeki milyonlarca bloğu arındırırken, gövdedeki gizli "D" ve "V" açıları Dev Cleaner ve Vellium kimliğini temsil eder.</p>
+        <div class="tag-list">
+          <span class="tag">Kristal Monolit</span>
+          <span class="tag">Lazer Arındırma</span>
+          <span class="tag">Siyan / Elektrik Mavi</span>
+        </div>
+      </div>
+
+      <!-- Konsept B -->
+      <div class="card">
+        <div class="preview-box">
+          <img src="concept-b-dev-pulse.svg" alt="Konsept B: DV Pulse">
+        </div>
+        <div class="sizes-strip">
+          <span style="font-size: 11px; color: var(--text-muted);">Ölçekler:</span>
+          <img src="concept-b-dev-pulse.svg" class="s48" alt="48px">
+          <img src="concept-b-dev-pulse.svg" class="s24" alt="24px">
+        </div>
+        <div class="card-subtitle">Konsept B</div>
+        <h2 class="card-title">DV Clean Pulse</h2>
+        <p class="card-desc">Geliştirici terminal çentiği (&gt;) ile "D" ve "V" harflerinin iç içe geçip aerodinamik bir hız deltasına dönüştüğü tipografik/geometrik modern sembol. Linear ve Raycast tarzı seçkin mühendislik havası taşır.</p>
+        <div class="tag-list">
+          <span class="tag">DV Monogramı</span>
+          <span class="tag">Kod Şevronu &gt;</span>
+          <span class="tag">Vellium Moru &amp; Neon</span>
+        </div>
+      </div>
+
+      <!-- Konsept C -->
+      <div class="card">
+        <div class="preview-box">
+          <img src="concept-c-kinetic-nova.svg" alt="Konsept C: Kinetic Nova">
+        </div>
+        <div class="sizes-strip">
+          <span style="font-size: 11px; color: var(--text-muted);">Ölçekler:</span>
+          <img src="concept-c-kinetic-nova.svg" class="s48" alt="48px">
+          <img src="concept-c-kinetic-nova.svg" class="s24" alt="24px">
+        </div>
+        <div class="card-subtitle">Konsept C</div>
+        <h2 class="card-title">Kinetic Nova</h2>
+        <p class="card-desc">Titanyum disk yörüngesi ve merkezdeki 8 yönlü arındırma novası. Diskin en derin sektörlerine kadar inen tarama hızını ve sıfır çöp (absolute zero) temizliğini simgeler.</p>
+        <div class="tag-list">
+          <span class="tag">Disk Yörüngesi</span>
+          <span class="tag">8 Yönlü Nova</span>
+          <span class="tag">Kozmik Arındırma</span>
+        </div>
+      </div>
+
+      <!-- Konsept D -->
+      <div class="card">
+        <div class="preview-box">
+          <img src="concept-d-cyber-shield.svg" alt="Konsept D: Cyber Shield">
+        </div>
+        <div class="sizes-strip">
+          <span style="font-size: 11px; color: var(--text-muted);">Ölçekler:</span>
+          <img src="concept-d-cyber-shield.svg" class="s48" alt="48px">
+          <img src="concept-d-cyber-shield.svg" class="s24" alt="24px">
+        </div>
+        <div class="card-subtitle">Konsept D</div>
+        <h2 class="card-title">Cyber Shield</h2>
+        <p class="card-desc">Geri Dönüşüm Kutusu güvencesini ve %100 Veri Kaybı Önleme kuralını simgeleyen aerodinamik kalkan. İçindeki dinamik süpürme bıçağı hem kod satırını hem de anında temizliği ifade eder.</p>
+        <div class="tag-list">
+          <span class="tag">Zırh / Güvenlik</span>
+          <span class="tag">Sıfır Veri Kaybı</span>
+          <span class="tag">Zümrüt Yeşili &amp; Siyan</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      <p>⚠️ Kural Hatırlatması: Bu logolar konsept galerisinde tutulmaktadır. Siz onay verene kadar uygulamadaki mevcut logo <strong>asla değiştirilmez</strong>.</p>
+    </div>
+  </div>
+</body>
+</html>

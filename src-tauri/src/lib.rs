@@ -2,9 +2,11 @@ pub mod audit;
 pub mod build_info;
 pub mod catalog;
 pub mod cleanup;
+pub mod cli;
 pub mod commands;
 pub mod error;
 pub mod last_scan;
+pub mod mcp;
 pub mod platform;
 pub mod providers;
 pub mod safety;
@@ -43,7 +45,7 @@ pub fn run() {
                     "main",
                     tauri::WebviewUrl::default(),
                 )
-                .title("Node Cleaner")
+                .title("Dev Cleaner")
                 .inner_size(1180.0, 760.0)
                 .min_inner_size(980.0, 640.0)
                 .center()
@@ -79,6 +81,8 @@ pub fn run() {
             get_growth_report,
             get_official_action_history,
             clear_cleanup_history,
+            clear_cleanups_history,
+            clear_actions_history,
             get_app_settings,
             save_app_settings,
             get_build_info,
@@ -89,7 +93,7 @@ pub fn run() {
             quit_app
         ])
         .run(tauri::generate_context!())
-        .expect("Node Cleaner başlatılırken hata oluştu");
+        .expect("Dev Cleaner başlatılırken hata oluştu");
 }
 
 /// Native tray entry point: the app keeps running when the window is hidden,
@@ -103,7 +107,7 @@ fn setup_tray(app: &mut tauri::App) -> tauri::Result<()> {
     let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
 
     let mut builder = TrayIconBuilder::with_id("main-tray")
-        .tooltip("Node Cleaner")
+        .tooltip("Dev Cleaner")
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id.as_ref() {

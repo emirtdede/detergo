@@ -11,6 +11,9 @@ export type ModalType =
 export type SettingsSection =
   | "general"
   | "scan"
+  | "notifications"
+  | "shortcuts"
+  | "automation"
   | "protections"
   | "agents"
   | "privacy"
@@ -19,7 +22,7 @@ export type SettingsSection =
 /** About hosts the legal documents as a subview rather than a settings page. */
 export type AboutPane = "overview" | "legal";
 
-export type HistoryTab = "cleanups" | "actions";
+export type HistoryTab = "cleanups" | "actions" | "scans";
 
 /** Documents hosted on the Legal page; the value survives tab switches. */
 export type LegalDoc = "eula" | "privacy" | "thirdParty";

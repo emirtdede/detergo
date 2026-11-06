@@ -199,9 +199,24 @@ mod win {
 
 pub use win::{facts, identity, is_in_use, is_remote_path, is_reparse_point, volume_free_bytes};
 
-/// Enumerates running processes whose executable file name matches one of the
-/// given names (case-insensitive, without `.exe`).
-pub fn running_process_names(names: &[&str]) -> Vec<(String, Option<PathBuf>)> {
+use std::sync::Mutex;
+use std::time::{Duration, Instant};
+
+struct ProcessSnapshot {
+    timestamp: Instant,
+    entries: Vec<(String, Option<PathBuf>)>,
+}
+
+static PROCESS_CACHE: Mutex<Option<ProcessSnapshot>> = Mutex::new(None);
+const PROCESS_CACHE_TTL: Duration = Duration::from_millis(2000);
+
+pub fn invalidate_process_cache() {
+    if let Ok(mut guard) = PROCESS_CACHE.lock() {
+        *guard = None;
+    }
+}
+
+fn fetch_running_processes_raw() -> Vec<(String, Option<PathBuf>)> {
     #[cfg(windows)]
     {
         use std::ffi::OsString;
@@ -238,36 +253,27 @@ pub fn running_process_names(names: &[&str]) -> Vec<(String, Option<PathBuf>)> {
                         .to_lowercase();
                     let stem = exe.strip_suffix(".exe").unwrap_or(&exe).to_string();
 
-                    // Exact matches plus provider helper processes such as
-                    // `codex-code-mode-host` or `claude-code`.
-                    if names.iter().any(|n| {
-                        stem == *n
-                            || (stem.starts_with(n)
-                                && stem.as_bytes().get(n.len()).copied() == Some(b'-'))
-                    }) {
-                        let mut full = None;
-                        if let Ok(process) = OpenProcess(
-                            PROCESS_QUERY_LIMITED_INFORMATION,
-                            false,
-                            entry.th32ProcessID,
-                        ) {
-                            let mut buf = vec![0u16; 32768];
-                            let mut size = buf.len() as u32;
-                            if QueryFullProcessImageNameW(
-                                process,
-                                PROCESS_NAME_WIN32,
-                                windows::core::PWSTR(buf.as_mut_ptr()),
-                                &mut size,
-                            )
-                            .is_ok()
-                            {
-                                full =
-                                    Some(PathBuf::from(OsString::from_wide(&buf[..size as usize])));
-                            }
-                            let _ = CloseHandle(process);
+                    let mut full = None;
+                    if let Ok(process) = OpenProcess(
+                        PROCESS_QUERY_LIMITED_INFORMATION,
+                        false,
+                        entry.th32ProcessID,
+                    ) {
+                        let mut buf = vec![0u16; 32768];
+                        let mut size = buf.len() as u32;
+                        if QueryFullProcessImageNameW(
+                            process,
+                            PROCESS_NAME_WIN32,
+                            windows::core::PWSTR(buf.as_mut_ptr()),
+                            &mut size,
+                        )
+                        .is_ok()
+                        {
+                            full = Some(PathBuf::from(OsString::from_wide(&buf[..size as usize])));
                         }
-                        out.push((stem, full));
+                        let _ = CloseHandle(process);
                     }
+                    out.push((stem, full));
 
                     entry.dwSize = std::mem::size_of::<PROCESSENTRY32W>() as u32;
                     if Process32NextW(snapshot, &mut entry).is_err() {
@@ -281,6 +287,51 @@ pub fn running_process_names(names: &[&str]) -> Vec<(String, Option<PathBuf>)> {
     }
     #[cfg(not(windows))]
     {
+        Vec::new()
+    }
+}
+
+/// Enumerates running processes whose executable file name matches one of the
+/// given names (case-insensitive, without `.exe`).
+pub fn running_process_names(names: &[&str]) -> Vec<(String, Option<PathBuf>)> {
+    #[cfg(windows)]
+    {
+        let all_processes = {
+            let mut lock = PROCESS_CACHE.lock().unwrap_or_else(|e| e.into_inner());
+            if let Some(entry) = &*lock {
+                if entry.timestamp.elapsed() < PROCESS_CACHE_TTL {
+                    entry.entries.clone()
+                } else {
+                    let fresh = fetch_running_processes_raw();
+                    *lock = Some(ProcessSnapshot {
+                        timestamp: Instant::now(),
+                        entries: fresh.clone(),
+                    });
+                    fresh
+                }
+            } else {
+                let fresh = fetch_running_processes_raw();
+                *lock = Some(ProcessSnapshot {
+                    timestamp: Instant::now(),
+                    entries: fresh.clone(),
+                });
+                fresh
+            }
+        };
+
+        all_processes
+            .into_iter()
+            .filter(|(stem, _)| {
+                names.iter().any(|n| {
+                    stem == *n
+                        || (stem.starts_with(n)
+                            && stem.as_bytes().get(n.len()).copied() == Some(b'-'))
+                })
+            })
+            .collect()
+    }
+    #[cfg(not(windows))]
+    {
         let _ = names;
         Vec::new()
     }
@@ -289,7 +340,7 @@ pub fn running_process_names(names: &[&str]) -> Vec<(String, Option<PathBuf>)> {
 /// Best-effort check whether any process image lives inside `root`.
 pub fn process_running_under(root: &Path) -> bool {
     let names = [
-        "codex", "claude", "antigravity", "electron", "code", "node", "git", "docker",
+        "codex", "claude", "antigravity", "opencode", "t3code", "bionic", "cursor", "windsurf", "codeium", "ollama", "electron", "code", "node", "git", "docker",
     ];
     running_process_names(&names)
         .into_iter()

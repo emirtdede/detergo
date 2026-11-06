@@ -1,9 +1,15 @@
-export type UiLocale = "tr" | "en";
+import { SupportedLanguage } from "@/types";
+import { LANGUAGES_LIST } from "@/locales/languages";
 
-/** Only locales with a complete UI string catalogue may appear in Settings. */
-export const SUPPORTED_UI_LOCALES: readonly UiLocale[] = ["tr", "en"];
+export type UiLocale = SupportedLanguage;
 
-/** Resolve any persisted locale to the UI language we can actually render. */
-export function resolveUiLocale(language?: string | null): UiLocale {
-  return language === "tr" ? "tr" : "en";
+/** All 73 locales supported across the application */
+export const SUPPORTED_UI_LOCALES: readonly SupportedLanguage[] = LANGUAGES_LIST.map((l) => l.id);
+
+/** Resolve any persisted locale to a supported language, falling back to English. */
+export function resolveUiLocale(language?: string | null): SupportedLanguage {
+  if (!language) return "en";
+  const normalized = language.toLowerCase();
+  const found = LANGUAGES_LIST.find((l) => l.id === normalized);
+  return found ? found.id : "en";
 }

@@ -2,7 +2,7 @@ import { TranslationSchema } from "../types";
 
 export const lv: TranslationSchema = {
   app: {
-    title: "Node Cleaner",
+    title: "Dev Cleaner",
     tagline: "node_modules Tīrītājs",
     description: "Tūlītēji atgūstiet izstrādātāja diska vietu.",
   },

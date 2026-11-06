@@ -6,8 +6,6 @@
   min-height: 0;
   height: 100%;
   width: 100%;
-  max-width: 1240px;
-  margin-inline: auto;
 }
 
 /* Document-style pages (caches, agents, history) grow with their content and
@@ -16,13 +14,10 @@
 .page-view {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
   min-width: 0;
   width: 100%;
-  /* Document pages share the dashboard's readable column width on ultra-wide
-     windows instead of hugging the left edge. */
-  max-width: 1240px;
-  margin-inline: auto;
+  padding-bottom: var(--space-8);
 }
 
 /* The item table is virtualized and needs a definite box to scroll inside.

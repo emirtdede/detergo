@@ -2,7 +2,7 @@ import { TranslationSchema } from "../types";
 
 export const el: TranslationSchema = {
   app: {
-    title: "Node Cleaner",
+    title: "Dev Cleaner",
     tagline: "Καθαριστής node_modules",
     description: "Ανακτήστε χώρο στο δίσκο για προγραμματιστές άμεσα.",
   },

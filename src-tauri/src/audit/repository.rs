@@ -75,8 +75,7 @@ impl AuditRepository {
             .map(PathBuf::from)
             .or_else(|_| std::env::var("USERPROFILE").map(|p| PathBuf::from(p).join(".config")))
             .unwrap_or_else(|_| PathBuf::from("."));
-        let dir = base.join("node-cleaner");
-        let _ = fs::create_dir_all(&dir);
+        let dir = crate::platform::resolve_app_dir(&base);
         Self {
             history_path: dir.join("history.jsonl"),
             snapshots_path: dir.join("snapshots.jsonl"),
@@ -139,6 +138,40 @@ impl AuditRepository {
 
     /// Removes every persisted history/snapshot/action record. Missing files are
     /// treated as already cleared, but a real delete failure is reported.
+    /// Removes only cleanup history and storage snapshot files, keeping action logs intact.
+    pub fn clear_cleanups(&self) -> Result<(), AppError> {
+        for path in [&self.history_path, &self.snapshots_path] {
+            match fs::remove_file(path) {
+                Ok(()) => {}
+                Err(err) if err.kind() == std::io::ErrorKind::NotFound => {}
+                Err(err) => {
+                    return Err(AppError::SettingsWriteFailed(format!(
+                        "Temizlik geçmişi dosyası silinemedi ({}): {}",
+                        path.display(),
+                        err
+                    )))
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Removes only official CLI action logs, keeping cleanup and snapshot records intact.
+    pub fn clear_actions(&self) -> Result<(), AppError> {
+        match fs::remove_file(&self.actions_path) {
+            Ok(()) => {}
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => {}
+            Err(err) => {
+                return Err(AppError::SettingsWriteFailed(format!(
+                    "Komut geçmişi dosyası silinemedi ({}): {}",
+                    self.actions_path.display(),
+                    err
+                )))
+            }
+        }
+        Ok(())
+    }
+
     pub fn clear_all(&self) -> Result<(), AppError> {
         for path in [&self.history_path, &self.snapshots_path, &self.actions_path] {
             match fs::remove_file(path) {

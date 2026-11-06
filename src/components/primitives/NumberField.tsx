@@ -66,13 +66,15 @@ export const NumberField: React.FC<NumberFieldProps> = ({
     <div className="number-field">
       <input
         id={id}
-        type="number"
+        type="text"
         className="number-field-input"
         inputMode="numeric"
+        pattern="[0-9]*"
+        role="spinbutton"
+        aria-valuenow={Number(draft) || value}
+        aria-valuemin={min}
+        aria-valuemax={max}
         value={draft}
-        min={min}
-        max={max}
-        step={step}
         aria-label={ariaLabel}
         onChange={(e) => setDraft(e.target.value)}
         onFocus={() => setEditing(true)}
@@ -81,7 +83,13 @@ export const NumberField: React.FC<NumberFieldProps> = ({
           commit(e.target.value);
         }}
         onKeyDown={(e) => {
-          if (e.key === "Enter") {
+          if (e.key === "ArrowUp") {
+            e.preventDefault();
+            bump(1);
+          } else if (e.key === "ArrowDown") {
+            e.preventDefault();
+            bump(-1);
+          } else if (e.key === "Enter") {
             e.preventDefault();
             commit((e.target as HTMLInputElement).value);
             (e.target as HTMLInputElement).blur();

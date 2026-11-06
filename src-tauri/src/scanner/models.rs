@@ -56,6 +56,8 @@ pub struct CleanupItem {
     /// Only proven, non-agent SAFE cache targets may be selected automatically.
     pub auto_selectable: bool,
     pub last_modified_at: Option<String>,
+    #[serde(default)]
+    pub last_modified_ms: Option<i64>,
     pub status: ItemStatus,
     pub parent_item_id: Option<String>,
     pub note: Option<String>,

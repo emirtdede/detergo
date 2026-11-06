@@ -12,8 +12,7 @@ pub struct SettingsRepository {
 impl SettingsRepository {
     pub fn new() -> Self {
         let base_dir = dirs_or_fallback();
-        let app_dir = base_dir.join("node-cleaner");
-        let _ = fs::create_dir_all(&app_dir);
+        let app_dir = crate::platform::resolve_app_dir(&base_dir);
         let config_path = app_dir.join("config.json");
         Self { config_path }
     }

@@ -145,7 +145,7 @@ impl MeasurementEngine {
         let cpu_count = std::thread::available_parallelism()
             .map(|n| n.get())
             .unwrap_or(4);
-        let concurrency = (cpu_count / 2).clamp(2, 4);
+        let concurrency = (cpu_count * 2).clamp(4, 32);
         Self {
             cancellation_token,
             concurrency_limit: concurrency,

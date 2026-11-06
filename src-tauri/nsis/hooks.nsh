@@ -1,5 +1,5 @@
 ; ============================================================
-; Node Cleaner NSIS Installer/Uninstaller Hooks
+; Dev Cleaner NSIS Installer/Uninstaller Hooks
 ; - Header image sağa hizalama (MUI_HEADERIMAGE_RIGHT)
 ; - Başlık / alt başlık sol hiza düzeltmesi (Control 1037/1038)
 ; ============================================================

@@ -79,6 +79,7 @@ fn make_session(root: &Path, targets: Vec<StoredTarget>) -> ScanSession {
             selectable: !t.protected,
             auto_selectable: false,
             last_modified_at: None,
+            last_modified_ms: None,
             status: ItemStatus::Ready,
             parent_item_id: None,
             note: None,

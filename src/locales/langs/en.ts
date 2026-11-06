@@ -2,7 +2,7 @@ import { TranslationSchema } from "../types";
 
 export const en: TranslationSchema = {
   app: {
-    title: "Node Cleaner",
+    title: "Dev Cleaner",
     tagline: "node_modules Cleaner",
     description: "Reclaim developer disk space instantly.",
   },
@@ -182,11 +182,11 @@ export const en: TranslationSchema = {
       "From local-first architectures and native desktop integrations to privacy-conscious processing, secure admin systems, algorithmic validation, machine-learning-supported simulations, and user-controlled AI features, Vellium approaches software as an engineered comfort space — not a temporary interface.",
       "We build systems that reduce chaos, preserve control, and turn technology into something precise, reliable, and lasting."
     ],
-    privacyIntro: "Node Cleaner is engineered with a strict local-first philosophy and absolute respect for user privacy.",
+    privacyIntro: "Dev Cleaner is engineered with a strict local-first philosophy and absolute respect for user privacy.",
     privacySections: [
       {
         title: "1. Zero Telemetry & Offline Architecture",
-        content: "Node Cleaner never collects usage statistics, telemetry metrics, crash logs, or analytics. The application operates entirely offline without sending network requests to external servers."
+        content: "Dev Cleaner never collects usage statistics, telemetry metrics, crash logs, or analytics. The application operates entirely offline without sending network requests to external servers."
       },
       {
         title: "2. Filesystem & Project Confidentiality",
@@ -201,11 +201,11 @@ export const en: TranslationSchema = {
         content: "All scanning and cleaning activities run solely when explicitly triggered by you. There are no background daemons, automated cloud syncs, or hidden watchers."
       }
     ],
-    termsIntro: "By using Node Cleaner, you acknowledge and agree to the following terms and licensing provisions.",
+    termsIntro: "By using Dev Cleaner, you acknowledge and agree to the following terms and licensing provisions.",
     termsSections: [
       {
         title: "1. License Grant",
-        content: "Vellium grants you a non-exclusive, non-transferable end-user license to install and use Node Cleaner for personal and commercial project maintenance."
+        content: "Vellium grants you a non-exclusive, non-transferable end-user license to install and use Dev Cleaner for personal and commercial project maintenance."
       },
       {
         title: "2. User Responsibility",
@@ -213,14 +213,14 @@ export const en: TranslationSchema = {
       },
       {
         title: "3. Intellectual Property",
-        content: "Node Cleaner, including its source code, visual design, trademarks, branding, and algorithms, is the exclusive intellectual property of Vellium and protected under international copyright treaties."
+        content: "Dev Cleaner, including its source code, visual design, trademarks, branding, and algorithms, is the exclusive intellectual property of Vellium and protected under international copyright treaties."
       },
       {
         title: "4. Disclaimer of Warranty (AS IS)",
         content: "The software is provided 'AS IS', without warranty of any kind. Vellium makes no warranties that the application will be uninterrupted, error-free, or compatible with all operating system environments."
       }
     ],
-    securityIntro: "Node Cleaner incorporates robust safety layers to safeguard your system stability and prevent unintended data loss.",
+    securityIntro: "Dev Cleaner incorporates robust safety layers to safeguard your system stability and prevent unintended data loss.",
     securitySections: [
       {
         title: "1. System Directory Safeguard",
@@ -236,10 +236,10 @@ export const en: TranslationSchema = {
       },
       {
         title: "4. Clean Exit (No Lingering Background Processes)",
-        content: "When closed, Node Cleaner shuts down completely. It leaves no background services, hidden tray watchers, or scheduled tasks on your computer."
+        content: "When closed, Dev Cleaner shuts down completely. It leaves no background services, hidden tray watchers, or scheduled tasks on your computer."
       }
     ],
-    licensesIntro: "Node Cleaner proudly leverages open-source technology. The third-party libraries and their licenses are listed below:",
+    licensesIntro: "Dev Cleaner proudly leverages open-source technology. The third-party libraries and their licenses are listed below:",
     licensesList: [
       {
         name: "Tauri",

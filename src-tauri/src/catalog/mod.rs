@@ -24,6 +24,7 @@ pub struct CatalogIndex {
     catalog: Catalog,
     by_id: HashMap<String, usize>,
     exact: HashMap<String, Vec<usize>>,
+    by_extension: HashMap<String, Vec<usize>>,
     patterns: Vec<(String, usize)>,
     project_markers: Vec<String>,
 }
@@ -43,6 +44,7 @@ impl CatalogIndex {
     fn build(catalog: Catalog) -> Self {
         let mut by_id = HashMap::new();
         let mut exact: HashMap<String, Vec<usize>> = HashMap::new();
+        let mut by_extension: HashMap<String, Vec<usize>> = HashMap::new();
         let mut patterns = Vec::new();
         let mut project_markers: Vec<String> = Vec::new();
 
@@ -50,7 +52,10 @@ impl CatalogIndex {
             by_id.insert(rule.id.clone(), idx);
             for name in &rule.names {
                 let lower = name.to_lowercase();
-                if lower.contains('*') {
+                if lower.starts_with("*.") && lower[2..].find('*').is_none() {
+                    let ext = lower[2..].to_string();
+                    by_extension.entry(ext).or_default().push(idx);
+                } else if lower.contains('*') {
                     patterns.push((lower, idx));
                 } else {
                     exact.entry(lower).or_default().push(idx);
@@ -89,6 +94,7 @@ impl CatalogIndex {
             catalog,
             by_id,
             exact,
+            by_extension,
             patterns,
             project_markers,
         }
@@ -116,6 +122,14 @@ impl CatalogIndex {
         if let Some(idxs) = self.exact.get(&lower) {
             for idx in idxs {
                 out.push(&self.catalog.rules[*idx]);
+            }
+        }
+        if let Some(pos) = lower.rfind('.') {
+            let ext = &lower[pos + 1..];
+            if let Some(idxs) = self.by_extension.get(ext) {
+                for idx in idxs {
+                    out.push(&self.catalog.rules[*idx]);
+                }
             }
         }
         for (pattern, idx) in &self.patterns {

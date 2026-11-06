@@ -2,7 +2,7 @@ import { TranslationSchema } from "../types";
 
 export const tr: TranslationSchema = {
   app: {
-    title: "Node Cleaner",
+    title: "Dev Cleaner",
     tagline: "node_modules Temizleyici",
     description: "Geliştirici disk alanını anında geri kazanın.",
   },
@@ -182,11 +182,11 @@ export const tr: TranslationSchema = {
       "Yerel öncelikli mimarilerden ve yerel masaüstü entegrasyonlarından, gizliliğe duyarlı işlemeye, güvenli yönetici sistemlerine, algoritmik doğrulamaya, makine öğrenimi destekli simülasyonlara ve kullanıcı kontrollü yapay zekâ özelliklerine kadar Vellium, yazılıma geçici bir arayüz olarak değil, mühendisliği titizlikle yapılmış bir konfor alanı olarak yaklaşır.",
       "Kaosu azaltan, kontrolü koruyan ve teknolojiyi hassas, güvenilir ve kalıcı bir değere dönüştüren sistemler inşa ediyoruz."
     ],
-    privacyIntro: "Node Cleaner, en yüksek gizlilik standartlarına uygun olarak %100 yerel (local-first) prensibiyle geliştirilmiştir.",
+    privacyIntro: "Dev Cleaner, en yüksek gizlilik standartlarına uygun olarak %100 yerel (local-first) prensibiyle geliştirilmiştir.",
     privacySections: [
       {
         title: "1. Sıfır Telemetri ve Sıfır Ağ İletişimi",
-        content: "Node Cleaner hiçbir kullanım istatistiği, telemetri verisi, hata raporu veya analitik izleyici toplamaz. Uygulama disk taraması yaparken internete bağlanmaz veya harici sunucularla iletişim kurmaz."
+        content: "Dev Cleaner hiçbir kullanım istatistiği, telemetri verisi, hata raporu veya analitik izleyici toplamaz. Uygulama disk taraması yaparken internete bağlanmaz veya harici sunucularla iletişim kurmaz."
       },
       {
         title: "2. Dosya Yolları ve Proje Gizliliği",
@@ -201,7 +201,7 @@ export const tr: TranslationSchema = {
         content: "Tüm işlemler doğrudan sizin tetiklemenizle başlar. Arka planda sessiz veya izinsiz çalışan herhangi bir arka plan servisi veya veri toplayıcı servis bulunmamaktadır."
       }
     ],
-    termsIntro: "Node Cleaner uygulamasını kullanarak aşağıdaki kullanım koşullarını ve lisans hükümlerini kabul etmiş sayılırsınız.",
+    termsIntro: "Dev Cleaner uygulamasını kullanarak aşağıdaki kullanım koşullarını ve lisans hükümlerini kabul etmiş sayılırsınız.",
     termsSections: [
       {
         title: "1. Lisans Verilmesi",
@@ -213,14 +213,14 @@ export const tr: TranslationSchema = {
       },
       {
         title: "3. Fikri Mülkiyet Hakları",
-        content: "Node Cleaner'ın kaynak kodu, tasarımı, arayüzü, logoları, algoritmaları ve tüm kurumsal varlıkları Vellium'un fikri mülkiyetindedir. Telif hakları kanunları ve uluslararası anlaşmalarla korunmaktadır."
+        content: "Dev Cleaner'ın kaynak kodu, tasarımı, arayüzü, logoları, algoritmaları ve tüm kurumsal varlıkları Vellium'un fikri mülkiyetindedir. Telif hakları kanunları ve uluslararası anlaşmalarla korunmaktadır."
       },
       {
         title: "4. Garanti Reddi (AS IS)",
         content: "Uygulama 'olduğu gibi' (AS IS) esasıyla sunulmaktadır. Vellium, uygulamanın kesintisiz veya hatasız çalışacağına dair zımni bir garanti vermez, ancak en yüksek kararlılığı sağlamak için sürekli iyileştirmeler yapar."
       }
     ],
-    securityIntro: "Node Cleaner, sistem kararlılığınızı ve veri güvenliğinizi korumak için çok katmanlı güvenlik bariyerleriyle donatılmıştır.",
+    securityIntro: "Dev Cleaner, sistem kararlılığınızı ve veri güvenliğinizi korumak için çok katmanlı güvenlik bariyerleriyle donatılmıştır.",
     securitySections: [
       {
         title: "1. Sistem Dizinleri Koruma Kalkanı",
@@ -236,10 +236,10 @@ export const tr: TranslationSchema = {
       },
       {
         title: "4. Arka Plan Süreci Bulunmaması",
-        content: "Node Cleaner penceresi kapatıldığında arka planda çalışmaya devam etmez. Disk üzerinde sürekli gözetleme (watcher) veya otomatik arka plan silme işlemi gerçekleştirmez."
+        content: "Dev Cleaner penceresi kapatıldığında arka planda çalışmaya devam etmez. Disk üzerinde sürekli gözetleme (watcher) veya otomatik arka plan silme işlemi gerçekleştirmez."
       }
     ],
-    licensesIntro: "Node Cleaner, açık kaynak topluluğunun değerli katkılarıyla geliştirilmiştir. Kullanılan kütüphaneler ve lisansları aşağıda listelenmiştir:",
+    licensesIntro: "Dev Cleaner, açık kaynak topluluğunun değerli katkılarıyla geliştirilmiştir. Kullanılan kütüphaneler ve lisansları aşağıda listelenmiştir:",
     licensesList: [
       {
         name: "Tauri",

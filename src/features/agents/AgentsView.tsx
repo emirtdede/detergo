@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Bot,
   EyeOff,
@@ -6,6 +6,7 @@ import {
   Plus,
   RefreshCw,
   ShieldAlert,
+  ShieldCheck,
   Trash2,
   TrendingUp,
 } from "lucide-react";
@@ -18,7 +19,7 @@ import { useScanController } from "@/features/scan/useScanController";
 import { useUIText } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { formatBytes } from "@/lib/formatters";
-import { AgentProviderInfo, AppSettings, GrowthEntry } from "@/types";
+import { AgentProviderInfo, AppSettings } from "@/types";
 import { ItemTable, maskPath } from "@/features/items/ItemTable";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
@@ -36,6 +37,12 @@ const BUILTIN_NAMES: Record<string, string> = {
   codex: "Codex",
   "claude-code": "Claude Code",
   antigravity: "Antigravity",
+  opencode: "OpenCode",
+  t3code: "T3 Code",
+  bionic: "Bionic",
+  cursor: "Cursor",
+  windsurf: "Windsurf",
+  ollama: "Ollama",
 };
 
 export const AgentsView: React.FC = () => {
@@ -46,8 +53,8 @@ export const AgentsView: React.FC = () => {
   const status = useScanStore((s) => s.status);
   const error = useScanStore((s) => s.error);
   const progress = useScanStore((s) => s.progress);
+  const restored = useScanStore((s) => s.restored);
   const [providers, setProviders] = useState<AgentProviderInfo[]>([]);
-  const [growth, setGrowth] = useState<GrowthEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const maskPaths = usePreferencesStore((s) => s.maskPaths);
@@ -60,20 +67,24 @@ export const AgentsView: React.FC = () => {
   const [toolRoots, setToolRoots] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
-  const loadProviders = () => {
+  const loadProviders = (silent = false) => {
+    if (loading) return;
     setLoading(true);
     setLoadError(null);
-    Promise.all([scannerApi.getAgentProviders(), scannerApi.getGrowthReport()])
-      .then(([list, report]) => {
+    scannerApi.getAgentProviders()
+      .then((list) => {
         setProviders(list);
-        setGrowth(report.entries);
+        if (!silent) showToast("AI araçları güncellendi", "info");
       })
-      .catch((err) => setLoadError(describeError(err)))
+      .catch((err) => {
+        setLoadError(describeError(err));
+        showToast(`AI sağlayıcıları alınamadı: ${describeError(err)}`, "error");
+      })
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
-    loadProviders();
+    loadProviders(true);
   }, []);
 
   const applySettings = (settings: AppSettings) => {
@@ -158,18 +169,34 @@ export const AgentsView: React.FC = () => {
 
   // The AI storage table distinguishes the same four scan states as Projects,
   // so "nothing scanned yet" is not shown after a failed or empty scan.
+  const isLoadedOrScanned = status === "completed" || itemIds.length > 0 || restored;
   const emptyTitle = isScanning
     ? ui.common.scanning
     : status === "failed"
       ? ui.errors.title
-      : status === "idle"
-        ? ui.overview.noScan
-        : ui.table.noItems;
+      : isLoadedOrScanned
+        ? "Temizlenebilir AI Kalıntısı Bulunamadı"
+        : "AI Araçları Taranmadı";
   const emptyDescription = isScanning
     ? `${progress?.entriesFound ?? 0} / ${progress?.entriesMeasured ?? 0}`
     : status === "failed"
       ? error?.message ?? ui.overview.startHint
-      : ui.overview.scanFirst;
+      : isLoadedOrScanned
+        ? "Taranan AI araçları ve çalışma alanı temiz durumda. Silinebilecek oturum veya geçici log dosyası yok."
+        : "AI depolamasını analiz etmek için yukarıdaki 'AI depolamasını tara' butonunu kullanın.";
+
+  const agentTotals = useMemo(() => {
+    let cleanable = 0;
+    let safe = 0;
+    for (const item of items) {
+      if (item.protected || item.safetyClass === "keep" || !item.selectable) continue;
+      const b = item.estimatedReclaimBytes ?? 0;
+      cleanable += b;
+      if (item.safetyClass === "safe") safe += b;
+    }
+    const detectedCount = providers.filter((p) => p.installed).length;
+    return { cleanable, safe, detectedCount };
+  }, [items, providers]);
 
   return (
     <div className="page-view">
@@ -192,8 +219,8 @@ export const AgentsView: React.FC = () => {
             <Button
               variant="secondary"
               size="sm"
-              icon={<RefreshCw size={13} />}
-              onClick={loadProviders}
+              icon={<RefreshCw size={13} className={loading ? "spin" : ""} />}
+              onClick={() => loadProviders(false)}
               disabled={loading}
             >
               {ui.common.refresh}
@@ -210,6 +237,66 @@ export const AgentsView: React.FC = () => {
           </>
         }
       />
+
+      {/* Shared Bento KPI Strip for Agents */}
+      <div className="nc-bento-strip nc-bento-strip--3">
+        <div className="nc-kpi-card">
+          <div className="nc-kpi-card-header">
+            <span className="nc-kpi-card-label">AI Depolama Yükü</span>
+            <span className="nc-kpi-card-icon nc-kpi-card-icon--accent">
+              <Bot size={14} />
+            </span>
+          </div>
+          <div className="nc-kpi-card-body">
+            <span className="nc-kpi-card-value">
+              {items.length > 0
+                ? formatBytes(agentTotals.cleanable)
+                : agentTotals.detectedCount > 0
+                  ? "Taranmadı"
+                  : "0 B"}
+            </span>
+            <span className="nc-kpi-card-sub">
+              {items.length > 0
+                ? `${items.length} oturum & bellek öğesi`
+                : "Sağ üstten 'AI depolamasını tara' butonuna tıklayın"}
+            </span>
+          </div>
+        </div>
+
+        <div className="nc-kpi-card">
+          <div className="nc-kpi-card-header">
+            <span className="nc-kpi-card-label">Güvenli Geri Kazanım</span>
+            <span className="nc-kpi-card-icon nc-kpi-card-icon--success">
+              <ShieldCheck size={14} />
+            </span>
+          </div>
+          <div className="nc-kpi-card-body">
+            <span className="nc-kpi-card-value">
+              {items.length > 0
+                ? formatBytes(agentTotals.safe)
+                : agentTotals.detectedCount > 0
+                  ? "Taranmadı"
+                  : "0 B"}
+            </span>
+            <span className="nc-kpi-card-sub">Geri Dönüşüm Kutusuna taşınır</span>
+          </div>
+        </div>
+
+        <div className="nc-kpi-card">
+          <div className="nc-kpi-card-header">
+            <span className="nc-kpi-card-label">Yüklü AI Ajanları</span>
+            <span className="nc-kpi-card-icon nc-kpi-card-icon--purple">
+              <TrendingUp size={14} />
+            </span>
+          </div>
+          <div className="nc-kpi-card-body">
+            <span className="nc-kpi-card-value">
+              {agentTotals.detectedCount} / {providers.length} Ajan
+            </span>
+            <span className="nc-kpi-card-sub">Claude Code, Cursor, Codex...</span>
+          </div>
+        </div>
+      </div>
 
       {loadError && (
         <p className="items-warning">
@@ -243,13 +330,13 @@ export const AgentsView: React.FC = () => {
           title={loading ? ui.common.loading : ui.agents.noProviders}
         />
       ) : (
-        <div className="provider-grid">
+        <div className="agents-provider-grid">
           {providers.map((provider) => {
             const stats = providerStats[provider.id];
             const isCustom = provider.id.startsWith("custom:");
             return (
-              <article key={provider.id} className="provider-card">
-                <h3>
+              <article key={provider.id} className="agents-provider-card">
+                <header>
                   <span className="provider-card-name" title={provider.name}>
                     {provider.name}
                   </span>
@@ -258,13 +345,13 @@ export const AgentsView: React.FC = () => {
                   {isCustom && <span className="chip ok">{ui.agents.keepOnly}</span>}
                   {stats?.active && <span className="chip warn">{ui.agents.active}</span>}
                   {!provider.installed && <span className="chip">{ui.agents.notInstalled}</span>}
-                </h3>
+                </header>
                 <div className="provider-paths">
                   {provider.roots
                     .filter((root) => root.exists)
                     .slice(0, 4)
                     .map((root) => (
-                      <span key={root.path}>
+                      <span key={root.path} title={maskPaths ? maskPath(root.path) : root.path}>
                         {maskPaths ? maskPath(root.path) : root.path}
                       </span>
                     ))}
@@ -277,7 +364,7 @@ export const AgentsView: React.FC = () => {
                   <span>{ui.overview.cleanable}</span>
                   <strong>{formatBytes(stats?.cleanableBytes ?? 0)}</strong>
                 </div>
-                {provider.note && <p className="plan-note">{provider.note}</p>}
+                <p className="plan-note">{provider.note || "\u00A0"}</p>
                 <div className="provider-actions">
                   {isCustom ? (
                     <Button
@@ -305,53 +392,18 @@ export const AgentsView: React.FC = () => {
         </div>
       )}
 
-      <section>
-        <h3 className="items-meta" style={{ marginBottom: 8 }}>
-          <span>
-            <TrendingUp size={13} /> {ui.agents.growth}
-          </span>
-        </h3>
-        {growth.length === 0 ? (
-          <p className="plan-note">{ui.agents.growthEmpty}</p>
-        ) : (
-          <table className="table-simple">
-            <thead>
-              <tr>
-                <th>{ui.agents.providerNote}</th>
-                <th>{ui.table.category}</th>
-                <th className="num">{ui.overview.cleanable}</th>
-                <th className="num">{ui.result.volumeDelta}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {growth.slice(0, 8).map((entry) => (
-                <tr key={`${entry.provider}-${entry.category}`}>
-                  <td>{entry.provider}</td>
-                  <td>{entry.category}</td>
-                  <td className="num">{formatBytes(entry.currentBytes)}</td>
-                  <td className="num">
-                    <span className={`chip ${entry.level === "critical" ? "danger" : entry.level === "attention" ? "warn" : "ok"}`}>
-                      {entry.deltaBytes >= 0 ? "+" : ""}
-                      {formatBytes(Math.abs(entry.deltaBytes))}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
-
       {items.length > 0 ? (
         <ItemTable items={items} showProject={false} />
       ) : (
-        <EmptyState
-          variant="compact"
-          live={isScanning}
-          icon={<ShieldAlert size={20} />}
-          title={emptyTitle}
-          description={emptyDescription}
-        />
+        <div className="agents-scan-results-card">
+          <EmptyState
+            variant="compact"
+            live={isScanning}
+            icon={isLoadedOrScanned ? <ShieldCheck size={28} style={{ color: "var(--success)" }} /> : <ShieldAlert size={28} />}
+            title={emptyTitle}
+            description={emptyDescription}
+          />
+        </div>
       )}
 
       <Dialog

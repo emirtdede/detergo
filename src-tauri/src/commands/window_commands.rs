@@ -24,5 +24,13 @@ pub fn show_main_window(app: &AppHandle) {
         let _ = window.show();
         let _ = window.unminimize();
         let _ = window.set_focus();
+
+        #[cfg(windows)]
+        {
+            if let Ok(hwnd) = window.hwnd() {
+                use windows::Win32::Foundation::HWND;
+                crate::platform::force_foreground(HWND(hwnd.0 as _));
+            }
+        }
     }
 }

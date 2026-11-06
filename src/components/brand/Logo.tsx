@@ -27,7 +27,7 @@ export const Logo: React.FC<LogoProps> = ({
         viewBox="0 0 32 32"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        aria-label="Node Cleaner Logo"
+        aria-label="Dev Cleaner Logo"
       >
         <defs>
           <linearGradient id="nc-grad-primary" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
@@ -86,7 +86,7 @@ export const Logo: React.FC<LogoProps> = ({
             color: "var(--text-primary)",
           }}
         >
-          Node Cleaner
+          Dev Cleaner
         </span>
       )}
     </div>

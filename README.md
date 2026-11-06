@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🧹 Node Cleaner — Hızlı & Güvenli node_modules Temizleme Aracı
+# 🧹 Dev Cleaner — Hızlı, Güvenli ve Çoklu Ekosistem Geliştirici Temizlik Aracı
 
 </div>
 
@@ -27,15 +27,19 @@
 ![TanStack Virtual](https://img.shields.io/badge/TanStack-Virtual_3-FF4154?style=for-the-badge)
 ![Windows](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D6?style=for-the-badge&logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-Proprietary-yellow?style=for-the-badge)
+![Languages](https://img.shields.io/badge/Languages-73%20Supported-success?style=for-the-badge&logo=google-translate)
+![Safety](https://img.shields.io/badge/Safety-Recycle%20Bin%20%7C%20Zero%20Data%20Loss-brightgreen?style=for-the-badge&logo=windows)
+![MCP](https://img.shields.io/badge/MCP-Server%20Builtin-blueviolet?style=for-the-badge)
 
 </div>
 
 ---
 
-## ⚠️ Release status (2.0.0)
+## 🚀 Release status (2.2.0 — Dev Cleaner)
 
-This repository contains Node Cleaner 2.0: a catalog-driven, multi-ecosystem
-developer-artifact and AI-agent storage cleaner. The destructive path is
+This repository contains **Dev Cleaner 2.2**: a comprehensive, catalog-driven, multi-ecosystem
+developer-artifact and AI-agent storage reclaimer featuring 73 fully supported languages,
+customizable keyboard shortcuts, MCP server capabilities, and automated OS locale detection during Windows setup. The destructive path is
 Rust-backed and guarded by automated tests, and the previously pending verification
 work has been executed (real Recycle Bin round-trip, 10k/50k/1M-entry/300k-recording
 benchmarks, crash-during-delete, offline/no-telemetry, installer round-trips).
@@ -64,7 +68,7 @@ Where it conflicts with `docs/MASTER_SPEC.md`, the specification wins.
 
 <div align="center">
   <img src="assets/brand/app-icon.svg" alt="Node Cleaner Logo" width="130" height="130" />
-  <h3>Node Cleaner — High-Performance Disk Space Reclaimer & node_modules Cleaner</h3>
+  <h3>Dev Cleaner — High-Performance Multi-Ecosystem Developer Artifact & AI Agent Cleaner</h3>
   <p><em>Ultra-Fast Discovery, Monorepo Hierarchy Grouping & Safe Deletion for JavaScript & TypeScript Workspaces</em></p>
   <p><strong>Developed & Published by <a href="https://vellium.dev">Vellium</a></strong></p>
 </div>
@@ -92,7 +96,7 @@ Node Cleaner operates **100% locally** with zero telemetry, zero analytics, and 
   - **Recycle Bin (Reversible)**: Native Win32 Shell API integration (`IFileOperation`) allowing instant recovery from Windows Recycle Bin.
   - **Permanent Deletion**: Asynchronous high-throughput directory purge with double confirmation dialogs.
 - **📊 60 FPS Virtualized Grid**: TanStack Virtualizer powers buttery-smooth 60 FPS scrolling and rendering even across 10,000+ discovered project entries with zero DOM overhead.
-- **🌐 Localization (i18n)**: The legacy header uses a 75-locale dictionary with instant in-app switching. The 2.0 screens (Overview, Projects, AI Tools, Tool Caches, History, Settings) are localized in **English and Turkish only**; full 75-locale coverage for these screens is not claimed.
+- **🌐 Global Localization (73 Languages)**: Full native support for 73 languages with zero translation leakage via robust proxy fallbacks. RTL (Right-to-Left) dynamic mirroring for Arabic, Hebrew, Persian, and Urdu. Windows NSIS installer automatically defaults to your Windows system language.
 - **🎨 Modern Dark-Transparent Glassmorphism UI**: Custom frameless window styling with curated dark aesthetic design tokens, smooth animations, and responsive layouts.
 - **🔍 Real-Time Search & Sorting**: Filter projects by name, filesystem path, or package manager (`npm`, `pnpm`, `yarn`, `bun`), and sort by largest disk size or oldest modified date.
 - **🔒 100% Offline & Private**: Zero telemetry, zero analytics, zero external network requests.
@@ -325,7 +329,7 @@ Distributed under the **Proprietary License**. Copyright &copy; 2026 Vellium. Al
 
 <div align="center">
   <img src="assets/brand/app-icon.svg" alt="Node Cleaner Logo" width="130" height="130" />
-  <h3>Node Cleaner — Yüksek Performanslı Disk Alanı Açma ve node_modules Temizleme Aracı</h3>
+  <h3>Dev Cleaner — Yüksek Performanslı Çoklu Ekosistem Geliştirici Artığı ve AI Ajanı Temizleme Aracı</h3>
   <p><em>JavaScript ve TypeScript Projeleri İçin Ultra Hızlı Tarama, Monorepo Hiyerarşi Gruplama ve Güvenli Silme</em></p>
   <p><strong>Geliştirici ve Yayıncı: <a href="https://vellium.dev">Vellium</a></strong></p>
 </div>
@@ -353,7 +357,7 @@ Uygulama **%100 yerel ve çevrimdışı** çalışır; hiçbir harici sunucuya b
   - **Çöp Kutusu (Geri Alınabilir)**: Yerel Win32 Shell API (`IFileOperation`) entegrasyonu ile klasörleri Windows Çöp Kutusu'na taşır.
   - **Kalıcı Silme**: Asenkron yüksek hızlı doğrudan disk temizliği (çift onaylı modal ile).
 - **📊 60 FPS Sanallaştırılmış Liste**: TanStack Virtualizer mimarisi ile 10.000+ proje listelense bile DOM şişmesi yaşanmaz, 60 FPS akıcı kaydırma sağlanır.
-- **🌐 Yerelleştirme (i18n)**: Eski başlık alanı 75 dilli sözlüğü kullanır ve dil anında değiştirilebilir. 2.0 ekranları (Genel Bakış, Projeler, AI Araçları, Araç Önbellekleri, Geçmiş, Ayarlar) yalnızca **İngilizce ve Türkçe** olarak yerelleştirilmiştir; bu ekranlar için 75 dilde tam kapsam iddia edilmemektedir.
+- **🌐 Küresel Yerelleştirme (73 Dil)**: Güçlü vekil (proxy fallback) mimarisi sayesinde sıfır dil sızıntısı ile 73 dilde eksiksiz çalışma. Arapça, İbranice, Farsça ve Urduca için dinamik RTL desteği. Windows kurulum sihirbazında otomatik sistem dili algılama ve dil seçici.
 - **🎨 Modern Karanlık Cam Efektli (Glassmorphism) Arayüz**: Özel çerçevesiz pencere tasarımı, estetik karanlık renk paleti ve akıcı mikro animasyonlar.
 - **🔍 Gerçek Zamanlı Arama ve Sıralama**: Proje adı veya dosya yoluna göre anında filtreleme; en büyük boyuta veya en eski değiştirilme tarihine göre sıralama.
 - **🔒 Tamamen Çevrimdışı ve Gizli**: Sıfır telemetri, sıfır analiz, sıfır dış ağ bağlantısı.

@@ -35,6 +35,14 @@ const SYSTEM_EXCLUSIONS: &[&str] = &[
     "programdata",
     "recovery",
     "msocache",
+    "$windows.~bt",
+    "$windows.~ws",
+    "system32",
+    "syswow64",
+    "perflogs",
+    "intel",
+    "amd",
+    "microsoft",
 ];
 
 const BATCH_SIZE: usize = 100;
@@ -278,10 +286,11 @@ impl<'a> DiscoveryEngine<'a> {
 
             let item_id = format!("t{}", &uuid::Uuid::new_v4().simple().to_string()[..24]);
             let parent_item_id = ancestor.as_ref().map(|(_, id)| id.clone());
-            let modified_at = std::fs::metadata(&path)
-                .ok()
-                .and_then(|m| m.modified().ok())
-                .map(system_time_to_iso);
+            let sys_modified = std::fs::metadata(&path).ok().and_then(|m| m.modified().ok());
+            let modified_at = sys_modified.map(system_time_to_iso);
+            let last_modified_ms = sys_modified
+                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                .map(|d| d.as_millis() as i64);
 
             let evidence_snapshot = EvidenceSnapshot {
                 rule_id: rule.id.clone(),
@@ -323,6 +332,7 @@ impl<'a> DiscoveryEngine<'a> {
                     && classification.confidence == crate::catalog::Confidence::High
                     && !rule.requires_idle,
                 last_modified_at: modified_at.clone(),
+                last_modified_ms,
                 status: if selectable {
                     ItemStatus::Discovered
                 } else {
@@ -428,9 +438,18 @@ fn entry_allowed(entry: &walkdir::DirEntry, exclusions: &HashSet<String>) -> boo
     if entry.depth() == 1 && SYSTEM_EXCLUSIONS.iter().any(|s| *s == name) {
         return false;
     }
-    // Never descend through junctions, symlinks or cloud reparse points. They
-    // can resolve outside the scan root and their content may hydrate remote
-    // data. Symlinks are covered by the same check.
+    if name == "packages" || name == "microsoft" {
+        if let Some(p) = entry.path().parent().and_then(|p| p.file_name()).map(|f| f.to_string_lossy().to_lowercase()) {
+            if p == "local" || p == "appdata" {
+                return false;
+            }
+        }
+    }
+    // Fast zero-syscall check: if DirEntry is known symlink, prune immediately!
+    if entry.file_type().is_symlink() {
+        return false;
+    }
+    // Never descend through junctions or cloud reparse points.
     if crate::platform::is_reparse_point(entry.path()) {
         return false;
     }

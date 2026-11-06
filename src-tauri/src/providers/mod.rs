@@ -60,6 +60,30 @@ pub fn list_agent_providers(settings: &AppSettings) -> Vec<AgentProviderInfo> {
             "antigravity",
             Some("Brain ve konuşmalar korunur; tarayıcı kayıtları yalnızca kayıt durduğunda temizlenebilir."),
         ),
+        (
+            "opencode",
+            Some("Yapılandırma ve opencode.db korunur; görev çıktıları, loglar ve derleme önbellekleri temizlenebilir."),
+        ),
+        (
+            "t3code",
+            Some("Kullanıcı profili korunur; GPU/Code Cache ve eski yükleyici kalıntıları temizlenebilir."),
+        ),
+        (
+            "bionic",
+            Some("Kullanıcı ayarları korunur; geçici Web/Code Cache ve log dosyaları temizlenebilir."),
+        ),
+        (
+            "cursor",
+            Some("Ayarlar ve sohbet geçmişi korunur; GPU, Code Cache ve web önbellekleri temizlenebilir."),
+        ),
+        (
+            "windsurf",
+            Some("Cascade sohbet geçmişi korunur; Electron ve GPU önbellekleri temizlenebilir."),
+        ),
+        (
+            "ollama",
+            Some("İndirilen yerel modeller ve kimlikler salt okunur korunur; geçici log ve güncelleme kalıntıları temizlenebilir."),
+        ),
     ] {
         if hidden.iter().any(|h| h == id) {
             continue;
@@ -231,10 +255,12 @@ pub fn scan_agents(
 
             let id = format!("t{}", &uuid::Uuid::new_v4().simple().to_string()[..24]);
             let display_name = spec.rel.to_string();
-            let modified_at = std::fs::metadata(&path)
+            let sys_time = std::fs::metadata(&path)
                 .ok()
                 .and_then(|m| m.modified().ok())
-                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok());
+            let last_modified_ms = sys_time.map(|d| d.as_millis() as i64);
+            let modified_at = sys_time
                 .map(|d| {
                     chrono::DateTime::from_timestamp(d.as_secs() as i64, 0)
                         .map(|dt| dt.format("%Y-%m-%dT%H:%M:%SZ").to_string())
@@ -281,6 +307,7 @@ pub fn scan_agents(
                 selectable,
                 auto_selectable: false,
                 last_modified_at: modified_at,
+                last_modified_ms,
                 status: if selectable {
                     ItemStatus::Ready
                 } else {
@@ -373,6 +400,7 @@ pub fn scan_agents(
                 selectable: false,
                 auto_selectable: false,
                 last_modified_at: None,
+                last_modified_ms: None,
                 status: ItemStatus::Blocked,
                 parent_item_id: None,
                 note: Some("Kullanıcı tanımlı araç; otomatik temizlik yapılmaz.".to_string()),

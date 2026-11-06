@@ -22,12 +22,24 @@ const CLAUDE_PROCESSES: &[&str] = &["claude"];
 // "electron" is intentionally not included: it is shared by many unrelated
 // desktop applications and would block Antigravity cleanup on most machines.
 const ANTIGRAVITY_PROCESSES: &[&str] = &["antigravity", "antigravity-ide", "antigravity ide"];
+const OPENCODE_PROCESSES: &[&str] = &["opencode", "ai.opencode.desktop"];
+const T3CODE_PROCESSES: &[&str] = &["t3code", "t3code-v2"];
+const BIONIC_PROCESSES: &[&str] = &["bionic"];
+const CURSOR_PROCESSES: &[&str] = &["cursor"];
+const WINDSURF_PROCESSES: &[&str] = &["windsurf", "codeium"];
+const OLLAMA_PROCESSES: &[&str] = &["ollama", "ollama_app"];
 
 pub fn provider_processes(provider: &str) -> &'static [&'static str] {
     match provider {
         "codex" => CODEX_PROCESSES,
         "claude-code" => CLAUDE_PROCESSES,
         "antigravity" => ANTIGRAVITY_PROCESSES,
+        "opencode" => OPENCODE_PROCESSES,
+        "t3code" => T3CODE_PROCESSES,
+        "bionic" => BIONIC_PROCESSES,
+        "cursor" => CURSOR_PROCESSES,
+        "windsurf" => WINDSURF_PROCESSES,
+        "ollama" => OLLAMA_PROCESSES,
         _ => &[],
     }
 }

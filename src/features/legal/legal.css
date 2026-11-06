@@ -117,7 +117,7 @@
 
 .legal-doc-summary {
   margin: 0;
-  max-width: 72ch;
+  width: 100%; max-width: 100%;
   color: var(--text-secondary);
   font-size: var(--text-md);
   line-height: var(--leading-relaxed);
@@ -172,7 +172,7 @@
 
 .legal-paragraph {
   margin: 0;
-  max-width: 72ch;
+  width: 100%; max-width: 100%;
   color: var(--text-secondary);
   font-size: var(--text-md);
   line-height: var(--leading-relaxed);
@@ -186,7 +186,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-width: 72ch;
+  width: 100%; max-width: 100%;
   color: var(--text-secondary);
   font-size: var(--text-md);
   line-height: var(--leading-relaxed);
@@ -248,7 +248,7 @@
 
 .legal-note {
   margin: 0;
-  max-width: 72ch;
+  width: 100%; max-width: 100%;
   color: var(--text-muted);
   font-size: var(--text-md);
   line-height: var(--leading-relaxed);

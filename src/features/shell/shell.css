@@ -553,6 +553,7 @@
   font-size: var(--text-xs);
 }
 
+.table-simple th.num,
 .table-simple td.num {
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -593,3 +594,370 @@
   font-size: var(--text-xs);
   line-height: 1.4;
 }
+/* ==========================================================================
+   PRECISION CACHE PROVIDER CARDS & HISTORY RESPONSIVE EMPTY STATE
+   ========================================================================== */
+
+.provider-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.provider-card {
+  min-width: 0;
+  height: 252px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: 14px 16px;
+  transition: border-color var(--duration-fast);
+}
+
+.provider-card:hover {
+  border-color: var(--border-strong);
+}
+
+.provider-card-header,
+.provider-card h3 {
+  height: 26px;
+  margin: 0;
+  font-size: var(--text-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.provider-card-name {
+  font-weight: 650;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.provider-paths {
+  height: 48px;
+  min-height: 48px;
+  max-height: 48px;
+  margin: 6px 0 8px 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 18px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 3px;
+  min-width: 0;
+  overflow: hidden !important; /* Absolute zero scrollbar guarantee */
+  scrollbar-width: none !important;
+}
+
+.provider-paths::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.provider-paths span {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: block !important;
+  flex-shrink: 0;
+  height: 18px;
+  line-height: 18px;
+}
+
+.provider-card .form-row,
+.provider-card-size-row {
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
+  min-width: 0;
+  border-top: 1px solid var(--separator);
+  border-bottom: 1px solid var(--separator);
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+}
+
+.provider-card-footer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+  padding-top: 6px;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.provider-card-footer .provider-card-note {
+  margin: 0 0 8px 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.provider-card-footer .provider-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.provider-card-footer .provider-actions .btn {
+  background: var(--surface-alt) !important;
+  border: 1px solid var(--border-control, rgba(255, 255, 255, 0.12)) !important;
+  color: var(--text-secondary) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 0 10px !important;
+  height: 28px !important;
+  box-shadow: none !important;
+  transition: all var(--duration-fast);
+}
+
+.provider-card-footer .provider-actions .btn:hover:not(:disabled) {
+  background: var(--surface-hover) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Agents Empty Card Box */
+.agents-empty-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-sm);
+  padding: clamp(24px, 3vw, 40px) !important;
+  margin-top: var(--space-3);
+}
+
+/* Zero-Scrollbar Responsive Empty State for History & Projects */
+.view-container {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+}
+
+.history-page-view,
+.items-view {
+  flex: 1 1 0px !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.history-page-view #history-panel {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 0px !important;
+  min-height: 0 !important;
+  width: 100% !important;
+}
+
+.history-page-view #history-panel > .empty-state,
+.items-view > .empty-state {
+  flex: 1 1 0px !important;
+  min-height: clamp(340px, 46vh, 540px) !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--surface) !important;
+  border: 1px dashed var(--border-strong) !important;
+  border-radius: var(--radius-md) !important;
+  margin: var(--space-2) 0 0 0 !important;
+  box-sizing: border-box !important;
+  padding: var(--space-6) !important;
+}
+
+
+/* ==========================================================================
+   AGENTS GRID & HISTORY TABLE CARD WRAPPER
+   ========================================================================== */
+.agents-provider-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .agents-provider-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+.agents-provider-card {
+  min-width: 0;
+  height: 310px;
+  min-height: 310px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: 16px;
+  transition: border-color var(--duration-fast);
+}
+
+.agents-provider-card:hover {
+  border-color: var(--border-strong);
+}
+
+.agents-provider-card header,
+.agents-provider-card h3 {
+  height: 26px;
+  margin: 0;
+  font-size: var(--text-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.agents-provider-card .provider-paths {
+  height: 76px !important;
+  min-height: 76px !important;
+  max-height: 76px !important;
+  margin: 6px 0 !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+  line-height: 17px !important;
+  color: var(--text-muted) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  scrollbar-width: none !important;
+}
+
+.agents-provider-card .provider-paths::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.agents-provider-card .provider-paths span {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: block !important;
+  flex-shrink: 0 !important;
+  height: 17px !important;
+  line-height: 17px !important;
+  font-size: 10.5px !important;
+}
+
+.agents-provider-card .form-row {
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  border-top: 1px solid var(--separator);
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+}
+
+.agents-provider-card .form-row:last-of-type {
+  border-bottom: 1px solid var(--separator);
+}
+
+.agents-provider-card .plan-note {
+  margin: 8px 0 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+}
+
+.agents-provider-card .provider-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.agents-scan-results-card {
+  background: var(--surface) !important;
+  border: 1px dashed var(--border-strong) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-8) var(--space-6) !important;
+  margin-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 220px;
+}
+
+.history-table-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4) !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  overflow-x: auto !important;
+  flex: 1 1 0px !important;
+  min-height: clamp(340px, 46vh, 540px) !important;
+}
+
+.history-table-card--empty {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: var(--space-8) !important;
+}
+
+.history-table-card--empty .empty-state {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-height: auto !important;
+}
+

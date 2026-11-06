@@ -2,7 +2,7 @@ import { TranslationSchema } from "../types";
 
 export const fa: TranslationSchema = {
   app: {
-    title: "Node Cleaner",
+    title: "Dev Cleaner",
     tagline: "پاک‌کننده node_modules",
     description: "فضای دیسک توسعه‌دهنده را فوراً بازیابی کنید.",
   },

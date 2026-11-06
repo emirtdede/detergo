@@ -5,6 +5,8 @@ import { useScanStore, persistLastScanNow } from "@/stores/scan-store";
 import { useSelectionStore } from "@/stores/selection-store";
 import { useUiStore } from "@/stores/ui-store";
 import { AppErrorDto, ScanEvent, ScanRequest, ScanScope } from "@/types";
+import { appendScanHistory } from "@/features/history/scan-history";
+import { notificationService } from "@/lib/notifications/notification-service";
 
 function toAppError(err: unknown): AppErrorDto {
   if (err && typeof err === "object" && "code" in err) {
@@ -107,6 +109,34 @@ export function useScanController() {
       const finished = useScanStore.getState();
       if (finished.status === "completed" || finished.status === "cancelled") {
         void persistLastScanNow();
+        appendScanHistory({
+          id: finished.scanId || `scan-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          scope:
+            finished.scope === "project"
+              ? "Proje Bağımlılıkları"
+              : finished.scope === "agents"
+                ? "AI Ajanları"
+                : "Tüm Sürücüler",
+          rootPath: finished.currentRootPath || "Tüm Sürücüler",
+          itemCount: finished.itemIds.length,
+          cleanableBytes: finished.summary
+            ? Math.max(0, finished.summary.totalBytes - finished.summary.protectedBytes)
+            : 0,
+          durationMs: finished.summary?.durationMs ?? 0,
+          status: finished.status === "completed" ? "completed" : "cancelled",
+        });
+
+        if (finished.status === "completed") {
+          const reclaimBytes = finished.summary
+            ? Math.max(0, finished.summary.totalBytes - finished.summary.protectedBytes)
+            : 0;
+          notificationService.notifyScanComplete({
+            targetCount: finished.itemIds.length,
+            reclaimBytes,
+            durationMs: finished.summary?.durationMs,
+          });
+        }
       }
     } catch (err) {
       const error = toAppError(err);

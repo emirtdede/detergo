@@ -35,8 +35,7 @@ pub struct LastScanRepository {
 impl LastScanRepository {
     pub fn new() -> Self {
         let base_dir = dirs_or_fallback();
-        let app_dir = base_dir.join("node-cleaner");
-        let _ = fs::create_dir_all(&app_dir);
+        let app_dir = crate::platform::resolve_app_dir(&base_dir);
         Self {
             path: app_dir.join("last-scan.json"),
         }
@@ -225,6 +224,7 @@ mod tests {
             selectable: true,
             auto_selectable: true,
             last_modified_at: None,
+            last_modified_ms: None,
             status: crate::scanner::models::ItemStatus::Ready,
             parent_item_id: None,
             note: None,

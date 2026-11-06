@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type AppView = "overview" | "projects" | "agents" | "caches" | "history" | "settings";
+export type AppView = "overview" | "projects" | "agents" | "caches" | "docs" | "history" | "settings" | "about";
 
 interface AppState {
   view: AppView;

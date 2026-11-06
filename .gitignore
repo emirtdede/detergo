@@ -6,6 +6,7 @@ dist/
 dist-ssr/
 release_output/
 *.local
+*.exe
 
 # Rust & Cargo targets
 target/

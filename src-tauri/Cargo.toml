@@ -1,7 +1,7 @@
 [package]
 name = "node-cleaner"
 version = "2.0.0"
-description = "Vellium Node Cleaner - multi-ecosystem developer artifact and AI agent storage cleaner"
+description = "Dev Cleaner by Vellium - multi-ecosystem developer artifact and AI agent storage cleaner"
 authors = ["Vellium"]
 edition = "2021"
 
@@ -24,6 +24,9 @@ trash = "5"
 walkdir = "2"
 toml = "0.8"
 uuid = { version = "1", features = ["v4"] }
+rayon = "1.10"
+crossbeam-channel = "0.5"
+mimalloc = "0.1.52"
 
 [profile.dev]
 codegen-units = 1
@@ -36,12 +39,14 @@ incremental = false
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.58", features = [
     "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
     "Win32_System_Com",
     "Win32_Storage_FileSystem",
     "Win32_Foundation",
     "Win32_System_Threading",
     "Win32_System_ProcessStatus",
     "Win32_System_Diagnostics_ToolHelp",
+    "Win32_System_Console",
     "Win32_Security"
 ] }
 

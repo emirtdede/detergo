@@ -7,6 +7,7 @@ import {
   SidebarMode,
   SortOption,
   SupportedLanguage,
+  DEFAULT_SHORTCUTS,
 } from "@/types";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { useUiStore } from "@/stores/ui-store";
@@ -31,6 +32,9 @@ interface PreferencesState extends AppSettings {
   setLastScanPath: (path: string | null) => void;
   updateSettings: (patch: Partial<AppSettings>) => void;
   persistSettings: () => Promise<void>;
+  shortcuts: Record<string, string>;
+  setShortcut: (id: string, shortcut: string) => void;
+  resetShortcuts: () => void;
   loadPreferences: (prefs: Partial<AppSettings>) => void;
 }
 
@@ -58,33 +62,46 @@ const DEFAULT_SETTINGS: AppSettings = {
   closeAction: "ask",
   customAgentProviders: [],
   hiddenBuiltinProviders: [],
+  notifications: {
+    scanComplete: "both",
+    cleanComplete: "both",
+    diskPressure: "both",
+    processLock: "in_app",
+    automationWebhook: "both",
+    soundEnabled: true,
+  },
+  webhookUrl: null,
+  webhookOnScan: true,
+  webhookOnClean: true,
+  shortcuts: { ...DEFAULT_SHORTCUTS },
 };
 
 const LEGACY_THEME_MAP: Record<string, string> = {
   black: "dark-black",
-  "dark-transparent": "dark-black",
   transparent: "dark-black",
-  "dark-blue": "dark-gray",
-  "dark-purple": "dark-gray",
-  "dark-green": "dark-gray",
-  "dark-red": "dark-gray",
-  "dark-orange": "dark-gray",
-  "dark-yellow": "dark-gray",
+  "dark-transparent": "dark-black",
   white: "light-white",
   "white-transparent": "light-white",
-  "light-blue": "light-gray",
-  "light-purple": "light-gray",
-  "light-green": "light-gray",
-  "light-red": "light-gray",
-  "light-orange": "light-gray",
-  "light-yellow": "light-gray",
+  "light-transparent": "light-white",
 };
 
 const VERIFIED_THEMES = new Set([
   "dark-black",
   "dark-gray",
+  "dark-blue",
+  "dark-purple",
+  "dark-green",
+  "dark-red",
+  "dark-orange",
+  "dark-yellow",
   "light-white",
   "light-gray",
+  "light-blue",
+  "light-purple",
+  "light-green",
+  "light-red",
+  "light-orange",
+  "light-yellow",
 ]);
 
 export function normalizeTheme(theme: string): string {
@@ -159,6 +176,11 @@ function toSettings(state: PreferencesState): AppSettings {
     closeAction: state.closeAction,
     customAgentProviders: state.customAgentProviders,
     hiddenBuiltinProviders: state.hiddenBuiltinProviders,
+    notifications: state.notifications ?? DEFAULT_SETTINGS.notifications,
+    webhookUrl: state.webhookUrl ?? null,
+    webhookOnScan: state.webhookOnScan ?? true,
+    webhookOnClean: state.webhookOnClean ?? true,
+    shortcuts: state.shortcuts ?? DEFAULT_SHORTCUTS,
   };
 }
 
@@ -282,6 +304,20 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
     syncPreferences(get());
   },
 
+  shortcuts: { ...DEFAULT_SHORTCUTS },
+
+  setShortcut: (id: string, shortcut: string) => {
+    const current = get().shortcuts ?? { ...DEFAULT_SHORTCUTS };
+    const updated = { ...current, [id]: shortcut };
+    set({ shortcuts: updated });
+    get().persistSettings();
+  },
+
+  resetShortcuts: () => {
+    set({ shortcuts: { ...DEFAULT_SHORTCUTS } });
+    get().persistSettings();
+  },
+
   updateSettings: (patch: Partial<AppSettings>) => {
     // Persistence is awaited by the settings view so the UI never reports a
     // successful save before the backend has accepted it.
@@ -317,6 +353,7 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
           : "ask",
       customAgentProviders: prefs.customAgentProviders ?? [],
       hiddenBuiltinProviders: prefs.hiddenBuiltinProviders ?? [],
+      shortcuts: prefs.shortcuts ? { ...DEFAULT_SHORTCUTS, ...prefs.shortcuts } : { ...DEFAULT_SHORTCUTS },
     };
     applyThemeToDom(merged.theme);
     applyLanguageToDom(resolvedLanguage);

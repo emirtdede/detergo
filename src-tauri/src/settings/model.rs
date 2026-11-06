@@ -81,6 +81,46 @@ fn default_timeout_minutes() -> u64 {
     15
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum NotificationChannel {
+    #[default]
+    Both,
+    InApp,
+    Desktop,
+    None,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct NotificationPreferences {
+    #[serde(default)]
+    pub scan_complete: NotificationChannel,
+    #[serde(default)]
+    pub clean_complete: NotificationChannel,
+    #[serde(default)]
+    pub disk_pressure: NotificationChannel,
+    #[serde(default)]
+    pub process_lock: NotificationChannel,
+    #[serde(default)]
+    pub automation_webhook: NotificationChannel,
+    #[serde(default = "default_true")]
+    pub sound_enabled: bool,
+}
+
+impl Default for NotificationPreferences {
+    fn default() -> Self {
+        Self {
+            scan_complete: NotificationChannel::Both,
+            clean_complete: NotificationChannel::Both,
+            disk_pressure: NotificationChannel::Both,
+            process_lock: NotificationChannel::InApp,
+            automation_webhook: NotificationChannel::Both,
+            sound_enabled: true,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct AppSettings {
@@ -124,6 +164,16 @@ pub struct AppSettings {
     pub custom_agent_providers: Vec<CustomAgentProvider>,
     #[serde(default)]
     pub hidden_builtin_providers: Vec<String>,
+    #[serde(default)]
+    pub notifications: NotificationPreferences,
+    #[serde(default)]
+    pub webhook_url: Option<String>,
+    #[serde(default = "default_true")]
+    pub webhook_on_scan: bool,
+    #[serde(default = "default_true")]
+    pub webhook_on_clean: bool,
+    #[serde(default)]
+    pub shortcuts: Option<std::collections::HashMap<String, String>>,
 }
 
 fn default_true() -> bool {
@@ -159,6 +209,11 @@ impl Default for AppSettings {
             close_action: default_close_action(),
             custom_agent_providers: Vec::new(),
             hidden_builtin_providers: Vec::new(),
+            notifications: NotificationPreferences::default(),
+            webhook_url: None,
+            webhook_on_scan: true,
+            webhook_on_clean: true,
+            shortcuts: None,
         }
     }
 }
