@@ -51,7 +51,7 @@ if ($Kind -eq "msi") {
     Write-Host "MSI scope : $msiScope"
 }
 
-$installDir = Join-Path $env:LOCALAPPDATA "Node Cleaner"
+$installDir = Join-Path $env:LOCALAPPDATA "Dev Cleaner"
 $uninstallKeys = @(
     "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*",
     "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*",
@@ -61,7 +61,7 @@ $uninstallKeys = @(
 function Get-InstalledEntry {
     foreach ($key in $uninstallKeys) {
         Get-ItemProperty -Path $key -ErrorAction SilentlyContinue |
-            Where-Object { $_.DisplayName -like "Node Cleaner*" } |
+            Where-Object { $_.DisplayName -like "Dev Cleaner*" } |
             Select-Object -First 1
     }
 }

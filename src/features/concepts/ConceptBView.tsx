@@ -35,7 +35,7 @@ export const ConceptBView: React.FC<Props> = ({
         <div className="cb-app-header">
           <div className="cb-app-logo">NC</div>
           <div>
-            <div className="cb-app-title">Node Cleaner</div>
+            <div className="cb-app-title">Dev Cleaner</div>
             <div style={{ fontSize: "11px", color: "var(--cb-text-muted)" }}>
               Windows Masaüstü
             </div>

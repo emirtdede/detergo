@@ -1,4 +1,4 @@
-# Node Cleaner — Documentation
+# Dev Cleaner (formerly Node Cleaner) — Documentation
 
 This folder is the single source of truth for the 2.0 design, security
 evidence and release status. Documents are grouped by purpose, not by date.

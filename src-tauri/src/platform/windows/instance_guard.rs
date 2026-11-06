@@ -69,7 +69,7 @@ pub fn process_has_window(pid: u32) -> bool {
 }
 
 /// Pre-flight orphan cleanup:
-/// If another instance of Node Cleaner is running in the background as a headless
+/// If another instance of Dev Cleaner is running in the background as a headless
 /// zombie (e.g. from an aborted CLI command, background task, or crashed webview)
 /// without any window, terminate it cleanly so the current launch can claim the
 /// single-instance lock and present a visible desktop window.
@@ -99,7 +99,7 @@ pub fn preflight_cleanup_zombies() {
                         .to_string_lossy()
                         .to_lowercase();
 
-                    if exe_name.contains("node-cleaner") || exe_name.contains("node cleaner") {
+                    if exe_name.contains("dev-cleaner") || exe_name.contains("dev cleaner") || exe_name.contains("node-cleaner") || exe_name.contains("node cleaner") {
                         // Check if this instance has a visible window
                         let has_win = process_has_window(pid);
                         if !has_win {

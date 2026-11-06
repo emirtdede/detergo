@@ -1,10 +1,10 @@
 @echo off
 setlocal enabledelayedexpansion
-title Node Cleaner - SHA256 Verification Tool
+title Dev Cleaner - SHA256 Verification Tool
 color 0B
 
 echo =========================================================
-echo       NODE CLEANER - SHA256 DOSYA DOGRULAMA ARACI
+echo       DEV CLEANER - SHA256 DOSYA DOGRULAMA ARACI
 echo =========================================================
 echo.
 

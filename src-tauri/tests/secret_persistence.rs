@@ -1,5 +1,5 @@
 //! SEC-26 execution: a scan must never copy project file *contents* or secret
-//! values into anything Node Cleaner persists.
+//! values into anything Dev Cleaner persists.
 //!
 //! The 2.0.0 audit left this as "review-verified, execution pending". This test
 //! executes it: it builds a fake project whose `.env` and `node_modules` content

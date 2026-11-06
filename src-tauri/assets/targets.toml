@@ -1,4 +1,4 @@
-# Node Cleaner target catalog
+# Dev Cleaner target catalog
 #
 # Every rule is validated at startup. A rule that fails validation disables the
 # cleanup engine entirely (fail-closed). `min_evidence` counts independent

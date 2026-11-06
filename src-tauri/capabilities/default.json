@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Capability for Node Cleaner default window",
+  "description": "Capability for Dev Cleaner default window",
   "windows": ["main"],
   "permissions": [
     "core:default",

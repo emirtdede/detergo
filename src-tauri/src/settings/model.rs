@@ -17,7 +17,7 @@ pub struct SortConfig {
     pub direction: String,
 }
 
-/// A user-defined AI tool. Node Cleaner never invents cleanup rules for these
+/// A user-defined AI tool. Dev Cleaner never invents cleanup rules for these
 /// roots: every discovered target is reported as `KEEP`.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]

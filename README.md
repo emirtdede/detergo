@@ -67,7 +67,7 @@ Where it conflicts with `docs/MASTER_SPEC.md`, the specification wins.
 # English Version
 
 <div align="center">
-  <img src="assets/brand/app-icon.svg" alt="Node Cleaner Logo" width="130" height="130" />
+  <img src="assets/brand/app-icon.svg" alt="Dev Cleaner Logo" width="130" height="130" />
   <h3>Dev Cleaner — High-Performance Multi-Ecosystem Developer Artifact & AI Agent Cleaner</h3>
   <p><em>Ultra-Fast Discovery, Monorepo Hierarchy Grouping & Safe Deletion for JavaScript & TypeScript Workspaces</em></p>
   <p><strong>Developed & Published by <a href="https://vellium.dev">Vellium</a></strong></p>
@@ -77,13 +77,13 @@ Where it conflicts with `docs/MASTER_SPEC.md`, the specification wins.
 
 ## 💻 Project Overview
 
-**Node Cleaner** is a Windows desktop application built with **Tauri 2 (Rust)** and **React 19 (TypeScript)**. Version 2.0 discovers reproducible developer artifacts across JavaScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart and other ecosystems, analyses AI coding-agent storage (Codex, Claude Code, Antigravity) without reading file contents, and safely cleans selected targets. Every scan, measurement, classification and deletion runs in the Rust backend; the frontend only presents and selects backend-owned target IDs.
+**Dev Cleaner** is a Windows desktop application built with **Tauri 2 (Rust)** and **React 19 (TypeScript)**. Version 2.0 discovers reproducible developer artifacts across JavaScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart and other ecosystems, analyses AI coding-agent storage (Codex, Claude Code, Antigravity) without reading file contents, and safely cleans selected targets. Every scan, measurement, classification and deletion runs in the Rust backend; the frontend only presents and selects backend-owned target IDs.
 
-Traditional filesystem scanners freeze system I/O by recursing deep into nested dependency subfolders. **Node Cleaner** solves this with an **Optimized Pruning Directory Traversal Engine**: as soon as a `node_modules` directory is discovered, deep recursive traversal is bypassed, and size calculation is offloaded to asynchronous worker pools.
+Traditional filesystem scanners freeze system I/O by recursing deep into nested dependency subfolders. **Dev Cleaner** solves this with an **Optimized Pruning Directory Traversal Engine**: as soon as a `node_modules` directory is discovered, deep recursive traversal is bypassed, and size calculation is offloaded to asynchronous worker pools.
 
-With strict **Multi-Layer Safety Verification (`SEC-DEL`)**, protected system folders (like `C:\Windows`, `Program Files`, and user profile roots) cannot be selected or deleted. Node Cleaner supports both reversible **Windows Recycle Bin** soft deletion (`IFileOperation` / `SHFileOperationW`) and lightning-fast **Permanent** deletion with interactive confirmations.
+With strict **Multi-Layer Safety Verification (`SEC-DEL`)**, protected system folders (like `C:\Windows`, `Program Files`, and user profile roots) cannot be selected or deleted. Dev Cleaner supports both reversible **Windows Recycle Bin** soft deletion (`IFileOperation` / `SHFileOperationW`) and lightning-fast **Permanent** deletion with interactive confirmations.
 
-Node Cleaner operates **100% locally** with zero telemetry, zero analytics, and zero external network dependencies.
+Dev Cleaner operates **100% locally** with zero telemetry, zero analytics, and zero external network dependencies.
 
 ---
 
@@ -328,7 +328,7 @@ Distributed under the **Proprietary License**. Copyright &copy; 2026 Vellium. Al
 # Türkçe Versiyon
 
 <div align="center">
-  <img src="assets/brand/app-icon.svg" alt="Node Cleaner Logo" width="130" height="130" />
+  <img src="assets/brand/app-icon.svg" alt="Dev Cleaner Logo" width="130" height="130" />
   <h3>Dev Cleaner — Yüksek Performanslı Çoklu Ekosistem Geliştirici Artığı ve AI Ajanı Temizleme Aracı</h3>
   <p><em>JavaScript ve TypeScript Projeleri İçin Ultra Hızlı Tarama, Monorepo Hiyerarşi Gruplama ve Güvenli Silme</em></p>
   <p><strong>Geliştirici ve Yayıncı: <a href="https://vellium.dev">Vellium</a></strong></p>
@@ -338,11 +338,11 @@ Distributed under the **Proprietary License**. Copyright &copy; 2026 Vellium. Al
 
 ## 💻 Project Overview (Proje Genel Bakışı)
 
-**Node Cleaner**, **Tauri 2 (Rust)** ve **React 19 (TypeScript)** ile geliştirilmiş bir Windows masaüstü uygulamasıdır. 2.0 sürümü JavaScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart ve diğer ekosistemlerdeki yeniden üretilebilir geliştirici artıklarını bulur; Codex, Claude Code ve Antigravity gibi AI kodlama ajanlarının depolamasını dosya içeriğini okumadan analiz eder ve seçilen hedefleri güvenle temizler. Tarama, ölçüm, sınıflandırma ve silme tamamen Rust arka ucunda çalışır; ön yüz yalnızca arka ucun ürettiği hedef kimliklerini gösterir ve seçer.
+**Dev Cleaner**, **Tauri 2 (Rust)** ve **React 19 (TypeScript)** ile geliştirilmiş bir Windows masaüstü uygulamasıdır. 2.0 sürümü JavaScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart ve diğer ekosistemlerdeki yeniden üretilebilir geliştirici artıklarını bulur; Codex, Claude Code ve Antigravity gibi AI kodlama ajanlarının depolamasını dosya içeriğini okumadan analiz eder ve seçilen hedefleri güvenle temizler. Tarama, ölçüm, sınıflandırma ve silme tamamen Rust arka ucunda çalışır; ön yüz yalnızca arka ucun ürettiği hedef kimliklerini gösterir ve seçer.
 
-Geleneksel dosya tarayıcıları iç içe geçmiş bağımlılık ağaçlarında takılarak sistemi kilitler. **Node Cleaner**, geliştirdiği **Budamalı Dizin Tarama Motoru** ile `node_modules` klasörüne ulaştığı anda derin özyinelemeli taramayı durdurarak boyutu arka plan iş parçacığı havuzlarına devreder ve yüzlerce projeyi saniyeler içinde listeler.
+Geleneksel dosya tarayıcıları iç içe geçmiş bağımlılık ağaçlarında takılarak sistemi kilitler. **Dev Cleaner**, geliştirdiği **Budamalı Dizin Tarama Motoru** ile `node_modules` klasörüne ulaştığı anda derin özyinelemeli taramayı durdurarak boyutu arka plan iş parçacığı havuzlarına devreder ve yüzlerce projeyi saniyeler içinde listeler.
 
-Gelişmiş **Çok Katmanlı Güvenlik Mekanizması (`SEC-DEL`)** sayesinde Windows sistem dizinleri (`C:\Windows`, `Program Files` vb.) ve kullanıcı ana klasörleri kesinlikle silinemez. Node Cleaner hem geri alınabilir **Windows Çöp Kutusu** (`IFileOperation`) hem de kalıcı silme seçeneklerini çift onaylı koruma ile sunar.
+Gelişmiş **Çok Katmanlı Güvenlik Mekanizması (`SEC-DEL`)** sayesinde Windows sistem dizinleri (`C:\Windows`, `Program Files` vb.) ve kullanıcı ana klasörleri kesinlikle silinemez. Dev Cleaner hem geri alınabilir **Windows Çöp Kutusu** (`IFileOperation`) hem de kalıcı silme seçeneklerini çift onaylı koruma ile sunar.
 
 Uygulama **%100 yerel ve çevrimdışı** çalışır; hiçbir harici sunucuya bağlanmaz, telemetri veya analitik verisi toplamaz.
 

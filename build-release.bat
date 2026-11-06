@@ -1,9 +1,9 @@
 @echo off
-title Node Cleaner - One-Click Release Builder
+title Dev Cleaner - One-Click Release Builder
 color 0A
 
 echo =========================================================
-echo       NODE CLEANER - TEK TIKLA RELEASE VE HASH URETICI
+echo       DEV CLEANER - TEK TIKLA RELEASE VE HASH URETICI
 echo =========================================================
 echo.
 

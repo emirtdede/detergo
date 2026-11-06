@@ -109,7 +109,7 @@ pub fn list_agent_providers(settings: &AppSettings) -> Vec<AgentProviderInfo> {
     }
 
     // User-defined tools. They are listed and scanned, but every target is
-    // reported as KEEP because Node Cleaner has no verified rule set for them.
+    // reported as KEEP because Dev Cleaner has no verified rule set for them.
     for custom in &settings.custom_agent_providers {
         let provider_roots: Vec<AgentRootInfo> = custom
             .root_paths
