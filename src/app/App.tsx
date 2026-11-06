@@ -22,6 +22,7 @@ import { useAppStore } from "@/stores/app-store";
 import { useUiStore } from "@/stores/ui-store";
 import { useUIText } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
+import { useScanController } from "@/features/scan/useScanController";
 import { DEFAULT_SHORTCUTS } from "@/types";
 import "@/styles/index.css";
 import "@/features/shell/shell.css";
@@ -63,6 +64,7 @@ export const App: React.FC = () => {
 
   const loadPreferences = usePreferencesStore((s) => s.loadPreferences);
   const view = useAppStore((s) => s.view);
+  const { startScan, cancelScan, isScanning } = useScanController();
   const showToast = useUiStore((s) => s.showToast);
   const ui = useUIText();
 
@@ -99,7 +101,7 @@ export const App: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isScanning, startScan, cancelScan]);
 
   // RTL Language handling
   const currentLang = usePreferencesStore((s) => s.language);
@@ -131,6 +133,16 @@ export const App: React.FC = () => {
           'input[type="search"], .search-field-input, #search-input'
         );
         searchInput?.focus();
+        return;
+      }
+
+      if (matchesShortcut(event, shortcuts.startStopScan)) {
+        event.preventDefault();
+        if (isScanning) {
+          cancelScan();
+        } else {
+          void startScan();
+        }
         return;
       }
 

@@ -36,6 +36,24 @@ textarea,
   user-select: none;
 }
 
+/* Prevent image & link ghost dragging in webview */
+img,
+a,
+svg {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+/* Desktop chrome text selection prevention */
+.top-command-bar,
+.nav-rail,
+.overview-header,
+.nc-kpi-card-header,
+.nc-bento-strip,
+.page-header {
+  user-select: none;
+}
+
 body {
   font-family: var(--font-sans);
   font-size: var(--text-base);
