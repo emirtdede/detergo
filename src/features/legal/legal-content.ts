@@ -31,8 +31,8 @@ export interface LegalDocMeta {
   hint: string;
 }
 
-const UPDATED_TR = "2 Kasım 2026";
-const UPDATED_EN = "2 November 2026";
+const UPDATED_TR = "6 Kasım 2026 (v2.2.0)";
+const UPDATED_EN = "6 November 2026 (v2.2.0)";
 
 const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
   eula: {

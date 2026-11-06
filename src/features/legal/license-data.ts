@@ -76,6 +76,24 @@ export const DIRECT_DEPENDENCIES: DirectDependency[] = [
     "ecosystem": "rust"
   },
   {
+    "name": "crossbeam-channel",
+    "version": "0.5.16",
+    "license": "MIT OR Apache-2.0",
+    "ecosystem": "rust"
+  },
+  {
+    "name": "mimalloc",
+    "version": "0.1.52",
+    "license": "MIT",
+    "ecosystem": "rust"
+  },
+  {
+    "name": "rayon",
+    "version": "1.12.0",
+    "license": "MIT OR Apache-2.0",
+    "ecosystem": "rust"
+  },
+  {
     "name": "serde",
     "version": "1.0.229",
     "license": "MIT OR Apache-2.0",
@@ -207,6 +225,14 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         "version": "0.5.16"
       },
       {
+        "name": "crossbeam-deque",
+        "version": "0.8.8"
+      },
+      {
+        "name": "crossbeam-epoch",
+        "version": "0.9.21"
+      },
+      {
         "name": "crossbeam-utils",
         "version": "0.8.22"
       },
@@ -253,6 +279,10 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       {
         "name": "dyn-clone",
         "version": "1.0.20"
+      },
+      {
+        "name": "either",
+        "version": "1.19.0"
       },
       {
         "name": "erased-serde",
@@ -385,6 +415,14 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       {
         "name": "quote",
         "version": "1.0.47"
+      },
+      {
+        "name": "rayon",
+        "version": "1.12.0"
+      },
+      {
+        "name": "rayon-core",
+        "version": "1.13.0"
       },
       {
         "name": "ref-cast",
@@ -786,6 +824,14 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       {
         "name": "infer",
         "version": "0.19.0"
+      },
+      {
+        "name": "libmimalloc-sys",
+        "version": "0.1.49"
+      },
+      {
+        "name": "mimalloc",
+        "version": "0.1.52"
       },
       {
         "name": "mio",
@@ -1462,5 +1508,5 @@ export const NPM_LICENSE_GROUPS: LicenseGroup[] = [
   }
 ];
 
-export const RUST_COMPONENT_COUNT = 285;
+export const RUST_COMPONENT_COUNT = 292;
 export const NPM_COMPONENT_COUNT = 10;
