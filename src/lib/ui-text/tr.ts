@@ -88,6 +88,12 @@ export const TR: UIText = {
     resetToast: "Arayüz ve tarama verileri sıfırlandı",
     restoreSuccessToast: "Son tarama sonuçları başarıyla geri yüklendi",
     noLastScanToast: "Kayıtlı son tarama anlık görüntüsü bulunamadı",
+    resetConfirmTitle: "Çalışma Alanını Sıfırla",
+    resetConfirmDesc: "Mevcut tarama sonuçları, depolama analizleri ve seçilen hedefler çalışma alanından temizlenecektir. Bu işlem yalnızca arayüzdeki geçici görünümü sıfırlar, diskteki dosyalarınıza zarar vermez.",
+    resetConfirmBtn: "Çalışma Alanını Sıfırla",
+    restoreConfirmTitle: "Son Taramayı Geri Yükle",
+    restoreConfirmDesc: "En son kaydedilen başarılı tarama anlık görüntüsü çalışma alanına geri yüklenecek ve mevcut analiz verileri güncellenecektir.",
+    restoreConfirmBtn: "Geri Yükle",
   },
   table: {
     label: "Temizlik hedefleri",

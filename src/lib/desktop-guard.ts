@@ -219,3 +219,4 @@ export function installDesktopGuard(options?: DesktopGuardOptions): () => void {
     window.removeEventListener("pointerdown", onPointerDown, { capture: true });
   };
 }
+

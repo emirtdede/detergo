@@ -88,6 +88,12 @@ export const EN: UIText = {
     resetToast: "Interface and scan data have been reset",
     restoreSuccessToast: "Last scan results successfully restored",
     noLastScanToast: "No saved last scan snapshot found",
+    resetConfirmTitle: "Reset Workspace",
+    resetConfirmDesc: "Current scan results, storage analytics, and selected targets will be cleared from the workspace. This only resets the in-memory view and does not touch your physical files.",
+    resetConfirmBtn: "Reset Workspace",
+    restoreConfirmTitle: "Restore Last Scan",
+    restoreConfirmDesc: "The last saved scan snapshot will be restored into the workspace and update the current analytics data.",
+    restoreConfirmBtn: "Restore",
   },
   table: {
     label: "Cleanup targets",

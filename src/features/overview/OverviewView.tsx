@@ -14,6 +14,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
+import { Dialog } from "@/components/primitives/Dialog";
 import { useScanStore } from "@/stores/scan-store";
 import { useUIText } from "@/lib/ui-text";
 import { useScanController } from "@/features/scan/useScanController";
@@ -44,13 +45,18 @@ export const OverviewView: React.FC = () => {
   const showToast = useUiStore((s) => s.showToast);
   const restored = useScanStore((s) => s.restored);
 
-  const handleReset = () => {
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+
+  const confirmReset = () => {
+    setResetDialogOpen(false);
     useScanStore.getState().resetScan();
     useSelectionStore.getState().clearSelection();
     showToast(ui.overview.resetToast, "info");
   };
 
-  const handleRestoreLastScan = async () => {
+  const confirmRestore = async () => {
+    setRestoreDialogOpen(false);
     try {
       const snapshot = await scannerApi.getLastScan();
       if (snapshot && snapshot.summary) {
@@ -233,7 +239,7 @@ export const OverviewView: React.FC = () => {
             <button
               type="button"
               className="overview-header-btn"
-              onClick={handleReset}
+              onClick={() => setResetDialogOpen(true)}
               disabled={isScanning || (items.length === 0 && !restored)}
               title={ui.overview.resetUi}
               aria-label={ui.overview.resetUi}
@@ -243,7 +249,7 @@ export const OverviewView: React.FC = () => {
             <button
               type="button"
               className="overview-header-btn"
-              onClick={handleRestoreLastScan}
+              onClick={() => setRestoreDialogOpen(true)}
               disabled={isScanning}
               title={ui.overview.restoreLastScan}
               aria-label={ui.overview.restoreLastScan}
@@ -581,6 +587,57 @@ export const OverviewView: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Onay Pop-up'ları (Confirmation Dialogs) */}
+      <Dialog
+        isOpen={resetDialogOpen}
+        onClose={() => setResetDialogOpen(false)}
+        title={
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <RotateCcw size={18} style={{ color: "var(--danger)" }} />
+            {ui.overview.resetConfirmTitle}
+          </span>
+        }
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setResetDialogOpen(false)}>
+              {ui.common.cancel}
+            </Button>
+            <Button variant="danger" onClick={confirmReset}>
+              {ui.overview.resetConfirmBtn}
+            </Button>
+          </>
+        }
+      >
+        <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "var(--text-sm)", lineHeight: "var(--leading-relaxed)" }}>
+          {ui.overview.resetConfirmDesc}
+        </p>
+      </Dialog>
+
+      <Dialog
+        isOpen={restoreDialogOpen}
+        onClose={() => setRestoreDialogOpen(false)}
+        title={
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <History size={18} style={{ color: "var(--accent)" }} />
+            {ui.overview.restoreConfirmTitle}
+          </span>
+        }
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setRestoreDialogOpen(false)}>
+              {ui.common.cancel}
+            </Button>
+            <Button variant="primary" onClick={confirmRestore}>
+              {ui.overview.restoreConfirmBtn}
+            </Button>
+          </>
+        }
+      >
+        <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "var(--text-sm)", lineHeight: "var(--leading-relaxed)" }}>
+          {ui.overview.restoreConfirmDesc}
+        </p>
+      </Dialog>
     </div>
   );
 };

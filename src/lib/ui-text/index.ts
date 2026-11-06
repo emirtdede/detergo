@@ -47,6 +47,7 @@ export interface UIText {
     projects: string; scanFirst: string; topItems: string; breakdown: string; partial: string;
     noScan: string; startHint: string; stopReason: string; warnings: string; errors: string;
     resetUi: string; restoreLastScan: string; resetToast: string; restoreSuccessToast: string; noLastScanToast: string;
+    resetConfirmTitle: string; resetConfirmDesc: string; resetConfirmBtn: string; restoreConfirmTitle: string; restoreConfirmDesc: string; restoreConfirmBtn: string;
   };
   table: {
     label: string;
