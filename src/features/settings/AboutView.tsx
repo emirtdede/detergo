@@ -141,7 +141,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
       {isStandalone && (
         <PageHeader
           title={ui.nav.about}
-          description="Sistem sürüm bilgisi, kural kataloğu telemetrisi ve açık kaynak lisans uyumluluğu."
+          description={ui.settings.aboutHint}
           actions={
             <Button
               variant="secondary"
@@ -159,53 +159,53 @@ export const AboutView: React.FC<AboutViewProps> = ({
       <div className="nc-bento-strip nc-bento-strip--4">
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">Sürüm</span>
+            <span className="nc-kpi-card-label">{ui.about.kpiVersion}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--accent">
               <Sparkles size={14} />
             </span>
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">v{buildInfo?.version ?? "2.0.0"}</span>
-            <span className="nc-kpi-card-sub">{profileLabel} Dağıtım Profili</span>
+            <span className="nc-kpi-card-sub">{profileLabel} {ui.settings.buildProfile}</span>
           </div>
         </div>
 
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">Kural Kataloğu</span>
+            <span className="nc-kpi-card-label">{ui.about.kpiCatalog}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--success">
               <Boxes size={14} />
             </span>
           </div>
           <div className="nc-kpi-card-body">
-            <span className="nc-kpi-card-value">{catalogStats.rules} Kural</span>
-            <span className="nc-kpi-card-sub">Aktif temizleme kuralları</span>
+            <span className="nc-kpi-card-value">{catalogStats.rules} {ui.settings.rules}</span>
+            <span className="nc-kpi-card-sub">{ui.about.kpiRulesSub}</span>
           </div>
         </div>
 
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">Ekosistemler</span>
+            <span className="nc-kpi-card-label">{ui.about.kpiEco}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--purple">
               <Layers size={14} />
             </span>
           </div>
           <div className="nc-kpi-card-body">
-            <span className="nc-kpi-card-value">{catalogStats.ecosystems} Ekosistem</span>
-            <span className="nc-kpi-card-sub">Web, Rust, Python, Ajanlar...</span>
+            <span className="nc-kpi-card-value">{catalogStats.ecosystems} {ui.settings.ecosystems}</span>
+            <span className="nc-kpi-card-sub">{ui.about.kpiEcoSub}</span>
           </div>
         </div>
 
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">Lisans Durumu</span>
+            <span className="nc-kpi-card-label">{ui.about.kpiLicense}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--warning">
               <ScrollText size={14} />
             </span>
           </div>
           <div className="nc-kpi-card-body">
-            <span className="nc-kpi-card-value">MIT / Açık</span>
-            <span className="nc-kpi-card-sub">149 Rust + 48 NPM paketi</span>
+            <span className="nc-kpi-card-value">{ui.about.kpiLicenseValue}</span>
+            <span className="nc-kpi-card-sub">{ui.about.kpiLicenseSub}</span>
           </div>
         </div>
       </div>
@@ -226,22 +226,22 @@ export const AboutView: React.FC<AboutViewProps> = ({
 
           <div className="about-meta-list">
             <div className="about-meta-row">
-              <span className="about-meta-label">Uygulama Sürümü</span>
+              <span className="about-meta-label">{ui.about.appVersion}</span>
               <span className="about-meta-value">v{buildInfo?.version ?? "2.0.0"}</span>
             </div>
             <div className="about-meta-row">
-              <span className="about-meta-label">Git Commit Hash</span>
+              <span className="about-meta-label">{ui.about.gitCommitHash}</span>
               <span className="about-meta-value">
                 {buildInfo ? buildInfo.commitShort : "release-v2"}
               </span>
             </div>
             <div className="about-meta-row">
-              <span className="about-meta-label">Derleme Profili</span>
+              <span className="about-meta-label">{ui.settings.buildProfile}</span>
               <span className="about-meta-value">{profileLabel}</span>
             </div>
             {builtAt && (
               <div className="about-meta-row">
-                <span className="about-meta-label">Derleme Zamanı</span>
+                <span className="about-meta-label">{ui.about.builtAt}</span>
                 <span className="about-meta-value">{builtAt}</span>
               </div>
             )}
@@ -249,9 +249,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
 
           <div className="about-trust-strip">
             <ShieldCheck size={18} className="about-trust-icon" />
-            <span>
-              <strong>Yerel ve Güvenli Çalışma:</strong> Dev Cleaner disk analizlerini ve temizliklerini tamamen yerel makinenizde gerçekleştirir. Kaynak kodlarınız veya dosya yollarınız asla harici bir sunucuya iletilmez.
-            </span>
+            <span>{ui.about.localSafeNote}</span>
           </div>
         </div>
 
@@ -262,9 +260,9 @@ export const AboutView: React.FC<AboutViewProps> = ({
               <Code2 size={20} />
             </div>
             <div className="about-panel-title-group">
-              <h2 className="about-panel-title">Sistem Kural Kataloğu</h2>
+              <h2 className="about-panel-title">{ui.about.catalogTitle}</h2>
               <span className="about-panel-desc">
-                {catalogStats.rules} Kural · {catalogStats.categories} Kategori · {catalogStats.ecosystems} Ekosistem
+                {catalogStats.rules} {ui.settings.rules} · {catalogStats.categories} {ui.settings.categories} · {catalogStats.ecosystems} {ui.settings.ecosystems}
               </span>
             </div>
           </div>
@@ -273,8 +271,8 @@ export const AboutView: React.FC<AboutViewProps> = ({
             <div className="about-rule-card">
               <div className="about-rule-head">
                 <span className="about-rule-dot" style={{ backgroundColor: "var(--accent)" }} />
-                <span className="about-rule-name">Node.js Ekosistemi</span>
-                <span className="about-rule-badge">Aktif</span>
+                <span className="about-rule-name">{ui.overview.ecoNode}</span>
+                <span className="about-rule-badge">{ui.common.on}</span>
               </div>
               <span className="about-rule-scope">node_modules, .next, dist, build, .turbo</span>
             </div>
@@ -282,17 +280,17 @@ export const AboutView: React.FC<AboutViewProps> = ({
             <div className="about-rule-card">
               <div className="about-rule-head">
                 <span className="about-rule-dot" style={{ backgroundColor: "#F97316" }} />
-                <span className="about-rule-name">Rust Ekosistemi</span>
-                <span className="about-rule-badge">Aktif</span>
+                <span className="about-rule-name">{ui.overview.ecoRust}</span>
+                <span className="about-rule-badge">{ui.common.on}</span>
               </div>
-              <span className="about-rule-scope">target, Cargo.lock debug derlemeleri</span>
+              <span className="about-rule-scope">{ui.about.ecoRustScope}</span>
             </div>
 
             <div className="about-rule-card">
               <div className="about-rule-head">
                 <span className="about-rule-dot" style={{ backgroundColor: "var(--success)" }} />
-                <span className="about-rule-name">Python Ekosistemi</span>
-                <span className="about-rule-badge">Aktif</span>
+                <span className="about-rule-name">{ui.overview.ecoPython}</span>
+                <span className="about-rule-badge">{ui.common.on}</span>
               </div>
               <span className="about-rule-scope">venv, .venv, __pycache__, .pytest_cache</span>
             </div>
@@ -300,8 +298,8 @@ export const AboutView: React.FC<AboutViewProps> = ({
             <div className="about-rule-card">
               <div className="about-rule-head">
                 <span className="about-rule-dot" style={{ backgroundColor: "#8B5CF6" }} />
-                <span className="about-rule-name">AI Kodlama Ajanları</span>
-                <span className="about-rule-badge">Aktif</span>
+                <span className="about-rule-name">{ui.about.ruleAgents}</span>
+                <span className="about-rule-badge">{ui.common.on}</span>
               </div>
               <span className="about-rule-scope">Claude Code, Cursor, Codex, Antigravity</span>
             </div>
@@ -309,8 +307,8 @@ export const AboutView: React.FC<AboutViewProps> = ({
             <div className="about-rule-card">
               <div className="about-rule-head">
                 <span className="about-rule-dot" style={{ backgroundColor: "#EC4899" }} />
-                <span className="about-rule-name">Global Paket Önbellekleri</span>
-                <span className="about-rule-badge">Aktif</span>
+                <span className="about-rule-name">{ui.about.ruleCaches}</span>
+                <span className="about-rule-badge">{ui.common.on}</span>
               </div>
               <span className="about-rule-scope">npm cache, Cargo registry, pip cache, yarn</span>
             </div>
@@ -318,22 +316,22 @@ export const AboutView: React.FC<AboutViewProps> = ({
             <div className="about-rule-card">
               <div className="about-rule-head">
                 <span className="about-rule-dot" style={{ backgroundColor: "#06B6D4" }} />
-                <span className="about-rule-name">Genel Derleme Çıktıları</span>
-                <span className="about-rule-badge">Aktif</span>
+                <span className="about-rule-name">{ui.about.ruleBuild}</span>
+                <span className="about-rule-badge">{ui.common.on}</span>
               </div>
-              <span className="about-rule-scope">out, coverage, .cache, log ve tmp çıktıları</span>
+              <span className="about-rule-scope">{ui.about.ruleBuildScope}</span>
             </div>
           </div>
 
           <div className="about-meta-list">
             <div className="about-meta-row">
-              <span className="about-meta-label">Kural Şeması</span>
-              <span className="about-meta-value">v1.0 Doğrulanmış</span>
+              <span className="about-meta-label">{ui.about.catalogTitle}</span>
+              <span className="about-meta-value">{ui.about.schemaVerified}</span>
             </div>
             <div className="about-meta-row">
-              <span className="about-meta-label">Güvenlik Motoru</span>
+              <span className="about-meta-label">{ui.about.safetyEngine}</span>
               <span className="about-meta-value" style={{ color: "var(--success)" }}>
-                Aktif ve Korumalı
+                {ui.about.safetyActive}
               </span>
             </div>
           </div>
@@ -347,8 +345,8 @@ export const AboutView: React.FC<AboutViewProps> = ({
             <Mail size={18} />
           </div>
           <div className="about-panel-title-group">
-            <h2 className="about-panel-title">Vellium İletişim Kanalları</h2>
-            <span className="about-panel-desc">Resmî kurumsal e-posta adresleri ve destek noktaları</span>
+            <h2 className="about-panel-title">{ui.about.contactsTitle}</h2>
+            <span className="about-panel-desc">{ui.about.contactsSubtitle}</span>
           </div>
         </div>
 
@@ -356,54 +354,54 @@ export const AboutView: React.FC<AboutViewProps> = ({
           <a href="mailto:contact@vellium.dev" className="about-contact-card" title="contact@vellium.dev">
             <div className="about-contact-icon about-contact-icon--blue"><Mail size={16} /></div>
             <div className="about-contact-info">
-              <span className="about-contact-label">Genel İletişim</span>
+              <span className="about-contact-label">{ui.about.contactGeneral}</span>
               <strong className="about-contact-email">contact@vellium.dev</strong>
-              <span className="about-contact-desc">Resmî iş birlikleri ve genel yazışmalar</span>
+              <span className="about-contact-desc">{ui.about.contactGeneralDesc}</span>
             </div>
           </a>
 
           <a href="mailto:billing@vellium.dev" className="about-contact-card" title="billing@vellium.dev">
             <div className="about-contact-icon about-contact-icon--purple"><CreditCard size={16} /></div>
             <div className="about-contact-info">
-              <span className="about-contact-label">Fatura & Ticari</span>
+              <span className="about-contact-label">{ui.about.contactSupport}</span>
               <strong className="about-contact-email">billing@vellium.dev</strong>
-              <span className="about-contact-desc">Ödeme, abonelik ve kurumsal faturalandırma</span>
+              <span className="about-contact-desc">{ui.about.contactBillingDesc}</span>
             </div>
           </a>
 
           <a href="mailto:legal@vellium.dev" className="about-contact-card" title="legal@vellium.dev">
             <div className="about-contact-icon about-contact-icon--warning"><ScrollText size={16} /></div>
             <div className="about-contact-info">
-              <span className="about-contact-label">Hukuk & Sözleşmeler</span>
+              <span className="about-contact-label">{ui.about.contactLegal}</span>
               <strong className="about-contact-email">legal@vellium.dev</strong>
-              <span className="about-contact-desc">EULA, lisanslama ve telif hakları</span>
+              <span className="about-contact-desc">{ui.about.contactLegalDesc}</span>
             </div>
           </a>
 
           <a href="mailto:privacy@vellium.dev" className="about-contact-card" title="privacy@vellium.dev">
             <div className="about-contact-icon about-contact-icon--green"><Lock size={16} /></div>
             <div className="about-contact-info">
-              <span className="about-contact-label">Gizlilik & KVKK</span>
+              <span className="about-contact-label">{ui.about.contactPrivacy}</span>
               <strong className="about-contact-email">privacy@vellium.dev</strong>
-              <span className="about-contact-desc">Veri güvenliği ve gizlilik politikası</span>
+              <span className="about-contact-desc">{ui.about.contactPrivacyDesc}</span>
             </div>
           </a>
 
           <a href="mailto:security@vellium.dev" className="about-contact-card" title="security@vellium.dev">
             <div className="about-contact-icon about-contact-icon--red"><ShieldAlert size={16} /></div>
             <div className="about-contact-info">
-              <span className="about-contact-label">Güvenlik Bildirimi</span>
+              <span className="about-contact-label">{ui.about.contactSecurity}</span>
               <strong className="about-contact-email">security@vellium.dev</strong>
-              <span className="about-contact-desc">Güvenlik açığı bildirimleri (sorumlu açıklama)</span>
+              <span className="about-contact-desc">{ui.about.contactSecurityDesc}</span>
             </div>
           </a>
 
           <a href="mailto:support@vellium.dev" className="about-contact-card" title="support@vellium.dev">
             <div className="about-contact-icon about-contact-icon--accent"><Headphones size={16} /></div>
             <div className="about-contact-info">
-              <span className="about-contact-label">Müşteri Desteği</span>
+              <span className="about-contact-label">{ui.about.contactSupport}</span>
               <strong className="about-contact-email">support@vellium.dev</strong>
-              <span className="about-contact-desc">Teknik destek, geri bildirim ve sorun giderme</span>
+              <span className="about-contact-desc">{ui.about.contactSupportDesc}</span>
             </div>
           </a>
         </div>

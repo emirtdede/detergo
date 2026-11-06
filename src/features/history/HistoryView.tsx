@@ -71,15 +71,15 @@ export const HistoryView: React.FC = () => {
       if (tab === "cleanups") {
         await scannerApi.clearCleanupsHistory();
         setRecords([]);
-        showToast("Temizlik geçmişi temizlendi", "success");
+        showToast(ui.history.toastCleanupsCleared, "success");
       } else if (tab === "actions") {
         await scannerApi.clearActionsHistory();
         setActions([]);
-        showToast("Araç komut geçmişi temizlendi", "success");
+        showToast(ui.history.toastActionsCleared, "success");
       } else if (tab === "scans") {
         clearScanHistory();
         setScans([]);
-        showToast("Tarama geçmişi temizlendi", "success");
+        showToast(ui.history.toastScansCleared, "success");
       }
     } catch (err) {
       setError(describeError(err));
@@ -95,7 +95,7 @@ export const HistoryView: React.FC = () => {
       setRecords([]);
       setActions([]);
       setScans([]);
-      showToast("Tüm geçmiş kayıtları temizlendi", "success");
+      showToast(ui.history.toastAllCleared, "success");
     } catch (err) {
       setError(describeError(err));
     }
@@ -106,13 +106,13 @@ export const HistoryView: React.FC = () => {
       const snapshot = await scannerApi.getLastScan();
       if (snapshot && snapshot.summary) {
         useScanStore.getState().restoreScan(snapshot);
-        showToast("Son tarama sonuçları başarıyla geri yüklendi", "success");
+        showToast(ui.overview.restoreSuccessToast, "success");
         setView("projects");
       } else {
-        showToast("Kayıtlı son tarama anlık görüntüsü bulunamadı", "error");
+        showToast(ui.overview.noLastScanToast, "error");
       }
     } catch (err) {
-      showToast(`Geri yükleme başarısız: ${describeError(err)}`, "error");
+      showToast(`${ui.history.loadError}: ${describeError(err)}`, "error");
     }
   };
 
@@ -130,7 +130,7 @@ export const HistoryView: React.FC = () => {
   const tabs: Array<{ id: HistoryTab; label: string; icon: React.ReactNode }> = [
     { id: "cleanups", label: ui.history.tabCleanups, icon: <History size={14} /> },
     { id: "actions", label: ui.history.tabActions, icon: <Terminal size={14} /> },
-    { id: "scans", label: "Tarama Geçmişi", icon: <FolderTree size={14} /> },
+    { id: "scans", label: ui.history.tabScans, icon: <FolderTree size={14} /> },
   ];
 
   const activeEmpty =
@@ -138,7 +138,7 @@ export const HistoryView: React.FC = () => {
       ? ui.history.empty
       : tab === "actions"
         ? ui.history.actionsEmpty
-        : "Henüz kayıtlı tarama geçmişi yok.";
+        : ui.history.emptyScans;
   const activeCount =
     tab === "cleanups" ? records.length : tab === "actions" ? actions.length : scans.length;
 
@@ -169,13 +169,13 @@ export const HistoryView: React.FC = () => {
               icon={<Trash2 size={13} />}
               onClick={() => setConfirmOpen(true)}
               disabled={loading || (tab === "cleanups" ? records.length === 0 : tab === "actions" ? actions.length === 0 : scans.length === 0)}
-              title={tab === "cleanups" ? "Yalnızca temizlik geçmişini temizle" : tab === "actions" ? "Yalnızca komut geçmişini temizle" : "Yalnızca tarama geçmişini temizle"}
+              title={tab === "cleanups" ? ui.history.clearCleanupsTooltip : tab === "actions" ? ui.history.clearActionsTooltip : ui.history.clearScansTooltip}
             >
               {tab === "cleanups"
-                ? "Temizlikleri Temizle"
+                ? ui.history.clearCleanupsBtn
                 : tab === "actions"
-                  ? "Komutları Temizle"
-                  : "Taramaları Temizle"}
+                  ? ui.history.clearActionsBtn
+                  : ui.history.clearScansBtn}
             </Button>
             <Button
               variant="secondary"
@@ -201,7 +201,7 @@ export const HistoryView: React.FC = () => {
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">{formatBytes(summary.reclaimed)}</span>
-            <span className="nc-kpi-card-sub">Geri kazanılan toplam depolama</span>
+            <span className="nc-kpi-card-sub">{ui.history.totalReclaimed}</span>
           </div>
         </div>
 
@@ -213,8 +213,8 @@ export const HistoryView: React.FC = () => {
             </span>
           </div>
           <div className="nc-kpi-card-body">
-            <span className="nc-kpi-card-value">{summary.runs} İşlem</span>
-            <span className="nc-kpi-card-sub">{scans.length} Kayıtlı Tarama</span>
+            <span className="nc-kpi-card-value">{ui.history.records(summary.runs)}</span>
+            <span className="nc-kpi-card-sub">{scans.length} {ui.history.tabScans}</span>
           </div>
         </div>
 
@@ -229,7 +229,7 @@ export const HistoryView: React.FC = () => {
             <span className="nc-kpi-card-value" style={{ fontSize: "var(--text-base)" }}>
               {summary.last}
             </span>
-            <span className="nc-kpi-card-sub">En son gerçekleştirilen işlem</span>
+            <span className="nc-kpi-card-sub">{ui.history.lastRun}</span>
           </div>
         </div>
       </div>
@@ -387,12 +387,12 @@ export const HistoryView: React.FC = () => {
           <thead>
             <tr>
               <th>{ui.history.timestamp}</th>
-              <th>Kapsam</th>
-              <th>Hedef Dizin</th>
-              <th className="num">Bulunan Öğe</th>
-              <th className="num">Temizlenebilir</th>
+              <th>{ui.history.colScope}</th>
+              <th>{ui.history.colPath}</th>
+              <th className="num">{ui.history.colEntries}</th>
+              <th className="num">{ui.overview.cleanable}</th>
               <th className="num">{ui.history.duration}</th>
-              <th>Durum</th>
+              <th>{ui.common.scan}</th>
               <th style={{ width: 180, textAlign: "right" }} />
             </tr>
           </thead>
@@ -401,11 +401,19 @@ export const HistoryView: React.FC = () => {
               <tr key={scan.id}>
                 <td>{new Date(scan.timestamp).toLocaleString()}</td>
                 <td>
-                  <span className="chip">{scan.scope}</span>
+                  <span className="chip">
+                    {scan.scope === "project" || scan.scope === "Proje Bağımlılıkları"
+                      ? ui.history.scopeProjects
+                      : scan.scope === "agents" || scan.scope === "AI Ajanları"
+                        ? ui.history.scopeAgents
+                        : ui.history.scopeAllDrives}
+                  </span>
                 </td>
                 <td style={{ maxWidth: 220 }} title={scan.rootPath}>
                   <span className="items-path">
-                    {maskPaths ? maskPath(scan.rootPath) : scan.rootPath}
+                    {scan.rootPath === "allDrives" || scan.rootPath === "Tüm Sürücüler"
+                      ? ui.common.allDrives
+                      : maskPaths ? maskPath(scan.rootPath) : scan.rootPath}
                   </span>
                 </td>
                 <td className="num">{scan.itemCount}</td>
@@ -413,7 +421,7 @@ export const HistoryView: React.FC = () => {
                 <td className="num">{scan.durationMs} ms</td>
                 <td>
                   <span className={`chip ${scan.status === "completed" ? "ok" : "warn"}`}>
-                    {scan.status === "completed" ? "Tamamlandı" : "İptal Edildi"}
+                    {scan.status === "completed" ? ui.history.statusCompleted : ui.history.statusCancelled}
                   </span>
                 </td>
                 <td style={{ textAlign: "right" }}>
@@ -423,13 +431,13 @@ export const HistoryView: React.FC = () => {
                       size="sm"
                       icon={<RotateCcw size={12} />}
                       onClick={handleRestoreLatestScan}
-                      title="Son tarama sonuçlarını çalışma alanına geri yükle"
+                      title={ui.history.restoreScanTooltip}
                     >
-                      Son Taramayı Geri Yükle
+                      {ui.history.restoreScanBtn}
                     </Button>
                   ) : (
                     <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                      Önceki Tarama
+                      {ui.history.prevScan}
                     </span>
                   )}
                 </td>
@@ -447,10 +455,10 @@ export const HistoryView: React.FC = () => {
         onClose={() => setConfirmOpen(false)}
         title={
           tab === "cleanups"
-            ? "Temizlik Geçmişini Temizle"
+            ? ui.history.clearCleanupsTitle
             : tab === "actions"
-              ? "Komut Geçmişini Temizle"
-              : "Tarama Geçmişini Temizle"
+              ? ui.history.clearActionsTitle
+              : ui.history.clearScansTitle
         }
         footer={
           <>
@@ -460,25 +468,25 @@ export const HistoryView: React.FC = () => {
             <Button
               variant="danger-outline"
               onClick={handleClearAllHistory}
-              title="Tüm sekmelerdeki geçmiş kayıtlarını temizle"
+              title={ui.history.clearAllBtn}
             >
-              Tüm Geçmişi Temizle
+              {ui.history.clearAllBtn}
             </Button>
             <Button
               variant="danger"
               onClick={handleClearCurrentTab}
             >
-              Bu Geçmişi Temizle
+              {ui.history.clearCurrentBtn}
             </Button>
           </>
         }
       >
         <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "var(--text-sm)", lineHeight: "var(--leading-relaxed)" }}>
           {tab === "cleanups"
-            ? "Yalnızca gerçekleşen temizlik işlem kayıtları silinecektir. Araç komutları ve tarama geçmişi korunacaktır. Onaylıyor musunuz?"
+            ? ui.history.clearCleanupsDesc
             : tab === "actions"
-              ? "Yalnızca resmî araç komut çalıştırma kayıtları silinecektir. Temizlik ve tarama geçmişi korunacaktır. Onaylıyor musunuz?"
-              : "Yalnızca kayıtlı tarama sonuçları silinecektir. Temizlik ve komut geçmişi korunacaktır. Onaylıyor musunuz?"}
+              ? ui.history.clearActionsDesc
+              : ui.history.clearScansDesc}
         </p>
       </Dialog>
     </div>

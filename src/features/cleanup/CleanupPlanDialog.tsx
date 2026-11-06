@@ -96,7 +96,7 @@ export const CleanupPlanDialog: React.FC = () => {
       notificationService.notifyCleanComplete({
         count: report.successCount,
         bytes: report.reclaimBytes,
-        destination: mode === "permanent" ? "Kalıcı Olarak Silindi" : "Geri Dönüşüm Kutusuna",
+        destination: mode === "permanent" ? ui.notifications.destPermanent : ui.notifications.destTrash,
       });
       if (report.auditError) showToast(report.auditError, "error", 8000);
     } catch (err) {

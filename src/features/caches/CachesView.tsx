@@ -157,7 +157,7 @@ export const CachesView: React.FC = () => {
       <div className="nc-bento-strip nc-bento-strip--3">
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">Toplam Önbellek</span>
+            <span className="nc-kpi-card-label">{ui.caches.kpiTotal}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--accent">
               <Package size={14} />
             </span>
@@ -167,27 +167,27 @@ export const CachesView: React.FC = () => {
               {cacheTotals.measuredCount > 0
                 ? formatBytes(cacheTotals.totalBytes)
                 : measuring
-                  ? "Ölçülüyor..."
-                  : "Ölçülmedi"}
+                  ? ui.caches.measuring
+                  : ui.caches.notMeasured}
             </span>
             <span className="nc-kpi-card-sub">
               {cacheTotals.measuredCount > 0
-                ? `${cacheTotals.measuredCount} / ${providers.length} Araç ölçüldü`
-                : "Sağ üstten 'Boyutları ölç'e tıklayın"}
+                ? ui.caches.measureProgress(cacheTotals.measuredCount, providers.length)
+                : ui.caches.measureHint}
             </span>
           </div>
         </div>
 
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">Ölçülen Araçlar</span>
+            <span className="nc-kpi-card-label">{ui.caches.kpiMeasured}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--success">
               <Gauge size={14} />
             </span>
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">
-              {cacheTotals.measuredCount} / {providers.length} Araç
+              {ui.caches.measureProgress(cacheTotals.measuredCount, providers.length)}
             </span>
             <span className="nc-kpi-card-sub">npm, Cargo, Pip, Yarn...</span>
           </div>
@@ -195,16 +195,16 @@ export const CachesView: React.FC = () => {
 
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">Resmi CLI Eylemleri</span>
+            <span className="nc-kpi-card-label">{ui.caches.kpiActions}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--warning">
               <Terminal size={14} />
             </span>
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">
-              {cacheTotals.actionsCount} Eylem Hazır
+              {ui.caches.actionsReady(cacheTotals.actionsCount)}
             </span>
-            <span className="nc-kpi-card-sub">Resmi paket yöneticisi komutları</span>
+            <span className="nc-kpi-card-sub">{ui.caches.kpiActionsSub}</span>
           </div>
         </div>
       </div>
@@ -354,9 +354,9 @@ export const CachesView: React.FC = () => {
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <Terminal size={12} color="#00f0ff" />
-                  <span>Dev Cleaner Terminal</span>
+                  <span>{ui.caches.terminalTitle}</span>
                 </div>
-                <span>{result ? (result.success ? "✓ Tamamlandı" : "✗ Hata") : running ? "⚡ Çalışıyor..." : "Hazır"}</span>
+                <span>{result ? (result.success ? ui.caches.terminalCompleted : ui.caches.terminalError) : running ? ui.caches.terminalRunning : ui.caches.terminalReady}</span>
               </div>
               <div style={{ padding: "10px 12px", color: "#e2e8f0", lineHeight: 1.5, maxHeight: 180, overflowY: "auto" }}>
                 <div style={{ color: "#38bdf8" }}>
@@ -364,7 +364,7 @@ export const CachesView: React.FC = () => {
                 </div>
                 {running && (
                   <div style={{ color: "#94a3b8", fontStyle: "italic", marginTop: 4 }}>
-                    Komut arka planda çalıştırılıyor...
+                    {ui.caches.terminalBackground}
                   </div>
                 )}
                 {result?.stdoutTail && (
@@ -379,7 +379,7 @@ export const CachesView: React.FC = () => {
                 )}
                 {result && (
                   <div style={{ color: result.success ? "#4ade80" : "#f87171", marginTop: 6, fontSize: 11 }}>
-                    [İşlem {result.durationMs}ms içinde exit_code {result.exitCode ?? 0} ile sonlandı]
+                    {ui.caches.terminalFinished(result.durationMs, result.exitCode ?? 0)}
                   </div>
                 )}
               </div>

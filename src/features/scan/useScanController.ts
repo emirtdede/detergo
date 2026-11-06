@@ -112,13 +112,8 @@ export function useScanController() {
         appendScanHistory({
           id: finished.scanId || `scan-${Date.now()}`,
           timestamp: new Date().toISOString(),
-          scope:
-            finished.scope === "project"
-              ? "Proje Bağımlılıkları"
-              : finished.scope === "agents"
-                ? "AI Ajanları"
-                : "Tüm Sürücüler",
-          rootPath: finished.currentRootPath || "Tüm Sürücüler",
+          scope: finished.scope || "project",
+          rootPath: finished.currentRootPath || "allDrives",
           itemCount: finished.itemIds.length,
           cleanableBytes: finished.summary
             ? Math.max(0, finished.summary.totalBytes - finished.summary.protectedBytes)

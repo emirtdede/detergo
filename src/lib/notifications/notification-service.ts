@@ -1,3 +1,4 @@
+import { getUIText } from "@/lib/ui-text";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
 import { formatBytes } from "@/lib/formatters";
@@ -128,49 +129,57 @@ class NotificationService {
   }
 
   public notifyScanComplete(evt: ScanCompletedEvent) {
+    const ui = getUIText();
     const channel = usePreferencesStore.getState().notifications?.scanComplete ?? "both";
-    const title = "Dev Cleaner: Tarama Tamamlandı";
-    const body = `${evt.targetCount} hedef bulundu, ${formatBytes(evt.reclaimBytes)} alan geri kazanılabilir.`;
+    const title = ui.notifications.scanDoneTitle;
+    const body = ui.notifications.scanDoneBody(evt.targetCount, formatBytes(evt.reclaimBytes));
     this.dispatch(channel, title, body, "success");
   }
 
   public notifyCleanComplete(evt: CleanCompletedEvent) {
+    const ui = getUIText();
     const channel = usePreferencesStore.getState().notifications?.cleanComplete ?? "both";
-    const title = "Dev Cleaner: Temizlik Tamamlandı";
-    const body = `${evt.count} hedef başarıyla ${evt.destination ?? "Geri Dönüşüm Kutusuna"} taşındı (${formatBytes(evt.bytes)}).`;
+    const dest = evt.destination ?? ui.notifications.destTrash;
+    const title = ui.notifications.cleanDoneTitle;
+    const body = ui.notifications.cleanDoneBody(evt.count, dest, formatBytes(evt.bytes));
     this.dispatch(channel, title, body, "success");
   }
 
   public notifyDiskPressure(evt: DiskPressureEvent) {
+    const ui = getUIText();
     const channel = usePreferencesStore.getState().notifications?.diskPressure ?? "both";
-    const title = "Dev Cleaner: Kritik Disk Alanı Uyarısı";
-    const body = `${evt.drive} sürücüsünde doluluk oranı %${evt.percentUsed.toFixed(0)} seviyesine ulaştı. Kalan: ${formatBytes(evt.freeBytes)}.`;
+    const title = ui.notifications.diskAlertTitle;
+    const body = ui.notifications.diskAlertBody(evt.drive, Number(evt.percentUsed.toFixed(0)), formatBytes(evt.freeBytes));
     this.dispatch(channel, title, body, "warning");
   }
 
   public notifyProcessLock(evt: ProcessLockEvent) {
+    const ui = getUIText();
     const channel = usePreferencesStore.getState().notifications?.processLock ?? "in_app";
-    const title = "Dev Cleaner: Kilitli Dosya / Süreç Uyarısı";
-    const body = `${evt.path} başka bir geliştirici süreci tarafından kilitlendiği için korundu.`;
+    const title = ui.notifications.lockAlertTitle;
+    const body = ui.notifications.lockAlertBody(evt.path);
     this.dispatch(channel, title, body, "warning");
   }
 
   public notifyAutomationWebhook(evt: WebhookEvent) {
+    const ui = getUIText();
     const channel = usePreferencesStore.getState().notifications?.automationWebhook ?? "both";
     if (evt.status === "success") {
-      this.dispatch(channel, "Dev Cleaner: Webhook İletildi", `Veriler başarıyla ${evt.url} adresine aktarıldı.`, "success");
+      this.dispatch(channel, ui.notifications.webhookSuccess, ui.notifications.webhookSuccessBody(evt.url), "success");
     } else {
-      this.dispatch(channel, "Dev Cleaner: Webhook Uyarısı", `Hedef sunucuya erişilemedi: ${evt.error ?? evt.url}`, "error");
+      this.dispatch(channel, ui.notifications.webhookError, ui.notifications.webhookErrorBody(evt.error ?? evt.url), "error");
     }
   }
 
   public testDesktopNotification() {
-    this.sendDesktop("Dev Cleaner: Test Bildirimi", "Windows 11 Masaüstü Bildirim Sistemi kusursuz çalışıyor!");
+    const ui = getUIText();
+    this.sendDesktop(ui.notifications.testDesktopTitle, ui.notifications.testDesktopBody);
     this.playChime();
   }
 
   public testInAppNotification() {
-    useUiStore.getState().showToast("Dev Cleaner: Uygulama İçi Bildirim Sistemi aktif ve çalışıyor!", "info");
+    const ui = getUIText();
+    useUiStore.getState().showToast(ui.notifications.testInAppToast, "info");
     this.playChime();
   }
 }

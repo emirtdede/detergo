@@ -74,11 +74,11 @@ export const AgentsView: React.FC = () => {
     scannerApi.getAgentProviders()
       .then((list) => {
         setProviders(list);
-        if (!silent) showToast("AI araçları güncellendi", "info");
+        if (!silent) showToast(ui.agents.toastRefreshed, "info");
       })
       .catch((err) => {
         setLoadError(describeError(err));
-        showToast(`AI sağlayıcıları alınamadı: ${describeError(err)}`, "error");
+        showToast(ui.agents.toastError(describeError(err)), "error");
       })
       .finally(() => setLoading(false));
   };
@@ -175,15 +175,15 @@ export const AgentsView: React.FC = () => {
     : status === "failed"
       ? ui.errors.title
       : isLoadedOrScanned
-        ? "Temizlenebilir AI Kalıntısı Bulunamadı"
-        : "AI Araçları Taranmadı";
+        ? ui.agents.emptyTitleClean
+        : ui.agents.emptyTitleIdle;
   const emptyDescription = isScanning
     ? `${progress?.entriesFound ?? 0} / ${progress?.entriesMeasured ?? 0}`
     : status === "failed"
       ? error?.message ?? ui.overview.startHint
       : isLoadedOrScanned
-        ? "Taranan AI araçları ve çalışma alanı temiz durumda. Silinebilecek oturum veya geçici log dosyası yok."
-        : "AI depolamasını analiz etmek için yukarıdaki 'AI depolamasını tara' butonunu kullanın.";
+        ? ui.agents.emptyDescClean
+        : ui.agents.emptyDescIdle;
 
   const agentTotals = useMemo(() => {
     let cleanable = 0;
@@ -242,7 +242,7 @@ export const AgentsView: React.FC = () => {
       <div className="nc-bento-strip nc-bento-strip--3">
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">AI Depolama Yükü</span>
+            <span className="nc-kpi-card-label">{ui.agents.kpiStorage}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--accent">
               <Bot size={14} />
             </span>
@@ -252,20 +252,20 @@ export const AgentsView: React.FC = () => {
               {items.length > 0
                 ? formatBytes(agentTotals.cleanable)
                 : agentTotals.detectedCount > 0
-                  ? "Taranmadı"
+                  ? ui.agents.notScanned
                   : "0 B"}
             </span>
             <span className="nc-kpi-card-sub">
               {items.length > 0
-                ? `${items.length} oturum & bellek öğesi`
-                : "Sağ üstten 'AI depolamasını tara' butonuna tıklayın"}
+                ? ui.agents.itemsSub(items.length)
+                : ui.agents.scanHint}
             </span>
           </div>
         </div>
 
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">Güvenli Geri Kazanım</span>
+            <span className="nc-kpi-card-label">{ui.agents.kpiSafeReclaim}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--success">
               <ShieldCheck size={14} />
             </span>
@@ -275,23 +275,23 @@ export const AgentsView: React.FC = () => {
               {items.length > 0
                 ? formatBytes(agentTotals.safe)
                 : agentTotals.detectedCount > 0
-                  ? "Taranmadı"
+                  ? ui.agents.notScanned
                   : "0 B"}
             </span>
-            <span className="nc-kpi-card-sub">Geri Dönüşüm Kutusuna taşınır</span>
+            <span className="nc-kpi-card-sub">{ui.agents.kpiSafeReclaimSub}</span>
           </div>
         </div>
 
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">Yüklü AI Ajanları</span>
+            <span className="nc-kpi-card-label">{ui.agents.kpiInstalled}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--purple">
               <TrendingUp size={14} />
             </span>
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">
-              {agentTotals.detectedCount} / {providers.length} Ajan
+              {agentTotals.detectedCount} / {providers.length} {ui.overview.ecoAgent}
             </span>
             <span className="nc-kpi-card-sub">Claude Code, Cursor, Codex...</span>
           </div>

@@ -1,4 +1,5 @@
 import React from "react";
+import { useUIText } from "@/lib/ui-text";
 import "./primitives.css";
 
 export interface SwitchProps {
@@ -16,12 +17,15 @@ export const Switch: React.FC<SwitchProps> = ({
   checked,
   onChange,
   disabled = false,
-  onLabel = "Açık",
-  offLabel = "Kapalı",
+  onLabel,
+  offLabel,
   "aria-label": ariaLabel,
   id,
   className = "",
 }) => {
+  const ui = useUIText();
+  const resolvedOn = onLabel ?? ui.common.on;
+  const resolvedOff = offLabel ?? ui.common.off;
   return (
     <button
       type="button"
@@ -45,7 +49,7 @@ export const Switch: React.FC<SwitchProps> = ({
         }
       }}
     >
-      <span>{checked ? onLabel : offLabel}</span>
+      <span>{checked ? resolvedOn : resolvedOff}</span>
     </button>
   );
 };

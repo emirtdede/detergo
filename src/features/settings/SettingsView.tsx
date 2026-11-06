@@ -30,18 +30,7 @@ import "../items/items.css";
 import "../shell/shell.css";
 import "./settings.css";
 
-const SHORTCUT_DEFS = [
-  { id: "toggleSidebar", label: "Kenar Çubuğunu Aç/Kapat", hint: "Sol gezinti çubuğunu genişletir veya daraltır" },
-  { id: "focusSearch", label: "Aramaya Odaklan", hint: "Sayfadaki arama veya filtre çubuğunu odaklar" },
-  { id: "startStopScan", label: "Taramayı Başlat / Durdur", hint: "Seçili dizin üzerinde taramayı başlatır veya devam edeni iptal eder" },
-  { id: "navOverview", label: "Genel Bakış Sayfası", hint: "Sistem durumu ve temel metrikler paneline gider" },
-  { id: "navProjects", label: "Projeler Sayfası", hint: "Bulunan temizlenebilir projeler tablosuna gider" },
-  { id: "navAgents", label: "AI Ajanları Sayfası", hint: "Yapay zeka araçları ve model temizleme paneline gider" },
-  { id: "navCaches", label: "Önbellekler Sayfası", hint: "Sistem geliştirici önbellekleri paneline gider" },
-  { id: "navDocs", label: "Dokümanlar Sayfası", hint: "Kılavuzlar, CLI komutları ve yardım paneline gider" },
-  { id: "navHistory", label: "Geçmiş Sayfası", hint: "Önceki temizlik kayıtları ve geri yükleme paneline gider" },
-  { id: "navSettings", label: "Ayarlar Sayfası", hint: "Uygulama tercihleri ve yapılandırma paneline gider" },
-];
+// Shortcuts are dynamically localized inside SettingsView via shortcutDefs
 
 const THEMES: ThemeMode[] = [
   "dark-black",
@@ -123,6 +112,19 @@ export const SettingsView: React.FC = () => {
   const [recordingId, setRecordingId] = useState<string | null>(null);
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
 
+  const shortcutDefs = useMemo(() => [
+    { id: "toggleSidebar", label: ui.settings.scToggleSidebar, hint: ui.settings.scToggleSidebarHint },
+    { id: "focusSearch", label: ui.settings.scFocusSearch, hint: ui.settings.scFocusSearchHint },
+    { id: "startStopScan", label: ui.settings.scStartStopScan, hint: ui.settings.scStartStopScanHint },
+    { id: "navOverview", label: ui.settings.scNavOverview, hint: ui.settings.scNavOverviewHint },
+    { id: "navProjects", label: ui.settings.scNavProjects, hint: ui.settings.scNavProjectsHint },
+    { id: "navAgents", label: ui.settings.scNavAgents, hint: ui.settings.scNavAgentsHint },
+    { id: "navCaches", label: ui.settings.scNavCaches, hint: ui.settings.scNavCachesHint },
+    { id: "navDocs", label: ui.settings.scNavDocs, hint: ui.settings.scNavDocsHint },
+    { id: "navHistory", label: ui.settings.scNavHistory, hint: ui.settings.scNavHistoryHint },
+    { id: "navSettings", label: ui.settings.scNavSettings, hint: ui.settings.scNavSettingsHint },
+  ], [ui.settings]);
+
   const updateNotify = (key: keyof NonNullable<typeof prefs.notifications>, channel: NotificationChannel | boolean) => {
     const current = prefs.notifications ?? {
       scanComplete: "both",
@@ -143,7 +145,7 @@ export const SettingsView: React.FC = () => {
   const handleTestWebhook = async () => {
     const url = prefs.webhookUrl?.trim();
     if (!url) {
-      showToast("Lütfen önce geçerli bir Webhook URL'si girin.", "warning");
+      showToast(ui.settings.webhookUrlEmpty, "warning");
       return;
     }
     setTestingWebhook(true);
@@ -158,15 +160,15 @@ export const SettingsView: React.FC = () => {
           event: "test_ping",
           timestamp: new Date().toISOString(),
           product: "Dev Cleaner by Vellium",
-          message: "Canlı webhook test bağlantısı başarılı!",
+          message: ui.settings.webhookSent,
         }),
         mode: "no-cors",
       });
-      setWebhookTestStatus("✓ İstek başarıyla gönderildi");
-      showToast("Webhook test isteği iletildi!", "success");
+      setWebhookTestStatus(`✓ ${ui.settings.webhookSent}`);
+      showToast(ui.settings.webhookSent, "success");
     } catch (err) {
       setWebhookTestStatus(`❌ Hata: ${String(err)}`);
-      showToast(`Webhook hatası: ${String(err)}`, "error");
+      showToast(`Webhook: ${String(err)}`, "error");
     } finally {
       setTestingWebhook(false);
     }
@@ -211,7 +213,7 @@ export const SettingsView: React.FC = () => {
       const combo = parts.join("+");
 
       if (RESERVED_SHORTCUTS.has(combo)) {
-        setConflictWarning(`"${combo}" sistem tarafından rezerve edilmiştir, atanamaz.`);
+        setConflictWarning(ui.settings.reservedWarning(combo));
         return;
       }
 
@@ -221,15 +223,15 @@ export const SettingsView: React.FC = () => {
       );
 
       if (existing) {
-        const existingDef = SHORTCUT_DEFS.find((d) => d.id === existing[0]);
-        setConflictWarning(`"${combo}" zaten "${existingDef?.label ?? existing[0]}" için atanmış!`);
+        const existingDef = shortcutDefs.find((d) => d.id === existing[0]);
+        setConflictWarning(ui.settings.conflictWarning(combo, existingDef?.label ?? existing[0]));
         return;
       }
 
       setConflictWarning(null);
       prefs.setShortcut(recordingId, combo);
       setRecordingId(null);
-      showToast(`Kısayol güncellendi: ${combo}`, "success", 2000);
+      showToast(ui.settings.toastShortcutUpdated(combo), "success", 2000);
     };
 
     window.addEventListener("keydown", handleKeyDown, true);
@@ -271,7 +273,7 @@ export const SettingsView: React.FC = () => {
     <div className="settings-page">
       <PageHeader
         title={ui.nav.settings}
-        description="Geliştirici tercihlerini, tarama derinliğini ve koruma kurallarını yönetin."
+        description={ui.settings.subtitle}
       />
 
       {catalog && !catalog.valid && (
@@ -284,7 +286,7 @@ export const SettingsView: React.FC = () => {
       <div className="nc-bento-strip nc-bento-strip--3">
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">Görünüm & Dil</span>
+            <span className="nc-kpi-card-label">{ui.settings.kpiAppearance}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--accent">
               <Palette size={14} />
             </span>
@@ -294,14 +296,14 @@ export const SettingsView: React.FC = () => {
               {themeLabel(prefs.theme, ui)}
             </span>
             <span className="nc-kpi-card-sub">
-              Aktif Dil: {resolveUiLocale(prefs.language).toUpperCase()} · {prefs.reduceMotion ? "Azaltılmış Hareket" : "Standart Animasyon"}
+              {ui.settings.language}: {resolveUiLocale(prefs.language).toUpperCase()} · {prefs.reduceMotion ? ui.settings.reducedMotion : ui.settings.standardMotion}
             </span>
           </div>
         </div>
 
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">Tarama Profili</span>
+            <span className="nc-kpi-card-label">{ui.settings.kpiScanProfile}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--success">
               <Cpu size={14} />
             </span>
@@ -311,24 +313,24 @@ export const SettingsView: React.FC = () => {
               {prefs.scanProfile.toUpperCase()}
             </span>
             <span className="nc-kpi-card-sub">
-              Derinlik: {prefs.maxDepth} seviye · Sınır: {(prefs.maxCandidates / 1000).toFixed(0)}k aday
+              {ui.settings.maxDepth}: {prefs.maxDepth} · {ui.settings.maxCandidates}: {(prefs.maxCandidates / 1000).toFixed(0)}k
             </span>
           </div>
         </div>
 
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">Güvenlik & Korumalar</span>
+            <span className="nc-kpi-card-label">{ui.settings.kpiSecurity}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--purple">
               <ShieldCheck size={14} />
             </span>
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value" style={{ fontSize: "var(--text-lg)" }}>
-              {prefs.protectedPaths.length} Klasör
+              {ui.settings.kpiFoldersDefined(prefs.protectedPaths.length)}
             </span>
             <span className="nc-kpi-card-sub">
-              {prefs.excludedNames.length} Dosya adı istisnası tanımlı
+              {ui.settings.kpiRulesDefined(prefs.excludedNames.length)}
             </span>
           </div>
         </div>
@@ -524,9 +526,9 @@ export const SettingsView: React.FC = () => {
           <section className="settings-card">
             <div className="settings-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div>
-                <h3 className="settings-group-title" style={{ margin: 0 }}>Bildirim Kanalları & Uyarılar</h3>
+                <h3 className="settings-group-title" style={{ margin: 0 }}>{ui.settings.notifTitle}</h3>
                 <p className="settings-hint" style={{ margin: "4px 0 0" }}>
-                  Her olay için uygulama içi veya Windows masaüstü bildirim tercihinizi bağımsız belirleyin.
+                  {ui.settings.notifDesc}
                 </p>
               </div>
               <div style={{ display: "flex", gap: 8 }}>
@@ -536,22 +538,22 @@ export const SettingsView: React.FC = () => {
                   icon={<Bell size={13} />}
                   onClick={() => notificationService.testDesktopNotification()}
                 >
-                  Masaüstü Bildirimi Test Et
+                  {ui.settings.testDesktop}
                 </Button>
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={() => notificationService.testInAppNotification()}
                 >
-                  Uygulama İçi Test Et
+                  {ui.settings.testInApp}
                 </Button>
               </div>
             </div>
 
             <div className="form-row">
               <div>
-                <span>Bildirim Sesleri</span>
-                <p className="settings-hint">Bildirim geldiğinde hafif ses efekti çal</p>
+                <span>{ui.settings.notifSounds}</span>
+                <p className="settings-hint">{ui.settings.notifSoundsHint}</p>
               </div>
               <Switch
                 checked={prefs.notifications?.soundEnabled ?? true}
@@ -560,85 +562,85 @@ export const SettingsView: React.FC = () => {
               />
             </div>
 
-            <h4 className="settings-group-title" style={{ marginTop: 20, marginBottom: 8 }}>Olay Bazlı Bildirim Dağıtımı</h4>
+            <h4 className="settings-group-title" style={{ marginTop: 20, marginBottom: 8 }}>{ui.settings.eventMatrixTitle}</h4>
 
             <label className="form-row">
               <div>
-                <span>1. Tarama Tamamlandığında</span>
-                <p className="settings-hint">Geri kazanılabilir boyut ve bulunan hedef sayısı</p>
+                <span>{ui.settings.evScanDone}</span>
+                <p className="settings-hint">{ui.settings.evScanDoneHint}</p>
               </div>
               <select
                 value={prefs.notifications?.scanComplete ?? "both"}
                 onChange={(e) => updateNotify("scanComplete", e.target.value as NotificationChannel)}
               >
-                <option value="both">Her İkisi (Uygulama İçi + Masaüstü)</option>
-                <option value="in_app">Yalnızca Uygulama İçi Toast</option>
-                <option value="desktop">Yalnızca Windows Masaüstü Bildirimi</option>
-                <option value="none">Kapalı (Bildirim Gönderme)</option>
+                <option value="both">{ui.settings.chBoth}</option>
+                <option value="in_app">{ui.settings.chInApp}</option>
+                <option value="desktop">{ui.settings.chDesktop}</option>
+                <option value="none">{ui.settings.chNone}</option>
               </select>
             </label>
 
             <label className="form-row">
               <div>
-                <span>2. Temizlik Tamamlandığında</span>
-                <p className="settings-hint">Geri Dönüşüm Kutusuna aktarılan toplam boyut özeti</p>
+                <span>{ui.settings.evCleanDone}</span>
+                <p className="settings-hint">{ui.settings.evCleanDoneHint}</p>
               </div>
               <select
                 value={prefs.notifications?.cleanComplete ?? "both"}
                 onChange={(e) => updateNotify("cleanComplete", e.target.value as NotificationChannel)}
               >
-                <option value="both">Her İkisi (Uygulama İçi + Masaüstü)</option>
-                <option value="in_app">Yalnızca Uygulama İçi Toast</option>
-                <option value="desktop">Yalnızca Windows Masaüstü Bildirimi</option>
-                <option value="none">Kapalı (Bildirim Gönderme)</option>
+                <option value="both">{ui.settings.chBoth}</option>
+                <option value="in_app">{ui.settings.chInApp}</option>
+                <option value="desktop">{ui.settings.chDesktop}</option>
+                <option value="none">{ui.settings.chNone}</option>
               </select>
             </label>
 
             <label className="form-row">
               <div>
-                <span>3. Kritik Disk Doluluğu Uyarısı</span>
-                <p className="settings-hint">Taranan diskte boş alan %10'un altına indiğinde uyar</p>
+                <span>{ui.settings.evDiskAlert}</span>
+                <p className="settings-hint">{ui.settings.evDiskAlertHint}</p>
               </div>
               <select
                 value={prefs.notifications?.diskPressure ?? "both"}
                 onChange={(e) => updateNotify("diskPressure", e.target.value as NotificationChannel)}
               >
-                <option value="both">Her İkisi (Uygulama İçi + Masaüstü)</option>
-                <option value="in_app">Yalnızca Uygulama İçi Toast</option>
-                <option value="desktop">Yalnızca Windows Masaüstü Bildirimi</option>
-                <option value="none">Kapalı (Bildirim Gönderme)</option>
+                <option value="both">{ui.settings.chBoth}</option>
+                <option value="in_app">{ui.settings.chInApp}</option>
+                <option value="desktop">{ui.settings.chDesktop}</option>
+                <option value="none">{ui.settings.chNone}</option>
               </select>
             </label>
 
             <label className="form-row">
               <div>
-                <span>4. Kilitli Dosya / Süreç Çatışması</span>
-                <p className="settings-hint">Başka bir geliştirici süreci dosyayı kilitlediğinde</p>
+                <span>{ui.settings.evLockConflict}</span>
+                <p className="settings-hint">{ui.settings.evLockConflictHint}</p>
               </div>
               <select
                 value={prefs.notifications?.processLock ?? "in_app"}
                 onChange={(e) => updateNotify("processLock", e.target.value as NotificationChannel)}
               >
-                <option value="both">Her İkisi (Uygulama İçi + Masaüstü)</option>
-                <option value="in_app">Yalnızca Uygulama İçi Toast</option>
-                <option value="desktop">Yalnızca Windows Masaüstü Bildirimi</option>
-                <option value="none">Kapalı (Bildirim Gönderme)</option>
+                <option value="both">{ui.settings.chBoth}</option>
+                <option value="in_app">{ui.settings.chInApp}</option>
+                <option value="desktop">{ui.settings.chDesktop}</option>
+                <option value="none">{ui.settings.chNone}</option>
               </select>
             </label>
 
             <label className="form-row">
               <div>
-                <span>5. Otomasyon & Webhook Bildirimleri</span>
-                <p className="settings-hint">CLI veya Webhook tetikleme sonuçları</p>
+                <span>{ui.settings.evAutomation}</span>
+                <p className="settings-hint">{ui.settings.evAutomationHint}</p>
               </div>
               <select
                 value={prefs.notifications?.automationWebhook ?? "both"}
                 onChange={(e) => updateNotify("automationWebhook", e.target.value as NotificationChannel)}
               >
-                <option value="both">Her İkisi (Uygulama İçi + Masaüstü)</option>
-                <option value="in_app">Yalnızca Uygulama İçi Toast</option>
-                <option value="desktop">Yalnızca Windows Masaüstü Bildirimi</option>
-                <option value="none">Kapalı (Bildirim Gönderme)</option>
+                <option value="both">{ui.settings.chBoth}</option>
+                <option value="in_app">{ui.settings.chInApp}</option>
+                <option value="desktop">{ui.settings.chDesktop}</option>
+                <option value="none">{ui.settings.chNone}</option>
               </select>
             </label>
           </section>
@@ -648,9 +650,9 @@ export const SettingsView: React.FC = () => {
           <section className="settings-card">
             <div className="shortcuts-header-row">
               <div>
-                <h3 className="settings-group-title">Klavye Kısayolları Haritası</h3>
+                <h3 className="settings-group-title">{ui.settings.shortcutsTitle}</h3>
                 <p className="settings-hint">
-                  İş akışınızı hızlandırmak için tuş kombinasyonlarını özelleştirin. Rezerve sistem tuşları çakışmalara karşı korunur.
+                  {ui.settings.shortcutsDesc}
                 </p>
               </div>
               <Button
@@ -660,11 +662,11 @@ export const SettingsView: React.FC = () => {
                   prefs.resetShortcuts();
                   setConflictWarning(null);
                   setRecordingId(null);
-                  showToast("Tüm kısayollar varsayılanlara sıfırlandı", "info", 2000);
+                  showToast(ui.settings.toastShortcutsReset, "info", 2000);
                 }}
               >
                 <RotateCcw size={13} style={{ marginRight: 6 }} />
-                Varsayılanlara Sıfırla
+                {ui.settings.resetShortcuts}
               </Button>
             </div>
 
@@ -678,13 +680,13 @@ export const SettingsView: React.FC = () => {
             <table className="shortcuts-table">
               <thead>
                 <tr>
-                  <th style={{ width: "35%" }}>İşlem Adı</th>
-                  <th style={{ width: "40%" }}>Açıklama</th>
-                  <th style={{ width: "25%", textAlign: "right" }}>Kısayol &amp; Düzenle</th>
+                  <th style={{ width: "35%" }}>{ui.settings.thAction}</th>
+                  <th style={{ width: "40%" }}>{ui.settings.thDesc}</th>
+                  <th style={{ width: "25%", textAlign: "right" }}>{ui.settings.thShortcut}</th>
                 </tr>
               </thead>
               <tbody>
-                {SHORTCUT_DEFS.map((def) => {
+                {shortcutDefs.map((def) => {
                   const currentShortcut = (prefs.shortcuts ?? DEFAULT_SHORTCUTS)[def.id] ?? DEFAULT_SHORTCUTS[def.id];
                   const isRecording = recordingId === def.id;
 
@@ -700,7 +702,7 @@ export const SettingsView: React.FC = () => {
                         <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                           {isRecording ? (
                             <span className="shortcut-recording-badge">
-                              Tuşa basın... (Esc: İptal)
+                              {ui.settings.pressKey}
                             </span>
                           ) : (
                             <span className="shortcut-key-badge">{currentShortcut}</span>
@@ -719,7 +721,7 @@ export const SettingsView: React.FC = () => {
                               }
                             }}
                           >
-                            {isRecording ? "İptal" : "Değiştir"}
+                            {isRecording ? ui.common.cancel : ui.settings.changeKey}
                           </Button>
                         </div>
                       </td>
@@ -733,9 +735,9 @@ export const SettingsView: React.FC = () => {
 
         {activeSection.id === "automation" && (
           <section className="settings-card">
-            <h3 className="settings-group-title">Evrensel Webhook & Otomasyon</h3>
+            <h3 className="settings-group-title">{ui.settings.webhookTitle}</h3>
             <p className="settings-hint" style={{ marginBottom: 16 }}>
-              Tarama ve temizlik sonuçlarını n8n, Slack, Discord veya kurum içi webhook sunucunuza aktarın.
+              {ui.settings.webhookDesc}
             </p>
 
             <div className="form-row form-row--stretch">
@@ -753,7 +755,7 @@ export const SettingsView: React.FC = () => {
                 onClick={handleTestWebhook}
                 disabled={testingWebhook || !prefs.webhookUrl}
               >
-                {testingWebhook ? "Gönderiliyor..." : "Test Gönder"}
+                {testingWebhook ? ui.settings.webhookSending : ui.settings.webhookTestBtn}
               </Button>
             </div>
 
@@ -765,8 +767,8 @@ export const SettingsView: React.FC = () => {
 
             <div className="form-row" style={{ marginTop: 16 }}>
               <div>
-                <span>Tarama Tamamlandığında İlet</span>
-                <p className="settings-hint">Bulunan hedeflerin JSON özetini webhook'a gönderir</p>
+                <span>{ui.settings.webhookScanDone}</span>
+                <p className="settings-hint">{ui.settings.webhookScanDoneHint}</p>
               </div>
               <Switch
                 checked={prefs.webhookOnScan ?? true}
@@ -777,8 +779,8 @@ export const SettingsView: React.FC = () => {
 
             <div className="form-row">
               <div>
-                <span>Temizlik Tamamlandığında İlet</span>
-                <p className="settings-hint">Geri kazanılan alan ve başarı raporunu webhook'a gönderir</p>
+                <span>{ui.settings.webhookCleanDone}</span>
+                <p className="settings-hint">{ui.settings.webhookCleanDoneHint}</p>
               </div>
               <Switch
                 checked={prefs.webhookOnClean ?? true}

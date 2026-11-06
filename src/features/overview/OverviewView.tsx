@@ -66,7 +66,7 @@ export const OverviewView: React.FC = () => {
         showToast(ui.overview.noLastScanToast, "error");
       }
     } catch (err) {
-      showToast(`Geri yükleme başarısız: ${err instanceof Error ? err.message : String(err)}`, "error");
+      showToast(`${ui.history.loadError}: ${err instanceof Error ? err.message : String(err)}`, "error");
     }
   };
 
@@ -126,12 +126,12 @@ export const OverviewView: React.FC = () => {
   const distributionSegments = useMemo(() => {
     if (totals.cleanable <= 0) return [];
     const ecoMap: Record<string, { label: string; bytes: number; color: string }> = {
-      node: { label: "Web / Node.js", bytes: 0, color: "var(--accent)" },
-      rust: { label: "Rust / Cargo", bytes: 0, color: "#F97316" },
-      python: { label: "Python / venv", bytes: 0, color: "var(--success)" },
-      agent: { label: "AI Ajanları", bytes: 0, color: "#8B5CF6" },
-      cache: { label: "Önbellekler", bytes: 0, color: "#EC4899" },
-      other: { label: "Diğer Çıktılar", bytes: 0, color: "var(--text-muted)" },
+      node: { label: ui.overview.ecoNode, bytes: 0, color: "var(--accent)" },
+      rust: { label: ui.overview.ecoRust, bytes: 0, color: "#F97316" },
+      python: { label: ui.overview.ecoPython, bytes: 0, color: "var(--success)" },
+      agent: { label: ui.overview.ecoAgent, bytes: 0, color: "#8B5CF6" },
+      cache: { label: ui.overview.ecoCache, bytes: 0, color: "#EC4899" },
+      other: { label: ui.overview.ecoOther, bytes: 0, color: "var(--text-muted)" },
     };
 
     for (const item of items) {
@@ -214,9 +214,9 @@ export const OverviewView: React.FC = () => {
       {/* 1. TOP HEADER & TELEMETRY */}
       <header className="overview-header">
         <div className="overview-header-copy">
-          <h1 className="overview-title">Genel Bakış</h1>
+          <h1 className="overview-title">{ui.overview.pageTitle}</h1>
           <p className="overview-subtitle">
-            Geliştirici depolama alanı, yapay zeka ajanları ve sistem derleme artıklarının merkezi analizi.
+            {ui.overview.pageSubtitle}
           </p>
         </div>
 
@@ -228,10 +228,10 @@ export const OverviewView: React.FC = () => {
             />
             <span>
               {isScanning
-                ? `${ui.common.scanning} (${progress?.entriesFound ?? 0} hedef)`
+                ? `${ui.common.scanning} (${progress?.entriesFound ?? 0} ${ui.overview.candidates})`
                 : items.length > 0
-                ? "Analiz Hazır"
-                : "Sistem Hazır"}
+                ? ui.overview.statusReady
+                : ui.overview.statusIdle}
             </span>
           </div>
 
@@ -261,11 +261,11 @@ export const OverviewView: React.FC = () => {
       </header>
 
       {/* 2. 4-COLUMN BENTO KPI ROW */}
-      <section className="overview-kpi-grid" aria-label="Temel Sistem Göstergeleri">
+      <section className="overview-kpi-grid" aria-label={ui.overview.title}>
         {/* KPI 1: Temizlenebilir Alan */}
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">Temizlenebilir Alan</span>
+            <span className="nc-kpi-card-label">{ui.overview.kpiCleanable}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--accent">
               <HardDrive size={15} />
             </span>
@@ -283,7 +283,7 @@ export const OverviewView: React.FC = () => {
                   {formatSignedBytes(cleanableDelta)}
                 </span>
               ) : (
-                <span>Taranan çalışma alanında</span>
+                <span>{ui.overview.kpiCleanableSub}</span>
               )}
             </div>
           </div>
@@ -292,7 +292,7 @@ export const OverviewView: React.FC = () => {
         {/* KPI 2: Güvenli Reclaim */}
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">%100 Güvenli Reclaim</span>
+            <span className="nc-kpi-card-label">{ui.overview.kpiSafeReclaim}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--success">
               <ShieldCheck size={15} />
             </span>
@@ -302,7 +302,7 @@ export const OverviewView: React.FC = () => {
               {items.length > 0 ? formatBytes(totals.safeReclaim) : "—"}
             </span>
             <div className="nc-kpi-card-sub">
-              <span>Geri Dönüşüm Kutusuna taşınır</span>
+              <span>{ui.overview.kpiSafeReclaimSub}</span>
             </div>
           </div>
         </div>
@@ -310,17 +310,17 @@ export const OverviewView: React.FC = () => {
         {/* KPI 3: Taranan Hedefler & Projeler */}
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">Taranan Hedefler</span>
+            <span className="nc-kpi-card-label">{ui.overview.kpiTargets}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--purple">
               <FolderTree size={15} />
             </span>
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">
-              {items.length > 0 ? `${items.length} Öğe` : "0 Öğe"}
+              {items.length > 0 ? ui.common.items(items.length) : ui.common.items(0)}
             </span>
             <div className="nc-kpi-card-sub">
-              <span>{totals.projects > 0 ? `${totals.projects} Aktif Projede` : "Klasör seçimi bekleniyor"}</span>
+              <span>{totals.projects > 0 ? ui.overview.kpiTargetsSubActive(totals.projects) : ui.overview.kpiTargetsSubIdle}</span>
             </div>
           </div>
         </div>
@@ -328,7 +328,7 @@ export const OverviewView: React.FC = () => {
         {/* KPI 4: Geçmiş Kazanım (Lifetime Reclaimed) */}
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">Toplam Tasarruf</span>
+            <span className="nc-kpi-card-label">{ui.overview.kpiLifetime}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--warning">
               <Sparkles size={15} />
             </span>
@@ -338,21 +338,21 @@ export const OverviewView: React.FC = () => {
               {lifetimeReclaimed > 0 ? formatBytes(lifetimeReclaimed) : "0 B"}
             </span>
             <div className="nc-kpi-card-sub">
-              <span>{lifetimeRuns > 0 ? `${lifetimeRuns} temizlikte kazanıldı` : "İlk temizliğinize hazır"}</span>
+              <span>{lifetimeRuns > 0 ? ui.overview.kpiLifetimeSubRuns(lifetimeRuns) : ui.overview.kpiLifetimeSubIdle}</span>
             </div>
           </div>
         </div>
       </section>
 
             {/* 3. FULL-WIDTH STORAGE DISTRIBUTION & INTERACTIVE ACTION CENTER */}
-      <section className="overview-dist-panel" aria-label="Depolama Dağılımı ve Eylem Merkezi">
+      <section className="overview-dist-panel" aria-label={ui.overview.distTitle}>
         <div className="overview-panel-header">
           <div className="overview-panel-title-group">
-            <h2 className="overview-panel-title">Depolama Dağılımı ve Eylem Merkezi</h2>
+            <h2 className="overview-panel-title">{ui.overview.distTitle}</h2>
             <span className="overview-panel-desc">
               {items.length > 0
-                ? "Ekosistemlere göre disk tüketimi analizi ve doğrudan eylem başlatıcı"
-                : "Çalışma alanınızı tarayarak disk yükünü haritalandırın ve tek tıkla temizlik başlatın"}
+                ? ui.overview.distSubtitleActive
+                : ui.overview.distSubtitleIdle}
             </span>
           </div>
           {items.length > 0 && (
@@ -414,23 +414,23 @@ export const OverviewView: React.FC = () => {
             <div className="overview-zero-icon">
               <HardDrive size={26} />
             </div>
-            <h3 className="overview-zero-heading">Çalışma Alanınızı Analiz Edin</h3>
+            <h3 className="overview-zero-heading">{ui.overview.distEmptyTitle}</h3>
             <p className="overview-zero-desc">
-              node_modules, target, venv ve geçici derleme kalıntılarını tespit etmek için taranacak dizini seçin.
+              {ui.overview.distEmptyDesc}
             </p>
           </div>
         )}
       </section>
 
       {/* 4. DUAL BALANCED COLUMNS: Top 5 Targets + 4 Hubs (Same Height) */}
-      <section className="overview-secondary-grid" aria-label="Ayrıntılı Hedefler ve Kategoriler">
+      <section className="overview-secondary-grid" aria-label={ui.overview.breakdown}>
         {/* Left: Top 5 Space Consumers */}
         <div className="overview-panel overview-panel--equal">
           <div className="overview-panel-header">
             <div className="overview-panel-title-group">
-              <h2 className="overview-panel-title">En Çok Yer Kaplayan 5 Hedef</h2>
+              <h2 className="overview-panel-title">{ui.overview.topItemsTitle}</h2>
               <span className="overview-panel-desc">
-                Diskte en yüksek geri kazanım potansiyeli sunan dizinler
+                {ui.overview.topItemsSubtitle}
               </span>
             </div>
             {topItems.length > 0 && (
@@ -440,7 +440,7 @@ export const OverviewView: React.FC = () => {
                 icon={<ArrowUpRight size={13} />}
                 onClick={() => setView("projects")}
               >
-                Tümünü Gör
+                {ui.overview.viewAll}
               </Button>
             )}
           </div>
@@ -467,7 +467,7 @@ export const OverviewView: React.FC = () => {
             ) : (
               <div className="overview-zero-state" style={{ padding: "20px" }}>
                 <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>
-                  Tarama tamamlandığında en büyük depolama yükleri burada listelenecektir.
+                  {ui.overview.topItemsEmpty}
                 </span>
               </div>
             )}
@@ -475,7 +475,7 @@ export const OverviewView: React.FC = () => {
         </div>
 
         {/* Right: 4 Category Hub Cards - Exactly matches height of Left Panel */}
-        <div className="overview-hubs-column overview-hubs-column--equal" aria-label="Temizlik Kategorileri">
+        <div className="overview-hubs-column overview-hubs-column--equal" aria-label={ui.overview.breakdown}>
           {/* Hub 1: Projeler */}
           <div
             className="overview-hub-card"
@@ -489,15 +489,15 @@ export const OverviewView: React.FC = () => {
                 <Code2 size={20} />
               </div>
               <div className="overview-hub-info">
-                <h3 className="overview-hub-title">Proje Bağımlılıkları</h3>
+                <h3 className="overview-hub-title">{ui.overview.hubProjectsTitle}</h3>
                 <span className="overview-hub-desc">
-                  node_modules, target, .next, dist ve venv çıktıları
+                  {ui.overview.hubProjectsDesc}
                 </span>
               </div>
             </div>
             <div className="overview-hub-right">
               <span className="overview-hub-badge">
-                {items.length > 0 ? `${projectItemsCount} Öğe` : "Projeler"}
+                {items.length > 0 ? ui.common.items(projectItemsCount) : ui.nav.projects}
               </span>
               <ArrowUpRight size={16} className="overview-hub-arrow" />
             </div>
@@ -516,15 +516,15 @@ export const OverviewView: React.FC = () => {
                 <Bot size={20} />
               </div>
               <div className="overview-hub-info">
-                <h3 className="overview-hub-title">AI Kodlama Ajanları</h3>
+                <h3 className="overview-hub-title">{ui.overview.hubAgentsTitle}</h3>
                 <span className="overview-hub-desc">
-                  Claude Code, Cursor, Codex ve Antigravity oturum/logları
+                  {ui.overview.hubAgentsDesc}
                 </span>
               </div>
             </div>
             <div className="overview-hub-right">
               <span className="overview-hub-badge">
-                {items.length > 0 ? `${agentItemsCount} Ajan Hedefi` : "Ajanlar"}
+                {items.length > 0 ? `${agentItemsCount} ${ui.overview.ecoAgent}` : ui.nav.agents}
               </span>
               <ArrowUpRight size={16} className="overview-hub-arrow" />
             </div>
@@ -543,15 +543,15 @@ export const OverviewView: React.FC = () => {
                 <Zap size={20} />
               </div>
               <div className="overview-hub-info">
-                <h3 className="overview-hub-title">Paket & Araç Önbellekleri</h3>
+                <h3 className="overview-hub-title">{ui.overview.hubCachesTitle}</h3>
                 <span className="overview-hub-desc">
-                  npm, Cargo, Pip ve Yarn global indirme depoları
+                  {ui.overview.hubCachesDesc}
                 </span>
               </div>
             </div>
             <div className="overview-hub-right">
               <span className="overview-hub-badge">
-                {totalCachesBytes > 0 ? formatBytes(totalCachesBytes) : `${cacheProviders.length} Araç`}
+                {totalCachesBytes > 0 ? formatBytes(totalCachesBytes) : `${cacheProviders.length} ${ui.nav.caches}`}
               </span>
               <ArrowUpRight size={16} className="overview-hub-arrow" />
             </div>
@@ -570,17 +570,17 @@ export const OverviewView: React.FC = () => {
                 <History size={20} />
               </div>
               <div className="overview-hub-info">
-                <h3 className="overview-hub-title">Temizlik & İşlem Geçmişi</h3>
+                <h3 className="overview-hub-title">{ui.overview.hubHistoryTitle}</h3>
                 <span className="overview-hub-desc">
                   {lifetimeReclaimed > 0
-                    ? `${formatBytes(lifetimeReclaimed)} geri kazanım denetim günlüğü`
-                    : "Gerçekleşen temizlik kayıtları ve denetim günlüğü"}
+                    ? ui.overview.hubHistoryDescActive(formatBytes(lifetimeReclaimed))
+                    : ui.overview.hubHistoryDescIdle}
                 </span>
               </div>
             </div>
             <div className="overview-hub-right">
               <span className="overview-hub-badge">
-                {lifetimeRuns > 0 ? `${lifetimeRuns} İşlem` : "Geçmiş"}
+                {lifetimeRuns > 0 ? ui.history.records(lifetimeRuns) : ui.nav.history}
               </span>
               <ArrowUpRight size={16} className="overview-hub-arrow" />
             </div>
