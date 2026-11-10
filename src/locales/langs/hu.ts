@@ -157,7 +157,6 @@ export const hu: TranslationSchema = {
     favoriteAdded: "Hozzáadva a kedvencekhez.",
     about: "Névjegy",
     version: "Verzió",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Kiadó: Vellium • © 2026 Vellium. Minden jog fenntartva.",
     privacyNote:
       "Minden keresés és törlés 100%-ban helyben történik a számítógépén. Nincs telemetria.",

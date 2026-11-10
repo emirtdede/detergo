@@ -158,7 +158,6 @@ export const hy: TranslationSchema = {
     favoriteAdded: "Ավելացվեց ընտրանում:",
     about: "Ծրագրի մասին",
     version: "Տարբերակ",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Հրատարակիչ՝ Vellium • © 2026 Vellium. Բոլոր իրավունքները պաշտպանված են:",
     privacyNote:
       "Բոլոր սկանավորումներն ու ջնջումները տեղի են ունենում 100% լոկալ ձեր համակարգչում: Ոչ մի տվյալ չի ուղարկվում:",

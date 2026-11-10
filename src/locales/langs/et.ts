@@ -157,7 +157,6 @@ export const et: TranslationSchema = {
     favoriteAdded: "Lisatud lemmikutesse.",
     about: "Teave",
     version: "Versioon",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Väljaandja: Vellium • © 2026 Vellium. Kõik õigused kaitstud.",
     privacyNote:
       "Kõik skannimised ja kustutamised toimuvad 100% lokaalselt teie arvutis. Telemeetriat pole.",

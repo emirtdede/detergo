@@ -1,38 +1,41 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="493" height="58" viewBox="0 0 493 58" fill="none">
     <defs>
-        <linearGradient id="wb-bg" x1="0" y1="0" x2="493" y2="58" gradientUnits="userSpaceOnUse">
+        <linearGradient id="wb-bg" x1="0" y1="0" x2="353" y2="58" gradientUnits="userSpaceOnUse">
             <stop stop-color="#FFFFFF"/>
-            <stop offset="1" stop-color="#EFF0F3"/>
+            <stop offset="1" stop-color="#F1F2F5"/>
         </linearGradient>
-        <linearGradient id="wb-panel" x1="373" y1="0" x2="493" y2="58" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#17171C"/>
+        <linearGradient id="wb-panel" x1="353" y1="0" x2="493" y2="58" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#191920"/>
+            <stop offset="0.55" stop-color="#0C0C10"/>
             <stop offset="1" stop-color="#050507"/>
         </linearGradient>
-        <linearGradient id="wb-bg-icon" x1="256" y1="32" x2="256" y2="480" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#1C1C21"/>
-            <stop offset="0.45" stop-color="#0D0D10"/>
+        <linearGradient id="wb-icon-bg" x1="256" y1="32" x2="256" y2="480" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#232329"/>
+            <stop offset="0.45" stop-color="#101014"/>
             <stop offset="1" stop-color="#050507"/>
         </linearGradient>
-        <linearGradient id="wb-rim" x1="256" y1="32" x2="256" y2="480" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#FFFFFF" stop-opacity="0.32"/>
-            <stop offset="0.35" stop-color="#FFFFFF" stop-opacity="0.08"/>
+        <linearGradient id="wb-icon-rim" x1="256" y1="32" x2="256" y2="480" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FFFFFF" stop-opacity="0.38"/>
+            <stop offset="0.4" stop-color="#FFFFFF" stop-opacity="0.08"/>
             <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.03"/>
         </linearGradient>
         <g id="wb-icon">
-            <rect x="32" y="32" width="448" height="448" rx="108" fill="url(#wb-bg-icon)"/>
-            <rect x="34" y="34" width="444" height="444" rx="106" stroke="url(#wb-rim)" stroke-width="4"/>
-            <g>
-                <path d="M166 172L86 256L166 340" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M346 172L426 256L346 340" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M225.5 336.1L259.6 246.5" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round"/>
-                <path d="M283.4 146C283.4 173.8 293.6 184 321.4 184C293.6 184 283.4 194.2 283.4 222C283.4 194.2 273.2 184 245.4 184C273.2 184 283.4 173.8 283.4 146Z" fill="#FFFFFF"/>
-            </g>
+            <rect x="32" y="32" width="448" height="448" rx="108" fill="url(#wb-icon-bg)"/>
+            <rect x="34" y="34" width="444" height="444" rx="106" stroke="url(#wb-icon-rim)" stroke-width="4"/>
+            <path d="M166 172L86 256L166 340" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M346 172L426 256L346 340" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M225.5 336.1L259.6 246.5" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round"/>
+            <path d="M283.4 146C283.4 173.8 293.6 184 321.4 184C293.6 184 283.4 194.2 283.4 222C283.4 194.2 273.2 184 245.4 184C273.2 184 283.4 173.8 283.4 146Z" fill="#FFFFFF"/>
         </g>
     </defs>
 
-    <rect width="493" height="58" fill="url(#wb-bg)"/>
-    <rect x="373" width="120" height="58" fill="url(#wb-panel)"/>
-    <rect x="373" width="1" height="58" fill="#000000" fill-opacity="0.18"/>
-    <use href="#wb-icon" transform="translate(412 8) scale(0.082)"/>
-    <rect x="0" y="57" width="493" height="1" fill="#000000" fill-opacity="0.12"/>
+    <!-- WiX draws the dialog title over the light area, so it stays clean. -->
+    <rect width="353" height="58" fill="url(#wb-bg)"/>
+    <rect x="353" width="140" height="58" fill="url(#wb-panel)"/>
+    <rect x="353" width="1" height="58" fill="#000000" fill-opacity="0.16"/>
+
+    <use href="#wb-icon" transform="translate(375 15) scale(0.054688) translate(-32 -32)"/>
+    <text x="404" y="34" font-family="Segoe UI, Segoe UI Semibold, Arial, sans-serif" font-size="9.5" font-weight="700" letter-spacing="0.6" fill="#FFFFFF">DEV CLEANER</text>
+
+    <rect x="0" y="57" width="493" height="1" fill="#000000" fill-opacity="0.10"/>
 </svg>

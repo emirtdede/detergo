@@ -158,7 +158,6 @@ export const vi: TranslationSchema = {
     favoriteAdded: "Đã thêm vào mục yêu thích.",
     about: "Giới thiệu",
     version: "Phiên bản",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Nhà phát hành: Vellium • © 2026 Vellium. Đã đăng ký bản quyền.",
     privacyNote:
       "Mọi thao tác quét và xóa đều diễn ra 100% cục bộ trên máy tính của bạn. Không có đo lường từ xa.",

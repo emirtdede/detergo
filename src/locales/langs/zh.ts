@@ -156,7 +156,6 @@ export const zh: TranslationSchema = {
     favoriteAdded: "已添加到收藏夹。",
     about: "关于",
     version: "版本",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "发布者: Vellium • © 2026 Vellium. 保留所有权利。",
     privacyNote: "所有扫描和删除操作均 100% 在本地完成。零数据上传与追踪。",
     close: "关闭",

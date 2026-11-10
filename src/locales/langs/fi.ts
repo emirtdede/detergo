@@ -157,7 +157,6 @@ export const fi: TranslationSchema = {
     favoriteAdded: "Lisätty suosikkeihin.",
     about: "Tietoja",
     version: "Versio",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Julkaisija: Vellium • © 2026 Vellium. Kaikki oikeudet pidätetään.",
     privacyNote:
       "Kaikki skannaukset ja poistot tapahtuvat 100 % paikallisesti tietokoneellasi. Ei telemetriaa.",

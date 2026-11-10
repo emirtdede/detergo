@@ -157,7 +157,6 @@ export const si: TranslationSchema = {
     favoriteAdded: "ප්‍රියතමයන්ට එක් කරන ලදී.",
     about: "පිළිබඳව",
     version: "අනුවාදය",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "ප්‍රකාශක: Vellium • © 2026 Vellium. සියලුම හිමිකම් ඇවිරිණි.",
     privacyNote:
       "සියලුම ස්කෑන් කිරීම් සහ මකාදැමීම් 100% ක් ඔබගේ පරිගණකයේ දේශීයව සිදු වේ. ටෙලිමෙට්‍රි නොමැත.",

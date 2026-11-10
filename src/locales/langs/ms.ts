@@ -158,7 +158,6 @@ export const ms: TranslationSchema = {
     favoriteAdded: "Ditambah pada kegemaran.",
     about: "Perihal",
     version: "Versi",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Penerbit: Vellium • © 2026 Vellium. Hak cipta terpelihara.",
     privacyNote:
       "Semua imbasan dan pemadaman berlaku 100% secara tempatan pada komputer anda. Sifar telemetri.",

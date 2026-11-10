@@ -156,7 +156,6 @@ export const am: TranslationSchema = {
     favoriteAdded: "ወደ ተወዳጆች ታክሏል።",
     about: "ስለ መተግበሪያው",
     version: "ስሪት",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "አታሚ፡ Vellium • © 2026 Vellium. መብቱ በህግ የተጠበቀ ነው።",
     privacyNote: "ሁሉም ቅኝቶች እና ስረዛዎች 100% በአካባቢው በኮምፒተርዎ ላይ ይከናወናሉ። ምንም ውሂብ አይላክም።",
     close: "ዝጋ",

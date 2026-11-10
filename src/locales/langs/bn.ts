@@ -158,7 +158,6 @@ export const bn: TranslationSchema = {
     favoriteAdded: "প্রিয়তে যোগ করা হয়েছে।",
     about: "সম্পর্কে",
     version: "সংস্করণ",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "প্রকাশক: Vellium • © 2026 Vellium. সর্বস্বত্ব সংরক্ষিত।",
     privacyNote:
       "সমস্ত স্ক্যান এবং মোছার কাজ আপনার কম্পিউটারে 100% স্থানীয়ভাবে ঘটে। কোনো তথ্য বাইরে যায় না।",

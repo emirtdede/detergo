@@ -159,7 +159,6 @@ export const tr: TranslationSchema = {
     favoriteAdded: "Favori konumlara eklendi.",
     about: "Hakkında",
     version: "Sürüm",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Yayıncı: Vellium • © 2026 Vellium. Tüm hakları saklıdır.",
     privacyNote:
       "Tüm tarama ve temizlik işlemleri tamamen yerel olarak bilgisayarınızda gerçekleşir. Hiçbir veri dışarı aktarılmaz.",

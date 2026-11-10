@@ -161,7 +161,6 @@ export const fil: TranslationSchema = {
     favoriteAdded: "Idinagdag sa mga paborito.",
     about: "Tungkol sa",
     version: "Bersyon",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Publisher: Vellium • © 2026 Vellium. Nakalaan ang lahat ng karapatan.",
     privacyNote:
       "Ang lahat ng pag-scan at pagbura ay 100% lokal na nagaganap sa iyong computer. Walang telemetry.",

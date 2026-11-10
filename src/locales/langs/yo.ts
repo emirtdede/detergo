@@ -159,7 +159,6 @@ export const yo: TranslationSchema = {
     favoriteAdded: "A ti fi kún àwọn ayùnfẹ́.",
     about: "Nípa",
     version: "Ẹ̀yà",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Olùtẹ̀jáde: Vellium • © 2026 Vellium. Gbogbo ẹ̀tọ́ ni a kọ́kọ́ mú mọ́ra.",
     privacyNote:
       "Gbogbo ṣíṣàwárí àti ìparẹ́ ń wáyé ní 100% lábẹ́lé lórí kọ̀mpútà rẹ. Kò sí dátà kankan tí a ń fi ránṣẹ́ síta.",

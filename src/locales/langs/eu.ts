@@ -158,7 +158,6 @@ export const eu: TranslationSchema = {
     favoriteAdded: "Gogokoetara gehitu da.",
     about: "Honi Buruz",
     version: "Bertsioa",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Argitaratzailea: Vellium • © 2026 Vellium. Eskubide guztiak erreserbatuta.",
     privacyNote:
       "Eskaneatze eta ezabatze guztiak %100ean lokalean gertatzen dira zure ordenagailuan. Telemetriarik gabe.",

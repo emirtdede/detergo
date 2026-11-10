@@ -158,7 +158,6 @@ export const af: TranslationSchema = {
     favoriteAdded: "By gunstelinge gevoeg.",
     about: "Oor",
     version: "Weergawe",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Uitgewer: Vellium • © 2026 Vellium. Alle regte voorbehou.",
     privacyNote:
       "Alle skandering en verwydering vind 100% plaaslik op jou rekenaar plaas. Geen data word versend nie.",

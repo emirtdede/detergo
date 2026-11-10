@@ -161,7 +161,6 @@ export const ml: TranslationSchema = {
     favoriteAdded: "പ്രിയപ്പെട്ടവയിലേക്ക് ചേർത്തു.",
     about: "വിവരം",
     version: "പതിപ്പ്",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "പ്രസാധകൻ: Vellium • © 2026 Vellium. എല്ലാ അവകാശങ്ങളും നിക്ഷിപ്തം.",
     privacyNote:
       "എല്ലാ സ്കാനിംഗും ഇല്ലാതാക്കലും നിങ്ങളുടെ കമ്പ്യൂട്ടറിൽ 100% പ്രാദേശികമായി നടക്കുന്നു. ഡാറ്റ പുറത്തേക്ക് അയയ്ക്കില്ല.",

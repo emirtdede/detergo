@@ -157,7 +157,6 @@ export const mn: TranslationSchema = {
     favoriteAdded: "Дуртайд нэмэгдлээ.",
     about: "Тухай",
     version: "Хувилбар",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Нийтлэгч: Vellium • © 2026 Vellium. Бүх эрх хуулиар хамгаалагдсан.",
     privacyNote:
       "Бүх шалгах болон устгах үйлдлүүд таны компьютерт 100% дотооддоо явагдана. Гадагшаа мэдээлэл дамжуулахгүй.",

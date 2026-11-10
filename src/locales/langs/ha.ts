@@ -159,7 +159,6 @@ export const ha: TranslationSchema = {
     favoriteAdded: "An ƙara zuwa abubuwan da aka fi so.",
     about: "Game da",
     version: "Sigar",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Mawallafi: Vellium • © 2026 Vellium. An kiyaye duk haƙƙoƙi.",
     privacyNote:
       "Duk bincike da gogewa suna faruwa 100% a cikin kwamfutarka. Babu bayanan da ake aikawa waje.",

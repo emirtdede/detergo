@@ -15,12 +15,37 @@ unchanged from 2.2.1.
   dark obsidian squircle, white glyph, no text and no font dependency.
 - The mark uses the supplied original geometry unscaled, so the brackets keep a
   clear margin from the squircle edge at every size.
-- The NSIS setup wizard now speaks 52 languages instead of Turkish and English:
-  every app language for which NSIS ships a real translation file. English stays
-  first so an unknown system language falls back to English, Turkish second.
-  The 21 app languages without an NSIS translation keep the English wizard.
-  `npm run check:languages` keeps the config, the mapping and the app locales in
-  sync.
+- The NSIS setup wizard now speaks all 73 app languages, not just the 52 for
+  which NSIS ships a translation file. English stays first so an unknown system
+  language falls back to English, Turkish second, the rest alphabetical. The 21
+  missing language tables (`.nlf` + `.nsh`) and the 54 missing Tauri
+  custom-message packs ("app is running", "already installed", maintenance
+  options) are generated from the English templates by
+  `npm run generate:nsis-languages` and committed, so a release build needs no
+  network. See `docs/release/INSTALLER_LANGUAGES.md`.
+- The language picker is shown on every setup run, even when a language was
+  remembered (`MUI_LANGDLL_ALWAYSSHOW`), preselects that language, and lists each
+  language under its native name. Registry cache lives at
+  `HKCU\Software\Vellium\Dev Cleaner\Installer Language`.
+- Setup/uninstall artwork was redrawn as a DEV CLEANER icon + wordmark lockup
+  (sidebar, header, uninstaller header, WiX banner and dialog). The header image
+  is right-aligned (`MUI_HEADERIMAGE_RIGHT`); the stray chevron and the cropped
+  watermark are gone.
+- The wizard footer uses the language-neutral `© 2026 Vellium` instead of the
+  English sentence `All rights reserved.`, because NSIS renders one
+  `BrandingText` for all languages.
+- Removed the dead `settings.platform` key ("Tauri v2 + React 18 + Rust") from
+  all 73 dictionaries; no component read it, and it was the last value that was
+  English in every language.
+- `npm run check:languages` now verifies 73 config entries, project `.nlf`/`.nsh`
+  pairs (language id, codepage 1200, no surviving English sentinels), Tauri
+  message packs (right `LANG_*` constant, no `LANG_ENGLISH`, no BOM, `$\"` not
+  `\"`), `customLanguageFiles` paths and the language-neutral copyright.
+  `npm run check:i18n` now also audits the legacy `src/locales/langs` dictionaries
+  that previously escaped the untranslated-value gate.
+- `npm run sync:nsis-languages` copies the project packs into the Tauri NSIS
+  `Contrib\Language files` directory before bundling, because makensis only
+  resolves language files from inside its own installation.
 - Every Windows surface now uses one 15-frame ICO
   (`16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72, 80, 96, 128, 256`): app window,
   taskbar, Explorer, shortcuts, NSIS setup/uninstaller and the portable EXE.

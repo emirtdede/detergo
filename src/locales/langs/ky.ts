@@ -157,7 +157,6 @@ export const ky: TranslationSchema = {
     favoriteAdded: "Тандалгандарга кошулду.",
     about: "Программа жөнүндө",
     version: "Версиясы",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Басып чыгаруучу: Vellium • © 2026 Vellium. Бардык укуктар корголгон.",
     privacyNote:
       "Бардык скандоо жана өчүрүү аракеттери 100% компьютериңизде локалдык түрдө ишке ашат. Эч кандай маалымат сыртка жөнөтүлбөйт.",

@@ -161,7 +161,6 @@ export const kn: TranslationSchema = {
     favoriteAdded: "ಮೆಚ್ಚಿನವುಗಳಿಗೆ ಸೇರಿಸಲಾಗಿದೆ.",
     about: "ಕುರಿತು",
     version: "ಆವೃತ್ತಿ",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "ಪ್ರಕಾಶಕರು: Vellium • © 2026 Vellium. ಎಲ್ಲ ಹಕ್ಕುಗಳನ್ನು ಕಾಯ್ದಿರಿಸಲಾಗಿದೆ.",
     privacyNote:
       "ಎಲ್ಲಾ ಸ್ಕ್ಯಾನ್ ಮತ್ತು ಅಳಿಸುವಿಕೆಗಳು ನಿಮ್ಮ ಕಂಪ್ಯೂಟರ್‌ನಲ್ಲಿ 100% ಸ್ಥಳೀಯವಾಗಿ ನಡೆಯುತ್ತವೆ. ಯಾವುದೇ ಡೇಟಾ ಹೊರಗೆ ಹೋಗುವುದಿಲ್ಲ.",

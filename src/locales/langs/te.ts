@@ -159,7 +159,6 @@ export const te: TranslationSchema = {
     favoriteAdded: "ఇష్టమైన వాటిలో చేర్చబడింది.",
     about: "గురించి",
     version: "వెర్షన్",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "ప్రచురణకర్త: Vellium • © 2026 Vellium. సర్వ హక్కులు ప్రత్యేకించబడ్డాయి.",
     privacyNote:
       "అన్ని స్కాన్‌లు మరియు తొలగింపులు మీ కంప్యూటర్‌లోనే 100% స్థానికంగా జరుగుతాయి. ఎలాంటి డేటా బయటకు వెళ్లదు.",

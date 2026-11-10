@@ -98,7 +98,7 @@ Dev Cleaner operates **100% locally** with zero telemetry, zero analytics, and z
   - **Recycle Bin (Reversible)**: Native Win32 Shell API integration (`IFileOperation`) allowing instant recovery from Windows Recycle Bin.
   - **Permanent Deletion**: Asynchronous high-throughput directory purge with double confirmation dialogs.
 - **60 FPS Virtualized Grid**: TanStack Virtualizer powers buttery-smooth 60 FPS scrolling and rendering even across 10,000+ discovered project entries with zero DOM overhead.
-- **Global Localization (73 Languages)**: Full native support for 73 languages with zero translation leakage via robust proxy fallbacks. RTL (Right-to-Left) dynamic mirroring for Arabic, Hebrew, Persian, and Urdu. The Windows NSIS installer defaults to your system language and offers a language picker covering the 52 languages NSIS itself ships (the other 21 get an English setup wizard over a localized app).
+- **Global Localization (73 Languages)**: Full native support for 73 languages with zero translation leakage via robust proxy fallbacks. RTL (Right-to-Left) dynamic mirroring for Arabic, Hebrew, Persian, and Urdu. The Windows NSIS installer speaks all 73 languages: the picker opens on every run (preselecting the remembered language) and the 21 languages NSIS does not ship are generated from English templates, including Tauri's installer messages.
 - **Modern Dark-Transparent Glassmorphism UI**: Custom frameless window styling with curated dark aesthetic design tokens, smooth animations, and responsive layouts.
 - **Real-Time Search & Sorting**: Filter projects by name, filesystem path, or package manager (`npm`, `pnpm`, `yarn`, `bun`), and sort by largest disk size or oldest modified date.
 - **100% Offline & Private**: Zero telemetry, zero analytics, zero external network requests.
@@ -381,7 +381,7 @@ Uygulama **%100 yerel ve çevrimdışı** çalışır; hiçbir harici sunucuya b
   - **Çöp Kutusu (Geri Alınabilir)**: Yerel Win32 Shell API (`IFileOperation`) entegrasyonu ile klasörleri Windows Çöp Kutusu'na taşır.
   - **Kalıcı Silme**: Asenkron yüksek hızlı doğrudan disk temizliği (çift onaylı modal ile).
 - **60 FPS Sanallaştırılmış Liste**: TanStack Virtualizer mimarisi ile 10.000+ proje listelense bile DOM şişmesi yaşanmaz, 60 FPS akıcı kaydırma sağlanır.
-- **Küresel Yerelleştirme (73 Dil)**: Güçlü vekil (proxy fallback) mimarisi sayesinde sıfır dil sızıntısı ile 73 dilde eksiksiz çalışma. Arapça, İbranice, Farsça ve Urduca için dinamik RTL desteği. Windows NSIS kurulum sihirbazı sistem dilini otomatik seçer ve NSIS'in kendi dil dosyası bulunan 52 dili sunar (kalan 21 dilde sihirbaz İngilizce, uygulama ise yerel dilde açılır).
+- **Küresel Yerelleştirme (73 Dil)**: Güçlü vekil (proxy fallback) mimarisi sayesinde sıfır dil sızıntısı ile 73 dilde eksiksiz çalışma. Arapça, İbranice, Farsça ve Urduca için dinamik RTL desteği. Windows NSIS kurulum sihirbazı 73 dilin tamamını konuşur: dil seçici her çalıştırmada açılır (hatırlanan dili önseçili getirir) ve NSIS'in kendi dil dosyası bulunmayan 21 dil, Tauri kurulum mesajları dâhil İngilizce şablonlardan üretilir.
 - **Modern Karanlık Cam Efektli (Glassmorphism) Arayüz**: Özel çerçevesiz pencere tasarımı, estetik karanlık renk paleti ve akıcı mikro animasyonlar.
 - **Gerçek Zamanlı Arama ve Sıralama**: Proje adı veya dosya yoluna göre anında filtreleme; en büyük boyuta veya en eski değiştirilme tarihine göre sıralama.
 - **Tamamen Çevrimdışı ve Gizli**: Sıfır telemetri, sıfır analiz, sıfır dış ağ bağlantısı.

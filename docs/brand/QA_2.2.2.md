@@ -51,7 +51,7 @@ are listed under [Still pending](#still-pending).
 | V-08 | Tray 16–48 px, dark panel | **PASS** | White glyph contrasts; tile silhouette visible |
 | V-09 | Tray 16–48 px, light panel | **PASS** | Dark tile separates from the light strip; no white-on-white tile |
 | V-10 | Tray 16 px | **PASS with note** | Same spark simplification as V-06; the tile remains a recognisable 16 px target |
-| V-11 | NSIS sidebar | **PASS** | Mark, wordmark and ghost glyph on the dark grid; no stretched pixels |
+| V-11 | NSIS sidebar | **PASS** | Icon + `DEV CLEANER` wordmark lockup, optically centred with ≥26 px side margins; no cropped watermark, no stray chevron |
 | V-12 | NSIS header / unheader | **PASS** | Mark sits on the right dark block; text area stays clear |
 | V-13 | WiX banner / dialog | **PASS** | Light left side preserved for native black text; mark on the right dark block |
 | V-14 | Installer art dimensions | **PASS** | Exact 164×314, 150×57, 493×58 and 493×312 bitmaps |
@@ -60,6 +60,10 @@ are listed under [Still pending](#still-pending).
 | V-17 | GitHub avatar | **PASS** | Subject centred inside the inscribed circle; dark canvas hides the square edge |
 | V-18 | Retired identity | **PASS** | No blue gradient, old glyph, `setup.ico`, wordmark-in-icon or baked text in any inspected asset |
 | V-18b | Glyph inset matches the supplied original | **PASS** | The mark uses the original geometry with no scale transform; brackets keep visible margin inside the squircle at 16–256 px (frame sheet reviewed at 4× nearest-neighbour) |
+| V-18c | Installer lockup placement | **PASS** | Sidebar wordmark margins measured from the decoded BMP: `CLEANER` 34/33 px, tagline 26/28 px on a 164 px canvas; header lockup starts at x=11 and the panel is flush to the wizard's right edge (`MUI_HEADERIMAGE_RIGHT`) |
+| V-18d | Wizard chrome in a generated language | **PASS** | Sinhala (1115), Tamil (1097) and Urdu (1056) captured from the shipped setup: title, welcome text, directory page, buttons and footer all localized; the body sentence names the localized button (`ඊළඟ`, `அடுத்து`) instead of `Next`; Urdu mirrors the header to the left without mirroring the wordmark |
+| V-18e | Language picker with a remembered language | **PASS** | With `HKCU\...\Installer Language` = 1031 the picker still opened and preselected German; with 1115 it preselected Sinhala and listed the autonym `සිංහල` |
+| V-18f | Wizard footer | **PASS** | Reads `© 2026 Vellium` in every language; the English sentence `All rights reserved.` is gone because NSIS emits one `BrandingText` for all languages |
 
 ### Installed shell surfaces, 100% scaling (2026-11-10)
 

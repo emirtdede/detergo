@@ -158,7 +158,6 @@ export const lv: TranslationSchema = {
     favoriteAdded: "Pievienots izlasei.",
     about: "Par Programmu",
     version: "Versija",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Izdevējs: Vellium • © 2026 Vellium. Visas tiesības aizsargātas.",
     privacyNote:
       "Visas skenēšanas un dzēšanas darbības notiek 100% lokāli jūsu datorā. Nav telemetrijas.",

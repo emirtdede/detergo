@@ -157,7 +157,6 @@ export const ko: TranslationSchema = {
     favoriteAdded: "즐겨찾기에 추가되었습니다.",
     about: "정보",
     version: "버전",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "게시자: Vellium • © 2026 Vellium. All rights reserved.",
     privacyNote: "모든 검사 및 삭제는 컴퓨터에서 100% 로컬로 수행됩니다. 원격 전송이 없습니다.",
     close: "닫기",

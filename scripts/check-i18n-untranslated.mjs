@@ -28,6 +28,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 /** Values that may legitimately stay identical to English in any locale. */
 const ALLOWED_IDENTICAL_VALUES = new Set([
   // Brand, product and platform names.
+  "Dev Cleaner",
   "Dev Cleaner Terminal",
   "Web / Node.js",
   "Python / venv",
@@ -62,6 +63,7 @@ const ALLOWED_IDENTICAL_VALUES = new Set([
   "On",
   "Orange",
   "Permanent",
+  "Path",
   "Privacy",
   "Profile",
   "Project",
@@ -194,6 +196,36 @@ for (const relativeDir of ["src/features/docs/docs-locales", "src/features/legal
       }
       findings.push({ locale, key: source, value, kind: caseOnly ? "case-only" : "identical" });
     }
+  }
+}
+
+/*
+ * Legacy dictionaries (`src/locales/langs`). They back the deprecated `tr`
+ * proxy and some older views, so an English value there is just as visible as
+ * one in `ui-text`. They were previously unaudited, which is how the literal
+ * `settings.platform: "Tauri v2 + React 18 + Rust"` survived in 72 languages.
+ */
+const LEGACY_TECHNICAL_LEAF = /^legal\.licensesList\[\d+\]\.(name|version|license|url)$/;
+
+const legacyDir = join(root, "src/locales/langs");
+const legacyEn = flatten(
+  Object.values(await loadTypeScriptDictionary(join(legacyDir, "en.ts")))[0],
+);
+
+for (const name of readdirSync(legacyDir)) {
+  if (!name.endsWith(".ts") || name === "en.ts") continue;
+  checkedFiles++;
+  const locale = basename(name, ".ts");
+  const dict = flatten(Object.values(await loadTypeScriptDictionary(join(legacyDir, name)))[0]);
+
+  for (const [key, source] of Object.entries(legacyEn)) {
+    if (dict[key] !== source) continue;
+    // Dependency names, versions, licence ids and URLs are product data, not UI
+    // copy: translating them would be wrong, not a coverage gap.
+    if (LEGACY_TECHNICAL_LEAF.test(key)) continue;
+    checkedLeaves++;
+    if (ALLOWED_IDENTICAL_VALUES.has(source)) continue;
+    findings.push({ locale, key, value: source });
   }
 }
 

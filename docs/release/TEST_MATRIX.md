@@ -28,7 +28,8 @@ Rust toolchain:
 | Production frontend build | `npm run build` | **PASS** |
 | Icon structure | `npm run check:icons` | **PASS** — 15-frame ICO, 8 tray PNGs, 5 BMPs, manifest hashes |
 | Brand integrity | `npm run check:brand` | **PASS** - glyph sync, no retired references |
-| Installer language coverage | `npm run check:languages` | **PASS** - 73 app locales, 52 NSIS languages, 21 documented gaps |
+| Installer language coverage | `npm run check:languages` | **PASS** — 73 app locales, 73 NSIS languages (21 project packs, 54 message packs), language-neutral copyright |
+| Installer language gate strictness | `npm run generate:nsis-languages` then `check:languages` | **PASS** — the gate rejects a stale copy in the NSIS toolset's `Contrib` directory, a `.nlf` codepage other than 1200, a surviving English sentinel, a `LANG_ENGLISH` reference in a message pack, a BOM in a message pack, `\"` instead of `$\"`, and an English button word inside a localized sentence. Each was triggered deliberately during development and produced a named failure |
 | Audit invariants | `npm run check:audit` | **PASS** — 5 rules |
 | Version sync | `npm run check-version` | **PASS** — 2.2.2 everywhere |
 
@@ -75,13 +76,23 @@ results prove the packages behave, not that a pristine image is unaffected.
 | Shell surfaces | `npm run verify:shell-icons` | **8/8 PASS** — `DisplayIcon` resolves to `app.ico`; desktop and Start menu shortcuts resolve their icon inside `$INSTDIR`; clean uninstall |
 | 2.2.1 → 2.2.2 upgrade (NSIS) | `npm run verify:upgrade -- -Kind NSIS` | **8/8 PASS** — 2.2.1 installs, upgrades in place, reports 2.2.2, single Apps & Features entry at 2.2.2, upgraded EXE 15 frames, clean removal |
 | MSI elevation guard | `npm run verify:msi` (non-elevated) | **Correctly aborts (exit 2)** - refuses to test the per-machine package as a per-user install |
-| Installer language table | `setup.exe /S /LANG=1045` then uninstall | **PASS** - Polish is one of the 29 languages without a Tauri custom string file; the wizard still installs and removes cleanly, untranslated Tauri messages fall back to English because English is declared first |
+| Installer language table (silent) | `setup.exe /S /LANG=1045` then uninstall | **PASS (2.2.1 run)** — silent install/removal worked with a non-English language id. Re-run for 2.2.2 is listed under *Still NOT EXECUTED* below |
+| Installer message packs present | `npm run check:languages` + generated `installer.nsi` | **PASS** — 54 `customLanguageFiles` entries are passed to makensis; Polish (`pl`) is among them, so the languages that would otherwise fall back to English for Tauri's own messages now have their own strings |
+| Installer language picker, remembered language | open the setup with `Installer Language` = 1031 and 1115 | **PASS** — the dialog is shown on both runs and preselects the remembered language under its native name (`Deutsch`, `සිංහල`) |
+| Generated-language wizard chrome | Sinhala (1115), Tamil (1097), Urdu (1056) wizard captures | **PASS** — title, welcome text, directory page, buttons, body sentence and footer localized; `Next >`/`Browse...` no longer leak; Urdu mirrors the header to the left |
 | Installed shell surfaces, 100% | manual capture after the same NSIS install | **6/6 PASS** - desktop shortcut, Start menu result, Explorer extra-large icons, running taskbar button, tray overflow and in-app chrome all show the new mark ([`docs/brand/qa/shell/`](../brand/qa/shell/)) |
 
 Two harness defects were found and fixed by these runs: `Get-FileHash` does not
 resolve in a Windows PowerShell session with a stripped `PSModulePath`, and the
 upgrade script rejected the NSIS "empty folder queued for logon removal" end
 state that `verify-installer` already accepted.
+
+Still **NOT EXECUTED** for the 2.2.2 installer-language work: the silent
+`/S /LANG=1045` install/uninstall against the 2.2.2 setup, and a click-through of
+the install, license and finish pages for a sample of the 21 generated language
+tables. The welcome and directory pages are captured for three of them (Sinhala,
+Tamil, Urdu) because they cover the chrome that used to leak; the remaining
+pages of those tables share the same generated file and were inspected as text.
 
 `npm run check:contrast` remains **FAIL** for the same four themes as 2.2.1:
 `src/styles/tokens.css` does not define the semantic tokens the checker expects.

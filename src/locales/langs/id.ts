@@ -158,7 +158,6 @@ export const id: TranslationSchema = {
     favoriteAdded: "Ditambahkan ke favorit.",
     about: "Tentang",
     version: "Versi",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Penerbit: Vellium • © 2026 Vellium. Hak cipta dilindungi.",
     privacyNote:
       "Semua pemindaian dan penghapusan terjadi 100% lokal di komputer Anda. Tanpa telemetri.",

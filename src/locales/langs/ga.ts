@@ -160,7 +160,6 @@ export const ga: TranslationSchema = {
     favoriteAdded: "Curtha le roghanna.",
     about: "Faoi",
     version: "Leagan",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Foilsitheoir: Vellium • © 2026 Vellium. Gach ceart ar cosaint.",
     privacyNote:
       "Tarlaíonn gach scanadh agus scriosadh 100% go háitiúil ar do ríomhaire. Gan teiliméadracht.",

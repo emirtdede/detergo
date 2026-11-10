@@ -77,10 +77,10 @@
     "src-tauri/icons/tray-36.png": "75ba8d1e3d65e8aed51f38f37d9a65de48405d90804245270d07c12a3b501245",
     "src-tauri/icons/tray-40.png": "75fe58bcefd5864a318172a2389391a601125e3d4fade0de6248e452362c0ce4",
     "src-tauri/icons/tray-48.png": "2cd86ba6f2a2eca679f6c14d72b39bc3dae00cad3a791adfc2d2a7789f63a7e9",
-    "src-tauri/nsis/header.bmp": "3153e3beb4e95952e9a4cb3367743ac68594a3af7f1f9067a7d2271e6240ef5b",
-    "src-tauri/nsis/sidebar.bmp": "63aff6ada28870914423aec192e642ef6dacfcf118926d1a79f85b49a59686ca",
-    "src-tauri/nsis/unheader.bmp": "03b938a7c3d75d0e41f7d146944227d43f9dd2704e7bb0696cef29a8bdce14e9",
-    "src-tauri/wix/banner.bmp": "bfa25faad3a3c47d6bc12c408c8c203d5000cf2bfb6c3ced14ba64ff12ee58ba",
-    "src-tauri/wix/dialog.bmp": "d3677c633faa5575cc830aea31baaf0687b47824fdbc4b12dd466c7189836542"
+    "src-tauri/nsis/header.bmp": "e68dcadcfffd38cde09d35cbb8adbd77ed6ca281b5e5d662324ba6b5e46b5c59",
+    "src-tauri/nsis/sidebar.bmp": "77478e7e828481dad86241f5f4950fc5fb6f69265a62992ad94c82d8b2c25cc0",
+    "src-tauri/nsis/unheader.bmp": "3726456ffef0a90c9a2bfb71db0281db6a9cd6efd50c7b3a3af5816ab3f46ca2",
+    "src-tauri/wix/banner.bmp": "ebab8f9f7ebf1b4f1768c4340b301c8ebe8a8d2649ee8a248e5b92ed35bb14d9",
+    "src-tauri/wix/dialog.bmp": "e0c7b561f8a4d2c64ac951e008825eb7de0b9f4497185862fab6caeb2f0f753a"
   }
 }

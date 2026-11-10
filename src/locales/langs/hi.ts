@@ -158,7 +158,6 @@ export const hi: TranslationSchema = {
     favoriteAdded: "पसंदीदा में जोड़ा गया।",
     about: "परिचय",
     version: "संस्करण",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "प्रकाशक: Vellium • © 2026 Vellium. सर्वाधिकार सुरक्षित।",
     privacyNote:
       "सभी स्कैन और विलोपन आपके कंप्यूटर पर 100% स्थानीय रूप से होते हैं। कोई डेटा बाहर नहीं जाता।",

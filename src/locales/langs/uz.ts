@@ -159,7 +159,6 @@ export const uz: TranslationSchema = {
     favoriteAdded: "Sevimlilarga qo'shildi.",
     about: "Dastur Haqida",
     version: "Versiya",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Nashriyotchi: Vellium • © 2026 Vellium. Barcha huquqlar himoyalangan.",
     privacyNote:
       "Barcha skanerlash va o'chirish jarayonlari 100% kompyuteringizda amalga oshiriladi. Hech qanday ma'lumot uzatilmaydi.",

@@ -157,7 +157,6 @@ export const sw: TranslationSchema = {
     favoriteAdded: "Limeongezwa kwenye vipendwa.",
     about: "Kuhusu",
     version: "Toleo",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Mchapishaji: Vellium • © 2026 Vellium. Haki zote zimehifadhiwa.",
     privacyNote:
       "Uchanganuzi wote na ufutaji hufanyika 100% ndani ya kompyuta yako. Hakuna data inayotumwa nje.",

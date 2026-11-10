@@ -151,7 +151,6 @@ export interface TranslationSchema {
     favoriteAdded: string;
     about: string;
     version: string;
-    platform: string;
     publisher: string;
     privacyNote: string;
     close: string;

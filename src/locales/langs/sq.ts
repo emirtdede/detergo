@@ -160,7 +160,6 @@ export const sq: TranslationSchema = {
     favoriteAdded: "U shtua te të preferuarat.",
     about: "Rreth Programit",
     version: "Versioni",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Botuesi: Vellium • © 2026 Vellium. Të gjitha të drejtat të rezervuara.",
     privacyNote:
       "Të gjitha skanimet dhe fshirjet ndodhin 100% lokalisht në kompjuterin tuaj. Pa telemetri.",

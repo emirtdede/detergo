@@ -157,7 +157,6 @@ export const kk: TranslationSchema = {
     favoriteAdded: "Таңдаулыларға қосылды.",
     about: "Бағдарлама туралы",
     version: "Нұсқасы",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Баспагер: Vellium • © 2026 Vellium. Барлық құқықтар қорғалған.",
     privacyNote:
       "Барлық сканерлеу және жою әрекеттері 100% компьютерде жергілікті түрде өтеді. Ешқандай деректер сыртқа жіберілмейді.",

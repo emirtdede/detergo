@@ -157,7 +157,6 @@ export const is: TranslationSchema = {
     favoriteAdded: "Bætt við eftirlæti.",
     about: "Um Forritið",
     version: "Útgáfa",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Útgefandi: Vellium • © 2026 Vellium. Allur réttur áskilinn.",
     privacyNote:
       "Allar skannanir og eyðingar fara fram 100% staðbundið á tölvunni þinni. Engin fjarmæling.",

@@ -158,7 +158,6 @@ export const lt: TranslationSchema = {
     favoriteAdded: "Pridėta prie mėgstamiausių.",
     about: "Apie",
     version: "Versija",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Leidėjas: Vellium • © 2026 Vellium. Visos teisės saugomos.",
     privacyNote:
       "Visi nuskaitymai ir trynimai vyksta 100% lokaliai jūsų kompiuteryje. Jokių telemetrijos duomenų.",

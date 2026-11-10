@@ -156,7 +156,6 @@ export const zh_tw: TranslationSchema = {
     favoriteAdded: "已新增至我的最愛。",
     about: "關於",
     version: "版本",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "發行者: Vellium • © 2026 Vellium. 保留所有權利。",
     privacyNote: "所有掃描和刪除操作均 100% 在本機完成。零資料回傳與追蹤。",
     close: "關閉",

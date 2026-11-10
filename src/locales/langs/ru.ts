@@ -157,7 +157,6 @@ export const ru: TranslationSchema = {
     favoriteAdded: "Добавлено в избранное.",
     about: "О программе",
     version: "Версия",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Издатель: Vellium • © 2026 Vellium. Все права защищены.",
     privacyNote:
       "Все проверки и удаления происходят на 100% локально на вашем компьютере. Телеметрия отсутствует.",

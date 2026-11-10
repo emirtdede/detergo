@@ -159,7 +159,6 @@ export const az: TranslationSchema = {
     favoriteAdded: "Seçilmişlərə əlavə edildi.",
     about: "Haqqında",
     version: "Versiya",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Nəşriyyatçı: Vellium • © 2026 Vellium. Bütün hüquqlar qorunur.",
     privacyNote:
       "Bütün skan və silinmə əməliyyatları 100% lokal olaraq kompüterinizdə baş verir. Sıfır telemetriya.",

@@ -158,7 +158,6 @@ export const ka: TranslationSchema = {
     favoriteAdded: "დაემატა რჩეულებში.",
     about: "შესახებ",
     version: "ვერსია",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "გამომცემელი: Vellium • © 2026 Vellium. ყველა უფლება დაცულია.",
     privacyNote:
       "ყველა სკანირება და წაშლა ხორციელდება 100% ლოკალურად თქვენს კომპიუტერზე. ტელემეტრია არ გამოიყენება.",

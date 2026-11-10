@@ -1,31 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="164" height="314" viewBox="0 0 164 314" fill="none">
     <defs>
         <linearGradient id="sb-bg" x1="82" y1="0" x2="82" y2="314" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#111116"/>
+            <stop stop-color="#121218"/>
             <stop offset="0.55" stop-color="#0A0A0D"/>
             <stop offset="1" stop-color="#050507"/>
         </linearGradient>
-        <linearGradient id="sb-bg-icon" x1="256" y1="32" x2="256" y2="480" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#1C1C21"/>
-            <stop offset="0.45" stop-color="#0D0D10"/>
+        <linearGradient id="sb-icon-bg" x1="256" y1="32" x2="256" y2="480" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#232329"/>
+            <stop offset="0.45" stop-color="#101014"/>
             <stop offset="1" stop-color="#050507"/>
         </linearGradient>
-        <linearGradient id="sb-rim" x1="256" y1="32" x2="256" y2="480" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#FFFFFF" stop-opacity="0.32"/>
-            <stop offset="0.35" stop-color="#FFFFFF" stop-opacity="0.08"/>
+        <linearGradient id="sb-icon-rim" x1="256" y1="32" x2="256" y2="480" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FFFFFF" stop-opacity="0.38"/>
+            <stop offset="0.4" stop-color="#FFFFFF" stop-opacity="0.08"/>
             <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.03"/>
         </linearGradient>
+        <linearGradient id="sb-word" x1="82" y1="124" x2="82" y2="176" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FFFFFF"/>
+            <stop offset="1" stop-color="#C9CDD4"/>
+        </linearGradient>
+        <linearGradient id="sb-foot" x1="82" y1="250" x2="82" y2="314" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FFFFFF" stop-opacity="0.05"/>
+            <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+        </linearGradient>
         <g id="sb-icon">
-            <rect x="32" y="32" width="448" height="448" rx="108" fill="url(#sb-bg-icon)"/>
-            <rect x="34" y="34" width="444" height="444" rx="106" stroke="url(#sb-rim)" stroke-width="4"/>
-            <g>
-                <path d="M166 172L86 256L166 340" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M346 172L426 256L346 340" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M225.5 336.1L259.6 246.5" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round"/>
-                <path d="M283.4 146C283.4 173.8 293.6 184 321.4 184C293.6 184 283.4 194.2 283.4 222C283.4 194.2 273.2 184 245.4 184C273.2 184 283.4 173.8 283.4 146Z" fill="#FFFFFF"/>
-            </g>
-        </g>
-        <g id="sb-glyph">
+            <rect x="32" y="32" width="448" height="448" rx="108" fill="url(#sb-icon-bg)"/>
+            <rect x="34" y="34" width="444" height="444" rx="106" stroke="url(#sb-icon-rim)" stroke-width="4"/>
             <path d="M166 172L86 256L166 340" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M346 172L426 256L346 340" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M225.5 336.1L259.6 246.5" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round"/>
@@ -34,15 +34,28 @@
     </defs>
 
     <rect width="164" height="314" fill="url(#sb-bg)"/>
-    <g opacity="0.035" stroke="#FFFFFF" stroke-width="1">
-        <path d="M0 20H164M0 44H164M0 68H164M0 92H164M0 116H164M0 140H164M0 164H164M0 188H164M0 212H164M0 236H164M0 260H164M0 284H164M0 308H164"/>
-        <path d="M20 0V314M44 0V314M68 0V314M92 0V314M116 0V314M140 0V314"/>
+    <g opacity="0.03" stroke="#FFFFFF" stroke-width="1">
+        <path d="M0 22H164M0 48H164M0 74H164M0 100H164M0 126H164M0 152H164M0 178H164M0 204H164M0 230H164M0 256H164M0 282H164M0 308H164"/>
+        <path d="M22 0V314M48 0V314M74 0V314M100 0V314M126 0V314M152 0V314"/>
     </g>
 
-    <use href="#sb-icon" transform="translate(18 32) scale(0.25)"/>
+    <!-- Icon lockup, optically centred -->
+    <use href="#sb-icon" transform="translate(46 34) scale(0.160714) translate(-32 -32)"/>
 
-    <rect x="18" y="184" width="128" height="1" fill="#FFFFFF" fill-opacity="0.14"/>
-    <rect x="18" y="184" width="34" height="2" fill="#FFFFFF" fill-opacity="0.55"/>
+    <!-- Wordmark -->
+    <text x="82" y="147" text-anchor="middle" font-family="Segoe UI, Segoe UI Semibold, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="4.6" fill="url(#sb-word)">DEV</text>
+    <text x="82" y="172" text-anchor="middle" font-family="Segoe UI, Segoe UI Semibold, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="1.7" fill="url(#sb-word)">CLEANER</text>
 
-    <use href="#sb-glyph" transform="translate(-5 194) scale(0.34)" opacity="0.055"/>
+    <!-- Tagline -->
+    <text x="82" y="196" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="7.9" letter-spacing="1.0" fill="#8C939D">NODE_MODULES CLEANER</text>
+
+    <!-- Divider -->
+    <rect x="32" y="220" width="100" height="1" fill="#FFFFFF" fill-opacity="0.12"/>
+    <rect x="67" y="219.5" width="30" height="2" rx="1" fill="#FFFFFF" fill-opacity="0.7"/>
+
+    <!-- Footer copy -->
+    <text x="82" y="245" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="7.6" letter-spacing="1.8" fill="#5F656E">RECLAIM YOUR DISK</text>
+
+    <!-- Bottom glow instead of a cropped watermark -->
+    <rect x="0" y="262" width="164" height="52" fill="url(#sb-foot)"/>
 </svg>

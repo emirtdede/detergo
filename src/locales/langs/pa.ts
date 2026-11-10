@@ -158,7 +158,6 @@ export const pa: TranslationSchema = {
     favoriteAdded: "ਮਨਪਸੰਦ ਵਿੱਚ ਸ਼ਾਮਲ ਕੀਤਾ ਗਿਆ।",
     about: "ਬਾਰੇ",
     version: "ਵਰਜਨ",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "ਪ੍ਰਕਾਸ਼ਕ: Vellium • © 2026 Vellium. ਸਾਰੇ ਹੱਕ ਰਾਖਵੇਂ ਹਨ।",
     privacyNote:
       "ਸਾਰੇ ਸਕੈਨ ਅਤੇ ਮਿਟਾਉਣ ਦੇ ਕੰਮ ਤੁਹਾਡੇ ਕੰਪਿਊਟਰ 'ਤੇ 100% ਸਥਾਨਕ ਤੌਰ 'ਤੇ ਹੁੰਦੇ ਹਨ। ਕੋਈ ਡਾਟਾ ਬਾਹਰ ਨਹੀਂ ਜਾਂਦਾ।",

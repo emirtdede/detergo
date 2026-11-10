@@ -158,7 +158,6 @@ export const tk: TranslationSchema = {
     favoriteAdded: "Halanýanlara goşuldy.",
     about: "Hakynda",
     version: "Wersiýasy",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Neşir ediji: Vellium • © 2026 Vellium. Ähli hukuklar goralan.",
     privacyNote:
       "Ähli skanirleme we pozmak amallary 100% kompýuteriňizde ýerli ýagdaýda geçirilýär. Hiç hili maglumat daşary iberilmeýär.",

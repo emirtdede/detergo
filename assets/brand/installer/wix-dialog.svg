@@ -1,34 +1,36 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="493" height="312" viewBox="0 0 493 312" fill="none">
     <defs>
-        <linearGradient id="wd-bg" x1="0" y1="0" x2="493" y2="312" gradientUnits="userSpaceOnUse">
+        <linearGradient id="wd-bg" x1="0" y1="0" x2="353" y2="312" gradientUnits="userSpaceOnUse">
             <stop stop-color="#FFFFFF"/>
-            <stop offset="0.7" stop-color="#F4F4F7"/>
-            <stop offset="1" stop-color="#E8E9EE"/>
+            <stop offset="0.7" stop-color="#F6F6F9"/>
+            <stop offset="1" stop-color="#EAEBF0"/>
         </linearGradient>
         <linearGradient id="wd-panel" x1="353" y1="0" x2="493" y2="312" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#17171C"/>
-            <stop offset="0.6" stop-color="#0A0A0D"/>
+            <stop stop-color="#191920"/>
+            <stop offset="0.55" stop-color="#0A0A0D"/>
             <stop offset="1" stop-color="#050507"/>
         </linearGradient>
-        <linearGradient id="wd-bg-icon" x1="256" y1="32" x2="256" y2="480" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#1C1C21"/>
-            <stop offset="0.45" stop-color="#0D0D10"/>
+        <linearGradient id="wd-icon-bg" x1="256" y1="32" x2="256" y2="480" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#232329"/>
+            <stop offset="0.45" stop-color="#101014"/>
             <stop offset="1" stop-color="#050507"/>
         </linearGradient>
-        <linearGradient id="wd-rim" x1="256" y1="32" x2="256" y2="480" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#FFFFFF" stop-opacity="0.32"/>
-            <stop offset="0.35" stop-color="#FFFFFF" stop-opacity="0.08"/>
+        <linearGradient id="wd-icon-rim" x1="256" y1="32" x2="256" y2="480" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FFFFFF" stop-opacity="0.38"/>
+            <stop offset="0.4" stop-color="#FFFFFF" stop-opacity="0.08"/>
             <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.03"/>
         </linearGradient>
+        <linearGradient id="wd-word" x1="423" y1="188" x2="423" y2="224" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FFFFFF"/>
+            <stop offset="1" stop-color="#C9CDD4"/>
+        </linearGradient>
         <g id="wd-icon">
-            <rect x="32" y="32" width="448" height="448" rx="108" fill="url(#wd-bg-icon)"/>
-            <rect x="34" y="34" width="444" height="444" rx="106" stroke="url(#wd-rim)" stroke-width="4"/>
-            <g>
-                <path d="M166 172L86 256L166 340" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M346 172L426 256L346 340" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M225.5 336.1L259.6 246.5" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round"/>
-                <path d="M283.4 146C283.4 173.8 293.6 184 321.4 184C293.6 184 283.4 194.2 283.4 222C283.4 194.2 273.2 184 245.4 184C273.2 184 283.4 173.8 283.4 146Z" fill="#FFFFFF"/>
-            </g>
+            <rect x="32" y="32" width="448" height="448" rx="108" fill="url(#wd-icon-bg)"/>
+            <rect x="34" y="34" width="444" height="444" rx="106" stroke="url(#wd-icon-rim)" stroke-width="4"/>
+            <path d="M166 172L86 256L166 340" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M346 172L426 256L346 340" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M225.5 336.1L259.6 246.5" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round"/>
+            <path d="M283.4 146C283.4 173.8 293.6 184 321.4 184C293.6 184 283.4 194.2 283.4 222C283.4 194.2 273.2 184 245.4 184C273.2 184 283.4 173.8 283.4 146Z" fill="#FFFFFF"/>
         </g>
         <g id="wd-glyph">
             <path d="M166 172L86 256L166 340" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
@@ -38,10 +40,20 @@
         </g>
     </defs>
 
-    <rect width="493" height="312" fill="url(#wd-bg)"/>
+    <rect width="353" height="312" fill="url(#wd-bg)"/>
     <rect x="353" width="140" height="312" fill="url(#wd-panel)"/>
-    <rect x="353" width="1" height="312" fill="#000000" fill-opacity="0.18"/>
-    <use href="#wd-icon" transform="translate(381 96) scale(0.164)"/>
-    <use href="#wd-glyph" transform="translate(320 218) scale(0.2)" opacity="0.1"/>
-    <use href="#wd-glyph" transform="translate(24 226) scale(0.16)" opacity="0.045"/>
+    <rect x="353" width="1" height="312" fill="#000000" fill-opacity="0.16"/>
+
+    <!-- Brand lockup inside the side panel -->
+    <use href="#wd-icon" transform="translate(387 78) scale(0.160714) translate(-32 -32)"/>
+
+    <text x="423" y="199" text-anchor="middle" font-family="Segoe UI, Segoe UI Semibold, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="4" fill="url(#wd-word)">DEV</text>
+    <text x="423" y="217" text-anchor="middle" font-family="Segoe UI, Segoe UI Semibold, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="1.8" fill="url(#wd-word)">CLEANER</text>
+    <text x="423" y="233" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="6.6" letter-spacing="1.2" fill="#8C939D">NODE_MODULES CLEANER</text>
+
+    <rect x="396" y="248" width="54" height="1" fill="#FFFFFF" fill-opacity="0.12"/>
+    <rect x="413" y="247.5" width="20" height="2" rx="1" fill="#FFFFFF" fill-opacity="0.65"/>
+
+    <!-- Faint glyph texture on the light side -->
+    <use href="#wd-glyph" transform="translate(24 236) scale(0.16) translate(-32 -32)" opacity="0.04"/>
 </svg>

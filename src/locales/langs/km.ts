@@ -157,7 +157,6 @@ export const km: TranslationSchema = {
     favoriteAdded: "បានបន្ថែមទៅសំណព្វចិត្ត។",
     about: "អំពី",
     version: "កំណែ",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "អ្នកបោះពុម្ពផ្សាយ: Vellium • © 2026 Vellium. រក្សាសិទ្ធិគ្រប់យ៉ាង។",
     privacyNote:
       "ការស្កេននិងការលុបទាំងអស់ដំណើរការ ១០០% នៅលើកុំព្យូទ័ររបស់អ្នក។ គ្មានទិន្នន័យបញ្ជូនទៅក្រៅទេ។",

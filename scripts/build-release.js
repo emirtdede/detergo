@@ -111,6 +111,9 @@ console.log("\n[STEP 2/5] Sürüm senkronizasyonu ve marka varlıkları kontrol 
 execSync("npm run check-version", { cwd: rootDir, stdio: "inherit" });
 execSync("npm run check:icons", { cwd: rootDir, stdio: "inherit" });
 execSync("npm run check:brand", { cwd: rootDir, stdio: "inherit" });
+// NSIS only looks for language files inside its own installation, so the
+// project-supplied packs have to be copied there before the bundle is compiled.
+execSync("npm run sync:nsis-languages", { cwd: rootDir, stdio: "inherit" });
 execSync("npm run check:languages", { cwd: rootDir, stdio: "inherit" });
 
 const startedAt = Date.now();

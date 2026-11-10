@@ -157,7 +157,6 @@ export const sl: TranslationSchema = {
     favoriteAdded: "Dodano med priljubljene.",
     about: "O Programu",
     version: "Različica",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Založnik: Vellium • © 2026 Vellium. Vse pravice pridržane.",
     privacyNote:
       "Vsa preiskovanja in brisanja potekajo 100% lokalno v vašem računalniku. Brez telemetrije.",

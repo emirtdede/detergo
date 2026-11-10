@@ -158,7 +158,6 @@ export const el: TranslationSchema = {
     favoriteAdded: "Προστέθηκε στα αγαπημένα.",
     about: "Σχετικά",
     version: "Έκδοση",
-    platform: "Tauri v2 + React 18 + Rust",
     publisher: "Εκδότης: Vellium • © 2026 Vellium. Με την επιφύλαξη παντός δικαιώματος.",
     privacyNote:
       "Όλες οι σαρώσεις και διαγραφές εκτελούνται 100% τοπικά στον υπολογιστή σας. Μηδενική τηλεμετρία.",
