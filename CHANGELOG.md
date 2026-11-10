@@ -15,6 +15,12 @@ unchanged from 2.2.1.
   dark obsidian squircle, white glyph, no text and no font dependency.
 - The mark uses the supplied original geometry unscaled, so the brackets keep a
   clear margin from the squircle edge at every size.
+- The NSIS setup wizard now speaks 52 languages instead of Turkish and English:
+  every app language for which NSIS ships a real translation file. English stays
+  first so an unknown system language falls back to English, Turkish second.
+  The 21 app languages without an NSIS translation keep the English wizard.
+  `npm run check:languages` keeps the config, the mapping and the app locales in
+  sync.
 - Every Windows surface now uses one 15-frame ICO
   (`16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72, 80, 96, 128, 256`): app window,
   taskbar, Explorer, shortcuts, NSIS setup/uninstaller and the portable EXE.

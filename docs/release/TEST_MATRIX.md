@@ -27,7 +27,8 @@ Rust toolchain:
 | Prettier | `npm run format:check` | **PASS** |
 | Production frontend build | `npm run build` | **PASS** |
 | Icon structure | `npm run check:icons` | **PASS** — 15-frame ICO, 8 tray PNGs, 5 BMPs, manifest hashes |
-| Brand integrity | `npm run check:brand` | **PASS** — glyph sync, no retired references |
+| Brand integrity | `npm run check:brand` | **PASS** - glyph sync, no retired references |
+| Installer language coverage | `npm run check:languages` | **PASS** - 73 app locales, 52 NSIS languages, 21 documented gaps |
 | Audit invariants | `npm run check:audit` | **PASS** — 5 rules |
 | Version sync | `npm run check-version` | **PASS** — 2.2.2 everywhere |
 
@@ -74,6 +75,7 @@ results prove the packages behave, not that a pristine image is unaffected.
 | Shell surfaces | `npm run verify:shell-icons` | **8/8 PASS** — `DisplayIcon` resolves to `app.ico`; desktop and Start menu shortcuts resolve their icon inside `$INSTDIR`; clean uninstall |
 | 2.2.1 → 2.2.2 upgrade (NSIS) | `npm run verify:upgrade -- -Kind NSIS` | **8/8 PASS** — 2.2.1 installs, upgrades in place, reports 2.2.2, single Apps & Features entry at 2.2.2, upgraded EXE 15 frames, clean removal |
 | MSI elevation guard | `npm run verify:msi` (non-elevated) | **Correctly aborts (exit 2)** - refuses to test the per-machine package as a per-user install |
+| Installer language table | `setup.exe /S /LANG=1045` then uninstall | **PASS** - Polish is one of the 29 languages without a Tauri custom string file; the wizard still installs and removes cleanly, untranslated Tauri messages fall back to English because English is declared first |
 | Installed shell surfaces, 100% | manual capture after the same NSIS install | **6/6 PASS** - desktop shortcut, Start menu result, Explorer extra-large icons, running taskbar button, tray overflow and in-app chrome all show the new mark ([`docs/brand/qa/shell/`](../brand/qa/shell/)) |
 
 Two harness defects were found and fixed by these runs: `Get-FileHash` does not

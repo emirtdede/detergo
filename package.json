@@ -22,6 +22,7 @@
     "check:build-info": "node scripts/check-build-info.mjs",
     "check:icons": "node scripts/check-icons.mjs",
     "check:brand": "node scripts/check-brand.mjs",
+    "check:languages": "node scripts/check-installer-languages.mjs",
     "check:exe-icons": "node scripts/check-exe-icons.mjs",
     "generate:icons": "node scripts/generate-icons.mjs",
     "generate:icons:verify": "node scripts/verify-icon-determinism.mjs",
