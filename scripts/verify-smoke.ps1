@@ -263,5 +263,7 @@ if ($failures.Count -gt 0) {
     foreach ($f in $failures) { Write-Host "  - $($f.Id) $($f.Label): $($f.Detail)" }
     exit 1
 }
-Write-Host "Manual items still required: Windows notification, in-app cancel, recycle-bin restore."
+Write-Host "Notification routing: npm test (notification-service.test.ts)"
+Write-Host "Cancel paths:        cargo test (scanner + cleanup cancellation)"
+Write-Host "Recycle-bin restore: npm run verify:trash"
 exit 0

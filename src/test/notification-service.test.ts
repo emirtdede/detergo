@@ -113,4 +113,33 @@ describe("notification service routing", () => {
     expect(body).toContain("2");
     expect(body).not.toMatch(/^Scan complete/i);
   });
+
+  // WebView2 only surfaces web notifications if the host handles
+  // NotificationReceived; wry registers no handler, so inside the Tauri shell
+  // `new Notification()` is invisible. A desktop-only choice must therefore
+  // degrade to an in-app toast instead of disappearing.
+  it("falls back to an in-app toast inside the Tauri shell", () => {
+    (window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ = {};
+    setChannel("scanComplete", "desktop");
+    try {
+      notificationService.notifyScanComplete({ targetCount: 4, reclaimBytes: 0 });
+    } finally {
+      delete (window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__;
+    }
+
+    expect(FakeNotification.instances).toHaveLength(0);
+    expect(useUiStore.getState().toast?.message).toContain("4");
+  });
+
+  it("gives in-app feedback from the desktop test button inside the shell", () => {
+    (window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ = {};
+    try {
+      notificationService.testDesktopNotification();
+    } finally {
+      delete (window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__;
+    }
+
+    expect(FakeNotification.instances).toHaveLength(0);
+    expect(useUiStore.getState().toast).not.toBeNull();
+  });
 });

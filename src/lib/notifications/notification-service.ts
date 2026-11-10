@@ -130,16 +130,29 @@ class NotificationService {
     }
   }
 
+  /**
+   * True only when an OS toast can actually be rendered by the page.
+   *
+   * Inside the Tauri shell the page is hosted by WebView2. WebView2 surfaces
+   * web notifications through `ICoreWebView2_24::add_NotificationReceived` and
+   * the host application is responsible for drawing the toast. wry (and
+   * therefore Tauri) registers no handler, so `new Notification()` constructs an
+   * object and shows nothing. See `docs/architecture/NOTIFICATIONS.md` for the
+   * evidence and for the 2.3 plan (native toast + AUMID).
+   */
+  private canShowDesktop(): boolean {
+    if (typeof window === "undefined") return false;
+    if ("__TAURI_INTERNALS__" in window) return false;
+    return "Notification" in window;
+  }
+
   private sendDesktop(title: string, body: string) {
+    if (!this.canShowDesktop()) return;
     if (!this.hasPermission) {
       this.readPermission();
     }
     try {
-      if (
-        typeof window !== "undefined" &&
-        "Notification" in window &&
-        Notification.permission === "granted"
-      ) {
+      if (Notification.permission === "granted") {
         new Notification(title, {
           body,
           icon: "/icons/icon.png",
@@ -166,11 +179,18 @@ class NotificationService {
       this.playChime();
     }
 
-    if (channel === "both" || channel === "in_app") {
+    // An explicit desktop choice must never become a silent no-op: when the
+    // shell cannot raise an OS toast, deliver the same message in-app instead.
+    const wantsDesktop = channel === "both" || channel === "desktop";
+    const desktopAvailable = this.canShowDesktop();
+    const wantsInApp =
+      channel === "in_app" || channel === "both" || (wantsDesktop && !desktopAvailable);
+
+    if (wantsInApp) {
       useUiStore.getState().showToast(`${title}: ${message}`, level);
     }
 
-    if (channel === "both" || channel === "desktop") {
+    if (wantsDesktop && desktopAvailable) {
       this.sendDesktop(title, message);
     }
   }
@@ -243,7 +263,13 @@ class NotificationService {
   public testDesktopNotification() {
     const lang = usePreferencesStore.getState().language;
     const ui = getUIText(lang);
-    this.sendDesktop(ui.notifications.testDesktopTitle, ui.notifications.testDesktopBody);
+    if (this.canShowDesktop()) {
+      this.sendDesktop(ui.notifications.testDesktopTitle, ui.notifications.testDesktopBody);
+    } else {
+      // The shell cannot raise an OS toast; show the same message in-app so the
+      // user gets concrete feedback instead of a button that does nothing.
+      useUiStore.getState().showToast(ui.notifications.testDesktopBody, "info");
+    }
     this.playChime();
   }
 

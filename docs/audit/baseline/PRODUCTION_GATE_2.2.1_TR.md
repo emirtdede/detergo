@@ -10,7 +10,7 @@ bağlanmıştır, yani artık "elle imzalanacak belge" değil, çalıştırılab
 | # | Kapı | Durum | Kanıt |
 |---|---|---|---|
 | 1 | `npm run typecheck` → exit 0 | **PASS** | `tsc --noEmit` exit 0 |
-| 2 | `npm test` → tümü yeşil, 0 atlanmış | **PASS** | 11 dosya / 90 test geçti, atlanan yok |
+| 2 | `npm test` → tümü yeşil, 0 atlanmış | **PASS** | 11 dosya / 92 test geçti, atlanan yok |
 | 3 | `cargo test` → tümü yeşil | **PASS** | 127 lib + 8 `mcp_flow` + 6 `webhook` + 12 path guard + diğer entegrasyon dosyaları; 0 failed |
 | 4 | `cargo clippy --all-targets -- -D warnings` | **PASS** | 0 uyarı |
 | 5 | `cargo fmt --check` | **PASS** | exit 0 |
@@ -23,7 +23,7 @@ bağlanmıştır, yani artık "elle imzalanacak belge" değil, çalıştırılab
 | 12 | Path güvenlik matrisi → 12/12 | **PASS** | `safety::path_guard` 12/12 — bkz. `SECURITY_MATRIX_2.2.1_TR.md` |
 | 13 | 50k öğe arama ölçümü → baseline'dan yavaş değil | **PASS** | < 250 ms eşiği — bkz. `PERFORMANCE_2.2.1_TR.md` |
 | 14 | `dist/` boyutu → baseline'dan büyük değil | **PASS** | 9,59 MB (−46,2 kB) — concept chunk üretimde yok |
-| 15 | Smoke (webhook, bildirim, iptal, restore, dil) | **PASS** | `npm run verify:smoke` 10/10 + `src/test/notification-service.test.ts` 7/7 + `npm run verify:trash` restore adımı |
+| 15 | Smoke (webhook, bildirim, iptal, restore, dil) | **PASS** | `npm run verify:smoke` 10/10 + `src/test/notification-service.test.ts` 9/9 + `npm run verify:trash` restore adımı |
 | 16 | NSIS + MSI temiz kurulum/kaldırma | **PASS** | `npm run verify:installer` 8/8 |
 | 17 | Rollback tatbikatı (PR-2, PR-4) | **PASS** | `ROLLBACK_DRILL_2.2.1_TR.md` — iki ayrı geri alma derlemesi |
 | 18 | `BUILD_INFO.json` commit = HEAD, `dirty: false` | **PASS** | `npm run check:build-info` → `Build provenance OK` |
@@ -46,10 +46,14 @@ bağlanmıştır, yani artık "elle imzalanacak belge" değil, çalıştırılab
 
 Tarayıcı/CLI ile tetiklenemeyen iki davranış kod katmanında kanıtlanır:
 
-- **Bildirim (S-04):** `src/test/notification-service.test.ts` 7 test — `both`,
-  `desktop`, `in_app`, `none` kanalları, izin reddi, webhook hata kanalı ve
-  dil değişiminde gövde metni. İzin `granted` değilse masaüstü bildirimi
-  oluşturulmaz, uygulama içi toast çalışmaya devam eder.
+- **Bildirim (S-04):** `src/test/notification-service.test.ts` 9 test — `both`,
+  `desktop`, `in_app`, `none` kanalları, izin reddi, webhook hata kanalı,
+  dil değişiminde gövde metni ve Tauri kabuğunda geri düşüş. Ölçüm sırasında
+  gerçek bir kusur bulundu: WebView2 web bildirimlerini yalnızca barındırıcı
+  `NotificationReceived` olayını işlerse gösterir, wry ise işlemez; bu yüzden
+  `new Notification()` kabuk içinde sessiz bir no-op'tu. 2.2.1'de masaüstü
+  kanalı, kabuk içinde uygulama içi toast'a düşer (kanıt ve 2.3 planı:
+  `docs/architecture/NOTIFICATIONS.md`).
 - **Tarama/temizlik iptali (S-05/S-06):**
   `scanner::tests::cancelled_discovery_returns_partial_outcome_without_error`
   (kısmi sonuç, hata yok, `stop_reason=cancelled`) ve

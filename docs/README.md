@@ -13,6 +13,7 @@ evidence and release status. Documents are grouped by purpose, not by date.
 | 4 | [`architecture/AGENT_PROVIDERS.md`](architecture/AGENT_PROVIDERS.md) | Codex / Claude Code / Antigravity storage classes and KEEP rules. |
 | 5 | [`architecture/MCP.md`](architecture/MCP.md) | MCP tool surface, preview→execute flow and the three destructive gates. |
 | 6 | [`architecture/SCAN_HISTORY_MIGRATION.md`](architecture/SCAN_HISTORY_MIGRATION.md) | Why scan history lives in localStorage for 2.2.1, and the 2.3 plan. |
+| 7 | [`architecture/NOTIFICATIONS.md`](architecture/NOTIFICATIONS.md) | Why WebView2 web notifications do not surface, and the 2.2.1 fallback. |
 | 7 | [`audit/PRE_DEPLOYMENT_QA_AUDIT_TR.md`](audit/PRE_DEPLOYMENT_QA_AUDIT_TR.md) | Pre-deployment audit: 42 findings (Turkish). |
 | 8 | [`audit/REMEDIATION_PLAN_TR.md`](audit/REMEDIATION_PLAN_TR.md) | Remediation plan and work packages P0–E1 (Turkish). |
 | 9 | [`audit/baseline/SECURITY_MATRIX_2.2.1_TR.md`](audit/baseline/SECURITY_MATRIX_2.2.1_TR.md) | 12 path + 9 MCP security scenarios with their tests. |
@@ -29,6 +30,7 @@ docs/
 │   ├── CLEANUP_CATALOG.md
 │   ├── AGENT_PROVIDERS.md
 │   ├── MCP.md
+│   ├── NOTIFICATIONS.md
 │   └── SCAN_HISTORY_MIGRATION.md
 ├── audit/
 │   ├── PRE_DEPLOYMENT_QA_AUDIT_TR.md
