@@ -102,18 +102,23 @@ export const gu: TranslationSchema = {
     cancel: "રદ કરો",
     confirm: "પુષ્ટિ કરો",
     recycleTitle: "શું પસંદ કરેલ ફોલ્ડર્સ રીસાઇકલ બિનમાં ખસેડવા છે?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules ફોલ્ડર્સ (${size}) રીસાઇકલ બિનમાં ખસેડવામાં આવશે. તમે તેમને કોઈપણ સમયે પુનઃસ્થાપિત કરી શકો છો.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules ફોલ્ડર્સ (${size}) રીસાઇકલ બિનમાં ખસેડવામાં આવશે. તમે તેમને કોઈપણ સમયે પુનઃસ્થાપિત કરી શકો છો.`,
     recycleConfirmButton: "રીસાઇકલ બિનમાં ખસેડો",
     permanentTitle: "શું પસંદ કરેલ ફોલ્ડર્સ કાયમ માટે કાઢી નાખવા છે?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules ફોલ્ડર્સ (${size}) ડિસ્કમાંથી કાયમ માટે કાઢી નાખવામાં આવશે. આ ક્રિયા પૂર્વવત્ કરી શકાતી નથી.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules ફોલ્ડર્સ (${size}) ડિસ્કમાંથી કાયમ માટે કાઢી નાખવામાં આવશે. આ ક્રિયા પૂર્વવત્ કરી શકાતી નથી.`,
     permanentWarning: "ચેતવણી: આ ક્રિયા કાયમી છે! ફોલ્ડર્સ રીસાઇકલ બિનમાં મોકલવામાં આવશે નહીં.",
     permanentConfirmButton: "કાયમ માટે કાઢી નાખો",
     deletingInProgress: "કાઢી નાખવામાં આવી રહ્યું છે...",
     recycleSuccess: (count: number) => `${count} ફોલ્ડર્સ સફળતાપૂર્વક રીસાઇકલ બિનમાં ખસેડાયા.`,
-    permanentSuccess: (count: number) => `${count} ફોલ્ડર્સ સફળતાપૂર્વક કાયમ માટે કાઢી નાખવામાં આવ્યા.`,
+    permanentSuccess: (count: number) =>
+      `${count} ફોલ્ડર્સ સફળતાપૂર્વક કાયમ માટે કાઢી નાખવામાં આવ્યા.`,
     partialErrorTitle: "આંશિક કાઢી નાખવાનો અહેવાલ",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} ફોલ્ડર્સ સાફ કરવામાં આવ્યા, પરંતુ ${errorCount} ફોલ્ડર્સ કાઢી શકાયા નથી.`,
-    lockedOrPermissionNote: "કેટલીક ફાઇલો ચાલુ પ્રક્રિયાઓ દ્વારા લૉક હોઈ શકે છે અથવા સંચાલક પરવાનગીઓની જરૂર પડી શકે છે.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} ફોલ્ડર્સ સાફ કરવામાં આવ્યા, પરંતુ ${errorCount} ફોલ્ડર્સ કાઢી શકાયા નથી.`,
+    lockedOrPermissionNote:
+      "કેટલીક ફાઇલો ચાલુ પ્રક્રિયાઓ દ્વારા લૉક હોઈ શકે છે અથવા સંચાલક પરવાનગીઓની જરૂર પડી શકે છે.",
   },
   settings: {
     title: "સેટિંગ્સ",
@@ -155,7 +160,8 @@ export const gu: TranslationSchema = {
     version: "આવૃત્તિ",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "પ્રકાશક: Vellium • © 2026 Vellium. સર્વાધિકાર સુરક્ષિત.",
-    privacyNote: "બધા સ્કેન અને કાઢી નાખવાની પ્રક્રિયા તમારા કમ્પ્યુટર પર 100% સ્થાનિક રીતે થાય છે. કોઈ ડેટા બહાર જતો નથી.",
+    privacyNote:
+      "બધા સ્કેન અને કાઢી નાખવાની પ્રક્રિયા તમારા કમ્પ્યુટર પર 100% સ્થાનિક રીતે થાય છે. કોઈ ડેટા બહાર જતો નથી.",
     close: "બંધ કરો",
   },
   errors: {

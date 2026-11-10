@@ -41,20 +41,20 @@ export function useSettingsSections(): SettingsSectionDef[] {
     },
     {
       id: "notifications",
-      label: "Bildirimler & Uyarılar",
-      hint: "Uygulama içi ve Windows masaüstü bildirim tercihleri",
+      label: ui.settings.notifTitle,
+      hint: ui.settings.notifDesc,
       icon: <Bell size={15} />,
     },
     {
       id: "shortcuts",
-      label: "Klavye Kısayolları",
-      hint: "Uygulama içi özel tuş kombinasyonlarını yapılandırın",
+      label: ui.settings.shortcutsTitle,
+      hint: ui.settings.shortcutsDesc,
       icon: <Keyboard size={15} />,
     },
     {
       id: "automation",
-      label: "Otomasyon & Webhook",
-      hint: "Webhook endpoint'leri ve otonom tetikleyiciler",
+      label: ui.settings.webhookTitle,
+      hint: ui.settings.webhookDesc,
       icon: <Webhook size={15} />,
     },
     {

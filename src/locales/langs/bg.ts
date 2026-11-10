@@ -102,18 +102,23 @@ export const bg: TranslationSchema = {
     cancel: "Отказ",
     confirm: "Потвърждение",
     recycleTitle: "Преместване на избраните папки в кошчето?",
-    recycleDescription: (count: number, size: string) => `${count} папки node_modules (${size}) ще бъдат преместени в кошчето. Можете да ги възстановите по всяко време.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} папки node_modules (${size}) ще бъдат преместени в кошчето. Можете да ги възстановите по всяко време.`,
     recycleConfirmButton: "Преместване в кошчето",
     permanentTitle: "Окончателно изтриване на избраните папки?",
-    permanentDescription: (count: number, size: string) => `${count} папки node_modules (${size}) ще бъдат окончателно изтрити от диска. Това действие не може да бъде отменено.`,
-    permanentWarning: "ВНИМАНИЕ: Това действие е необратимо! Папките няма да бъдат изпратени в кошчето.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} папки node_modules (${size}) ще бъдат окончателно изтрити от диска. Това действие не може да бъде отменено.`,
+    permanentWarning:
+      "ВНИМАНИЕ: Това действие е необратимо! Папките няма да бъдат изпратени в кошчето.",
     permanentConfirmButton: "Окончателно изтриване",
     deletingInProgress: "Изтриване...",
     recycleSuccess: (count: number) => `${count} папки успешно преместени в кошчето.`,
     permanentSuccess: (count: number) => `${count} папки успешно изтрити окончателно.`,
     partialErrorTitle: "Доклад за частично изтриване",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} папки почистени, но ${errorCount} папки не можаха да бъдат изтрити.`,
-    lockedOrPermissionNote: "Някои файлове може да са заключени от работещи процеси или да изискват администраторски права.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} папки почистени, но ${errorCount} папки не можаха да бъдат изтрити.`,
+    lockedOrPermissionNote:
+      "Някои файлове може да са заключени от работещи процеси или да изискват администраторски права.",
   },
   settings: {
     title: "Настройки",
@@ -155,7 +160,8 @@ export const bg: TranslationSchema = {
     version: "Версия",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Издател: Vellium • © 2026 Vellium. Всички права запазени.",
-    privacyNote: "Всички сканирания и изтривания се извършват 100% локално на вашия компютър. Без телеметрия.",
+    privacyNote:
+      "Всички сканирания и изтривания се извършват 100% локално на вашия компютър. Без телеметрия.",
     close: "Затваряне",
   },
   errors: {
@@ -164,7 +170,8 @@ export const bg: TranslationSchema = {
     pathNotFound: "Указаният път не е намерен.",
     scanCancelled: "Сканирането беше отменено от потребителя.",
     scanFailed: "Възникна грешка по време на сканирането.",
-    unsafeDeleteTarget: "От съображения за сигурност системните и коренните папки не могат да се изтриват.",
+    unsafeDeleteTarget:
+      "От съображения за сигурност системните и коренните папки не могат да се изтриват.",
     recycleBinFailed: "Неуспешно преместване на папките в кошчето.",
     permanentDeleteFailed: "Неуспешно окончателно изтриване на папките.",
     settingsReadFailed: "Файлът с настройки не можа да бъде прочетен.",

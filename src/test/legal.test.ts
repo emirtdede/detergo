@@ -43,8 +43,16 @@ describe("legal documents", () => {
       expect(LEGAL_DOCUMENTS[language].privacy.clauses.length).toBeGreaterThanOrEqual(10);
     }
     // The obligations a EULA is expected to cover.
-    const headings = LEGAL_DOCUMENTS.en.eula.clauses.map((clause) => clause.heading.toLowerCase()).join(" ");
-    for (const keyword of ["license grant", "restrictions", "warranty", "liability", "governing law"]) {
+    const headings = LEGAL_DOCUMENTS.en.eula.clauses
+      .map((clause) => clause.heading.toLowerCase())
+      .join(" ");
+    for (const keyword of [
+      "license grant",
+      "restrictions",
+      "warranty",
+      "liability",
+      "governing law",
+    ]) {
       expect(headings).toContain(keyword);
     }
   });
@@ -65,21 +73,32 @@ describe("legal documents", () => {
     }
   });
 
-  it("falls back to English for every other UI language", () => {
-    expect(getLegalDocument("de", "privacy")).toBe(LEGAL_DOCUMENTS.en.privacy);
+  it("localizes every other UI language instead of falling back to English", () => {
+    // An unknown or missing language still resolves to the English original.
     expect(getLegalDocument(undefined, "eula")).toBe(LEGAL_DOCUMENTS.en.eula);
     expect(getLegalDocument(null, "thirdParty")).toBe(LEGAL_DOCUMENTS.en.thirdParty);
-    expect(getLegalDocMeta("ja")).toBe(LEGAL_DOC_META.en);
+
+    for (const language of ["de", "ja", "ar"] as const) {
+      const document = getLegalDocument(language, "privacy");
+      expect(document, `${language} privacy`).not.toBe(LEGAL_DOCUMENTS.en.privacy);
+      expect(document.title, `${language} title`).not.toBe(LEGAL_DOCUMENTS.en.privacy.title);
+      expect(document.clauses.length).toBe(LEGAL_DOCUMENTS.en.privacy.clauses.length);
+      expect(getLegalDocMeta(language)).not.toBe(LEGAL_DOC_META.en);
+      expect(getLegalDocMeta(language)[0].label).not.toBe(LEGAL_DOC_META.en[0].label);
+    }
   });
 
   it("names Vellium and its channel in every document", () => {
     for (const language of ["en", "tr"] as const) {
       for (const id of DOC_IDS) {
         const document = LEGAL_DOCUMENTS[language][id];
-        const text = [document.summary, ...document.clauses.flatMap((clause) => [
-          ...(clause.paragraphs ?? []),
-          ...(clause.bullets ?? []),
-        ])].join(" ");
+        const text = [
+          document.summary,
+          ...document.clauses.flatMap((clause) => [
+            ...(clause.paragraphs ?? []),
+            ...(clause.bullets ?? []),
+          ]),
+        ].join(" ");
         expect(text).toContain("Vellium");
         expect(text).toContain("vellium.dev");
       }

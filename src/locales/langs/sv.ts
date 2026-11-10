@@ -102,18 +102,22 @@ export const sv: TranslationSchema = {
     cancel: "Avbryt",
     confirm: "Bekräfta",
     recycleTitle: "Flytta Markerade Mappar till Papperskorgen?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules-mappar (${size}) flyttas till Papperskorgen. Du kan återställa dem när som helst.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules-mappar (${size}) flyttas till Papperskorgen. Du kan återställa dem när som helst.`,
     recycleConfirmButton: "Flytta till Papperskorgen",
     permanentTitle: "Ta bort Markerade Mappar Permanent?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules-mappar (${size}) raderas permanent från disken. Detta kan inte ångras.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules-mappar (${size}) raderas permanent från disken. Detta kan inte ångras.`,
     permanentWarning: "VARNING: Denna åtgärd är permanent! Mappar skickas inte till Papperskorgen.",
     permanentConfirmButton: "Ta bort Permanent",
     deletingInProgress: "Radering pågår...",
     recycleSuccess: (count: number) => `${count} mappar flyttades till Papperskorgen.`,
     permanentSuccess: (count: number) => `${count} mappar togs bort permanent.`,
     partialErrorTitle: "Rapport om Delvis Borttagning",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} mappar rensade, men ${errorCount} mappar kunde inte tas bort.`,
-    lockedOrPermissionNote: "Vissa filer kan vara låsta av processer som körs eller kräva administratörsbehörighet.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} mappar rensade, men ${errorCount} mappar kunde inte tas bort.`,
+    lockedOrPermissionNote:
+      "Vissa filer kan vara låsta av processer som körs eller kräva administratörsbehörighet.",
   },
   settings: {
     title: "Inställningar",

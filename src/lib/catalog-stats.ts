@@ -16,7 +16,7 @@ export interface CatalogStats {
  * number of categories (or vice versa).
  */
 export function countCatalogStats(
-  rules: readonly Pick<CatalogRule, "ecosystem" | "category">[]
+  rules: readonly Pick<CatalogRule, "ecosystem" | "category">[],
 ): CatalogStats {
   return {
     rules: rules.length,

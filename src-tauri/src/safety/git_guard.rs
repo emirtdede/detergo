@@ -22,15 +22,18 @@ pub enum GitError {
 impl std::fmt::Display for GitError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            GitError::Unavailable => write!(f, "git çalıştırılabilir dosyası bulunamadı"),
-            GitError::Failure(msg) => write!(f, "git komutu başarısız: {}", msg),
+            GitError::Unavailable => write!(f, "git executable not found"),
+            GitError::Failure(msg) => write!(f, "git command failed: {}", msg),
         }
     }
 }
 
 fn command(repo: &Path, args: &[&str]) -> Result<std::process::Output, GitError> {
     let mut cmd = Command::new("git");
-    cmd.arg("-C").arg(repo).arg("-c").arg("core.quotepath=false");
+    cmd.arg("-C")
+        .arg(repo)
+        .arg("-c")
+        .arg("core.quotepath=false");
     for a in args {
         cmd.arg(a);
     }
@@ -60,7 +63,10 @@ pub fn find_repository_root(start: &Path) -> Option<PathBuf> {
 }
 
 fn is_linked_worktree(root: &Path) -> bool {
-    root.join(".git").metadata().map(|m| m.is_file()).unwrap_or(false)
+    root.join(".git")
+        .metadata()
+        .map(|m| m.is_file())
+        .unwrap_or(false)
 }
 
 /// Inspects the Git state of a path. Errors are returned instead of being
@@ -81,7 +87,7 @@ pub fn inspect_git(path: &Path) -> Result<GitStatus, GitError> {
         Ok(r) => r.to_string_lossy().replace('\\', "/"),
         Err(_) => {
             return Err(GitError::Failure(
-                "hedef depo kökünün dışında".to_string(),
+                "target is outside repository root".to_string(),
             ))
         }
     };
@@ -145,7 +151,7 @@ pub fn ensure_not_tracked(path: &Path) -> Result<(), String> {
         Err(e) => Err(e.to_string()),
         Ok(status) => {
             if status.tracked {
-                Err("Hedef Git tarafından izleniyor.".to_string())
+                Err("Target is tracked by Git.".to_string())
             } else {
                 Ok(())
             }

@@ -102,18 +102,22 @@ export const et: TranslationSchema = {
     cancel: "Tühista",
     confirm: "Kinnita",
     recycleTitle: "Teisalda Valitud Kaustad Prügikasti?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules kausta (${size}) teisaldatakse Prügikasti. Saate need igal ajal taastada.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules kausta (${size}) teisaldatakse Prügikasti. Saate need igal ajal taastada.`,
     recycleConfirmButton: "Teisalda Prügikasti",
     permanentTitle: "Kustuta Valitud Kaustad Jäädavalt?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules kausta (${size}) kustutatakse kettalt jäädavalt. Seda toimingut ei saa tagasi võtta.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules kausta (${size}) kustutatakse kettalt jäädavalt. Seda toimingut ei saa tagasi võtta.`,
     permanentWarning: "HOIATUS: See toiming on pöördumatu! Kaustu ei saadeta Prügikasti.",
     permanentConfirmButton: "Kustuta Jäädavalt",
     deletingInProgress: "Kustutamine pooleli...",
     recycleSuccess: (count: number) => `${count} kausta edukalt Prügikasti teisaldatud.`,
     permanentSuccess: (count: number) => `${count} kausta edukalt jäädavalt kustutatud.`,
     partialErrorTitle: "Osalise Kustutamise Aruanne",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} kausta puhastatud, kuid ${errorCount} kausta ei saanud kustutada.`,
-    lockedOrPermissionNote: "Mõned failid võivad olla töötavate protsesside poolt lukustatud või nõuavad administraatori õigusi.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} kausta puhastatud, kuid ${errorCount} kausta ei saanud kustutada.`,
+    lockedOrPermissionNote:
+      "Mõned failid võivad olla töötavate protsesside poolt lukustatud või nõuavad administraatori õigusi.",
   },
   settings: {
     title: "Seaded",
@@ -155,7 +159,8 @@ export const et: TranslationSchema = {
     version: "Versioon",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Väljaandja: Vellium • © 2026 Vellium. Kõik õigused kaitstud.",
-    privacyNote: "Kõik skannimised ja kustutamised toimuvad 100% lokaalselt teie arvutis. Telemeetriat pole.",
+    privacyNote:
+      "Kõik skannimised ja kustutamised toimuvad 100% lokaalselt teie arvutis. Telemeetriat pole.",
     close: "Sulge",
   },
   errors: {

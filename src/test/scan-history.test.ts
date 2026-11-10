@@ -9,9 +9,15 @@ import {
 const storageMap = new Map<string, string>();
 const localStorageMock = {
   getItem: (key: string) => storageMap.get(key) ?? null,
-  setItem: (key: string, value: string) => { storageMap.set(key, value); },
-  removeItem: (key: string) => { storageMap.delete(key); },
-  clear: () => { storageMap.clear(); },
+  setItem: (key: string, value: string) => {
+    storageMap.set(key, value);
+  },
+  removeItem: (key: string) => {
+    storageMap.delete(key);
+  },
+  clear: () => {
+    storageMap.clear();
+  },
 };
 
 beforeAll(() => {
@@ -34,7 +40,7 @@ describe("Scan History Storage", () => {
     const entry: ScanHistoryRecord = {
       id: "scan-1",
       timestamp: new Date().toISOString(),
-      scope: "Proje Bağımlılıkları",
+      scope: "project",
       rootPath: "D:\\test",
       itemCount: 5,
       cleanableBytes: 1048576,
@@ -54,7 +60,7 @@ describe("Scan History Storage", () => {
       appendScanHistory({
         id: `scan-${i}`,
         timestamp: new Date().toISOString(),
-        scope: "Proje Bağımlılıkları",
+        scope: "project",
         rootPath: `D:\\test\\${i}`,
         itemCount: i,
         cleanableBytes: i * 1000,
@@ -72,7 +78,7 @@ describe("Scan History Storage", () => {
     appendScanHistory({
       id: "scan-1",
       timestamp: new Date().toISOString(),
-      scope: "Proje",
+      scope: "project",
       rootPath: "D:\\test",
       itemCount: 1,
       cleanableBytes: 100,

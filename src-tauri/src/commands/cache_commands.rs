@@ -15,7 +15,7 @@ use crate::scanner::cancellation::CancellationToken;
 pub async fn get_cache_providers() -> Result<Vec<CacheProviderInfo>, AppError> {
     tokio::task::spawn_blocking(list_cache_providers)
         .await
-        .map_err(|e| AppError::Unknown(format!("Önbellek listesi başarısız: {}", e)))
+        .map_err(|e| AppError::Unknown(format!("Failed to list caches: {}", e)))
 }
 
 /// Streams measured sizes one path at a time so the UI can show progress and
@@ -30,7 +30,7 @@ pub async fn measure_cache_providers(
         let mut current = state
             .cache_token
             .lock()
-            .map_err(|_| AppError::Unknown("Önbellek durumu kilitli.".to_string()))?;
+            .map_err(|_| AppError::Unknown("Cache state lock failure.".to_string()))?;
         if let Some(old) = current.take() {
             old.cancel();
         }
@@ -44,14 +44,10 @@ pub async fn measure_cache_providers(
         });
     })
     .await
-    .map_err(|e| AppError::Unknown(format!("Önbellek ölçümü başarısız: {}", e)));
+    .map_err(|e| AppError::Unknown(format!("Failed to measure caches: {}", e)));
 
     if let Ok(mut current) = state.cache_token.lock() {
-        if current
-            .as_ref()
-            .map(|t| t.same(&token))
-            .unwrap_or(false)
-        {
+        if current.as_ref().map(|t| t.same(&token)).unwrap_or(false) {
             *current = None;
         }
     }
@@ -64,7 +60,7 @@ pub fn cancel_cache_measurement(state: State<'_, AppState>) -> Result<(), AppErr
     let mut current = state
         .cache_token
         .lock()
-        .map_err(|_| AppError::Unknown("Önbellek durumu kilitli.".to_string()))?;
+        .map_err(|_| AppError::Unknown("Cache state lock failure.".to_string()))?;
     if let Some(token) = current.take() {
         token.cancel();
     }
@@ -88,7 +84,7 @@ pub async fn execute_official_action(
     let registry = state.official.clone();
     let mut result = tokio::task::spawn_blocking(move || execute_action(&registry, &token))
         .await
-        .map_err(|e| AppError::Unknown(format!("Araç komutu başarısız: {}", e)))??;
+        .map_err(|e| AppError::Unknown(format!("Tool action failed: {}", e)))??;
 
     let settings = state.settings.load();
     if settings.history_enabled {
@@ -106,7 +102,7 @@ pub async fn execute_official_action(
             duration_ms: result.duration_ms,
         };
         if let Err(err) = state.audit.append_action(&record) {
-            result.audit_error = Some(format!("İşlem kaydı yazılamadı: {}", err));
+            result.audit_error = Some(format!("Failed to record action audit: {}", err));
         }
     }
     Ok(result)

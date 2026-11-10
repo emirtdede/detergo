@@ -102,18 +102,22 @@ export const da: TranslationSchema = {
     cancel: "Annuller",
     confirm: "Bekræft",
     recycleTitle: "Flyt Markerede Mapper til Papirkurv?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules-mapper (${size}) flyttes til Papirkurven. Du kan gendanne dem når som helst.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules-mapper (${size}) flyttes til Papirkurven. Du kan gendanne dem når som helst.`,
     recycleConfirmButton: "Flyt til Papirkurv",
     permanentTitle: "Slet Markerede Mapper Permanent?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules-mapper (${size}) slettes permanent fra disken. Dette kan ikke fortrydes.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules-mapper (${size}) slettes permanent fra disken. Dette kan ikke fortrydes.`,
     permanentWarning: "ADVARSEL: Denne handling er permanent! Mapper sendes ikke til Papirkurven.",
     permanentConfirmButton: "Slet Permanent",
     deletingInProgress: "Sletning i gang...",
     recycleSuccess: (count: number) => `${count} mapper flyttet til Papirkurven med succes.`,
     permanentSuccess: (count: number) => `${count} mapper slettet permanent med succes.`,
     partialErrorTitle: "Rapport om Delvis Sletning",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} mapper renset, men ${errorCount} mapper kunne ikke slettes.`,
-    lockedOrPermissionNote: "Nogle filer er muligvis låst af aktive processer eller kræver administratorrettigheder.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} mapper renset, men ${errorCount} mapper kunne ikke slettes.`,
+    lockedOrPermissionNote:
+      "Nogle filer er muligvis låst af aktive processer eller kræver administratorrettigheder.",
   },
   settings: {
     title: "Indstillinger",
@@ -155,7 +159,8 @@ export const da: TranslationSchema = {
     version: "Version",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Udgiver: Vellium • © 2026 Vellium. Alle rettigheder forbeholdes.",
-    privacyNote: "Alle scanninger og sletninger sker 100 % lokalt på din computer. Ingen telemetri.",
+    privacyNote:
+      "Alle scanninger og sletninger sker 100 % lokalt på din computer. Ingen telemetri.",
     close: "Luk",
   },
   errors: {

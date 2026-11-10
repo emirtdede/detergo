@@ -55,7 +55,9 @@ function parseColor(value) {
     return { r, g, b, a };
   }
 
-  const rgb = value.match(/^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,\s/]+([\d.]+))?\s*\)$/i);
+  const rgb = value.match(
+    /^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,\s/]+([\d.]+))?\s*\)$/i,
+  );
   if (rgb) {
     return {
       r: Number(rgb[1]),
@@ -81,9 +83,7 @@ function composite(foreground, background) {
 
 function channel(value) {
   const normalized = value / 255;
-  return normalized <= 0.03928
-    ? normalized / 12.92
-    : Math.pow((normalized + 0.055) / 1.055, 2.4);
+  return normalized <= 0.03928 ? normalized / 12.92 : Math.pow((normalized + 0.055) / 1.055, 2.4);
 }
 
 function luminance(color) {
@@ -95,8 +95,7 @@ function luminance(color) {
  * on (e.g. --accent-subtle over --surface) before measuring text on top.
  */
 function contrast(foreground, background, base) {
-  const bg =
-    background.a < 1 && base ? composite(background, base) : background;
+  const bg = background.a < 1 && base ? composite(background, base) : background;
   const fg = composite(foreground, bg);
   const lighter = Math.max(luminance(fg), luminance(bg));
   const darker = Math.min(luminance(fg), luminance(bg));
@@ -177,7 +176,7 @@ for (const theme of THEMES) {
     const ratio = contrast(
       colours[fgName],
       colours[bgName],
-      baseName ? colours[baseName] : undefined
+      baseName ? colours[baseName] : undefined,
     );
     rows.push({
       pair: `${fgName} on ${bgName}${baseName ? ` over ${baseName}` : ""}`,
@@ -209,7 +208,7 @@ for (const theme of THEMES) {
     const verdict = row.ratio + 0.005 < row.minimum ? "FAIL" : "ok";
     console.log(
       `  ${verdict.padEnd(4)} ${row.ratio.toFixed(2).padStart(5)}:1  ` +
-        `(min ${row.minimum.toFixed(1)})  ${row.pair}`
+        `(min ${row.minimum.toFixed(1)})  ${row.pair}`,
     );
   }
 }

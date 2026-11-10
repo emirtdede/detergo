@@ -1,4 +1,4 @@
-﻿/**
+/**
  * The legal documents shipped inside the application.
  *
  * They are embedded rather than fetched: the app is local-first and must stay
@@ -7,6 +7,8 @@
  * for the primary user base. Any other UI language falls back to English, which
  * is stated in the documents themselves.
  */
+
+import { resolveUiLocale } from "@/lib/ui-locale";
 
 export type LegalDocId = "eula" | "privacy" | "thirdParty";
 
@@ -31,8 +33,8 @@ export interface LegalDocMeta {
   hint: string;
 }
 
-const UPDATED_TR = "6 Kasım 2026 (v2.2.0)";
-const UPDATED_EN = "6 November 2026 (v2.2.0)";
+const UPDATED_TR = "6 Kasım 2026 (v2.2.1)";
+const UPDATED_EN = "6 November 2026 (v2.2.1)";
 
 const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
   eula: {
@@ -44,7 +46,7 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: "1. Taraflar ve kapsam",
         paragraphs: [
-          "Bu Son Kullanıcı Lisans Sözleşmesi (\"Sözleşme\"), Vellium (\"Vellium\", \"biz\") ile Dev Cleaner yazılımını kullanan gerçek veya tüzel kişi (\"siz\", \"Kullanıcı\") arasında kurulur. Sözleşme; Dev Cleaner'ın kurulum paketini, yürütülebilir dosyalarını, arayüzünü, yerleşik kataloğunu ve beraberinde sunulan belgeleri (birlikte \"Yazılım\") kapsar.",
+          'Bu Son Kullanıcı Lisans Sözleşmesi ("Sözleşme"), Vellium ("Vellium", "biz") ile Dev Cleaner yazılımını kullanan gerçek veya tüzel kişi ("siz", "Kullanıcı") arasında kurulur. Sözleşme; Dev Cleaner\'ın kurulum paketini, yürütülebilir dosyalarını, arayüzünü, yerleşik kataloğunu ve beraberinde sunulan belgeleri (birlikte "Yazılım") kapsar.',
           "Yazılımı kurmadan önce bu Sözleşmeyi okumanız gerekir. Kurulum, çalıştırma veya herhangi bir biçimde kullanım, bu Sözleşmenin tüm hükümlerini kabul ettiğiniz anlamına gelir. Koşulları kabul etmiyorsanız Yazılımı kullanmayın ve kurulu kopyayı kaldırın.",
           "Yazılımı bir kuruluş adına kullanıyorsanız, bu Sözleşmeyi o kuruluş adına kabul etmeye yetkili olduğunuzu beyan edersiniz.",
         ],
@@ -71,7 +73,7 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: "4. Üçüncü taraf bileşenleri ve açık kaynak",
         paragraphs: [
-          "Yazılım, açık kaynak lisansları altında dağıtılan üçüncü taraf bileşenler içerir. Bu bileşenlerin listesi ve lisans koşulları, Yazılım içindeki \"Üçüncü Taraf Lisanslar\" sayfasında yer alır ve Yazılımın ayrılmaz bir parçasıdır.",
+          'Yazılım, açık kaynak lisansları altında dağıtılan üçüncü taraf bileşenler içerir. Bu bileşenlerin listesi ve lisans koşulları, Yazılım içindeki "Üçüncü Taraf Lisanslar" sayfasında yer alır ve Yazılımın ayrılmaz bir parçasıdır.',
           "İlgili açık kaynak lisansları, sizinle ilgili bileşenin hak sahipleri arasında doğrudan haklar doğurur. Bu Sözleşmedeki hiçbir hüküm, size açık kaynak lisanslarının tanıdığı hakları kısıtlamaz veya ortadan kaldırmaz. Açık kaynak lisansı ile bu Sözleşme arasında çelişki bulunması hâlinde, ilgili bileşen bakımından açık kaynak lisansı geçerli olur.",
         ],
       },
@@ -98,7 +100,7 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: "8. Garanti reddi",
         paragraphs: [
-          "Yazılım \"OLDUĞU GİBİ\" ve \"MEVCUT OLDUĞU ŞEKİLDE\" sunulur. Vellium, yürürlükteki hukukun izin verdiği azami ölçüde; ticari elverişlilik, belirli bir amaca uygunluk, hak ihlali içermeme ve kesintisiz veya hatasız çalışma dâhil olmak üzere açık veya zımni hiçbir garanti vermez.",
+          'Yazılım "OLDUĞU GİBİ" ve "MEVCUT OLDUĞU ŞEKİLDE" sunulur. Vellium, yürürlükteki hukukun izin verdiği azami ölçüde; ticari elverişlilik, belirli bir amaca uygunluk, hak ihlali içermeme ve kesintisiz veya hatasız çalışma dâhil olmak üzere açık veya zımni hiçbir garanti vermez.',
           "Yazılım dosya sistemi üzerinde silme işlemleri gerçekleştirir. Silme kararı ve kapsamı her zaman size aittir. Çalışma dizinlerinizi, sürüm kontrol geçmişinizi ve yedeklerinizi düzenli olarak doğrulamak sizin sorumluluğunuzdadır. Yazılım, varsayılan olarak geri dönüşüm kutusu üzerinden siler ve kalıcı silme için ayrıca onay ister.",
         ],
       },
@@ -285,13 +287,12 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
   eula: {
     title: "End User License Agreement",
     updated: UPDATED_EN,
-    summary:
-      "By downloading, installing or using Dev Cleaner you accept this agreement in full.",
+    summary: "By downloading, installing or using Dev Cleaner you accept this agreement in full.",
     clauses: [
       {
         heading: "1. Parties and scope",
         paragraphs: [
-          "This End User License Agreement (\"Agreement\") is entered into between Vellium (\"Vellium\", \"we\") and the natural or legal person using the Dev Cleaner software (\"you\", \"User\"). The Agreement covers the installer, the executable files, the user interface, the built-in catalog and the accompanying documentation (together, the \"Software\").",
+          'This End User License Agreement ("Agreement") is entered into between Vellium ("Vellium", "we") and the natural or legal person using the Dev Cleaner software ("you", "User"). The Agreement covers the installer, the executable files, the user interface, the built-in catalog and the accompanying documentation (together, the "Software").',
           "You must read this Agreement before installing the Software. Installing, running or otherwise using the Software means you accept all of its terms. If you do not accept them, do not use the Software and remove any installed copy.",
           "If you use the Software on behalf of an organisation, you represent that you are authorised to accept this Agreement for that organisation.",
         ],
@@ -318,7 +319,7 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: "4. Third-party components and open source",
         paragraphs: [
-          "The Software includes third-party components distributed under open-source licenses. Their list and license terms appear on the \"Third-Party Licenses\" page inside the Software and form an integral part of it.",
+          'The Software includes third-party components distributed under open-source licenses. Their list and license terms appear on the "Third-Party Licenses" page inside the Software and form an integral part of it.',
           "Those open-source licenses grant you rights directly from the respective copyright holders. Nothing in this Agreement limits or removes the rights granted to you by an open-source license. If an open-source license conflicts with this Agreement, the open-source license prevails for that component.",
         ],
       },
@@ -345,7 +346,7 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: "8. Disclaimer of warranty",
         paragraphs: [
-          "The Software is provided \"AS IS\" and \"AS AVAILABLE\". To the maximum extent permitted by law, Vellium disclaims all express or implied warranties, including merchantability, fitness for a particular purpose, non-infringement and uninterrupted or error-free operation.",
+          'The Software is provided "AS IS" and "AS AVAILABLE". To the maximum extent permitted by law, Vellium disclaims all express or implied warranties, including merchantability, fitness for a particular purpose, non-infringement and uninterrupted or error-free operation.',
           "The Software performs deletion operations on your file system. The decision to delete, and its scope, is always yours. You are responsible for verifying your working trees, version-control history and backups. By default the Software deletes through the Recycle Bin and asks for separate confirmation before permanent deletion.",
         ],
       },
@@ -401,7 +402,9 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       },
       {
         heading: "2. What data is processed",
-        paragraphs: ["The application processes the following data solely to perform its cleanup function:"],
+        paragraphs: [
+          "The application processes the following data solely to perform its cleanup function:",
+        ],
         bullets: [
           "File and folder metadata: path, size, last-modified time and category. After a scan, this is stored locally together with the scan summary so the last results can be shown when you reopen the app (see section 3).",
           "Preferences: theme, language, scan limits, protection lists and window behaviour.",
@@ -411,7 +414,9 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       },
       {
         heading: "3. Where the data is stored",
-        paragraphs: ["All persistent data stays on your own computer, inside your Windows user profile:"],
+        paragraphs: [
+          "All persistent data stays on your own computer, inside your Windows user profile:",
+        ],
         bullets: [
           "%APPDATA%\\dev-cleaner\\config.json — application preferences.",
           "%APPDATA%\\dev-cleaner\\last-scan.json — the candidate list (path, size, classification) and summary of the last completed or cancelled scan. Only one snapshot is kept, never a history; writes over 64 MB are refused. Your next scan replaces the file; delete it to remove it permanently.",
@@ -511,7 +516,7 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: "3. Warranty and liability",
         paragraphs: [
-          "Third-party components are provided \"as is\" under their own licenses. Their authors are not liable for damages arising from their use in this application. Listing these components does not imply that their projects endorse Vellium or Dev Cleaner.",
+          'Third-party components are provided "as is" under their own licenses. Their authors are not liable for damages arising from their use in this application. Listing these components does not imply that their projects endorse Vellium or Dev Cleaner.',
         ],
       },
       {
@@ -529,12 +534,82 @@ export const LEGAL_DOCUMENTS: Record<"tr" | "en", Record<LegalDocId, LegalDocume
   en: EN_DOCUMENTS,
 };
 
+/**
+ * Convenience translations of the authoritative English text. They live in
+ * JSON dictionaries keyed by the exact English source string so the document
+ * structure stays single-sourced.
+ */
+const LEGAL_MODULES = import.meta.glob("./legal-locales/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, Record<string, string>>;
+
+const LEGAL_DICTS: Record<string, Record<string, string>> = {};
+for (const [path, data] of Object.entries(LEGAL_MODULES)) {
+  const locale = path
+    .split("/")
+    .pop()
+    ?.replace(/\.json$/, "");
+  if (locale) LEGAL_DICTS[locale] = data as Record<string, string>;
+}
+
+/** Notice shown above machine-translated documents. */
+export const LEGAL_TRANSLATION_NOTICE =
+  "This translation is provided for convenience only. In case of any divergence, the English original prevails.";
+
+function legalText(locale: string, text: string): string {
+  return LEGAL_DICTS[locale]?.[text] ?? text;
+}
+
+/** Translate a standalone legal string (e.g. the translation notice). */
+export function localizeLegalString(language: string | null | undefined, text: string): string {
+  const locale = resolveUiLocale(language);
+  if (locale === "en" || locale === "tr") return text;
+  return legalText(locale, text);
+}
+
+function localizeDocument(locale: string, document: LegalDocument): LegalDocument {
+  return {
+    title: legalText(locale, document.title),
+    updated: localizeRevisionDate(locale),
+    summary: legalText(locale, document.summary),
+    clauses: document.clauses.map((clause) => ({
+      heading: legalText(locale, clause.heading),
+      paragraphs: clause.paragraphs?.map((paragraph) => legalText(locale, paragraph)),
+      bullets: clause.bullets?.map((bullet) => legalText(locale, bullet)),
+    })),
+  };
+}
+
+/** Localized revision date; falls back to the English spelling. */
+export function localizeRevisionDate(locale: string): string {
+  try {
+    const formatted = new Intl.DateTimeFormat(locale, {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(new Date(Date.UTC(2026, 10, 6)));
+    return `${formatted} (v2.2.1)`;
+  } catch {
+    return UPDATED_EN;
+  }
+}
+
 /** Returns the document for the UI language, falling back to English. */
 export function getLegalDocument(
   language: string | null | undefined,
-  id: LegalDocId
+  id: LegalDocId,
 ): LegalDocument {
-  return (language === "tr" ? TR_DOCUMENTS : EN_DOCUMENTS)[id];
+  const locale = resolveUiLocale(language);
+  if (locale === "tr") return TR_DOCUMENTS[id];
+  if (locale === "en") return EN_DOCUMENTS[id];
+  return localizeDocument(locale, EN_DOCUMENTS[id]);
+}
+
+/** Whether the active locale renders a convenience translation. */
+export function isLegalTranslation(language: string | null | undefined): boolean {
+  const locale = resolveUiLocale(language);
+  return locale !== "en" && locale !== "tr";
 }
 
 export const LEGAL_DOC_META: Record<"tr" | "en", LegalDocMeta[]> = {
@@ -551,7 +626,22 @@ export const LEGAL_DOC_META: Record<"tr" | "en", LegalDocMeta[]> = {
 };
 
 export function getLegalDocMeta(language: string | null | undefined): LegalDocMeta[] {
-  return language === "tr" ? LEGAL_DOC_META.tr : LEGAL_DOC_META.en;
+  const locale = resolveUiLocale(language);
+  if (locale === "tr") return LEGAL_DOC_META.tr;
+  if (locale === "en") return LEGAL_DOC_META.en;
+  return LEGAL_DOC_META.en.map((meta) => ({
+    ...meta,
+    label: legalText(locale, meta.label),
+    hint: legalText(locale, meta.hint),
+  }));
+}
+
+/** Localized revision label for the active language. */
+export function getLegalRevision(language: string | null | undefined): string {
+  const locale = resolveUiLocale(language);
+  if (locale === "tr") return UPDATED_TR;
+  if (locale === "en") return UPDATED_EN;
+  return localizeRevisionDate(locale);
 }
 
 /** The revision date shared by every document, shown in the About page. */

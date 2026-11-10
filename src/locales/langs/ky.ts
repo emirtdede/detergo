@@ -102,18 +102,22 @@ export const ky: TranslationSchema = {
     cancel: "Жокко чыгаруу",
     confirm: "Ырастоо",
     recycleTitle: "Тандалган папкалар таштанды кутусуна жылдырылсынбы?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules папкасы (${size}) Таштанды кутусуна жылдырылат. Аларды каалаган убакта калыбына келтире аласыз.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules папкасы (${size}) Таштанды кутусуна жылдырылат. Аларды каалаган убакта калыбына келтире аласыз.`,
     recycleConfirmButton: "Таштанды кутусуна жылдыруу",
     permanentTitle: "Тандалган папкалар биржолата өчүрүлсүнбү?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules папкасы (${size}) дисктен биржолата өчүрүлөт. Бул аракетти жокко чыгарууга болбойт.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules папкасы (${size}) дисктен биржолата өчүрүлөт. Бул аракетти жокко чыгарууга болбойт.`,
     permanentWarning: "ЭСКЕРТҮҮ: Бул аракет кайтарылгыс! Папкалар Таштанды кутусуна жөнөтүлбөйт.",
     permanentConfirmButton: "Биржолата өчүрүү",
     deletingInProgress: "Өчүрүлүүдө...",
     recycleSuccess: (count: number) => `${count} папка ийгиликтүү Таштанды кутусуна жылдырылды.`,
-    permanentSuccess: (count: number) => `${count} папка ийгиликтүү биржолата өчүрүلدү.`,
+    permanentSuccess: (count: number) => `${count} папка ийгиликтүү биржолата өчүрүлдү.`,
     partialErrorTitle: "Жарым-жартылай өчүрүү отчету",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} папка тазаланды, бирок ${errorCount} папканы өчүрүүгө мүмкүн болгон жок.`,
-    lockedOrPermissionNote: "Кээ бир файлдар иштеп жаткан процесстер тарабынан бөгөттөлүшү же администратордун уруксаттарын талап кылышы мүмкүн.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} папка тазаланды, бирок ${errorCount} папканы өчүрүүгө мүмкүн болгон жок.`,
+    lockedOrPermissionNote:
+      "Кээ бир файлдар иштеп жаткан процесстер тарабынан бөгөттөлүшү же администратордун уруксаттарын талап кылышы мүмкүн.",
   },
   settings: {
     title: "Орнотуулар",
@@ -155,7 +159,8 @@ export const ky: TranslationSchema = {
     version: "Версиясы",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Басып чыгаруучу: Vellium • © 2026 Vellium. Бардык укуктар корголгон.",
-    privacyNote: "Бардык скандоо жана өчүрүү аракеттери 100% компьютериңизде локалдык түрдө ишке ашат. Эч кандай маалымат сыртка жөнөтүлбөйт.",
+    privacyNote:
+      "Бардык скандоо жана өчүрүү аракеттери 100% компьютериңизде локалдык түрдө ишке ашат. Эч кандай маалымат сыртка жөнөтүлбөйт.",
     close: "Жабуу",
   },
   errors: {

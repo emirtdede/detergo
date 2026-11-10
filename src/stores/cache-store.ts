@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { scannerApi } from "@/lib/tauri/scanner-api";
+import { describeError } from "@/lib/errors/user-message";
 import { CacheMeasureEvent, CacheProviderInfo } from "@/types";
 
 interface CacheState {
@@ -16,13 +17,6 @@ interface CacheState {
   startMeasure: () => Promise<void>;
   cancelMeasure: () => Promise<void>;
   applyMeasureEvent: (event: CacheMeasureEvent) => void;
-}
-
-function describeError(err: unknown): string {
-  if (err && typeof err === "object" && "message" in err) {
-    return String((err as { message: string }).message);
-  }
-  return String(err);
 }
 
 /**
@@ -66,7 +60,7 @@ export const useCacheStore = create<CacheState>((set, get) => ({
             const cachePaths = provider.cachePaths.map((path) =>
               path.path === event.path
                 ? { ...path, exists: event.exists, bytes: event.bytes }
-                : path
+                : path,
             );
             return { ...provider, cachePaths };
           }),
@@ -78,12 +72,15 @@ export const useCacheStore = create<CacheState>((set, get) => ({
           providers: state.providers.map((provider) =>
             provider.id === event.providerId
               ? { ...provider, totalBytes: event.totalBytes, measured: true }
-              : provider
+              : provider,
           ),
         }));
         break;
       case "finished":
+        set({ measuring: false, measureError: null });
+        break;
       case "cancelled":
+        set({ measuring: false });
         break;
     }
   },

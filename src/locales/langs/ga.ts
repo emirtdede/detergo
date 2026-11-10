@@ -45,7 +45,8 @@ export const ga: TranslationSchema = {
   },
   scan: {
     idleTitle: "Faigh Do Spás Diosca Ar Ais",
-    idleSubtitle: "Aimsigh agus glan fillteáin node_modules go sábháilte i do thionscadail go léir.",
+    idleSubtitle:
+      "Aimsigh agus glan fillteáin node_modules go sábháilte i do thionscadail go léir.",
     selectFolderFirst: "Roghnaigh fillteán thuas chun scanadh a thosú.",
     discovering: "Ag aimsiú tionscadal...",
     measuring: "Ag ríomh méideanna...",
@@ -102,18 +103,24 @@ export const ga: TranslationSchema = {
     cancel: "Cealaigh",
     confirm: "Deimhnigh",
     recycleTitle: "Bog na Fillteáin Roghnaithe go dtí an Bosca Athchúrsála?",
-    recycleDescription: (count: number, size: string) => `${count} bogfar fillteáin node_modules (${size}) go dtí an Bosca Athchúrsála. Is féidir leat iad a chur ar ais am ar bith.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} bogfar fillteáin node_modules (${size}) go dtí an Bosca Athchúrsála. Is féidir leat iad a chur ar ais am ar bith.`,
     recycleConfirmButton: "Bog go Bosca Athchúrsála",
     permanentTitle: "Scrios na Fillteáin Roghnaithe go Buan?",
-    permanentDescription: (count: number, size: string) => `${count} scriosfar fillteáin node_modules (${size}) go buan ón diosca. Ní féidir é seo a chealú.`,
-    permanentWarning: "RABHADH: Tá an gníomh seo buan! Ní sheolfar fillteáin chuig an mBosca Athchúrsála.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} scriosfar fillteáin node_modules (${size}) go buan ón diosca. Ní féidir é seo a chealú.`,
+    permanentWarning:
+      "RABHADH: Tá an gníomh seo buan! Ní sheolfar fillteáin chuig an mBosca Athchúrsála.",
     permanentConfirmButton: "Scrios go Buan",
     deletingInProgress: "Scriosadh ar siúl...",
-    recycleSuccess: (count: number) => `${count} fillteán bogtha go dtí an Bosca Athchúrsála go rathúil.`,
+    recycleSuccess: (count: number) =>
+      `${count} fillteán bogtha go dtí an Bosca Athchúrsála go rathúil.`,
     permanentSuccess: (count: number) => `${count} fillteán scriosta go buan go rathúil.`,
     partialErrorTitle: "Tuarascáil ar Scriosadh Páirteach",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} fillteán glanta, ach níorbh fhéidir ${errorCount} fillteán a scriosadh.`,
-    lockedOrPermissionNote: "D'fhéadfadh go mbeadh roinnt comhad faoi ghlas ag próisis atá ar siúl nó go mbeadh ceadanna riarthóra ag teastáil.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} fillteán glanta, ach níorbh fhéidir ${errorCount} fillteán a scriosadh.`,
+    lockedOrPermissionNote:
+      "D'fhéadfadh go mbeadh roinnt comhad faoi ghlas ag próisis atá ar siúl nó go mbeadh ceadanna riarthóra ag teastáil.",
   },
   settings: {
     title: "Socruithe",
@@ -155,7 +162,8 @@ export const ga: TranslationSchema = {
     version: "Leagan",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Foilsitheoir: Vellium • © 2026 Vellium. Gach ceart ar cosaint.",
-    privacyNote: "Tarlaíonn gach scanadh agus scriosadh 100% go háitiúil ar do ríomhaire. Gan teiliméadracht.",
+    privacyNote:
+      "Tarlaíonn gach scanadh agus scriosadh 100% go háitiúil ar do ríomhaire. Gan teiliméadracht.",
     close: "Dún",
   },
   errors: {
@@ -164,7 +172,8 @@ export const ga: TranslationSchema = {
     pathNotFound: "Ní bhfuarthas an chonair shonraithe.",
     scanCancelled: "Chuir an t-úsáideoir an scanadh ar ceal.",
     scanFailed: "Tharla earráid le linn an scanta.",
-    unsafeDeleteTarget: "Ar mhaithe le sábháilteacht, ní féidir fillteáin fhréimhe nó chórais a scriosadh.",
+    unsafeDeleteTarget:
+      "Ar mhaithe le sábháilteacht, ní féidir fillteáin fhréimhe nó chórais a scriosadh.",
     recycleBinFailed: "Theip ar bhogadh chuig an mBosca Athchúrsála.",
     permanentDeleteFailed: "Theip ar scriosadh buan.",
     settingsReadFailed: "Níorbh fhéidir comhad socruithe a léamh.",

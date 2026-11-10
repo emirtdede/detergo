@@ -102,17 +102,20 @@ export const zh_tw: TranslationSchema = {
     cancel: "取消",
     confirm: "確認",
     recycleTitle: "將選取的資料夾移至資源回收筒？",
-    recycleDescription: (count: number, size: string) => `${count} 個 node_modules 資料夾 (${size}) 將被移至資源回收筒。您可以隨時還原它們。`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} 個 node_modules 資料夾 (${size}) 將被移至資源回收筒。您可以隨時還原它們。`,
     recycleConfirmButton: "移至資源回收筒",
     permanentTitle: "永久刪除選取的資料夾？",
-    permanentDescription: (count: number, size: string) => `${count} 個 node_modules 資料夾 (${size}) 將從磁碟永久刪除。此操作無法復原。`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} 個 node_modules 資料夾 (${size}) 將從磁碟永久刪除。此操作無法復原。`,
     permanentWarning: "警告：此操作不可復原！資料夾不會送至資源回收筒。",
     permanentConfirmButton: "永久刪除",
     deletingInProgress: "正在刪除...",
     recycleSuccess: (count: number) => `${count} 個資料夾已成功移至資源回收筒。`,
     permanentSuccess: (count: number) => `${count} 個資料夾已成功永久刪除。`,
     partialErrorTitle: "部分刪除報告",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} 個資料夾已清理，但有 ${errorCount} 個資料夾未能刪除。`,
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} 個資料夾已清理，但有 ${errorCount} 個資料夾未能刪除。`,
     lockedOrPermissionNote: "某些檔案可能被執行中的處理程序鎖定或需要管理員權限。",
   },
   settings: {

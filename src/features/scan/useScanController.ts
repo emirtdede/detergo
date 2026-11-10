@@ -6,6 +6,7 @@ import { useSelectionStore } from "@/stores/selection-store";
 import { useUiStore } from "@/stores/ui-store";
 import { AppErrorDto, ScanEvent, ScanRequest, ScanScope } from "@/types";
 import { appendScanHistory } from "@/features/history/scan-history";
+import { getUIText, localizeAppError } from "@/lib/ui-text";
 import { notificationService } from "@/lib/notifications/notification-service";
 
 function toAppError(err: unknown): AppErrorDto {
@@ -36,7 +37,7 @@ export function useScanController() {
     let root =
       rootOverride ?? current.currentRootPath ?? usePreferencesStore.getState().lastScanPath ?? "";
     if (scope === "project" && !root) {
-      const picked = await scannerApi.selectFolderDialog();
+      const picked = await scannerApi.selectFolderDialog(getUIText().header.folderNotSelected);
       if (!picked) return;
       root = picked;
     }
@@ -137,7 +138,7 @@ export function useScanController() {
       const error = toAppError(err);
       useScanStore.getState().failScan(error);
       if (error.code !== "ScanCancelled") {
-        useUiStore.getState().showToast(error.message, "error", 6000);
+        useUiStore.getState().showToast(localizeAppError(error), "error", 6000);
       }
     }
   }, []);
@@ -148,7 +149,7 @@ export function useScanController() {
     try {
       await scannerApi.cancelScan();
     } catch (err) {
-      useUiStore.getState().showToast(toAppError(err).message, "error");
+      useUiStore.getState().showToast(localizeAppError(err), "error");
     }
   }, [isScanning]);
 

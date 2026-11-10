@@ -37,7 +37,7 @@ export const NavRail: React.FC = () => {
   // folds to its icon track automatically there, without overwriting the
   // user's saved preference: widening the window restores their choice.
   const [isNarrow, setIsNarrow] = useState(
-    () => typeof window !== "undefined" && window.innerWidth <= 900
+    () => typeof window !== "undefined" && window.innerWidth <= 900,
   );
 
   useEffect(() => {

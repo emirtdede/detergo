@@ -102,18 +102,23 @@ export const nl: TranslationSchema = {
     cancel: "Annuleren",
     confirm: "Bevestigen",
     recycleTitle: "Geselecteerde Mappen naar Prullenbak Verplaatsen?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules-mappen (${size}) worden verplaatst naar de Prullenbak. U kunt ze op elk moment herstellen.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules-mappen (${size}) worden verplaatst naar de Prullenbak. U kunt ze op elk moment herstellen.`,
     recycleConfirmButton: "Verplaatsen naar Prullenbak",
     permanentTitle: "Geselecteerde Mappen Permanent Verwijderen?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules-mappen (${size}) worden permanent van de schijf verwijderd. Dit kan niet ongedaan worden gemaakt.`,
-    permanentWarning: "WAARSCHUWING: Deze actie is permanent! Mappen worden niet naar de Prullenbak verzonden.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules-mappen (${size}) worden permanent van de schijf verwijderd. Dit kan niet ongedaan worden gemaakt.`,
+    permanentWarning:
+      "WAARSCHUWING: Deze actie is permanent! Mappen worden niet naar de Prullenbak verzonden.",
     permanentConfirmButton: "Permanent Verwijderen",
     deletingInProgress: "Verwijderen bezig...",
     recycleSuccess: (count: number) => `${count} mappen succesvol verplaatst naar de Prullenbak.`,
     permanentSuccess: (count: number) => `${count} mappen succesvol permanent verwijderd.`,
     partialErrorTitle: "Rapport Gedeeltelijke Verwijdering",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} mappen opgeschoond, maar ${errorCount} mappen konden niet worden verwijderd.`,
-    lockedOrPermissionNote: "Sommige bestanden zijn mogelijk vergrendeld door actieve processen of vereisen beheerdersrechten.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} mappen opgeschoond, maar ${errorCount} mappen konden niet worden verwijderd.`,
+    lockedOrPermissionNote:
+      "Sommige bestanden zijn mogelijk vergrendeld door actieve processen of vereisen beheerdersrechten.",
   },
   settings: {
     title: "Instellingen",
@@ -155,7 +160,8 @@ export const nl: TranslationSchema = {
     version: "Versie",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Uitgever: Vellium • © 2026 Vellium. Alle rechten voorbehouden.",
-    privacyNote: "Alle scans en verwijderingen vinden 100% lokaal plaats op uw computer. Geen telemetrie.",
+    privacyNote:
+      "Alle scans en verwijderingen vinden 100% lokaal plaats op uw computer. Geen telemetrie.",
     close: "Sluiten",
   },
   errors: {
@@ -164,7 +170,8 @@ export const nl: TranslationSchema = {
     pathNotFound: "Opgegeven pad is niet gevonden.",
     scanCancelled: "Scan is geannuleerd door gebruiker.",
     scanFailed: "Er is een fout opgetreden tijdens het scannen.",
-    unsafeDeleteTarget: "Om veiligheidsredenen kunnen hoofd- of systeemmappen niet worden verwijderd.",
+    unsafeDeleteTarget:
+      "Om veiligheidsredenen kunnen hoofd- of systeemmappen niet worden verwijderd.",
     recycleBinFailed: "Verplaatsen naar Prullenbak mislukt.",
     permanentDeleteFailed: "Permanent verwijderen mislukt.",
     settingsReadFailed: "Kan instellingenbestand niet lezen.",

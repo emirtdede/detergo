@@ -38,10 +38,17 @@ fn wide_tree(root: &Path, dirs: usize, files_per_dir: usize) -> u64 {
             entries += 1;
         }
     }
-    let real = root.join("a").join("b").join("project").join("node_modules");
+    let real = root
+        .join("a")
+        .join("b")
+        .join("project")
+        .join("node_modules");
     fs::create_dir_all(&real).expect("create target");
     fs::write(
-        root.join("a").join("b").join("project").join("package.json"),
+        root.join("a")
+            .join("b")
+            .join("project")
+            .join("package.json"),
         b"{\"name\":\"entry-bench\"}",
     )
     .expect("write package.json");
@@ -79,7 +86,11 @@ fn directory_entry_benchmark() {
     // count proportional to the requested entry count.
     let dirs = (total_entries / 2).max(1);
 
-    let root = std::env::temp_dir().join(format!("nc-entries-{}-{}", total_entries, std::process::id()));
+    let root = std::env::temp_dir().join(format!(
+        "nc-entries-{}-{}",
+        total_entries,
+        std::process::id()
+    ));
     if root.exists() {
         let _ = fs::remove_dir_all(&root);
     }
@@ -139,19 +150,28 @@ fn directory_entry_benchmark() {
     println!("NC_ENTRY dirs={dirs}");
     println!("NC_ENTRY built_entries={entries}");
     println!("NC_ENTRY build_ms={build_ms}");
-    println!("NC_ENTRY directories_visited={}", summary.directories_visited);
+    println!(
+        "NC_ENTRY directories_visited={}",
+        summary.directories_visited
+    );
     println!("NC_ENTRY candidates={}", summary.total_entries);
     println!("NC_ENTRY scan_ms={scan_ms}");
     println!("NC_ENTRY partial={}", summary.partial);
     println!("NC_ENTRY stop_reason={:?}", summary.stop_reason);
     println!("NC_ENTRY events={}", events.lock().map(|n| *n).unwrap_or(0));
     if let Some(peak) = peak {
-        println!("NC_ENTRY peak_working_set_mb={:.1}", peak as f64 / (1024.0 * 1024.0));
+        println!(
+            "NC_ENTRY peak_working_set_mb={:.1}",
+            peak as f64 / (1024.0 * 1024.0)
+        );
     }
 
     let cleanup_started = Instant::now();
     let _ = fs::remove_dir_all(&root);
-    println!("NC_ENTRY cleanup_ms={}", cleanup_started.elapsed().as_millis());
+    println!(
+        "NC_ENTRY cleanup_ms={}",
+        cleanup_started.elapsed().as_millis()
+    );
 
     assert_eq!(
         summary.stop_reason, None,

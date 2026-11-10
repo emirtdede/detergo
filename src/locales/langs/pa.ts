@@ -45,7 +45,8 @@ export const pa: TranslationSchema = {
   },
   scan: {
     idleTitle: "ਆਪਣੀ ਡਿਸਕ ਸਪੇਸ ਵਾਪਸ ਪ੍ਰਾਪਤ ਕਰੋ",
-    idleSubtitle: "ਆਪਣੇ ਸਾਰੇ ਪ੍ਰੋਜੈਕਟਾਂ ਵਿੱਚ node_modules ਫੋਲਡਰਾਂ ਨੂੰ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਲੱਭੋ ਅਤੇ ਸਾਫ਼ ਕਰੋ।",
+    idleSubtitle:
+      "ਆਪਣੇ ਸਾਰੇ ਪ੍ਰੋਜੈਕਟਾਂ ਵਿੱਚ node_modules ਫੋਲਡਰਾਂ ਨੂੰ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਲੱਭੋ ਅਤੇ ਸਾਫ਼ ਕਰੋ।",
     selectFolderFirst: "ਸਕੈਨ ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਉੱਪਰ ਇੱਕ ਫੋਲਡਰ ਚੁਣੋ।",
     discovering: "ਪ੍ਰੋਜੈਕਟ ਲੱਭੇ ਜਾ ਰਹੇ ਹਨ...",
     measuring: "ਆਕਾਰ ਗਿਣਿਆ ਜਾ ਰਿਹਾ ਹੈ...",
@@ -102,18 +103,22 @@ export const pa: TranslationSchema = {
     cancel: "ਰੱਦ ਕਰੋ",
     confirm: "ਪੁਸ਼ਟੀ ਕਰੋ",
     recycleTitle: "ਕੀ ਚੁਣੇ ਹੋਏ ਫੋਲਡਰਾਂ ਨੂੰ ਰੀਸਾਈਕਲ ਬਿਨ ਵਿੱਚ ਭੇਜਣਾ ਹੈ?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules ਫੋਲਡਰ (${size}) ਰੀਸਾਈਕਲ ਬਿਨ ਵਿੱਚ ਭੇਜੇ ਜਾਣਗੇ। ਤੁਸੀਂ ਉਹਨਾਂ ਨੂੰ ਕਿਸੇ ਵੀ ਸਮੇਂ ਬਹਾਲ ਕਰ ਸਕਦੇ ਹੋ।`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules ਫੋਲਡਰ (${size}) ਰੀਸਾਈਕਲ ਬਿਨ ਵਿੱਚ ਭੇਜੇ ਜਾਣਗੇ। ਤੁਸੀਂ ਉਹਨਾਂ ਨੂੰ ਕਿਸੇ ਵੀ ਸਮੇਂ ਬਹਾਲ ਕਰ ਸਕਦੇ ਹੋ।`,
     recycleConfirmButton: "ਰੀਸਾਈਕਲ ਬਿਨ ਵਿੱਚ ਭੇਜੋ",
     permanentTitle: "ਕੀ ਚੁਣੇ ਹੋਏ ਫੋਲਡਰਾਂ ਨੂੰ ਪੱਕੇ ਤੌਰ 'ਤੇ ਮਿਟਾਉਣਾ ਹੈ?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules ਫੋਲਡਰ (${size}) ਡਿਸਕ ਤੋਂ ਪੱਕੇ ਤੌਰ 'ਤੇ ਮਿਟਾ ਦਿੱਤੇ ਜਾਣਗੇ। ਇਸ ਕਾਰਵਾਈ ਨੂੰ ਵਾਪਸ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਦਾ।`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules ਫੋਲਡਰ (${size}) ਡਿਸਕ ਤੋਂ ਪੱਕੇ ਤੌਰ 'ਤੇ ਮਿਟਾ ਦਿੱਤੇ ਜਾਣਗੇ। ਇਸ ਕਾਰਵਾਈ ਨੂੰ ਵਾਪਸ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਦਾ।`,
     permanentWarning: "ਚੇਤਾਵਨੀ: ਇਹ ਕਾਰਵਾਈ ਪੱਕੀ ਹੈ! ਫੋਲਡਰ ਰੀਸਾਈਕਲ ਬਿਨ ਵਿੱਚ ਨਹੀਂ ਭੇਜੇ ਜਾਣਗੇ।",
     permanentConfirmButton: "ਪੱਕੇ ਤੌਰ 'ਤੇ ਮਿਟਾਓ",
     deletingInProgress: "ਮਿਟਾਇਆ ਜਾ ਰਿਹਾ ਹੈ...",
     recycleSuccess: (count: number) => `${count} ਫੋਲਡਰ ਸਫਲਤਾਪੂਰਵਕ ਰੀਸਾਈਕਲ ਬਿਨ ਵਿੱਚ ਭੇਜੇ ਗਏ।`,
     permanentSuccess: (count: number) => `${count} ਫੋਲਡਰ ਸਫਲਤਾਪੂਰਵਕ ਪੱਕੇ ਤੌਰ 'ਤੇ ਮਿਟਾਏ ਗਏ।`,
     partialErrorTitle: "ਅੰਸ਼ਕ ਮਿਟਾਉਣ ਦੀ ਰਿਪੋਰਟ",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} ਫੋਲਡਰ ਸਾਫ਼ ਕੀਤੇ ਗਏ, ਪਰ ${errorCount} ਫੋਲਡਰ ਮਿਟਾਏ ਨਹੀਂ ਜਾ ਸਕੇ।`,
-    lockedOrPermissionNote: "ਕੁਝ ਫਾਈਲਾਂ ਚੱਲ ਰਹੀਆਂ ਪ੍ਰਕਿਰਿਆਵਾਂ ਦੁਆਰਾ ਲਾਕ ਹੋ ਸਕਦੀਆਂ ਹਨ ਜਾਂ ਪ੍ਰਸ਼ਾਸਕ ਇਜਾਜ਼ਤਾਂ ਦੀ ਲੋੜ ਹੋ ਸਕਦੀ ਹੈ।",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} ਫੋਲਡਰ ਸਾਫ਼ ਕੀਤੇ ਗਏ, ਪਰ ${errorCount} ਫੋਲਡਰ ਮਿਟਾਏ ਨਹੀਂ ਜਾ ਸਕੇ।`,
+    lockedOrPermissionNote:
+      "ਕੁਝ ਫਾਈਲਾਂ ਚੱਲ ਰਹੀਆਂ ਪ੍ਰਕਿਰਿਆਵਾਂ ਦੁਆਰਾ ਲਾਕ ਹੋ ਸਕਦੀਆਂ ਹਨ ਜਾਂ ਪ੍ਰਸ਼ਾਸਕ ਇਜਾਜ਼ਤਾਂ ਦੀ ਲੋੜ ਹੋ ਸਕਦੀ ਹੈ।",
   },
   settings: {
     title: "ਸੈਟਿੰਗਾਂ",
@@ -155,7 +160,8 @@ export const pa: TranslationSchema = {
     version: "ਵਰਜਨ",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "ਪ੍ਰਕਾਸ਼ਕ: Vellium • © 2026 Vellium. ਸਾਰੇ ਹੱਕ ਰਾਖਵੇਂ ਹਨ।",
-    privacyNote: "ਸਾਰੇ ਸਕੈਨ ਅਤੇ ਮਿਟਾਉਣ ਦੇ ਕੰਮ ਤੁਹਾਡੇ ਕੰਪਿਊਟਰ 'ਤੇ 100% ਸਥਾਨਕ ਤੌਰ 'ਤੇ ਹੁੰਦੇ ਹਨ। ਕੋਈ ਡਾਟਾ ਬਾਹਰ ਨਹੀਂ ਜਾਂਦਾ।",
+    privacyNote:
+      "ਸਾਰੇ ਸਕੈਨ ਅਤੇ ਮਿਟਾਉਣ ਦੇ ਕੰਮ ਤੁਹਾਡੇ ਕੰਪਿਊਟਰ 'ਤੇ 100% ਸਥਾਨਕ ਤੌਰ 'ਤੇ ਹੁੰਦੇ ਹਨ। ਕੋਈ ਡਾਟਾ ਬਾਹਰ ਨਹੀਂ ਜਾਂਦਾ।",
     close: "ਬੰਦ ਕਰੋ",
   },
   errors: {

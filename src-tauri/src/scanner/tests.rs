@@ -13,7 +13,9 @@ fn write(path: &std::path::Path, bytes: usize) {
     fs::write(path, vec![b'x'; bytes]).unwrap();
 }
 
-fn discover_all(root: &std::path::Path) -> (Vec<CleanupItem>, Vec<StoredTarget>, Option<StopReason>) {
+fn discover_all(
+    root: &std::path::Path,
+) -> (Vec<CleanupItem>, Vec<StoredTarget>, Option<StopReason>) {
     discover_with_protected(root, &[])
 }
 
@@ -56,7 +58,9 @@ fn discovery_finds_node_modules_but_skips_nested() {
     assert_eq!(items.len(), 2, "nested node_modules must not be emitted");
     assert_eq!(targets.len(), 2);
     assert!(items.iter().all(|i| i.rule_id == "js.node_modules"));
-    assert!(items.iter().any(|i| i.project_name.as_deref() == Some("app-a")));
+    assert!(items
+        .iter()
+        .any(|i| i.project_name.as_deref() == Some("app-a")));
 }
 
 #[test]
@@ -72,7 +76,9 @@ fn user_protected_paths_are_blocked_during_discovery() {
     assert_eq!(items.len(), 1);
     assert!(items[0].protected);
     assert!(!items[0].selectable);
-    assert!(items[0].warning_codes.contains(&"USER_PROTECTED".to_string()));
+    assert!(items[0]
+        .warning_codes
+        .contains(&"USER_PROTECTED".to_string()));
     assert!(targets[0].protected);
 }
 
@@ -92,7 +98,10 @@ fn generic_build_requires_project_proof() {
         .find(|i| i.display_path.contains("with-marker"))
         .expect("verified build must be found");
     assert_eq!(with.safety_class, SafetyClass::Regenerate);
-    assert!(!with.auto_selectable, "REGENERATE targets are never auto-selected");
+    assert!(
+        !with.auto_selectable,
+        "REGENERATE targets are never auto-selected"
+    );
 
     let without = items
         .iter()
@@ -100,7 +109,9 @@ fn generic_build_requires_project_proof() {
         .expect("unverified build should still be reported for transparency");
     assert_eq!(without.safety_class, SafetyClass::Review);
     assert!(!without.auto_selectable);
-    assert!(without.warning_codes.contains(&"NO_PROJECT_MARKER".to_string()));
+    assert!(without
+        .warning_codes
+        .contains(&"NO_PROJECT_MARKER".to_string()));
 }
 
 #[test]
@@ -208,7 +219,6 @@ fn session_registry_rejects_unknown_and_dedupes_ids() {
     assert!(registry.get_session(&id).is_ok());
     assert!(registry.get_session("does-not-exist").is_err());
 }
-
 
 #[test]
 fn plans_are_consumed_exactly_once() {
@@ -320,7 +330,6 @@ async fn end_to_end_scan_plan_and_permanent_delete() {
     assert!(proj.join("package.json").exists());
 }
 
-
 #[test]
 fn hardlinked_files_are_counted_once_for_allocated_size() {
     let temp = tempfile::tempdir().unwrap();
@@ -334,13 +343,13 @@ fn hardlinked_files_are_counted_once_for_allocated_size() {
     }
 
     let token = CancellationToken::new();
-    let size = measurement::measure_path(&dir, crate::catalog::TargetKind::Directory, &token).unwrap();
+    let size =
+        measurement::measure_path(&dir, crate::catalog::TargetKind::Directory, &token).unwrap();
     assert_eq!(size.file_count, 2);
     assert_eq!(size.logical_bytes, 128 * 1024);
     assert!(size.hardlink_dedup_bytes >= 64 * 1024);
     assert!(size.allocated_bytes.unwrap() < size.logical_bytes);
 }
-
 
 #[test]
 fn expired_sessions_are_rejected() {

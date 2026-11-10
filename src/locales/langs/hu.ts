@@ -102,18 +102,22 @@ export const hu: TranslationSchema = {
     cancel: "Mégse",
     confirm: "Megerősítés",
     recycleTitle: "Áthelyezi a Kijelölt Mappákat a Lomtárba?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules mappa (${size}) kerül át a Lomtárba. Bármikor visszaállíthatja őket.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules mappa (${size}) kerül át a Lomtárba. Bármikor visszaállíthatja őket.`,
     recycleConfirmButton: "Áthelyezés a Lomtárba",
     permanentTitle: "Véglegesen Törli a Kijelölt Mappákat?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules mappa (${size}) véglegesen törlődik a lemezről. Ez a művelet nem vonható vissza.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules mappa (${size}) véglegesen törlődik a lemezről. Ez a művelet nem vonható vissza.`,
     permanentWarning: "FIGYELMEZTETÉS: Ez a művelet végleges! A mappák nem kerülnek a Lomtárba.",
     permanentConfirmButton: "Végleges Törlés",
     deletingInProgress: "Törlés folyamatban...",
     recycleSuccess: (count: number) => `${count} mappa sikeresen áthelyezve a Lomtárba.`,
     permanentSuccess: (count: number) => `${count} mappa sikeresen véglegesen törölve.`,
     partialErrorTitle: "Részleges Törlési Jelentés",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} mappa megtisztítva, de ${errorCount} mappát nem sikerült törölni.`,
-    lockedOrPermissionNote: "Néhány fájlt futó folyamatok zárolhatnak, vagy rendszergazdai jogosultság szükséges.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} mappa megtisztítva, de ${errorCount} mappát nem sikerült törölni.`,
+    lockedOrPermissionNote:
+      "Néhány fájlt futó folyamatok zárolhatnak, vagy rendszergazdai jogosultság szükséges.",
   },
   settings: {
     title: "Beállítások",
@@ -155,7 +159,8 @@ export const hu: TranslationSchema = {
     version: "Verzió",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Kiadó: Vellium • © 2026 Vellium. Minden jog fenntartva.",
-    privacyNote: "Minden keresés és törlés 100%-ban helyben történik a számítógépén. Nincs telemetria.",
+    privacyNote:
+      "Minden keresés és törlés 100%-ban helyben történik a számítógépén. Nincs telemetria.",
     close: "Bezárás",
   },
   errors: {

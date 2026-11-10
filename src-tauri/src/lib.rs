@@ -40,16 +40,13 @@ pub fn run() {
                 let _ = win.set_focus();
             }
             if windows.is_empty() {
-                let win = tauri::WebviewWindowBuilder::new(
-                    app,
-                    "main",
-                    tauri::WebviewUrl::default(),
-                )
-                .title("Dev Cleaner")
-                .inner_size(1180.0, 760.0)
-                .min_inner_size(980.0, 640.0)
-                .center()
-                .build()?;
+                let win =
+                    tauri::WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::default())
+                        .title("Dev Cleaner")
+                        .inner_size(1180.0, 760.0)
+                        .min_inner_size(980.0, 640.0)
+                        .center()
+                        .build()?;
                 let _ = win.show();
                 let _ = win.set_focus();
             }
@@ -72,6 +69,7 @@ pub fn run() {
             open_url,
             preview_cleanup,
             execute_cleanup,
+            cancel_cleanup,
             get_cache_providers,
             measure_cache_providers,
             cancel_cache_measurement,
@@ -80,12 +78,14 @@ pub fn run() {
             get_cleanup_history,
             get_growth_report,
             get_official_action_history,
+            clear_all_history,
             clear_cleanup_history,
             clear_cleanups_history,
             clear_actions_history,
             get_app_settings,
             save_app_settings,
             get_build_info,
+            test_webhook,
             get_last_scan,
             save_last_scan,
             clear_last_scan,
@@ -93,17 +93,85 @@ pub fn run() {
             quit_app
         ])
         .run(tauri::generate_context!())
-        .expect("Dev Cleaner başlatılırken hata oluştu");
+        .expect("Error while starting Dev Cleaner");
 }
 
 /// Native tray entry point: the app keeps running when the window is hidden,
 /// and the tray is the only way back (or the only way to really quit).
+///
+/// Tray labels are localized from the same generated dictionary the frontend
+/// uses for backend-originated strings, so every supported locale is covered.
+fn tray_labels(language: Option<&str>) -> (&'static str, &'static str) {
+    use std::collections::HashMap;
+    use std::sync::OnceLock;
+
+    static TABLE: OnceLock<HashMap<String, (String, String)>> = OnceLock::new();
+    let table = TABLE.get_or_init(|| {
+        let raw: serde_json::Value =
+            serde_json::from_str(include_str!("../assets/tray-locales.json"))
+                .unwrap_or(serde_json::Value::Null);
+        let mut map = HashMap::new();
+        if let serde_json::Value::Object(entries) = raw {
+            for (locale, value) in entries {
+                let show = value
+                    .get("Show")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("Show")
+                    .to_string();
+                let quit = value
+                    .get("Quit")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("Quit")
+                    .to_string();
+                map.insert(locale, (show, quit));
+            }
+        }
+        map
+    });
+
+    let fallback = || ("Show", "Quit");
+    match language {
+        Some(lang) => match table.get(lang) {
+            Some((show, quit)) => (show.as_str(), quit.as_str()),
+            None => fallback(),
+        },
+        None => fallback(),
+    }
+}
+
+/// Rebuild the tray menu with labels for `language`.
+///
+/// Called when the user saves settings so a language change also updates the
+/// tray without restarting the application.
+pub fn refresh_tray_labels(app: &tauri::AppHandle, language: Option<&str>) {
+    use tauri::menu::{Menu, MenuItem};
+
+    let Some(tray) = app.tray_by_id("main-tray") else {
+        return;
+    };
+    let (show_label, quit_label) = tray_labels(language);
+    let show_item = match MenuItem::with_id(app, "show", show_label, true, None::<&str>) {
+        Ok(item) => item,
+        Err(_) => return,
+    };
+    let quit_item = match MenuItem::with_id(app, "quit", quit_label, true, None::<&str>) {
+        Ok(item) => item,
+        Err(_) => return,
+    };
+    if let Ok(menu) = Menu::with_items(app, &[&show_item, &quit_item]) {
+        let _ = tray.set_menu(Some(menu));
+    }
+}
+
 fn setup_tray(app: &mut tauri::App) -> tauri::Result<()> {
     use tauri::menu::{Menu, MenuItem};
     use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 
-    let show_item = MenuItem::with_id(app, "show", "Göster", true, None::<&str>)?;
-    let quit_item = MenuItem::with_id(app, "quit", "Çıkış", true, None::<&str>)?;
+    let settings = settings::SettingsRepository::new().load();
+    let (show_label, quit_label) = tray_labels(settings.language.as_deref());
+
+    let show_item = MenuItem::with_id(app, "show", show_label, true, None::<&str>)?;
+    let quit_item = MenuItem::with_id(app, "quit", quit_label, true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
 
     let mut builder = TrayIconBuilder::with_id("main-tray")

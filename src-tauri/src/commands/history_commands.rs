@@ -15,7 +15,9 @@ pub struct GrowthReport {
 
 #[tauri::command]
 pub fn get_cleanup_history(limit: Option<usize>, state: State<'_, AppState>) -> Vec<AuditRecord> {
-    let mut records = state.audit.list_records(limit.unwrap_or(200).clamp(1, 1000));
+    let mut records = state
+        .audit
+        .list_records(limit.unwrap_or(200).clamp(1, 1000));
     records.reverse();
     records
 }
@@ -34,14 +36,24 @@ pub fn get_official_action_history(
     limit: Option<usize>,
     state: State<'_, AppState>,
 ) -> Vec<ActionAuditRecord> {
-    let mut records = state.audit.list_actions(limit.unwrap_or(200).clamp(1, 1000));
+    let mut records = state
+        .audit
+        .list_actions(limit.unwrap_or(200).clamp(1, 1000));
     records.reverse();
     records
 }
 
+/// Clears every cleanup, storage-snapshot and official-action history record.
+/// This is what the "clear all" UI action calls.
+#[tauri::command]
+pub fn clear_all_history(state: State<'_, AppState>) -> Result<(), AppError> {
+    state.audit.clear_all()
+}
+
+/// Deprecated alias kept for older frontends. Use `clear_all_history`.
 #[tauri::command]
 pub fn clear_cleanup_history(state: State<'_, AppState>) -> Result<(), AppError> {
-    state.audit.clear_all()
+    clear_all_history(state)
 }
 
 #[tauri::command]

@@ -102,18 +102,23 @@ export const vi: TranslationSchema = {
     cancel: "Hủy",
     confirm: "Xác nhận",
     recycleTitle: "Chuyển các thư mục đã chọn vào Thùng rác?",
-    recycleDescription: (count: number, size: string) => `${count} thư mục node_modules (${size}) sẽ được chuyển vào Thùng rác. Bạn có thể khôi phục bất cứ lúc nào.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} thư mục node_modules (${size}) sẽ được chuyển vào Thùng rác. Bạn có thể khôi phục bất cứ lúc nào.`,
     recycleConfirmButton: "Chuyển vào Thùng rác",
     permanentTitle: "Xóa vĩnh viễn các thư mục đã chọn?",
-    permanentDescription: (count: number, size: string) => `${count} thư mục node_modules (${size}) sẽ bị xóa vĩnh viễn khỏi ổ đĩa. Hành động này không thể hoàn tác.`,
-    permanentWarning: "CẢNH BÁO: Hành động này là vĩnh viễn! Thư mục sẽ không được chuyển vào Thùng rác.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} thư mục node_modules (${size}) sẽ bị xóa vĩnh viễn khỏi ổ đĩa. Hành động này không thể hoàn tác.`,
+    permanentWarning:
+      "CẢNH BÁO: Hành động này là vĩnh viễn! Thư mục sẽ không được chuyển vào Thùng rác.",
     permanentConfirmButton: "Xóa vĩnh viễn",
     deletingInProgress: "Đang xóa...",
     recycleSuccess: (count: number) => `${count} thư mục đã chuyển vào Thùng rác thành công.`,
     permanentSuccess: (count: number) => `${count} thư mục đã xóa vĩnh viễn thành công.`,
     partialErrorTitle: "Báo cáo xóa một phần",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} thư mục đã được dọn dẹp, nhưng không thể xóa ${errorCount} thư mục.`,
-    lockedOrPermissionNote: "Một số tệp có thể bị khóa bởi các tiến trình đang chạy hoặc yêu cầu quyền quản trị viên.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} thư mục đã được dọn dẹp, nhưng không thể xóa ${errorCount} thư mục.`,
+    lockedOrPermissionNote:
+      "Một số tệp có thể bị khóa bởi các tiến trình đang chạy hoặc yêu cầu quyền quản trị viên.",
   },
   settings: {
     title: "Cài đặt",
@@ -155,7 +160,8 @@ export const vi: TranslationSchema = {
     version: "Phiên bản",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Nhà phát hành: Vellium • © 2026 Vellium. Đã đăng ký bản quyền.",
-    privacyNote: "Mọi thao tác quét và xóa đều diễn ra 100% cục bộ trên máy tính của bạn. Không có đo lường từ xa.",
+    privacyNote:
+      "Mọi thao tác quét và xóa đều diễn ra 100% cục bộ trên máy tính của bạn. Không có đo lường từ xa.",
     close: "Đóng",
   },
   errors: {

@@ -19,6 +19,10 @@ pub struct AppState {
     pub catalog_error: Option<String>,
     pub scan_token: Mutex<Option<CancellationToken>>,
     pub cache_token: Mutex<Option<CancellationToken>>,
+    /// Held for the duration of a cleanup run. A second run is rejected while
+    /// the slot is occupied, and `cancel_cleanup` uses the token to stop the
+    /// current run between items.
+    pub cleanup_token: Mutex<Option<CancellationToken>>,
 }
 
 impl AppState {
@@ -37,13 +41,14 @@ impl AppState {
             catalog_error,
             scan_token: Mutex::new(None),
             cache_token: Mutex::new(None),
+            cleanup_token: Mutex::new(None),
         }
     }
 
     pub fn catalog(&self) -> Result<Arc<CatalogIndex>, AppError> {
         self.catalog.clone().ok_or_else(|| {
             AppError::Blocked(format!(
-                "Katalog doğrulanamadı; temizleme devre dışı. {}",
+                "Catalog could not be validated; cleanup is disabled. {}",
                 self.catalog_error.clone().unwrap_or_default()
             ))
         })

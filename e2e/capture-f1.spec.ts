@@ -39,7 +39,10 @@ test.describe("F1 Comparative Frame Generation", () => {
           await expect(page.locator("main#main")).toBeVisible();
 
           // Select theme
-          await page.locator("#primary-navigation").getByRole("button", { name: "Settings" }).click();
+          await page
+            .locator("#primary-navigation")
+            .getByRole("button", { name: "Settings" })
+            .click();
           await page.locator(".settings-body select").first().selectOption(theme);
 
           for (const scr of SCREENS) {
@@ -47,7 +50,10 @@ test.describe("F1 Comparative Frame Generation", () => {
             const filename = `${frameId}.png`;
             const filePath = path.join(FRAMES_DIR, filename);
 
-            await page.locator("#primary-navigation").getByRole("button", { name: scr.nav }).click();
+            await page
+              .locator("#primary-navigation")
+              .getByRole("button", { name: scr.nav })
+              .click();
             await page.evaluate((c) => {
               document.documentElement.setAttribute("data-concept", c);
             }, concept);
@@ -73,14 +79,54 @@ test.describe("F1 Comparative Frame Generation", () => {
 
     // Capture 8 Edge Cases
     const edgeCases = [
-      { id: "EDGE_OVERVIEW_EMPTY_DARK", nav: "Overview", theme: "dark-black", size: { width: 1180, height: 760 } },
-      { id: "EDGE_OVERVIEW_EMPTY_LIGHT", nav: "Overview", theme: "light-white", size: { width: 1180, height: 760 } },
-      { id: "EDGE_PROJECTS_DENSE_50K", nav: "Projects", theme: "dark-gray", size: { width: 1180, height: 760 } },
-      { id: "EDGE_PROJECTS_NARROW_760X560", nav: "Projects", theme: "dark-black", size: { width: 760, height: 560 } },
-      { id: "EDGE_SETTINGS_LONG_LABELS", nav: "Settings", theme: "light-gray", size: { width: 1180, height: 760 } },
-      { id: "EDGE_SETTINGS_NARROW_760X560", nav: "Settings", theme: "dark-gray", size: { width: 760, height: 560 } },
-      { id: "EDGE_LEGAL_EULA_VIEWER", nav: "Settings", theme: "dark-black", size: { width: 1180, height: 760 } },
-      { id: "EDGE_DIALOG_CONFIRMATION", nav: "Projects", theme: "dark-black", size: { width: 1180, height: 760 } },
+      {
+        id: "EDGE_OVERVIEW_EMPTY_DARK",
+        nav: "Overview",
+        theme: "dark-black",
+        size: { width: 1180, height: 760 },
+      },
+      {
+        id: "EDGE_OVERVIEW_EMPTY_LIGHT",
+        nav: "Overview",
+        theme: "light-white",
+        size: { width: 1180, height: 760 },
+      },
+      {
+        id: "EDGE_PROJECTS_DENSE_50K",
+        nav: "Projects",
+        theme: "dark-gray",
+        size: { width: 1180, height: 760 },
+      },
+      {
+        id: "EDGE_PROJECTS_NARROW_760X560",
+        nav: "Projects",
+        theme: "dark-black",
+        size: { width: 760, height: 560 },
+      },
+      {
+        id: "EDGE_SETTINGS_LONG_LABELS",
+        nav: "Settings",
+        theme: "light-gray",
+        size: { width: 1180, height: 760 },
+      },
+      {
+        id: "EDGE_SETTINGS_NARROW_760X560",
+        nav: "Settings",
+        theme: "dark-gray",
+        size: { width: 760, height: 560 },
+      },
+      {
+        id: "EDGE_LEGAL_EULA_VIEWER",
+        nav: "Settings",
+        theme: "dark-black",
+        size: { width: 1180, height: 760 },
+      },
+      {
+        id: "EDGE_DIALOG_CONFIRMATION",
+        nav: "Projects",
+        theme: "dark-black",
+        size: { width: 1180, height: 760 },
+      },
     ];
 
     const capturedEdgeFrames: Array<any> = [];
@@ -111,15 +157,21 @@ test.describe("F1 Comparative Frame Generation", () => {
     // Save W034: concept_frame_index.json
     fs.writeFileSync(
       path.join(OUT_DIR, "concept_frame_index.json"),
-      JSON.stringify({ totalFrames: capturedFrames.length, frames: capturedFrames }, null, 2)
+      JSON.stringify({ totalFrames: capturedFrames.length, frames: capturedFrames }, null, 2),
     );
 
     // Save W035: edge_frame_index.json
     fs.writeFileSync(
       path.join(OUT_DIR, "edge_frame_index.json"),
-      JSON.stringify({ totalFrames: capturedEdgeFrames.length, edgeFrames: capturedEdgeFrames }, null, 2)
+      JSON.stringify(
+        { totalFrames: capturedEdgeFrames.length, edgeFrames: capturedEdgeFrames },
+        null,
+        2,
+      ),
     );
 
-    console.log(`Successfully generated ${capturedFrames.length} comparative frames and ${capturedEdgeFrames.length} edge frames.`);
+    console.log(
+      `Successfully generated ${capturedFrames.length} comparative frames and ${capturedEdgeFrames.length} edge frames.`,
+    );
   });
 });

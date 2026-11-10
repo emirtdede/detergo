@@ -102,18 +102,22 @@ export const fi: TranslationSchema = {
     cancel: "Peruuta",
     confirm: "Vahvista",
     recycleTitle: "Siirretäänkö Valitut Kansiot Roskakoriin?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules-kansiota (${size}) siirretään roskakoriin. Voit palauttaa ne milloin tahansa.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules-kansiota (${size}) siirretään roskakoriin. Voit palauttaa ne milloin tahansa.`,
     recycleConfirmButton: "Siirrä Roskakoriin",
     permanentTitle: "Poistetaanko Valitut Kansiot Pysyvästi?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules-kansiota (${size}) poistetaan pysyvästi levyltä. Tätä toimintoa ei voi kumota.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules-kansiota (${size}) poistetaan pysyvästi levyltä. Tätä toimintoa ei voi kumota.`,
     permanentWarning: "VAROITUS: Tämä toiminto on pysyvä! Kansioita ei lähetetä roskakoriin.",
     permanentConfirmButton: "Poista Pysyvästi",
     deletingInProgress: "Poistaminen käynnissä...",
     recycleSuccess: (count: number) => `${count} kansiota siirretty onnistuneesti roskakoriin.`,
     permanentSuccess: (count: number) => `${count} kansiota poistettu pysyvästi onnistuneesti.`,
     partialErrorTitle: "Osittaisen Poiston Raportti",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} kansiota puhdistettu, mutta ${errorCount} kansiota ei voitu poistaa.`,
-    lockedOrPermissionNote: "Jotkin tiedostot saattavat olla käynnissä olevien prosessien lukitsemia tai vaativat pääkäyttäjän oikeuksia.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} kansiota puhdistettu, mutta ${errorCount} kansiota ei voitu poistaa.`,
+    lockedOrPermissionNote:
+      "Jotkin tiedostot saattavat olla käynnissä olevien prosessien lukitsemia tai vaativat pääkäyttäjän oikeuksia.",
   },
   settings: {
     title: "Asetukset",
@@ -155,7 +159,8 @@ export const fi: TranslationSchema = {
     version: "Versio",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Julkaisija: Vellium • © 2026 Vellium. Kaikki oikeudet pidätetään.",
-    privacyNote: "Kaikki skannaukset ja poistot tapahtuvat 100 % paikallisesti tietokoneellasi. Ei telemetriaa.",
+    privacyNote:
+      "Kaikki skannaukset ja poistot tapahtuvat 100 % paikallisesti tietokoneellasi. Ei telemetriaa.",
     close: "Sulje",
   },
   errors: {

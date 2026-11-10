@@ -67,26 +67,26 @@ pub const CODEX_TARGETS: &[AgentTargetSpec] = &[
         "sessions",
         "codex.sessions",
         "sessions",
-        Some("Konuşma geçmişi; yalnızca Codex içinden yönetilmeli."),
+        Some("Conversation history; must be managed from within Codex."),
     ),
     keep(
         "archived_sessions",
         "codex.archived_sessions",
         "sessions",
-        Some("Arşivlenmiş oturumlar; resmî komutla yönetilir."),
+        Some("Archived sessions; managed via official commands."),
     ),
     keep(
         "worktrees",
         "codex.worktrees",
         "worktrees",
-        Some("Git worktree'leri; dosya sistemiyle silinemez."),
+        Some("Git worktrees; cannot be removed directly from the file system."),
     ),
-    keep("log", "codex.logs", "diagnostics", Some("Tanılama günlükleri.")),
+    keep("log", "codex.logs", "diagnostics", Some("Diagnostic logs.")),
     keep(
         "logs_2.sqlite",
         "codex.log_db",
         "diagnostics",
-        Some("SQLite tanılama veritabanı; WAL/SHM dosyalarıyla birlikte korunur."),
+        Some("SQLite diagnostic database; preserved alongside WAL/SHM files."),
     ),
     keep("skills", "codex.skills", "configuration", None),
     keep("memories", "codex.memories", "memory", None),
@@ -99,34 +99,39 @@ pub const CLAUDE_HOME_TARGETS: &[AgentTargetSpec] = &[
         "projects",
         "claude.projects",
         "conversations",
-        Some("Proje konuşmaları; varsayılan olarak korunur."),
+        Some("Project conversations; preserved by default."),
     ),
     keep(
         "file-history",
         "claude.file_history",
         "checkpoints",
-        Some("Checkpoint geri alma verisi; asla otomatik silinmez."),
+        Some("Checkpoint rewind data; never deleted automatically."),
     ),
     keep("settings.json", "claude.settings", "configuration", None),
     keep("plans", "claude.plans", "plans", None),
     keep("plugins", "claude.plugins", "configuration", None),
     keep("skills", "claude.skills", "configuration", None),
     keep("todos", "claude.todos", "conversations", None),
-    review("debug", "claude.debug", "diagnostics", Some("Hata ayıklama günlükleri.")),
+    review("debug", "claude.debug", "diagnostics", Some("Debug logs.")),
     review("shell-snapshots", "claude.shell_snapshots", "cache", None),
     review("statsig", "claude.statsig", "cache", None),
     review(
         "tasks",
         "claude.tasks",
         "task-output",
-        Some("Görev çıktıları çok büyüyebilir; aktif görev varsa silinemez."),
+        Some("Task outputs can grow large; cannot be deleted if an active task exists."),
     ),
     safe("image-cache", "claude.image_cache", "cache"),
     safe("paste-cache", "claude.paste_cache", "cache"),
 ];
 
 pub const CLAUDE_TEMP_TARGETS: &[AgentTargetSpec] = &[
-    review("tasks", "claude.temp_tasks", "task-output", Some("Geçici görev çıktıları.")),
+    review(
+        "tasks",
+        "claude.temp_tasks",
+        "task-output",
+        Some("Temporary task outputs."),
+    ),
     review("shell-snapshots", "claude.temp_shell", "cache", None),
 ];
 
@@ -135,9 +140,14 @@ pub const ANTIGRAVITY_DATA_TARGETS: &[AgentTargetSpec] = &[
         "brain",
         "antigravity.brain",
         "brain",
-        Some("Ajan belleği ve artefaktları; varsayılan olarak korunur."),
+        Some("Agent memory and artifacts; preserved by default."),
     ),
-    keep("conversations", "antigravity.conversations", "conversations", None),
+    keep(
+        "conversations",
+        "antigravity.conversations",
+        "conversations",
+        None,
+    ),
     keep("backups", "antigravity.backups", "backups", None),
     AgentTargetSpec {
         rel: "browser_recordings",
@@ -148,7 +158,7 @@ pub const ANTIGRAVITY_DATA_TARGETS: &[AgentTargetSpec] = &[
         protected: false,
         requires_idle: true,
         note: Some(
-            "Tarayıcı kayıtları çok büyüyebilir; yalnızca kayıt üretimi durduğunda temizlenebilir.",
+            "Browser recordings can grow large; can only be cleaned when recording has stopped.",
         ),
     },
     review("skills", "antigravity.skills", "configuration", None),
@@ -159,9 +169,14 @@ pub const ANTIGRAVITY_BACKUP_TARGETS: &[AgentTargetSpec] = &[
         "brain",
         "antigravity.backup_brain",
         "backups",
-        Some("Yedek beyin verisi korunur."),
+        Some("Backup brain data is preserved."),
     ),
-    keep("conversations", "antigravity.backup_conversations", "backups", None),
+    keep(
+        "conversations",
+        "antigravity.backup_conversations",
+        "backups",
+        None,
+    ),
 ];
 
 pub const ANTIGRAVITY_APP_TARGETS: &[AgentTargetSpec] = &[
@@ -169,9 +184,14 @@ pub const ANTIGRAVITY_APP_TARGETS: &[AgentTargetSpec] = &[
         "User",
         "antigravity.user_data",
         "configuration",
-        Some("Kullanıcı ayarları ve çalışma alanı verisi."),
+        Some("User settings and workspace data."),
     ),
-    keep("Local State", "antigravity.local_state", "configuration", None),
+    keep(
+        "Local State",
+        "antigravity.local_state",
+        "configuration",
+        None,
+    ),
 ];
 
 pub const ANTIGRAVITY_LOCAL_TARGETS: &[AgentTargetSpec] = &[
@@ -183,24 +203,69 @@ pub const ANTIGRAVITY_LOCAL_TARGETS: &[AgentTargetSpec] = &[
 ];
 
 pub const OPENCODE_CONFIG_TARGETS: &[AgentTargetSpec] = &[
-    keep("opencode.json", "opencode.config", "configuration", Some("Kullanıcı ayarları ve API anahtarları.")),
-    keep("opencode.jsonc", "opencode.config_jsonc", "configuration", Some("Kullanıcı ayarları.")),
+    keep(
+        "opencode.json",
+        "opencode.config",
+        "configuration",
+        Some("User settings and API keys."),
+    ),
+    keep(
+        "opencode.jsonc",
+        "opencode.config_jsonc",
+        "configuration",
+        Some("User settings."),
+    ),
     keep("tui.json", "opencode.tui_config", "configuration", None),
 ];
 
 pub const OPENCODE_SHARE_TARGETS: &[AgentTargetSpec] = &[
-    keep("opencode.db", "opencode.db", "sessions", Some("Oturum ve mesaj geçmişi veritabanı; korunur.")),
+    keep(
+        "opencode.db",
+        "opencode.db",
+        "sessions",
+        Some("Session and message history database; preserved."),
+    ),
     keep("opencode.db-wal", "opencode.db_wal", "sessions", None),
     keep("opencode.db-shm", "opencode.db_shm", "sessions", None),
-    review("log", "opencode.logs", "diagnostics", Some("Tanılama günlükleri.")),
-    review("shell", "opencode.shell", "cache", Some("Shell çalıştırma anlık görüntüleri.")),
-    review("snapshot", "opencode.snapshot", "cache", Some("Kod anlık görüntüleri.")),
-    review("tool-output", "opencode.tool_output", "task-output", Some("Büyük araç ve görev çıktıları; temizlenebilir.")),
-    review("repos", "opencode.repos", "cache", Some("Önbelleğe alınmış depo kopyaları.")),
+    review(
+        "log",
+        "opencode.logs",
+        "diagnostics",
+        Some("Diagnostic logs."),
+    ),
+    review(
+        "shell",
+        "opencode.shell",
+        "cache",
+        Some("Shell execution snapshots."),
+    ),
+    review(
+        "snapshot",
+        "opencode.snapshot",
+        "cache",
+        Some("Code snapshots."),
+    ),
+    review(
+        "tool-output",
+        "opencode.tool_output",
+        "task-output",
+        Some("Large tool and task outputs; can be cleaned."),
+    ),
+    review(
+        "repos",
+        "opencode.repos",
+        "cache",
+        Some("Cached repository clones."),
+    ),
 ];
 
 pub const OPENCODE_APP_TARGETS: &[AgentTargetSpec] = &[
-    keep("drafts.sqlite", "opencode.drafts", "sessions", Some("Taslaklar korunur.")),
+    keep(
+        "drafts.sqlite",
+        "opencode.drafts",
+        "sessions",
+        Some("Drafts are preserved."),
+    ),
     safe("Cache", "opencode.cache", "cache"),
     safe("Code Cache", "opencode.code_cache", "cache"),
     safe("GPUCache", "opencode.gpu_cache", "cache"),
@@ -210,13 +275,22 @@ pub const OPENCODE_APP_TARGETS: &[AgentTargetSpec] = &[
     review("Crashpad", "opencode.crashpad", "diagnostics", None),
 ];
 
-pub const OPENCODE_UPDATER_TARGETS: &[AgentTargetSpec] = &[
-    safe("pending", "opencode.updater_pending", "cache"),
-];
+pub const OPENCODE_UPDATER_TARGETS: &[AgentTargetSpec] =
+    &[safe("pending", "opencode.updater_pending", "cache")];
 
 pub const T3CODE_APP_TARGETS: &[AgentTargetSpec] = &[
-    keep("Local Storage", "t3code.local_storage", "configuration", Some("Kullanıcı tercihleri ve oturum bağlantıları.")),
-    keep("IndexedDB", "t3code.indexed_db", "sessions", Some("Oturum ve iş parçacığı geçmişi.")),
+    keep(
+        "Local Storage",
+        "t3code.local_storage",
+        "configuration",
+        Some("User preferences and session connections."),
+    ),
+    keep(
+        "IndexedDB",
+        "t3code.indexed_db",
+        "sessions",
+        Some("Session and thread history."),
+    ),
     safe("Cache", "t3code.cache", "cache"),
     safe("Code Cache", "t3code.code_cache", "cache"),
     safe("GPUCache", "t3code.gpu_cache", "cache"),
@@ -226,13 +300,22 @@ pub const T3CODE_APP_TARGETS: &[AgentTargetSpec] = &[
     safe("DawnWebGPUCache", "t3code.webgpu_cache", "cache"),
 ];
 
-pub const T3CODE_UPDATER_TARGETS: &[AgentTargetSpec] = &[
-    safe("pending", "t3code.updater_pending", "cache"),
-];
+pub const T3CODE_UPDATER_TARGETS: &[AgentTargetSpec] =
+    &[safe("pending", "t3code.updater_pending", "cache")];
 
 pub const BIONIC_APP_TARGETS: &[AgentTargetSpec] = &[
-    keep("Preferences", "bionic.preferences", "configuration", Some("Kullanıcı yapılandırması ve ayarları.")),
-    keep("Local Storage", "bionic.local_storage", "configuration", None),
+    keep(
+        "Preferences",
+        "bionic.preferences",
+        "configuration",
+        Some("User configuration and settings."),
+    ),
+    keep(
+        "Local Storage",
+        "bionic.local_storage",
+        "configuration",
+        None,
+    ),
     keep("Network", "bionic.network", "configuration", None),
     safe("Cache", "bionic.cache", "cache"),
     safe("Code Cache", "bionic.code_cache", "cache"),
@@ -241,15 +324,35 @@ pub const BIONIC_APP_TARGETS: &[AgentTargetSpec] = &[
 ];
 
 pub const CURSOR_USER_TARGETS: &[AgentTargetSpec] = &[
-    keep("rules", "cursor.rules", "configuration", Some("Kullanıcı ve proje AI kuralları.")),
+    keep(
+        "rules",
+        "cursor.rules",
+        "configuration",
+        Some("User and project AI rules."),
+    ),
     keep("tunnels", "cursor.tunnels", "configuration", None),
-    review("projects", "cursor.projects_cache", "cache", Some("Proje bağlam önbellekleri.")),
+    review(
+        "projects",
+        "cursor.projects_cache",
+        "cache",
+        Some("Project context caches."),
+    ),
     review("logs", "cursor.user_logs", "diagnostics", None),
 ];
 
 pub const CURSOR_APP_TARGETS: &[AgentTargetSpec] = &[
-    keep("User", "cursor.user_settings", "configuration", Some("Kullanıcı ayarları, tuş atamaları ve eklentiler.")),
-    keep("workspaceStorage", "cursor.workspace_storage", "sessions", Some("Çalışma alanı oturumları ve sohbet geçmişleri.")),
+    keep(
+        "User",
+        "cursor.user_settings",
+        "configuration",
+        Some("User settings, keybindings, and extensions."),
+    ),
+    keep(
+        "workspaceStorage",
+        "cursor.workspace_storage",
+        "sessions",
+        Some("Workspace sessions and chat histories."),
+    ),
     safe("Cache", "cursor.cache", "cache"),
     safe("Code Cache", "cursor.code_cache", "cache"),
     safe("GPUCache", "cursor.gpu_cache", "cache"),
@@ -259,17 +362,35 @@ pub const CURSOR_APP_TARGETS: &[AgentTargetSpec] = &[
 ];
 
 pub const WINDSURF_CODEIUM_TARGETS: &[AgentTargetSpec] = &[
-    keep("cascade", "windsurf.cascade_history", "sessions", Some("Cascade sohbet geçmişi ve konuşma belleği.")),
+    keep(
+        "cascade",
+        "windsurf.cascade_history",
+        "sessions",
+        Some("Cascade chat history and conversation memory."),
+    ),
     review("logs", "windsurf.codeium_logs", "diagnostics", None),
 ];
 
-pub const WINDSURF_USER_TARGETS: &[AgentTargetSpec] = &[
-    keep("extensions", "windsurf.extensions", "configuration", None),
-];
+pub const WINDSURF_USER_TARGETS: &[AgentTargetSpec] = &[keep(
+    "extensions",
+    "windsurf.extensions",
+    "configuration",
+    None,
+)];
 
 pub const WINDSURF_APP_TARGETS: &[AgentTargetSpec] = &[
-    keep("User", "windsurf.user_settings", "configuration", Some("Kullanıcı ayarları ve çalışma alanı verisi.")),
-    keep("workspaceStorage", "windsurf.workspace_storage", "sessions", None),
+    keep(
+        "User",
+        "windsurf.user_settings",
+        "configuration",
+        Some("User settings and workspace data."),
+    ),
+    keep(
+        "workspaceStorage",
+        "windsurf.workspace_storage",
+        "sessions",
+        None,
+    ),
     safe("Cache", "windsurf.cache", "cache"),
     safe("Code Cache", "windsurf.code_cache", "cache"),
     safe("GPUCache", "windsurf.gpu_cache", "cache"),
@@ -279,13 +400,23 @@ pub const WINDSURF_APP_TARGETS: &[AgentTargetSpec] = &[
 ];
 
 pub const OLLAMA_USER_TARGETS: &[AgentTargetSpec] = &[
-    keep("models", "ollama.models", "models", Some("İndirilmiş yerel yapay zeka model ağırlıkları ve manifestoları.")),
+    keep(
+        "models",
+        "ollama.models",
+        "models",
+        Some("Downloaded local AI model weights and manifests."),
+    ),
     keep("id_ed25519", "ollama.key", "credentials", None),
     keep("id_ed25519.pub", "ollama.pubkey", "credentials", None),
 ];
 
 pub const OLLAMA_LOCAL_TARGETS: &[AgentTargetSpec] = &[
-    review("server.log", "ollama.server_log", "diagnostics", Some("Sunucu günlük dosyası.")),
+    review(
+        "server.log",
+        "ollama.server_log",
+        "diagnostics",
+        Some("Server log file."),
+    ),
     review("logs", "ollama.logs", "diagnostics", None),
     safe("temp", "ollama.temp", "cache"),
     safe("updates", "ollama.updates", "cache"),
@@ -329,6 +460,6 @@ pub fn provider_display_name(provider: &str) -> &'static str {
         "cursor" => "Cursor",
         "windsurf" => "Windsurf",
         "ollama" => "Ollama",
-        _ => "Bilinmeyen sağlayıcı",
+        _ => "Unknown provider",
     }
 }

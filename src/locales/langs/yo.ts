@@ -102,18 +102,24 @@ export const yo: TranslationSchema = {
     cancel: "Fagilé",
     confirm: "Fidájú",
     recycleTitle: "Gbé Àwọn Àpò tí a Yàn lọ sí Àpótí Ìdọ̀tí?",
-    recycleDescription: (count: number, size: string) => `${count} àwọn àpò node_modules (${size}) ni a ó gbé lọ sí Àpótí Ìdọ̀tí. O lè mú wọn padà nígbàkúgbà.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} àwọn àpò node_modules (${size}) ni a ó gbé lọ sí Àpótí Ìdọ̀tí. O lè mú wọn padà nígbàkúgbà.`,
     recycleConfirmButton: "Gbé lọ sí Àpótí Ìdọ̀tí",
     permanentTitle: "Pa Àwọn Àpò tí a Yàn Rẹ́ Pátápátá?",
-    permanentDescription: (count: number, size: string) => `${count} àwọn àpò node_modules (${size}) ni a ó pa rẹ́ pátápátá kúrò lórí àwo-fún-ìrántí. A kò lè dá ìgbése yìí padà.`,
-    permanentWarning: "ÌKILỌ̀: Ìgbése yìí jẹ́ títí láé! A kò ní fi àwọn àpò náà ránṣẹ́ sí Àpótí Ìdọ̀tí.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} àwọn àpò node_modules (${size}) ni a ó pa rẹ́ pátápátá kúrò lórí àwo-fún-ìrántí. A kò lè dá ìgbése yìí padà.`,
+    permanentWarning:
+      "ÌKILỌ̀: Ìgbése yìí jẹ́ títí láé! A kò ní fi àwọn àpò náà ránṣẹ́ sí Àpótí Ìdọ̀tí.",
     permanentConfirmButton: "Pa Rẹ́ Pátápátá",
     deletingInProgress: "N pa rẹ́ lọ́wọ́...",
-    recycleSuccess: (count: number) => `${count} àwọn àpò ni a ti gbé lọ sí Àpótí Ìdọ̀tí pẹ̀lú àṣeyọrí.`,
+    recycleSuccess: (count: number) =>
+      `${count} àwọn àpò ni a ti gbé lọ sí Àpótí Ìdọ̀tí pẹ̀lú àṣeyọrí.`,
     permanentSuccess: (count: number) => `${count} àwọn àpò ni a ti pa rẹ́ pátápátá pẹ̀lú àṣeyọrí.`,
     partialErrorTitle: "Ìròyìn Ìparẹ́ Apá Kan",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} àwọn àpò ni a ti fọ̀ mọ́, ṣùgbọ́n a kò lè pa àwọn àpò ${errorCount} rẹ́.`,
-    lockedOrPermissionNote: "Àwọn fáìlì kan lè wà ní tìtì pa láti ọwọ́ àwọn ìṣe tí ń lọ lọ́wọ́ tàbí kí wọ́n nílò àwọn àṣẹ olùṣàkóso.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} àwọn àpò ni a ti fọ̀ mọ́, ṣùgbọ́n a kò lè pa àwọn àpò ${errorCount} rẹ́.`,
+    lockedOrPermissionNote:
+      "Àwọn fáìlì kan lè wà ní tìtì pa láti ọwọ́ àwọn ìṣe tí ń lọ lọ́wọ́ tàbí kí wọ́n nílò àwọn àṣẹ olùṣàkóso.",
   },
   settings: {
     title: "Àwọn Ètò",
@@ -155,7 +161,8 @@ export const yo: TranslationSchema = {
     version: "Ẹ̀yà",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Olùtẹ̀jáde: Vellium • © 2026 Vellium. Gbogbo ẹ̀tọ́ ni a kọ́kọ́ mú mọ́ra.",
-    privacyNote: "Gbogbo ṣíṣàwárí àti ìparẹ́ ń wáyé ní 100% lábẹ́lé lórí kọ̀mpútà rẹ. Kò sí dátà kankan tí a ń fi ránṣẹ́ síta.",
+    privacyNote:
+      "Gbogbo ṣíṣàwárí àti ìparẹ́ ń wáyé ní 100% lábẹ́lé lórí kọ̀mpútà rẹ. Kò sí dátà kankan tí a ń fi ránṣẹ́ síta.",
     close: "Tì í",
   },
   errors: {

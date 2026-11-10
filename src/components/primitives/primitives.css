@@ -2,8 +2,9 @@
 .glass-surface {
   position: relative;
   border-radius: var(--radius-lg);
-  transition: background-color var(--duration-fast) var(--ease-standard),
-              border-color var(--duration-fast) var(--ease-standard);
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
 }
 
 .glass-standard {
@@ -97,7 +98,9 @@
 .btn-danger {
   background-color: var(--danger);
   color: var(--danger-text);
-  box-shadow: var(--shadow-sm), 0 0 0 1px var(--danger-subtle);
+  box-shadow:
+    var(--shadow-sm),
+    0 0 0 1px var(--danger-subtle);
 }
 .btn-danger:hover:not(:disabled) {
   background-color: var(--danger-hover);
@@ -185,18 +188,22 @@
   align-items: center;
   justify-content: center;
   transition: all var(--duration-fast) var(--ease-standard);
-  color: var(--on-accent);
+  color: var(--accent-text);
 }
 .checkbox-container:hover .checkbox-box {
   border-color: var(--accent);
 }
+/* The tick/dash glyph is drawn in the current text color; it must contrast
+   against the accent fill, not against the page surface. */
 .checkbox-checked .checkbox-box {
   background-color: var(--accent);
   border-color: var(--accent);
+  color: var(--accent-text);
 }
 .checkbox-indeterminate .checkbox-box {
   background-color: var(--accent);
   border-color: var(--accent);
+  color: var(--accent-text);
 }
 
 /* Number Field
@@ -212,7 +219,8 @@
   border-radius: var(--radius-xs);
   background: var(--surface-alt);
   overflow: hidden;
-  transition: border-color var(--duration-fast) var(--ease-standard),
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
     box-shadow var(--duration-fast) var(--ease-standard);
 }
 
@@ -268,7 +276,8 @@
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background-color var(--duration-fast) var(--ease-standard),
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
     color var(--duration-fast) var(--ease-standard);
 }
 
@@ -379,8 +388,12 @@
   animation: indeterminate 1.5s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
 }
 @keyframes indeterminate {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(350%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
 }
 
 /* Dialog Overlay and Modal */
@@ -451,12 +464,22 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Toast Floating Element */
@@ -491,8 +514,14 @@
 }
 
 @keyframes toastSlideIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ==========================================================================
@@ -640,7 +669,6 @@
   gap: var(--space-2);
 }
 
-
 /* ==========================================================================
    VELLIUM BENTO DESIGN SYSTEM — SHARED KPI & SURFACE PRIMITIVES
    Unified across Overview, Projects, Agents, Caches, History, Settings & About.
@@ -694,9 +722,10 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
-  transition: border-color var(--duration-fast) var(--ease-standard),
-              transform var(--duration-fast) var(--ease-standard),
-              background-color var(--duration-fast) var(--ease-standard);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
   min-width: 0;
 }
 
@@ -774,7 +803,9 @@
   letter-spacing: -0.02em;
   line-height: 1.15;
   color: var(--text-primary);
-  font-feature-settings: "tnum" 1, "zero" 1;
+  font-feature-settings:
+    "tnum" 1,
+    "zero" 1;
 }
 
 .nc-kpi-card-sub {
@@ -842,7 +873,7 @@
   outline-offset: 2px;
 }
 
-/* Checked (Açık / On) State */
+/* Checked (Light / On) State */
 .nc-switch-button.is-checked {
   border-color: rgba(59, 130, 246, 0.45);
   background: rgba(59, 130, 246, 0.08);
@@ -862,7 +893,8 @@
   border-radius: 9999px;
   background: var(--surface-strong);
   border: 1px solid var(--border-strong);
-  transition: background var(--duration-fast) var(--ease-standard),
+  transition:
+    background var(--duration-fast) var(--ease-standard),
     border-color var(--duration-fast) var(--ease-standard),
     box-shadow var(--duration-fast) var(--ease-standard);
   flex-shrink: 0;
@@ -887,7 +919,8 @@
   border-radius: 50%;
   background: #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  transition: transform var(--duration-fast) cubic-bezier(0.34, 1.56, 0.64, 1),
+  transition:
+    transform var(--duration-fast) cubic-bezier(0.34, 1.56, 0.64, 1),
     background var(--duration-fast) var(--ease-standard);
 }
 

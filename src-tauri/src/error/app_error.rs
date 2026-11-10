@@ -11,6 +11,14 @@ pub enum AppError {
     ScanFailed(String),
     UnsafeDeleteTarget(String),
     RecycleBinFailed(String),
+    RecycleBinTooSmall(String),
+    RecycleBinDisabled(String),
+    RecycleBinNotFound(String),
+    RecycleBinPathTooLong(String),
+    RecycleBinSharingViolation(String),
+    RecycleBinAccessDenied(String),
+    RecycleBinAborted(String),
+    RecycleBinComFailed(String),
     PermanentDeleteFailed(String),
     SettingsReadFailed(String),
     SettingsWriteFailed(String),
@@ -21,30 +29,58 @@ pub enum AppError {
     PlanExpired(String),
     PlanChanged(String),
     Blocked(String),
+    Network(String),
     Unknown(String),
 }
 
 impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            AppError::InvalidPath(msg) => write!(f, "Geçersiz dosya yolu: {}", msg),
-            AppError::AccessDenied(msg) => write!(f, "Erişim engellendi: {}", msg),
-            AppError::PathNotFound(msg) => write!(f, "Yol bulunamadı: {}", msg),
-            AppError::ScanCancelled(msg) => write!(f, "Tarama iptal edildi: {}", msg),
-            AppError::ScanFailed(msg) => write!(f, "Tarama başarısız oldu: {}", msg),
-            AppError::UnsafeDeleteTarget(msg) => write!(f, "Güvensiz silme hedefi: {}", msg),
-            AppError::RecycleBinFailed(msg) => write!(f, "Çöp kutusuna taşıma başarısız: {}", msg),
-            AppError::PermanentDeleteFailed(msg) => write!(f, "Kalıcı silme başarısız: {}", msg),
-            AppError::SettingsReadFailed(msg) => write!(f, "Ayar okuma hatası: {}", msg),
-            AppError::SettingsWriteFailed(msg) => write!(f, "Ayar yazma hatası: {}", msg),
-            AppError::PlatformUnsupported(msg) => write!(f, "Platform desteklenmiyor: {}", msg),
-            AppError::SessionInvalid(msg) => write!(f, "Geçersiz tarama oturumu: {}", msg),
-            AppError::SessionExpired(msg) => write!(f, "Tarama oturumu süresi doldu: {}", msg),
-            AppError::PlanInvalid(msg) => write!(f, "Geçersiz temizlik planı: {}", msg),
-            AppError::PlanExpired(msg) => write!(f, "Temizlik planı süresi doldu: {}", msg),
-            AppError::PlanChanged(msg) => write!(f, "Temizlik planı değişti: {}", msg),
-            AppError::Blocked(msg) => write!(f, "İşlem güvenlik nedeniyle engellendi: {}", msg),
-            AppError::Unknown(msg) => write!(f, "Bilinmeyen hata: {}", msg),
+            AppError::InvalidPath(msg) => write!(f, "Invalid path: {}", msg),
+            AppError::AccessDenied(msg) => write!(f, "Access denied: {}", msg),
+            AppError::PathNotFound(msg) => write!(f, "Path not found: {}", msg),
+            AppError::ScanCancelled(msg) => write!(f, "Scan cancelled: {}", msg),
+            AppError::ScanFailed(msg) => write!(f, "Scan failed: {}", msg),
+            AppError::UnsafeDeleteTarget(msg) => write!(f, "Unsafe delete target: {}", msg),
+            AppError::RecycleBinFailed(msg) => write!(f, "Recycle bin operation failed: {}", msg),
+            AppError::RecycleBinTooSmall(msg) => {
+                write!(
+                    f,
+                    "Recycle bin capacity is too small for the target: {}",
+                    msg
+                )
+            }
+            AppError::RecycleBinDisabled(msg) => {
+                write!(f, "Recycle bin is disabled for this drive: {}", msg)
+            }
+            AppError::RecycleBinNotFound(msg) => write!(f, "Recycle bin not found: {}", msg),
+            AppError::RecycleBinPathTooLong(msg) => {
+                write!(f, "Path is too long for the recycle bin: {}", msg)
+            }
+            AppError::RecycleBinSharingViolation(msg) => {
+                write!(f, "Recycle bin target is in use: {}", msg)
+            }
+            AppError::RecycleBinAccessDenied(msg) => {
+                write!(f, "Recycle bin access denied: {}", msg)
+            }
+            AppError::RecycleBinAborted(msg) => {
+                write!(f, "Recycle bin operation was aborted: {}", msg)
+            }
+            AppError::RecycleBinComFailed(msg) => {
+                write!(f, "Recycle bin shell operation failed: {}", msg)
+            }
+            AppError::PermanentDeleteFailed(msg) => write!(f, "Permanent delete failed: {}", msg),
+            AppError::SettingsReadFailed(msg) => write!(f, "Settings read failed: {}", msg),
+            AppError::SettingsWriteFailed(msg) => write!(f, "Settings write failed: {}", msg),
+            AppError::PlatformUnsupported(msg) => write!(f, "Platform unsupported: {}", msg),
+            AppError::SessionInvalid(msg) => write!(f, "Invalid scan session: {}", msg),
+            AppError::SessionExpired(msg) => write!(f, "Scan session expired: {}", msg),
+            AppError::PlanInvalid(msg) => write!(f, "Invalid cleanup plan: {}", msg),
+            AppError::PlanExpired(msg) => write!(f, "Cleanup plan expired: {}", msg),
+            AppError::PlanChanged(msg) => write!(f, "Cleanup plan changed: {}", msg),
+            AppError::Blocked(msg) => write!(f, "Operation blocked for safety: {}", msg),
+            AppError::Network(msg) => write!(f, "Network error: {}", msg),
+            AppError::Unknown(msg) => write!(f, "Unknown error: {}", msg),
         }
     }
 }

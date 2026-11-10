@@ -22,12 +22,7 @@ export default defineConfig({
       // `release_output\Node-Cleaner-*.exe` locked, and the watcher used to die
       // with "EBUSY: resource busy or locked, watch" the moment those appeared,
       // which took the whole `tauri dev` session down with it.
-      ignored: [
-        "**/src-tauri/**",
-        "**/release_output/**",
-        "**/dist/**",
-        "**/.git/**",
-      ],
+      ignored: ["**/src-tauri/**", "**/release_output/**", "**/dist/**", "**/.git/**"],
     },
   },
   build: {
@@ -38,7 +33,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          if (id.includes("src/locales/langs")) {
+          if (id.includes("src/locales/langs") || id.includes("src/lib/ui-text/locales")) {
             return "locales-bundle";
           }
           if (id.includes("node_modules")) {

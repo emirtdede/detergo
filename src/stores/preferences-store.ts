@@ -13,6 +13,8 @@ import { scannerApi } from "@/lib/tauri/scanner-api";
 import { useUiStore } from "@/stores/ui-store";
 import { detectSystemLanguage } from "@/locales/languages";
 import { resolveUiLocale } from "@/lib/ui-locale";
+import { getUIText } from "@/lib/ui-text";
+import { log } from "@/lib/logging";
 
 interface PreferencesState extends AppSettings {
   isLoaded: boolean;
@@ -39,7 +41,7 @@ interface PreferencesState extends AppSettings {
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
-  schemaVersion: 3,
+  schemaVersion: 4,
   theme: "dark-black",
   language: resolveUiLocale(detectSystemLanguage()),
   reduceMotion: false,
@@ -74,6 +76,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   webhookOnScan: true,
   webhookOnClean: true,
   shortcuts: { ...DEFAULT_SHORTCUTS },
+  mcpAllowDestructive: false,
 };
 
 const LEGACY_THEME_MAP: Record<string, string> = {
@@ -181,19 +184,56 @@ function toSettings(state: PreferencesState): AppSettings {
     webhookOnScan: state.webhookOnScan ?? true,
     webhookOnClean: state.webhookOnClean ?? true,
     shortcuts: state.shortcuts ?? DEFAULT_SHORTCUTS,
+    mcpAllowDestructive: state.mcpAllowDestructive ?? false,
   };
+}
+
+const SETTINGS_DEBOUNCE_MS = 250;
+
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+let writeChain: Promise<void> = Promise.resolve();
+let lastErrorAt = 0;
+
+function reportSaveError(language?: string | null) {
+  const now = Date.now();
+  // A burst of failing writes must not stack identical toasts.
+  if (now - lastErrorAt < 5000) return;
+  lastErrorAt = now;
+  useUiStore.getState().showToast(getUIText(language).settings.saveError, "error", 5000);
+}
+
+/**
+ * Persists the current settings. Writes are serialized so a slow first write
+ * cannot be overtaken by a later one. The returned promise rejects on failure
+ * for explicit callers; the internal chain stays alive and reports the error
+ * once so a burst cannot stack toasts.
+ */
+export function flushPreferences(): Promise<void> {
+  if (saveTimer !== null) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+  const state = usePreferencesStore.getState();
+  if (!state.isLoaded) return writeChain;
+
+  const snapshot = toSettings(state);
+  const write = writeChain.then(() => scannerApi.saveAppSettings(snapshot));
+  writeChain = write.catch((err) => {
+    log.error("Failed to persist settings", err);
+    reportSaveError(state.language);
+  });
+  return write;
 }
 
 function syncPreferences(state: PreferencesState) {
   if (!state.isLoaded) return;
-  scannerApi.saveAppSettings(toSettings(state)).catch((err) => {
-    console.error("Failed to persist settings:", err);
-    useUiStore.getState().showToast(
-      state.language === "tr" ? "Ayarlar kaydedilemedi" : "Could not save settings",
-      "error",
-      5000
-    );
-  });
+  if (saveTimer !== null) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    saveTimer = null;
+    void flushPreferences().catch(() => {
+      // The shared chain already logged and reported this failure.
+    });
+  }, SETTINGS_DEBOUNCE_MS);
 }
 
 export const usePreferencesStore = create<PreferencesState>((set, get) => ({
@@ -284,7 +324,9 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
 
   removeRecentLocation: (path: string) => {
     set((state) => {
-      const nextRecent = state.recentLocations.filter((p) => p.toLowerCase() !== path.toLowerCase());
+      const nextRecent = state.recentLocations.filter(
+        (p) => p.toLowerCase() !== path.toLowerCase(),
+      );
       const nextLastScan =
         state.lastScanPath?.toLowerCase() === path.toLowerCase()
           ? (nextRecent[0] ?? null)
@@ -325,14 +367,14 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   },
 
   persistSettings: () => {
-    const state = get();
-    if (!state.isLoaded) return Promise.resolve();
-    return scannerApi.saveAppSettings(toSettings(state));
+    // Routed through the debounced writer so an explicit save cannot race a
+    // pending write and land out of order.
+    return flushPreferences();
   },
 
   loadPreferences: (prefs: Partial<AppSettings>) => {
     const resolvedLanguage = resolveUiLocale(
-      (prefs.language as SupportedLanguage) || detectSystemLanguage()
+      (prefs.language as SupportedLanguage) || detectSystemLanguage(),
     ) as SupportedLanguage;
     const merged: AppSettings = {
       ...DEFAULT_SETTINGS,
@@ -348,12 +390,13 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
       sidebarMode: prefs.sidebarMode === "collapsed" ? "collapsed" : "expanded",
       cacheMeasureMode: prefs.cacheMeasureMode === "full" ? "full" : "fast",
       closeAction:
-        prefs.closeAction === "tray" || prefs.closeAction === "quit"
-          ? prefs.closeAction
-          : "ask",
+        prefs.closeAction === "tray" || prefs.closeAction === "quit" ? prefs.closeAction : "ask",
       customAgentProviders: prefs.customAgentProviders ?? [],
       hiddenBuiltinProviders: prefs.hiddenBuiltinProviders ?? [],
-      shortcuts: prefs.shortcuts ? { ...DEFAULT_SHORTCUTS, ...prefs.shortcuts } : { ...DEFAULT_SHORTCUTS },
+      shortcuts: prefs.shortcuts
+        ? { ...DEFAULT_SHORTCUTS, ...prefs.shortcuts }
+        : { ...DEFAULT_SHORTCUTS },
+      mcpAllowDestructive: prefs.mcpAllowDestructive ?? false,
     };
     applyThemeToDom(merged.theme);
     applyLanguageToDom(resolvedLanguage);

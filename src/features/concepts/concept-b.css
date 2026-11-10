@@ -24,7 +24,13 @@
   width: 100vw;
   background-color: var(--cb-bg);
   color: var(--cb-text-primary);
-  font-family: "Segoe UI Variable Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    "Segoe UI Variable Display",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   overflow: hidden;
   font-size: 14px;
 }
@@ -293,4 +299,3 @@
   justify-content: flex-end;
   gap: 10px;
 }
-

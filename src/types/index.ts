@@ -37,14 +37,79 @@ export type LegacyThemeMode =
   | "white";
 
 export type SupportedLanguage =
-  | "tr" | "en" | "de" | "es" | "fr" | "it" | "pt" | "nl" | "pl" | "ru"
-  | "ja" | "ko" | "zh" | "zh-tw" | "sv" | "ar" | "hi" | "id" | "vi" | "uk"
-  | "el" | "cs" | "da" | "fi" | "no" | "hu" | "ro" | "th" | "ms" | "fil"
-  | "bn" | "he" | "fa" | "ur" | "az" | "kk" | "uz" | "bg" | "sk" | "hr"
-  | "et" | "ta" | "te" | "mr" | "kn" | "gu" | "ml" | "pa" | "lt" | "lv"
-  | "sr" | "sl" | "bs" | "sq" | "mk" | "is" | "sw" | "am" | "ha" | "yo"
-  | "af" | "ka" | "hy" | "ky" | "tk" | "mn" | "ca" | "eu" | "gl" | "ga"
-  | "my" | "km" | "si";
+  | "tr"
+  | "en"
+  | "de"
+  | "es"
+  | "fr"
+  | "it"
+  | "pt"
+  | "nl"
+  | "pl"
+  | "ru"
+  | "ja"
+  | "ko"
+  | "zh"
+  | "zh-tw"
+  | "sv"
+  | "ar"
+  | "hi"
+  | "id"
+  | "vi"
+  | "uk"
+  | "el"
+  | "cs"
+  | "da"
+  | "fi"
+  | "no"
+  | "hu"
+  | "ro"
+  | "th"
+  | "ms"
+  | "fil"
+  | "bn"
+  | "he"
+  | "fa"
+  | "ur"
+  | "az"
+  | "kk"
+  | "uz"
+  | "bg"
+  | "sk"
+  | "hr"
+  | "et"
+  | "ta"
+  | "te"
+  | "mr"
+  | "kn"
+  | "gu"
+  | "ml"
+  | "pa"
+  | "lt"
+  | "lv"
+  | "sr"
+  | "sl"
+  | "bs"
+  | "sq"
+  | "mk"
+  | "is"
+  | "sw"
+  | "am"
+  | "ha"
+  | "yo"
+  | "af"
+  | "ka"
+  | "hy"
+  | "ky"
+  | "tk"
+  | "mn"
+  | "ca"
+  | "eu"
+  | "gl"
+  | "ga"
+  | "my"
+  | "km"
+  | "si";
 
 export interface FavoriteLocation {
   id: string;
@@ -55,13 +120,7 @@ export interface FavoriteLocation {
 }
 
 export interface SortOption {
-  field:
-    | "size"
-    | "modified"
-    | "name"
-    | "safety"
-    | "project"
-    | "category";
+  field: "size" | "modified" | "name" | "safety" | "project" | "category";
   direction: "asc" | "desc";
 }
 
@@ -101,7 +160,6 @@ export interface CleanupItem {
   autoSelectable: boolean;
   lastModifiedAt?: string | null;
   lastModifiedMs?: number | null;
-  _searchHaystack?: string;
   status: ItemStatus;
   parentItemId?: string | null;
   note?: string | null;
@@ -282,8 +340,24 @@ export interface CleanupReport {
   results: CleanupResultItem[];
   startedAt: string;
   finishedAt: string;
+  cancelled: boolean;
+  processedCount: number;
+  skippedCount: number;
   auditError?: string | null;
 }
+
+/** Progress events streamed by the backend while a cleanup runs. */
+export type CleanupEvent =
+  | { type: "started"; total: number }
+  | { type: "itemStarted"; index: number; total: number; displayPath: string }
+  | {
+      type: "itemFinished";
+      index: number;
+      total: number;
+      success: boolean;
+      errorCode?: string | null;
+    }
+  | { type: "cancelled"; processed: number; skipped: number };
 
 export interface AgentRootInfo {
   path: string;
@@ -492,41 +566,42 @@ export interface AppSettings {
   webhookOnScan?: boolean;
   webhookOnClean?: boolean;
   shortcuts?: Record<string, string>;
+  mcpAllowDestructive?: boolean;
 }
 
 export const DEFAULT_SHORTCUTS: Record<string, string> = {
-  toggleSidebar: 'Ctrl+B',
-  focusSearch: 'Ctrl+K',
-  startStopScan: 'Ctrl+Enter',
-  navOverview: 'Alt+1',
-  navProjects: 'Alt+2',
-  navAgents: 'Alt+3',
-  navCaches: 'Alt+4',
-  navDocs: 'Alt+5',
-  navHistory: 'Alt+6',
-  navSettings: 'Alt+7',
+  toggleSidebar: "Ctrl+B",
+  focusSearch: "Ctrl+K",
+  startStopScan: "Ctrl+Enter",
+  navOverview: "Alt+1",
+  navProjects: "Alt+2",
+  navAgents: "Alt+3",
+  navCaches: "Alt+4",
+  navDocs: "Alt+5",
+  navHistory: "Alt+6",
+  navSettings: "Alt+7",
 };
 
 export const RESERVED_SHORTCUTS = new Set([
-  'Ctrl+W',
-  'Ctrl+R',
-  'Ctrl+Shift+R',
-  'Ctrl+J',
-  'Ctrl+P',
-  'Ctrl+U',
-  'Ctrl+S',
-  'Ctrl+H',
-  'Ctrl+D',
-  'Ctrl+O',
-  'Ctrl+N',
-  'Ctrl+T',
-  'F1',
-  'F3',
-  'F5',
-  'F7',
-  'Alt+F4',
-  'F11',
-  'F12',
+  "Ctrl+W",
+  "Ctrl+R",
+  "Ctrl+Shift+R",
+  "Ctrl+J",
+  "Ctrl+P",
+  "Ctrl+U",
+  "Ctrl+S",
+  "Ctrl+H",
+  "Ctrl+D",
+  "Ctrl+O",
+  "Ctrl+N",
+  "Ctrl+T",
+  "F1",
+  "F3",
+  "F5",
+  "F7",
+  "Alt+F4",
+  "F11",
+  "F12",
 ]);
 
 export interface KnownLocation {

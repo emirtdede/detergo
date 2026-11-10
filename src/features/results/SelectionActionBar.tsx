@@ -8,19 +8,15 @@ import { useSelectionStore } from "@/stores/selection-store";
 import { useUiStore } from "@/stores/ui-store";
 import { useUIText } from "@/lib/ui-text";
 import { useScanController } from "@/features/scan/useScanController";
+import { usePreferencesStore } from "@/stores/preferences-store";
 import { formatBytes } from "@/lib/formatters";
+import { formatSavedAt } from "@/lib/format/date";
 import { DeleteMode } from "@/types";
 import "./results.css";
 
-function formatSavedAt(value: string | null): string {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleString();
-}
-
 export const SelectionActionBar: React.FC = () => {
   const ui = useUIText();
+  const language = usePreferencesStore((s) => s.language);
   const selectedIds = useSelectionStore((s) => s.selectedIds);
   const clearSelection = useSelectionStore((s) => s.clearSelection);
   const itemsById = useScanStore((s) => s.itemsById);
@@ -36,13 +32,16 @@ export const SelectionActionBar: React.FC = () => {
   const [pendingMode, setPendingMode] = useState<DeleteMode | null>(null);
 
   const selectedItems = useMemo(
-    () => Array.from(selectedIds).map((id) => itemsById[id]).filter(Boolean),
-    [selectedIds, itemsById]
+    () =>
+      Array.from(selectedIds)
+        .map((id) => itemsById[id])
+        .filter(Boolean),
+    [selectedIds, itemsById],
   );
 
   const totalBytes = useMemo(
     () => selectedItems.reduce((acc, item) => acc + (item.estimatedReclaimBytes ?? 0), 0),
-    [selectedItems]
+    [selectedItems],
   );
 
   if (selectedIds.size === 0) return null;
@@ -81,7 +80,7 @@ export const SelectionActionBar: React.FC = () => {
         <div className="selection-info">
           <span>{ui.table.selected(selectedIds.size)}</span>
           <span style={{ color: "var(--text-muted)" }}>•</span>
-          <span className="selection-total">{formatBytes(totalBytes)}</span>
+          <span className="selection-total">{formatBytes(totalBytes, language)}</span>
         </div>
 
         <div className="selection-divider" />
@@ -103,7 +102,12 @@ export const SelectionActionBar: React.FC = () => {
           >
             {ui.plan.confirmPermanent}
           </Button>
-          <IconButton size="sm" aria-label={ui.table.clearSelection} tooltip={ui.table.clearSelection} onClick={clearSelection}>
+          <IconButton
+            size="sm"
+            aria-label={ui.table.clearSelection}
+            tooltip={ui.table.clearSelection}
+            onClick={clearSelection}
+          >
             <X size={13} />
           </IconButton>
         </div>
@@ -125,18 +129,13 @@ export const SelectionActionBar: React.FC = () => {
             <Button variant="secondary" size="sm" onClick={continueAnyway}>
               {ui.stale.continueAnyway}
             </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={rescanNow}
-              disabled={isScanning}
-            >
+            <Button variant="primary" size="sm" onClick={rescanNow} disabled={isScanning}>
               {ui.stale.rescan}
             </Button>
           </>
         }
       >
-        <p className="plan-note">{ui.stale.warningBody(formatSavedAt(lastSavedAt))}</p>
+        <p className="plan-note">{ui.stale.warningBody(formatSavedAt(lastSavedAt, language))}</p>
         <p className="plan-note" style={{ marginTop: 8 }}>
           {ui.stale.savedLocally}
         </p>

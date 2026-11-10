@@ -25,7 +25,7 @@ mod win {
     use super::*;
     use std::os::windows::ffi::OsStrExt;
     use windows::core::PCWSTR;
-    use windows::Win32::Foundation::{CloseHandle, GetLastError, HANDLE, ERROR_SUCCESS};
+    use windows::Win32::Foundation::{CloseHandle, GetLastError, ERROR_SUCCESS, HANDLE};
     use windows::Win32::Storage::FileSystem::{
         CreateFileW, GetCompressedFileSizeW, GetDriveTypeW, GetFileInformationByHandle,
         BY_HANDLE_FILE_INFORMATION, FILE_ATTRIBUTE_REPARSE_POINT, FILE_FLAG_BACKUP_SEMANTICS,
@@ -33,7 +33,10 @@ mod win {
     };
 
     fn wide(path: &Path) -> Vec<u16> {
-        path.as_os_str().encode_wide().chain(std::iter::once(0)).collect()
+        path.as_os_str()
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect()
     }
 
     fn open_for_query(path: &Path) -> Option<HANDLE> {
@@ -340,7 +343,21 @@ pub fn running_process_names(names: &[&str]) -> Vec<(String, Option<PathBuf>)> {
 /// Best-effort check whether any process image lives inside `root`.
 pub fn process_running_under(root: &Path) -> bool {
     let names = [
-        "codex", "claude", "antigravity", "opencode", "t3code", "bionic", "cursor", "windsurf", "codeium", "ollama", "electron", "code", "node", "git", "docker",
+        "codex",
+        "claude",
+        "antigravity",
+        "opencode",
+        "t3code",
+        "bionic",
+        "cursor",
+        "windsurf",
+        "codeium",
+        "ollama",
+        "electron",
+        "code",
+        "node",
+        "git",
+        "docker",
     ];
     running_process_names(&names)
         .into_iter()

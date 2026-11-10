@@ -102,18 +102,23 @@ export const tk: TranslationSchema = {
     cancel: "Ýatyr",
     confirm: "Tassykla",
     recycleTitle: "Saýlanan Bukjalar Zibil Gutusyna Geçirilsinmi?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules bukjasy (${size}) Zibil gutusyna geçiriler. Islendik wagt olary yzyna dikeldip bilersiňiz.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules bukjasy (${size}) Zibil gutusyna geçiriler. Islendik wagt olary yzyna dikeldip bilersiňiz.`,
     recycleConfirmButton: "Zibil Gutusyna Geçir",
     permanentTitle: "Saýlanan Bukjalar Bütinleý Pozulsynmy?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules bukjasy (${size}) diskden bütinleý we yzyna gaýtaryp bolmajak görnüşde pozular.`,
-    permanentWarning: "DUÝDURYŞ: Bu hereket yzyna gaýtarylmaýar! Bukjalar Zibil gutusyna iberilmez.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules bukjasy (${size}) diskden bütinleý we yzyna gaýtaryp bolmajak görnüşde pozular.`,
+    permanentWarning:
+      "DUÝDURYŞ: Bu hereket yzyna gaýtarylmaýar! Bukjalar Zibil gutusyna iberilmez.",
     permanentConfirmButton: "Bütinleý Poz",
     deletingInProgress: "Pozulýar...",
     recycleSuccess: (count: number) => `${count} bukja üstünlikli Zibil gutusyna geçirildi.`,
     permanentSuccess: (count: number) => `${count} bukja üstünlikli bütinleý pozuldy.`,
     partialErrorTitle: "Bölekleýin Pozmak Hasabaty",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} bukja arassalandy, ýöne ${errorCount} bukjany pozup bolmady.`,
-    lockedOrPermissionNote: "Käbir faýllar işleýän prosesler tarapyndan gulplanyp bilner ýa-da administrator rugsatlaryny talap edip biler.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} bukja arassalandy, ýöne ${errorCount} bukjany pozup bolmady.`,
+    lockedOrPermissionNote:
+      "Käbir faýllar işleýän prosesler tarapyndan gulplanyp bilner ýa-da administrator rugsatlaryny talap edip biler.",
   },
   settings: {
     title: "Sazlamalar",
@@ -155,7 +160,8 @@ export const tk: TranslationSchema = {
     version: "Wersiýasy",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Neşir ediji: Vellium • © 2026 Vellium. Ähli hukuklar goralan.",
-    privacyNote: "Ähli skanirleme we pozmak amallary 100% kompýuteriňizde ýerli ýagdaýda geçirilýär. Hiç hili maglumat daşary iberilmeýär.",
+    privacyNote:
+      "Ähli skanirleme we pozmak amallary 100% kompýuteriňizde ýerli ýagdaýda geçirilýär. Hiç hili maglumat daşary iberilmeýär.",
     close: "Ýap",
   },
   errors: {

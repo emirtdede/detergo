@@ -45,7 +45,8 @@ export const ta: TranslationSchema = {
   },
   scan: {
     idleTitle: "உங்கள் வட்டு இடத்தை மீட்டெடுக்கவும்",
-    idleSubtitle: "உங்கள் அனைத்து திட்டங்களிலும் உள்ள node_modules கோப்புறைகளை பாதுகாப்பாக கண்டறிந்து சுத்தம் செய்யவும்.",
+    idleSubtitle:
+      "உங்கள் அனைத்து திட்டங்களிலும் உள்ள node_modules கோப்புறைகளை பாதுகாப்பாக கண்டறிந்து சுத்தம் செய்யவும்.",
     selectFolderFirst: "ஸ்கேன் செய்ய மேலே ஒரு கோப்புறையைத் தேர்ந்தெடுக்கவும்.",
     discovering: "திட்டங்கள் கண்டறியப்படுகின்றன...",
     measuring: "அளவுகள் கணக்கிடப்படுகின்றன...",
@@ -102,18 +103,25 @@ export const ta: TranslationSchema = {
     cancel: "ரத்து செய்",
     confirm: "உறுதி செய்",
     recycleTitle: "தேர்ந்தெடுக்கப்பட்ட கோப்புறைகளை மறுசுழற்சி தொட்டிக்கு நகர்த்தவா?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules கோப்புறைகள் (${size}) மறுசுழற்சி தொட்டிக்கு நகர்த்தப்படும். நீங்கள் எப்போது வேண்டுமானாலும் அவற்றை மீட்டெடுக்கலாம்.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules கோப்புறைகள் (${size}) மறுசுழற்சி தொட்டிக்கு நகர்த்தப்படும். நீங்கள் எப்போது வேண்டுமானாலும் அவற்றை மீட்டெடுக்கலாம்.`,
     recycleConfirmButton: "மறுசுழற்சி தொட்டிக்கு நகர்த்து",
     permanentTitle: "தேர்ந்தெடுக்கப்பட்ட கோப்புறைகளை நிரந்தரமாக நீக்கவா?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules கோப்புறைகள் (${size}) வட்டிலிருந்து நிரந்தரமாக நீக்கப்படும். இந்த செயலை செயல்தவிர்க்க முடியாது.`,
-    permanentWarning: "எச்சரிக்கை: இந்த செயல் நிரந்தரமானது! கோப்புறைகள் மறுசுழற்சி தொட்டிக்கு அனுப்பப்படாது.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules கோப்புறைகள் (${size}) வட்டிலிருந்து நிரந்தரமாக நீக்கப்படும். இந்த செயலை செயல்தவிர்க்க முடியாது.`,
+    permanentWarning:
+      "எச்சரிக்கை: இந்த செயல் நிரந்தரமானது! கோப்புறைகள் மறுசுழற்சி தொட்டிக்கு அனுப்பப்படாது.",
     permanentConfirmButton: "நிரந்தரமாக நீக்கு",
     deletingInProgress: "நீக்கப்படுகிறது...",
-    recycleSuccess: (count: number) => `${count} கோப்புறைகள் மறுசுழற்சி தொட்டிக்கு வெற்றிகரமாக நகர்த்தப்பட்டன.`,
-    permanentSuccess: (count: number) => `${count} கோப்புறைகள் வெற்றிகரமாக நிரந்தரமாக நீக்கப்பட்டன.`,
+    recycleSuccess: (count: number) =>
+      `${count} கோப்புறைகள் மறுசுழற்சி தொட்டிக்கு வெற்றிகரமாக நகர்த்தப்பட்டன.`,
+    permanentSuccess: (count: number) =>
+      `${count} கோப்புறைகள் வெற்றிகரமாக நிரந்தரமாக நீக்கப்பட்டன.`,
     partialErrorTitle: "பகுதி நீக்கல் அறிக்கை",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} கோப்புறைகள் சுத்தம் செய்யப்பட்டன, ஆனால் ${errorCount} கோப்புறைகளை நீக்க முடியவில்லை.`,
-    lockedOrPermissionNote: "சில கோப்புகள் இயங்கும் செயல்முறைகளால் பூட்டப்பட்டிருக்கலாம் அல்லது நிர்வாகி அனுமதிகள் தேவைப்படலாம்.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} கோப்புறைகள் சுத்தம் செய்யப்பட்டன, ஆனால் ${errorCount} கோப்புறைகளை நீக்க முடியவில்லை.`,
+    lockedOrPermissionNote:
+      "சில கோப்புகள் இயங்கும் செயல்முறைகளால் பூட்டப்பட்டிருக்கலாம் அல்லது நிர்வாகி அனுமதிகள் தேவைப்படலாம்.",
   },
   settings: {
     title: "அமைப்புகள்",
@@ -155,7 +163,8 @@ export const ta: TranslationSchema = {
     version: "பதிப்பு",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "வெளியீட்டாளர்: Vellium • © 2026 Vellium. அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை.",
-    privacyNote: "அனைத்து ஸ்கேன்களும் நீக்குதல்களும் உங்கள் கணினியிலேயே 100% உள்ளூரில் நடைபெறுகின்றன. எந்த தரவும் வெளியே போகாது.",
+    privacyNote:
+      "அனைத்து ஸ்கேன்களும் நீக்குதல்களும் உங்கள் கணினியிலேயே 100% உள்ளூரில் நடைபெறுகின்றன. எந்த தரவும் வெளியே போகாது.",
     close: "மூடு",
   },
   errors: {

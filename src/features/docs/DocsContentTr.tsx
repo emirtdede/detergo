@@ -11,9 +11,13 @@ import {
   Info,
   AlertTriangle,
   RotateCcw,
+  Laptop,
+  Terminal,
+  Target,
 } from "lucide-react";
 import { NumberField } from "@/components/primitives/NumberField";
-import { mcpConfigs, webhookSampleJson } from "./docs-data";
+import { McpIdeKey, mcpConfigs, webhookSampleJson } from "./docs-data";
+import { McpIdeSelector } from "./McpIdeSelector";
 
 // Syntax highlighter function
 function highlightBash(code: string): React.ReactNode[] {
@@ -116,8 +120,8 @@ export interface DocsContentProps {
   setCliMinSize: (val: string) => void;
   cliWebhook: string;
   setCliWebhook: (val: string) => void;
-  activeIde: "cursor" | "windsurf" | "claude" | "antigravity";
-  setActiveIde: (ide: "cursor" | "windsurf" | "claude" | "antigravity") => void;
+  activeIde: McpIdeKey;
+  setActiveIde: (ide: McpIdeKey) => void;
   generatedCliCommand: string;
 }
 
@@ -155,7 +159,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
           <article className="docs-article">
             <div className="docs-badge-row">
               <span className="docs-category-pill">Genel Bakış</span>
-              <span className="docs-version-pill">v2.2.0</span>
+              <span className="docs-version-pill">v2.2.1</span>
             </div>
             <h1 className="docs-title">Dev Cleaner'a Hoş Geldiniz</h1>
             <p className="docs-lead">
@@ -174,9 +178,86 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
 
             <h2 className="docs-h2">4 Temel Çalışma Modu</h2>
             <p className="docs-p">
-              Dev Cleaner'ı ister masaüstü arayüzünden, ister terminal CLI üzerinden, ister Claude/Cursor gibi yapay zeka ajanları
-              aracılığıyla (MCP), isterseniz de n8n/CI pipeline'larında webhook entegrasyonuyla tam otonom kullanabilirsiniz.
+              Dev Cleaner, geliştirici alışkanlıklarınıza ve iş akışınıza tam uyum sağlayan 4 farklı çalışma paradigması sunar:
             </p>
+
+            <div className="docs-modes-grid">
+              <div className="docs-mode-card">
+                <div className="docs-mode-header">
+                  <span className="docs-mode-icon docs-mode-icon--blue">
+                    <Laptop size={16} />
+                  </span>
+                  <div className="docs-mode-title-wrap">
+                    <strong className="docs-mode-title">1. Masaüstü Grafik Arayüzü</strong>
+                    <span className="docs-mode-badge">Görsel GUI</span>
+                  </div>
+                </div>
+                <p className="docs-mode-desc">
+                  Tek tıkla disk taraması, kategorik filtreler, depolama dağılım grafikleri ve Geri Dönüşüm Kutusu güvencesiyle sezgisel temizlik.
+                </p>
+                <div className="docs-mode-target">
+                  <Target size={13} className="docs-mode-target-icon" />
+                  <span className="docs-mode-target-label">En Uygun:</span> Görsel kontrol ve manuel seçim isteyen geliştiriciler
+                </div>
+              </div>
+
+              <div className="docs-mode-card">
+                <div className="docs-mode-header">
+                  <span className="docs-mode-icon docs-mode-icon--green">
+                    <Terminal size={16} />
+                  </span>
+                  <div className="docs-mode-title-wrap">
+                    <strong className="docs-mode-title">2. Terminal Komut Satırı</strong>
+                    <span className="docs-mode-badge">CLI Engine</span>
+                  </div>
+                </div>
+                <p className="docs-mode-desc">
+                  PowerShell, CMD ve Bash üzerinden doğrudan <code>dev-cleaner</code> komutuyla yüksek hızlı tarama, <code>--dry-run</code> simülasyonu ve script otomasyonu.
+                </p>
+                <div className="docs-mode-target">
+                  <Target size={13} className="docs-mode-target-icon" />
+                  <span className="docs-mode-target-label">En Uygun:</span> Hız, klavye kısayolu ve terminalden ayrılmak istemeyenler
+                </div>
+              </div>
+
+              <div className="docs-mode-card">
+                <div className="docs-mode-header">
+                  <span className="docs-mode-icon docs-mode-icon--purple">
+                    <Bot size={16} />
+                  </span>
+                  <div className="docs-mode-title-wrap">
+                    <strong className="docs-mode-title">3. Yapay Zeka Ajan Protokolü</strong>
+                    <span className="docs-mode-badge">MCP Sunucusu</span>
+                  </div>
+                </div>
+                <p className="docs-mode-desc">
+                  Cursor, Windsurf, Claude Code ve Antigravity ile Model Context Protocol (MCP) üzerinden doğal dille temizlik ve disk analizi.
+                </p>
+                <div className="docs-mode-target">
+                  <Target size={13} className="docs-mode-target-icon" />
+                  <span className="docs-mode-target-label">En Uygun:</span> Claude &amp; Cursor ile pair programming yapan yapay zeka odaklı geliştiriciler
+                </div>
+              </div>
+
+              <div className="docs-mode-card">
+                <div className="docs-mode-header">
+                  <span className="docs-mode-icon docs-mode-icon--orange">
+                    <Webhook size={16} />
+                  </span>
+                  <div className="docs-mode-title-wrap">
+                    <strong className="docs-mode-title">4. Otonom Webhook &amp; CI/CD</strong>
+                    <span className="docs-mode-badge">Pipeline Entegrasyonu</span>
+                  </div>
+                </div>
+                <p className="docs-mode-desc">
+                  n8n, GitHub Actions veya kurumsal webhook endpoint'lerine tarama/temizlik tamamlandığında otomatik JSON telemetrisi gönderimi.
+                </p>
+                <div className="docs-mode-target">
+                  <Target size={13} className="docs-mode-target-icon" />
+                  <span className="docs-mode-target-label">En Uygun:</span> DevOps mühendisleri, sunucu yöneticileri ve n8n otomasyon kurucuları
+                </div>
+              </div>
+            </div>
 
             <div className="docs-code-card">
               <div className="docs-code-header">
@@ -429,6 +510,69 @@ dev-cleaner scan "D:\\projeler" --json`
               </pre>
             </div>
 
+            <div className="docs-table-wrapper">
+              <table className="docs-table">
+                <thead>
+                  <tr>
+                    <th>Parametre (Flag)</th>
+                    <th>Tür</th>
+                    <th>Varsayılan</th>
+                    <th>Açıklama</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>&lt;dizin&gt;</code></td>
+                    <td>string</td>
+                    <td><code>.</code> (aktif dizin)</td>
+                    <td>Taranacak kök klasör yolu (örn: <code>D:\projeler</code>).</td>
+                  </tr>
+                  <tr>
+                    <td><code>--scope &lt;kapsam&gt;</code></td>
+                    <td>projects | agents | caches | all</td>
+                    <td><code>projects</code></td>
+                    <td>Taranacak hedef grubu (proje bağımlılıkları, AI depoları, paket önbellekleri).</td>
+                  </tr>
+                  <tr>
+                    <td><code>--auto-clean</code></td>
+                    <td>boolean</td>
+                    <td><code>false</code></td>
+                    <td>Tarama bittiğinde belirlenen güvenlik filtrelerine uygun hedefleri otomatik siler.</td>
+                  </tr>
+                  <tr>
+                    <td><code>--dry-run</code></td>
+                    <td>boolean</td>
+                    <td><code>false</code></td>
+                    <td>Simülasyon modu; hiçbir dosyaya dokunmadan nelerin temizleneceğini simüle eder.</td>
+                  </tr>
+                  <tr>
+                    <td><code>--safety &lt;sınıflar&gt;</code></td>
+                    <td>safe,regenerate,review</td>
+                    <td><code>safe,regenerate</code></td>
+                    <td>Temizlenecek güvenlik sınıfları virgülle ayrılarak belirtilir.</td>
+                  </tr>
+                  <tr>
+                    <td><code>--min-size &lt;mb&gt;</code></td>
+                    <td>number</td>
+                    <td><code>0</code></td>
+                    <td>Yalnızca belirtilen Megabayt değerinden büyük olan hedefleri kapsama alır.</td>
+                  </tr>
+                  <tr>
+                    <td><code>--json</code></td>
+                    <td>boolean</td>
+                    <td><code>false</code></td>
+                    <td>İnsan okunabilir tablo yerine scriptler ve CI/CD için saf JSON çıktısı üretir.</td>
+                  </tr>
+                  <tr>
+                    <td><code>--webhook &lt;url&gt;</code></td>
+                    <td>string (URL)</td>
+                    <td><code>null</code></td>
+                    <td>İşlem tamamlandığında JSON özet yükünü POST edecek HTTP webhook adresi.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
             <h2 className="docs-h2">2. `dev-cleaner caches`</h2>
             <p className="docs-p">21 geliştirici aracının paket önbelleklerini listeler veya resmi komutla temizler.</p>
             <div className="docs-code-card">
@@ -637,7 +781,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
           <article className="docs-article">
             <div className="docs-badge-row">
               <span className="docs-category-pill">AI Protokolü</span>
-              <span className="docs-version-pill">MCP v2.2.0</span>
+              <span className="docs-version-pill">MCP v2.2.1</span>
             </div>
             <h1 className="docs-title">Model Context Protocol (MCP) Sunucusu</h1>
             <p className="docs-lead">
@@ -673,37 +817,11 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
               Kullandığınız geliştirme ortamını seçin ve tek tıkla yapılandırma dosyanıza ekleyin:
             </p>
 
-            {/* IDE Tabs */}
-            <div className="ide-tabs-bar">
-              <button
-                type="button"
-                className={`ide-tab-btn ${activeIde === "cursor" ? "active" : ""}`}
-                onClick={() => setActiveIde("cursor")}
-              >
-                Cursor
-              </button>
-              <button
-                type="button"
-                className={`ide-tab-btn ${activeIde === "windsurf" ? "active" : ""}`}
-                onClick={() => setActiveIde("windsurf")}
-              >
-                Windsurf
-              </button>
-              <button
-                type="button"
-                className={`ide-tab-btn ${activeIde === "claude" ? "active" : ""}`}
-                onClick={() => setActiveIde("claude")}
-              >
-                Claude Desktop
-              </button>
-              <button
-                type="button"
-                className={`ide-tab-btn ${activeIde === "antigravity" ? "active" : ""}`}
-                onClick={() => setActiveIde("antigravity")}
-              >
-                Antigravity
-              </button>
-            </div>
+            {/* Single Dropdown Button */}
+            <McpIdeSelector
+              activeIde={activeIde}
+              onSelect={setActiveIde}
+            />
 
             <div className="docs-code-card">
               <div className="docs-code-header">

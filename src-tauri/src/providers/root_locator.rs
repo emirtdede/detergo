@@ -259,8 +259,8 @@ pub fn root_exists(root: &AgentRoot) -> bool {
 
 /// True when any file under `path` changed within the given window.
 pub fn recently_modified(path: &Path, window_secs: u64) -> bool {
-    let cutoff = std::time::SystemTime::now()
-        .checked_sub(std::time::Duration::from_secs(window_secs));
+    let cutoff =
+        std::time::SystemTime::now().checked_sub(std::time::Duration::from_secs(window_secs));
     let Some(cutoff) = cutoff else {
         return false;
     };

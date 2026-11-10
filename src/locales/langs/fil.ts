@@ -45,7 +45,8 @@ export const fil: TranslationSchema = {
   },
   scan: {
     idleTitle: "Bawiin ang Iyong Espasyo sa Disk",
-    idleSubtitle: "Ligtas na hanapin at linisin ang mga folder ng node_modules sa lahat ng iyong proyekto.",
+    idleSubtitle:
+      "Ligtas na hanapin at linisin ang mga folder ng node_modules sa lahat ng iyong proyekto.",
     selectFolderFirst: "Pumili ng folder sa itaas upang simulan ang pag-scan.",
     discovering: "Naghahanap ng mga proyekto...",
     measuring: "Kinakalkula ang laki...",
@@ -102,18 +103,25 @@ export const fil: TranslationSchema = {
     cancel: "Kanselahin",
     confirm: "Kumpirmahin",
     recycleTitle: "Ilipat ang mga Napiling Folder sa Recycle Bin?",
-    recycleDescription: (count: number, size: string) => `${count} mga folder ng node_modules (${size}) ang ililipat sa Recycle Bin. Maaari mong ibalik ang mga ito anumang oras.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} mga folder ng node_modules (${size}) ang ililipat sa Recycle Bin. Maaari mong ibalik ang mga ito anumang oras.`,
     recycleConfirmButton: "Ilipat sa Recycle Bin",
     permanentTitle: "Permanenteng Burahin ang mga Napiling Folder?",
-    permanentDescription: (count: number, size: string) => `${count} mga folder ng node_modules (${size}) ang permanenteng buburahin sa disk. Hindi na ito maibabalik.`,
-    permanentWarning: "BABALA: Ang aksyong ito ay permanente! Hindi ipadadala ang mga folder sa Recycle Bin.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} mga folder ng node_modules (${size}) ang permanenteng buburahin sa disk. Hindi na ito maibabalik.`,
+    permanentWarning:
+      "BABALA: Ang aksyong ito ay permanente! Hindi ipadadala ang mga folder sa Recycle Bin.",
     permanentConfirmButton: "Permanenteng Burahin",
     deletingInProgress: "Kasalukuyang nagbubura...",
-    recycleSuccess: (count: number) => `${count} mga folder ang matagumpay na nailipat sa Recycle Bin.`,
-    permanentSuccess: (count: number) => `${count} mga folder ang matagumpay na permanenteng nabura.`,
+    recycleSuccess: (count: number) =>
+      `${count} mga folder ang matagumpay na nailipat sa Recycle Bin.`,
+    permanentSuccess: (count: number) =>
+      `${count} mga folder ang matagumpay na permanenteng nabura.`,
     partialErrorTitle: "Ulat ng Bahagyang Pagbura",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} mga folder ang nalinis, ngunit ${errorCount} mga folder ang hindi nabura.`,
-    lockedOrPermissionNote: "Maaaring naka-lock ang ilang file ng mga tumatakbong proseso o nangangailangan ng pahintulot ng admin.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} mga folder ang nalinis, ngunit ${errorCount} mga folder ang hindi nabura.`,
+    lockedOrPermissionNote:
+      "Maaaring naka-lock ang ilang file ng mga tumatakbong proseso o nangangailangan ng pahintulot ng admin.",
   },
   settings: {
     title: "Mga Setting",
@@ -155,7 +163,8 @@ export const fil: TranslationSchema = {
     version: "Bersyon",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Publisher: Vellium • © 2026 Vellium. Nakalaan ang lahat ng karapatan.",
-    privacyNote: "Ang lahat ng pag-scan at pagbura ay 100% lokal na nagaganap sa iyong computer. Walang telemetry.",
+    privacyNote:
+      "Ang lahat ng pag-scan at pagbura ay 100% lokal na nagaganap sa iyong computer. Walang telemetry.",
     close: "Isara",
   },
   errors: {

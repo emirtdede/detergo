@@ -5,10 +5,10 @@ use std::process::{Command, Output, Stdio};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
+use crate::catalog::TargetKind;
 use crate::error::AppError;
 use crate::scanner::cancellation::CancellationToken;
 use crate::scanner::measurement::measure_path;
-use crate::catalog::TargetKind;
 
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(600);
 const VERSION_TIMEOUT: Duration = Duration::from_secs(10);
@@ -53,9 +53,15 @@ pub struct CacheProviderInfo {
 
 /// Progress events for the asynchronous cache measurement pass.
 #[derive(Debug, Clone, Serialize)]
-#[serde(tag = "type", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[serde(
+    tag = "type",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 pub enum CacheMeasureEvent {
-    Started { provider_count: usize },
+    Started {
+        provider_count: usize,
+    },
     PathMeasured {
         provider_id: String,
         path: String,
@@ -169,9 +175,9 @@ const ACTIONS: &[ProviderDef] = &[
             exe: "npm",
             args: &["cache", "clean", "--force"],
             label: "npm cache clean --force",
-            description: "npm önbelleğini resmî komutla temizler.",
+            description: "Cleans npm cache via the official command.",
             requires_network: false,
-            impact: "Sonraki kurulumlar paketleri yeniden indirebilir.",
+            impact: "Subsequent installs may re-download packages.",
         }],
     },
     ProviderDef {
@@ -186,9 +192,9 @@ const ACTIONS: &[ProviderDef] = &[
             exe: "pnpm",
             args: &["store", "prune"],
             label: "pnpm store prune",
-            description: "Kullanılmayan pnpm paketlerini resmî komutla kaldırır.",
+            description: "Prunes unused pnpm packages via the official command.",
             requires_network: false,
-            impact: "Sonraki kurulumlar paketleri yeniden indirebilir.",
+            impact: "Subsequent installs may re-download packages.",
         }],
     },
     ProviderDef {
@@ -203,9 +209,9 @@ const ACTIONS: &[ProviderDef] = &[
             exe: "yarn",
             args: &["cache", "clean"],
             label: "yarn cache clean",
-            description: "Yarn önbelleğini resmî komutla temizler.",
+            description: "Cleans Yarn cache via the official command.",
             requires_network: false,
-            impact: "Sonraki kurulumlar paketleri yeniden indirebilir.",
+            impact: "Subsequent installs may re-download packages.",
         }],
     },
     ProviderDef {
@@ -220,9 +226,9 @@ const ACTIONS: &[ProviderDef] = &[
             exe: "bun",
             args: &["pm", "cache", "rm"],
             label: "bun pm cache rm",
-            description: "Bun paket önbelleğini resmi komutla temizler.",
+            description: "Cleans Bun package cache via the official command.",
             requires_network: false,
-            impact: "Sonraki kurulumlar paketleri yeniden indirebilir.",
+            impact: "Subsequent installs may re-download packages.",
         }],
     },
     ProviderDef {
@@ -237,9 +243,9 @@ const ACTIONS: &[ProviderDef] = &[
             exe: "pip",
             args: &["cache", "purge"],
             label: "pip cache purge",
-            description: "pip tekerlek önbelleğini resmî komutla temizler.",
+            description: "Purges pip wheel cache via the official command.",
             requires_network: false,
-            impact: "Sonraki kurulumlar paketleri yeniden indirebilir.",
+            impact: "Subsequent installs may re-download packages.",
         }],
     },
     ProviderDef {
@@ -254,9 +260,9 @@ const ACTIONS: &[ProviderDef] = &[
             exe: "uv",
             args: &["cache", "clean"],
             label: "uv cache clean",
-            description: "uv paket ve wheel önbelleğini resmî komutla temizler.",
+            description: "Cleans uv package and wheel cache via the official command.",
             requires_network: false,
-            impact: "Sonraki sanal ortam kurulumlarında paketler ihtiyaç halinde yeniden indirilir.",
+            impact: "Subsequent virtual environment builds will re-download packages as needed.",
         }],
     },
     ProviderDef {
@@ -266,7 +272,7 @@ const ACTIONS: &[ProviderDef] = &[
         version_exe: "cargo",
         read_only: false,
         note: Some(
-            "İndirilen .crate arşivleri ve git depoları önbelleğidir. Gerektiğinde derleme sırasında yeniden indirilir.",
+            "Downloaded .crate archives and git repositories cache. Re-downloaded during compilation as needed.",
         ),
         actions: &[],
     },
@@ -277,7 +283,7 @@ const ACTIONS: &[ProviderDef] = &[
         version_exe: "gradle",
         read_only: false,
         note: Some(
-            "Gradle bağımlılık ve wrapper önbelleğidir. Android/Java derlemelerinde otomatik yeniden indirilir.",
+            "Gradle dependency and wrapper cache. Automatically re-downloaded during Android/Java builds.",
         ),
         actions: &[],
     },
@@ -288,7 +294,7 @@ const ACTIONS: &[ProviderDef] = &[
         version_exe: "mvn",
         read_only: false,
         note: Some(
-            "Global .m2 yerel depo kütüphane önbelleğidir. Projeler build edildiğinde eksikler yeniden çekilir.",
+            "Global .m2 local repository library cache. Re-fetched when projects build.",
         ),
         actions: &[],
     },
@@ -304,9 +310,9 @@ const ACTIONS: &[ProviderDef] = &[
             exe: "composer",
             args: &["clear-cache"],
             label: "composer clear-cache",
-            description: "Composer indirme ve paket metaveri önbelleğini resmî komutla temizler.",
+            description: "Cleans Composer download and metadata cache via the official command.",
             requires_network: false,
-            impact: "Sonraki bağımlılık kurulumlarında paketler yeniden indirebilir.",
+            impact: "Subsequent dependency installs may re-download packages.",
         }],
     },
     ProviderDef {
@@ -316,16 +322,16 @@ const ACTIONS: &[ProviderDef] = &[
         version_exe: "conda",
         read_only: false,
         note: Some(
-            "Paket tarball ve indeks önbelleği temizlenir; mevcut sanal ortamlar korunur.",
+            "Package tarballs and index cache are cleaned; existing environments are preserved.",
         ),
         actions: &[ActionDef {
             id: "conda.clean.all",
             exe: "conda",
             args: &["clean", "--all", "-y"],
             label: "conda clean --all -y",
-            description: "Kullanılmayan Conda paket tarball'larını ve geçici önbellekleri temizler.",
+            description: "Cleans unused Conda package tarballs and temporary caches.",
             requires_network: false,
-            impact: "Yalnızca paket önbelleği temizlenir; kurulu ortamlar etkilenmez.",
+            impact: "Only package cache is cleaned; installed environments are unaffected.",
         }],
     },
     ProviderDef {
@@ -335,16 +341,16 @@ const ACTIONS: &[ProviderDef] = &[
         version_exe: "playwright",
         read_only: false,
         note: Some(
-            "Test tarayıcıları (Chromium, Firefox, WebKit) temizlenir; npx playwright install ile yeniden yüklenir.",
+            "Test browsers (Chromium, Firefox, WebKit) are removed; reinstall via npx playwright install.",
         ),
         actions: &[ActionDef {
             id: "playwright.uninstall.all",
             exe: "npx",
             args: &["playwright", "uninstall", "--all"],
             label: "npx playwright uninstall --all",
-            description: "İndirilmiş Playwright test tarayıcılarını resmî komutla temizler.",
+            description: "Removes downloaded Playwright test browsers via the official command.",
             requires_network: false,
-            impact: "Tarayıcı ikilileri kaldırılır; testler çalıştırıldığında yeniden indirilir.",
+            impact: "Browser binaries are removed; re-downloaded when tests run.",
         }],
     },
     ProviderDef {
@@ -354,16 +360,16 @@ const ACTIONS: &[ProviderDef] = &[
         version_exe: "cypress",
         read_only: false,
         note: Some(
-            "Önbelleğe alınmış Cypress çalışma sürümleri temizlenir; test çalıştırıldığında tekrar indirilir.",
+            "Cached Cypress runtime versions are cleaned; re-downloaded when tests run.",
         ),
         actions: &[ActionDef {
             id: "cypress.cache.clear",
             exe: "npx",
             args: &["cypress", "cache", "clear"],
             label: "npx cypress cache clear",
-            description: "İndirilmiş Cypress çalışma zamanı sürümlerini resmî komutla temizler.",
+            description: "Clears downloaded Cypress runtime versions via the official command.",
             requires_network: false,
-            impact: "Cypress ikilileri silinir; sonraki test çalıştırmasında yeniden indirilir.",
+            impact: "Cypress binaries are deleted; re-downloaded during subsequent test runs.",
         }],
     },
     ProviderDef {
@@ -373,7 +379,7 @@ const ACTIONS: &[ProviderDef] = &[
         version_exe: "vcpkg",
         read_only: false,
         note: Some(
-            "vcpkg ikili paket arşivleri önbelleğidir. Paketler yeniden derlendiğinde arşivler tekrar oluşur.",
+            "vcpkg binary package archives cache. Recreated when packages are recompiled.",
         ),
         actions: &[],
     },
@@ -384,7 +390,7 @@ const ACTIONS: &[ProviderDef] = &[
         version_exe: "huggingface-cli",
         read_only: false,
         note: Some(
-            "İndirilen yerel yapay zeka model ağırlıkları ve tokenizer önbelleğidir. Kod çalıştırıldığında model tekrar çekilir.",
+            "Downloaded local AI model weights and tokenizer cache. Re-fetched when model code runs.",
         ),
         actions: &[],
     },
@@ -394,15 +400,15 @@ const ACTIONS: &[ProviderDef] = &[
         cache_paths: NUGET_CACHE,
         version_exe: "dotnet",
         read_only: false,
-        note: Some("Global paket klasörü temizlenirse projeler yeniden restore edilir."),
+        note: Some("If global packages folder is cleared, projects will restore packages on next build."),
         actions: &[ActionDef {
             id: "dotnet.nuget.clear",
             exe: "dotnet",
             args: &["nuget", "locals", "all", "--clear"],
             label: "dotnet nuget locals all --clear",
-            description: "NuGet http-cache ve global paket önbelleğini resmî komutla temizler.",
+            description: "Clears NuGet http-cache and global packages cache via the official command.",
             requires_network: true,
-            impact: "Sonraki derlemeler paketleri yeniden indirebilir.",
+            impact: "Subsequent builds may re-download packages.",
         }],
     },
     ProviderDef {
@@ -417,9 +423,9 @@ const ACTIONS: &[ProviderDef] = &[
             exe: "go",
             args: &["clean", "-modcache"],
             label: "go clean -modcache",
-            description: "Go modül önbelleğini resmî komutla temizler.",
+            description: "Cleans Go module cache via the official command.",
             requires_network: true,
-            impact: "Sonraki derlemeler modülleri yeniden indirebilir.",
+            impact: "Subsequent builds may re-download modules.",
         }],
     },
     ProviderDef {
@@ -432,7 +438,7 @@ const ACTIONS: &[ProviderDef] = &[
         version_exe: "docker",
         read_only: true,
         note: Some(
-            "Docker imaj/volume verisi Dev Cleaner tarafından silinmez. Yönetim için Docker Desktop kullanın.",
+            "Docker image and volume data is not deleted by Dev Cleaner. Use Docker Desktop for management.",
         ),
         actions: &[],
     },
@@ -443,7 +449,7 @@ const ACTIONS: &[ProviderDef] = &[
         version_exe: "wsl",
         read_only: true,
         note: Some(
-            "WSL sanal disk (VHDX) boyutu gerçek boş alan değildir; Dev Cleaner bu dosyayı silmez veya küçültmez.",
+            "WSL virtual disk (VHDX) size is not reclaimable raw space; Dev Cleaner does not delete or compact this file.",
         ),
         actions: &[],
     },
@@ -459,9 +465,9 @@ const ACTIONS: &[ProviderDef] = &[
             exe: "dart",
             args: &["pub", "cache", "clean", "--force"],
             label: "dart pub cache clean",
-            description: "Dart ve Flutter paket önbelleğini resmî komutla temizler.",
+            description: "Cleans Dart and Flutter package cache via the official command.",
             requires_network: false,
-            impact: "Sonraki build işlemlerinde paketler yeniden indirilebilir.",
+            impact: "Subsequent build steps may re-download packages.",
         }],
     },
     ProviderDef {
@@ -471,7 +477,7 @@ const ACTIONS: &[ProviderDef] = &[
         version_exe: "electron",
         read_only: false,
         note: Some(
-            "İndirilmiş Electron ikili dosyaları ve çalışma zamanı önbelleğidir. Proje derlendiğinde yeniden çekilir.",
+            "Downloaded Electron binaries and runtime cache. Re-fetched when projects build.",
         ),
         actions: &[],
     },
@@ -509,27 +515,18 @@ pub fn find_executable(name: &str) -> Option<PathBuf> {
 /// direct child, which leaves the real tool running when the command was
 /// launched through `cmd.exe`.
 fn terminate_process_tree(pid: u32) {
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt;
-        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
-        let mut cmd = Command::new("taskkill");
-        cmd.args(["/PID", &pid.to_string(), "/T", "/F"])
-            .creation_flags(CREATE_NO_WINDOW)
-            .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null());
-        let _ = cmd.status();
-    }
-    #[cfg(not(windows))]
-    {
-        let _ = Command::new("kill")
-            .args(["-TERM", &format!("-{}", pid)])
-            .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .status();
-    }
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+    // Windows-only product: there is no other platform to support. The previous
+    // POSIX branch sent `kill -TERM -pid`, which is wrong for this target and
+    // would never be compiled anyway.
+    let mut cmd = Command::new("taskkill");
+    cmd.args(["/PID", &pid.to_string(), "/T", "/F"])
+        .creation_flags(CREATE_NO_WINDOW)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+    let _ = cmd.status();
 }
 
 /// Runs a command with a hard timeout. Output is collected by
@@ -549,7 +546,7 @@ fn run_command_with_timeout(mut cmd: Command, timeout: Duration) -> Result<Outpu
 
     let child = cmd
         .spawn()
-        .map_err(|e| AppError::Unknown(format!("Komut başlatılamadı: {}", e)))?;
+        .map_err(|e| AppError::Unknown(format!("Failed to spawn command: {}", e)))?;
     let pid = child.id();
     let (tx, rx) = std::sync::mpsc::channel();
     std::thread::spawn(move || {
@@ -559,7 +556,7 @@ fn run_command_with_timeout(mut cmd: Command, timeout: Duration) -> Result<Outpu
     match rx.recv_timeout(timeout) {
         Ok(Ok(output)) => Ok(output),
         Ok(Err(e)) => Err(AppError::Unknown(format!(
-            "Komut çıktısı okunamadı: {}",
+            "Failed to read command output: {}",
             e
         ))),
         Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
@@ -568,12 +565,12 @@ fn run_command_with_timeout(mut cmd: Command, timeout: Duration) -> Result<Outpu
             // block the caller indefinitely if a grandchild escaped.
             let _ = rx.recv_timeout(Duration::from_secs(10));
             Err(AppError::Unknown(format!(
-                "Araç komutu {} saniye içinde tamamlanmadı; süreç ağacı durduruldu.",
+                "Tool command timed out after {} seconds; process tree was terminated.",
                 timeout.as_secs()
             )))
         }
         Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => Err(AppError::Unknown(
-            "Komut izleyicisi beklenmedik biçimde kapandı.".to_string(),
+            "Command monitor channel closed unexpectedly.".to_string(),
         )),
     }
 }
@@ -631,17 +628,16 @@ fn extract_version(line: &str) -> Option<String> {
         // Strip a product name glued to the number, e.g. "go1.27.0".
         let token = match token.find(|c: char| c.is_ascii_digit()) {
             Some(0) => token,
-            Some(index) if token[..index].chars().all(|c| c.is_ascii_alphabetic()) => &token[index..],
+            Some(index) if token[..index].chars().all(|c| c.is_ascii_alphabetic()) => {
+                &token[index..]
+            }
             _ => continue,
         };
         let token = token.trim_start_matches(['v', 'V']).trim_matches('.');
         if token.is_empty() || !token.contains('.') {
             continue;
         }
-        if token
-            .chars()
-            .all(|c| c.is_ascii_digit() || c == '.')
-        {
+        if token.chars().all(|c| c.is_ascii_digit() || c == '.') {
             return Some(token.to_string());
         }
     }
@@ -667,7 +663,14 @@ fn tool_version(name: &str) -> Option<String> {
     } else {
         // Unrecognised banner: keep a short, single-line fallback rather than
         // letting an arbitrary long line into the chip.
-        Some(cleaned.chars().take(24).collect::<String>().trim_end().to_string())
+        Some(
+            cleaned
+                .chars()
+                .take(24)
+                .collect::<String>()
+                .trim_end()
+                .to_string(),
+        )
     }
 }
 
@@ -684,7 +687,7 @@ fn action_infos(def: &ProviderDef) -> Vec<OfficialActionInfo> {
                 args: a.args.iter().map(|s| s.to_string()).collect(),
                 available: exe.is_some(),
                 unavailable_reason: if exe.is_none() {
-                    Some(format!("'{}' sistem PATH üzerinde bulunamadı.", a.exe))
+                    Some(format!("'{}' was not found on the system PATH.", a.exe))
                 } else {
                     None
                 },
@@ -734,7 +737,11 @@ pub fn list_cache_providers() -> Vec<CacheProviderInfo> {
         .collect()
 }
 
-fn measure_dirs(paths: &[CachePathInfo], token: &CancellationToken, files_only: bool) -> Vec<CachePathInfo> {
+fn measure_dirs(
+    paths: &[CachePathInfo],
+    token: &CancellationToken,
+    files_only: bool,
+) -> Vec<CachePathInfo> {
     paths
         .iter()
         .map(|info| {
@@ -758,11 +765,7 @@ fn measure_dirs(paths: &[CachePathInfo], token: &CancellationToken, files_only: 
 /// metadata instead of being walked, and read-only providers never walk
 /// directories: those trees belong to another tool and walking them took
 /// minutes on real machines without producing an actionable number.
-fn measure_cache_path(
-    def: &ProviderDef,
-    path: &Path,
-    token: &CancellationToken,
-) -> Option<u64> {
+fn measure_cache_path(def: &ProviderDef, path: &Path, token: &CancellationToken) -> Option<u64> {
     if !path.exists() {
         return None;
     }
@@ -839,9 +842,17 @@ impl OfficialActionRegistry {
         Self::default()
     }
 
+    /// A poisoned lock still guards a consistent map (the critical section is
+    /// just an insert/remove), so recover instead of panicking the app.
+    fn lock_pending(&self) -> std::sync::MutexGuard<'_, HashMap<String, PendingAction>> {
+        self.pending
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
     fn issue(&self, provider_id: &str, action_id: &str, before_bytes: u64) -> String {
         let token = uuid::Uuid::new_v4().simple().to_string();
-        let mut pending = self.pending.lock().unwrap();
+        let mut pending = self.lock_pending();
         pending.retain(|_, p| p.created.elapsed() < Duration::from_secs(300));
         pending.insert(
             token.clone(),
@@ -856,13 +867,13 @@ impl OfficialActionRegistry {
     }
 
     fn take(&self, token: &str) -> Result<(String, String, u64), AppError> {
-        let mut pending = self.pending.lock().unwrap();
+        let mut pending = self.lock_pending();
         let action = pending
             .remove(token)
-            .ok_or_else(|| AppError::PlanInvalid("Araç işlem belirteci geçersiz.".to_string()))?;
+            .ok_or_else(|| AppError::PlanInvalid("Action preview token is invalid.".to_string()))?;
         if action.created.elapsed() >= Duration::from_secs(300) {
             return Err(AppError::PlanExpired(
-                "Araç işlem belirtecinin süresi doldu.".to_string(),
+                "Action preview token has expired.".to_string(),
             ));
         }
         Ok((action.provider_id, action.action_id, action.before_bytes))
@@ -879,20 +890,19 @@ pub fn preview_action(
     action_id: &str,
 ) -> Result<OfficialActionPreview, AppError> {
     let (_, def) = provider_def(provider_id)
-        .ok_or_else(|| AppError::InvalidPath(format!("Bilinmeyen sağlayıcı: {}", provider_id)))?;
+        .ok_or_else(|| AppError::InvalidPath(format!("Unknown provider: {}", provider_id)))?;
     if def.read_only {
         return Err(AppError::Blocked(
-            "Bu sağlayıcı salt okunur; otomatik temizleme desteklenmiyor.".to_string(),
+            "This provider is read-only; automated cleanup is not supported.".to_string(),
         ));
     }
     let action = def
         .actions
         .iter()
         .find(|a| a.id == action_id)
-        .ok_or_else(|| AppError::InvalidPath(format!("Bilinmeyen işlem: {}", action_id)))?;
-    let exe = find_executable(action.exe).ok_or_else(|| {
-        AppError::PlatformUnsupported(format!("'{}' bulunamadı.", action.exe))
-    })?;
+        .ok_or_else(|| AppError::InvalidPath(format!("Unknown action: {}", action_id)))?;
+    let exe = find_executable(action.exe)
+        .ok_or_else(|| AppError::PlatformUnsupported(format!("'{}' not found.", action.exe)))?;
 
     let token_cancel = CancellationToken::new();
     let paths: Vec<CachePathInfo> = def
@@ -919,7 +929,7 @@ pub fn preview_action(
         args: action.args.iter().map(|s| s.to_string()).collect(),
         before_bytes: before,
         warning: format!(
-            "{} — Bu işlem yalnızca {} önbelleğini etkiler. {}",
+            "{} — This action only affects {} cache. {}",
             action.label, def.name, action.impact
         ),
         expires_ms: crate::cleanup::plan::now_ms() + 300_000,
@@ -932,14 +942,14 @@ pub fn execute_action(
 ) -> Result<OfficialActionResult, AppError> {
     let (provider_id, action_id, before) = registry.take(token)?;
     let (_, def) = provider_def(&provider_id)
-        .ok_or_else(|| AppError::InvalidPath("Bilinmeyen sağlayıcı.".to_string()))?;
+        .ok_or_else(|| AppError::InvalidPath("Unknown provider.".to_string()))?;
     let action = def
         .actions
         .iter()
         .find(|a| a.id == action_id)
-        .ok_or_else(|| AppError::InvalidPath("Bilinmeyen işlem.".to_string()))?;
+        .ok_or_else(|| AppError::InvalidPath("Unknown action.".to_string()))?;
     let exe = find_executable(action.exe)
-        .ok_or_else(|| AppError::PlatformUnsupported(format!("'{}' bulunamadı.", action.exe)))?;
+        .ok_or_else(|| AppError::PlatformUnsupported(format!("'{}' not found.", action.exe)))?;
 
     let started = Instant::now();
     let args: Vec<String> = action.args.iter().map(|s| s.to_string()).collect();
@@ -979,7 +989,7 @@ pub fn execute_action(
         stdout_tail,
         stderr_tail,
         note: Some(format!(
-            "{} komutu için çıkış kodu: {:?}",
+            "Exit code for {}: {:?}",
             action.label,
             status.code()
         )),
@@ -1039,7 +1049,10 @@ mod tests {
         );
         assert_eq!(extract_version("npm 11.9.1").as_deref(), Some("11.9.1"));
         assert_eq!(extract_version("10.0.403").as_deref(), Some("10.0.403"));
-        assert_eq!(extract_version("WSL sürümü: 2.7.14.0").as_deref(), Some("2.7.14.0"));
+        assert_eq!(
+            extract_version("WSL sürümü: 2.7.14.0").as_deref(),
+            Some("2.7.14.0")
+        );
         assert_eq!(extract_version("Yarn 1.22.22").as_deref(), Some("1.22.22"));
     }
 
@@ -1054,10 +1067,8 @@ mod tests {
     fn cache_measure_events_serialize_as_camel_case() {
         // The frontend switches on these exact keys; a snake_case regression
         // would silently freeze the progress display.
-        let started = serde_json::to_value(CacheMeasureEvent::Started {
-            provider_count: 5,
-        })
-        .unwrap();
+        let started =
+            serde_json::to_value(CacheMeasureEvent::Started { provider_count: 5 }).unwrap();
         assert_eq!(started["type"], "started");
         assert_eq!(started["providerCount"], 5);
 

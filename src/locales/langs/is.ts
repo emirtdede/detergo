@@ -102,18 +102,22 @@ export const is: TranslationSchema = {
     cancel: "Hætta við",
     confirm: "Staðfesta",
     recycleTitle: "Færa Valdar Möppur í Ruslið?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules möppur (${size}) verða færðar í Ruslið. Þú getur endurheimt þær hvenær sem er.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules möppur (${size}) verða færðar í Ruslið. Þú getur endurheimt þær hvenær sem er.`,
     recycleConfirmButton: "Færa í Ruslið",
     permanentTitle: "Eyða Völdum Möppum Varanlega?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules möppum (${size}) verður eytt varanlega af diski. Þetta er ekki hægt að afturkalla.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules möppum (${size}) verður eytt varanlega af diski. Þetta er ekki hægt að afturkalla.`,
     permanentWarning: "AÐVÖRUN: Þessi aðgerð er varanleg! Möppurnar verða ekki sendar í Ruslið.",
     permanentConfirmButton: "Eyða Varanlega",
     deletingInProgress: "Eyðing í gangi...",
     recycleSuccess: (count: number) => `${count} möppur færðar í Ruslið með góðum árangri.`,
     permanentSuccess: (count: number) => `${count} möppum eytt varanlega.`,
     partialErrorTitle: "Skýrsla um Hlutaeyðingu",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} möppur hreinsaðar, en ekki tókst að eyða ${errorCount} möppum.`,
-    lockedOrPermissionNote: "Sumar skrár kunna að vera læstar af forritum í gangi eða krefjast kerfisstjóraheimilda.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} möppur hreinsaðar, en ekki tókst að eyða ${errorCount} möppum.`,
+    lockedOrPermissionNote:
+      "Sumar skrár kunna að vera læstar af forritum í gangi eða krefjast kerfisstjóraheimilda.",
   },
   settings: {
     title: "Stillingar",
@@ -155,7 +159,8 @@ export const is: TranslationSchema = {
     version: "Útgáfa",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Útgefandi: Vellium • © 2026 Vellium. Allur réttur áskilinn.",
-    privacyNote: "Allar skannanir og eyðingar fara fram 100% staðbundið á tölvunni þinni. Engin fjarmæling.",
+    privacyNote:
+      "Allar skannanir og eyðingar fara fram 100% staðbundið á tölvunni þinni. Engin fjarmæling.",
     close: "Loka",
   },
   errors: {

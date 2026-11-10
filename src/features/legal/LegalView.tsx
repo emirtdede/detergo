@@ -13,8 +13,11 @@ import {
   type LicenseGroup,
 } from "./license-data";
 import {
+  LEGAL_TRANSLATION_NOTICE,
   getLegalDocMeta,
   getLegalDocument,
+  isLegalTranslation,
+  localizeLegalString,
 } from "./legal-content";
 import "./legal.css";
 
@@ -44,25 +47,23 @@ const LicenseGroupBlock: React.FC<{ group: LicenseGroup }> = ({ group }) => (
 );
 
 const ThirdPartyDetail: React.FC = () => {
-  const language = usePreferencesStore((s) => s.language);
   const ui = useUIText();
   const t = ui.legal;
-  const tr = language === "tr";
 
   return (
     <>
       <div className="legal-stats">
         <div className="legal-stat">
           <strong>{RUST_COMPONENT_COUNT}</strong>
-          <span>{tr ? "Rust crate" : "Rust crates"}</span>
+          <span>{t.statRustCrates}</span>
         </div>
         <div className="legal-stat">
           <strong>{NPM_COMPONENT_COUNT}</strong>
-          <span>{tr ? "JavaScript paketi" : "JavaScript packages"}</span>
+          <span>{t.statJsPackages}</span>
         </div>
         <div className="legal-stat">
           <strong>{DIRECT_DEPENDENCIES.length}</strong>
-          <span>{tr ? "Doğrudan bağımlılık" : "Direct dependencies"}</span>
+          <span>{t.statDirectDeps}</span>
         </div>
       </div>
 
@@ -87,7 +88,9 @@ const ThirdPartyDetail: React.FC = () => {
                       {dependency.ecosystem === "rust" ? "Rust" : "JS"}
                     </span>
                   </td>
-                  <td><code>{dependency.name}</code></td>
+                  <td>
+                    <code>{dependency.name}</code>
+                  </td>
                   <td className="legal-mono">{dependency.version}</td>
                   <td>{dependency.license}</td>
                 </tr>
@@ -124,7 +127,6 @@ export const LegalView: React.FC = () => {
   const setLegalDoc = useUiStore((s) => s.setLegalDoc);
   const legalDocument = getLegalDocument(language, legalDoc);
   const docs = getLegalDocMeta(language);
-  const tr = language === "tr";
 
   const openUrl = (url: string) => {
     void scannerApi.openUrl(url);
@@ -133,7 +135,8 @@ export const LegalView: React.FC = () => {
   const moveDoc = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
     let next = index;
     if (event.key === "ArrowRight" || event.key === "ArrowDown") next = (index + 1) % docs.length;
-    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = (index - 1 + docs.length) % docs.length;
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp")
+      next = (index - 1 + docs.length) % docs.length;
     else if (event.key === "Home") next = 0;
     else if (event.key === "End") next = docs.length - 1;
     else return;
@@ -181,10 +184,15 @@ export const LegalView: React.FC = () => {
           <div className="legal-doc-header-copy">
             <h2 className="legal-doc-title">{legalDocument.title}</h2>
             <p className="legal-doc-summary">{legalDocument.summary}</p>
+            {isLegalTranslation(language) && (
+              <p className="legal-doc-summary legal-doc-translation-notice">
+                {localizeLegalString(language, LEGAL_TRANSLATION_NOTICE)}
+              </p>
+            )}
           </div>
           <span className="legal-doc-revision">
             <CalendarClock size={12} />
-            {tr ? `Son güncelleme: ${legalDocument.updated}` : `Last updated: ${legalDocument.updated}`}
+            {ui.legal.lastUpdated(legalDocument.updated)}
           </span>
         </header>
 
@@ -193,11 +201,15 @@ export const LegalView: React.FC = () => {
             <li key={clause.heading} className="legal-clause">
               <h3 className="legal-clause-heading">{clause.heading}</h3>
               {clause.paragraphs?.map((paragraph) => (
-                <p key={paragraph} className="legal-paragraph">{paragraph}</p>
+                <p key={paragraph} className="legal-paragraph">
+                  {paragraph}
+                </p>
               ))}
               {clause.bullets && (
                 <ul className="legal-bullets">
-                  {clause.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
+                  {clause.bullets.map((bullet) => (
+                    <li key={bullet}>{bullet}</li>
+                  ))}
                 </ul>
               )}
             </li>

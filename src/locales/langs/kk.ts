@@ -102,18 +102,22 @@ export const kk: TranslationSchema = {
     cancel: "Бас тарту",
     confirm: "Растау",
     recycleTitle: "Таңдалған қалталарды себетке жылжыту керек пе?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules қалтасы (${size}) Себетке жылжытылады. Оларды кез келген уақытта қалпына келтіре аласыз.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules қалтасы (${size}) Себетке жылжытылады. Оларды кез келген уақытта қалпына келтіре аласыз.`,
     recycleConfirmButton: "Себетке жылжыту",
     permanentTitle: "Таңдалған қалталарды біржола жою керек пе?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules қалтасы (${size}) дискіден біржола жойылады. Бұл әрекетті қайтару мүмкін емес.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules қалтасы (${size}) дискіден біржола жойылады. Бұл әрекетті қайтару мүмкін емес.`,
     permanentWarning: "ЕСКЕРТУ: Бұл әрекет қайтарылмайды! Қалталар Себетке жіберілмейді.",
     permanentConfirmButton: "Біржола жою",
     deletingInProgress: "Жойылуда...",
     recycleSuccess: (count: number) => `${count} қалта сәтті Себетке жылжытылды.`,
     permanentSuccess: (count: number) => `${count} қалта сәтті біржола жойылды.`,
     partialErrorTitle: "Ішінара жою туралы есеп",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} қалта тазаланды, бірақ ${errorCount} қалтаны жою мүмкін болмады.`,
-    lockedOrPermissionNote: "Кейбір файлдар орындалып жатқан процестермен бұғатталуы немесе әкімші рұқсаттарын талап етуі мүмкін.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} қалта тазаланды, бірақ ${errorCount} қалтаны жою мүмкін болмады.`,
+    lockedOrPermissionNote:
+      "Кейбір файлдар орындалып жатқан процестермен бұғатталуы немесе әкімші рұқсаттарын талап етуі мүмкін.",
   },
   settings: {
     title: "Параметрлер",
@@ -155,7 +159,8 @@ export const kk: TranslationSchema = {
     version: "Нұсқасы",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Баспагер: Vellium • © 2026 Vellium. Барлық құқықтар қорғалған.",
-    privacyNote: "Барлық сканерлеу және жою әрекеттері 100% компьютерде жергілікті түрде өтеді. Ешқандай деректер сыртқа жіберілмейді.",
+    privacyNote:
+      "Барлық сканерлеу және жою әрекеттері 100% компьютерде жергілікті түрде өтеді. Ешқандай деректер сыртқа жіберілмейді.",
     close: "Жабу",
   },
   errors: {

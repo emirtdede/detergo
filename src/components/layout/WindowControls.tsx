@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Minus, Square, Copy, X } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useUIText } from "@/lib/ui-text";
+import { log } from "@/lib/logging";
 import "./window-controls.css";
 
 export const WindowControls: React.FC = () => {
@@ -11,7 +12,10 @@ export const WindowControls: React.FC = () => {
   useEffect(() => {
     try {
       const appWindow = getCurrentWindow();
-      appWindow.isMaximized().then(setIsMaximized).catch(() => {});
+      appWindow
+        .isMaximized()
+        .then(setIsMaximized)
+        .catch(() => {});
 
       const unlisten = appWindow.onResized(async () => {
         try {
@@ -30,7 +34,7 @@ export const WindowControls: React.FC = () => {
     try {
       await getCurrentWindow().minimize();
     } catch (err) {
-      console.error(err);
+      log.error("Window control action failed", err);
     }
   };
 
@@ -40,7 +44,7 @@ export const WindowControls: React.FC = () => {
       const max = await getCurrentWindow().isMaximized();
       setIsMaximized(max);
     } catch (err) {
-      console.error(err);
+      log.error("Window control action failed", err);
     }
   };
 
@@ -48,7 +52,7 @@ export const WindowControls: React.FC = () => {
     try {
       await getCurrentWindow().close();
     } catch (err) {
-      console.error(err);
+      log.error("Window control action failed", err);
     }
   };
 

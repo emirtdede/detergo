@@ -102,18 +102,23 @@ export const ms: TranslationSchema = {
     cancel: "Batal",
     confirm: "Sahkan",
     recycleTitle: "Pindahkan Folder Terpilih ke Tong Kitar Semula?",
-    recycleDescription: (count: number, size: string) => `${count} folder node_modules (${size}) akan dipindahkan ke Tong Kitar Semula. Anda boleh memulihkannya pada bila-bila masa.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} folder node_modules (${size}) akan dipindahkan ke Tong Kitar Semula. Anda boleh memulihkannya pada bila-bila masa.`,
     recycleConfirmButton: "Pindah ke Tong",
     permanentTitle: "Padam Folder Terpilih Secara Kekal?",
-    permanentDescription: (count: number, size: string) => `${count} folder node_modules (${size}) akan dipadamkan secara kekal dari cakera. Tindakan ini tidak boleh dibuat asal.`,
-    permanentWarning: "AMARAN: Tindakan ini adalah kekal! Folder tidak akan dihantar ke Tong Kitar Semula.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} folder node_modules (${size}) akan dipadamkan secara kekal dari cakera. Tindakan ini tidak boleh dibuat asal.`,
+    permanentWarning:
+      "AMARAN: Tindakan ini adalah kekal! Folder tidak akan dihantar ke Tong Kitar Semula.",
     permanentConfirmButton: "Padam Kekal",
     deletingInProgress: "Pemadaman sedang berjalan...",
     recycleSuccess: (count: number) => `${count} folder berjaya dipindahkan ke Tong Kitar Semula.`,
     permanentSuccess: (count: number) => `${count} folder berjaya dipadamkan secara kekal.`,
     partialErrorTitle: "Laporan Pemadaman Separa",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} folder dibersihkan, tetapi ${errorCount} folder tidak dapat dipadamkan.`,
-    lockedOrPermissionNote: "Sesetengah fail mungkin dikunci oleh proses yang sedang berjalan atau memerlukan kebenaran pentadbir.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} folder dibersihkan, tetapi ${errorCount} folder tidak dapat dipadamkan.`,
+    lockedOrPermissionNote:
+      "Sesetengah fail mungkin dikunci oleh proses yang sedang berjalan atau memerlukan kebenaran pentadbir.",
   },
   settings: {
     title: "Tetapan",
@@ -155,7 +160,8 @@ export const ms: TranslationSchema = {
     version: "Versi",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Penerbit: Vellium • © 2026 Vellium. Hak cipta terpelihara.",
-    privacyNote: "Semua imbasan dan pemadaman berlaku 100% secara tempatan pada komputer anda. Sifar telemetri.",
+    privacyNote:
+      "Semua imbasan dan pemadaman berlaku 100% secara tempatan pada komputer anda. Sifar telemetri.",
     close: "Tutup",
   },
   errors: {

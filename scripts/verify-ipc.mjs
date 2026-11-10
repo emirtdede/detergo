@@ -141,71 +141,79 @@ try {
          out.remoteBlocked = false;
        } catch { out.remoteBlocked = true; }
        return out;
-     })()`
+     })()`,
   );
   record(
     "CSP blocks inline script",
     cspProbe?.inlineBlocked === true,
-    JSON.stringify(cspProbe?.inlineBlocked)
+    JSON.stringify(cspProbe?.inlineBlocked),
   );
   record("CSP blocks eval", cspProbe?.evalBlocked === true, JSON.stringify(cspProbe?.evalBlocked));
   record(
     "CSP blocks off-origin fetch",
     cspProbe?.remoteBlocked === true,
-    JSON.stringify(cspProbe?.remoteBlocked)
+    JSON.stringify(cspProbe?.remoteBlocked),
   );
 
-  const catalog = await evaluate(
-    client,
-    `window.__TAURI_INTERNALS__.invoke("get_catalog")`
-  );
+  const catalog = await evaluate(client, `window.__TAURI_INTERNALS__.invoke("get_catalog")`);
   record("get_catalog", Boolean(catalog && catalog.valid), `${catalog?.rules?.length ?? 0} rules`);
 
-  const settings = await evaluate(
-    client,
-    `window.__TAURI_INTERNALS__.invoke("get_app_settings")`
+  const settings = await evaluate(client, `window.__TAURI_INTERNALS__.invoke("get_app_settings")`);
+  record(
+    "get_app_settings",
+    Boolean(settings && settings.schemaVersion >= 3),
+    `schema v${settings?.schemaVersion}`,
   );
-  record("get_app_settings", Boolean(settings && settings.schemaVersion >= 3), `schema v${settings?.schemaVersion}`);
 
-  const known = await evaluate(
-    client,
-    `window.__TAURI_INTERNALS__.invoke("get_known_locations")`
+  const known = await evaluate(client, `window.__TAURI_INTERNALS__.invoke("get_known_locations")`);
+  record(
+    "get_known_locations",
+    Array.isArray(known) && known.length > 0,
+    `${known?.length ?? 0} locations`,
   );
-  record("get_known_locations", Array.isArray(known) && known.length > 0, `${known?.length ?? 0} locations`);
 
   const providers = await evaluate(
     client,
-    `window.__TAURI_INTERNALS__.invoke("get_agent_providers")`
+    `window.__TAURI_INTERNALS__.invoke("get_agent_providers")`,
   );
-  record("get_agent_providers", Array.isArray(providers) && providers.length > 0, `${providers?.length ?? 0} providers`);
+  record(
+    "get_agent_providers",
+    Array.isArray(providers) && providers.length > 0,
+    `${providers?.length ?? 0} providers`,
+  );
 
   // The provenance stamp must be present, clean and match the shipped commit.
   const expected = path.join(rootDir, "release_output", "BUILD_INFO.json");
-  const buildInfo = await evaluate(
-    client,
-    `window.__TAURI_INTERNALS__.invoke("get_build_info")`
-  );
+  const buildInfo = await evaluate(client, `window.__TAURI_INTERNALS__.invoke("get_build_info")`);
   record(
     "get_build_info",
     Boolean(buildInfo && buildInfo.commit && buildInfo.commit !== "unknown"),
-    buildInfo ? `${buildInfo.commitShort} profile=${buildInfo.profile} dirty=${buildInfo.dirty}` : "missing"
+    buildInfo
+      ? `${buildInfo.commitShort} profile=${buildInfo.profile} dirty=${buildInfo.dirty}`
+      : "missing",
   );
   if (fs.existsSync(expected)) {
     const manifest = JSON.parse(fs.readFileSync(expected, "utf8"));
     record(
       "binary commit matches BUILD_INFO.json",
       buildInfo?.commit === manifest.commit,
-      `${buildInfo?.commit?.slice(0, 12)} vs ${manifest.commit.slice(0, 12)}`
+      `${buildInfo?.commit?.slice(0, 12)} vs ${manifest.commit.slice(0, 12)}`,
     );
     record(
       "binary and manifest agree on tree cleanliness",
       buildInfo?.dirty === manifest.dirty,
-      `binary dirty=${buildInfo?.dirty}, manifest dirty=${manifest.dirty}`
+      `binary dirty=${buildInfo?.dirty}, manifest dirty=${manifest.dirty}`,
     );
     if (manifest.dirty) {
-      console.log("  NOTE  build was produced from a dirty tree; this artifact is not publishable.");
+      console.log(
+        "  NOTE  build was produced from a dirty tree; this artifact is not publishable.",
+      );
     } else {
-      record("build was from a clean tree", buildInfo?.dirty === false, `dirty=${buildInfo?.dirty}`);
+      record(
+        "build was from a clean tree",
+        buildInfo?.dirty === false,
+        `dirty=${buildInfo?.dirty}`,
+      );
     }
     record("release profile", buildInfo?.profile === "release", buildInfo?.profile);
   }
@@ -213,7 +221,7 @@ try {
   // Window controls must still be allowed by the ACL.
   const maxState = await evaluate(
     client,
-    `window.__TAURI_INTERNALS__.invoke("plugin:window|is_maximized", { label: "main" })`
+    `window.__TAURI_INTERNALS__.invoke("plugin:window|is_maximized", { label: "main" })`,
   );
   record("plugin:window|is_maximized (ACL)", typeof maxState === "boolean", String(maxState));
 
@@ -223,18 +231,41 @@ try {
     `window.__TAURI_INTERNALS__
        .invoke("execute_cleanup", { planId: "plan-does-not-exist", confirmationToken: "x", permanentAcknowledged: true })
        .then(() => "ALLOWED")
-       .catch((e) => String(e?.message ?? e))`
+       .catch((e) => String(e?.message ?? e))`,
   );
-  record("execute_cleanup rejects an unknown plan", forged !== "ALLOWED", String(forged).slice(0, 80));
+  record(
+    "execute_cleanup rejects an unknown plan",
+    forged !== "ALLOWED",
+    String(forged).slice(0, 80),
+  );
+
+  // Cancelling an idle run must be a no-op, not an error: the UI calls this
+  // without knowing whether a run is still active.
+  const cancelIdle = await evaluate(
+    client,
+    `window.__TAURI_INTERNALS__
+       .invoke("cancel_cleanup")
+       .then(() => "OK")
+       .catch((e) => String(e?.message ?? e))`,
+  );
+  record(
+    "cancel_cleanup is a safe no-op when idle",
+    cancelIdle === "OK",
+    String(cancelIdle).slice(0, 80),
+  );
 
   const unsafeUrl = await evaluate(
     client,
     `window.__TAURI_INTERNALS__
        .invoke("open_url", { url: "javascript:alert(1)" })
        .then(() => "ALLOWED")
-       .catch((e) => String(e?.message ?? e))`
+       .catch((e) => String(e?.message ?? e))`,
   );
-  record("open_url rejects a non-http scheme", unsafeUrl !== "ALLOWED", String(unsafeUrl).slice(0, 80));
+  record(
+    "open_url rejects a non-http scheme",
+    unsafeUrl !== "ALLOWED",
+    String(unsafeUrl).slice(0, 80),
+  );
 
   client.ws.close();
 } catch (err) {

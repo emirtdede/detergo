@@ -65,7 +65,8 @@
   font-weight: 500;
   text-align: left;
   cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-standard),
+  transition:
+    background var(--duration-fast) var(--ease-standard),
     color var(--duration-fast) var(--ease-standard);
 }
 
@@ -241,9 +242,18 @@
   color: var(--text-secondary);
 }
 
-.chip.ok { color: var(--success-text); border-color: var(--success); }
-.chip.warn { color: var(--warning-text); border-color: var(--warning); }
-.chip.danger { color: var(--danger-foreground); border-color: var(--danger); }
+.chip.ok {
+  color: var(--success-text);
+  border-color: var(--success);
+}
+.chip.warn {
+  color: var(--warning-text);
+  border-color: var(--warning);
+}
+.chip.danger {
+  color: var(--danger-foreground);
+  border-color: var(--danger);
+}
 
 .settings-grid {
   display: grid;
@@ -758,8 +768,11 @@
   min-height: 0 !important;
 }
 
+/* Only direct children of the scroll container are pinned to the viewport
+   height. Nested item tables inside document-style pages (for example the AI
+   Tools page) must keep their own definite box instead. */
 .history-page-view,
-.items-view {
+.view-container > .items-view {
   flex: 1 1 0px !important;
   min-height: 0 !important;
   display: flex !important;
@@ -775,7 +788,7 @@
 }
 
 .history-page-view #history-panel > .empty-state,
-.items-view > .empty-state {
+.view-container > .items-view > .empty-state {
   flex: 1 1 0px !important;
   min-height: clamp(340px, 46vh, 540px) !important;
   height: 100% !important;
@@ -790,7 +803,6 @@
   box-sizing: border-box !important;
   padding: var(--space-6) !important;
 }
-
 
 /* ==========================================================================
    AGENTS GRID & HISTORY TABLE CARD WRAPPER
@@ -960,4 +972,3 @@
   padding: 0 !important;
   min-height: auto !important;
 }
-

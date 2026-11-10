@@ -60,7 +60,8 @@ body {
   line-height: var(--leading-normal);
   color: var(--text-primary);
   background-color: var(--app-bg);
-  transition: background-color var(--duration-normal) var(--ease-standard),
+  transition:
+    background-color var(--duration-normal) var(--ease-standard),
     color var(--duration-normal) var(--ease-standard);
 }
 

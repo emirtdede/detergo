@@ -102,18 +102,22 @@ export const uk: TranslationSchema = {
     cancel: "Скасувати",
     confirm: "Підтвердити",
     recycleTitle: "Перемістити вибрані папки в кошик?",
-    recycleDescription: (count: number, size: string) => `${count} папок node_modules (${size}) буде переміщено в кошик. Ви зможете відновити їх у будь-який час.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} папок node_modules (${size}) буде переміщено в кошик. Ви зможете відновити їх у будь-який час.`,
     recycleConfirmButton: "У кошик",
     permanentTitle: "Видалити вибрані папки назавжди?",
-    permanentDescription: (count: number, size: string) => `${count} папок node_modules (${size}) буде безповоротно видалено з диска.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} папок node_modules (${size}) буде безповоротно видалено з диска.`,
     permanentWarning: "ПОПЕРЕДЖЕННЯ: Ця дія незворотна! Папки не будуть відправлені в кошик.",
     permanentConfirmButton: "Видалити назавжди",
     deletingInProgress: "Видалення...",
     recycleSuccess: (count: number) => `${count} папок успішно переміщено в кошик.`,
     permanentSuccess: (count: number) => `${count} папок успішно видалено назавжди.`,
     partialErrorTitle: "Звіт про часткове видалення",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} папок очищено, але ${errorCount} папок не вдалося видалити.`,
-    lockedOrPermissionNote: "Деякі файли можуть бути заблоковані запущеними процесами або вимагати прав адміністратора.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} папок очищено, але ${errorCount} папок не вдалося видалити.`,
+    lockedOrPermissionNote:
+      "Деякі файли можуть бути заблоковані запущеними процесами або вимагати прав адміністратора.",
   },
   settings: {
     title: "Налаштування",
@@ -155,7 +159,8 @@ export const uk: TranslationSchema = {
     version: "Версія",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Видавець: Vellium • © 2026 Vellium. Всі права захищені.",
-    privacyNote: "Усі сканування та видалення відбуваються на 100% локально на вашому комп'ютері. Жодної телеметрії.",
+    privacyNote:
+      "Усі сканування та видалення відбуваються на 100% локально на вашому комп'ютері. Жодної телеметрії.",
     close: "Закрити",
   },
   errors: {

@@ -1,13 +1,13 @@
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-use crate::catalog::model::{CleanupMethod, SafetyClass};
+use crate::catalog::model::{CleanupMethod, SafetyClass, TargetKind};
 use crate::catalog::CatalogIndex;
 use crate::cleanup::DeleteMode;
 use crate::error::AppError;
 use crate::platform::identity;
-use crate::scanner::session::ScanSession;
 use crate::safety::ActiveUse;
+use crate::scanner::session::ScanSession;
 
 pub const PLAN_TTL_SECS: u64 = 15 * 60;
 
@@ -18,6 +18,30 @@ pub struct TargetSnapshot {
     pub logical_bytes: u64,
     pub modified_secs: Option<u64>,
     pub file_id: Option<String>,
+    /// Nanosecond modification time used only for in-memory verification.
+    /// Kept out of the serialized plan so the wire format stays stable.
+    #[serde(skip)]
+    pub modified_nanos: Option<u64>,
+}
+
+/// Result of re-checking a plan item against the live filesystem.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum VerificationOutcome {
+    /// The object is still the same one the user previewed.
+    Verified,
+    /// A different object now occupies the path (or it disappeared).
+    PlanChanged,
+    /// Same object, but file content/size/mtime changed after preview.
+    ContentChanged,
+    /// The object could not be measured or identified; fail closed.
+    NotMeasured,
+}
+
+fn modified_nanos(meta: &std::fs::Metadata) -> Option<u64> {
+    meta.modified()
+        .ok()
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_nanos().min(u64::MAX as u128) as u64)
 }
 
 impl TargetSnapshot {
@@ -32,6 +56,7 @@ impl TargetSnapshot {
                 .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
                 .map(|d| d.as_secs()),
             file_id: identity(path).map(|id| format!("{}:{}", id.volume_serial, id.file_index)),
+            modified_nanos: meta.as_ref().and_then(modified_nanos),
         }
     }
 
@@ -50,6 +75,57 @@ impl TargetSnapshot {
             _ => false,
         }
     }
+}
+
+/// Verifies a previewed item against a freshly captured snapshot.
+///
+/// Directory identity is the only trustworthy signal: Windows reports a
+/// directory's `metadata().len()` as zero, so comparing it with the measured
+/// tree size produced false `PLAN_CHANGED` results for every folder. Files and
+/// file groups additionally verify their logical size and nanosecond mtime.
+///
+/// `measured_logical` is the fresh recursive measurement (`None` when the walk
+/// did not complete). Every unverifiable case fails closed as `NotMeasured`.
+pub fn verify_snapshot(
+    kind: TargetKind,
+    expected: &TargetSnapshot,
+    current: &TargetSnapshot,
+    measured_logical: Option<u64>,
+) -> VerificationOutcome {
+    if expected.exists != current.exists {
+        return VerificationOutcome::PlanChanged;
+    }
+
+    // Identity: an unknown id on either side is "cannot verify", not "same".
+    match (&expected.file_id, &current.file_id) {
+        (Some(a), Some(b)) if a == b => {}
+        (Some(_), Some(_)) => return VerificationOutcome::PlanChanged,
+        _ => return VerificationOutcome::NotMeasured,
+    }
+
+    if kind == TargetKind::Directory {
+        // Directories are identified by object id only. Content growth is a
+        // normal, expected change between preview and execution.
+        return VerificationOutcome::Verified;
+    }
+
+    let Some(measured) = measured_logical else {
+        return VerificationOutcome::NotMeasured;
+    };
+    let (Some(expected_nanos), Some(current_nanos)) =
+        (expected.modified_nanos, current.modified_nanos)
+    else {
+        return VerificationOutcome::NotMeasured;
+    };
+
+    if measured != expected.logical_bytes
+        || current.logical_bytes != expected.logical_bytes
+        || current_nanos != expected_nanos
+    {
+        return VerificationOutcome::ContentChanged;
+    }
+
+    VerificationOutcome::Verified
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -118,7 +194,7 @@ pub fn build_plan(
 ) -> Result<CleanupPlan, AppError> {
     if target_ids.is_empty() {
         return Err(AppError::PlanInvalid(
-            "Temizlik için en az bir hedef seçilmelidir.".to_string(),
+            "At least one target must be selected for cleanup.".to_string(),
         ));
     }
 
@@ -131,7 +207,7 @@ pub fn build_plan(
         let target = session
             .targets
             .get(id)
-            .ok_or_else(|| AppError::PlanInvalid(format!("Bilinmeyen hedef: {}", id)))?;
+            .ok_or_else(|| AppError::PlanInvalid(format!("Unknown target: {}", id)))?;
         ordered.push(target);
     }
 
@@ -172,16 +248,16 @@ pub fn build_plan(
         if let Some(parent_id) = covered.get(&target.id) {
             eligible = false;
             blocked_code = Some("COVERED_BY_PARENT".to_string());
-            blocked_reason = Some(format!("Üst hedef zaten seçildi ({})", parent_id));
+            blocked_reason = Some(format!("Parent target already selected ({})", parent_id));
         } else if target.protected || target.safety_class == SafetyClass::Keep {
             eligible = false;
             blocked_code = Some("PROTECTED".to_string());
-            blocked_reason = Some("Korunan veri; arabirimden silinemez.".to_string());
+            blocked_reason = Some("Protected data; cannot be deleted from interface.".to_string());
         } else if target.active_use.blocks_deletion() {
             eligible = false;
             blocked_code = Some("ACTIVE_USE".to_string());
             blocked_reason =
-                Some("Hedef şu anda kullanımda veya kullanım durumu bilinmiyor.".to_string());
+                Some("Target is currently in use or active status is unknown.".to_string());
         } else if let Some((code, reason)) = policy.agent_policy_block(target) {
             eligible = false;
             blocked_code = Some(code.to_string());
@@ -189,7 +265,7 @@ pub fn build_plan(
         } else if target.logical_bytes.is_none() {
             eligible = false;
             blocked_code = Some("NOT_MEASURED".to_string());
-            blocked_reason = Some("Boyut ölçülmedi; yeniden tarama gerekli.".to_string());
+            blocked_reason = Some("Size not measured; rescan required.".to_string());
         } else if policy.min_size_bytes > 0
             && target
                 .allocated_bytes
@@ -198,26 +274,27 @@ pub fn build_plan(
         {
             eligible = false;
             blocked_code = Some("BELOW_MIN_SIZE".to_string());
-            blocked_reason = Some("Hedef, ayarlardaki minimum öğe boyutundan küçük.".to_string());
+            blocked_reason =
+                Some("Target is smaller than minimum item size in settings.".to_string());
         } else {
             match target.cleanup_method {
                 CleanupMethod::None => {
                     eligible = false;
                     blocked_code = Some("NO_METHOD".to_string());
-                    blocked_reason =
-                        Some("Bu hedef için temizleme yöntemi tanımlı değil.".to_string());
+                    blocked_reason = Some("No cleanup method defined for this target.".to_string());
                 }
                 CleanupMethod::OfficialTool => {
                     eligible = false;
                     blocked_code = Some("OFFICIAL_ACTION_REQUIRED".to_string());
-                    blocked_reason =
-                        Some("Bu hedef yalnızca resmî araç komutuyla temizlenebilir.".to_string());
+                    blocked_reason = Some(
+                        "This target can only be cleaned via official tool command.".to_string(),
+                    );
                 }
                 CleanupMethod::Permanent if mode == DeleteMode::RecycleBin => {
                     eligible = false;
                     blocked_code = Some("MODE_NOT_ALLOWED".to_string());
                     blocked_reason = Some(
-                        "Bu hedef yalnızca açık kalıcı silme onayıyla temizlenebilir.".to_string(),
+                        "This target can only be cleaned with explicit permanent deletion confirmation.".to_string(),
                     );
                 }
                 _ => {}
@@ -261,7 +338,7 @@ pub fn build_plan(
 
     if eligible_count == 0 {
         return Err(AppError::Blocked(
-            "Seçilen hedeflerin hiçbiri güvenli biçimde silinemiyor.".to_string(),
+            "None of the selected targets can be safely deleted.".to_string(),
         ));
     }
 

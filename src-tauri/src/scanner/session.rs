@@ -8,6 +8,7 @@ use crate::scanner::models::{CleanupItem, ScanScope, ScanSummary, StoredTarget};
 
 pub const SESSION_TTL: Duration = Duration::from_secs(30 * 60);
 
+#[derive(Clone)]
 pub struct ScanSession {
     pub id: String,
     pub scope: ScanScope,
@@ -65,10 +66,10 @@ impl ScanRegistry {
         let sessions = self.sessions.lock().unwrap();
         let handle = sessions
             .get(id)
-            .ok_or_else(|| AppError::SessionInvalid("Tarama oturumu bulunamadı.".to_string()))?;
+            .ok_or_else(|| AppError::SessionInvalid("Scan session not found.".to_string()))?;
         if handle.lock().map(|s| s.is_expired()).unwrap_or(true) {
             return Err(AppError::SessionExpired(
-                "Tarama oturumunun süresi doldu; yeniden tarama gerekli.".to_string(),
+                "Scan session expired; rescan required.".to_string(),
             ));
         }
         Ok(handle.clone())
@@ -79,11 +80,20 @@ impl ScanRegistry {
         sessions
             .values()
             .filter(|s| s.lock().map(|s| !s.is_expired()).unwrap_or(false))
-            .max_by_key(|s| s.lock().map(|s| s.created).unwrap_or_else(|_| Instant::now()))
+            .max_by_key(|s| {
+                s.lock()
+                    .map(|s| s.created)
+                    .unwrap_or_else(|_| Instant::now())
+            })
             .cloned()
     }
 
-    pub fn store_items(&self, session_id: &str, items: Vec<CleanupItem>, targets: Vec<StoredTarget>) {
+    pub fn store_items(
+        &self,
+        session_id: &str,
+        items: Vec<CleanupItem>,
+        targets: Vec<StoredTarget>,
+    ) {
         let Ok(handle) = self.get_session(session_id) else {
             return;
         };
@@ -115,10 +125,10 @@ impl ScanRegistry {
         let mut plans = self.plans.lock().unwrap();
         let plan = plans
             .remove(id)
-            .ok_or_else(|| AppError::PlanInvalid("Temizlik planı bulunamadı.".to_string()))?;
+            .ok_or_else(|| AppError::PlanInvalid("Cleanup plan not found.".to_string()))?;
         if plan.is_expired() {
             return Err(AppError::PlanExpired(
-                "Temizlik planının süresi doldu; yeniden önizleme gerekli.".to_string(),
+                "Cleanup plan expired; a new preview is required.".to_string(),
             ));
         }
         Ok(plan)

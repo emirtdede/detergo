@@ -102,18 +102,22 @@ export const ko: TranslationSchema = {
     cancel: "취소",
     confirm: "확인",
     recycleTitle: "선택한 폴더를 휴지통으로 이동하시겠습니까?",
-    recycleDescription: (count: number, size: string) => `${count} 개의 node_modules 폴더(${size})가 휴지통으로 이동됩니다. 언제든지 복원할 수 있습니다.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} 개의 node_modules 폴더(${size})가 휴지통으로 이동됩니다. 언제든지 복원할 수 있습니다.`,
     recycleConfirmButton: "휴지통으로 이동",
     permanentTitle: "선택한 폴더를 영구적으로 삭제하시겠습니까?",
-    permanentDescription: (count: number, size: string) => `${count} 개의 node_modules 폴더(${size})가 디스크에서 완전히 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} 개의 node_modules 폴더(${size})가 디스크에서 완전히 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`,
     permanentWarning: "경고: 이 작업은 영구적입니다! 폴더가 휴지통으로 이동되지 않습니다.",
     permanentConfirmButton: "영구 삭제",
     deletingInProgress: "삭제 중...",
     recycleSuccess: (count: number) => `${count} 개 폴더가 휴지통으로 이동되었습니다.`,
     permanentSuccess: (count: number) => `${count} 개 폴더가 영구 삭제되었습니다.`,
     partialErrorTitle: "일부 삭제 보고서",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} 개 폴더를 정리했지만, ${errorCount}개 폴더를 삭제하지 못했습니다.`,
-    lockedOrPermissionNote: "일부 파일이 실행 중인 프로세스에 의해 잠겨 있거나 관리자 권한이 필요할 수 있습니다.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} 개 폴더를 정리했지만, ${errorCount}개 폴더를 삭제하지 못했습니다.`,
+    lockedOrPermissionNote:
+      "일부 파일이 실행 중인 프로세스에 의해 잠겨 있거나 관리자 권한이 필요할 수 있습니다.",
   },
   settings: {
     title: "설정",

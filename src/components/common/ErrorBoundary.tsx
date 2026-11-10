@@ -1,6 +1,8 @@
 import { Component, ErrorInfo, ReactNode } from "react";
 import { DICTIONARIES } from "@/locales/dictionaries";
 import { SupportedLanguage } from "@/types";
+import { usePreferencesStore } from "@/stores/preferences-store";
+import { log } from "@/lib/logging";
 
 interface Props {
   children: ReactNode;
@@ -24,7 +26,9 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught React Error:", error, errorInfo);
+    // The stack belongs in a log, never on screen: it can contain local paths
+    // and internal module names.
+    log.error("Uncaught React error", error, errorInfo.componentStack);
     this.setState({ error, errorInfo });
   }
 
@@ -36,49 +40,67 @@ export class ErrorBoundary extends Component<Props, State> {
         return DICTIONARIES[stored].errorBoundary;
       }
     } catch {}
-    return DICTIONARIES["tr"].errorBoundary;
+    try {
+      const active = usePreferencesStore.getState()?.language;
+      if (active && DICTIONARIES[active]) {
+        return DICTIONARIES[active].errorBoundary;
+      }
+    } catch {}
+    return (DICTIONARIES["en"] || DICTIONARIES["tr"]).errorBoundary;
   }
 
   public render() {
     if (this.state.hasError) {
       const t = this.getTranslation();
       return (
-        <div style={{
-          padding: "32px",
-          color: "#fff",
-          background: "#16161a",
-          minHeight: "100vh",
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-        }}>
-          <div style={{
-            maxWidth: "600px",
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: "16px",
-            padding: "28px",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.4)"
-          }}>
-            <h2 style={{ color: "#E5484D", marginBottom: "12px", fontSize: "20px" }}>
-              {t.title}
-            </h2>
+        <div
+          style={{
+            padding: "32px",
+            color: "#fff",
+            background: "#16161a",
+            minHeight: "100vh",
+            fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            style={{
+              maxWidth: "600px",
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: "16px",
+              padding: "28px",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+            }}
+          >
+            <h2 style={{ color: "#E5484D", marginBottom: "12px", fontSize: "20px" }}>{t.title}</h2>
             <p style={{ color: "#A4A4AA", fontSize: "14px", marginBottom: "16px" }}>
-              {this.state.error?.message || t.unknownError}
+              {t.unknownError}
             </p>
-            <pre style={{
-              background: "rgba(0,0,0,0.5)",
-              padding: "12px",
-              borderRadius: "8px",
-              fontSize: "12px",
-              overflowX: "auto",
-              color: "#f5a623",
-              maxHeight: "200px"
-            }}>
-              {this.state.error?.stack}
+            <pre
+              style={{
+                background: "rgba(0,0,0,0.5)",
+                padding: "12px",
+                borderRadius: "8px",
+                fontSize: "12px",
+                overflowX: "auto",
+                color: "#f5a623",
+                maxHeight: "200px",
+              }}
+            >
+              {this.state.error?.message ?? "—"}
             </pre>
+            {import.meta.env.DEV && this.state.error?.stack && (
+              <details style={{ marginTop: "8px", color: "#A4A4AA", fontSize: "12px" }}>
+                <summary>Stack trace (dev only)</summary>
+                <pre style={{ overflowX: "auto", maxHeight: "200px", marginTop: "6px" }}>
+                  {this.state.error.stack}
+                </pre>
+              </details>
+            )}
             <button
               onClick={() => window.location.reload()}
               style={{
@@ -89,7 +111,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 border: "none",
                 borderRadius: "8px",
                 cursor: "pointer",
-                fontWeight: 600
+                fontWeight: 600,
               }}
             >
               {t.reload}

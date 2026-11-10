@@ -102,18 +102,24 @@ export const it: TranslationSchema = {
     cancel: "Annulla",
     confirm: "Conferma",
     recycleTitle: "Spostare le Cartelle Selezionate nel Cestino?",
-    recycleDescription: (count: number, size: string) => `${count} cartelle node_modules (${size}) verranno spostate nel Cestino. Puoi ripristinarle in qualsiasi momento.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} cartelle node_modules (${size}) verranno spostate nel Cestino. Puoi ripristinarle in qualsiasi momento.`,
     recycleConfirmButton: "Sposta nel Cestino",
     permanentTitle: "Eliminare Definitivamente le Cartelle Selezionate?",
-    permanentDescription: (count: number, size: string) => `${count} cartelle node_modules (${size}) verranno eliminate definitivamente dal disco. L'azione non è reversibile.`,
-    permanentWarning: "ATTENZIONE: Questa azione è permanente! Le cartelle non saranno inviate al Cestino.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} cartelle node_modules (${size}) verranno eliminate definitivamente dal disco. L'azione non è reversibile.`,
+    permanentWarning:
+      "ATTENZIONE: Questa azione è permanente! Le cartelle non saranno inviate al Cestino.",
     permanentConfirmButton: "Elimina Definitivamente",
     deletingInProgress: "Eliminazione in corso...",
     recycleSuccess: (count: number) => `${count} cartelle spostate nel Cestino con successo.`,
-    permanentSuccess: (count: number) => `${count} cartelle eliminate definitivamente con successo.`,
+    permanentSuccess: (count: number) =>
+      `${count} cartelle eliminate definitivamente con successo.`,
     partialErrorTitle: "Rapporto di Eliminazione Parziale",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} cartelle pulite, ma ${errorCount} cartelle non possono essere eliminate.`,
-    lockedOrPermissionNote: "Alcuni file potrebbero essere bloccati da processi in esecuzione o richiedere privilegi di amministratore.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} cartelle pulite, ma ${errorCount} cartelle non possono essere eliminate.`,
+    lockedOrPermissionNote:
+      "Alcuni file potrebbero essere bloccati da processi in esecuzione o richiedere privilegi di amministratore.",
   },
   settings: {
     title: "Impostazioni",
@@ -155,7 +161,8 @@ export const it: TranslationSchema = {
     version: "Versione",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Editore: Vellium • © 2026 Vellium. Tutti i diritti riservati.",
-    privacyNote: "Tutte le scansioni ed eliminazioni avvengono al 100% localmente sul tuo computer. Zero telemetria.",
+    privacyNote:
+      "Tutte le scansioni ed eliminazioni avvengono al 100% localmente sul tuo computer. Zero telemetria.",
     close: "Chiudi",
   },
   errors: {
@@ -164,7 +171,8 @@ export const it: TranslationSchema = {
     pathNotFound: "Percorso specificato non trovato.",
     scanCancelled: "Scansione annullata dall'utente.",
     scanFailed: "Si è verificato un errore durante la scansione.",
-    unsafeDeleteTarget: "Per sicurezza, le cartelle radice o di sistema non possono essere eliminate.",
+    unsafeDeleteTarget:
+      "Per sicurezza, le cartelle radice o di sistema non possono essere eliminate.",
     recycleBinFailed: "Spostamento nel Cestino non riuscito.",
     permanentDeleteFailed: "Eliminazione definitiva non riuscita.",
     settingsReadFailed: "Impossibile leggere il file delle impostazioni.",

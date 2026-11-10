@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🧹 Dev Cleaner — Hızlı, Güvenli ve Çoklu Ekosistem Geliştirici Temizlik Aracı
+# Dev Cleaner — Hızlı, Güvenli ve Çoklu Ekosistem Geliştirici Temizlik Aracı
 
 </div>
 
@@ -35,7 +35,7 @@
 
 ---
 
-## 🚀 Release status (2.2.0 — Dev Cleaner)
+## Release status (2.2.0 — Dev Cleaner)
 
 This repository contains **Dev Cleaner 2.2**: a comprehensive, catalog-driven, multi-ecosystem
 developer-artifact and AI-agent storage reclaimer featuring 73 fully supported languages,
@@ -64,6 +64,7 @@ Where it conflicts with `docs/MASTER_SPEC.md`, the specification wins.
 ---
 
 <a id="english-version"></a>
+
 # English Version
 
 <div align="center">
@@ -75,7 +76,7 @@ Where it conflicts with `docs/MASTER_SPEC.md`, the specification wins.
 
 <br>
 
-## 💻 Project Overview
+## Project Overview
 
 **Dev Cleaner** is a Windows desktop application built with **Tauri 2 (Rust)** and **React 19 (TypeScript)**. Version 2.0 discovers reproducible developer artifacts across JavaScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart and other ecosystems, analyses AI coding-agent storage (Codex, Claude Code, Antigravity) without reading file contents, and safely cleans selected targets. Every scan, measurement, classification and deletion runs in the Rust backend; the frontend only presents and selects backend-owned target IDs.
 
@@ -87,23 +88,23 @@ Dev Cleaner operates **100% locally** with zero telemetry, zero analytics, and z
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
-- **⚡ Blazing-Fast Discovery Engine**: Traverses massive disk trees with millisecond response times, instantly skipping nested sub-directory recursion inside `node_modules` to find hundreds of projects without UI stutter.
-- **🛡️ Multi-Layer Safety Guard (`SEC-DEL`)**: Hardened path boundary checks prevent deletion of Windows system directories, user root folders, non-`node_modules` targets, or drive roots (`C:\`).
-- **📦 Monorepo & Workspace Hierarchy Detection**: Intelligently groups nested package folders under their respective monorepo root workspaces (`pnpm-workspace`, `Turbo`, `Lerna`, `Nx`, `Yarn Workspaces`, `Bun`).
-- **🎛️ Two-Stage Safe Deletion**:
+- **Blazing-Fast Discovery Engine**: Traverses massive disk trees with millisecond response times, instantly skipping nested sub-directory recursion inside `node_modules` to find hundreds of projects without UI stutter.
+- **Multi-Layer Safety Guard (`SEC-DEL`)**: Hardened path boundary checks prevent deletion of Windows system directories, user root folders, non-`node_modules` targets, or drive roots (`C:\`).
+- **Monorepo & Workspace Hierarchy Detection**: Intelligently groups nested package folders under their respective monorepo root workspaces (`pnpm-workspace`, `Turbo`, `Lerna`, `Nx`, `Yarn Workspaces`, `Bun`).
+- **Two-Stage Safe Deletion**:
   - **Recycle Bin (Reversible)**: Native Win32 Shell API integration (`IFileOperation`) allowing instant recovery from Windows Recycle Bin.
   - **Permanent Deletion**: Asynchronous high-throughput directory purge with double confirmation dialogs.
-- **📊 60 FPS Virtualized Grid**: TanStack Virtualizer powers buttery-smooth 60 FPS scrolling and rendering even across 10,000+ discovered project entries with zero DOM overhead.
-- **🌐 Global Localization (73 Languages)**: Full native support for 73 languages with zero translation leakage via robust proxy fallbacks. RTL (Right-to-Left) dynamic mirroring for Arabic, Hebrew, Persian, and Urdu. Windows NSIS installer automatically defaults to your Windows system language.
-- **🎨 Modern Dark-Transparent Glassmorphism UI**: Custom frameless window styling with curated dark aesthetic design tokens, smooth animations, and responsive layouts.
-- **🔍 Real-Time Search & Sorting**: Filter projects by name, filesystem path, or package manager (`npm`, `pnpm`, `yarn`, `bun`), and sort by largest disk size or oldest modified date.
-- **🔒 100% Offline & Private**: Zero telemetry, zero analytics, zero external network requests.
+- **60 FPS Virtualized Grid**: TanStack Virtualizer powers buttery-smooth 60 FPS scrolling and rendering even across 10,000+ discovered project entries with zero DOM overhead.
+- **Global Localization (73 Languages)**: Full native support for 73 languages with zero translation leakage via robust proxy fallbacks. RTL (Right-to-Left) dynamic mirroring for Arabic, Hebrew, Persian, and Urdu. Windows NSIS installer automatically defaults to your Windows system language.
+- **Modern Dark-Transparent Glassmorphism UI**: Custom frameless window styling with curated dark aesthetic design tokens, smooth animations, and responsive layouts.
+- **Real-Time Search & Sorting**: Filter projects by name, filesystem path, or package manager (`npm`, `pnpm`, `yarn`, `bun`), and sort by largest disk size or oldest modified date.
+- **100% Offline & Private**: Zero telemetry, zero analytics, zero external network requests.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 <div align="center">
 
@@ -118,6 +119,7 @@ Dev Cleaner operates **100% locally** with zero telemetry, zero analytics, and z
 </div>
 
 ### Backend & Core Engine (Rust)
+
 - **Tauri 2.2**: Native Windows runtime integration, frameless window styling, and secure IPC bridge
 - **WalkDir 2.5**: Optimized directory traversal with custom pruning logic
 - **Trash 5.2**: Native Windows Recycle Bin COM integration
@@ -126,6 +128,7 @@ Dev Cleaner operates **100% locally** with zero telemetry, zero analytics, and z
 - **Single Instance Plugin**: `tauri-plugin-single-instance` for single-process mutex enforcement
 
 ### Frontend & User Interface (React & TypeScript)
+
 - **React 19 & TypeScript 5.7**: Component-driven reactive user interface with strict typing
 - **TanStack React Virtual 3.13**: Window-level DOM virtualization for high-density tabular data
 - **Zustand 5.0**: Reactive state management (`useScannerStore`, `useSettingsStore`)
@@ -134,7 +137,7 @@ Dev Cleaner operates **100% locally** with zero telemetry, zero analytics, and z
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```tree
 Node-Cleaner/
@@ -215,7 +218,7 @@ Node-Cleaner/
 
 ---
 
-## ⚙️ Scanning & Safe Deletion Architecture
+## Scanning & Safe Deletion Architecture
 
 ```mermaid
 flowchart TD
@@ -247,18 +250,19 @@ flowchart TD
 
 ### Safety & Deletion Specifications
 
-| Feature | Mechanism | Description |
-| :--- | :--- | :--- |
-| **Directory Pruning** | `walkdir::IntoIter::filter_entry` | Skips deep traversal inside `node_modules`, saving millions of redundant I/O calls |
-| **Path Guard (`SEC-DEL`)** | Strict Canonical Verification | Blocks deletion if path is root (`C:\`), Windows OS folder, Program Files, or non-`node_modules` |
-| **Recycle Bin Deletion** | Win32 `IFileOperation` | Safely moves folders to Windows Recycle Bin with full restoration support |
-| **Permanent Deletion** | Asynchronous Rayon Pool | High-throughput direct disk unlinking for massive multi-gigabyte dependency trees |
+| Feature                    | Mechanism                         | Description                                                                                      |
+| :------------------------- | :-------------------------------- | :----------------------------------------------------------------------------------------------- |
+| **Directory Pruning**      | `walkdir::IntoIter::filter_entry` | Skips deep traversal inside `node_modules`, saving millions of redundant I/O calls               |
+| **Path Guard (`SEC-DEL`)** | Strict Canonical Verification     | Blocks deletion if path is root (`C:\`), Windows OS folder, Program Files, or non-`node_modules` |
+| **Recycle Bin Deletion**   | Win32 `IFileOperation`            | Safely moves folders to Windows Recycle Bin with full restoration support                        |
+| **Permanent Deletion**     | Asynchronous Rayon Pool           | High-throughput direct disk unlinking for massive multi-gigabyte dependency trees                |
 
 ---
 
-## ⚙️ Installation & Usage
+## Installation & Usage
 
 ### Prerequisites
+
 - **Node.js**: Version 18.0.0 or higher
 - **Rust & Cargo**: Version 1.75.0 or higher
 - **Windows**: Windows 10 (1809+) or Windows 11 (64-bit x64)
@@ -267,17 +271,20 @@ flowchart TD
 ### Step-by-Step Developer Setup
 
 1. **Clone the Repository:**
+
    ```bash
    git clone https://github.com/emirtdede/Node-Cleaner.git
    cd Node-Cleaner
    ```
 
 2. **Install Node Dependencies:**
+
    ```bash
    npm install
    ```
 
 3. **Run Automated Test Suites:**
+
    ```bash
    # Run Frontend Unit & Virtualization Tests (Vitest)
    npm test
@@ -289,6 +296,7 @@ flowchart TD
    ```
 
 4. **Start Local Development Mode:**
+
    ```bash
    npm run tauri dev
    ```
@@ -301,18 +309,18 @@ flowchart TD
 
 ---
 
-## 📦 Pre-Compiled Distribution Packages
+## Pre-Compiled Distribution Packages
 
 Ready-to-use production packages are generated into the `release_output/` directory (git-ignored; run `npm run build:release`):
 
-- **NSIS Setup Installer**: `Node-Cleaner-1.0.0-x64-Setup.exe` *(Full installer with desktop/start menu shortcuts)*
-- **MSI Enterprise Installer**: `Node-Cleaner-1.0.0-x64.msi` *(Enterprise & GPO silent deployment)*
-- **Standalone Portable**: `Node-Cleaner-1.0.0-Portable.exe` *(Zero installation, run standalone from USB or any folder)*
+- **NSIS Setup Installer**: `Node-Cleaner-1.0.0-x64-Setup.exe` _(Full installer with desktop/start menu shortcuts)_
+- **MSI Enterprise Installer**: `Node-Cleaner-1.0.0-x64.msi` _(Enterprise & GPO silent deployment)_
+- **Standalone Portable**: `Node-Cleaner-1.0.0-Portable.exe` _(Zero installation, run standalone from USB or any folder)_
 - **Integrity Verification**: `verify-checksums.bat` & `SHA256SUMS.txt`
 
 ---
 
-## ⚖️ License
+## License
 
 Distributed under the **Proprietary License**. Copyright &copy; 2026 Vellium. All rights reserved.
 
@@ -325,6 +333,7 @@ Distributed under the **Proprietary License**. Copyright &copy; 2026 Vellium. Al
 ---
 
 <a id="turkish-version"></a>
+
 # Türkçe Versiyon
 
 <div align="center">
@@ -336,7 +345,7 @@ Distributed under the **Proprietary License**. Copyright &copy; 2026 Vellium. Al
 
 <br>
 
-## 💻 Project Overview (Proje Genel Bakışı)
+## Project Overview (Proje Genel Bakışı)
 
 **Dev Cleaner**, **Tauri 2 (Rust)** ve **React 19 (TypeScript)** ile geliştirilmiş bir Windows masaüstü uygulamasıdır. 2.0 sürümü JavaScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart ve diğer ekosistemlerdeki yeniden üretilebilir geliştirici artıklarını bulur; Codex, Claude Code ve Antigravity gibi AI kodlama ajanlarının depolamasını dosya içeriğini okumadan analiz eder ve seçilen hedefleri güvenle temizler. Tarama, ölçüm, sınıflandırma ve silme tamamen Rust arka ucunda çalışır; ön yüz yalnızca arka ucun ürettiği hedef kimliklerini gösterir ve seçer.
 
@@ -348,23 +357,23 @@ Uygulama **%100 yerel ve çevrimdışı** çalışır; hiçbir harici sunucuya b
 
 ---
 
-## 🚀 Key Features (Önemli Özellikler)
+## Key Features (Önemli Özellikler)
 
-- **⚡ Işık Hızında Tarama Motoru**: Milyonlarca dosya içeren disk ağaçlarını tararken `node_modules` alt dizinlerine gereksiz girmeyerek taramayı budar ve sistemi dondurmadan yüzlerce projeyi saniyeler içinde bulur.
-- **🛡️ Çok Katmanlı Güvenlik Kalkanı (`SEC-DEL`)**: Windows sistem kökü (`C:\`), `Windows`, `Program Files`, kullanıcı profil dizinleri veya `node_modules` dışındaki klasörlerin yanlışlıkla silinmesini kesin olarak engeller.
-- **📦 Monorepo ve Çalışma Alanı Gruplama**: İç içe geçmiş paketleri bağlı oldukları monorepo kök dizini altında akıllıca gruplar (`pnpm-workspace`, `Turbo`, `Lerna`, `Nx`, `Yarn Workspaces`, `Bun`).
-- **🎛️ İki Aşamalı Güvenli Silme**:
+- **Işık Hızında Tarama Motoru**: Milyonlarca dosya içeren disk ağaçlarını tararken `node_modules` alt dizinlerine gereksiz girmeyerek taramayı budar ve sistemi dondurmadan yüzlerce projeyi saniyeler içinde bulur.
+- **Çok Katmanlı Güvenlik Kalkanı (`SEC-DEL`)**: Windows sistem kökü (`C:\`), `Windows`, `Program Files`, kullanıcı profil dizinleri veya `node_modules` dışındaki klasörlerin yanlışlıkla silinmesini kesin olarak engeller.
+- **Monorepo ve Çalışma Alanı Gruplama**: İç içe geçmiş paketleri bağlı oldukları monorepo kök dizini altında akıllıca gruplar (`pnpm-workspace`, `Turbo`, `Lerna`, `Nx`, `Yarn Workspaces`, `Bun`).
+- **İki Aşamalı Güvenli Silme**:
   - **Çöp Kutusu (Geri Alınabilir)**: Yerel Win32 Shell API (`IFileOperation`) entegrasyonu ile klasörleri Windows Çöp Kutusu'na taşır.
   - **Kalıcı Silme**: Asenkron yüksek hızlı doğrudan disk temizliği (çift onaylı modal ile).
-- **📊 60 FPS Sanallaştırılmış Liste**: TanStack Virtualizer mimarisi ile 10.000+ proje listelense bile DOM şişmesi yaşanmaz, 60 FPS akıcı kaydırma sağlanır.
-- **🌐 Küresel Yerelleştirme (73 Dil)**: Güçlü vekil (proxy fallback) mimarisi sayesinde sıfır dil sızıntısı ile 73 dilde eksiksiz çalışma. Arapça, İbranice, Farsça ve Urduca için dinamik RTL desteği. Windows kurulum sihirbazında otomatik sistem dili algılama ve dil seçici.
-- **🎨 Modern Karanlık Cam Efektli (Glassmorphism) Arayüz**: Özel çerçevesiz pencere tasarımı, estetik karanlık renk paleti ve akıcı mikro animasyonlar.
-- **🔍 Gerçek Zamanlı Arama ve Sıralama**: Proje adı veya dosya yoluna göre anında filtreleme; en büyük boyuta veya en eski değiştirilme tarihine göre sıralama.
-- **🔒 Tamamen Çevrimdışı ve Gizli**: Sıfır telemetri, sıfır analiz, sıfır dış ağ bağlantısı.
+- **60 FPS Sanallaştırılmış Liste**: TanStack Virtualizer mimarisi ile 10.000+ proje listelense bile DOM şişmesi yaşanmaz, 60 FPS akıcı kaydırma sağlanır.
+- **Küresel Yerelleştirme (73 Dil)**: Güçlü vekil (proxy fallback) mimarisi sayesinde sıfır dil sızıntısı ile 73 dilde eksiksiz çalışma. Arapça, İbranice, Farsça ve Urduca için dinamik RTL desteği. Windows kurulum sihirbazında otomatik sistem dili algılama ve dil seçici.
+- **Modern Karanlık Cam Efektli (Glassmorphism) Arayüz**: Özel çerçevesiz pencere tasarımı, estetik karanlık renk paleti ve akıcı mikro animasyonlar.
+- **Gerçek Zamanlı Arama ve Sıralama**: Proje adı veya dosya yoluna göre anında filtreleme; en büyük boyuta veya en eski değiştirilme tarihine göre sıralama.
+- **Tamamen Çevrimdışı ve Gizli**: Sıfır telemetri, sıfır analiz, sıfır dış ağ bağlantısı.
 
 ---
 
-## 🛠️ Tech Stack (Teknoloji Yığını)
+## Tech Stack (Teknoloji Yığını)
 
 <div align="center">
 
@@ -379,6 +388,7 @@ Uygulama **%100 yerel ve çevrimdışı** çalışır; hiçbir harici sunucuya b
 </div>
 
 ### Arka Uç ve Çekirdek Motor (Rust)
+
 - **Tauri 2.2**: Windows yerel platform entegrasyonu, çerçevesiz pencere yönetimi ve güvenli IPC köprüsü
 - **WalkDir 2.5**: Özel budama mantığına sahip yüksek hızlı dosya sistemi tarayıcısı
 - **Trash 5.2**: Windows Çöp Kutusu COM alt sistemi entegrasyonu
@@ -387,6 +397,7 @@ Uygulama **%100 yerel ve çevrimdışı** çalışır; hiçbir harici sunucuya b
 - **Tekil Süreç Eklentisi**: `tauri-plugin-single-instance` ile tekil process kilidi
 
 ### Ön Yüz ve Kullanıcı Arayüzü (React & TypeScript)
+
 - **React 19 & TypeScript 5.7**: Bileşen odaklı, tip güvenli reaktif kullanıcı arayüzü
 - **TanStack React Virtual 3.13**: Yüksek yoğunluklu veriler için pencereleme ve DOM sanallaştırma motoru
 - **Zustand 5.0**: Reaktif durum yönetimi (`useScannerStore`, `useSettingsStore`)
@@ -395,7 +406,7 @@ Uygulama **%100 yerel ve çevrimdışı** çalışır; hiçbir harici sunucuya b
 
 ---
 
-## 📁 Project Structure (Proje Klasör Yapısı)
+## Project Structure (Proje Klasör Yapısı)
 
 ```tree
 Node-Cleaner/
@@ -476,20 +487,21 @@ Node-Cleaner/
 
 ---
 
-## ⚙️ Mimari ve Güvenlik Mekanizması
+## Mimari ve Güvenlik Mekanizması
 
-| Özellik | Kullanılan Mekanizma | Açıklama |
-| :--- | :--- | :--- |
-| **Dizin Budama (Pruning)** | `walkdir::IntoIter::filter_entry` | `node_modules` içine derinlemesine girilmesini engelleyerek milyonlarca gereksiz I/O çağrısını önler |
-| **Yol Güvenliği (`SEC-DEL`)** | Kanonik Yol Doğrulaması | Sürücü kökü (`C:\`), Windows dizini, Program Files ve `node_modules` harici yolların silinmesini engeller |
-| **Çöp Kutusu ile Silme** | Win32 `IFileOperation` | Klasörleri güvenle Windows Çöp Kutusu'na taşır, gerektiğinde geri kurtarılabilmesini sağlar |
-| **Kalıcı Silme** | Asenkron Rayon / Tokio Havuzu | Gigabaytlarca veriyi arka planda yüksek I/O verimiyle doğrudan diskten siler |
+| Özellik                       | Kullanılan Mekanizma              | Açıklama                                                                                                  |
+| :---------------------------- | :-------------------------------- | :-------------------------------------------------------------------------------------------------------- |
+| **Dizin Budama (Pruning)**    | `walkdir::IntoIter::filter_entry` | `node_modules` içine derinlemesine girilmesini engelleyerek milyonlarca gereksiz I/O çağrısını önler      |
+| **Yol Güvenliği (`SEC-DEL`)** | Kanonik Yol Doğrulaması           | Sürücü kökü (`C:\`), Windows dizini, Program Files ve `node_modules` harici yolların silinmesini engeller |
+| **Çöp Kutusu ile Silme**      | Win32 `IFileOperation`            | Klasörleri güvenle Windows Çöp Kutusu'na taşır, gerektiğinde geri kurtarılabilmesini sağlar               |
+| **Kalıcı Silme**              | Asenkron Rayon / Tokio Havuzu     | Gigabaytlarca veriyi arka planda yüksek I/O verimiyle doğrudan diskten siler                              |
 
 ---
 
-## ⚙️ Installation & Usage (Kurulum ve Kullanım)
+## Installation & Usage (Kurulum ve Kullanım)
 
 ### Gereksinimler
+
 - **Node.js**: Sürüm 18.0.0 veya üzeri
 - **Rust & Cargo**: Sürüm 1.75.0 veya üzeri
 - **İşletim Sistemi**: Windows 10 (1809+) veya Windows 11 (64-bit x64)
@@ -498,17 +510,20 @@ Node-Cleaner/
 ### Adım Adım Geliştirici Kurulumu
 
 1. **Depoyu Klonlayın:**
+
    ```bash
    git clone https://github.com/emirtdede/Node-Cleaner.git
    cd Node-Cleaner
    ```
 
 2. **Node Bağımlılıklarını Yükleyin:**
+
    ```bash
    npm install
    ```
 
 3. **Otomatik Testleri Çalıştırın:**
+
    ```bash
    # Frontend Birim ve Sanallaştırma Testlerini Çalıştırın (Vitest)
    npm test
@@ -520,6 +535,7 @@ Node-Cleaner/
    ```
 
 4. **Geliştirici Modunda Başlatın:**
+
    ```bash
    npm run tauri dev
    ```
@@ -532,18 +548,18 @@ Node-Cleaner/
 
 ---
 
-## 📦 Dağıtım Paketleri
+## Dağıtım Paketleri
 
 Hazır derlenmiş resmi release paketleri `release_output/` klasörüne üretilir (git-ignored; `npm run build:release`):
 
-- **NSIS Kurulum Sihirbazı**: `Node-Cleaner-1.0.0-x64-Setup.exe` *(Masaüstü ve başlat menüsü kısayolları ile)*
-- **MSI Kurumsal Installer**: `Node-Cleaner-1.0.0-x64.msi` *(Sessiz kurulum ve GPO dağıtımına uygun)*
-- **Standalone Taşınabilir Sürüm**: `Node-Cleaner-1.0.0-Portable.exe` *(Kurulumsuz, doğrudan çalışır)*
+- **NSIS Kurulum Sihirbazı**: `Node-Cleaner-1.0.0-x64-Setup.exe` _(Masaüstü ve başlat menüsü kısayolları ile)_
+- **MSI Kurumsal Installer**: `Node-Cleaner-1.0.0-x64.msi` _(Sessiz kurulum ve GPO dağıtımına uygun)_
+- **Standalone Taşınabilir Sürüm**: `Node-Cleaner-1.0.0-Portable.exe` _(Kurulumsuz, doğrudan çalışır)_
 - **Bütünlük Doğrulama**: `verify-checksums.bat` ve `SHA256SUMS.txt`
 
 ---
 
-## ⚖️ License (Lisans)
+## License (Lisans)
 
 Bu proje **Ticari / Özel (Proprietary)** lisans ile korunmaktadır. Telif Hakkı &copy; 2026 Vellium. Tüm hakları saklıdır.
 

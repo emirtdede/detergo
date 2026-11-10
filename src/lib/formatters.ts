@@ -1,7 +1,20 @@
+function resolveEffectiveLocale(locale?: string | null): string {
+  if (locale && typeof locale === "string" && locale.trim()) return locale;
+  try {
+    if (typeof window !== "undefined") {
+      const stored =
+        localStorage.getItem("dev_cleaner_language") ||
+        localStorage.getItem("node_cleaner_language");
+      if (stored) return stored;
+    }
+  } catch {}
+  return "en";
+}
+
 /**
  * Format bytes into human-readable representation (MB, GB, TB) formatted according to the locale.
  */
-export function formatBytes(bytes: number | null | undefined, locale = "tr"): string {
+export function formatBytes(bytes: number | null | undefined, locale?: string | null): string {
   if (bytes === null || bytes === undefined || isNaN(bytes)) {
     return "-";
   }
@@ -9,6 +22,7 @@ export function formatBytes(bytes: number | null | undefined, locale = "tr"): st
     return "0 B";
   }
 
+  const effectiveLocale = resolveEffectiveLocale(locale);
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB", "TB", "PB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -20,7 +34,7 @@ export function formatBytes(bytes: number | null | undefined, locale = "tr"): st
 
   const value = bytes / Math.pow(k, safeIndex);
   try {
-    const formattedValue = new Intl.NumberFormat(locale, {
+    const formattedValue = new Intl.NumberFormat(effectiveLocale, {
       minimumFractionDigits: value >= 10 ? 1 : 2,
       maximumFractionDigits: value >= 10 ? 1 : 2,
     }).format(value);
@@ -35,9 +49,9 @@ export function formatBytes(bytes: number | null | undefined, locale = "tr"): st
  * Signed byte delta with a real minus sign (U+2212). The old duplicated
  * helpers in the caches/history views carried a mojibake literal instead.
  */
-export function formatSignedBytes(bytes: number): string {
-  if (bytes === 0) return formatBytes(0);
-  return `${bytes > 0 ? "+" : "−"}${formatBytes(Math.abs(bytes))}`;
+export function formatSignedBytes(bytes: number, locale?: string | null): string {
+  if (bytes === 0) return formatBytes(0, locale);
+  return `${bytes > 0 ? "+" : "−"}${formatBytes(Math.abs(bytes), locale)}`;
 }
 
 /**
@@ -45,7 +59,7 @@ export function formatSignedBytes(bytes: number): string {
  */
 export function formatDate(
   isoString: string | null | undefined,
-  locale = "tr"
+  locale?: string | null,
 ): {
   relative: string;
   exact: string;
@@ -53,6 +67,9 @@ export function formatDate(
   if (!isoString) {
     return { relative: "-", exact: "-" };
   }
+
+  const effectiveLocale = resolveEffectiveLocale(locale);
+  const isTr = effectiveLocale.toLowerCase().startsWith("tr");
 
   try {
     const date = new Date(isoString);
@@ -70,59 +87,48 @@ export function formatDate(
     const diffYears = Math.floor(diffDays / 365);
 
     let relative = "";
-    if (diffDays < 1) {
-      if (diffHours < 1) {
-        if (diffMin < 1) {
-          if (locale.startsWith("tr")) {
-            relative = "Az önce";
+    try {
+      const rtf = new Intl.RelativeTimeFormat(effectiveLocale, { numeric: "auto" });
+      if (diffDays < 1) {
+        if (diffHours < 1) {
+          if (diffMin < 1) {
+            relative = isTr ? "Az önce" : rtf.format(-Math.max(1, diffSec), "second");
           } else {
-            try {
-              const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
-              relative = rtf.format(-Math.max(1, diffSec), "second");
-            } catch {
-              relative = "Just now";
-            }
+            relative = rtf.format(-diffMin, "minute");
           }
         } else {
-          try {
-            const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
-            relative = rtf.format(-diffMin, "minute");
-          } catch {
-            relative = `${diffMin}m ago`;
-          }
-        }
-      } else {
-        try {
-          const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
           relative = rtf.format(-diffHours, "hour");
-        } catch {
-          relative = `${diffHours}h ago`;
         }
-      }
-    } else if (diffDays < 30) {
-      try {
-        const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+      } else if (diffDays < 30) {
         relative = rtf.format(-diffDays, "day");
-      } catch {
-        relative = `${diffDays}d ago`;
-      }
-    } else if (diffMonths < 12) {
-      try {
-        const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+      } else if (diffMonths < 12) {
         relative = rtf.format(-diffMonths, "month");
-      } catch {
-        relative = `${diffMonths}mo ago`;
-      }
-    } else {
-      try {
-        const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+      } else {
         relative = rtf.format(-diffYears, "year");
+      }
+    } catch {
+      // Safe fallback when Intl.RelativeTimeFormat fails for effectiveLocale
+      try {
+        const fallbackRtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+        if (diffDays < 1) {
+          if (diffHours < 1) {
+            relative = isTr ? "Az önce" : fallbackRtf.format(-Math.max(1, diffMin), "minute");
+          } else {
+            relative = fallbackRtf.format(-diffHours, "hour");
+          }
+        } else if (diffDays < 30) {
+          relative = fallbackRtf.format(-diffDays, "day");
+        } else if (diffMonths < 12) {
+          relative = fallbackRtf.format(-diffMonths, "month");
+        } else {
+          relative = fallbackRtf.format(-diffYears, "year");
+        }
       } catch {
-        relative = `${diffYears}y ago`;
+        relative = isTr ? "Az önce" : "-";
       }
     }
 
-    const exact = new Intl.DateTimeFormat(locale, {
+    const exact = new Intl.DateTimeFormat(effectiveLocale, {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -137,14 +143,8 @@ export function formatDate(
 }
 
 /**
- * Truncate long file path with ellipsis in the middle or end
+ * Path helpers live in `@/lib/format/path` so views do not have to import
+ * formatting utilities from a feature component. Re-exported here for the
+ * existing call sites.
  */
-export function truncatePath(fullPath: string, maxLength = 48): string {
-  if (!fullPath || fullPath.length <= maxLength) return fullPath;
-  const parts = fullPath.split(/[/\\]/);
-  if (parts.length <= 2) return fullPath;
-
-  const first = parts[0] + "\\" + parts[1];
-  const last = parts[parts.length - 1];
-  return `${first}\\...\\${last}`;
-}
+export { maskPath, truncatePath } from "@/lib/format/path";

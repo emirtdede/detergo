@@ -8,18 +8,18 @@ import { makeItem, makeUpdate } from "./fixtures";
 
 describe("WP-1: Foundation & Formatting Utilities", () => {
   it("formats bytes accurately with Turkish decimal comma", () => {
-    expect(formatBytes(0)).toBe("0 B");
-    expect(formatBytes(1024)).toBe("1,00 KB");
-    expect(formatBytes(1048576)).toBe("1,00 MB");
-    expect(formatBytes(1572864)).toBe("1,50 MB");
-    expect(formatBytes(1073741824 * 2.5)).toBe("2,50 GB");
-    expect(formatBytes(null)).toBe("-");
+    expect(formatBytes(0, "tr")).toBe("0 B");
+    expect(formatBytes(1024, "tr")).toBe("1,00 KB");
+    expect(formatBytes(1048576, "tr")).toBe("1,00 MB");
+    expect(formatBytes(1572864, "tr")).toBe("1,50 MB");
+    expect(formatBytes(1073741824 * 2.5, "tr")).toBe("2,50 GB");
+    expect(formatBytes(null, "tr")).toBe("-");
   });
 
   it("formats dates into relative and exact values", () => {
     const now = new Date().toISOString();
-    expect(formatDate(now).relative).toBe("Az önce");
-    expect(formatDate(null).relative).toBe("-");
+    expect(formatDate(now, "tr").relative).toBe("Az önce");
+    expect(formatDate(null, "tr").relative).toBe("-");
   });
 
   it("truncates long file paths cleanly", () => {

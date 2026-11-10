@@ -13,7 +13,7 @@ const pkg = JSON.parse(fs.readFileSync(path.join(rootDir, "package.json"), "utf8
 const version = pkg.version;
 
 console.log("=================================================");
-console.log(`🚀 Dev Cleaner ${version} — Release build`);
+console.log(`[RELEASE] Dev Cleaner ${version} — Release build`);
 console.log("=================================================\n");
 
 // ---------------------------------------------------------
@@ -37,27 +37,27 @@ try {
   branch = git(["rev-parse", "--abbrev-ref", "HEAD"]);
   dirty = git(["status", "--porcelain"]).length > 0 ? "true" : "false";
 } catch {
-  console.warn("⚠️  git bilgisi okunamadı; derleme izlenebilirliği garanti edilemez.");
+  console.warn("[WARN] git bilgisi okunamadı; derleme izlenebilirliği garanti edilemez.");
 }
 
 const allowDirty = process.argv.includes("--allow-dirty");
-console.log(`🔖 Commit: ${commit}`);
-console.log(`🌿 Branch: ${branch}`);
-console.log(`🧾 Dirty:  ${dirty}`);
+console.log(`[GIT] Commit: ${commit}`);
+console.log(`[GIT] Branch: ${branch}`);
+console.log(`[GIT] Dirty:  ${dirty}`);
 
 if (dirty !== "false" && !allowDirty) {
   console.error(
-    "\n❌ Çalışma ağacı temiz değil. Yayın artefaktı yalnızca commit edilmiş bir\n" +
+    "\n[ERROR] Çalışma ağacı temiz değil. Yayın artefaktı yalnızca commit edilmiş bir\n" +
       "   kaynaktan üretilebilir. Değişiklikleri commit edin veya (yalnızca yerel\n" +
-      "   test için) `npm run build:release -- --allow-dirty` kullanın.\n"
+      "   test için) `npm run build:release -- --allow-dirty` kullanın.\n",
   );
   process.exit(1);
 }
 if (dirty !== "false") {
-  console.warn("⚠️  --allow-dirty: bu derleme yayınlanamaz, yalnızca yerel test içindir.");
+  console.warn("[WARN] --allow-dirty: bu derleme yayınlanamaz, yalnızca yerel test içindir.");
 }
 
-console.log("\n🧹 1. Eski çıktılar temizleniyor...");
+console.log("\n[STEP 1/5] Eski çıktılar temizleniyor...");
 // Only stop copies that would lock the artefacts we are about to replace: the
 // installed app and a previously unpacked portable build. A blanket
 // `taskkill /IM node-cleaner.exe` also killed the debug binary that
@@ -69,7 +69,7 @@ try {
       `Get-Process -Name node-cleaner,'Node-Cleaner-${version}-Portable' -ErrorAction SilentlyContinue | ` +
       `Where-Object { $_.Path -and $_.Path -notlike '*node_cleaner_target*' -and $_.Path -notlike '*\\target\\*' } | ` +
       `Stop-Process -Force; exit 0"`,
-    { stdio: "ignore" }
+    { stdio: "ignore" },
   );
 } catch {}
 
@@ -87,7 +87,7 @@ if (fs.existsSync(releaseOutputDir)) {
 // runtime ACL authority was empty, so every window control and drag command was
 // rejected ("not allowed by ACL"). Regenerate the capability set on every
 // release build.
-console.log("🧹 ACL ve derleme önbelleği temizleniyor...");
+console.log("[CLEAN] ACL ve derleme önbelleği temizleniyor...");
 fs.rmSync(path.join(rootDir, "src-tauri", "gen", "schemas"), { recursive: true, force: true });
 
 // Artifact directory: standard Cargo location unless the caller overrides it
@@ -95,7 +95,7 @@ fs.rmSync(path.join(rootDir, "src-tauri", "gen", "schemas"), { recursive: true, 
 const cargoTargetDir = process.env.CARGO_TARGET_DIR
   ? path.resolve(process.env.CARGO_TARGET_DIR)
   : path.join(rootDir, "src-tauri", "target");
-console.log(`📁 Cargo target-dir: ${cargoTargetDir}`);
+console.log(`[TARGET] Cargo target-dir: ${cargoTargetDir}`);
 
 for (const profile of ["release", "debug"]) {
   const buildDir = path.join(cargoTargetDir, profile, "build");
@@ -107,7 +107,7 @@ for (const profile of ["release", "debug"]) {
   }
 }
 
-console.log("\n📦 2. Sürüm senkronizasyonu kontrol ediliyor...");
+console.log("\n[STEP 2/5] Sürüm senkronizasyonu kontrol ediliyor...");
 execSync("npm run check-version", { cwd: rootDir, stdio: "inherit" });
 
 const startedAt = Date.now();
@@ -119,20 +119,20 @@ const buildEnv = {
   NC_BUILD_TIME: String(Math.floor(startedAt / 1000)),
 };
 
-console.log("\n🔨 3. Tauri release derlemesi başlatılıyor...");
+console.log("\n[STEP 3/5] Tauri release derlemesi başlatılıyor...");
 execSync("npm run tauri build", { cwd: rootDir, stdio: "inherit", env: buildEnv });
 
 const targetDir = path.join(cargoTargetDir, "release");
 const binary = path.join(targetDir, "node-cleaner.exe");
 if (!fs.existsSync(binary)) {
-  console.error(`❌ Derleme çıktısı bulunamadı: ${binary}`);
+  console.error(`[ERROR] Derleme çıktısı bulunamadı: ${binary}`);
   process.exit(1);
 }
 if (fs.statSync(binary).mtimeMs < startedAt - 1000) {
   console.error(
-    `❌ Derleme çıktısı bu çalıştırmada üretilmedi (mtime: ${new Date(
-      fs.statSync(binary).mtimeMs
-    ).toISOString()}). Eski bir binary paketlenmesin.`
+    `[ERROR] Derleme çıktısı bu çalıştırmada üretilmedi (mtime: ${new Date(
+      fs.statSync(binary).mtimeMs,
+    ).toISOString()}). Eski bir binary paketlenmesin.`,
   );
   process.exit(1);
 }
@@ -158,23 +158,23 @@ const artifacts = [
   },
 ];
 
-console.log("\n📂 4. Paketler release_output klasörüne aktarılıyor...");
+console.log("\n[STEP 4/5] Paketler release_output klasörüne aktarılıyor...");
 const copiedFiles = [];
 
 for (const art of artifacts) {
   if (art.src && fs.existsSync(art.src)) {
     // A bundle from an earlier run must never be mixed with this build.
     if (fs.statSync(art.src).mtimeMs < startedAt - 1000) {
-      console.error(`❌ Eski paket atlandı (bu çalıştırmada üretilmedi): ${art.src}`);
+      console.error(`[ERROR] Eski paket atlandı (bu çalıştırmada üretilmedi): ${art.src}`);
       process.exit(1);
     }
     const destPath = path.join(releaseOutputDir, art.destName);
     fs.copyFileSync(art.src, destPath);
     copiedFiles.push(art.destName);
     const sizeMb = (fs.statSync(destPath).size / (1024 * 1024)).toFixed(2);
-    console.log(`  ✓ ${art.destName} (${sizeMb} MB)`);
+    console.log(`  [OK] ${art.destName} (${sizeMb} MB)`);
   } else {
-    console.warn(`  ⚠️ Kaynak bulunamadı: ${art.destName}`);
+    console.warn(`  [WARN] Kaynak bulunamadı: ${art.destName}`);
     process.exit(1);
   }
 }
@@ -184,15 +184,23 @@ if (fs.existsSync(verifyScript)) {
   fs.copyFileSync(verifyScript, path.join(releaseOutputDir, "verify-checksums.bat"));
 }
 
-console.log("\n🔐 5. SHA-256 özetleri hesaplanıyor...");
+console.log("\n[STEP 5/5] SHA-256 özetleri hesaplanıyor...");
 const checksumLines = [];
 for (const fileName of copiedFiles) {
   const filePath = path.join(releaseOutputDir, fileName);
-  const hash = crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex").toUpperCase();
+  const hash = crypto
+    .createHash("sha256")
+    .update(fs.readFileSync(filePath))
+    .digest("hex")
+    .toUpperCase();
   checksumLines.push(`${hash}  ${fileName}`);
-  console.log(`  🔑 ${fileName} -> ${hash}`);
+  console.log(`  [HASH] ${fileName} -> ${hash}`);
 }
-fs.writeFileSync(path.join(releaseOutputDir, "SHA256SUMS.txt"), checksumLines.join("\n") + "\n", "utf8");
+fs.writeFileSync(
+  path.join(releaseOutputDir, "SHA256SUMS.txt"),
+  checksumLines.join("\n") + "\n",
+  "utf8",
+);
 
 // Provenance record shipped next to the packages so a download can be matched
 // to the source revision without reading the binary.
@@ -216,15 +224,15 @@ const buildInfo = {
 fs.writeFileSync(
   path.join(releaseOutputDir, "BUILD_INFO.json"),
   JSON.stringify(buildInfo, null, 2) + "\n",
-  "utf8"
+  "utf8",
 );
 
 if (dirty !== "false") {
-  console.log("\n⚠️  BU UYARI: kaynak ağacı kirliydi; bu paketler yayınlanamaz.");
+  console.log("\n[WARN] BU UYARI: kaynak ağacı kirliydi; bu paketler yayınlanamaz.");
 }
 
 console.log("\n=================================================");
-console.log("🎉 RELEASE DERLEMESİ VE DOĞRULAMA TAMAMLANDI!");
-console.log(`📁 ${releaseOutputDir}`);
-console.log(`🔖 ${commit.slice(0, 7)} (${branch})`);
+console.log("[SUCCESS] RELEASE DERLEMESİ VE DOĞRULAMA TAMAMLANDI!");
+console.log(`[OUTPUT] ${releaseOutputDir}`);
+console.log(`[BUILD] ${commit.slice(0, 7)} (${branch})`);
 console.log("=================================================\n");

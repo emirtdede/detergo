@@ -55,11 +55,7 @@ fn recordings_measurement_benchmark() {
         .and_then(|v| v.parse::<usize>().ok())
         .unwrap_or(300_000);
 
-    let root = std::env::temp_dir().join(format!(
-        "nc-recordings-{}-{}",
-        count,
-        std::process::id()
-    ));
+    let root = std::env::temp_dir().join(format!("nc-recordings-{}-{}", count, std::process::id()));
     if root.exists() {
         let _ = fs::remove_dir_all(&root);
     }
@@ -90,7 +86,10 @@ fn recordings_measurement_benchmark() {
 
     let cleanup_started = Instant::now();
     let _ = fs::remove_dir_all(&root);
-    println!("NC_RECORDINGS cleanup_ms={}", cleanup_started.elapsed().as_millis());
+    println!(
+        "NC_RECORDINGS cleanup_ms={}",
+        cleanup_started.elapsed().as_millis()
+    );
 
     assert_eq!(
         size.logical_bytes, expected_bytes,

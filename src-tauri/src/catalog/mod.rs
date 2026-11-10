@@ -8,7 +8,7 @@ mod tests;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-pub use matcher::{classify, Evidence, Classification};
+pub use matcher::{classify, Classification, Evidence};
 pub use model::{
     validate_catalog, Catalog, CatalogError, CleanupMethod, Confidence, GitPolicy, MarkerMode,
     Rule, SafetyClass, TargetKind,
@@ -31,8 +31,8 @@ pub struct CatalogIndex {
 
 impl CatalogIndex {
     pub fn from_toml(source: &str) -> Result<Self, CatalogError> {
-        let catalog: Catalog =
-            toml::from_str(source).map_err(|e| CatalogError(format!("TOML ayrıştırılamadı: {}", e)))?;
+        let catalog: Catalog = toml::from_str(source)
+            .map_err(|e| CatalogError(format!("Failed to parse TOML catalog: {}", e)))?;
         validate_catalog(&catalog)?;
         Ok(Self::build(catalog))
     }

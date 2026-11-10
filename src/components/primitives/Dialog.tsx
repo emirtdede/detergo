@@ -47,7 +47,7 @@ export const Dialog: React.FC<DialogProps> = ({
     const getFocusable = () =>
       modal
         ? Array.from(modal.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-            (element) => element.getClientRects().length > 0
+            (element) => element.getClientRects().length > 0,
           )
         : [];
 

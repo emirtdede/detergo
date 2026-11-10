@@ -4,8 +4,14 @@ import { isBrowserShortcutToBlock, installDesktopGuard } from "../lib/desktop-gu
 describe("Desktop Guard & Edge WebView2 Hardening", () => {
   const createKeyEvent = (
     key: string,
-    modifiers: { ctrl?: boolean; alt?: boolean; shift?: boolean; meta?: boolean; code?: string } = {},
-    target?: HTMLElement
+    modifiers: {
+      ctrl?: boolean;
+      alt?: boolean;
+      shift?: boolean;
+      meta?: boolean;
+      code?: string;
+    } = {},
+    target?: HTMLElement,
   ): KeyboardEvent => {
     return {
       key,
@@ -55,8 +61,12 @@ describe("Desktop Guard & Edge WebView2 Hardening", () => {
       expect(isBrowserShortcutToBlock(createKeyEvent("0", { ctrl: true }))).toBe(true);
       expect(isBrowserShortcutToBlock(createKeyEvent("=", { ctrl: true }))).toBe(true);
       expect(isBrowserShortcutToBlock(createKeyEvent("_", { ctrl: true }))).toBe(true);
-      expect(isBrowserShortcutToBlock(createKeyEvent("+", { ctrl: true, code: "NumpadAdd" }))).toBe(true);
-      expect(isBrowserShortcutToBlock(createKeyEvent("-", { ctrl: true, code: "NumpadSubtract" }))).toBe(true);
+      expect(isBrowserShortcutToBlock(createKeyEvent("+", { ctrl: true, code: "NumpadAdd" }))).toBe(
+        true,
+      );
+      expect(
+        isBrowserShortcutToBlock(createKeyEvent("-", { ctrl: true, code: "NumpadSubtract" })),
+      ).toBe(true);
     });
 
     it("blocks history back/forward navigation keys (Alt+ArrowLeft, Alt+ArrowRight)", () => {
@@ -65,7 +75,9 @@ describe("Desktop Guard & Edge WebView2 Hardening", () => {
     });
 
     it("blocks Edge feature flyouts (Ctrl+Shift+Delete, Ctrl+Shift+O, B, U, Y, M, S)", () => {
-      expect(isBrowserShortcutToBlock(createKeyEvent("delete", { ctrl: true, shift: true }))).toBe(true);
+      expect(isBrowserShortcutToBlock(createKeyEvent("delete", { ctrl: true, shift: true }))).toBe(
+        true,
+      );
       expect(isBrowserShortcutToBlock(createKeyEvent("o", { ctrl: true, shift: true }))).toBe(true);
       expect(isBrowserShortcutToBlock(createKeyEvent("b", { ctrl: true, shift: true }))).toBe(true);
       expect(isBrowserShortcutToBlock(createKeyEvent("u", { ctrl: true, shift: true }))).toBe(true);
@@ -79,13 +91,17 @@ describe("Desktop Guard & Edge WebView2 Hardening", () => {
       expect(isBrowserShortcutToBlock(createKeyEvent("f5"), false)).toBe(true);
       expect(isBrowserShortcutToBlock(createKeyEvent("r", { ctrl: true }), false)).toBe(true);
       expect(isBrowserShortcutToBlock(createKeyEvent("f12"), false)).toBe(true);
-      expect(isBrowserShortcutToBlock(createKeyEvent("i", { ctrl: true, shift: true }), false)).toBe(true);
+      expect(
+        isBrowserShortcutToBlock(createKeyEvent("i", { ctrl: true, shift: true }), false),
+      ).toBe(true);
 
       // In dev mode (isDev = true), reload and DevTools remain accessible to developer
       expect(isBrowserShortcutToBlock(createKeyEvent("f5"), true)).toBe(false);
       expect(isBrowserShortcutToBlock(createKeyEvent("r", { ctrl: true }), true)).toBe(false);
       expect(isBrowserShortcutToBlock(createKeyEvent("f12"), true)).toBe(false);
-      expect(isBrowserShortcutToBlock(createKeyEvent("i", { ctrl: true, shift: true }), true)).toBe(false);
+      expect(isBrowserShortcutToBlock(createKeyEvent("i", { ctrl: true, shift: true }), true)).toBe(
+        false,
+      );
     });
 
     it("preserves standard user text editing actions (Ctrl+C, Ctrl+V, Ctrl+X, Ctrl+A, Ctrl+Z)", () => {

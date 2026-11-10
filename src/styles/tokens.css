@@ -25,7 +25,8 @@
   --radius-full: 9999px;
 
   /* Typography */
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Helvetica Neue", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Helvetica Neue",
+    sans-serif;
   --font-mono: "Cascadia Code", "Consolas", "Courier New", monospace;
 
   --text-xs: 12px;
@@ -43,17 +44,17 @@
   --leading-relaxed: 1.6;
 
   /* Functional Status Colors */
-  --danger: #EF4444;
-  --danger-hover: #DC2626;
-  --danger-active: #B91C1C;
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+  --danger-active: #b91c1c;
   --danger-subtle: rgba(239, 68, 68, 0.14);
-  --danger-text: #FFFFFF;
+  --danger-text: #ffffff;
 
-  --success: #10B981;
+  --success: #10b981;
   --success-hover: #059669;
   --success-subtle: rgba(16, 185, 129, 0.14);
 
-  --warning: #F59E0B;
+  --warning: #f59e0b;
   --warning-subtle: rgba(245, 158, 11, 0.14);
 
   /* Transitions & Animation */
@@ -72,234 +73,235 @@
    1. KOYU TEMALAR (DARK THEMES)
    ========================================================================== */
 
-/* 1.1 S─░YAH (Black - AMOLED Solid) */
+/* 1.1 SİYAH (Black - AMOLED Solid) */
 [data-theme="dark-black"],
 [data-theme="black"],
 [data-theme="dark-transparent"],
 [data-theme="transparent"] {
-  --app-bg: #0C0C0E;
+  --app-bg: #0c0c0e;
   --surface: #141418;
-  --surface-strong: #1C1C22;
-  --surface-hover: #22222B;
-  --surface-active: #2A2A36;
+  --surface-strong: #1c1c22;
+  --surface-hover: #22222b;
+  --surface-active: #2a2a36;
   --surface-alt: #101014;
 
-  --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
   --text-disabled: #475569;
 
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.16);
   --separator: rgba(255, 255, 255, 0.06);
 
-  --accent: #3B82F6;
-  --accent-hover: #2563EB;
-  --accent-active: #1D4ED8;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-active: #1d4ed8;
   --accent-subtle: rgba(59, 130, 246, 0.15);
-  --accent-text: #FFFFFF;
+  --accent-text: #ffffff;
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
 
   --glass-bg: #141418;
-  --glass-bg-strong: #1C1C22;
+  --glass-bg-strong: #1c1c22;
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-inner-highlight: transparent;
 }
 
-/* 1.2 KOYU GR─░ (Dark Slate Gray) */
+/* 1.2 KOYU GRİ (Dark Slate Gray) */
 [data-theme="dark-gray"] {
-  --app-bg: #16171B;
+  --app-bg: #16171b;
   --surface: #202127;
-  --surface-strong: #2A2B33;
-  --surface-hover: #31333D;
-  --surface-active: #3C3E4A;
-  --surface-alt: #1A1B20;
+  --surface-strong: #2a2b33;
+  --surface-hover: #31333d;
+  --surface-active: #3c3e4a;
+  --surface-alt: #1a1b20;
 
-  --text-primary: #F1F5F9;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
   --text-disabled: #475569;
 
   --border: rgba(255, 255, 255, 0.09);
   --border-strong: rgba(255, 255, 255, 0.18);
   --separator: rgba(255, 255, 255, 0.07);
 
-  --accent: #60A5FA;
-  --accent-hover: #3B82F6;
-  --accent-active: #2563EB;
+  --accent: #60a5fa;
+  --accent-hover: #3b82f6;
+  --accent-active: #2563eb;
   --accent-subtle: rgba(96, 165, 250, 0.15);
-  --accent-text: #FFFFFF;
+  /* A light accent needs dark text on top; white text only reaches 2.5:1. */
+  --accent-text: #082f49;
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
 
   --glass-bg: #202127;
-  --glass-bg-strong: #2A2B33;
+  --glass-bg-strong: #2a2b33;
   --glass-border: rgba(255, 255, 255, 0.09);
   --glass-inner-highlight: transparent;
 }
 
-/* 1.3 KOYU MAV─░ (Midnight Blue) */
+/* 1.3 KOYU MAVİ (Midnight Blue) */
 [data-theme="dark-blue"] {
-  --app-bg: #0A1120;
-  --surface: #101D36;
-  --surface-strong: #172A4E;
-  --surface-hover: #1E3562;
-  --surface-active: #27437B;
-  --surface-alt: #0C162A;
+  --app-bg: #0a1120;
+  --surface: #101d36;
+  --surface-strong: #172a4e;
+  --surface-hover: #1e3562;
+  --surface-active: #27437b;
+  --surface-alt: #0c162a;
 
-  --text-primary: #F0F9FF;
-  --text-secondary: #93C5FD;
-  --text-muted: #60A5FA;
-  --text-disabled: #3B82F6;
+  --text-primary: #f0f9ff;
+  --text-secondary: #93c5fd;
+  --text-muted: #60a5fa;
+  --text-disabled: #3b82f6;
 
   --border: rgba(96, 165, 250, 0.16);
-  --border-strong: rgba(96, 165, 250, 0.30);
-  --separator: rgba(96, 165, 250, 0.10);
+  --border-strong: rgba(96, 165, 250, 0.3);
+  --separator: rgba(96, 165, 250, 0.1);
 
-  --accent: #38BDF8;
-  --accent-hover: #0EA5E9;
-  --accent-active: #0284C7;
+  --accent: #38bdf8;
+  --accent-hover: #0ea5e9;
+  --accent-active: #0284c7;
   --accent-subtle: rgba(56, 189, 248, 0.16);
-  --accent-text: #082F49;
+  --accent-text: #082f49;
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
 
-  --glass-bg: #101D36;
-  --glass-bg-strong: #172A4E;
+  --glass-bg: #101d36;
+  --glass-bg-strong: #172a4e;
   --glass-border: rgba(96, 165, 250, 0.16);
   --glass-inner-highlight: transparent;
 }
 
 /* 1.4 KOYU MOR (Deep Purple) */
 [data-theme="dark-purple"] {
-  --app-bg: #120A1E;
-  --surface: #1E1231;
-  --surface-strong: #2B1B47;
-  --surface-hover: #37235B;
-  --surface-active: #452C72;
-  --surface-alt: #160D25;
+  --app-bg: #120a1e;
+  --surface: #1e1231;
+  --surface-strong: #2b1b47;
+  --surface-hover: #37235b;
+  --surface-active: #452c72;
+  --surface-alt: #160d25;
 
-  --text-primary: #FAF5FF;
-  --text-secondary: #D8B4FE;
-  --text-muted: #A855F7;
-  --text-disabled: #7E22CE;
+  --text-primary: #faf5ff;
+  --text-secondary: #d8b4fe;
+  --text-muted: #a855f7;
+  --text-disabled: #7e22ce;
 
   --border: rgba(192, 132, 252, 0.16);
-  --border-strong: rgba(192, 132, 252, 0.30);
-  --separator: rgba(192, 132, 252, 0.10);
+  --border-strong: rgba(192, 132, 252, 0.3);
+  --separator: rgba(192, 132, 252, 0.1);
 
-  --accent: #C084FC;
-  --accent-hover: #A855F7;
-  --accent-active: #9333EA;
+  --accent: #c084fc;
+  --accent-hover: #a855f7;
+  --accent-active: #9333ea;
   --accent-subtle: rgba(192, 132, 252, 0.16);
-  --accent-text: #2E1065;
+  --accent-text: #2e1065;
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
 
-  --glass-bg: #1E1231;
-  --glass-bg-strong: #2B1B47;
+  --glass-bg: #1e1231;
+  --glass-bg-strong: #2b1b47;
   --glass-border: rgba(192, 132, 252, 0.16);
   --glass-inner-highlight: transparent;
 }
 
-/* 1.5 KOYU YE┼Ş─░L (Dark Emerald) */
+/* 1.5 KOYU YEŞİL (Dark Emerald) */
 [data-theme="dark-green"] {
   --app-bg: #081611;
-  --surface: #0E241C;
-  --surface-strong: #15372B;
-  --surface-hover: #1D4A3A;
-  --surface-active: #265E4B;
-  --surface-alt: #0B1C16;
+  --surface: #0e241c;
+  --surface-strong: #15372b;
+  --surface-hover: #1d4a3a;
+  --surface-active: #265e4b;
+  --surface-alt: #0b1c16;
 
-  --text-primary: #ECFDF5;
-  --text-secondary: #A7F3D0;
-  --text-muted: #34D399;
+  --text-primary: #ecfdf5;
+  --text-secondary: #a7f3d0;
+  --text-muted: #34d399;
   --text-disabled: #059669;
 
   --border: rgba(52, 211, 153, 0.16);
-  --border-strong: rgba(52, 211, 153, 0.30);
-  --separator: rgba(52, 211, 153, 0.10);
+  --border-strong: rgba(52, 211, 153, 0.3);
+  --separator: rgba(52, 211, 153, 0.1);
 
-  --accent: #34D399;
-  --accent-hover: #10B981;
+  --accent: #34d399;
+  --accent-hover: #10b981;
   --accent-active: #059669;
   --accent-subtle: rgba(52, 211, 153, 0.16);
-  --accent-text: #022C22;
+  --accent-text: #022c22;
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
 
-  --glass-bg: #0E241C;
-  --glass-bg-strong: #15372B;
+  --glass-bg: #0e241c;
+  --glass-bg-strong: #15372b;
   --glass-border: rgba(52, 211, 153, 0.16);
   --glass-inner-highlight: transparent;
 }
 
 /* 1.6 KOYU KIRMIZI (Dark Crimson) */
 [data-theme="dark-red"] {
-  --app-bg: #18090B;
+  --app-bg: #18090b;
   --surface: #261013;
-  --surface-strong: #38181D;
+  --surface-strong: #38181d;
   --surface-hover: #482026;
-  --surface-active: #5A2931;
-  --surface-alt: #1D0C0E;
+  --surface-active: #5a2931;
+  --surface-alt: #1d0c0e;
 
-  --text-primary: #FEF2F2;
-  --text-secondary: #FECACA;
-  --text-muted: #F87171;
-  --text-disabled: #DC2626;
+  --text-primary: #fef2f2;
+  --text-secondary: #fecaca;
+  --text-muted: #f87171;
+  --text-disabled: #dc2626;
 
   --border: rgba(248, 113, 113, 0.16);
-  --border-strong: rgba(248, 113, 113, 0.30);
-  --separator: rgba(248, 113, 113, 0.10);
+  --border-strong: rgba(248, 113, 113, 0.3);
+  --separator: rgba(248, 113, 113, 0.1);
 
-  --accent: #F87171;
-  --accent-hover: #EF4444;
-  --accent-active: #DC2626;
+  --accent: #f87171;
+  --accent-hover: #ef4444;
+  --accent-active: #dc2626;
   --accent-subtle: rgba(248, 113, 113, 0.16);
-  --accent-text: #450A0A;
+  --accent-text: #450a0a;
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
 
   --glass-bg: #261013;
-  --glass-bg-strong: #38181D;
+  --glass-bg-strong: #38181d;
   --glass-border: rgba(248, 113, 113, 0.16);
   --glass-inner-highlight: transparent;
 }
 
 /* 1.7 KOYU TURUNCU (Dark Orange) */
 [data-theme="dark-orange"] {
-  --app-bg: #180E07;
-  --surface: #26170E;
+  --app-bg: #180e07;
+  --surface: #26170e;
   --surface-strong: #392416;
-  --surface-hover: #4A301E;
-  --surface-active: #5E3E27;
-  --surface-alt: #1D110A;
+  --surface-hover: #4a301e;
+  --surface-active: #5e3e27;
+  --surface-alt: #1d110a;
 
-  --text-primary: #FFF7ED;
-  --text-secondary: #FED7AA;
-  --text-muted: #FB923C;
-  --text-disabled: #EA580C;
+  --text-primary: #fff7ed;
+  --text-secondary: #fed7aa;
+  --text-muted: #fb923c;
+  --text-disabled: #ea580c;
 
   --border: rgba(251, 146, 60, 0.16);
-  --border-strong: rgba(251, 146, 60, 0.30);
-  --separator: rgba(251, 146, 60, 0.10);
+  --border-strong: rgba(251, 146, 60, 0.3);
+  --separator: rgba(251, 146, 60, 0.1);
 
-  --accent: #FB923C;
-  --accent-hover: #F97316;
-  --accent-active: #EA580C;
+  --accent: #fb923c;
+  --accent-hover: #f97316;
+  --accent-active: #ea580c;
   --accent-subtle: rgba(251, 146, 60, 0.16);
   --accent-text: #431407;
 
@@ -307,7 +309,7 @@
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
 
-  --glass-bg: #26170E;
+  --glass-bg: #26170e;
   --glass-bg-strong: #392416;
   --glass-border: rgba(251, 146, 60, 0.16);
   --glass-inner-highlight: transparent;
@@ -316,24 +318,24 @@
 /* 1.8 KOYU SARI (Dark Amber/Gold) */
 [data-theme="dark-yellow"] {
   --app-bg: #161307;
-  --surface: #24200D;
+  --surface: #24200d;
   --surface-strong: #363014;
-  --surface-hover: #473F1C;
-  --surface-active: #5A5023;
-  --surface-alt: #1B1709;
+  --surface-hover: #473f1c;
+  --surface-active: #5a5023;
+  --surface-alt: #1b1709;
 
-  --text-primary: #FEFCE8;
-  --text-secondary: #FEF08A;
-  --text-muted: #FACC15;
-  --text-disabled: #CA8A04;
+  --text-primary: #fefce8;
+  --text-secondary: #fef08a;
+  --text-muted: #facc15;
+  --text-disabled: #ca8a04;
 
   --border: rgba(250, 204, 21, 0.16);
-  --border-strong: rgba(250, 204, 21, 0.30);
-  --separator: rgba(250, 204, 21, 0.10);
+  --border-strong: rgba(250, 204, 21, 0.3);
+  --separator: rgba(250, 204, 21, 0.1);
 
-  --accent: #FACC15;
-  --accent-hover: #EAB308;
-  --accent-active: #CA8A04;
+  --accent: #facc15;
+  --accent-hover: #eab308;
+  --accent-active: #ca8a04;
   --accent-subtle: rgba(250, 204, 21, 0.16);
   --accent-text: #422006;
 
@@ -341,168 +343,167 @@
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
 
-  --glass-bg: #24200D;
+  --glass-bg: #24200d;
   --glass-bg-strong: #363014;
   --glass-border: rgba(250, 204, 21, 0.16);
   --glass-inner-highlight: transparent;
 }
 
-
 /* ==========================================================================
-   2. A├çIK TEMALAR (LIGHT THEMES)
+   2. AÇIK TEMALAR (LIGHT THEMES)
    ========================================================================== */
 
 /* 2.1 BEYAZ (Pure Light Slate) */
 [data-theme="light-white"],
 [data-theme="white"],
 [data-theme="white-transparent"] {
-  --app-bg: #F8FAFC;
-  --surface: #FFFFFF;
-  --surface-strong: #F1F5F9;
-  --surface-hover: #F1F5F9;
-  --surface-active: #E2E8F0;
-  --surface-alt: #F8FAFC;
+  --app-bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-strong: #f1f5f9;
+  --surface-hover: #f1f5f9;
+  --surface-active: #e2e8f0;
+  --surface-alt: #f8fafc;
 
-  --text-primary: #0F172A;
+  --text-primary: #0f172a;
   --text-secondary: #475569;
-  --text-muted: #64748B;
-  --text-disabled: #94A3B8;
+  --text-muted: #64748b;
+  --text-disabled: #94a3b8;
 
   --border: rgba(0, 0, 0, 0.08);
   --border-strong: rgba(0, 0, 0, 0.16);
   --separator: rgba(0, 0, 0, 0.06);
 
-  --accent: #2563EB;
-  --accent-hover: #1D4ED8;
-  --accent-active: #1E40AF;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-active: #1e40af;
   --accent-subtle: rgba(37, 99, 235, 0.12);
-  --accent-text: #FFFFFF;
+  --accent-text: #ffffff;
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.12);
 
-  --glass-bg: #FFFFFF;
-  --glass-bg-strong: #F8FAFC;
+  --glass-bg: #ffffff;
+  --glass-bg-strong: #f8fafc;
   --glass-border: rgba(0, 0, 0, 0.08);
   --glass-inner-highlight: transparent;
 }
 
-/* 2.2 A├çIK GR─░ (Cloud Gray) */
+/* 2.2 AÇIK GRİ (Cloud Gray) */
 [data-theme="light-gray"] {
-  --app-bg: #EAECEF;
-  --surface: #F5F6F8;
-  --surface-strong: #E2E5EA;
-  --surface-hover: #EBEDF1;
-  --surface-active: #D9DCE3;
-  --surface-alt: #E4E7EC;
+  --app-bg: #eaecef;
+  --surface: #f5f6f8;
+  --surface-strong: #e2e5ea;
+  --surface-hover: #ebedf1;
+  --surface-active: #d9dce3;
+  --surface-alt: #e4e7ec;
 
-  --text-primary: #1E293B;
+  --text-primary: #1e293b;
   --text-secondary: #475569;
-  --text-muted: #64748B;
-  --text-disabled: #94A3B8;
+  --text-muted: #64748b;
+  --text-disabled: #94a3b8;
 
-  --border: rgba(0, 0, 0, 0.10);
+  --border: rgba(0, 0, 0, 0.1);
   --border-strong: rgba(0, 0, 0, 0.18);
   --separator: rgba(0, 0, 0, 0.07);
 
   --accent: #475569;
   --accent-hover: #334155;
-  --accent-active: #1E293B;
+  --accent-active: #1e293b;
   --accent-subtle: rgba(71, 85, 105, 0.14);
-  --accent-text: #FFFFFF;
+  --accent-text: #ffffff;
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.09);
   --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.14);
 
-  --glass-bg: #F5F6F8;
-  --glass-bg-strong: #E2E5EA;
-  --glass-border: rgba(0, 0, 0, 0.10);
+  --glass-bg: #f5f6f8;
+  --glass-bg-strong: #e2e5ea;
+  --glass-border: rgba(0, 0, 0, 0.1);
   --glass-inner-highlight: transparent;
 }
 
-/* 2.3 A├çIK MAV─░ (Sky Blue) */
+/* 2.3 AÇIK MAVİ (Sky Blue) */
 [data-theme="light-blue"] {
-  --app-bg: #EFF6FF;
-  --surface: #FFFFFF;
-  --surface-strong: #DBEAFE;
-  --surface-hover: #F0F7FF;
-  --surface-active: #BFDBFE;
-  --surface-alt: #E6F0FA;
+  --app-bg: #eff6ff;
+  --surface: #ffffff;
+  --surface-strong: #dbeafe;
+  --surface-hover: #f0f7ff;
+  --surface-active: #bfdbfe;
+  --surface-alt: #e6f0fa;
 
-  --text-primary: #0C4A6E;
-  --text-secondary: #0369A1;
-  --text-muted: #0284C7;
-  --text-disabled: #7DD3FC;
+  --text-primary: #0c4a6e;
+  --text-secondary: #0369a1;
+  --text-muted: #0284c7;
+  --text-disabled: #7dd3fc;
 
   --border: rgba(2, 132, 199, 0.14);
   --border-strong: rgba(2, 132, 199, 0.28);
   --separator: rgba(2, 132, 199, 0.08);
 
-  --accent: #0284C7;
-  --accent-hover: #0369A1;
+  --accent: #0284c7;
+  --accent-hover: #0369a1;
   --accent-active: #075985;
   --accent-subtle: rgba(2, 132, 199, 0.12);
-  --accent-text: #FFFFFF;
+  --accent-text: #ffffff;
 
   --shadow-sm: 0 1px 3px rgba(2, 132, 199, 0.06);
-  --shadow-md: 0 4px 12px rgba(2, 132, 199, 0.10);
+  --shadow-md: 0 4px 12px rgba(2, 132, 199, 0.1);
   --shadow-lg: 0 12px 28px rgba(2, 132, 199, 0.15);
 
-  --glass-bg: #FFFFFF;
-  --glass-bg-strong: #F0F9FF;
+  --glass-bg: #ffffff;
+  --glass-bg-strong: #f0f9ff;
   --glass-border: rgba(2, 132, 199, 0.14);
   --glass-inner-highlight: transparent;
 }
 
-/* 2.4 A├çIK MOR (Lavender) */
+/* 2.4 AÇIK MOR (Lavender) */
 [data-theme="light-purple"] {
-  --app-bg: #FAF5FF;
-  --surface: #FFFFFF;
-  --surface-strong: #F3E8FF;
-  --surface-hover: #FAF5FF;
-  --surface-active: #E9D5FF;
-  --surface-alt: #F3E8FF;
+  --app-bg: #faf5ff;
+  --surface: #ffffff;
+  --surface-strong: #f3e8ff;
+  --surface-hover: #faf5ff;
+  --surface-active: #e9d5ff;
+  --surface-alt: #f3e8ff;
 
-  --text-primary: #3B0764;
-  --text-secondary: #6B21A8;
-  --text-muted: #9333EA;
-  --text-disabled: #C084FC;
+  --text-primary: #3b0764;
+  --text-secondary: #6b21a8;
+  --text-muted: #9333ea;
+  --text-disabled: #c084fc;
 
   --border: rgba(147, 51, 234, 0.14);
   --border-strong: rgba(147, 51, 234, 0.28);
   --separator: rgba(147, 51, 234, 0.08);
 
-  --accent: #7C3AED;
-  --accent-hover: #6D28D9;
-  --accent-active: #5B21B6;
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
+  --accent-active: #5b21b6;
   --accent-subtle: rgba(124, 58, 237, 0.12);
-  --accent-text: #FFFFFF;
+  --accent-text: #ffffff;
 
   --shadow-sm: 0 1px 3px rgba(147, 51, 234, 0.06);
-  --shadow-md: 0 4px 12px rgba(147, 51, 234, 0.10);
+  --shadow-md: 0 4px 12px rgba(147, 51, 234, 0.1);
   --shadow-lg: 0 12px 28px rgba(147, 51, 234, 0.15);
 
-  --glass-bg: #FFFFFF;
-  --glass-bg-strong: #FAF5FF;
+  --glass-bg: #ffffff;
+  --glass-bg-strong: #faf5ff;
   --glass-border: rgba(147, 51, 234, 0.14);
   --glass-inner-highlight: transparent;
 }
 
-/* 2.5 A├çIK YE┼Ş─░L (Fresh Mint) */
+/* 2.5 AÇIK YEŞİL (Fresh Mint) */
 [data-theme="light-green"] {
-  --app-bg: #F0FDF4;
-  --surface: #FFFFFF;
-  --surface-strong: #DCFCE7;
-  --surface-hover: #F0FDF4;
-  --surface-active: #BBF7D0;
-  --surface-alt: #DCFCE7;
+  --app-bg: #f0fdf4;
+  --surface: #ffffff;
+  --surface-strong: #dcfce7;
+  --surface-hover: #f0fdf4;
+  --surface-active: #bbf7d0;
+  --surface-alt: #dcfce7;
 
-  --text-primary: #064E3B;
+  --text-primary: #064e3b;
   --text-secondary: #047857;
   --text-muted: #059669;
-  --text-disabled: #6EE7B7;
+  --text-disabled: #6ee7b7;
 
   --border: rgba(5, 150, 105, 0.14);
   --border-strong: rgba(5, 150, 105, 0.28);
@@ -510,125 +511,127 @@
 
   --accent: #059669;
   --accent-hover: #047857;
-  --accent-active: #065F46;
+  --accent-active: #065f46;
   --accent-subtle: rgba(5, 150, 105, 0.12);
-  --accent-text: #FFFFFF;
+  --accent-text: #ffffff;
 
   --shadow-sm: 0 1px 3px rgba(5, 150, 105, 0.06);
-  --shadow-md: 0 4px 12px rgba(5, 150, 105, 0.10);
+  --shadow-md: 0 4px 12px rgba(5, 150, 105, 0.1);
   --shadow-lg: 0 12px 28px rgba(5, 150, 105, 0.15);
 
-  --glass-bg: #FFFFFF;
-  --glass-bg-strong: #F0FDF4;
+  --glass-bg: #ffffff;
+  --glass-bg-strong: #f0fdf4;
   --glass-border: rgba(5, 150, 105, 0.14);
   --glass-inner-highlight: transparent;
 }
 
-/* 2.6 A├çIK KIRMIZI (Coral Rose) */
+/* 2.6 AÇIK KIRMIZI (Coral Rose) */
 [data-theme="light-red"] {
-  --app-bg: #FFF1F2;
-  --surface: #FFFFFF;
-  --surface-strong: #FFE4E6;
-  --surface-hover: #FFF1F2;
-  --surface-active: #FECDD3;
-  --surface-alt: #FFE4E6;
+  --app-bg: #fff1f2;
+  --surface: #ffffff;
+  --surface-strong: #ffe4e6;
+  --surface-hover: #fff1f2;
+  --surface-active: #fecdd3;
+  --surface-alt: #ffe4e6;
 
-  --text-primary: #4C0519;
-  --text-secondary: #BE123C;
-  --text-muted: #E11D48;
-  --text-disabled: #FDA4AF;
+  --text-primary: #4c0519;
+  --text-secondary: #be123c;
+  --text-muted: #e11d48;
+  --text-disabled: #fda4af;
 
   --border: rgba(225, 29, 72, 0.14);
   --border-strong: rgba(225, 29, 72, 0.28);
   --separator: rgba(225, 29, 72, 0.08);
 
-  --accent: #E11D48;
-  --accent-hover: #BE123C;
-  --accent-active: #9F1239;
+  --accent: #e11d48;
+  --accent-hover: #be123c;
+  --accent-active: #9f1239;
   --accent-subtle: rgba(225, 29, 72, 0.12);
-  --accent-text: #FFFFFF;
+  --accent-text: #ffffff;
 
   --shadow-sm: 0 1px 3px rgba(225, 29, 72, 0.06);
-  --shadow-md: 0 4px 12px rgba(225, 29, 72, 0.10);
+  --shadow-md: 0 4px 12px rgba(225, 29, 72, 0.1);
   --shadow-lg: 0 12px 28px rgba(225, 29, 72, 0.15);
 
-  --glass-bg: #FFFFFF;
-  --glass-bg-strong: #FFF1F2;
+  --glass-bg: #ffffff;
+  --glass-bg-strong: #fff1f2;
   --glass-border: rgba(225, 29, 72, 0.14);
   --glass-inner-highlight: transparent;
 }
 
-/* 2.7 A├çIK TURUNCU (Peach Orange) */
+/* 2.7 AÇIK TURUNCU (Peach Orange) */
 [data-theme="light-orange"] {
-  --app-bg: #FFF7ED;
-  --surface: #FFFFFF;
-  --surface-strong: #FFEDD5;
-  --surface-hover: #FFF7ED;
-  --surface-active: #FED7AA;
-  --surface-alt: #FFEDD5;
+  --app-bg: #fff7ed;
+  --surface: #ffffff;
+  --surface-strong: #ffedd5;
+  --surface-hover: #fff7ed;
+  --surface-active: #fed7aa;
+  --surface-alt: #ffedd5;
 
   --text-primary: #431407;
-  --text-secondary: #C2410C;
-  --text-muted: #EA580C;
-  --text-disabled: #FDBA74;
+  --text-secondary: #c2410c;
+  --text-muted: #ea580c;
+  --text-disabled: #fdba74;
 
   --border: rgba(234, 88, 12, 0.14);
   --border-strong: rgba(234, 88, 12, 0.28);
   --separator: rgba(234, 88, 12, 0.08);
 
-  --accent: #EA580C;
-  --accent-hover: #C2410C;
-  --accent-active: #9A3412;
+  --accent: #ea580c;
+  --accent-hover: #c2410c;
+  --accent-active: #9a3412;
   --accent-subtle: rgba(234, 88, 12, 0.12);
-  --accent-text: #FFFFFF;
+  --accent-text: #ffffff;
 
   --shadow-sm: 0 1px 3px rgba(234, 88, 12, 0.06);
-  --shadow-md: 0 4px 12px rgba(234, 88, 12, 0.10);
+  --shadow-md: 0 4px 12px rgba(234, 88, 12, 0.1);
   --shadow-lg: 0 12px 28px rgba(234, 88, 12, 0.15);
 
-  --glass-bg: #FFFFFF;
-  --glass-bg-strong: #FFF7ED;
+  --glass-bg: #ffffff;
+  --glass-bg-strong: #fff7ed;
   --glass-border: rgba(234, 88, 12, 0.14);
   --glass-inner-highlight: transparent;
 }
 
-/* 2.8 A├çIK SARI (Golden Sand) */
+/* 2.8 AÇIK SARI (Golden Sand) */
 [data-theme="light-yellow"] {
-  --app-bg: #FEFCE8;
-  --surface: #FFFFFF;
-  --surface-strong: #FEF9C3;
-  --surface-hover: #FEFCE8;
-  --surface-active: #FEF08A;
-  --surface-alt: #FEF9C3;
+  --app-bg: #fefce8;
+  --surface: #ffffff;
+  --surface-strong: #fef9c3;
+  --surface-hover: #fefce8;
+  --surface-active: #fef08a;
+  --surface-alt: #fef9c3;
 
   --text-primary: #422006;
-  --text-secondary: #A16207;
-  --text-muted: #CA8A04;
-  --text-disabled: #FDE047;
+  --text-secondary: #a16207;
+  --text-muted: #ca8a04;
+  --text-disabled: #fde047;
 
   --border: rgba(202, 138, 4, 0.14);
   --border-strong: rgba(202, 138, 4, 0.28);
   --separator: rgba(202, 138, 4, 0.08);
 
-  --accent: #D97706;
-  --accent-hover: #B45309;
-  --accent-active: #92400E;
+  --accent: #d97706;
+  --accent-hover: #b45309;
+  --accent-active: #92400e;
   --accent-subtle: rgba(217, 119, 6, 0.12);
-  --accent-text: #FFFFFF;
+  --accent-text: #ffffff;
 
   --shadow-sm: 0 1px 3px rgba(202, 138, 4, 0.06);
-  --shadow-md: 0 4px 12px rgba(202, 138, 4, 0.10);
+  --shadow-md: 0 4px 12px rgba(202, 138, 4, 0.1);
   --shadow-lg: 0 12px 28px rgba(202, 138, 4, 0.15);
 
-  --glass-bg: #FFFFFF;
-  --glass-bg-strong: #FEFCE8;
+  --glass-bg: #ffffff;
+  --glass-bg-strong: #fefce8;
   --glass-border: rgba(202, 138, 4, 0.14);
   --glass-inner-highlight: transparent;
 }
 
 /* Reduced Motion Override */
 @media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
+  *,
+  ::before,
+  ::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

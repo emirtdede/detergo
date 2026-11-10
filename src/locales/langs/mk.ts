@@ -102,18 +102,23 @@ export const mk: TranslationSchema = {
     cancel: "Откажи",
     confirm: "Потврди",
     recycleTitle: "Да се преместат избраните папки во Корпата за Отпадоци?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules папки (${size}) ќе бидат преместени во Корпата за Отпадоци. Можете да ги вратите во секое време.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules папки (${size}) ќе бидат преместени во Корпата за Отпадоци. Можете да ги вратите во секое време.`,
     recycleConfirmButton: "Премести во Корпа",
     permanentTitle: "Трајно да се избришат избраните папки?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules папки (${size}) ќе бидат трајно избришани од дискот. Ова дејство не може да се врати.`,
-    permanentWarning: "ПРЕДУПРЕДУВАЊЕ: Ова дејство е трајно! Папките нема да бидат испратени во Корпата за Отпадоци.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules папки (${size}) ќе бидат трајно избришани од дискот. Ова дејство не може да се врати.`,
+    permanentWarning:
+      "ПРЕДУПРЕДУВАЊЕ: Ова дејство е трајно! Папките нема да бидат испратени во Корпата за Отпадоци.",
     permanentConfirmButton: "Трајно Избриши",
     deletingInProgress: "Бришењето е во тек...",
     recycleSuccess: (count: number) => `${count} папки успешно преместени во Корпата за Отпадоци.`,
     permanentSuccess: (count: number) => `${count} папки успешно трајно избришани.`,
     partialErrorTitle: "Извештај за Делумно Бришење",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} папки исчистени, но ${errorCount} папки не можеа да се избришат.`,
-    lockedOrPermissionNote: "Некои датотеки може да се заклучени од активни процеси или да бараат администраторски дозволи.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} папки исчистени, но ${errorCount} папки не можеа да се избришат.`,
+    lockedOrPermissionNote:
+      "Некои датотеки може да се заклучени од активни процеси или да бараат администраторски дозволи.",
   },
   settings: {
     title: "Поставки",
@@ -155,7 +160,8 @@ export const mk: TranslationSchema = {
     version: "Верзија",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Издавач: Vellium • © 2026 Vellium. Сите права се задржани.",
-    privacyNote: "Сите скенирања и бришења се одвиваат 100% локално на вашиот компјутер. Без телеметрија.",
+    privacyNote:
+      "Сите скенирања и бришења се одвиваат 100% локално на вашиот компјутер. Без телеметрија.",
     close: "Затвори",
   },
   errors: {
@@ -164,7 +170,8 @@ export const mk: TranslationSchema = {
     pathNotFound: "Наведената патека не е пронајдена.",
     scanCancelled: "Скенирањето беше откажано од корисникот.",
     scanFailed: "Настана грешка при скенирањето.",
-    unsafeDeleteTarget: "Од безбедносни причини, коренските или системските папки не можат да се бришат.",
+    unsafeDeleteTarget:
+      "Од безбедносни причини, коренските или системските папки не можат да се бришат.",
     recycleBinFailed: "Не успеа преместувањето на папките во Корпата.",
     permanentDeleteFailed: "Не успеа трајното бришење на папките.",
     settingsReadFailed: "Датотеката со поставки не можеше да се прочита.",

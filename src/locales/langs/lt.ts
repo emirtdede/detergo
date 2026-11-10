@@ -102,18 +102,23 @@ export const lt: TranslationSchema = {
     cancel: "Atšaukti",
     confirm: "Patvirtinti",
     recycleTitle: "Perkelti Pasirinktus Aplankus į Šiukšlinę?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules aplankai (${size}) bus perkelti į Šiukšlinę. Galite juos bet kada atkurti.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules aplankai (${size}) bus perkelti į Šiukšlinę. Galite juos bet kada atkurti.`,
     recycleConfirmButton: "Perkelti į Šiukšlinę",
     permanentTitle: "Ištrinti Pasirinktus Aplankus Visam Laikui?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules aplankai (${size}) bus visam laikui ištrinti iš disko. Šio veiksmo negalima atšaukti.`,
-    permanentWarning: "ĮSPĖJIMAS: Šis veiksmas yra negrįžtamas! Aplankai nebus siunčiami į Šiukšlinę.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules aplankai (${size}) bus visam laikui ištrinti iš disko. Šio veiksmo negalima atšaukti.`,
+    permanentWarning:
+      "ĮSPĖJIMAS: Šis veiksmas yra negrįžtamas! Aplankai nebus siunčiami į Šiukšlinę.",
     permanentConfirmButton: "Ištrinti Visam Laikui",
     deletingInProgress: "Vyksta trynimas...",
     recycleSuccess: (count: number) => `${count} aplankų sėkmingai perkelta į Šiukšlinę.`,
     permanentSuccess: (count: number) => `${count} aplankų sėkmingai ištrinta visam laikui.`,
     partialErrorTitle: "Dalinio Ištrynimo Ataskaita",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} aplankų išvalyta, bet ${errorCount} aplankų nepavyko ištrinti.`,
-    lockedOrPermissionNote: "Kai kurie failai gali būti užrakinti veikiančių procesų arba reikalauja administratoriaus teisių.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} aplankų išvalyta, bet ${errorCount} aplankų nepavyko ištrinti.`,
+    lockedOrPermissionNote:
+      "Kai kurie failai gali būti užrakinti veikiančių procesų arba reikalauja administratoriaus teisių.",
   },
   settings: {
     title: "Nustatymai",
@@ -155,7 +160,8 @@ export const lt: TranslationSchema = {
     version: "Versija",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Leidėjas: Vellium • © 2026 Vellium. Visos teisės saugomos.",
-    privacyNote: "Visi nuskaitymai ir trynimai vyksta 100% lokaliai jūsų kompiuteryje. Jokių telemetrijos duomenų.",
+    privacyNote:
+      "Visi nuskaitymai ir trynimai vyksta 100% lokaliai jūsų kompiuteryje. Jokių telemetrijos duomenų.",
     close: "Uždaryti",
   },
   errors: {

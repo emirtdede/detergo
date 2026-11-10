@@ -32,7 +32,9 @@ pub fn add_custom_agent_provider(
 ) -> Result<AppSettings, AppError> {
     let display_name = name.trim().to_string();
     if display_name.is_empty() {
-        return Err(AppError::InvalidPath("Araç adı boş olamaz.".to_string()));
+        return Err(AppError::InvalidPath(
+            "Tool name cannot be empty.".to_string(),
+        ));
     }
 
     let normalized: Vec<String> = root_paths
@@ -41,7 +43,7 @@ pub fn add_custom_agent_provider(
         .collect();
     if normalized.is_empty() {
         return Err(AppError::InvalidPath(
-            "En az bir geçerli klasör yolu gerekli.".to_string(),
+            "At least one valid folder path is required.".to_string(),
         ));
     }
 
@@ -82,7 +84,7 @@ pub fn set_agent_provider_hidden(
     let id = id.trim().to_lowercase();
     if !BUILTIN_PROVIDERS.contains(&id.as_str()) {
         return Err(AppError::InvalidPath(format!(
-            "Bilinmeyen yerleşik AI aracı: {}",
+            "Unknown built-in AI provider: {}",
             id
         )));
     }

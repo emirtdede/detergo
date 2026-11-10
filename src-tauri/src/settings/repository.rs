@@ -62,7 +62,7 @@ impl SettingsRepository {
 
         let parent = self.config_path.parent().unwrap_or_else(|| Path::new("."));
         fs::create_dir_all(parent).map_err(|e| {
-            AppError::SettingsWriteFailed(format!("Ayar klasörü oluşturulamadı: {}", e))
+            AppError::SettingsWriteFailed(format!("Failed to create settings directory: {}", e))
         })?;
 
         let json_str = serde_json::to_string_pretty(&normalized)
@@ -84,7 +84,7 @@ impl SettingsRepository {
         if let Err(e) = write_result {
             let _ = fs::remove_file(&temp_path);
             return Err(AppError::SettingsWriteFailed(format!(
-                "Temp ayar dosyası yazılamadı: {}",
+                "Failed to write temporary settings file: {}",
                 e
             )));
         }
@@ -92,7 +92,7 @@ impl SettingsRepository {
         if let Err(e) = replace_file(&temp_path, &self.config_path) {
             let _ = fs::remove_file(&temp_path);
             return Err(AppError::SettingsWriteFailed(format!(
-                "Ayar dosyası değiştirilemedi: {}",
+                "Failed to replace settings file: {}",
                 e
             )));
         }
@@ -109,7 +109,7 @@ fn replace_file(from: &Path, to: &Path) -> std::io::Result<()> {
     use std::os::windows::ffi::OsStrExt;
     use windows::core::PCWSTR;
     use windows::Win32::Storage::FileSystem::{
-        MoveFileExW, MOVE_FILE_FLAGS, MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH,
+        MoveFileExW, MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH, MOVE_FILE_FLAGS,
     };
 
     fn wide(path: &Path) -> Vec<u16> {

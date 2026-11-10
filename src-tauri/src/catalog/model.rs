@@ -144,7 +144,9 @@ impl Rule {
     /// True when the given file name matches this rule (case-insensitive).
     pub fn matches_name(&self, name: &str) -> bool {
         let lower = name.to_lowercase();
-        self.names.iter().any(|pattern| pattern_matches(&pattern.to_lowercase(), &lower))
+        self.names
+            .iter()
+            .any(|pattern| pattern_matches(&pattern.to_lowercase(), &lower))
     }
 }
 
@@ -167,7 +169,7 @@ pub struct CatalogError(pub String);
 
 impl std::fmt::Display for CatalogError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Katalog doğrulama hatası: {}", self.0)
+        write!(f, "Catalog validation error: {}", self.0)
     }
 }
 
@@ -178,71 +180,74 @@ impl std::error::Error for CatalogError {}
 pub fn validate_catalog(catalog: &Catalog) -> Result<(), CatalogError> {
     if catalog.schema_version != 1 {
         return Err(CatalogError(format!(
-            "desteklenmeyen şema sürümü: {}",
+            "unsupported schema version: {}",
             catalog.schema_version
         )));
     }
     if catalog.rules.is_empty() {
-        return Err(CatalogError("katalog boş olamaz".to_string()));
+        return Err(CatalogError("catalog cannot be empty".to_string()));
     }
 
     let mut ids = HashSet::new();
     for rule in &catalog.rules {
         if rule.id.trim().is_empty() {
-            return Err(CatalogError("boş kural kimliği".to_string()));
+            return Err(CatalogError("empty rule id".to_string()));
         }
         if !rule
             .id
             .chars()
             .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || matches!(c, '.' | '-' | '_'))
         {
-            return Err(CatalogError(format!("geçersiz kural kimliği: {}", rule.id)));
+            return Err(CatalogError(format!("invalid rule id: {}", rule.id)));
         }
         if !ids.insert(rule.id.clone()) {
-            return Err(CatalogError(format!("yinelenen kural kimliği: {}", rule.id)));
+            return Err(CatalogError(format!("duplicate rule id: {}", rule.id)));
         }
         if rule.names.is_empty() {
-            return Err(CatalogError(format!("{}: hedef adı yok", rule.id)));
+            return Err(CatalogError(format!("{}: missing target names", rule.id)));
         }
         for name in &rule.names {
             let n = name.trim();
             if n.is_empty() || n == "*" || n.contains("..") || n.contains('/') || n.contains('\\') {
-                return Err(CatalogError(format!("{}: geçersiz ad deseni '{}'", rule.id, name)));
+                return Err(CatalogError(format!(
+                    "{}: invalid name pattern '{}'",
+                    rule.id, name
+                )));
             }
             if n.matches('*').count() > 1 {
                 return Err(CatalogError(format!(
-                    "{}: en fazla tek bir '*' desteklenir: '{}'",
+                    "{}: at most a single '*' wildcard is supported: '{}'",
                     rule.id, name
                 )));
             }
         }
         if rule.min_evidence == 0 || rule.min_evidence > 3 {
             return Err(CatalogError(format!(
-                "{}: min_evidence 1..=3 olmalıdır",
+                "{}: min_evidence must be in 1..=3",
                 rule.id
             )));
         }
         if rule.generic_name && rule.min_evidence < 2 {
             return Err(CatalogError(format!(
-                "{}: genel adlı hedefler en az 2 kanıt gerektirir",
+                "{}: generic targets require at least 2 pieces of evidence",
                 rule.id
             )));
         }
         if rule.protected && rule.cleanup != CleanupMethod::None {
             return Err(CatalogError(format!(
-                "{}: korumalı kural silme yöntemi tanımlayamaz",
+                "{}: protected rule cannot declare a cleanup method",
                 rule.id
             )));
         }
         if rule.safety == SafetyClass::Keep && rule.cleanup != CleanupMethod::None {
             return Err(CatalogError(format!(
-                "{}: KEEP sınıfı temizleme yöntemi tanımlayamaz",
+                "{}: KEEP safety class cannot declare a cleanup method",
                 rule.id
             )));
         }
         if rule.kind != TargetKind::Directory && !rule.content.is_empty() {
             return Err(CatalogError(format!(
-                "{}: yalnızca dizin hedefleri içerik imzası kullanabilir",
+                "{}: only directory targets can declare content signatures",
                 rule.id
             )));
         }
@@ -252,7 +257,7 @@ pub fn validate_catalog(catalog: &Catalog) -> Result<(), CatalogError> {
         for parent in rule.nested_in.iter().chain(rule.child_rules.iter()) {
             if !ids.contains(parent) {
                 return Err(CatalogError(format!(
-                    "{}: bilinmeyen ilişkili kural '{}'",
+                    "{}: unknown related rule '{}'",
                     rule.id, parent
                 )));
             }

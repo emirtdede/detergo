@@ -9,8 +9,10 @@ mod tests;
 
 use serde::{Deserialize, Serialize};
 
-pub use coordinator::{execute_plan, CleanupReport, CleanupResultItem};
-pub use plan::{build_plan, CleanupPlan, PlanItem, TargetSnapshot};
+pub use coordinator::{execute_plan, CleanupEvent, CleanupReport, CleanupResultItem};
+pub use plan::{
+    build_plan, verify_snapshot, CleanupPlan, PlanItem, TargetSnapshot, VerificationOutcome,
+};
 pub use recycle_bin::RecycleBinService;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -72,7 +74,7 @@ impl CleanupPolicy {
         if target.category == "cache" && !self.allow_agent_cache_cleanup {
             return Some((
                 "AGENT_CACHE_DISABLED",
-                "Ayarlarda AI önbellek temizliği kapalı.".to_string(),
+                "AI cache cleanup is disabled in settings.".to_string(),
             ));
         }
         if target.rule_id == "antigravity.browser_recordings"
@@ -81,8 +83,7 @@ impl CleanupPolicy {
         {
             return Some((
                 "RECORDING_ACTIVE",
-                "Tarayıcı kaydı hâlâ etkin; kayıt durduktan sonra yeniden deneyin."
-                    .to_string(),
+                "Browser recording is still active; try again after recording stops.".to_string(),
             ));
         }
         None

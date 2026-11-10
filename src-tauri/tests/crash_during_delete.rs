@@ -110,6 +110,7 @@ fn child_main() {
         &policy,
         &plan.confirmation_token,
         true,
+        &node_cleaner_lib::scanner::cancellation::CancellationToken::new(),
     )
     .expect("execute");
     drop(handle);
@@ -128,6 +129,9 @@ fn child_main() {
         moved_bytes: report.moved_bytes,
         duration_ms: report.duration_ms,
         entries: Vec::new(),
+        cancelled: report.cancelled,
+        processed_count: report.processed_count,
+        skipped_count: report.skipped_count,
     };
     repo.append_record(&record).expect("audit write");
 }
@@ -139,10 +143,7 @@ fn crash_during_permanent_delete_writes_no_audit_record() {
         return;
     }
 
-    let fixture = std::env::temp_dir().join(format!(
-        "nc-crash-{}",
-        uuid::Uuid::new_v4().simple()
-    ));
+    let fixture = std::env::temp_dir().join(format!("nc-crash-{}", uuid::Uuid::new_v4().simple()));
     let appdata = std::env::temp_dir().join(format!(
         "nc-crash-appdata-{}",
         uuid::Uuid::new_v4().simple()

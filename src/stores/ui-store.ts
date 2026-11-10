@@ -1,12 +1,7 @@
 import { create } from "zustand";
 import { CleanupPlan, CleanupReport, DeleteMode } from "@/types";
 
-export type ModalType =
-  | null
-  | "settings"
-  | "cleanup-plan"
-  | "cleanup-result"
-  | "official-action";
+export type ModalType = null | "settings" | "cleanup-plan" | "cleanup-result" | "official-action";
 
 export type SettingsSection =
   | "general"
@@ -49,6 +44,10 @@ interface UiState {
 
   openModal: (modal: ModalType) => void;
   closeModal: () => void;
+  /** Hides the active modal without discarding the plan or pending selection. */
+  hideModal: () => void;
+  /** Clears plan/report state without touching the active modal. */
+  clearPlanState: () => void;
   setSearchQuery: (query: string) => void;
   setSettingsSection: (section: SettingsSection) => void;
   setAboutPane: (pane: AboutPane) => void;
@@ -60,7 +59,7 @@ interface UiState {
   showToast: (
     message: string,
     type?: "info" | "success" | "warning" | "error",
-    durationMs?: number
+    durationMs?: number,
   ) => void;
   clearToast: () => void;
   setPendingDeletion: (ids: string[], mode?: DeleteMode) => void;
@@ -85,8 +84,11 @@ export const useUiStore = create<UiState>((set) => ({
 
   openModal: (modal) => set({ activeModal: modal }),
 
-  closeModal: () =>
-    set({ activeModal: null, pendingDeletionIds: [], plan: null }),
+  closeModal: () => set({ activeModal: null, pendingDeletionIds: [], plan: null }),
+
+  hideModal: () => set({ activeModal: null }),
+
+  clearPlanState: () => set({ plan: null, report: null, pendingDeletionIds: [] }),
 
   setSearchQuery: (query) => set({ searchQuery: query }),
 
@@ -100,8 +102,7 @@ export const useUiStore = create<UiState>((set) => ({
 
   setHistoryTab: (tab) => set({ historyTab: tab }),
 
-  openLegalDoc: (doc) =>
-    set({ legalDoc: doc, settingsSection: "about", aboutPane: "legal" }),
+  openLegalDoc: (doc) => set({ legalDoc: doc, settingsSection: "about", aboutPane: "legal" }),
 
   closeLegalDoc: () => set({ aboutPane: "overview" }),
 

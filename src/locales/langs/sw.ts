@@ -102,18 +102,22 @@ export const sw: TranslationSchema = {
     cancel: "Ghairi",
     confirm: "Thibitisha",
     recycleTitle: "Hamisha Folda Zilizochaguliwa kwenye Jalala?",
-    recycleDescription: (count: number, size: string) => `${count} folda za node_modules (${size}) zitahamishwa kwenye Jalala. Unaweza kuzirejesha wakati wowote.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} folda za node_modules (${size}) zitahamishwa kwenye Jalala. Unaweza kuzirejesha wakati wowote.`,
     recycleConfirmButton: "Hamisha kwenye Jalala",
     permanentTitle: "Futa Folda Zilizochaguliwa Kabisa?",
-    permanentDescription: (count: number, size: string) => `${count} folda za node_modules (${size}) zitafutwa kabisa kutoka kwenye diski. Kitendo hiki hakiwezi kutenduliwa.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} folda za node_modules (${size}) zitafutwa kabisa kutoka kwenye diski. Kitendo hiki hakiwezi kutenduliwa.`,
     permanentWarning: "ONYO: Kitendo hiki ni cha kudumu! Folda hazitatumwa kwenye Jalala.",
     permanentConfirmButton: "Futa Kabisa",
     deletingInProgress: "Inafuta...",
     recycleSuccess: (count: number) => `${count} folda zimehamishwa kwenye Jalala kwa mafanikio.`,
     permanentSuccess: (count: number) => `${count} folda zimefutwa kabisa kwa mafanikio.`,
     partialErrorTitle: "Ripoti ya Ufutaji wa Sehemu",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} folda zimesafishwa, lakini folda ${errorCount} hazikuweza kufutwa.`,
-    lockedOrPermissionNote: "Baadhi ya faili zinaweza kuwa zimefungwa na michakato inayoendeshwa au zinahitaji ruhusa za msimamizi.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} folda zimesafishwa, lakini folda ${errorCount} hazikuweza kufutwa.`,
+    lockedOrPermissionNote:
+      "Baadhi ya faili zinaweza kuwa zimefungwa na michakato inayoendeshwa au zinahitaji ruhusa za msimamizi.",
   },
   settings: {
     title: "Mipangilio",
@@ -155,7 +159,8 @@ export const sw: TranslationSchema = {
     version: "Toleo",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Mchapishaji: Vellium • © 2026 Vellium. Haki zote zimehifadhiwa.",
-    privacyNote: "Uchanganuzi wote na ufutaji hufanyika 100% ndani ya kompyuta yako. Hakuna data inayotumwa nje.",
+    privacyNote:
+      "Uchanganuzi wote na ufutaji hufanyika 100% ndani ya kompyuta yako. Hakuna data inayotumwa nje.",
     close: "Funga",
   },
   errors: {

@@ -48,7 +48,7 @@ impl Default for AgentPolicy {
 }
 
 fn default_schema_version() -> u32 {
-    3
+    4
 }
 
 fn default_sidebar_mode() -> String {
@@ -174,6 +174,10 @@ pub struct AppSettings {
     pub webhook_on_clean: bool,
     #[serde(default)]
     pub shortcuts: Option<std::collections::HashMap<String, String>>,
+    /// Allows the MCP `execute` tool to run at all. Off by default: an agent
+    /// must never be able to delete without an explicit opt-in.
+    #[serde(default)]
+    pub mcp_allow_destructive: bool,
 }
 
 fn default_true() -> bool {
@@ -183,7 +187,7 @@ fn default_true() -> bool {
 impl Default for AppSettings {
     fn default() -> Self {
         Self {
-            schema_version: 3,
+            schema_version: 4,
             theme: "dark-transparent".to_string(),
             reduce_motion: false,
             favorites: Vec::new(),
@@ -214,6 +218,7 @@ impl Default for AppSettings {
             webhook_on_scan: true,
             webhook_on_clean: true,
             shortcuts: None,
+            mcp_allow_destructive: false,
         }
     }
 }
@@ -223,6 +228,10 @@ impl AppSettings {
     pub fn migrate(&mut self) {
         if self.schema_version < 3 {
             self.schema_version = 3;
+        }
+        if self.schema_version < 4 {
+            // New in 4: MCP destructive actions are opt-in.
+            self.schema_version = 4;
         }
         self.normalize();
     }
@@ -281,11 +290,13 @@ impl AppSettings {
                     .collect();
                 let mut seen_paths = std::collections::HashSet::new();
                 provider.root_paths.retain(|path| {
-                    seen_paths.insert(
-                        crate::safety::path_guard::normalize_key(std::path::Path::new(path)),
-                    )
+                    seen_paths.insert(crate::safety::path_guard::normalize_key(
+                        std::path::Path::new(path),
+                    ))
                 });
-                if provider.id.is_empty() || provider.name.is_empty() || provider.root_paths.is_empty()
+                if provider.id.is_empty()
+                    || provider.name.is_empty()
+                    || provider.root_paths.is_empty()
                 {
                     return None;
                 }

@@ -20,11 +20,21 @@
   padding-bottom: var(--space-8);
 }
 
-/* The item table is virtualized and needs a definite box to scroll inside.
-   Embedded under a document page it takes a fixed minimum instead of 100%. */
+/* The item table is virtualized: its scroll box needs a definite height or the
+   virtualizer measures 0px and renders no rows. Embedded under a document page
+   it gets its own bounded box instead of inheriting 100%. */
 .page-view .items-view {
-  height: auto;
+  flex: 0 0 auto;
+  height: clamp(360px, 52vh, 620px);
   min-height: 360px;
+}
+
+/* Tables nested inside an already viewport-pinned view (Projects) take the
+   remaining space; 100% of a tall flex parent would push the page over. */
+.view-container > .items-view > .items-view {
+  flex: 1 1 0px;
+  height: auto;
+  min-height: 0;
 }
 
 .items-toolbar {
@@ -238,10 +248,26 @@
   width: fit-content;
 }
 
-.safety-badge.safe { color: var(--success-text); background: var(--success-subtle); border-color: var(--success); }
-.safety-badge.regenerate { color: var(--accent-foreground); background: var(--accent-subtle); border-color: var(--accent); }
-.safety-badge.review { color: var(--warning-text); background: var(--warning-subtle); border-color: var(--warning); }
-.safety-badge.keep { color: var(--text-muted); background: var(--surface-alt); border-color: var(--border); }
+.safety-badge.safe {
+  color: var(--success-text);
+  background: var(--success-subtle);
+  border-color: var(--success);
+}
+.safety-badge.regenerate {
+  color: var(--accent-foreground);
+  background: var(--accent-subtle);
+  border-color: var(--accent);
+}
+.safety-badge.review {
+  color: var(--warning-text);
+  background: var(--warning-subtle);
+  border-color: var(--warning);
+}
+.safety-badge.keep {
+  color: var(--text-muted);
+  background: var(--surface-alt);
+  border-color: var(--border);
+}
 
 .items-empty {
   padding: var(--space-12) var(--space-6);
@@ -479,4 +505,67 @@
   .items-toolbar .search-field {
     min-width: 0;
   }
+}
+
+/* Cleanup progress (plan dialog and background dock) */
+.cleanup-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-elevated, var(--surface));
+}
+
+.cleanup-progress-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.cleanup-progress-track {
+  height: 6px;
+  width: 100%;
+  border-radius: 999px;
+  background: var(--surface-sunken, var(--surface));
+  overflow: hidden;
+}
+
+.cleanup-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width var(--duration-fast) var(--ease-standard);
+}
+
+.cleanup-cancelled-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--warning-text, var(--text-secondary));
+}
+
+.cleanup-dock {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: 40;
+  width: min(380px, calc(100vw - 2 * var(--space-4)));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated, var(--surface));
+  box-shadow: var(--shadow-lg, var(--shadow-sm));
+  font-size: var(--text-sm);
+}
+
+.cleanup-dock-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
 }

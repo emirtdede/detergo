@@ -11,7 +11,7 @@ mod tests {
         let temp = tempdir().unwrap();
         let repo = SettingsRepository::with_path(temp.path().join("config.json"));
         let settings = repo.load();
-        assert_eq!(settings.schema_version, 3);
+        assert_eq!(settings.schema_version, 4);
         assert_eq!(settings.theme, "dark-transparent");
         assert!(!settings.reduce_motion);
         assert_eq!(settings.scan_profile, "balanced");
@@ -27,7 +27,9 @@ mod tests {
         let mut settings = AppSettings::default();
         settings.theme = "white".to_string();
         settings.reduce_motion = true;
-        settings.protected_paths.push("D:\\Work\\important".to_string());
+        settings
+            .protected_paths
+            .push("D:\\Work\\important".to_string());
         settings.favorites.push(FavoriteItem {
             id: "fav-1".to_string(),
             label: "My Code".to_string(),
@@ -41,7 +43,10 @@ mod tests {
         assert_eq!(loaded.theme, "white");
         assert!(loaded.reduce_motion);
         assert_eq!(loaded.favorites.len(), 1);
-        assert_eq!(loaded.protected_paths, vec!["D:\\Work\\important".to_string()]);
+        assert_eq!(
+            loaded.protected_paths,
+            vec!["D:\\Work\\important".to_string()]
+        );
     }
 
     #[test]
@@ -75,13 +80,14 @@ mod tests {
         let config_path = temp.path().join("config.json");
         {
             let mut file = File::create(&config_path).unwrap();
-            file.write_all(b"{ this is invalid JSON garbage ---").unwrap();
+            file.write_all(b"{ this is invalid JSON garbage ---")
+                .unwrap();
         }
 
         let repo = SettingsRepository::with_path(config_path.clone());
         let settings = repo.load();
 
-        assert_eq!(settings.schema_version, 3);
+        assert_eq!(settings.schema_version, 4);
         assert_eq!(settings.theme, "dark-transparent");
         let backups: Vec<_> = std::fs::read_dir(temp.path())
             .unwrap()
@@ -113,7 +119,8 @@ mod tests {
 
         let repo = SettingsRepository::with_path(config_path);
         let loaded = repo.load();
-        assert_eq!(loaded.schema_version, 3);
+        assert_eq!(loaded.schema_version, 4);
+        assert!(!loaded.mcp_allow_destructive);
         assert_eq!(loaded.theme, "dark-gray");
         assert!(loaded.reduce_motion);
         assert_eq!(loaded.favorites.len(), 1);
@@ -237,11 +244,8 @@ mod tests {
         settings.sidebar_mode = "sideways".to_string();
         settings.cache_measure_mode = "turbo".to_string();
         settings.close_action = "explode".to_string();
-        settings.hidden_builtin_providers = vec![
-            " Codex ".to_string(),
-            "codex".to_string(),
-            String::new(),
-        ];
+        settings.hidden_builtin_providers =
+            vec![" Codex ".to_string(), "codex".to_string(), String::new()];
         settings.normalize();
 
         assert_eq!(settings.sidebar_mode, "expanded");

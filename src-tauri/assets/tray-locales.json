@@ -1,0 +1,294 @@
+{
+  "af": {
+    "Show": "Maak oop",
+    "Quit": "Beëindig heeltemal"
+  },
+  "am": {
+    "Show": "ክፈት",
+    "Quit": "ሙሉ በሙሉ አቁሙ"
+  },
+  "ar": {
+    "Show": "فتح",
+    "Quit": "إنهاء تمامًا"
+  },
+  "az": {
+    "Show": "Aç",
+    "Quit": "Tamamilə çıx"
+  },
+  "bg": {
+    "Show": "Отвори",
+    "Quit": "Изключи напълно"
+  },
+  "bn": {
+    "Show": "খুলুন",
+    "Quit": "সম্পূর্ণভাবে ত্যাগ করা"
+  },
+  "bs": {
+    "Show": "Otvori",
+    "Quit": "Potpuno zatvori"
+  },
+  "ca": {
+    "Show": "Obrir",
+    "Quit": "Tancar completament"
+  },
+  "cs": {
+    "Show": "Otevřít",
+    "Quit": "Ukončit úplně"
+  },
+  "da": {
+    "Show": "Åbn",
+    "Quit": "Afslut helt"
+  },
+  "de": {
+    "Show": "Öffnen",
+    "Quit": "Vollständig beenden"
+  },
+  "el": {
+    "Show": "Άνοιγμα",
+    "Quit": "Έξοδος εντελώς"
+  },
+  "en": {
+    "Show": "Show",
+    "Quit": "Quit"
+  },
+  "es": {
+    "Show": "Abrir",
+    "Quit": "Salir completamente"
+  },
+  "et": {
+    "Show": "Ava",
+    "Quit": "Sule täielikult"
+  },
+  "eu": {
+    "Show": "Ireki",
+    "Quit": "Osoa itxi"
+  },
+  "fa": {
+    "Show": "باز کردن",
+    "Quit": "کاملاً خروج"
+  },
+  "fi": {
+    "Show": "Avaa",
+    "Quit": "Sulje kokonaan"
+  },
+  "fil": {
+    "Show": "Buksan",
+    "Quit": "Ganap na isara"
+  },
+  "fr": {
+    "Show": "Ouvrir",
+    "Quit": "Quitter complètement"
+  },
+  "ga": {
+    "Show": "Oscailte",
+    "Quit": "Scoir go hiomlán"
+  },
+  "gl": {
+    "Show": "Abrir",
+    "Quit": "Saír completamente"
+  },
+  "gu": {
+    "Show": "ખોલો",
+    "Quit": "સંપૂર્ણ રીતે છોડો"
+  },
+  "ha": {
+    "Show": "Buɗe",
+    "Quit": "Fita gaba ɗaya"
+  },
+  "he": {
+    "Show": "פתח",
+    "Quit": "סגור לחלוטין"
+  },
+  "hi": {
+    "Show": "खोलें",
+    "Quit": "पूरी तरह से बाहर निकलें"
+  },
+  "hr": {
+    "Show": "Otvori",
+    "Quit": "Potpuno izađi"
+  },
+  "hu": {
+    "Show": "Nyisd ki",
+    "Quit": "Teljes kilépés"
+  },
+  "hy": {
+    "Show": "Բացել",
+    "Quit": "Ամբողջությամբ փակել"
+  },
+  "id": {
+    "Show": "Buka",
+    "Quit": "Keluar sepenuhnya"
+  },
+  "is": {
+    "Show": "Opna",
+    "Quit": "Hætta alfarið"
+  },
+  "it": {
+    "Show": "Apri",
+    "Quit": "Chiudi completamente"
+  },
+  "ja": {
+    "Show": "開く",
+    "Quit": "完全に終了"
+  },
+  "ka": {
+    "Show": "გახსნა",
+    "Quit": "ბოლომდე გამოსვლა"
+  },
+  "kk": {
+    "Show": "Ашу",
+    "Quit": "Толығымен тоқтаңыз"
+  },
+  "km": {
+    "Show": "បើក",
+    "Quit": "ចាកចេញពេញលេញ"
+  },
+  "kn": {
+    "Show": "ತೆರೆದಿರಿ",
+    "Quit": "ಸಂಪೂರ್ಣವಾಗಿ ನಿಲ್ಲಿಸಿ"
+  },
+  "ko": {
+    "Show": "열려",
+    "Quit": "완전히 종료"
+  },
+  "ky": {
+    "Show": "Ачык",
+    "Quit": "Толук токтот"
+  },
+  "lt": {
+    "Show": "Atidaryti",
+    "Quit": "Visiškai išeiti"
+  },
+  "lv": {
+    "Show": "Atvērts",
+    "Quit": "Pilnībā iziet"
+  },
+  "mk": {
+    "Show": "Отвори",
+    "Quit": "Целосно излез"
+  },
+  "ml": {
+    "Show": "തുറക്കുക",
+    "Quit": "പൂർണ്ണമായി പുറത്തുകടുക"
+  },
+  "mn": {
+    "Show": "Нээлттэй",
+    "Quit": "Бүрэн зогсоо"
+  },
+  "mr": {
+    "Show": "उघडा",
+    "Quit": "पूर्णपणे बंद करा"
+  },
+  "ms": {
+    "Show": "Buka",
+    "Quit": "Keluar sepenuhnya"
+  },
+  "my": {
+    "Show": "ဖွင့်ပါ",
+    "Quit": "အပြည့်အဝ ရပ်လိုက်ပါ"
+  },
+  "nl": {
+    "Show": "Openen",
+    "Quit": "Helemaal afsluiten"
+  },
+  "no": {
+    "Show": "Åpne",
+    "Quit": "Avslutt helt"
+  },
+  "pa": {
+    "Show": "ਖੋਲ੍ਹੋ",
+    "Quit": "ਪੂਰੀ ਤਰ੍ਹਾਂ ਬੰਦ ਕਰੋ"
+  },
+  "pl": {
+    "Show": "Otwórz",
+    "Quit": "Zakończ całkowicie"
+  },
+  "pt": {
+    "Show": "Abrir",
+    "Quit": "Fechar completamente"
+  },
+  "ro": {
+    "Show": "Deschidere",
+    "Quit": "Închideți complet"
+  },
+  "ru": {
+    "Show": "Открыть",
+    "Quit": "Полностью выйти"
+  },
+  "si": {
+    "Show": "විවෘත කරන්න",
+    "Quit": "සම්පූර්ණයෙන් නවතා දමන්න"
+  },
+  "sk": {
+    "Show": "Otvoriť",
+    "Quit": "Úplne ukončiť"
+  },
+  "sl": {
+    "Show": "Odpri",
+    "Quit": "Popolnoma zapri"
+  },
+  "sq": {
+    "Show": "Hap",
+    "Quit": "Dil krejtësisht"
+  },
+  "sr": {
+    "Show": "Otvori",
+    "Quit": "Potpuno izađi"
+  },
+  "sv": {
+    "Show": "Öppna",
+    "Quit": "Avsluta helt"
+  },
+  "sw": {
+    "Show": "Fungua",
+    "Quit": "Toka kabisa"
+  },
+  "ta": {
+    "Show": "திறக்கவும்",
+    "Quit": "முழுமையாக வெளியேறு"
+  },
+  "te": {
+    "Show": "ఓపెన్ చేయండి",
+    "Quit": "పూర్తిగా ఔట్ అవ్వండి"
+  },
+  "th": {
+    "Show": "เปิด",
+    "Quit": "ออกจากโปรแกรมอย่างสมบูรณ์"
+  },
+  "tk": {
+    "Show": "Aç",
+    "Quit": "Doly çykmak"
+  },
+  "tr": {
+    "Show": "Göster",
+    "Quit": "Çıkış"
+  },
+  "uk": {
+    "Show": "Відкрити",
+    "Quit": "Повністю вийти"
+  },
+  "ur": {
+    "Show": "کھولیں",
+    "Quit": "مکمل طور پر بند کریں"
+  },
+  "uz": {
+    "Show": "Och",
+    "Quit": "Butunlay chiqish"
+  },
+  "vi": {
+    "Show": "Mở",
+    "Quit": "Thoát hoàn toàn"
+  },
+  "yo": {
+    "Show": "Ṣii",
+    "Quit": "Dẹkun patapata"
+  },
+  "zh": {
+    "Show": "打开",
+    "Quit": "完全退出"
+  },
+  "zh-tw": {
+    "Show": "開啟",
+    "Quit": "完全退出"
+  }
+}

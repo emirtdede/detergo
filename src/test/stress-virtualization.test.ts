@@ -13,7 +13,7 @@ describe("WP-7: Synthetic dataset and stress tests (1000+ items)", () => {
         logicalBytes: Math.floor(Math.random() * 5 * 1024 * 1024 * 1024),
         estimatedReclaimBytes: Math.floor(Math.random() * 5 * 1024 * 1024 * 1024),
         safetyClass: i % 5 === 0 ? "review" : "regenerate",
-      })
+      }),
     );
   }
 
@@ -24,7 +24,7 @@ describe("WP-7: Synthetic dataset and stress tests (1000+ items)", () => {
     const filtered = items.filter(
       (item) =>
         (item.projectName ?? "").toLowerCase().includes(query) ||
-        item.displayPath.toLowerCase().includes(query)
+        item.displayPath.toLowerCase().includes(query),
     );
     expect(filtered.length).toBeGreaterThan(0);
     expect(performance.now() - t0).toBeLessThan(15);
@@ -35,7 +35,7 @@ describe("WP-7: Synthetic dataset and stress tests (1000+ items)", () => {
     const t0 = performance.now();
     items.sort((a, b) => (b.estimatedReclaimBytes ?? 0) - (a.estimatedReclaimBytes ?? 0));
     expect(items[0].estimatedReclaimBytes!).toBeGreaterThanOrEqual(
-      items[items.length - 1].estimatedReclaimBytes!
+      items[items.length - 1].estimatedReclaimBytes!,
     );
     expect(performance.now() - t0).toBeLessThan(10);
   });
@@ -54,5 +54,30 @@ describe("WP-7: Synthetic dataset and stress tests (1000+ items)", () => {
     const set = new Set(items.map((item) => item.id));
     expect(set.size).toBe(1000);
     expect(performance.now() - t0).toBeLessThan(5);
+  });
+
+  it("filters and sorts a 50,000-item scan within 250ms", () => {
+    const items = Array.from({ length: 50_000 }, (_, i) =>
+      makeItem({
+        id: `bulk-${i}`,
+        displayName: `target-${i}`,
+        projectName: `project-${i % 500}`,
+        displayPath: `C:\\Workspaces\\org-${i % 50}\\project-${i % 500}\\node_modules`,
+        logicalBytes: (i % 4096) * 1024,
+        estimatedReclaimBytes: (i % 4096) * 1024,
+      }),
+    );
+
+    const t0 = performance.now();
+    const filtered = items.filter(
+      (item) =>
+        (item.projectName ?? "").toLowerCase().includes("project-42") ||
+        item.displayPath.toLowerCase().includes("project-42"),
+    );
+    filtered.sort((a, b) => (b.estimatedReclaimBytes ?? 0) - (a.estimatedReclaimBytes ?? 0));
+    const elapsed = performance.now() - t0;
+
+    expect(filtered.length).toBeGreaterThan(0);
+    expect(elapsed).toBeLessThan(250);
   });
 });

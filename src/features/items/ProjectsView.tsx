@@ -5,8 +5,9 @@ import { EmptyState } from "@/components/primitives/EmptyState";
 import { PageHeader } from "@/components/primitives/PageHeader";
 import { useScanStore } from "@/stores/scan-store";
 import { useScanController } from "@/features/scan/useScanController";
-import { useUIText } from "@/lib/ui-text";
-import { ItemTable, maskPath } from "./ItemTable";
+import { useUIText, localizeAppError } from "@/lib/ui-text";
+import { ItemTable } from "./ItemTable";
+import { maskPath } from "@/lib/format/path";
 import { formatBytes, truncatePath } from "@/lib/formatters";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import "./items.css";
@@ -14,6 +15,7 @@ import "./items.css";
 export const ProjectsView: React.FC = () => {
   const ui = useUIText();
   const { isScanning, startScan } = useScanController();
+  const language = usePreferencesStore((s) => s.language);
   const itemsById = useScanStore((s) => s.itemsById);
   const itemIds = useScanStore((s) => s.itemIds);
   const rootPath = useScanStore((s) => s.currentRootPath);
@@ -28,7 +30,7 @@ export const ProjectsView: React.FC = () => {
       itemIds
         .map((id) => itemsById[id])
         .filter((item) => item && item.provider === "project" && item.status !== "deleted"),
-    [itemIds, itemsById]
+    [itemIds, itemsById],
   );
 
   const projectTotals = useMemo(() => {
@@ -55,7 +57,9 @@ export const ProjectsView: React.FC = () => {
   const emptyDescription = isScanning
     ? `${progress?.entriesFound ?? 0} / ${progress?.entriesMeasured ?? 0}`
     : status === "failed"
-      ? error?.message ?? ui.errors.title
+      ? error
+        ? localizeAppError(error, ui)
+        : ui.errors.title
       : status === "idle"
         ? ui.projects.emptyDescIdle
         : ui.projects.emptyDescClean;
@@ -100,7 +104,7 @@ export const ProjectsView: React.FC = () => {
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">
-              {items.length > 0 ? formatBytes(projectTotals.cleanable) : "—"}
+              {items.length > 0 ? formatBytes(projectTotals.cleanable, language) : "—"}
             </span>
             <span className="nc-kpi-card-sub">{ui.common.showing(items.length)}</span>
           </div>
@@ -115,7 +119,7 @@ export const ProjectsView: React.FC = () => {
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">
-              {items.length > 0 ? formatBytes(projectTotals.safe) : "—"}
+              {items.length > 0 ? formatBytes(projectTotals.safe, language) : "—"}
             </span>
             <span className="nc-kpi-card-sub">{ui.projects.kpiSafeReclaimSub}</span>
           </div>
@@ -129,7 +133,9 @@ export const ProjectsView: React.FC = () => {
             </span>
           </div>
           <div className="nc-kpi-card-body">
-            <span className="nc-kpi-card-value">{projectTotals.projectCount} {ui.overview.projects}</span>
+            <span className="nc-kpi-card-value">
+              {projectTotals.projectCount} {ui.overview.projects}
+            </span>
             <span className="nc-kpi-card-sub">{ui.projects.kpiDetectedSub}</span>
           </div>
         </div>

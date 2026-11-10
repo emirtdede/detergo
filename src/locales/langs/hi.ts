@@ -45,7 +45,8 @@ export const hi: TranslationSchema = {
   },
   scan: {
     idleTitle: "अपना डिस्क स्पेस वापस पाएं",
-    idleSubtitle: "अपने सभी प्रोजेक्ट्स में node_modules फ़ोल्डरों को सुरक्षित रूप से खोजें और साफ़ करें।",
+    idleSubtitle:
+      "अपने सभी प्रोजेक्ट्स में node_modules फ़ोल्डरों को सुरक्षित रूप से खोजें और साफ़ करें।",
     selectFolderFirst: "स्कैन शुरू करने के लिए ऊपर एक फ़ोल्डर चुनें।",
     discovering: "प्रोजेक्ट्स खोजे जा रहे हैं...",
     measuring: "आकार की गणना हो रही है...",
@@ -102,18 +103,22 @@ export const hi: TranslationSchema = {
     cancel: "रद्द करें",
     confirm: "पुष्टि करें",
     recycleTitle: "क्या चयनित फ़ोल्डरों को रीसायकल बिन में ले जाएं?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules फ़ोल्डर (${size}) रीसायकल बिन में ले जाए जाएंगे। आप उन्हें कभी भी पुनर्स्थापित कर सकते हैं।`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules फ़ोल्डर (${size}) रीसायकल बिन में ले जाए जाएंगे। आप उन्हें कभी भी पुनर्स्थापित कर सकते हैं।`,
     recycleConfirmButton: "रीसायकल बिन में भेजें",
     permanentTitle: "क्या चयनित फ़ोल्डरों को स्थायी रूप से हटाएं?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules फ़ोल्डर (${size}) डिस्क से स्थायी रूप से हटा दिए जाएंगे। इसे पूर्ववत नहीं किया जा सकता।`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules फ़ोल्डर (${size}) डिस्क से स्थायी रूप से हटा दिए जाएंगे। इसे पूर्ववत नहीं किया जा सकता।`,
     permanentWarning: "चेतावनी: यह क्रिया स्थायी है! फ़ोल्डर रीसायकल बिन में नहीं भेजे जाएंगे।",
     permanentConfirmButton: "स्थायी रूप से हटाएं",
     deletingInProgress: "हटाया जा रहा है...",
     recycleSuccess: (count: number) => `${count} फ़ोल्डर सफलतापूर्वक रीसायकल बिन में भेजे गए।`,
     permanentSuccess: (count: number) => `${count} फ़ोल्डर सफलतापूर्वक स्थायी रूप से हटाए गए।`,
     partialErrorTitle: "आंशिक हटाने की रिपोर्ट",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} फ़ोल्डर साफ़ किए गए, लेकिन ${errorCount} फ़ोल्डर हटाए नहीं जा सके।`,
-    lockedOrPermissionNote: "कुछ फ़ाइलें चल रही प्रक्रियाओं द्वारा लॉक हो सकती हैं या व्यवस्थापक अनुमतियों की आवश्यकता हो सकती है।",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} फ़ोल्डर साफ़ किए गए, लेकिन ${errorCount} फ़ोल्डर हटाए नहीं जा सके।`,
+    lockedOrPermissionNote:
+      "कुछ फ़ाइलें चल रही प्रक्रियाओं द्वारा लॉक हो सकती हैं या व्यवस्थापक अनुमतियों की आवश्यकता हो सकती है।",
   },
   settings: {
     title: "सेटिंग्स",
@@ -155,7 +160,8 @@ export const hi: TranslationSchema = {
     version: "संस्करण",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "प्रकाशक: Vellium • © 2026 Vellium. सर्वाधिकार सुरक्षित।",
-    privacyNote: "सभी स्कैन और विलोपन आपके कंप्यूटर पर 100% स्थानीय रूप से होते हैं। कोई डेटा बाहर नहीं जाता।",
+    privacyNote:
+      "सभी स्कैन और विलोपन आपके कंप्यूटर पर 100% स्थानीय रूप से होते हैं। कोई डेटा बाहर नहीं जाता।",
     close: "बंद करें",
   },
   errors: {

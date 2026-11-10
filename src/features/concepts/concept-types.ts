@@ -30,7 +30,7 @@ export const MOCK_PROJECT_ITEMS: MockItem[] = [
     sizeBytes: 1420000000,
     safety: "safe",
     selected: true,
-    lastModified: "2 gün önce",
+    lastModified: "2 days ago",
   },
   {
     id: "item-2",
@@ -40,7 +40,7 @@ export const MOCK_PROJECT_ITEMS: MockItem[] = [
     sizeBytes: 3840000000,
     safety: "safe",
     selected: true,
-    lastModified: "Dün",
+    lastModified: "Yesterday",
   },
   {
     id: "item-3",
@@ -50,7 +50,7 @@ export const MOCK_PROJECT_ITEMS: MockItem[] = [
     sizeBytes: 2150000000,
     safety: "regenerate",
     selected: true,
-    lastModified: "4 saat önce",
+    lastModified: "4 hours ago",
   },
   {
     id: "item-4",
@@ -60,7 +60,7 @@ export const MOCK_PROJECT_ITEMS: MockItem[] = [
     sizeBytes: 890000000,
     safety: "safe",
     selected: false,
-    lastModified: "1 hafta önce",
+    lastModified: "1 week ago",
   },
   {
     id: "item-5",
@@ -70,7 +70,7 @@ export const MOCK_PROJECT_ITEMS: MockItem[] = [
     sizeBytes: 1670000000,
     safety: "safe",
     selected: true,
-    lastModified: "3 gün önce",
+    lastModified: "3 days ago",
   },
   {
     id: "item-6",
@@ -80,7 +80,6 @@ export const MOCK_PROJECT_ITEMS: MockItem[] = [
     sizeBytes: 640000000,
     safety: "safe",
     selected: false,
-    lastModified: "5 gün önce",
+    lastModified: "5 days ago",
   },
 ];
-

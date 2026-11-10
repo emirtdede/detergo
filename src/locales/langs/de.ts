@@ -102,18 +102,23 @@ export const de: TranslationSchema = {
     cancel: "Abbrechen",
     confirm: "Bestätigen",
     recycleTitle: "Ausgewählte Ordner in den Papierkorb verschieben?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules-Ordner (${size}) werden in den Papierkorb verschoben. Sie können jederzeit wiederhergestellt werden.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules-Ordner (${size}) werden in den Papierkorb verschoben. Sie können jederzeit wiederhergestellt werden.`,
     recycleConfirmButton: "In den Papierkorb",
     permanentTitle: "Ausgewählte Ordner endgültig löschen?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules-Ordner (${size}) werden endgültig von der Festplatte gelöscht. Dies kann nicht rückgängig gemacht werden.`,
-    permanentWarning: "WARNUNG: Dieser Vorgang ist endgültig! Die Ordner werden nicht in den Papierkorb verschoben.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules-Ordner (${size}) werden endgültig von der Festplatte gelöscht. Dies kann nicht rückgängig gemacht werden.`,
+    permanentWarning:
+      "WARNUNG: Dieser Vorgang ist endgültig! Die Ordner werden nicht in den Papierkorb verschoben.",
     permanentConfirmButton: "Endgültig löschen",
     deletingInProgress: "Löschvorgang läuft...",
     recycleSuccess: (count: number) => `${count} Ordner erfolgreich in den Papierkorb verschoben.`,
     permanentSuccess: (count: number) => `${count} Ordner erfolgreich endgültig gelöscht.`,
     partialErrorTitle: "Bericht über teilweises Löschen",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} Ordner bereinigt, aber ${errorCount} Ordner konnten nicht gelöscht werden.`,
-    lockedOrPermissionNote: "Einige Dateien sind möglicherweise durch laufende Prozesse gesperrt oder erfordern Administratorrechte.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} Ordner bereinigt, aber ${errorCount} Ordner konnten nicht gelöscht werden.`,
+    lockedOrPermissionNote:
+      "Einige Dateien sind möglicherweise durch laufende Prozesse gesperrt oder erfordern Administratorrechte.",
   },
   settings: {
     title: "Einstellungen",
@@ -145,7 +150,8 @@ export const de: TranslationSchema = {
     systemDefault: "Systemstandard",
     performance: "Leistung & Animation",
     reduceMotion: "Bewegung reduzieren",
-    reduceMotionDesc: "Deaktiviert Animationen und visuelle Effekte für weniger Ressourcenverbrauch.",
+    reduceMotionDesc:
+      "Deaktiviert Animationen und visuelle Effekte für weniger Ressourcenverbrauch.",
     favoritesManagement: "Favoriten-Verwaltung",
     noFavorites: "Noch keine gespeicherten Favoriten.",
     deleteFavoriteConfirm: "Möchten Sie diesen Favoriten wirklich entfernen?",
@@ -155,7 +161,8 @@ export const de: TranslationSchema = {
     version: "Version",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Herausgeber: Vellium • © 2026 Vellium. Alle Rechte vorbehalten.",
-    privacyNote: "Alle Scans und Löschungen erfolgen zu 100 % lokal auf Ihrem Computer. Keine Telemetrie.",
+    privacyNote:
+      "Alle Scans und Löschungen erfolgen zu 100 % lokal auf Ihrem Computer. Keine Telemetrie.",
     close: "Schließen",
   },
   errors: {
@@ -164,7 +171,8 @@ export const de: TranslationSchema = {
     pathNotFound: "Angegebener Pfad wurde nicht gefunden.",
     scanCancelled: "Scan wurde vom Benutzer abgebrochen.",
     scanFailed: "Beim Scannen ist ein Fehler aufgetreten.",
-    unsafeDeleteTarget: "Aus Sicherheitsgründen können System- oder Stammordner nicht gelöscht werden.",
+    unsafeDeleteTarget:
+      "Aus Sicherheitsgründen können System- oder Stammordner nicht gelöscht werden.",
     recycleBinFailed: "Verschieben in den Papierkorb fehlgeschlagen.",
     permanentDeleteFailed: "Endgültiges Löschen fehlgeschlagen.",
     settingsReadFailed: "Einstellungsdatei konnte nicht gelesen werden.",

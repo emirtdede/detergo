@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Dev Cleaner",
-  "version": "2.0.0",
+  "version": "2.2.1",
   "identifier": "com.vellium.devcleaner",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -40,9 +40,9 @@
     "homepage": "https://vellium.dev",
     "license": "Proprietary",
     "category": "DeveloperTool",
-    "copyright": "© 2026 Vellium. Tüm hakları saklıdır.",
-    "shortDescription": "Geliştirici artıklarını ve AI ajan depolamasını güvenle analiz edin ve temizleyin.",
-    "longDescription": "Dev Cleaner, Node.js/Python/Rust/.NET/Java/Go gibi ekosistemlerin yeniden üretilebilir bağımlılık, derleme ve önbellek çıktılarını ve Codex, Claude Code, Antigravity gibi AI kodlama ajanlarının yerel depolamasını tek yerden analiz eden yerel bir Windows uygulamasıdır. Yalnızca doğrulanmış ve açıkça seçilmiş hedefler Windows Çöp Kutusuna taşınır; kalıcı silme ayrı onay gerektirir. Uygulama tamamen çevrimdışı çalışır, telemetri göndermez.",
+    "copyright": "© 2026 Vellium. All rights reserved.",
+    "shortDescription": "Safely analyze and clean developer artifacts and AI agent storage.",
+    "longDescription": "Dev Cleaner is a local Windows application that analyzes, in one place, the reproducible dependency, build and cache outputs of ecosystems such as Node.js/Python/Rust/.NET/Java/Go, together with the local storage of AI coding agents such as Codex, Claude Code and Antigravity. Only verified and explicitly selected targets are moved to the Windows Recycle Bin; permanent deletion requires a separate confirmation. The application runs fully offline and sends no telemetry.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -52,10 +52,7 @@
     ],
     "windows": {
       "wix": {
-        "language": [
-          "tr-TR",
-          "en-US"
-        ]
+        "language": ["tr-TR", "en-US"]
       },
       "nsis": {
         "displayLanguageSelector": true,
@@ -66,10 +63,7 @@
         "sidebarImage": "nsis/sidebar.bmp",
         "installerHooks": "nsis/hooks.nsh",
         "installMode": "currentUser",
-        "languages": [
-          "Turkish",
-          "English"
-        ]
+        "languages": ["Turkish", "English"]
       }
     }
   }

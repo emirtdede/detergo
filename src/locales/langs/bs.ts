@@ -102,18 +102,22 @@ export const bs: TranslationSchema = {
     cancel: "Odustani",
     confirm: "Potvrdi",
     recycleTitle: "Premjestiti Odabrane Foldere u Smeće?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules foldera (${size}) bit će premješteno u Smeće. Možete ih vratiti u bilo kojem trenutku.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules foldera (${size}) bit će premješteno u Smeće. Možete ih vratiti u bilo kojem trenutku.`,
     recycleConfirmButton: "Premjesti u Smeće",
     permanentTitle: "Trajno Izbrisati Odabrane Foldere?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules foldera (${size}) bit će trajno izbrisano s diska. Ova se radnja ne može poništiti.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules foldera (${size}) bit će trajno izbrisano s diska. Ova se radnja ne može poništiti.`,
     permanentWarning: "UPOZORENJE: Ova radnja je trajna! Folderi se neće poslati u Smeće.",
     permanentConfirmButton: "Trajno Izbriši",
     deletingInProgress: "Brisanje u toku...",
     recycleSuccess: (count: number) => `${count} foldera uspješno premješteno u Smeće.`,
     permanentSuccess: (count: number) => `${count} foldera uspješno trajno izbrisano.`,
     partialErrorTitle: "Izvještaj o Djelomičnom Brisanju",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} foldera očišćeno, ali ${errorCount} foldera nije bilo moguće izbrisati.`,
-    lockedOrPermissionNote: "Neke datoteke mogu biti zaključane pokrenutim procesima ili zahtijevati administratorska prava.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} foldera očišćeno, ali ${errorCount} foldera nije bilo moguće izbrisati.`,
+    lockedOrPermissionNote:
+      "Neke datoteke mogu biti zaključane pokrenutim procesima ili zahtijevati administratorska prava.",
   },
   settings: {
     title: "Postavke",
@@ -155,7 +159,8 @@ export const bs: TranslationSchema = {
     version: "Verzija",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Izdavač: Vellium • © 2026 Vellium. Sva prava zadržana.",
-    privacyNote: "Sva skeniranja i brisanja odvijaju se 100% lokalno na vašem računaru. Nema telemetrije.",
+    privacyNote:
+      "Sva skeniranja i brisanja odvijaju se 100% lokalno na vašem računaru. Nema telemetrije.",
     close: "Zatvori",
   },
   errors: {
@@ -164,7 +169,8 @@ export const bs: TranslationSchema = {
     pathNotFound: "Navedena putanja nije pronađena.",
     scanCancelled: "Korisnik je otkazao skeniranje.",
     scanFailed: "Došlo je do greške tokom skeniranja.",
-    unsafeDeleteTarget: "Iz sigurnosnih razloga korijenski ili sistemski folderi se ne mogu brisati.",
+    unsafeDeleteTarget:
+      "Iz sigurnosnih razloga korijenski ili sistemski folderi se ne mogu brisati.",
     recycleBinFailed: "Premještanje foldera u Smeće nije uspjelo.",
     permanentDeleteFailed: "Trajno brisanje foldera nije uspjelo.",
     settingsReadFailed: "Nije moguće pročitati datoteku postavki.",

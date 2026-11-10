@@ -16,10 +16,10 @@ import {
 import { Button } from "@/components/primitives/Button";
 import { Dialog } from "@/components/primitives/Dialog";
 import { useScanStore } from "@/stores/scan-store";
-import { useUIText } from "@/lib/ui-text";
+import { useUIText, localizeAppError } from "@/lib/ui-text";
 import { useScanController } from "@/features/scan/useScanController";
 import { formatBytes, formatSignedBytes, truncatePath } from "@/lib/formatters";
-import { maskPath } from "@/features/items/ItemTable";
+import { maskPath } from "@/lib/format/path";
 import { SafetyBadge } from "@/features/items/SafetyBadge";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
@@ -27,6 +27,7 @@ import { useSelectionStore } from "@/stores/selection-store";
 import { useAppStore } from "@/stores/app-store";
 import { useCacheStore } from "@/stores/cache-store";
 import { scannerApi } from "@/lib/tauri/scanner-api";
+import { log } from "@/lib/logging";
 import "../items/items.css";
 import "./overview.css";
 
@@ -39,6 +40,7 @@ export const OverviewView: React.FC = () => {
   const previousSummary = useScanStore((s) => s.previousSummary);
   const previousCleanableBytes = useScanStore((s) => s.previousCleanableBytes);
   const maskPaths = usePreferencesStore((s) => s.maskPaths);
+  const language = usePreferencesStore((s) => s.language);
   const setView = useAppStore((s) => s.setView);
   const cacheProviders = useCacheStore((s) => s.providers);
   const loadCacheProviders = useCacheStore((s) => s.loadProviders);
@@ -66,30 +68,36 @@ export const OverviewView: React.FC = () => {
         showToast(ui.overview.noLastScanToast, "error");
       }
     } catch (err) {
-      showToast(`${ui.history.loadError}: ${err instanceof Error ? err.message : String(err)}`, "error");
+      showToast(`${ui.history.loadError}: ${localizeAppError(err, ui)}`, "error");
     }
   };
 
-    const [lifetimeReclaimed, setLifetimeReclaimed] = useState<number>(0);
+  const [lifetimeReclaimed, setLifetimeReclaimed] = useState<number>(0);
   const [lifetimeRuns, setLifetimeRuns] = useState<number>(0);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
   useEffect(() => {
-    
     scannerApi
       .getCleanupHistory(100)
       .then((records) => {
         const total = records.reduce((acc, r) => acc + (r.reclaimBytes || 0), 0);
         setLifetimeReclaimed(total);
         setLifetimeRuns(records.length);
+        setHistoryError(null);
       })
-      .catch(() => {});
+      .catch((err) => {
+        // The lifetime counters are a bonus; surface the failure inline instead
+        // of silently showing zero reclaimed bytes.
+        log.warn("Could not load lifetime cleanup history", err);
+        setHistoryError(localizeAppError(err, ui));
+      });
 
     void loadCacheProviders();
-  }, [loadCacheProviders]);
+  }, [loadCacheProviders, ui]);
 
   const items = useMemo(
     () => itemIds.map((id) => itemsById[id]).filter(Boolean),
-    [itemIds, itemsById]
+    [itemIds, itemsById],
   );
 
   const totals = useMemo(() => {
@@ -173,7 +181,7 @@ export const OverviewView: React.FC = () => {
         .filter((item) => item.selectable && !item.protected)
         .sort((a, b) => (b.estimatedReclaimBytes ?? 0) - (a.estimatedReclaimBytes ?? 0))
         .slice(0, 5),
-    [items]
+    [items],
   );
 
   const cleanableDelta = totals.cleanable - previousCleanableBytes;
@@ -187,9 +195,9 @@ export const OverviewView: React.FC = () => {
           (i.ecosystem || "").toLowerCase().includes("node") ||
           (i.ecosystem || "").toLowerCase().includes("rust") ||
           i.displayName.includes("node_modules") ||
-          i.displayName.includes("target")
+          i.displayName.includes("target"),
       ).length,
-    [items]
+    [items],
   );
 
   const agentItemsCount = useMemo(
@@ -199,14 +207,14 @@ export const OverviewView: React.FC = () => {
           (i.category || "").toLowerCase().includes("agent") ||
           (i.displayName || "").toLowerCase().includes("claude") ||
           (i.displayName || "").toLowerCase().includes("cursor") ||
-          (i.displayName || "").toLowerCase().includes("codex")
+          (i.displayName || "").toLowerCase().includes("codex"),
       ).length,
-    [items]
+    [items],
   );
 
   const totalCachesBytes = useMemo(
     () => cacheProviders.reduce((acc, p) => acc + (p.totalBytes || 0), 0),
-    [cacheProviders]
+    [cacheProviders],
   );
 
   return (
@@ -215,9 +223,7 @@ export const OverviewView: React.FC = () => {
       <header className="overview-header">
         <div className="overview-header-copy">
           <h1 className="overview-title">{ui.overview.pageTitle}</h1>
-          <p className="overview-subtitle">
-            {ui.overview.pageSubtitle}
-          </p>
+          <p className="overview-subtitle">{ui.overview.pageSubtitle}</p>
         </div>
 
         <div className="overview-header-telemetry">
@@ -230,8 +236,8 @@ export const OverviewView: React.FC = () => {
               {isScanning
                 ? `${ui.common.scanning} (${progress?.entriesFound ?? 0} ${ui.overview.candidates})`
                 : items.length > 0
-                ? ui.overview.statusReady
-                : ui.overview.statusIdle}
+                  ? ui.overview.statusReady
+                  : ui.overview.statusIdle}
             </span>
           </div>
 
@@ -262,7 +268,7 @@ export const OverviewView: React.FC = () => {
 
       {/* 2. 4-COLUMN BENTO KPI ROW */}
       <section className="overview-kpi-grid" aria-label={ui.overview.title}>
-        {/* KPI 1: Temizlenebilir Alan */}
+        {/* KPI 1: Cleanable Space */}
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
             <span className="nc-kpi-card-label">{ui.overview.kpiCleanable}</span>
@@ -272,15 +278,13 @@ export const OverviewView: React.FC = () => {
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">
-              {items.length > 0 ? formatBytes(totals.cleanable) : "—"}
+              {items.length > 0 ? formatBytes(totals.cleanable, language) : "—"}
             </span>
             <div className="nc-kpi-card-sub">
               {hasComparison && items.length > 0 ? (
-                <span
-                  className={`nc-kpi-delta-pill ${cleanableDelta > 0 ? "is-up" : "is-down"}`}
-                >
+                <span className={`nc-kpi-delta-pill ${cleanableDelta > 0 ? "is-up" : "is-down"}`}>
                   {cleanableDelta > 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                  {formatSignedBytes(cleanableDelta)}
+                  {formatSignedBytes(cleanableDelta, language)}
                 </span>
               ) : (
                 <span>{ui.overview.kpiCleanableSub}</span>
@@ -289,7 +293,7 @@ export const OverviewView: React.FC = () => {
           </div>
         </div>
 
-        {/* KPI 2: Güvenli Reclaim */}
+        {/* KPI 2: Safe Reclaim */}
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
             <span className="nc-kpi-card-label">{ui.overview.kpiSafeReclaim}</span>
@@ -299,7 +303,7 @@ export const OverviewView: React.FC = () => {
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">
-              {items.length > 0 ? formatBytes(totals.safeReclaim) : "—"}
+              {items.length > 0 ? formatBytes(totals.safeReclaim, language) : "—"}
             </span>
             <div className="nc-kpi-card-sub">
               <span>{ui.overview.kpiSafeReclaimSub}</span>
@@ -307,7 +311,7 @@ export const OverviewView: React.FC = () => {
           </div>
         </div>
 
-        {/* KPI 3: Taranan Hedefler & Projeler */}
+        {/* KPI 3: Scanned Targets & Projects */}
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
             <span className="nc-kpi-card-label">{ui.overview.kpiTargets}</span>
@@ -320,12 +324,16 @@ export const OverviewView: React.FC = () => {
               {items.length > 0 ? ui.common.items(items.length) : ui.common.items(0)}
             </span>
             <div className="nc-kpi-card-sub">
-              <span>{totals.projects > 0 ? ui.overview.kpiTargetsSubActive(totals.projects) : ui.overview.kpiTargetsSubIdle}</span>
+              <span>
+                {totals.projects > 0
+                  ? ui.overview.kpiTargetsSubActive(totals.projects)
+                  : ui.overview.kpiTargetsSubIdle}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* KPI 4: Geçmiş Kazanım (Lifetime Reclaimed) */}
+        {/* KPI 4: Lifetime Reclaimed */}
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
             <span className="nc-kpi-card-label">{ui.overview.kpiLifetime}</span>
@@ -335,29 +343,31 @@ export const OverviewView: React.FC = () => {
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">
-              {lifetimeReclaimed > 0 ? formatBytes(lifetimeReclaimed) : "0 B"}
+              {lifetimeReclaimed > 0 ? formatBytes(lifetimeReclaimed, language) : "0 B"}
             </span>
             <div className="nc-kpi-card-sub">
-              <span>{lifetimeRuns > 0 ? ui.overview.kpiLifetimeSubRuns(lifetimeRuns) : ui.overview.kpiLifetimeSubIdle}</span>
+              <span>
+                {lifetimeRuns > 0
+                  ? ui.overview.kpiLifetimeSubRuns(lifetimeRuns)
+                  : ui.overview.kpiLifetimeSubIdle}
+              </span>
             </div>
           </div>
         </div>
       </section>
 
-            {/* 3. FULL-WIDTH STORAGE DISTRIBUTION & INTERACTIVE ACTION CENTER */}
+      {/* 3. FULL-WIDTH STORAGE DISTRIBUTION & INTERACTIVE ACTION CENTER */}
       <section className="overview-dist-panel" aria-label={ui.overview.distTitle}>
         <div className="overview-panel-header">
           <div className="overview-panel-title-group">
             <h2 className="overview-panel-title">{ui.overview.distTitle}</h2>
             <span className="overview-panel-desc">
-              {items.length > 0
-                ? ui.overview.distSubtitleActive
-                : ui.overview.distSubtitleIdle}
+              {items.length > 0 ? ui.overview.distSubtitleActive : ui.overview.distSubtitleIdle}
             </span>
           </div>
           {items.length > 0 && (
             <span className="overview-hub-badge">
-              {formatBytes(totals.cleanable)} toplam
+              {ui.overview.distTotalBadge(formatBytes(totals.cleanable, language))}
             </span>
           )}
         </div>
@@ -380,7 +390,7 @@ export const OverviewView: React.FC = () => {
                     width: `${Math.max(2, seg.percent)}%`,
                     backgroundColor: seg.color,
                   }}
-                  title={`${seg.label}: ${formatBytes(seg.bytes)} (${seg.percent.toFixed(1)}%)`}
+                  title={`${seg.label}: ${formatBytes(seg.bytes, language)} (${seg.percent.toFixed(1)}%)`}
                 />
               ))}
             </div>
@@ -392,7 +402,7 @@ export const OverviewView: React.FC = () => {
                   key={seg.id}
                   className="overview-eco-card"
                   style={{ "--eco-color": seg.color } as React.CSSProperties}
-                  title={`${seg.label}: ${formatBytes(seg.bytes)}`}
+                  title={`${seg.label}: ${formatBytes(seg.bytes, language)}`}
                 >
                   <div className="overview-eco-card-top">
                     <span
@@ -403,7 +413,9 @@ export const OverviewView: React.FC = () => {
                     <span className="overview-eco-card-pct">{seg.percent.toFixed(1)}%</span>
                   </div>
                   <div className="overview-eco-card-bottom">
-                    <span className="overview-eco-card-size">{formatBytes(seg.bytes)}</span>
+                    <span className="overview-eco-card-size">
+                      {formatBytes(seg.bytes, language)}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -415,9 +427,7 @@ export const OverviewView: React.FC = () => {
               <HardDrive size={26} />
             </div>
             <h3 className="overview-zero-heading">{ui.overview.distEmptyTitle}</h3>
-            <p className="overview-zero-desc">
-              {ui.overview.distEmptyDesc}
-            </p>
+            <p className="overview-zero-desc">{ui.overview.distEmptyDesc}</p>
           </div>
         )}
       </section>
@@ -429,9 +439,7 @@ export const OverviewView: React.FC = () => {
           <div className="overview-panel-header">
             <div className="overview-panel-title-group">
               <h2 className="overview-panel-title">{ui.overview.topItemsTitle}</h2>
-              <span className="overview-panel-desc">
-                {ui.overview.topItemsSubtitle}
-              </span>
+              <span className="overview-panel-desc">{ui.overview.topItemsSubtitle}</span>
             </div>
             {topItems.length > 0 && (
               <Button
@@ -460,7 +468,7 @@ export const OverviewView: React.FC = () => {
                     </span>
                   </div>
                   <span className="overview-top-item-size">
-                    {formatBytes(item.estimatedReclaimBytes ?? 0)}
+                    {formatBytes(item.estimatedReclaimBytes ?? 0, language)}
                   </span>
                 </div>
               ))
@@ -475,8 +483,11 @@ export const OverviewView: React.FC = () => {
         </div>
 
         {/* Right: 4 Category Hub Cards - Exactly matches height of Left Panel */}
-        <div className="overview-hubs-column overview-hubs-column--equal" aria-label={ui.overview.breakdown}>
-          {/* Hub 1: Projeler */}
+        <div
+          className="overview-hubs-column overview-hubs-column--equal"
+          aria-label={ui.overview.breakdown}
+        >
+          {/* Hub 1: Projects */}
           <div
             className="overview-hub-card"
             role="button"
@@ -490,9 +501,7 @@ export const OverviewView: React.FC = () => {
               </div>
               <div className="overview-hub-info">
                 <h3 className="overview-hub-title">{ui.overview.hubProjectsTitle}</h3>
-                <span className="overview-hub-desc">
-                  {ui.overview.hubProjectsDesc}
-                </span>
+                <span className="overview-hub-desc">{ui.overview.hubProjectsDesc}</span>
               </div>
             </div>
             <div className="overview-hub-right">
@@ -503,7 +512,7 @@ export const OverviewView: React.FC = () => {
             </div>
           </div>
 
-          {/* Hub 2: AI Kodlama Ajanları */}
+          {/* Hub 2: AI Coding Agents */}
           <div
             className="overview-hub-card"
             role="button"
@@ -517,9 +526,7 @@ export const OverviewView: React.FC = () => {
               </div>
               <div className="overview-hub-info">
                 <h3 className="overview-hub-title">{ui.overview.hubAgentsTitle}</h3>
-                <span className="overview-hub-desc">
-                  {ui.overview.hubAgentsDesc}
-                </span>
+                <span className="overview-hub-desc">{ui.overview.hubAgentsDesc}</span>
               </div>
             </div>
             <div className="overview-hub-right">
@@ -530,7 +537,7 @@ export const OverviewView: React.FC = () => {
             </div>
           </div>
 
-          {/* Hub 3: Araç Önbellekleri */}
+          {/* Hub 3: Tool Caches */}
           <div
             className="overview-hub-card"
             role="button"
@@ -544,20 +551,20 @@ export const OverviewView: React.FC = () => {
               </div>
               <div className="overview-hub-info">
                 <h3 className="overview-hub-title">{ui.overview.hubCachesTitle}</h3>
-                <span className="overview-hub-desc">
-                  {ui.overview.hubCachesDesc}
-                </span>
+                <span className="overview-hub-desc">{ui.overview.hubCachesDesc}</span>
               </div>
             </div>
             <div className="overview-hub-right">
               <span className="overview-hub-badge">
-                {totalCachesBytes > 0 ? formatBytes(totalCachesBytes) : `${cacheProviders.length} ${ui.nav.caches}`}
+                {totalCachesBytes > 0
+                  ? formatBytes(totalCachesBytes, language)
+                  : `${cacheProviders.length} ${ui.nav.caches}`}
               </span>
               <ArrowUpRight size={16} className="overview-hub-arrow" />
             </div>
           </div>
 
-          {/* Hub 4: Temizlik & İşlem Geçmişi */}
+          {/* Hub 4: Cleanup & Operation History */}
           <div
             className="overview-hub-card"
             role="button"
@@ -572,9 +579,11 @@ export const OverviewView: React.FC = () => {
               <div className="overview-hub-info">
                 <h3 className="overview-hub-title">{ui.overview.hubHistoryTitle}</h3>
                 <span className="overview-hub-desc">
-                  {lifetimeReclaimed > 0
-                    ? ui.overview.hubHistoryDescActive(formatBytes(lifetimeReclaimed))
-                    : ui.overview.hubHistoryDescIdle}
+                  {historyError
+                    ? ui.history.loadError
+                    : lifetimeReclaimed > 0
+                      ? ui.overview.hubHistoryDescActive(formatBytes(lifetimeReclaimed, language))
+                      : ui.overview.hubHistoryDescIdle}
                 </span>
               </div>
             </div>
@@ -588,7 +597,7 @@ export const OverviewView: React.FC = () => {
         </div>
       </section>
 
-      {/* Onay Pop-up'ları (Confirmation Dialogs) */}
+      {/* Confirmation Dialogs */}
       <Dialog
         isOpen={resetDialogOpen}
         onClose={() => setResetDialogOpen(false)}
@@ -609,7 +618,14 @@ export const OverviewView: React.FC = () => {
           </>
         }
       >
-        <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "var(--text-sm)", lineHeight: "var(--leading-relaxed)" }}>
+        <p
+          style={{
+            margin: 0,
+            color: "var(--text-secondary)",
+            fontSize: "var(--text-sm)",
+            lineHeight: "var(--leading-relaxed)",
+          }}
+        >
           {ui.overview.resetConfirmDesc}
         </p>
       </Dialog>
@@ -634,7 +650,14 @@ export const OverviewView: React.FC = () => {
           </>
         }
       >
-        <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "var(--text-sm)", lineHeight: "var(--leading-relaxed)" }}>
+        <p
+          style={{
+            margin: 0,
+            color: "var(--text-secondary)",
+            fontSize: "var(--text-sm)",
+            lineHeight: "var(--leading-relaxed)",
+          }}
+        >
           {ui.overview.restoreConfirmDesc}
         </p>
       </Dialog>

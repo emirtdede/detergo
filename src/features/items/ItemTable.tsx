@@ -1,12 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import {
-  AlertTriangle,
-  ChevronDown,
-  ChevronUp,
-  FolderOpen,
-  Search,
-} from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp, FolderOpen, Search } from "lucide-react";
 import { Checkbox } from "@/components/primitives/Checkbox";
 import { EmptyState } from "@/components/primitives/EmptyState";
 import { IconButton } from "@/components/primitives/IconButton";
@@ -14,16 +8,30 @@ import { SearchField } from "@/components/primitives/SearchField";
 import { SafetyBadge } from "./SafetyBadge";
 import { useSelectionStore } from "@/stores/selection-store";
 import { usePreferencesStore } from "@/stores/preferences-store";
-import { useUIText } from "@/lib/ui-text";
+import {
+  useUIText,
+  localizeWarningCode,
+  localizeCategory,
+  localizeBackendNote,
+} from "@/lib/ui-text";
 import { useUiStore } from "@/stores/ui-store";
-import { formatBytes, truncatePath } from "@/lib/formatters";
+import { formatBytes } from "@/lib/formatters";
+import { maskPath, truncatePath } from "@/lib/format/path";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { CleanupItem, SafetyClass, SortOption } from "@/types";
 import { bulkSelectableIds } from "./selection-helpers";
 import "./items.css";
 
-export function maskPath(path: string): string {
-  return path.replace(/([A-Za-z]:\\Users\\)([^\\]+)/i, "$1•••");
+const SEARCH_FIELDS = (item: CleanupItem): string[] => [
+  item.displayPath,
+  item.displayName,
+  item.projectName ?? "",
+  item.category,
+  item.ruleId,
+];
+
+function searchHaystackFor(item: CleanupItem): string {
+  return SEARCH_FIELDS(item).join(" ").toLowerCase();
 }
 
 interface ItemTableProps {
@@ -44,13 +52,19 @@ function compareItems(a: CleanupItem, b: CleanupItem, sort: SortOption): number 
     case "size":
       return (a.logicalBytes ?? -1) - (b.logicalBytes ?? -1);
     case "modified":
-      const aTime = a.lastModifiedMs ?? (a.lastModifiedAt ? new Date(a.lastModifiedAt).getTime() : 0);
-      const bTime = b.lastModifiedMs ?? (b.lastModifiedAt ? new Date(b.lastModifiedAt).getTime() : 0);
+      const aTime =
+        a.lastModifiedMs ?? (a.lastModifiedAt ? new Date(a.lastModifiedAt).getTime() : 0);
+      const bTime =
+        b.lastModifiedMs ?? (b.lastModifiedAt ? new Date(b.lastModifiedAt).getTime() : 0);
       return aTime - bTime;
     case "safety":
       return SAFETY_RANK[a.safetyClass] - SAFETY_RANK[b.safetyClass];
     case "project":
-      return (a.projectName ?? "") < (b.projectName ?? "") ? -1 : (a.projectName ?? "") > (b.projectName ?? "") ? 1 : 0;
+      return (a.projectName ?? "") < (b.projectName ?? "")
+        ? -1
+        : (a.projectName ?? "") > (b.projectName ?? "")
+          ? 1
+          : 0;
     case "category":
       return a.category < b.category ? -1 : a.category > b.category ? 1 : 0;
     case "name":
@@ -74,29 +88,11 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
   const minSizeBytes = usePreferencesStore((s) => s.minSizeBytes);
   const sort = usePreferencesStore((s) => s.sort);
   const setSort = usePreferencesStore((s) => s.setSort);
+  const language = usePreferencesStore((s) => s.language);
   const showToast = useUiStore((s) => s.showToast);
   const parentRef = useRef<HTMLDivElement>(null);
 
-  const warningLabel = (code: string): string => {
-    switch (code) {
-      case "USER_PROTECTED":
-        return ui.warnings.userProtected;
-      case "TARGET_ACTIVE":
-        return ui.warnings.targetActive;
-      case "PROVIDER_ACTIVE":
-        return ui.warnings.providerActive;
-      case "RECORDING_ACTIVE":
-        return ui.warnings.recordingActive;
-      case "AGENT_CACHE_DISABLED":
-        return ui.warnings.agentCacheDisabled;
-      case "PROTECTED_TARGET":
-        return ui.warnings.protectedTarget;
-      case "NO_PROJECT_MARKER":
-        return ui.warnings.noProjectMarker;
-      default:
-        return ui.warnings.other(code);
-    }
-  };
+  const warningLabel = (code: string): string => localizeWarningCode(code, ui);
 
   const projectOptions = useMemo(() => {
     const values = new Set<string>();
@@ -110,6 +106,16 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
     const values = new Set<string>();
     for (const item of items) values.add(item.category);
     return Array.from(values).sort((a, b) => a.localeCompare(b));
+  }, [items]);
+
+  // Search text is derived, never written back into the store objects: mutating
+  // an item during render breaks StrictMode and silently pollutes the store.
+  const searchIndex = useMemo(() => {
+    const index = new Map<string, string>();
+    for (const item of items) {
+      index.set(item.id, searchHaystackFor(item));
+    }
+    return index;
   }, [items]);
 
   const filtered = useMemo(() => {
@@ -126,13 +132,21 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
         return false;
       }
       if (!query) return true;
-      const haystack = (item as any)._searchHaystack ??= `${item.displayPath} ${item.displayName} ${item.projectName ?? ""} ${item.category} ${item.ruleId}`.toLowerCase();
-      return haystack.includes(query);
+      return searchIndex.get(item.id)?.includes(query) ?? false;
     });
 
     const direction = sort.direction === "asc" ? 1 : -1;
     return matches.sort((a, b) => compareItems(a, b, sort) * direction);
-  }, [items, searchQuery, safetyFilter, projectFilter, categoryFilter, minSizeBytes, sort]);
+  }, [
+    items,
+    searchIndex,
+    searchQuery,
+    safetyFilter,
+    projectFilter,
+    categoryFilter,
+    minSizeBytes,
+    sort,
+  ]);
 
   // Selecting rows is always an explicit user action. `autoSelectable` stays
   // false for provider/agent targets (safe default), but filtering must not
@@ -165,11 +179,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
     hint?: string;
   }> = ({ field, label, numeric, hint }) => {
     const active = sort.field === field;
-    const sortState = active
-      ? sort.direction === "asc"
-        ? "ascending"
-        : "descending"
-      : "none";
+    const sortState = active ? (sort.direction === "asc" ? "ascending" : "descending") : "none";
     return (
       <div
         role="columnheader"
@@ -201,7 +211,11 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
   return (
     <div className="items-view">
       <div className="items-toolbar">
-        <SearchField value={searchQuery} onChange={setSearchQuery} placeholder={ui.table.searchPlaceholder} />
+        <SearchField
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder={ui.table.searchPlaceholder}
+        />
         {showProject && (
           <select
             className="items-filter-select"
@@ -211,7 +225,9 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
           >
             <option value="all">{ui.table.allProjects}</option>
             {projectOptions.map((project) => (
-              <option key={project} value={project}>{project}</option>
+              <option key={project} value={project}>
+                {project}
+              </option>
             ))}
           </select>
         )}
@@ -223,7 +239,9 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
         >
           <option value="all">{ui.table.allCategories}</option>
           {categoryOptions.map((category) => (
-            <option key={category} value={category}>{category}</option>
+            <option key={category} value={category}>
+              {localizeCategory(category, language)}
+            </option>
           ))}
         </select>
         <select
@@ -331,7 +349,13 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
                     }}
                     role="row"
                     aria-rowindex={virtualRow.index + 2}
-                    title={[item.note, warnings, item.regenerateHint].filter(Boolean).join("\n")}
+                    title={[
+                      localizeBackendNote(item.note, ui),
+                      warnings,
+                      localizeBackendNote(item.regenerateHint, ui),
+                    ]
+                      .filter(Boolean)
+                      .join("\n")}
                   >
                     <div role="cell">
                       <Checkbox
@@ -346,7 +370,9 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
                     </div>
                     <div className="items-name" role="cell">
                       <strong>{item.displayName}</strong>
-                      <span className="items-path" title={item.displayPath}>{truncatePath(displayPath(item.displayPath), 52)}</span>
+                      <span className="items-path" title={item.displayPath}>
+                        {truncatePath(displayPath(item.displayPath), 52)}
+                      </span>
                       {warnings && (
                         <span className="items-warning" title={warnings}>
                           <AlertTriangle size={11} />
@@ -355,9 +381,13 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
                       )}
                     </div>
                     {showProject ? (
-                      <div className="items-cell" role="cell">{item.projectName ?? "-"}</div>
+                      <div className="items-cell" role="cell">
+                        {item.projectName ?? "-"}
+                      </div>
                     ) : (
-                      <div className="items-cell" role="cell">{item.category}</div>
+                      <div className="items-cell" role="cell">
+                        {localizeCategory(item.category, language)}
+                      </div>
                     )}
                     <div role="cell">
                       <SafetyBadge safety={item.safetyClass} />
@@ -365,7 +395,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
                     <div className="items-cell items-size" role="cell">
                       {item.logicalBytes === null
                         ? ui.table.unmeasured
-                        : formatBytes(item.logicalBytes)}
+                        : formatBytes(item.logicalBytes, language)}
                     </div>
                     <div className="items-actions" role="cell">
                       <IconButton

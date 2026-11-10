@@ -102,18 +102,22 @@ export const pt: TranslationSchema = {
     cancel: "Cancelar",
     confirm: "Confirmar",
     recycleTitle: "Mover Pastas Selecionadas para a Lixeira?",
-    recycleDescription: (count: number, size: string) => `${count} pastas node_modules (${size}) serão movidas para a Lixeira. Você pode restaurá-las a qualquer momento.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} pastas node_modules (${size}) serão movidas para a Lixeira. Você pode restaurá-las a qualquer momento.`,
     recycleConfirmButton: "Mover para a Lixeira",
     permanentTitle: "Excluir Permanentemente as Pastas Selecionadas?",
-    permanentDescription: (count: number, size: string) => `${count} pastas node_modules (${size}) serão excluídas permanentemente do disco. Esta ação não pode ser desfeita.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} pastas node_modules (${size}) serão excluídas permanentemente do disco. Esta ação não pode ser desfeita.`,
     permanentWarning: "AVISO: Esta ação é irreversível! As pastas não irão para a Lixeira.",
     permanentConfirmButton: "Excluir Permanentemente",
     deletingInProgress: "Exclusão em andamento...",
     recycleSuccess: (count: number) => `${count} pastas movidas para a Lixeira com sucesso.`,
     permanentSuccess: (count: number) => `${count} pastas excluídas permanentemente com sucesso.`,
     partialErrorTitle: "Relatório de Exclusão Parcial",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} pastas limpas, mas ${errorCount} pastas não puderam ser excluídas.`,
-    lockedOrPermissionNote: "Alguns arquivos podem estar bloqueados por processos em execução ou requerer permissões elevadas.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} pastas limpas, mas ${errorCount} pastas não puderam ser excluídas.`,
+    lockedOrPermissionNote:
+      "Alguns arquivos podem estar bloqueados por processos em execução ou requerer permissões elevadas.",
   },
   settings: {
     title: "Configurações",
@@ -155,7 +159,8 @@ export const pt: TranslationSchema = {
     version: "Versão",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Editor: Vellium • © 2026 Vellium. Todos os direitos reservados.",
-    privacyNote: "Todas as varreduras e exclusões ocorrem 100% localmente no seu computador. Zero telemetria.",
+    privacyNote:
+      "Todas as varreduras e exclusões ocorrem 100% localmente no seu computador. Zero telemetria.",
     close: "Fechar",
   },
   errors: {

@@ -102,18 +102,23 @@ export const es: TranslationSchema = {
     cancel: "Cancelar",
     confirm: "Confirmar",
     recycleTitle: "¿Mover Carpetas Seleccionadas a la Papelera?",
-    recycleDescription: (count: number, size: string) => `${count} carpetas node_modules (${size}) se moverán a la Papelera de reciclaje. Puede restaurarlas en cualquier momento.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} carpetas node_modules (${size}) se moverán a la Papelera de reciclaje. Puede restaurarlas en cualquier momento.`,
     recycleConfirmButton: "Mover a la Papelera",
     permanentTitle: "¿Eliminar Permanentemente las Carpetas Seleccionadas?",
-    permanentDescription: (count: number, size: string) => `${count} carpetas node_modules (${size}) se eliminarán permanentemente del disco. Esto no se puede deshacer.`,
-    permanentWarning: "ADVERTENCIA: ¡Esta acción es irreversible! Las carpetas no se enviarán a la Papelera.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} carpetas node_modules (${size}) se eliminarán permanentemente del disco. Esto no se puede deshacer.`,
+    permanentWarning:
+      "ADVERTENCIA: ¡Esta acción es irreversible! Las carpetas no se enviarán a la Papelera.",
     permanentConfirmButton: "Eliminar Permanentemente",
     deletingInProgress: "Eliminación en curso...",
     recycleSuccess: (count: number) => `${count} carpetas movidas a la Papelera correctamente.`,
     permanentSuccess: (count: number) => `${count} carpetas eliminadas permanentemente con éxito.`,
     partialErrorTitle: "Informe de Eliminación Parcial",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} carpetas limpiadas, pero ${errorCount} carpetas no pudieron eliminarse.`,
-    lockedOrPermissionNote: "Algunos archivos pueden estar bloqueados por procesos en ejecución o requerir permisos elevados.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} carpetas limpiadas, pero ${errorCount} carpetas no pudieron eliminarse.`,
+    lockedOrPermissionNote:
+      "Algunos archivos pueden estar bloqueados por procesos en ejecución o requerir permisos elevados.",
   },
   settings: {
     title: "Configuración",
@@ -155,7 +160,8 @@ export const es: TranslationSchema = {
     version: "Versión",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Editor: Vellium • © 2026 Vellium. Todos los derechos reservados.",
-    privacyNote: "Todos los análisis y eliminaciones ocurren 100% localmente en su equipo. Cero telemetría.",
+    privacyNote:
+      "Todos los análisis y eliminaciones ocurren 100% localmente en su equipo. Cero telemetría.",
     close: "Cerrar",
   },
   errors: {

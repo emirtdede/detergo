@@ -12,12 +12,12 @@ use std::time::Instant;
 use crate::audit::StorageSnapshot;
 use crate::catalog::model::{CleanupMethod, Confidence, SafetyClass, TargetKind};
 use crate::catalog::project::stable_path_id;
+use crate::safety::evidence_guard::EvidenceSnapshot;
+use crate::safety::{active_use_for_provider, ActiveUse};
 use crate::scanner::cancellation::CancellationToken;
 use crate::scanner::limits::{ScanLimits, StopReason};
 use crate::scanner::measurement::measure_path_with_deadline;
 use crate::scanner::models::{CleanupItem, ItemStatus, StoredTarget};
-use crate::safety::evidence_guard::EvidenceSnapshot;
-use crate::safety::{active_use_for_provider, ActiveUse};
 use crate::settings::AppSettings;
 
 use agent_spec::{provider_display_name, specs_for};
@@ -50,39 +50,39 @@ pub fn list_agent_providers(settings: &AppSettings) -> Vec<AgentProviderInfo> {
     for (id, note) in [
         (
             "codex",
-            Some("Oturumlar, worktree'ler ve SQLite tanılama verisi salt okunur görüntülenir."),
+            Some("Sessions, worktrees, and SQLite diagnostics are displayed read-only."),
         ),
         (
             "claude-code",
-            Some("Konuşmalar ve file-history korunur; yalnızca doğrulanmış cache/görev çıktıları temizlenebilir."),
+            Some("Conversations and file-history are preserved; only verified cache and task outputs can be cleaned."),
         ),
         (
             "antigravity",
-            Some("Brain ve konuşmalar korunur; tarayıcı kayıtları yalnızca kayıt durduğunda temizlenebilir."),
+            Some("Brain and conversations are preserved; browser recordings can only be cleaned when recordings stop."),
         ),
         (
             "opencode",
-            Some("Yapılandırma ve opencode.db korunur; görev çıktıları, loglar ve derleme önbellekleri temizlenebilir."),
+            Some("Configuration and opencode.db are preserved; task outputs, logs, and build caches can be cleaned."),
         ),
         (
             "t3code",
-            Some("Kullanıcı profili korunur; GPU/Code Cache ve eski yükleyici kalıntıları temizlenebilir."),
+            Some("User profile is preserved; GPU/Code Cache and obsolete installer remnants can be cleaned."),
         ),
         (
             "bionic",
-            Some("Kullanıcı ayarları korunur; geçici Web/Code Cache ve log dosyaları temizlenebilir."),
+            Some("User settings are preserved; temporary Web/Code Cache and log files can be cleaned."),
         ),
         (
             "cursor",
-            Some("Ayarlar ve sohbet geçmişi korunur; GPU, Code Cache ve web önbellekleri temizlenebilir."),
+            Some("Settings and chat history are preserved; GPU, Code Cache, and web caches can be cleaned."),
         ),
         (
             "windsurf",
-            Some("Cascade sohbet geçmişi korunur; Electron ve GPU önbellekleri temizlenebilir."),
+            Some("Cascade chat history is preserved; Electron and GPU caches can be cleaned."),
         ),
         (
             "ollama",
-            Some("İndirilen yerel modeller ve kimlikler salt okunur korunur; geçici log ve güncelleme kalıntıları temizlenebilir."),
+            Some("Downloaded local models and identities are preserved read-only; temporary logs and update remnants can be cleaned."),
         ),
     ] {
         if hidden.iter().any(|h| h == id) {
@@ -130,9 +130,7 @@ pub fn list_agent_providers(settings: &AppSettings) -> Vec<AgentProviderInfo> {
             installed: provider_roots.iter().any(|r| r.exists),
             roots: provider_roots,
             read_only: true,
-            note: Some(
-                "Kullanıcı tanımlı araç: hedefler yalnızca KEEP olarak raporlanır.".to_string(),
-            ),
+            note: Some("User-defined tool: targets are reported as KEEP only.".to_string()),
         });
     }
 
@@ -215,8 +213,7 @@ pub fn scan_agents(
             let user_protected = policy.protected_paths.iter().any(|raw| {
                 let key = crate::safety::path_guard::normalize_key(std::path::Path::new(raw));
                 !key.is_empty()
-                    && (path_key == key
-                        || crate::safety::path_guard::is_within(&path_key, &key))
+                    && (path_key == key || crate::safety::path_guard::is_within(&path_key, &key))
             });
             let cache_disabled = spec.category == "cache" && !policy.allow_agent_cache_cleanup;
             let recording_active = spec.requires_idle
@@ -260,12 +257,11 @@ pub fn scan_agents(
                 .and_then(|m| m.modified().ok())
                 .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok());
             let last_modified_ms = sys_time.map(|d| d.as_millis() as i64);
-            let modified_at = sys_time
-                .map(|d| {
-                    chrono::DateTime::from_timestamp(d.as_secs() as i64, 0)
-                        .map(|dt| dt.format("%Y-%m-%dT%H:%M:%SZ").to_string())
-                        .unwrap_or_default()
-                });
+            let modified_at = sys_time.map(|d| {
+                chrono::DateTime::from_timestamp(d.as_secs() as i64, 0)
+                    .map(|dt| dt.format("%Y-%m-%dT%H:%M:%SZ").to_string())
+                    .unwrap_or_default()
+            });
 
             let evidence = EvidenceSnapshot {
                 rule_id: spec.rule_id.to_string(),
@@ -403,7 +399,7 @@ pub fn scan_agents(
                 last_modified_ms: None,
                 status: ItemStatus::Blocked,
                 parent_item_id: None,
-                note: Some("Kullanıcı tanımlı araç; otomatik temizlik yapılmaz.".to_string()),
+                note: Some("User-defined tool; no automatic cleanup is performed.".to_string()),
             });
 
             targets.push(StoredTarget {

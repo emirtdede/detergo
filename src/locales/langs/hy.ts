@@ -102,18 +102,23 @@ export const hy: TranslationSchema = {
     cancel: "Չեղարկել",
     confirm: "Հաստատել",
     recycleTitle: "Տեղափոխե՞լ ընտրված պանակները աղբարկղ:",
-    recycleDescription: (count: number, size: string) => `${count} node_modules պանակ (${size}) կտեղափոխվի աղբարկղ: Դուք կարող եք վերականգնել դրանք ցանկացած պահի:`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules պանակ (${size}) կտեղափոխվի աղբարկղ: Դուք կարող եք վերականգնել դրանք ցանկացած պահի:`,
     recycleConfirmButton: "Տեղափոխել աղբարկղ",
     permanentTitle: "Ջնջե՞լ ընտրված պանակները անվերադարձ:",
-    permanentDescription: (count: number, size: string) => `${count} node_modules պանակ (${size}) անվերադարձ կջնջվի սկավառակից: Այս գործողությունը հնարավոր չէ չեղարկել:`,
-    permanentWarning: "ԶԳՈՒՇԱՑՈՒՄ. Այս գործողությունն անվերադարձ է: Պանակները չեն ուղարկվի աղբարկղ:",
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules պանակ (${size}) անվերադարձ կջնջվի սկավառակից: Այս գործողությունը հնարավոր չէ չեղարկել:`,
+    permanentWarning:
+      "ԶԳՈՒՇԱՑՈՒՄ. Այս գործողությունն անվերադարձ է: Պանակները չեն ուղարկվի աղբարկղ:",
     permanentConfirmButton: "Ջնջել անվերադարձ",
     deletingInProgress: "Ջնջվում է...",
     recycleSuccess: (count: number) => `${count} պանակ հաջողությամբ տեղափոխվեց աղբարկղ:`,
     permanentSuccess: (count: number) => `${count} պանակ հաջողությամբ ջնջվեց անվերադարձ:`,
     partialErrorTitle: "Մասնակի ջնջման հաշվետվություն",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} պանակ մաքրվեց, բայց ${errorCount} պանակ չհաջողվեց ջնջել:`,
-    lockedOrPermissionNote: "Որոշ ֆայլեր կարող են արգելափակված լինել աշխատող գործընթացների կողմից կամ պահանջել ադմինիստրատորի իրավունքներ:",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} պանակ մաքրվեց, բայց ${errorCount} պանակ չհաջողվեց ջնջել:`,
+    lockedOrPermissionNote:
+      "Որոշ ֆայլեր կարող են արգելափակված լինել աշխատող գործընթացների կողմից կամ պահանջել ադմինիստրատորի իրավունքներ:",
   },
   settings: {
     title: "Կարգավորումներ",
@@ -155,7 +160,8 @@ export const hy: TranslationSchema = {
     version: "Տարբերակ",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Հրատարակիչ՝ Vellium • © 2026 Vellium. Բոլոր իրավունքները պաշտպանված են:",
-    privacyNote: "Բոլոր սկանավորումներն ու ջնջումները տեղի են ունենում 100% լոկալ ձեր համակարգչում: Ոչ մի տվյալ չի ուղարկվում:",
+    privacyNote:
+      "Բոլոր սկանավորումներն ու ջնջումները տեղի են ունենում 100% լոկալ ձեր համակարգչում: Ոչ մի տվյալ չի ուղարկվում:",
     close: "Փակել",
   },
   errors: {
@@ -164,7 +170,8 @@ export const hy: TranslationSchema = {
     pathNotFound: "Նշված ուղին չի գտնվել:",
     scanCancelled: "Սկանավորումը չեղարկվել է օգտատիրոջ կողմից:",
     scanFailed: "Սկանավորման ընթացքում տեղի է ունեցել սխալ:",
-    unsafeDeleteTarget: "Անվտանգության նկատառումներով արմատային կամ համակարգային պանակները չեն կարող ջնջվել:",
+    unsafeDeleteTarget:
+      "Անվտանգության նկատառումներով արմատային կամ համակարգային պանակները չեն կարող ջնջվել:",
     recycleBinFailed: "Չհաջողվեց տեղափոխել պանակները աղբարկղ:",
     permanentDeleteFailed: "Չհաջողվեց ջնջել պանակները անվերադարձ:",
     settingsReadFailed: "Չհաջողվեց կարդալ կարգավորումների ֆայլը:",

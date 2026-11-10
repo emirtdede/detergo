@@ -45,7 +45,8 @@ export const my: TranslationSchema = {
   },
   scan: {
     idleTitle: "ဒစ်ခ်နေရာလွတ် ပြန်လည်ရယူပါ",
-    idleSubtitle: "သင့်ပရောဂျက်များအားလုံးရှိ node_modules ဖိုဒါများကို လုံခြုံစွာ ရှာဖွေပြီး ရှင်းလင်းပါ။",
+    idleSubtitle:
+      "သင့်ပရောဂျက်များအားလုံးရှိ node_modules ဖိုဒါများကို လုံခြုံစွာ ရှာဖွေပြီး ရှင်းလင်းပါ။",
     selectFolderFirst: "စကင်ဖတ်ရန် အထက်ပါဖိုဒါတစ်ခုကို ရွေးချယ်ပါ။",
     discovering: "ပရောဂျက်များကို ရှာဖွေနေသည်...",
     measuring: "အရွယ်အစား တွက်ချက်နေသည်...",
@@ -102,18 +103,25 @@ export const my: TranslationSchema = {
     cancel: "မလုပ်တော့ပါ",
     confirm: "အတည်ပြုသည်",
     recycleTitle: "ရွေးထားသော ဖိုဒါများကို အမှိုက်ပုံးသို့ ရွှေ့မလား?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules ဖိုဒါများ (${size}) ကို အမှိုက်ပုံးသို့ ရွှေ့ပါမည်။ အချိန်မရွေး ပြန်လည်ရယူနိုင်ပါသည်။`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules ဖိုဒါများ (${size}) ကို အမှိုက်ပုံးသို့ ရွှေ့ပါမည်။ အချိန်မရွေး ပြန်လည်ရယူနိုင်ပါသည်။`,
     recycleConfirmButton: "အမှိုက်ပုံးသို့ ရွှေ့ရန်",
     permanentTitle: "ရွေးထားသော ဖိုဒါများကို အပြီးတိုင် ဖျက်မလား?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules ဖိုဒါများ (${size}) ကို ဒစ်ခ်မှ အပြီးတိုင် ဖျက်ပါမည်။ ဤလုပ်ဆောင်ချက်ကို ပြန်ပြင်၍မရပါ။`,
-    permanentWarning: "သတိပေးချက်: ဤလုပ်ဆောင်ချက်သည် အပြီးတိုင်ဖြစ်သည်! အမှိုက်ပုံးသို့ ရောက်မည်မဟုတ်ပါ။",
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules ဖိုဒါများ (${size}) ကို ဒစ်ခ်မှ အပြီးတိုင် ဖျက်ပါမည်။ ဤလုပ်ဆောင်ချက်ကို ပြန်ပြင်၍မရပါ။`,
+    permanentWarning:
+      "သတိပေးချက်: ဤလုပ်ဆောင်ချက်သည် အပြီးတိုင်ဖြစ်သည်! အမှိုက်ပုံးသို့ ရောက်မည်မဟုတ်ပါ။",
     permanentConfirmButton: "အပြီးတိုင် ဖျက်ရန်",
     deletingInProgress: "ဖျက်နေသည်...",
-    recycleSuccess: (count: number) => `${count} ဖိုဒါများကို အမှိုက်ပုံးသို့ အောင်မြင်စွာ ရွှေ့ပြီးပါပြီ။`,
-    permanentSuccess: (count: number) => `${count} ဖိုဒါများကို အပြီးတိုင် အောင်မြင်စွာ ဖျက်ပြီးပါပြီ။`,
+    recycleSuccess: (count: number) =>
+      `${count} ဖိုဒါများကို အမှိုက်ပုံးသို့ အောင်မြင်စွာ ရွှေ့ပြီးပါပြီ။`,
+    permanentSuccess: (count: number) =>
+      `${count} ဖိုဒါများကို အပြီးတိုင် အောင်မြင်စွာ ဖျက်ပြီးပါပြီ။`,
     partialErrorTitle: "တစ်စိတ်တစ်ပိုင်း ဖျက်ခြင်း အစီရင်ခံစာ",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} ဖိုဒါများကို ရှင်းလင်းပြီးသော်လည်း ${errorCount} ခု မဖျက်နိုင်ခဲ့ပါ။`,
-    lockedOrPermissionNote: "အချို့ဖိုင်များကို လုပ်ဆောင်နေသော ပရိုဂရမ်များက ပိတ်ထားနိုင်သည် သို့မဟုတ် စီမံခန့်ခွဲသူခွင့်ပြုချက် လိုအပ်နိုင်သည်။",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} ဖိုဒါများကို ရှင်းလင်းပြီးသော်လည်း ${errorCount} ခု မဖျက်နိုင်ခဲ့ပါ။`,
+    lockedOrPermissionNote:
+      "အချို့ဖိုင်များကို လုပ်ဆောင်နေသော ပရိုဂရမ်များက ပိတ်ထားနိုင်သည် သို့မဟုတ် စီမံခန့်ခွဲသူခွင့်ပြုချက် လိုအပ်နိုင်သည်။",
   },
   settings: {
     title: "ဆက်တင်များ",
@@ -155,7 +163,8 @@ export const my: TranslationSchema = {
     version: "ဗားရှင်း",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "ထုတ်ဝေသူ: Vellium • © 2026 Vellium. မူပိုင်ခွင့်များ ရယူထားပြီး။",
-    privacyNote: "စကင်ဖတ်ခြင်းနှင့် ဖျက်ခြင်းအားလုံးသည် သင့်ကွန်ပျူတာပေါ်တွင်သာ ၁၀၀% ပြုလုပ်သည်။ မည်သည့်ဒေတာမျှ အပြင်သို့ မပို့ပါ။",
+    privacyNote:
+      "စကင်ဖတ်ခြင်းနှင့် ဖျက်ခြင်းအားလုံးသည် သင့်ကွန်ပျူတာပေါ်တွင်သာ ၁၀၀% ပြုလုပ်သည်။ မည်သည့်ဒေတာမျှ အပြင်သို့ မပို့ပါ။",
     close: "ပိတ်ရန်",
   },
   errors: {

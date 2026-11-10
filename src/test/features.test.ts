@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { useScanStore } from "../stores/scan-store";
+import { LAST_SCAN_SCHEMA_SUPPORTED, useScanStore } from "../stores/scan-store";
 import { useSelectionStore } from "../stores/selection-store";
 import { usePreferencesStore } from "../stores/preferences-store";
 import { useUiStore } from "../stores/ui-store";
@@ -19,7 +19,7 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
 
   it("adds candidate items and applies measurements in batch", () => {
     const scanStore = useScanStore.getState();
-    scanStore.startScanState("scan-123", "C:\\Users\\emir\\Projects");
+    scanStore.startScanState("scan-123", "C:\\Users\\developer\\Projects");
 
     scanStore.addItems([
       makeItem({ id: "nm-1", displayName: "node_modules" }),
@@ -46,7 +46,9 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
     scanStore.startScanState("scan-ooo", "C:\\Projects");
 
     scanStore.applyMeasurements([makeUpdate("late", 734003200)]);
-    expect(useScanStore.getState().pendingMeasurements["late"].estimatedReclaimBytes).toBe(734003200);
+    expect(useScanStore.getState().pendingMeasurements["late"].estimatedReclaimBytes).toBe(
+      734003200,
+    );
     expect(useScanStore.getState().itemsById["late"]).toBeUndefined();
 
     scanStore.addItems([makeItem({ id: "late" })]);
@@ -89,7 +91,12 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
         selectable: false,
         autoSelectable: false,
       }),
-      makeItem({ id: "cache", displayName: "image-cache", safetyClass: "safe", autoSelectable: true }),
+      makeItem({
+        id: "cache",
+        displayName: "image-cache",
+        safetyClass: "safe",
+        autoSelectable: true,
+      }),
     ]);
 
     const items = useScanStore.getState().itemsById;
@@ -117,7 +124,7 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
 
     prefStore.renameFavorite(fav.id, "Renamed Project");
     expect(usePreferencesStore.getState().favorites.find((f) => f.id === fav.id)?.label).toBe(
-      "Renamed Project"
+      "Renamed Project",
     );
 
     prefStore.removeFavorite(fav.id);
@@ -186,7 +193,8 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
 
     // An unknown value from a hand-edited file must not disable the guard.
     prefStore.loadPreferences({ closeAction: "explode" as never });
-    expect(usePreferencesStore.getState().closeAction).toBe("ask");  });
+    expect(usePreferencesStore.getState().closeAction).toBe("ask");
+  });
 
   it("stores cleanup plans and reports for the dialogs", () => {
     const ui = useUiStore.getState();
@@ -291,7 +299,7 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
 
     // Restore snapshot
     scanStore.restoreScan({
-      schemaVersion: 2,
+      schemaVersion: LAST_SCAN_SCHEMA_SUPPORTED,
       savedAt: "2026-11-06T00:00:00Z",
       summary: {
         scanId: "restored-1",
@@ -315,5 +323,44 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
     expect(useScanStore.getState().restored).toBe(true);
     expect(useScanStore.getState().itemIds).toContain("restored-item");
     expect(useScanStore.getState().itemsById["restored-item"].estimatedReclaimBytes).toBe(1000);
+  });
+
+  it("provides valid MCP configurations for all AI tools from the Agents tab and extended IDEs", async () => {
+    const { mcpConfigList, mcpConfigs } = await import("@/features/docs/docs-data");
+
+    // All 9 built-in AI tools from Agents tab
+    const expectedAgentTools = [
+      "codex",
+      "claude-code",
+      "antigravity",
+      "opencode",
+      "t3code",
+      "bionic",
+      "cursor",
+      "windsurf",
+      "ollama",
+    ];
+
+    expectedAgentTools.forEach((toolId) => {
+      const found = mcpConfigList.find((item) => item.id === toolId);
+      expect(found).toBeDefined();
+      expect(found?.category).toBe("agents-tab");
+      expect(found?.file).toBeTruthy();
+      expect(found?.json).toBeTruthy();
+      // Must be parseable JSON
+      expect(() => JSON.parse(found!.json)).not.toThrow();
+
+      // Must also be keyed in mcpConfigs
+      expect(mcpConfigs[toolId as keyof typeof mcpConfigs]).toBeDefined();
+    });
+
+    // Also verify additional popular IDEs / environments
+    const expectedOtherTools = ["claude", "vscode-cline", "vscode-roo", "jetbrains", "zed"];
+    expectedOtherTools.forEach((toolId) => {
+      const found = mcpConfigList.find((item) => item.id === toolId);
+      expect(found).toBeDefined();
+      expect(found?.category).toBe("other");
+      expect(() => JSON.parse(found!.json)).not.toThrow();
+    });
   });
 });

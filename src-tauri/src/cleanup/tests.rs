@@ -1,9 +1,9 @@
 use super::*;
 use crate::catalog::model::{CleanupMethod, SafetyClass, TargetKind};
 use crate::catalog::CatalogIndex;
+use crate::safety::{ActiveUse, EvidenceSnapshot};
 use crate::scanner::models::{CleanupItem, ItemStatus, ScanScope, StoredTarget};
 use crate::scanner::session::ScanSession;
-use crate::safety::{ActiveUse, EvidenceSnapshot};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
@@ -146,12 +146,27 @@ fn parent_and_child_targets_are_not_double_counted() {
         ],
     );
 
-    let plan = build_plan(&session, &["t-child".into(), "t-parent".into()], DeleteMode::RecycleBin, &catalog(), &policy()).unwrap();
+    let plan = build_plan(
+        &session,
+        &["t-child".into(), "t-parent".into()],
+        DeleteMode::RecycleBin,
+        &catalog(),
+        &policy(),
+    )
+    .unwrap();
     assert_eq!(plan.eligible_count, 1);
-    let parent = plan.items.iter().find(|i| i.target_id == "t-parent").unwrap();
+    let parent = plan
+        .items
+        .iter()
+        .find(|i| i.target_id == "t-parent")
+        .unwrap();
     assert_eq!(plan.total_estimated_bytes, parent.estimated_reclaim_bytes);
     assert!(plan.total_estimated_bytes >= 512);
-    let child = plan.items.iter().find(|i| i.target_id == "t-child").unwrap();
+    let child = plan
+        .items
+        .iter()
+        .find(|i| i.target_id == "t-child")
+        .unwrap();
     assert!(!child.eligible);
     assert_eq!(child.blocked_code.as_deref(), Some("COVERED_BY_PARENT"));
 }
@@ -163,7 +178,12 @@ fn duplicate_target_ids_are_processed_once() {
     fs::create_dir_all(&nm).unwrap();
     let session = make_session(
         temp.path(),
-        vec![target("t-1", nm, "js.node_modules", SafetyClass::Regenerate)],
+        vec![target(
+            "t-1",
+            nm,
+            "js.node_modules",
+            SafetyClass::Regenerate,
+        )],
     );
     let plan = build_plan(
         &session,
@@ -181,7 +201,13 @@ fn duplicate_target_ids_are_processed_once() {
 fn unknown_target_ids_are_rejected() {
     let temp = tempfile::tempdir().unwrap();
     let session = make_session(temp.path(), vec![]);
-    let result = build_plan(&session, &["t-unknown".into()], DeleteMode::RecycleBin, &catalog(), &policy());
+    let result = build_plan(
+        &session,
+        &["t-unknown".into()],
+        DeleteMode::RecycleBin,
+        &catalog(),
+        &policy(),
+    );
     assert!(result.is_err());
 }
 
@@ -192,9 +218,20 @@ fn protected_targets_cannot_be_planned() {
     fs::create_dir_all(&brain).unwrap();
     let session = make_session(
         temp.path(),
-        vec![target("t-brain", brain, "antigravity.brain", SafetyClass::Keep)],
+        vec![target(
+            "t-brain",
+            brain,
+            "antigravity.brain",
+            SafetyClass::Keep,
+        )],
     );
-    let result = build_plan(&session, &["t-brain".into()], DeleteMode::Permanent, &catalog(), &policy());
+    let result = build_plan(
+        &session,
+        &["t-brain".into()],
+        DeleteMode::Permanent,
+        &catalog(),
+        &policy(),
+    );
     assert!(result.is_err());
 }
 
@@ -207,7 +244,13 @@ fn unmeasured_targets_are_blocked() {
     t.logical_bytes = None;
     t.allocated_bytes = None;
     let session = make_session(temp.path(), vec![t]);
-    let result = build_plan(&session, &["t-1".into()], DeleteMode::RecycleBin, &catalog(), &policy());
+    let result = build_plan(
+        &session,
+        &["t-1".into()],
+        DeleteMode::RecycleBin,
+        &catalog(),
+        &policy(),
+    );
     assert!(result.is_err());
 }
 
@@ -218,12 +261,34 @@ fn permanent_mode_requires_explicit_acknowledgement() {
     fs::create_dir_all(&nm).unwrap();
     let session = make_session(
         temp.path(),
-        vec![target("t-1", nm.clone(), "js.node_modules", SafetyClass::Regenerate)],
+        vec![target(
+            "t-1",
+            nm.clone(),
+            "js.node_modules",
+            SafetyClass::Regenerate,
+        )],
     );
-    let plan = build_plan(&session, &["t-1".into()], DeleteMode::Permanent, &catalog(), &policy()).unwrap();
-    let err = execute_plan_deterministic(&plan, &session, &catalog(), &[], &plan.confirmation_token, false);
+    let plan = build_plan(
+        &session,
+        &["t-1".into()],
+        DeleteMode::Permanent,
+        &catalog(),
+        &policy(),
+    )
+    .unwrap();
+    let err = execute_plan_deterministic(
+        &plan,
+        &session,
+        &catalog(),
+        &[],
+        &plan.confirmation_token,
+        false,
+    );
     assert!(err.is_err());
-    assert!(nm.exists(), "nothing may be deleted without acknowledgement");
+    assert!(
+        nm.exists(),
+        "nothing may be deleted without acknowledgement"
+    );
 }
 
 #[test]
@@ -235,11 +300,30 @@ fn permanent_execution_deletes_and_reports_measured_bytes() {
 
     let session = make_session(
         temp.path(),
-        vec![target("t-1", nm.clone(), "js.node_modules", SafetyClass::Regenerate)],
+        vec![target(
+            "t-1",
+            nm.clone(),
+            "js.node_modules",
+            SafetyClass::Regenerate,
+        )],
     );
-    let plan = build_plan(&session, &["t-1".into()], DeleteMode::Permanent, &catalog(), &policy()).unwrap();
-    let report = execute_plan_deterministic(&plan, &session, &catalog(), &[], &plan.confirmation_token, true)
-        .expect("execution");
+    let plan = build_plan(
+        &session,
+        &["t-1".into()],
+        DeleteMode::Permanent,
+        &catalog(),
+        &policy(),
+    )
+    .unwrap();
+    let report = execute_plan_deterministic(
+        &plan,
+        &session,
+        &catalog(),
+        &[],
+        &plan.confirmation_token,
+        true,
+    )
+    .expect("execution");
 
     assert_eq!(report.success_count, 1);
     assert!(report.reclaim_bytes >= 4096);
@@ -249,7 +333,7 @@ fn permanent_execution_deletes_and_reports_measured_bytes() {
 }
 
 #[test]
-fn changed_target_invalidates_the_plan() {
+fn directory_growth_does_not_invalidate_the_plan() {
     let temp = tempfile::tempdir().unwrap();
     let nm = temp.path().join("app/node_modules");
     fs::create_dir_all(&nm).unwrap();
@@ -257,17 +341,155 @@ fn changed_target_invalidates_the_plan() {
 
     let session = make_session(
         temp.path(),
-        vec![target("t-1", nm.clone(), "js.node_modules", SafetyClass::Regenerate)],
+        vec![target(
+            "t-1",
+            nm.clone(),
+            "js.node_modules",
+            SafetyClass::Regenerate,
+        )],
     );
-    let plan = build_plan(&session, &["t-1".into()], DeleteMode::Permanent, &catalog(), &policy()).unwrap();
+    let plan = build_plan(
+        &session,
+        &["t-1".into()],
+        DeleteMode::Permanent,
+        &catalog(),
+        &policy(),
+    )
+    .unwrap();
 
     fs::write(nm.join("b.js"), "two two two").unwrap();
 
-    let report = execute_plan_deterministic(&plan, &session, &catalog(), &[], &plan.confirmation_token, true)
-        .expect("execution");
+    // A directory is identified by its NTFS object id only. Content growth is
+    // an expected change between preview and execution and must not block it.
+    let report = execute_plan_deterministic(
+        &plan,
+        &session,
+        &catalog(),
+        &[],
+        &plan.confirmation_token,
+        true,
+    )
+    .expect("execution");
+    assert_eq!(report.success_count, 1);
+    assert_eq!(report.error_count, 0);
+    assert!(!nm.exists());
+}
+
+#[test]
+fn missing_target_invalidates_the_plan() {
+    let temp = tempfile::tempdir().unwrap();
+    let nm = temp.path().join("app/node_modules");
+    fs::create_dir_all(&nm).unwrap();
+    fs::write(nm.join("a.js"), "one").unwrap();
+
+    let session = make_session(
+        temp.path(),
+        vec![target(
+            "t-1",
+            nm.clone(),
+            "js.node_modules",
+            SafetyClass::Regenerate,
+        )],
+    );
+    let plan = build_plan(
+        &session,
+        &["t-1".into()],
+        DeleteMode::Permanent,
+        &catalog(),
+        &policy(),
+    )
+    .unwrap();
+
+    fs::remove_dir_all(&nm).unwrap();
+
+    let report = execute_plan_deterministic(
+        &plan,
+        &session,
+        &catalog(),
+        &[],
+        &plan.confirmation_token,
+        true,
+    )
+    .expect("execution");
     assert_eq!(report.success_count, 0);
-    assert_eq!(report.results[0].error_code.as_deref(), Some("PLAN_CHANGED"));
-    assert!(nm.exists());
+    assert_eq!(
+        report.results[0].error_code.as_deref(),
+        Some("PLAN_CHANGED")
+    );
+}
+
+#[test]
+fn verify_snapshot_separates_identity_from_content_changes() {
+    use crate::cleanup::plan::{verify_snapshot, TargetSnapshot, VerificationOutcome};
+
+    let file = TargetSnapshot {
+        exists: true,
+        logical_bytes: 100,
+        modified_secs: Some(10),
+        file_id: Some("vol:1".to_string()),
+        modified_nanos: Some(10_000),
+    };
+
+    // Same object, same content → verified.
+    assert_eq!(
+        verify_snapshot(TargetKind::File, &file, &file.clone(), Some(100)),
+        VerificationOutcome::Verified
+    );
+
+    // Same object, different content → CONTENT_CHANGED, not PLAN_CHANGED.
+    let grown = TargetSnapshot {
+        logical_bytes: 200,
+        modified_nanos: Some(20_000),
+        ..file.clone()
+    };
+    assert_eq!(
+        verify_snapshot(TargetKind::File, &file, &grown, Some(200)),
+        VerificationOutcome::ContentChanged
+    );
+
+    // A different object at the same path → PLAN_CHANGED.
+    let replaced = TargetSnapshot {
+        file_id: Some("vol:2".to_string()),
+        ..file.clone()
+    };
+    assert_eq!(
+        verify_snapshot(TargetKind::File, &file, &replaced, Some(100)),
+        VerificationOutcome::PlanChanged
+    );
+
+    // Unknown identity or unavailable measurement fails closed.
+    let unknown = TargetSnapshot {
+        file_id: None,
+        ..file.clone()
+    };
+    assert_eq!(
+        verify_snapshot(TargetKind::File, &file, &unknown, Some(100)),
+        VerificationOutcome::NotMeasured
+    );
+    assert_eq!(
+        verify_snapshot(TargetKind::File, &file, &file.clone(), None),
+        VerificationOutcome::NotMeasured
+    );
+
+    // Directories ignore size and mtime; identity is authoritative.
+    let directory = TargetSnapshot {
+        logical_bytes: 0,
+        ..file.clone()
+    };
+    let grown_directory = TargetSnapshot {
+        logical_bytes: 4096,
+        modified_nanos: Some(99_999),
+        ..file.clone()
+    };
+    assert_eq!(
+        verify_snapshot(
+            TargetKind::Directory,
+            &directory,
+            &grown_directory,
+            Some(4096)
+        ),
+        VerificationOutcome::Verified
+    );
 }
 
 #[test]
@@ -277,13 +499,25 @@ fn wrong_confirmation_token_is_rejected() {
     fs::create_dir_all(&nm).unwrap();
     let session = make_session(
         temp.path(),
-        vec![target("t-1", nm.clone(), "js.node_modules", SafetyClass::Regenerate)],
+        vec![target(
+            "t-1",
+            nm.clone(),
+            "js.node_modules",
+            SafetyClass::Regenerate,
+        )],
     );
-    let plan = build_plan(&session, &["t-1".into()], DeleteMode::Permanent, &catalog(), &policy()).unwrap();
-    assert!(execute_plan_deterministic(&plan, &session, &catalog(), &[], "forged-token", true).is_err());
+    let plan = build_plan(
+        &session,
+        &["t-1".into()],
+        DeleteMode::Permanent,
+        &catalog(),
+        &policy(),
+    )
+    .unwrap();
+    assert!(
+        execute_plan_deterministic(&plan, &session, &catalog(), &[], "forged-token", true).is_err()
+    );
     assert!(nm.exists());
-
-
 }
 
 #[test]
@@ -293,12 +527,31 @@ fn agent_cache_target_can_be_cleaned_without_a_project_catalog_rule() {
     fs::create_dir_all(&tasks).unwrap();
     fs::write(tasks.join("output.txt"), vec![b'x'; 2048]).unwrap();
 
-    let mut agent_target = target("t-agent", tasks.clone(), "claude.tasks", SafetyClass::Review);
+    let mut agent_target = target(
+        "t-agent",
+        tasks.clone(),
+        "claude.tasks",
+        SafetyClass::Review,
+    );
     agent_target.provider = "claude-code".to_string();
     let session = make_session(temp.path(), vec![agent_target]);
-    let plan = build_plan(&session, &["t-agent".into()], DeleteMode::Permanent, &catalog(), &policy()).unwrap();
-    let report = execute_plan_deterministic(&plan, &session, &catalog(), &[], &plan.confirmation_token, true)
-        .expect("agent cache cleanup");
+    let plan = build_plan(
+        &session,
+        &["t-agent".into()],
+        DeleteMode::Permanent,
+        &catalog(),
+        &policy(),
+    )
+    .unwrap();
+    let report = execute_plan_deterministic(
+        &plan,
+        &session,
+        &catalog(),
+        &[],
+        &plan.confirmation_token,
+        true,
+    )
+    .expect("agent cache cleanup");
     assert_eq!(report.success_count, 1);
     assert!(!tasks.exists());
 }
@@ -310,7 +563,12 @@ fn agent_cache_setting_is_enforced_again_at_execution() {
     fs::create_dir_all(&cache).unwrap();
     fs::write(cache.join("blob.bin"), vec![b'x'; 2048]).unwrap();
 
-    let mut agent_target = target("t-cache", cache.clone(), "claude.image_cache", SafetyClass::Safe);
+    let mut agent_target = target(
+        "t-cache",
+        cache.clone(),
+        "claude.image_cache",
+        SafetyClass::Safe,
+    );
     agent_target.provider = "claude-code".to_string();
     agent_target.category = "cache".to_string();
     let session = make_session(temp.path(), vec![agent_target]);
@@ -395,10 +653,22 @@ fn active_agent_blocks_execution_even_when_scan_was_idle() {
     fs::create_dir_all(&tasks).unwrap();
     fs::write(tasks.join("output.txt"), vec![b'x'; 2048]).unwrap();
 
-    let mut agent_target = target("t-agent", tasks.clone(), "claude.tasks", SafetyClass::Review);
+    let mut agent_target = target(
+        "t-agent",
+        tasks.clone(),
+        "claude.tasks",
+        SafetyClass::Review,
+    );
     agent_target.provider = "claude-code".to_string();
     let session = make_session(temp.path(), vec![agent_target]);
-    let plan = build_plan(&session, &["t-agent".into()], DeleteMode::Permanent, &catalog(), &policy()).unwrap();
+    let plan = build_plan(
+        &session,
+        &["t-agent".into()],
+        DeleteMode::Permanent,
+        &catalog(),
+        &policy(),
+    )
+    .unwrap();
 
     let report = crate::cleanup::coordinator::execute_plan_with_probe(
         &plan,
@@ -424,10 +694,28 @@ fn unknown_provider_targets_are_blocked() {
     let mut t = target("t-unknown", dir, "mystery.cache", SafetyClass::Review);
     t.provider = "mystery".to_string();
     let session = make_session(temp.path(), vec![t]);
-    let plan = build_plan(&session, &["t-unknown".into()], DeleteMode::Permanent, &catalog(), &policy()).unwrap();
-    let report = execute_plan_deterministic(&plan, &session, &catalog(), &[], &plan.confirmation_token, true).unwrap();
+    let plan = build_plan(
+        &session,
+        &["t-unknown".into()],
+        DeleteMode::Permanent,
+        &catalog(),
+        &policy(),
+    )
+    .unwrap();
+    let report = execute_plan_deterministic(
+        &plan,
+        &session,
+        &catalog(),
+        &[],
+        &plan.confirmation_token,
+        true,
+    )
+    .unwrap();
     assert_eq!(report.success_count, 0);
-    assert_eq!(report.results[0].error_code.as_deref(), Some("AGENT_POLICY"));
+    assert_eq!(
+        report.results[0].error_code.as_deref(),
+        Some("AGENT_POLICY")
+    );
 }
 
 #[test]
@@ -439,18 +727,41 @@ fn recreated_target_fails_identity_check() {
 
     let session = make_session(
         temp.path(),
-        vec![target("t-1", nm.clone(), "js.node_modules", SafetyClass::Regenerate)],
+        vec![target(
+            "t-1",
+            nm.clone(),
+            "js.node_modules",
+            SafetyClass::Regenerate,
+        )],
     );
-    let plan = build_plan(&session, &["t-1".into()], DeleteMode::Permanent, &catalog(), &policy()).unwrap();
+    let plan = build_plan(
+        &session,
+        &["t-1".into()],
+        DeleteMode::Permanent,
+        &catalog(),
+        &policy(),
+    )
+    .unwrap();
 
     fs::remove_dir_all(&nm).unwrap();
     fs::create_dir_all(&nm).unwrap();
     fs::write(nm.join("a.js"), "one").unwrap();
     fs::write(nm.join("new.js"), "new").unwrap();
 
-    let report = execute_plan_deterministic(&plan, &session, &catalog(), &[], &plan.confirmation_token, true).unwrap();
+    let report = execute_plan_deterministic(
+        &plan,
+        &session,
+        &catalog(),
+        &[],
+        &plan.confirmation_token,
+        true,
+    )
+    .unwrap();
     assert_eq!(report.success_count, 0);
-    assert_eq!(report.results[0].error_code.as_deref(), Some("PLAN_CHANGED"));
+    assert_eq!(
+        report.results[0].error_code.as_deref(),
+        Some("PLAN_CHANGED")
+    );
     assert!(nm.exists());
 }
 
@@ -480,17 +791,160 @@ fn partial_batch_reports_success_and_failure_separately() {
     )
     .unwrap();
 
-    // One target changes between preview and execution.
-    fs::write(b.join("extra.js"), vec![b'z'; 512]).unwrap();
+    // One target disappears between preview and execution.
+    fs::remove_dir_all(&b).unwrap();
 
-    let report = execute_plan_deterministic(&plan, &session, &catalog(), &[], &plan.confirmation_token, true).unwrap();
+    let report = execute_plan_deterministic(
+        &plan,
+        &session,
+        &catalog(),
+        &[],
+        &plan.confirmation_token,
+        true,
+    )
+    .unwrap();
     assert_eq!(report.success_count, 1);
     assert_eq!(report.error_count, 1);
     assert!(!a.exists());
-    assert!(b.exists());
+    assert!(!b.exists());
     assert_eq!(
-        report.results.iter().find(|r| r.target_id == "t-b").unwrap().error_code.as_deref(),
+        report
+            .results
+            .iter()
+            .find(|r| r.target_id == "t-b")
+            .unwrap()
+            .error_code
+            .as_deref(),
         Some("PLAN_CHANGED")
+    );
+}
+
+#[test]
+fn cancellation_between_items_stops_the_run() {
+    use crate::cleanup::coordinator::CleanupEvent;
+    use crate::scanner::cancellation::CancellationToken;
+
+    let temp = tempfile::tempdir().unwrap();
+    let a = temp.path().join("app1/node_modules");
+    let b = temp.path().join("app2/node_modules");
+    fs::create_dir_all(&a).unwrap();
+    fs::create_dir_all(&b).unwrap();
+    fs::write(a.join("x.js"), vec![b'x'; 1024]).unwrap();
+    fs::write(b.join("y.js"), vec![b'y'; 1024]).unwrap();
+
+    let session = make_session(
+        temp.path(),
+        vec![
+            target("t-a", a.clone(), "js.node_modules", SafetyClass::Regenerate),
+            target("t-b", b.clone(), "js.node_modules", SafetyClass::Regenerate),
+        ],
+    );
+    let plan = build_plan(
+        &session,
+        &["t-a".into(), "t-b".into()],
+        DeleteMode::Permanent,
+        &catalog(),
+        &policy(),
+    )
+    .unwrap();
+
+    let token = CancellationToken::new();
+    token.cancel();
+
+    let events = std::sync::Mutex::new(Vec::new());
+    let report = crate::cleanup::coordinator::execute_plan_with_hooks(
+        &plan,
+        &session,
+        &catalog(),
+        &policy(),
+        &plan.confirmation_token,
+        true,
+        &|_, _| ActiveUse::No,
+        &|event| events.lock().unwrap().push(event),
+        &token,
+    )
+    .unwrap();
+
+    assert!(report.cancelled);
+    assert_eq!(report.processed_count, 0);
+    assert_eq!(report.skipped_count, 2);
+    assert!(a.exists(), "cancellation must not delete anything");
+    assert!(b.exists(), "cancellation must not delete anything");
+
+    let events = events.into_inner().unwrap();
+    assert_eq!(events[0], CleanupEvent::Started { total: 2 });
+    assert!(matches!(
+        events.last(),
+        Some(CleanupEvent::Cancelled {
+            processed: 0,
+            skipped: 2
+        })
+    ));
+}
+
+#[test]
+fn progress_events_report_each_finished_item() {
+    use crate::cleanup::coordinator::CleanupEvent;
+    use crate::scanner::cancellation::CancellationToken;
+
+    let temp = tempfile::tempdir().unwrap();
+    let nm = temp.path().join("app/node_modules");
+    fs::create_dir_all(&nm).unwrap();
+    fs::write(nm.join("a.js"), "one").unwrap();
+
+    let session = make_session(
+        temp.path(),
+        vec![target(
+            "t-1",
+            nm.clone(),
+            "js.node_modules",
+            SafetyClass::Regenerate,
+        )],
+    );
+    let plan = build_plan(
+        &session,
+        &["t-1".into()],
+        DeleteMode::Permanent,
+        &catalog(),
+        &policy(),
+    )
+    .unwrap();
+
+    let events = std::sync::Mutex::new(Vec::new());
+    let report = crate::cleanup::coordinator::execute_plan_with_hooks(
+        &plan,
+        &session,
+        &catalog(),
+        &policy(),
+        &plan.confirmation_token,
+        true,
+        &|_, _| ActiveUse::No,
+        &|event| events.lock().unwrap().push(event),
+        &CancellationToken::new(),
+    )
+    .unwrap();
+
+    assert_eq!(report.processed_count, 1);
+    assert_eq!(report.skipped_count, 0);
+    assert!(!report.cancelled);
+
+    let events = events.into_inner().unwrap();
+    assert_eq!(
+        events,
+        vec![
+            CleanupEvent::Started { total: 1 },
+            CleanupEvent::ItemStarted {
+                index: 1,
+                total: 1,
+                display_path: nm.to_string_lossy().to_string(),
+            },
+            CleanupEvent::ItemFinished {
+                index: 1,
+                total: 1,
+                success: true,
+                error_code: None,
+            },
+        ]
     );
 }
 
@@ -507,10 +961,30 @@ fn read_only_target_never_reports_false_success() {
 
     let session = make_session(
         temp.path(),
-        vec![target("t-ro", nm.clone(), "js.node_modules", SafetyClass::Regenerate)],
+        vec![target(
+            "t-ro",
+            nm.clone(),
+            "js.node_modules",
+            SafetyClass::Regenerate,
+        )],
     );
-    let plan = build_plan(&session, &["t-ro".into()], DeleteMode::Permanent, &catalog(), &policy()).unwrap();
-    let report = execute_plan_deterministic(&plan, &session, &catalog(), &[], &plan.confirmation_token, true).unwrap();
+    let plan = build_plan(
+        &session,
+        &["t-ro".into()],
+        DeleteMode::Permanent,
+        &catalog(),
+        &policy(),
+    )
+    .unwrap();
+    let report = execute_plan_deterministic(
+        &plan,
+        &session,
+        &catalog(),
+        &[],
+        &plan.confirmation_token,
+        true,
+    )
+    .unwrap();
 
     for result in &report.results {
         if result.success {
@@ -523,7 +997,9 @@ fn read_only_target_never_reports_false_success() {
 
 #[test]
 fn official_actions_reject_unknown_and_read_only_requests() {
-    use crate::cleanup::official_actions::{execute_action, preview_action, OfficialActionRegistry};
+    use crate::cleanup::official_actions::{
+        execute_action, preview_action, OfficialActionRegistry,
+    };
 
     let registry = OfficialActionRegistry::new();
     assert!(preview_action(&registry, "not-a-tool", "x").is_err());
@@ -540,6 +1016,7 @@ fn snapshot_identity_fails_closed_when_file_id_is_unknown() {
         logical_bytes: 10,
         modified_secs: Some(1),
         file_id: None,
+        modified_nanos: None,
     };
     let unknown_b = unknown_a.clone();
     assert!(

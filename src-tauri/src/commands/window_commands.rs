@@ -8,7 +8,7 @@ use crate::error::AppError;
 pub fn hide_to_tray(window: WebviewWindow) -> Result<(), AppError> {
     window
         .hide()
-        .map_err(|e| AppError::Unknown(format!("Pencere tepsiye gizlenemedi: {}", e)))
+        .map_err(|e| AppError::Unknown(format!("Failed to hide window to tray: {}", e)))
 }
 
 /// Real application exit. Bypasses the close guard so the tray menu and the

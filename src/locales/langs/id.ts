@@ -102,18 +102,23 @@ export const id: TranslationSchema = {
     cancel: "Batal",
     confirm: "Konfirmasi",
     recycleTitle: "Pindahkan Folder Terpilih ke Tempat Sampah?",
-    recycleDescription: (count: number, size: string) => `${count} folder node_modules (${size}) akan dipindahkan ke Tempat Sampah. Anda dapat memulihkannya kapan saja.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} folder node_modules (${size}) akan dipindahkan ke Tempat Sampah. Anda dapat memulihkannya kapan saja.`,
     recycleConfirmButton: "Pindahkan ke Tempat Sampah",
     permanentTitle: "Hapus Folder Terpilih Secara Permanen?",
-    permanentDescription: (count: number, size: string) => `${count} folder node_modules (${size}) akan dihapus secara permanen dari disk. Tindakan ini tidak dapat dibatalkan.`,
-    permanentWarning: "PERINGATAN: Tindakan ini permanen! Folder tidak akan dikirim ke Tempat Sampah.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} folder node_modules (${size}) akan dihapus secara permanen dari disk. Tindakan ini tidak dapat dibatalkan.`,
+    permanentWarning:
+      "PERINGATAN: Tindakan ini permanen! Folder tidak akan dikirim ke Tempat Sampah.",
     permanentConfirmButton: "Hapus Permanen",
     deletingInProgress: "Penghapusan sedang berlangsung...",
     recycleSuccess: (count: number) => `${count} folder berhasil dipindahkan ke Tempat Sampah.`,
     permanentSuccess: (count: number) => `${count} folder berhasil dihapus secara permanen.`,
     partialErrorTitle: "Laporan Penghapusan Sebagian",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} folder dibersihkan, tetapi ${errorCount} folder tidak dapat dihapus.`,
-    lockedOrPermissionNote: "Beberapa file mungkin dikunci oleh proses yang sedang berjalan atau memerlukan izin administrator.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} folder dibersihkan, tetapi ${errorCount} folder tidak dapat dihapus.`,
+    lockedOrPermissionNote:
+      "Beberapa file mungkin dikunci oleh proses yang sedang berjalan atau memerlukan izin administrator.",
   },
   settings: {
     title: "Pengaturan",
@@ -155,7 +160,8 @@ export const id: TranslationSchema = {
     version: "Versi",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Penerbit: Vellium • © 2026 Vellium. Hak cipta dilindungi.",
-    privacyNote: "Semua pemindaian dan penghapusan terjadi 100% lokal di komputer Anda. Tanpa telemetri.",
+    privacyNote:
+      "Semua pemindaian dan penghapusan terjadi 100% lokal di komputer Anda. Tanpa telemetri.",
     close: "Tutup",
   },
   errors: {

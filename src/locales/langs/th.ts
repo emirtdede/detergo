@@ -102,18 +102,22 @@ export const th: TranslationSchema = {
     cancel: "ยกเลิก",
     confirm: "ยืนยัน",
     recycleTitle: "ย้ายโฟลเดอร์ที่เลือกไปที่ถังรีไซเคิลหรือไม่?",
-    recycleDescription: (count: number, size: string) => `${count} โฟลเดอร์ node_modules (${size}) จะถูกย้ายไปที่ถังรีไซเคิล คุณสามารถกู้คืนได้ตลอดเวลา`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} โฟลเดอร์ node_modules (${size}) จะถูกย้ายไปที่ถังรีไซเคิล คุณสามารถกู้คืนได้ตลอดเวลา`,
     recycleConfirmButton: "ย้ายไปถังรีไซเคิล",
     permanentTitle: "ลบโฟลเดอร์ที่เลือกอย่างถาวรหรือไม่?",
-    permanentDescription: (count: number, size: string) => `${count} โฟลเดอร์ node_modules (${size}) จะถูกลบออกจากดิสก์อย่างถาวร การกระทำนี้ไม่สามารถยกเลิกได้`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} โฟลเดอร์ node_modules (${size}) จะถูกลบออกจากดิสก์อย่างถาวร การกระทำนี้ไม่สามารถยกเลิกได้`,
     permanentWarning: "คำเตือน: การกระทำนี้เป็นแบบถาวร! โฟลเดอร์จะไม่ถูกส่งไปยังถังรีไซเคิล",
     permanentConfirmButton: "ลบถาวร",
     deletingInProgress: "กำลังดำเนินการลบ...",
     recycleSuccess: (count: number) => `${count} โฟลเดอร์ถูกย้ายไปที่ถังรีไซเคิลสำเร็จ`,
     permanentSuccess: (count: number) => `${count} โฟลเดอร์ถูกลบถาวรสำเร็จ`,
     partialErrorTitle: "รายงานการลบบางส่วน",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} ล้างโฟลเดอร์แล้ว แต่ไม่สามารถลบได้ ${errorCount} โฟลเดอร์`,
-    lockedOrPermissionNote: "บางไฟล์อาจถูกล็อกโดยกระบวนการที่กำลังทำงานหรือต้องการสิทธิ์ของผู้ดูแลระบบ",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} ล้างโฟลเดอร์แล้ว แต่ไม่สามารถลบได้ ${errorCount} โฟลเดอร์`,
+    lockedOrPermissionNote:
+      "บางไฟล์อาจถูกล็อกโดยกระบวนการที่กำลังทำงานหรือต้องการสิทธิ์ของผู้ดูแลระบบ",
   },
   settings: {
     title: "การตั้งค่า",
@@ -155,7 +159,8 @@ export const th: TranslationSchema = {
     version: "เวอร์ชัน",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "ผู้เผยแพร่: Vellium • © 2026 Vellium. สงวนลิขสิทธิ์ทั้งหมด",
-    privacyNote: "การสแกนและการลบทั้งหมดเกิดขึ้นภายในเครื่องของคุณ 100% ไม่มีการส่งข้อมูล telemetry",
+    privacyNote:
+      "การสแกนและการลบทั้งหมดเกิดขึ้นภายในเครื่องของคุณ 100% ไม่มีการส่งข้อมูล telemetry",
     close: "ปิด",
   },
   errors: {

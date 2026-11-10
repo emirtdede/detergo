@@ -45,7 +45,8 @@ export const kn: TranslationSchema = {
   },
   scan: {
     idleTitle: "ನಿಮ್ಮ ಡಿಸ್ಕ್ ಜಾಗವನ್ನು ಮರಳಿ ಪಡೆಯಿರಿ",
-    idleSubtitle: "ನಿಮ್ಮ ಎಲ್ಲಾ ಯೋಜನೆಗಳಲ್ಲಿ node_modules ಫೋಲ್ಡರ್‌ಗಳನ್ನು ಸುರಕ್ಷಿತವಾಗಿ ಹುಡುಕಿ ಮತ್ತು ಸ್ವಚ್ಛಗೊಳಿಸಿ.",
+    idleSubtitle:
+      "ನಿಮ್ಮ ಎಲ್ಲಾ ಯೋಜನೆಗಳಲ್ಲಿ node_modules ಫೋಲ್ಡರ್‌ಗಳನ್ನು ಸುರಕ್ಷಿತವಾಗಿ ಹುಡುಕಿ ಮತ್ತು ಸ್ವಚ್ಛಗೊಳಿಸಿ.",
     selectFolderFirst: "ಸ್ಕ್ಯಾನ್ ಪ್ರಾರಂಭಿಸಲು ಮೇಲೆ ಫೋಲ್ಡರ್ ಆಯ್ಕೆಮಾಡಿ.",
     discovering: "ಯೋಜನೆಗಳನ್ನು ಹುಡುಕಲಾಗುತ್ತಿದೆ...",
     measuring: "ಗಾತ್ರಗಳನ್ನು ಲೆಕ್ಕಹಾಕಲಾಗುತ್ತಿದೆ...",
@@ -102,18 +103,25 @@ export const kn: TranslationSchema = {
     cancel: "ರದ್ದುಮಾಡಿ",
     confirm: "ಖಚಿತಪಡಿಸಿ",
     recycleTitle: "ಆಯ್ಕೆಮಾಡಿದ ಫೋಲ್ಡರ್‌ಗಳನ್ನು ಮರುಬಳಕೆ ಬುಟ್ಟಿಗೆ ಸರಿಸಬೇಕೆ?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules ಫೋಲ್ಡರ್‌ಗಳನ್ನು (${size}) ಮರುಬಳಕೆ ಬುಟ್ಟಿಗೆ ಸರಿಸಲಾಗುತ್ತದೆ. ನೀವು ಅವುಗಳನ್ನು ಯಾವುದೇ ಸಮಯದಲ್ಲಿ ಮರುಸ್ಥಾಪಿಸಬಹುದು.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules ಫೋಲ್ಡರ್‌ಗಳನ್ನು (${size}) ಮರುಬಳಕೆ ಬುಟ್ಟಿಗೆ ಸರಿಸಲಾಗುತ್ತದೆ. ನೀವು ಅವುಗಳನ್ನು ಯಾವುದೇ ಸಮಯದಲ್ಲಿ ಮರುಸ್ಥಾಪಿಸಬಹುದು.`,
     recycleConfirmButton: "ಮರುಬಳಕೆ ಬುಟ್ಟಿಗೆ ಸರಿಸಿ",
     permanentTitle: "ಆಯ್ಕೆಮಾಡಿದ ಫೋಲ್ಡರ್‌ಗಳನ್ನು ಶಾಶ್ವತವಾಗಿ ಅಳಿಸಬೇಕೆ?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules ಫೋಲ್ಡರ್‌ಗಳನ್ನು (${size}) ಡಿಸ್ಕ್‌ನಿಂದ ಶಾಶ್ವತವಾಗಿ ಅಳಿಸಲಾಗುತ್ತದೆ. ಈ ಕ್ರಿಯೆಯನ್ನು ರದ್ದುಗೊಳಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ.`,
-    permanentWarning: "ಎಚ್ಚರಿಕೆ: ಈ ಕ್ರಿಯೆಯು ಶಾಶ್ವತವಾಗಿದೆ! ಫೋಲ್ಡರ್‌ಗಳನ್ನು ಮರುಬಳಕೆ ಬುಟ್ಟಿಗೆ ಕಳುಹಿಸಲಾಗುವುದಿಲ್ಲ.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules ಫೋಲ್ಡರ್‌ಗಳನ್ನು (${size}) ಡಿಸ್ಕ್‌ನಿಂದ ಶಾಶ್ವತವಾಗಿ ಅಳಿಸಲಾಗುತ್ತದೆ. ಈ ಕ್ರಿಯೆಯನ್ನು ರದ್ದುಗೊಳಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ.`,
+    permanentWarning:
+      "ಎಚ್ಚರಿಕೆ: ಈ ಕ್ರಿಯೆಯು ಶಾಶ್ವತವಾಗಿದೆ! ಫೋಲ್ಡರ್‌ಗಳನ್ನು ಮರುಬಳಕೆ ಬುಟ್ಟಿಗೆ ಕಳುಹಿಸಲಾಗುವುದಿಲ್ಲ.",
     permanentConfirmButton: "ಶಾಶ್ವತವಾಗಿ ಅಳಿಸಿ",
     deletingInProgress: "ಅಳಿಸಲಾಗುತ್ತಿದೆ...",
-    recycleSuccess: (count: number) => `${count} ಫೋಲ್ಡರ್‌ಗಳನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಮರುಬಳಕೆ ಬುಟ್ಟಿಗೆ ಸರಿಸಲಾಗಿದೆ.`,
-    permanentSuccess: (count: number) => `${count} ಫೋಲ್ಡರ್‌ಗಳನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಶಾಶ್ವತವಾಗಿ ಅಳಿಸಲಾಗಿದೆ.`,
+    recycleSuccess: (count: number) =>
+      `${count} ಫೋಲ್ಡರ್‌ಗಳನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಮರುಬಳಕೆ ಬುಟ್ಟಿಗೆ ಸರಿಸಲಾಗಿದೆ.`,
+    permanentSuccess: (count: number) =>
+      `${count} ಫೋಲ್ಡರ್‌ಗಳನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಶಾಶ್ವತವಾಗಿ ಅಳಿಸಲಾಗಿದೆ.`,
     partialErrorTitle: "ಭಾಗಶಃ ಅಳಿಸುವಿಕೆ ವರದಿ",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} ಫೋಲ್ಡರ್‌ಗಳನ್ನು ಸ್ವಚ್ಛಗೊಳಿಸಲಾಗಿದೆ, ಆದರೆ ${errorCount} ಫೋಲ್ಡರ್‌ಗಳನ್ನು ಅಳಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.`,
-    lockedOrPermissionNote: "ಕೆಲವು ಫೈಲ್‌ಗಳು ಚಾಲನೆಯಲ್ಲಿರುವ ಪ್ರಕ್ರಿಯೆಗಳಿಂದ ಲಾಕ್ ಆಗಿರಬಹುದು ಅಥವಾ ನಿರ್ವಾಹಕರ ಅನುಮತಿಗಳ ಅಗತ್ಯವಿರಬಹುದು.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} ಫೋಲ್ಡರ್‌ಗಳನ್ನು ಸ್ವಚ್ಛಗೊಳಿಸಲಾಗಿದೆ, ಆದರೆ ${errorCount} ಫೋಲ್ಡರ್‌ಗಳನ್ನು ಅಳಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.`,
+    lockedOrPermissionNote:
+      "ಕೆಲವು ಫೈಲ್‌ಗಳು ಚಾಲನೆಯಲ್ಲಿರುವ ಪ್ರಕ್ರಿಯೆಗಳಿಂದ ಲಾಕ್ ಆಗಿರಬಹುದು ಅಥವಾ ನಿರ್ವಾಹಕರ ಅನುಮತಿಗಳ ಅಗತ್ಯವಿರಬಹುದು.",
   },
   settings: {
     title: "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
@@ -155,7 +163,8 @@ export const kn: TranslationSchema = {
     version: "ಆವೃತ್ತಿ",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "ಪ್ರಕಾಶಕರು: Vellium • © 2026 Vellium. ಎಲ್ಲ ಹಕ್ಕುಗಳನ್ನು ಕಾಯ್ದಿರಿಸಲಾಗಿದೆ.",
-    privacyNote: "ಎಲ್ಲಾ ಸ್ಕ್ಯಾನ್ ಮತ್ತು ಅಳಿಸುವಿಕೆಗಳು ನಿಮ್ಮ ಕಂಪ್ಯೂಟರ್‌ನಲ್ಲಿ 100% ಸ್ಥಳೀಯವಾಗಿ ನಡೆಯುತ್ತವೆ. ಯಾವುದೇ ಡೇಟಾ ಹೊರಗೆ ಹೋಗುವುದಿಲ್ಲ.",
+    privacyNote:
+      "ಎಲ್ಲಾ ಸ್ಕ್ಯಾನ್ ಮತ್ತು ಅಳಿಸುವಿಕೆಗಳು ನಿಮ್ಮ ಕಂಪ್ಯೂಟರ್‌ನಲ್ಲಿ 100% ಸ್ಥಳೀಯವಾಗಿ ನಡೆಯುತ್ತವೆ. ಯಾವುದೇ ಡೇಟಾ ಹೊರಗೆ ಹೋಗುವುದಿಲ್ಲ.",
     close: "ಮುಚ್ಚಿ",
   },
   errors: {

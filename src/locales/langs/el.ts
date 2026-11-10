@@ -102,18 +102,23 @@ export const el: TranslationSchema = {
     cancel: "Ακύρωση",
     confirm: "Επιβεβαίωση",
     recycleTitle: "Μετακίνηση Επιλεγμένων Φακέλων στον Κάδο Ανακύκλωσης;",
-    recycleDescription: (count: number, size: string) => `${count} φάκελοι node_modules (${size}) θα μετακινηθούν στον Κάδο Ανακύκλωσης. Μπορείτε να τους επαναφέρετε ανά πάσα στιγμή.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} φάκελοι node_modules (${size}) θα μετακινηθούν στον Κάδο Ανακύκλωσης. Μπορείτε να τους επαναφέρετε ανά πάσα στιγμή.`,
     recycleConfirmButton: "Μετακίνηση στον Κάδο",
     permanentTitle: "Οριστική Διαγραφή Επιλεγμένων Φακέλων;",
-    permanentDescription: (count: number, size: string) => `${count} φάκελοι node_modules (${size}) θα διαγραφούν οριστικά από το δίσκο. Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.`,
-    permanentWarning: "ΠΡΟΕΙΔΟΠΟΙΗΣΗ: Αυτή η ενέργεια είναι μόνιμη! Οι φάκελοι δεν θα σταλούν στον Κάδο Ανακύκλωσης.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} φάκελοι node_modules (${size}) θα διαγραφούν οριστικά από το δίσκο. Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.`,
+    permanentWarning:
+      "ΠΡΟΕΙΔΟΠΟΙΗΣΗ: Αυτή η ενέργεια είναι μόνιμη! Οι φάκελοι δεν θα σταλούν στον Κάδο Ανακύκλωσης.",
     permanentConfirmButton: "Οριστική Διαγραφή",
     deletingInProgress: "Διαγραφή σε εξέλιξη...",
     recycleSuccess: (count: number) => `${count} φάκελοι μετακινήθηκαν επιτυχώς στον Κάδο.`,
     permanentSuccess: (count: number) => `${count} φάκελοι διαγράφηκαν οριστικά με επιτυχία.`,
     partialErrorTitle: "Αναφορά Μερικής Διαγραφής",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} φάκελοι καθαρίστηκαν, αλλά ${errorCount} φάκελοι δεν μπόρεσαν να διαγραφούν.`,
-    lockedOrPermissionNote: "Ορισμένα αρχεία ενδέχεται να είναι κλειδωμένα από διεργασίες ή να απαιτούν δικαιώματα διαχειριστή.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} φάκελοι καθαρίστηκαν, αλλά ${errorCount} φάκελοι δεν μπόρεσαν να διαγραφούν.`,
+    lockedOrPermissionNote:
+      "Ορισμένα αρχεία ενδέχεται να είναι κλειδωμένα από διεργασίες ή να απαιτούν δικαιώματα διαχειριστή.",
   },
   settings: {
     title: "Ρυθμίσεις",
@@ -155,7 +160,8 @@ export const el: TranslationSchema = {
     version: "Έκδοση",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Εκδότης: Vellium • © 2026 Vellium. Με την επιφύλαξη παντός δικαιώματος.",
-    privacyNote: "Όλες οι σαρώσεις και διαγραφές εκτελούνται 100% τοπικά στον υπολογιστή σας. Μηδενική τηλεμετρία.",
+    privacyNote:
+      "Όλες οι σαρώσεις και διαγραφές εκτελούνται 100% τοπικά στον υπολογιστή σας. Μηδενική τηλεμετρία.",
     close: "Κλείσιμο",
   },
   errors: {
@@ -164,7 +170,8 @@ export const el: TranslationSchema = {
     pathNotFound: "Η καθορισμένη διαδρομή δεν βρέθηκε.",
     scanCancelled: "Η σάρωση ακυρώθηκε από τον χρήστη.",
     scanFailed: "Παρουσιάστηκε σφάλμα κατά τη σάρωση.",
-    unsafeDeleteTarget: "Για λόγους ασφαλείας, οι ριζικοί ή συστημικοί φάκελοι δεν μπορούν να διαγραφούν.",
+    unsafeDeleteTarget:
+      "Για λόγους ασφαλείας, οι ριζικοί ή συστημικοί φάκελοι δεν μπορούν να διαγραφούν.",
     recycleBinFailed: "Αποτυχία μετακίνησης φακέλων στον Κάδο.",
     permanentDeleteFailed: "Αποτυχία οριστικής διαγραφής φακέλων.",
     settingsReadFailed: "Δεν ήταν δυνατή η ανάγνωση των ρυθμίσεων.",

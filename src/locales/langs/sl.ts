@@ -102,18 +102,22 @@ export const sl: TranslationSchema = {
     cancel: "Prekliči",
     confirm: "Potrdi",
     recycleTitle: "Premaknem Izbrane Mape v Koš?",
-    recycleDescription: (count: number, size: string) => `${count} map node_modules (${size}) bo premaknjenih v Koš. Kadar koli jih lahko obnovite.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} map node_modules (${size}) bo premaknjenih v Koš. Kadar koli jih lahko obnovite.`,
     recycleConfirmButton: "Premakni v Koš",
     permanentTitle: "Trajno Izbrišem Izbrane Mape?",
-    permanentDescription: (count: number, size: string) => `${count} map node_modules (${size}) bo trajno izbrisanih z diska. Tega dejanja ni mogoče razveljaviti.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} map node_modules (${size}) bo trajno izbrisanih z diska. Tega dejanja ni mogoče razveljaviti.`,
     permanentWarning: "OPOZORILO: To dejanje je trajno! Mape ne bodo poslane v Koš.",
     permanentConfirmButton: "Trajno Izbriši",
     deletingInProgress: "Brisanje v teku...",
     recycleSuccess: (count: number) => `${count} map uspešno premaknjenih v Koš.`,
     permanentSuccess: (count: number) => `${count} map uspešno trajno izbrisanih.`,
     partialErrorTitle: "Poročilo o Delnem Brisanju",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} map očiščenih, vendar ${errorCount} map ni bilo mogoče izbrisati.`,
-    lockedOrPermissionNote: "Nekatere datoteke so morda zaklenjene z zagnanimi procesi ali zahtevajo skrbniška dovoljenja.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} map očiščenih, vendar ${errorCount} map ni bilo mogoče izbrisati.`,
+    lockedOrPermissionNote:
+      "Nekatere datoteke so morda zaklenjene z zagnanimi procesi ali zahtevajo skrbniška dovoljenja.",
   },
   settings: {
     title: "Nastavitve",
@@ -155,7 +159,8 @@ export const sl: TranslationSchema = {
     version: "Različica",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Založnik: Vellium • © 2026 Vellium. Vse pravice pridržane.",
-    privacyNote: "Vsa preiskovanja in brisanja potekajo 100% lokalno v vašem računalniku. Brez telemetrije.",
+    privacyNote:
+      "Vsa preiskovanja in brisanja potekajo 100% lokalno v vašem računalniku. Brez telemetrije.",
     close: "Zapri",
   },
   errors: {

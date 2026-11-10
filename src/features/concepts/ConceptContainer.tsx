@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { Sun, Moon } from "lucide-react";
 import { ConceptAView } from "./ConceptAView";
 import { ConceptBView } from "./ConceptBView";
 import { ConceptScreen, ConceptVariant } from "./concept-types";
+import { useUIText } from "@/lib/ui-text";
 
 export const ConceptContainer: React.FC = () => {
+  const ui = useUIText();
   const [concept, setConcept] = useState<ConceptVariant>("A");
   const [screen, setScreen] = useState<ConceptScreen>("overview");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -84,14 +87,14 @@ export const ConceptContainer: React.FC = () => {
             fontSize: 11,
           }}
         >
-          <option value="overview">Genel Bakış</option>
-          <option value="projects">Projeler</option>
-          <option value="agents">AI Ajanları</option>
-          <option value="caches">Önbellekler</option>
-          <option value="history">Geçmiş</option>
-          <option value="settings">Ayarlar</option>
-          <option value="cleanup-modal">Temizlik Onayı</option>
-          <option value="permanent-modal">Kalıcı Silme Onayı</option>
+          <option value="overview">{ui.nav.overview}</option>
+          <option value="projects">{ui.nav.projects}</option>
+          <option value="agents">{ui.nav.agents}</option>
+          <option value="caches">{ui.nav.caches}</option>
+          <option value="history">{ui.nav.history}</option>
+          <option value="settings">{ui.nav.settings}</option>
+          <option value="cleanup-modal">{ui.plan.title}</option>
+          <option value="permanent-modal">{ui.plan.confirmPermanent}</option>
         </select>
 
         <button
@@ -104,9 +107,13 @@ export const ConceptContainer: React.FC = () => {
             padding: "4px 8px",
             cursor: "pointer",
             fontSize: 11,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
           }}
         >
-          {theme === "dark" ? "☀️ Açık" : "🌙 Koyu"}
+          {theme === "dark" ? <Sun size={12} /> : <Moon size={12} />}
+          <span>{theme === "dark" ? ui.settings.themeLight : ui.settings.themeDark}</span>
         </button>
       </div>
 
@@ -118,4 +125,3 @@ export const ConceptContainer: React.FC = () => {
     </div>
   );
 };
-

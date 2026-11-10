@@ -28,12 +28,12 @@ pub fn revalidate_evidence(
 ) -> Result<(), AppError> {
     if rule.id != snapshot.rule_id {
         return Err(AppError::UnsafeDeleteTarget(
-            "Kural kimliği tarama kaydıyla eşleşmiyor.".to_string(),
+            "Rule ID does not match scan record.".to_string(),
         ));
     }
     if rule.is_protected() {
         return Err(AppError::UnsafeDeleteTarget(
-            "Korumalı hedef silinemez.".to_string(),
+            "Protected target cannot be deleted.".to_string(),
         ));
     }
 
@@ -43,31 +43,34 @@ pub fn revalidate_evidence(
         .unwrap_or_default();
     if name.to_lowercase() != snapshot.target_name.to_lowercase() {
         return Err(AppError::UnsafeDeleteTarget(
-            "Hedef adı tarama kaydıyla eşleşmiyor.".to_string(),
+            "Target name does not match scan record.".to_string(),
         ));
     }
     if !rule.matches_name(&name) {
         return Err(AppError::UnsafeDeleteTarget(
-            "Hedef adı katalog kuralıyla eşleşmiyor.".to_string(),
+            "Target name does not match catalog rule.".to_string(),
         ));
     }
     if is_hard_protected_name(&name) {
         return Err(AppError::UnsafeDeleteTarget(
-            "Korunan ad silinemez.".to_string(),
+            "Protected name cannot be deleted.".to_string(),
         ));
     }
 
-    let roots: Vec<PathBuf> = [snapshot.project_root.as_ref(), snapshot.workspace_root.as_ref()]
-        .into_iter()
-        .flatten()
-        .map(PathBuf::from)
-        .collect();
+    let roots: Vec<PathBuf> = [
+        snapshot.project_root.as_ref(),
+        snapshot.workspace_root.as_ref(),
+    ]
+    .into_iter()
+    .flatten()
+    .map(PathBuf::from)
+    .collect();
 
     if !roots.is_empty() {
         if let Some(project_root) = &snapshot.project_root {
             if !Path::new(project_root).exists() {
                 return Err(AppError::UnsafeDeleteTarget(
-                    "Proje kökü artık mevcut değil; plan geçersiz.".to_string(),
+                    "Project root no longer exists; plan is invalid.".to_string(),
                 ));
             }
         }
@@ -75,7 +78,7 @@ pub fn revalidate_evidence(
             let found = roots.iter().any(|root| marker_exists(root, marker));
             if !found {
                 return Err(AppError::UnsafeDeleteTarget(format!(
-                    "Proje kanıtı değişti ({}); plan geçersiz.",
+                    "Project evidence changed ({}); plan is invalid.",
                     marker
                 )));
             }
@@ -83,7 +86,7 @@ pub fn revalidate_evidence(
         for signature in &snapshot.content_hits {
             if !marker_exists(target, signature) {
                 return Err(AppError::UnsafeDeleteTarget(format!(
-                    "Hedef içeriği değişti ({}); plan geçersiz.",
+                    "Target content changed ({}); plan is invalid.",
                     signature
                 )));
             }

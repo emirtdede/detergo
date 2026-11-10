@@ -42,7 +42,7 @@
   padding: 1px 6px;
   border-radius: var(--radius-full);
   background: rgba(10, 132, 255, 0.12);
-  color: #5AC8FA;
+  color: #5ac8fa;
   border: 1px solid rgba(10, 132, 255, 0.25);
   flex-shrink: 0;
 }
@@ -82,7 +82,8 @@
   background: var(--surface-strong);
   border: 1px solid var(--border-control);
   border-radius: var(--radius-full);
-  transition: background var(--duration-fast) var(--ease-standard),
+  transition:
+    background var(--duration-fast) var(--ease-standard),
     border-color var(--duration-fast) var(--ease-standard);
   max-width: 380px;
   min-width: 0;
@@ -156,20 +157,24 @@
   border-radius: var(--radius-full);
   color: var(--text-muted);
   flex: 0 0 auto;
-  transition: transform var(--duration-fast), color var(--duration-fast);
+  transition:
+    transform var(--duration-fast),
+    color var(--duration-fast);
 }
 .command-star-btn:hover {
-  color: #FFB800;
+  color: #ffb800;
   transform: scale(1.15);
 }
 .command-star-btn.active {
-  color: #FFB800;
+  color: #ffb800;
 }
 
 .command-chevron-icon {
   color: var(--text-muted);
   flex-shrink: 0;
-  transition: transform var(--duration-fast) var(--ease-standard), color var(--duration-fast);
+  transition:
+    transform var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast);
 }
 .command-chevron-icon.open {
   transform: rotate(180deg);
@@ -190,7 +195,9 @@
   background: var(--surface-strong);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0, 0, 0, 0.15);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 0 1px rgba(0, 0, 0, 0.15);
   padding: 6px;
   z-index: 1000;
   animation: locationDropdownEnter var(--duration-fast) var(--ease-standard);
@@ -347,7 +354,7 @@
 
 .location-menu-item-icon.action-icon {
   background: var(--accent);
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
 .location-menu-item-icon.fav-icon {
@@ -441,9 +448,15 @@
 }
 
 @keyframes pulseStop {
-  0% { box-shadow: 0 0 0 0 rgba(255, 69, 58, 0.4); }
-  70% { box-shadow: 0 0 0 8px rgba(255, 69, 58, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 69, 58, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 69, 58, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(255, 69, 58, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 69, 58, 0);
+  }
 }
 
 .command-settings-btn {
@@ -480,8 +493,12 @@
 }
 
 @keyframes indeterminateBar {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(400%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
 }
 
 /* 2. Unboxed Hero / Empty State View */

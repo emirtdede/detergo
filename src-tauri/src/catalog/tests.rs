@@ -1,5 +1,5 @@
-use super::*;
 use super::matcher::{collect_evidence, GitState};
+use super::*;
 use std::fs;
 
 const VALID: &str = r#"
@@ -44,7 +44,7 @@ fn parses_and_validates_catalog() {
 fn rejects_duplicate_rule_ids() {
     let t = VALID.replace("id = \"js.build\"", "id = \"js.node_modules\"");
     let err = CatalogIndex::from_toml(&t).unwrap_err();
-    assert!(err.0.contains("yinelenen"));
+    assert!(err.0.contains("duplicate"));
 }
 
 #[test]
@@ -62,7 +62,7 @@ safety = "safe"
 cleanup = "trash"
 "#;
     let err = CatalogIndex::from_toml(t).unwrap_err();
-    assert!(err.0.contains("bilinmeyen"));
+    assert!(err.0.contains("unknown"));
 }
 
 #[test]
@@ -81,7 +81,7 @@ safety = "regenerate"
 cleanup = "trash"
 "#;
     let err = CatalogIndex::from_toml(t).unwrap_err();
-    assert!(err.0.contains("2 kan"), "unexpected error: {}", err.0);
+    assert!(err.0.contains("at least 2"), "unexpected error: {}", err.0);
 }
 
 #[test]
@@ -177,7 +177,10 @@ fn evidence_requires_marker_for_generic_targets() {
         marker_hits: vec!["package.json".into()],
         ..Default::default()
     };
-    assert_eq!(classify(&rule, &with_marker).safety_class, SafetyClass::Regenerate);
+    assert_eq!(
+        classify(&rule, &with_marker).safety_class,
+        SafetyClass::Regenerate
+    );
 }
 
 #[test]

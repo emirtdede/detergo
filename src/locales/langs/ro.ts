@@ -102,18 +102,23 @@ export const ro: TranslationSchema = {
     cancel: "Anulează",
     confirm: "Confirmă",
     recycleTitle: "Mutați Folderele Selectate la Coșul de Gunoi?",
-    recycleDescription: (count: number, size: string) => `${count} foldere node_modules (${size}) vor fi mutate la Coșul de Gunoi. Le puteți restaura oricând.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} foldere node_modules (${size}) vor fi mutate la Coșul de Gunoi. Le puteți restaura oricând.`,
     recycleConfirmButton: "Mută la Coș",
     permanentTitle: "Ștergeți Definitiv Folderele Selectate?",
-    permanentDescription: (count: number, size: string) => `${count} foldere node_modules (${size}) vor fi șterse definitiv de pe disc. Această acțiune nu poate fi anulată.`,
-    permanentWarning: "AVERTISMENT: Această acțiune este permanentă! Folderele nu vor fi trimise la Coș.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} foldere node_modules (${size}) vor fi șterse definitiv de pe disc. Această acțiune nu poate fi anulată.`,
+    permanentWarning:
+      "AVERTISMENT: Această acțiune este permanentă! Folderele nu vor fi trimise la Coș.",
     permanentConfirmButton: "Șterge Definitiv",
     deletingInProgress: "Ștergere în curs...",
     recycleSuccess: (count: number) => `${count} foldere mutate cu succes la Coșul de Gunoi.`,
     permanentSuccess: (count: number) => `${count} foldere șterse definitiv cu succes.`,
     partialErrorTitle: "Raport de Ștergere Parțială",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} foldere curățate, dar ${errorCount} foldere nu au putut fi șterse.`,
-    lockedOrPermissionNote: "Unele fișiere pot fi blocate de procese active sau necesită permisiuni de administrator.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} foldere curățate, dar ${errorCount} foldere nu au putut fi șterse.`,
+    lockedOrPermissionNote:
+      "Unele fișiere pot fi blocate de procese active sau necesită permisiuni de administrator.",
   },
   settings: {
     title: "Setări",
@@ -155,7 +160,8 @@ export const ro: TranslationSchema = {
     version: "Versiune",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Editor: Vellium • © 2026 Vellium. Toate drepturile rezervate.",
-    privacyNote: "Toate scanările și ștergerile au loc 100% local pe computerul dumneavoastră. Zero telemetrie.",
+    privacyNote:
+      "Toate scanările și ștergerile au loc 100% local pe computerul dumneavoastră. Zero telemetrie.",
     close: "Închide",
   },
   errors: {
@@ -164,7 +170,8 @@ export const ro: TranslationSchema = {
     pathNotFound: "Calea specificată nu a fost găsită.",
     scanCancelled: "Scanarea a fost anulată de utilizator.",
     scanFailed: "A apărut o eroare în timpul scanării.",
-    unsafeDeleteTarget: "Din motive de siguranță, folderele rădăcină sau de sistem nu pot fi șterse.",
+    unsafeDeleteTarget:
+      "Din motive de siguranță, folderele rădăcină sau de sistem nu pot fi șterse.",
     recycleBinFailed: "Nu s-au putut muta folderele la Coșul de Gunoi.",
     permanentDeleteFailed: "Nu s-au putut șterge folderele definitiv.",
     settingsReadFailed: "Fișierul de setări nu a putut fi citit.",

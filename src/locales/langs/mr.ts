@@ -102,18 +102,23 @@ export const mr: TranslationSchema = {
     cancel: "रद्द करा",
     confirm: "पुष्टी करा",
     recycleTitle: "निवडलेले फोल्डर्स रिसायकल बिनमध्ये हलवायचे?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules फोल्डर्स (${size}) रिसायकल बिनमध्ये हलवले जातील. आपण ते कधीही पुनर्संचयित करू शकता.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules फोल्डर्स (${size}) रिसायकल बिनमध्ये हलवले जातील. आपण ते कधीही पुनर्संचयित करू शकता.`,
     recycleConfirmButton: "रिसायकल बिनमध्ये हलवा",
     permanentTitle: "निवडलेले फोल्डर्स कायमचे हटवायचे?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules फोल्डर्स (${size}) डिस्कवरून कायमचे हटवले जातील. ही क्रिया पूर्ववत केली जाऊ शकत नाही.`,
-    permanentWarning: "चेतावणी: ही क्रिया कायमस्वरूपी आहे! फोल्डर्स रिसायकल बिनमध्ये पाठवले जाणार नाहीत.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules फोल्डर्स (${size}) डिस्कवरून कायमचे हटवले जातील. ही क्रिया पूर्ववत केली जाऊ शकत नाही.`,
+    permanentWarning:
+      "चेतावणी: ही क्रिया कायमस्वरूपी आहे! फोल्डर्स रिसायकल बिनमध्ये पाठवले जाणार नाहीत.",
     permanentConfirmButton: "कायमचे हटवा",
     deletingInProgress: "हटवत आहे...",
     recycleSuccess: (count: number) => `${count} फोल्डर्स यशस्वीरित्या रिसायकल बिनमध्ये हलवले.`,
     permanentSuccess: (count: number) => `${count} फोल्डर्स यशस्वीरित्या कायमचे हटवले.`,
     partialErrorTitle: "अंशतः हटवल्याचा अहवाल",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} फोल्डर्स साफ केले, परंतु ${errorCount} फोल्डर्स हटवता आले नाहीत.`,
-    lockedOrPermissionNote: "काही फाइल्स चालू असलेल्या प्रक्रियांमुळे लॉक असू शकतात किंवा प्रशासक परवानग्यांची आवश्यकता असू शकते.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} फोल्डर्स साफ केले, परंतु ${errorCount} फोल्डर्स हटवता आले नाहीत.`,
+    lockedOrPermissionNote:
+      "काही फाइल्स चालू असलेल्या प्रक्रियांमुळे लॉक असू शकतात किंवा प्रशासक परवानग्यांची आवश्यकता असू शकते.",
   },
   settings: {
     title: "सेटिंग्ज",
@@ -155,7 +160,8 @@ export const mr: TranslationSchema = {
     version: "आवृत्ती",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "प्रकाशक: Vellium • © 2026 Vellium. सर्व हक्क राखीव.",
-    privacyNote: "सर्व स्कॅनिंग आणि हटवणे आपल्या संगणकावर 100% स्थानिक पातळीवर होते. कोणताही डेटा बाहेर जात नाही.",
+    privacyNote:
+      "सर्व स्कॅनिंग आणि हटवणे आपल्या संगणकावर 100% स्थानिक पातळीवर होते. कोणताही डेटा बाहेर जात नाही.",
     close: "बंद करा",
   },
   errors: {

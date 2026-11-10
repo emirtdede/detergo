@@ -73,7 +73,10 @@ fn build_summary(
         .filter(|i| i.protected)
         .map(|i| i.allocated_bytes.unwrap_or(i.logical_bytes.unwrap_or(0)))
         .sum();
-    let errors = items.iter().filter(|i| i.status == ItemStatus::Error).count() as u64;
+    let errors = items
+        .iter()
+        .filter(|i| i.status == ItemStatus::Error)
+        .count() as u64;
     let warnings = items.iter().filter(|i| !i.warning_codes.is_empty()).count() as u64;
 
     ScanSummary {
@@ -138,7 +141,14 @@ where
     let scan_deadline = started + limits.timeout;
 
     if request.scope == ScanScope::GlobalCaches {
-        let summary = build_summary(&request, &scan_id, &[], 0, started.elapsed().as_millis() as u64, None);
+        let summary = build_summary(
+            &request,
+            &scan_id,
+            &[],
+            0,
+            started.elapsed().as_millis() as u64,
+            None,
+        );
         let _ = tx.send(ScanEvent::Completed {
             summary: summary.clone(),
         });
@@ -155,7 +165,7 @@ where
             providers::scan_agents(&scan_id_agents, &token_agents, &policy_agents, limits)
         })
         .await
-        .map_err(|e| AppError::ScanFailed(format!("Ajan taraması başarısız: {}", e)))?;
+        .map_err(|e| AppError::ScanFailed(format!("Agent scan failed: {}", e)))?;
         for warning in &outcome.warnings {
             let _ = tx.send(ScanEvent::Warning {
                 code: warning.0.clone(),
@@ -213,9 +223,13 @@ where
         );
         session.lock().unwrap().summary = Some(summary.clone());
         let event = if stop.is_some() {
-            ScanEvent::Cancelled { summary: summary.clone() }
+            ScanEvent::Cancelled {
+                summary: summary.clone(),
+            }
         } else {
-            ScanEvent::Completed { summary: summary.clone() }
+            ScanEvent::Completed {
+                summary: summary.clone(),
+            }
         };
         let _ = tx.send(event);
         drop(tx);
@@ -238,7 +252,7 @@ where
         drop(tx);
         let _ = forwarder.await;
         return Err(AppError::InvalidPath(
-            "Taranacak yerel sürücü bulunamadı.".to_string(),
+            "No local drives found to scan.".to_string(),
         ));
     }
     for root in &scan_roots {
@@ -315,10 +329,7 @@ where
             Err(err) => {
                 drop(tx);
                 let _ = forwarder.await;
-                return Err(AppError::ScanFailed(format!(
-                    "Tarama görevi başarısız: {}",
-                    err
-                )));
+                return Err(AppError::ScanFailed(format!("Scan task failed: {}", err)));
             }
         };
 
@@ -357,8 +368,8 @@ where
                 .collect()
         };
 
-        let engine = measurement::MeasurementEngine::new(token.clone())
-            .with_deadline(scan_deadline);
+        let engine =
+            measurement::MeasurementEngine::new(token.clone()).with_deadline(scan_deadline);
         let tx_measure = tx.clone();
         let tx_progress = tx.clone();
         let measured: Arc<std::sync::Mutex<HashMap<String, MeasurementUpdate>>> =

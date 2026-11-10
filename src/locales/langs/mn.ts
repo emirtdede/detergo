@@ -102,18 +102,22 @@ export const mn: TranslationSchema = {
     cancel: "Цуцлах",
     confirm: "Батлах",
     recycleTitle: "Сонгосон хавтаснуудыг Хогийн саванд шилжүүлэх үү?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules хавтас (${size}) Хогийн саванд шилжинэ. Та тэдгээрийг хүссэн үедээ сэргээх боломжтой.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules хавтас (${size}) Хогийн саванд шилжинэ. Та тэдгээрийг хүссэн үедээ сэргээх боломжтой.`,
     recycleConfirmButton: "Хогийн саванд шилжүүлэх",
     permanentTitle: "Сонгосон хавтаснуудыг бүрмөсөн устгах уу?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules хавтас (${size}) дискнээс бүрмөсөн устах болно. Энэ үйлдлийг буцаах боломжгүй.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules хавтас (${size}) дискнээс бүрмөсөн устах болно. Энэ үйлдлийг буцаах боломжгүй.`,
     permanentWarning: "АНХААРУУЛГА: Энэ үйлдэл нь буцалтгүй юм! Хавтаснууд Хогийн саванд орохгүй.",
     permanentConfirmButton: "Бүрмөсөн устгах",
     deletingInProgress: "Устгаж байна...",
     recycleSuccess: (count: number) => `${count} хавтас амжилттай Хогийн саванд шилжлээ.`,
     permanentSuccess: (count: number) => `${count} хавтас амжилттай бүрмөсөн устгагдлаа.`,
     partialErrorTitle: "Хэсэгчлэн устгасан тухай тайлан",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} хавтас цэвэрлэгдсэн боловч ${errorCount} хавтсыг устгаж чадсангүй.`,
-    lockedOrPermissionNote: "Зарим файлууд ажиллаж байгаа процессуудаар түгжигдсэн эсвэл админы эрх шаардагдаж магадгүй.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} хавтас цэвэрлэгдсэн боловч ${errorCount} хавтсыг устгаж чадсангүй.`,
+    lockedOrPermissionNote:
+      "Зарим файлууд ажиллаж байгаа процессуудаар түгжигдсэн эсвэл админы эрх шаардагдаж магадгүй.",
   },
   settings: {
     title: "Тохиргоо",
@@ -155,7 +159,8 @@ export const mn: TranslationSchema = {
     version: "Хувилбар",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Нийтлэгч: Vellium • © 2026 Vellium. Бүх эрх хуулиар хамгаалагдсан.",
-    privacyNote: "Бүх шалгах болон устгах үйлдлүүд таны компьютерт 100% дотооддоо явагдана. Гадагшаа мэдээлэл дамжуулахгүй.",
+    privacyNote:
+      "Бүх шалгах болон устгах үйлдлүүд таны компьютерт 100% дотооддоо явагдана. Гадагшаа мэдээлэл дамжуулахгүй.",
     close: "Хаах",
   },
   errors: {
@@ -164,7 +169,8 @@ export const mn: TranslationSchema = {
     pathNotFound: "Заасан зам олдсонгүй.",
     scanCancelled: "Шалгалтыг хэрэглэгч цуцаллаа.",
     scanFailed: "Шалгах явцад алдаа гарлаа.",
-    unsafeDeleteTarget: "Аюулгүй байдлын үүднээс үндсэн эсвэл системийн хавтаснуудыг устгах боломжгүй.",
+    unsafeDeleteTarget:
+      "Аюулгүй байдлын үүднээс үндсэн эсвэл системийн хавтаснуудыг устгах боломжгүй.",
     recycleBinFailed: "Хавтаснуудыг Хогийн саванд шилжүүлж чадсангүй.",
     permanentDeleteFailed: "Хавтаснуудыг бүрмөсөн устгаж чадсангүй.",
     settingsReadFailed: "Тохиргооны файлыг уншиж чадсангүй.",

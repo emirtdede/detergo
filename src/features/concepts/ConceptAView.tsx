@@ -1,4 +1,5 @@
 import React from "react";
+import { useUIText } from "@/lib/ui-text";
 import {
   Folder,
   Trash2,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 import { ConceptScreen, MOCK_PROJECT_ITEMS } from "./concept-types";
 import "./concept-a.css";
+import { translateBackendText } from "@/lib/ui-text/backend-i18n";
 
 interface Props {
   screen: ConceptScreen;
@@ -20,11 +22,8 @@ interface Props {
   onNavigate?: (screen: ConceptScreen) => void;
 }
 
-export const ConceptAView: React.FC<Props> = ({
-  screen,
-  theme = "dark",
-  onNavigate,
-}) => {
+export const ConceptAView: React.FC<Props> = ({ screen, theme = "dark", onNavigate }) => {
+  const ui = useUIText();
   return (
     <div className={`concept-a-root ${theme === "light" ? "ca-light" : ""}`}>
       {/* 56px Precision Nav Rail */}
@@ -33,35 +32,35 @@ export const ConceptAView: React.FC<Props> = ({
         <button
           className={`ca-nav-item ${screen === "overview" ? "active" : ""}`}
           onClick={() => onNavigate?.("overview")}
-          title="Genel Bakış"
+          title={ui.nav.overview}
         >
           <Layers size={18} />
         </button>
         <button
           className={`ca-nav-item ${screen === "projects" ? "active" : ""}`}
           onClick={() => onNavigate?.("projects")}
-          title="Projeler"
+          title={ui.nav.projects}
         >
           <Folder size={18} />
         </button>
         <button
           className={`ca-nav-item ${screen === "agents" ? "active" : ""}`}
           onClick={() => onNavigate?.("agents")}
-          title="AI Ajanları"
+          title={ui.nav.agents}
         >
           <Bot size={18} />
         </button>
         <button
           className={`ca-nav-item ${screen === "caches" ? "active" : ""}`}
           onClick={() => onNavigate?.("caches")}
-          title="Önbellekler"
+          title={ui.nav.caches}
         >
           <Database size={18} />
         </button>
         <button
           className={`ca-nav-item ${screen === "history" ? "active" : ""}`}
           onClick={() => onNavigate?.("history")}
-          title="Geçmiş"
+          title={ui.nav.history}
         >
           <History size={18} />
         </button>
@@ -69,7 +68,7 @@ export const ConceptAView: React.FC<Props> = ({
         <button
           className={`ca-nav-item ${screen === "settings" ? "active" : ""}`}
           onClick={() => onNavigate?.("settings")}
-          title="Ayarlar"
+          title={ui.nav.settings}
         >
           <Settings size={18} />
         </button>
@@ -80,28 +79,28 @@ export const ConceptAView: React.FC<Props> = ({
         {/* Top Command Bar */}
         <header className="ca-command-bar">
           <div className="ca-path-selector">
-            <span className="ca-path-badge">WORKSPACE</span>
+            <span className="ca-path-badge">{translateBackendText("Workspace").toUpperCase()}</span>
             <span>D:\dev\projects</span>
           </div>
 
           <div className="ca-telemetry-strip">
             <div className="ca-stat-chip">
-              <span className="ca-stat-label">HEDEFLER:</span>
+              <span className="ca-stat-label">{ui.overview.candidates.toUpperCase()}:</span>
               <span className="ca-stat-val">18</span>
             </div>
             <div className="ca-stat-chip">
-              <span className="ca-stat-label">KAZANIM:</span>
+              <span className="ca-stat-label">{ui.table.reclaim.toUpperCase()}:</span>
               <span className="ca-stat-val" style={{ color: "var(--ca-accent)" }}>
                 12.4 GB
               </span>
             </div>
             <div className="ca-stat-chip">
-              <span className="ca-stat-label">GÜVENLİK:</span>
-              <span className="ca-pill ca-pill-safe">GÜVENLİ</span>
+              <span className="ca-stat-label">{ui.table.safety.toUpperCase()}:</span>
+              <span className="ca-pill ca-pill-safe">{ui.safety.safe.toUpperCase()}</span>
             </div>
             <button className="ca-btn-primary">
               <RefreshCw size={13} />
-              <span>Yeniden Tara</span>
+              <span>{ui.common.rescan}</span>
             </button>
           </div>
         </header>
@@ -114,12 +113,12 @@ export const ConceptAView: React.FC<Props> = ({
               <div className="ca-kpi-banner">
                 <div className="ca-kpi-main">
                   <span className="ca-kpi-val">12.4 GB</span>
-                  <span className="ca-kpi-label">Toplam Geri Kazanılabilir Alan</span>
+                  <span className="ca-kpi-label">{ui.overview.kpiCleanable}</span>
                 </div>
                 <div className="ca-kpi-pills">
-                  <span className="ca-pill ca-pill-safe">8.2 GB Güvenli</span>
-                  <span className="ca-pill ca-pill-regen">3.5 GB Yeniden Üretilebilir</span>
-                  <span className="ca-pill ca-pill-review">0.7 GB İnceleme Gerekli</span>
+                  <span className="ca-pill ca-pill-safe">8.2 GB {ui.safety.safe}</span>
+                  <span className="ca-pill ca-pill-regen">3.5 GB {ui.safety.regenerate}</span>
+                  <span className="ca-pill ca-pill-review">0.7 GB {ui.safety.review}</span>
                 </div>
               </div>
 
@@ -128,7 +127,7 @@ export const ConceptAView: React.FC<Props> = ({
                 {/* Left: Ecosystem Breakdown */}
                 <div className="ca-card">
                   <div className="ca-card-header">
-                    <span>Ekosistem Dağılımı</span>
+                    <span>{ui.overview.breakdown}</span>
                     <ShieldCheck size={14} color="var(--ca-success)" />
                   </div>
                   <div className="ca-dist-row">
@@ -160,7 +159,7 @@ export const ConceptAView: React.FC<Props> = ({
                     <span className="ca-dist-size">1.6 GB</span>
                   </div>
                   <div className="ca-dist-row">
-                    <span className="ca-dist-name">Diğerleri</span>
+                    <span className="ca-dist-name">{ui.overview.ecoOther}</span>
                     <div className="ca-dist-bar-wrapper">
                       <div className="ca-dist-bar-fill" style={{ width: "8%" }} />
                     </div>
@@ -171,18 +170,18 @@ export const ConceptAView: React.FC<Props> = ({
                 {/* Right: Quick Table */}
                 <div className="ca-card">
                   <div className="ca-card-header">
-                    <span>Kritik Temizlik Hedefleri</span>
+                    <span>{ui.overview.topItemsTitle}</span>
                     <span style={{ fontSize: "11px", color: "var(--ca-text-muted)" }}>
-                      En Büyük 5 Dizin
+                      {ui.overview.topItemsSubtitle}
                     </span>
                   </div>
                   <table className="ca-table">
                     <thead>
                       <tr>
-                        <th>Hedef</th>
-                        <th>Ekosistem</th>
-                        <th>Boyut</th>
-                        <th>Durum</th>
+                        <th>{ui.table.name}</th>
+                        <th>{ui.table.category}</th>
+                        <th>{ui.table.size}</th>
+                        <th>{ui.table.safety}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -198,9 +197,7 @@ export const ConceptAView: React.FC<Props> = ({
                           <td>
                             <span
                               className={`ca-pill ${
-                                item.safety === "safe"
-                                  ? "ca-pill-safe"
-                                  : "ca-pill-regen"
+                                item.safety === "safe" ? "ca-pill-safe" : "ca-pill-regen"
                               }`}
                             >
                               {item.safety.toUpperCase()}
@@ -218,11 +215,11 @@ export const ConceptAView: React.FC<Props> = ({
           {screen === "projects" && (
             <div className="ca-card">
               <div className="ca-card-header">
-                <span>Taranan Proje Dizinleri</span>
+                <span>{ui.projects.title}</span>
                 <div style={{ display: "flex", gap: "8px" }}>
                   <input
                     type="text"
-                    placeholder="Filtrele..."
+                    placeholder={ui.table.searchPlaceholder}
                     style={{
                       background: "var(--ca-bg)",
                       border: "1px solid var(--ca-border)",
@@ -240,12 +237,12 @@ export const ConceptAView: React.FC<Props> = ({
                     <th style={{ width: 32 }}>
                       <input type="checkbox" defaultChecked />
                     </th>
-                    <th>Hedef Adı</th>
-                    <th>Ekosistem</th>
-                    <th>Yol</th>
-                    <th>Boyut</th>
-                    <th>Güvenlik</th>
-                    <th>Son Değişiklik</th>
+                    <th>{ui.table.name}</th>
+                    <th>{ui.table.category}</th>
+                    <th>{ui.table.project}</th>
+                    <th>{ui.table.size}</th>
+                    <th>{ui.table.safety}</th>
+                    <th>{ui.table.modified}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -276,9 +273,7 @@ export const ConceptAView: React.FC<Props> = ({
                       <td>
                         <span
                           className={`ca-pill ${
-                            item.safety === "safe"
-                              ? "ca-pill-safe"
-                              : "ca-pill-regen"
+                            item.safety === "safe" ? "ca-pill-safe" : "ca-pill-regen"
                           }`}
                         >
                           {item.safety.toUpperCase()}
@@ -348,13 +343,13 @@ export const ConceptAView: React.FC<Props> = ({
                       marginBottom: "16px",
                     }}
                   >
-                    {agent.sessions} aktif oturum • {agent.cache} önbellek
+                    {agent.sessions} {ui.agents.active} • {agent.cache} {ui.overview.ecoCache}
                   </div>
                   <button
                     className="ca-btn-primary"
                     style={{ width: "100%", justifyContent: "center" }}
                   >
-                    Önbelleği Temizle
+                    {ui.caches.runAction}
                   </button>
                 </div>
               ))}
@@ -364,39 +359,39 @@ export const ConceptAView: React.FC<Props> = ({
           {screen === "caches" && (
             <div className="ca-card">
               <div className="ca-card-header">
-                <span>Geliştirici Araç Önbellekleri</span>
+                <span>{ui.caches.title}</span>
                 <span style={{ fontSize: "11px", color: "var(--ca-text-muted)" }}>
-                  Toplam: 10.47 GB
+                  {ui.caches.kpiTotal}: 10.47 GB
                 </span>
               </div>
               <table className="ca-table">
                 <thead>
                   <tr>
-                    <th>Sağlayıcı</th>
-                    <th>Ekosistem</th>
-                    <th>Konum</th>
-                    <th>Önbellek Boyutu</th>
-                    <th>Resmi Eylem</th>
+                    <th>{ui.table.project}</th>
+                    <th>{ui.table.category}</th>
+                    <th>{ui.table.project}</th>
+                    <th>{ui.table.size}</th>
+                    <th>{ui.caches.kpiActions}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {[
                     {
-                      name: "npm Cache",
+                      name: "npm",
                       eco: "JavaScript",
                       path: "~/.npm/_cacache",
                       size: "3.45 GB",
                       cmd: "npm cache clean --force",
                     },
                     {
-                      name: "pip Cache",
+                      name: "pip",
                       eco: "Python",
                       path: "~/.cache/pip",
                       size: "1.82 GB",
                       cmd: "pip cache purge",
                     },
                     {
-                      name: "Cargo Registry",
+                      name: "Cargo",
                       eco: "Rust",
                       path: "~/.cargo/registry",
                       size: "5.20 GB",
@@ -404,7 +399,7 @@ export const ConceptAView: React.FC<Props> = ({
                     },
                   ].map((c, i) => (
                     <tr key={i}>
-                      <td style={{ fontWeight: 600 }}>{c.name}</td>
+                      <td style={{ fontWeight: 600 }}>{translateBackendText(c.name)}</td>
                       <td>{c.eco}</td>
                       <td className="ca-col-mono" style={{ fontSize: "11px" }}>
                         {c.path}
@@ -434,49 +429,51 @@ export const ConceptAView: React.FC<Props> = ({
           {screen === "history" && (
             <div className="ca-card">
               <div className="ca-card-header">
-                <span>İşlem ve Denetim Günlüğü</span>
+                <span>{ui.history.title}</span>
                 <span style={{ fontSize: "11px", color: "var(--ca-text-muted)" }}>
-                  Son 30 Gün
+                  {ui.history.subtitle}
                 </span>
               </div>
               <table className="ca-table">
                 <thead>
                   <tr>
-                    <th>Zaman Damgası</th>
-                    <th>Mod</th>
-                    <th>Temizlenen Öğe</th>
-                    <th>Kazanılan Alan</th>
-                    <th>Durum</th>
+                    <th>{ui.history.timestamp}</th>
+                    <th>{ui.history.mode}</th>
+                    <th>{ui.history.actions}</th>
+                    <th>{ui.history.reclaim}</th>
+                    <th>{ui.table.safety}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {[
                     {
                       time: "2026-11-04 20:15:22",
-                      mode: "Çöp Kutusu",
+                      mode: ui.plan.trash,
                       items: 18,
                       size: "4.25 GB",
-                      status: "BAŞARILI",
+                      status: ui.result.success.toUpperCase(),
                     },
                     {
                       time: "2026-11-02 14:40:10",
-                      mode: "Çöp Kutusu",
+                      mode: ui.plan.trash,
                       items: 8,
                       size: "1.85 GB",
-                      status: "BAŞARILI",
+                      status: ui.result.success.toUpperCase(),
                     },
                     {
                       time: "2026-10-29 09:12:05",
-                      mode: "Kalıcı Silme",
+                      mode: ui.plan.permanent,
                       items: 32,
                       size: "14.10 GB",
-                      status: "BAŞARILI",
+                      status: ui.result.success.toUpperCase(),
                     },
                   ].map((h, i) => (
                     <tr key={i}>
                       <td className="ca-col-mono">{h.time}</td>
                       <td>{h.mode}</td>
-                      <td className="ca-col-mono">{h.items} hedef</td>
+                      <td className="ca-col-mono">
+                        {h.items} {ui.overview.candidates}
+                      </td>
                       <td className="ca-col-mono" style={{ fontWeight: 600 }}>
                         {h.size}
                       </td>
@@ -503,22 +500,22 @@ export const ConceptAView: React.FC<Props> = ({
                     marginBottom: "4px",
                   }}
                 >
-                  Genel Yapılandırma
+                  {ui.settings.general}
                 </div>
                 <div style={{ padding: "8px 12px", color: "var(--ca-text-secondary)" }}>
-                  Tarama ve Derinlik
+                  {ui.settings.scan}
                 </div>
                 <div style={{ padding: "8px 12px", color: "var(--ca-text-secondary)" }}>
-                  Güvenlik & İstisnalar
+                  {ui.settings.protections}
                 </div>
                 <div style={{ padding: "8px 12px", color: "var(--ca-text-secondary)" }}>
-                  AI Ajan Politikası
+                  {ui.settings.agents}
                 </div>
               </div>
 
               <div className="ca-card" style={{ padding: "16px" }}>
                 <h3 style={{ fontSize: "14px", fontWeight: 700, marginBottom: "16px" }}>
-                  Genel Tercihler
+                  {ui.settings.general}
                 </h3>
                 <div style={{ marginBottom: "16px" }}>
                   <label
@@ -529,7 +526,7 @@ export const ConceptAView: React.FC<Props> = ({
                       marginBottom: "6px",
                     }}
                   >
-                    Arayüz Teması
+                    {ui.settings.theme}
                   </label>
                   <select
                     style={{
@@ -541,22 +538,24 @@ export const ConceptAView: React.FC<Props> = ({
                       width: "240px",
                     }}
                   >
-                    <option>Dark Black (Varsayılan)</option>
-                    <option>Dark Gray</option>
-                    <option>Light White</option>
-                    <option>Light Gray</option>
+                    <option>
+                      {ui.settings.themeDark} ({translateBackendText("Default")})
+                    </option>
+                    <option>{translateBackendText("Dark Gray")}</option>
+                    <option>{translateBackendText("Light White")}</option>
+                    <option>{translateBackendText("Light Gray")}</option>
                   </select>
                 </div>
                 <div style={{ marginBottom: "16px" }}>
                   <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <input type="checkbox" defaultChecked />
-                    <span>Azaltılmış Hareket (Reduced Motion)</span>
+                    <span>{ui.settings.reduceMotion}</span>
                   </label>
                 </div>
                 <div>
                   <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <input type="checkbox" defaultChecked />
-                    <span>Taramadan sonra otomatik özet göster</span>
+                    <span>{ui.settings.scanHint}</span>
                   </label>
                 </div>
               </div>
@@ -568,14 +567,11 @@ export const ConceptAView: React.FC<Props> = ({
             <div className="ca-modal-overlay">
               <div className="ca-modal">
                 <div className="ca-modal-header">
-                  <span>Temizlik Planı Doğrulaması</span>
-                  <span className="ca-pill ca-pill-safe">GÜVENLİ İŞLEM</span>
+                  <span>{ui.plan.title}</span>
+                  <span className="ca-pill ca-pill-safe">{ui.safety.safe.toUpperCase()}</span>
                 </div>
                 <div className="ca-modal-body">
-                  <div style={{ marginBottom: "12px" }}>
-                    Seçilen <strong>5 hedef dizin</strong> Windows Çöp Kutusuna
-                    taşınacaktır. Veriler istenirse geri yüklenebilir.
-                  </div>
+                  <div style={{ marginBottom: "12px" }}>{ui.plan.confirmTrash}</div>
                   <div
                     style={{
                       background: "var(--ca-bg)",
@@ -587,8 +583,13 @@ export const ConceptAView: React.FC<Props> = ({
                       marginBottom: "16px",
                     }}
                   >
-                    <div>Toplam Kurtarılacak: <strong>9.08 GB</strong></div>
-                    <div>Hedef Konum: <strong>Windows Recycle Bin</strong></div>
+                    <div>
+                      {ui.table.reclaim}: <strong>9.08 GB</strong>
+                    </div>
+                    <div>
+                      {ui.table.project}:{" "}
+                      <strong>{translateBackendText("Windows Recycle Bin")}</strong>
+                    </div>
                   </div>
                 </div>
                 <div className="ca-modal-footer">
@@ -600,11 +601,11 @@ export const ConceptAView: React.FC<Props> = ({
                       border: "1px solid var(--ca-border)",
                     }}
                   >
-                    Vazgeç
+                    {ui.common.cancel}
                   </button>
                   <button className="ca-btn-primary">
                     <Trash2 size={13} />
-                    <span>Temizliği Başlat</span>
+                    <span>{ui.plan.confirmTrash}</span>
                   </button>
                 </div>
               </div>
@@ -614,10 +615,7 @@ export const ConceptAView: React.FC<Props> = ({
           {/* Modal Overlay for Permanent Delete Guard */}
           {screen === "permanent-modal" && (
             <div className="ca-modal-overlay">
-              <div
-                className="ca-modal"
-                style={{ borderColor: "var(--ca-danger)" }}
-              >
+              <div className="ca-modal" style={{ borderColor: "var(--ca-danger)" }}>
                 <div
                   className="ca-modal-header"
                   style={{
@@ -627,17 +625,24 @@ export const ConceptAView: React.FC<Props> = ({
                 >
                   <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <AlertTriangle size={16} />
-                    Kalıcı Silme Onayı
+                    {ui.plan.confirmPermanent}
                   </span>
-                  <span className="ca-pill ca-pill-review">GERİ ALINAMAZ</span>
+                  <span className="ca-pill ca-pill-review">
+                    {ui.plan.permanentAck.toUpperCase()}
+                  </span>
                 </div>
                 <div className="ca-modal-body">
                   <p style={{ color: "var(--ca-danger)", fontWeight: 600, marginBottom: "8px" }}>
-                    DİKKAT: Bu işlem dosyaları doğrudan diskten kalıcı olarak silecektir.
+                    {ui.plan.permanentNote}
                   </p>
-                  <p style={{ fontSize: "12px", color: "var(--ca-text-secondary)", marginBottom: "16px" }}>
-                    Dosyalar Windows Çöp Kutusuna gönderilmeyecek, kurtarma araçları
-                    olmadan geri getirilemeyecektir.
+                  <p
+                    style={{
+                      fontSize: "12px",
+                      color: "var(--ca-text-secondary)",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    {ui.plan.confirmPermanent}
                   </p>
                   <label
                     style={{
@@ -652,7 +657,7 @@ export const ConceptAView: React.FC<Props> = ({
                     }}
                   >
                     <input type="checkbox" defaultChecked />
-                    <span>Kalıcı silme işleminin geri alınamayacağını anlıyorum.</span>
+                    <span>{ui.plan.permanentAck}</span>
                   </label>
                 </div>
                 <div className="ca-modal-footer">
@@ -664,14 +669,11 @@ export const ConceptAView: React.FC<Props> = ({
                       border: "1px solid var(--ca-border)",
                     }}
                   >
-                    İptal
+                    {ui.common.cancel}
                   </button>
-                  <button
-                    className="ca-btn-primary"
-                    style={{ background: "var(--ca-danger)" }}
-                  >
+                  <button className="ca-btn-primary" style={{ background: "var(--ca-danger)" }}>
                     <Trash2 size={13} />
-                    <span>Kalıcı Olarak Sil</span>
+                    <span>{ui.plan.confirmPermanent}</span>
                   </button>
                 </div>
               </div>

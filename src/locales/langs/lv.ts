@@ -102,18 +102,23 @@ export const lv: TranslationSchema = {
     cancel: "Atcelt",
     confirm: "Apstiprināt",
     recycleTitle: "Pārvietot Atlasītās Mapes uz Atkritni?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules mapes (${size}) tiks pārvietotas uz Atkritni. Varat tās jebkurā laikā atjaunot.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules mapes (${size}) tiks pārvietotas uz Atkritni. Varat tās jebkurā laikā atjaunot.`,
     recycleConfirmButton: "Pārvietot uz Atkritni",
     permanentTitle: "Dzēst Atlasītās Mapes Neatgriezeniski?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules mapes (${size}) tiks neatgriezeniski dzēstas no diska. Šo darbību nevar atsaukt.`,
-    permanentWarning: "BRĪDINĀJUMS: Šī darbība ir neatgriezeniska! Mapes netiks nosūtītas uz Atkritni.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules mapes (${size}) tiks neatgriezeniski dzēstas no diska. Šo darbību nevar atsaukt.`,
+    permanentWarning:
+      "BRĪDINĀJUMS: Šī darbība ir neatgriezeniska! Mapes netiks nosūtītas uz Atkritni.",
     permanentConfirmButton: "Dzēst Neatgriezeniski",
     deletingInProgress: "Notiek dzēšana...",
     recycleSuccess: (count: number) => `${count} mapes veiksmīgi pārvietotas uz Atkritni.`,
     permanentSuccess: (count: number) => `${count} mapes veiksmīgi dzēstas neatgriezeniski.`,
     partialErrorTitle: "Daļējas Dzēšanas Atskaite",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} mapes notīrītas, bet ${errorCount} mapes neizdevās izdzēst.`,
-    lockedOrPermissionNote: "Daži faili var būt bloķēti ar palaistiem procesiem vai prasīt administratora tiesības.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} mapes notīrītas, bet ${errorCount} mapes neizdevās izdzēst.`,
+    lockedOrPermissionNote:
+      "Daži faili var būt bloķēti ar palaistiem procesiem vai prasīt administratora tiesības.",
   },
   settings: {
     title: "Iestatījumi",
@@ -155,7 +160,8 @@ export const lv: TranslationSchema = {
     version: "Versija",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Izdevējs: Vellium • © 2026 Vellium. Visas tiesības aizsargātas.",
-    privacyNote: "Visas skenēšanas un dzēšanas darbības notiek 100% lokāli jūsu datorā. Nav telemetrijas.",
+    privacyNote:
+      "Visas skenēšanas un dzēšanas darbības notiek 100% lokāli jūsu datorā. Nav telemetrijas.",
     close: "Aizvērt",
   },
   errors: {

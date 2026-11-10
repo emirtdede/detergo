@@ -36,7 +36,7 @@ function readRustPackages() {
       "--filter-platform",
       "x86_64-pc-windows-msvc",
     ],
-    { cwd: rootDir, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 }
+    { cwd: rootDir, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 },
   );
   const metadata = parseJson(raw);
   const rootPackage = metadata.packages.find((pkg) => pkg.name === "node-cleaner");
@@ -59,7 +59,8 @@ function readRustPackages() {
   };
   for (const id of directIds) walk(id);
 
-  const normalize = (license) => (license || "UNKNOWN").replace(/[()]/g, "").replace(/\s+/g, " ").trim();
+  const normalize = (license) =>
+    (license || "UNKNOWN").replace(/[()]/g, "").replace(/\s+/g, " ").trim();
 
   return [...reachable]
     .map((id) => packages.get(id))
@@ -107,11 +108,16 @@ function readNpmPackages() {
     const license =
       typeof manifest.license === "string"
         ? manifest.license
-        : manifest.license?.type ??
-          (Array.isArray(manifest.licenses) ? manifest.licenses.map((entry) => entry.type).join(" OR ") : "UNKNOWN");
+        : (manifest.license?.type ??
+          (Array.isArray(manifest.licenses)
+            ? manifest.licenses.map((entry) => entry.type).join(" OR ")
+            : "UNKNOWN"));
     resolved.set(name, { name, version: manifest.version, license, direct });
 
-    for (const child of Object.keys({ ...(manifest.dependencies ?? {}), ...(manifest.optionalDependencies ?? {}) })) {
+    for (const child of Object.keys({
+      ...(manifest.dependencies ?? {}),
+      ...(manifest.optionalDependencies ?? {}),
+    })) {
       if (!resolved.has(child)) queue.push({ name: child, from: dir, direct: false });
     }
   }
@@ -138,10 +144,20 @@ const npm = readNpmPackages();
 const direct = [
   ...rust
     .filter((pkg) => pkg.direct)
-    .map((pkg) => ({ name: pkg.name, version: pkg.version, license: pkg.license, ecosystem: "rust" })),
+    .map((pkg) => ({
+      name: pkg.name,
+      version: pkg.version,
+      license: pkg.license,
+      ecosystem: "rust",
+    })),
   ...npm
     .filter((pkg) => pkg.direct)
-    .map((pkg) => ({ name: pkg.name, version: pkg.version, license: pkg.license, ecosystem: "npm" })),
+    .map((pkg) => ({
+      name: pkg.name,
+      version: pkg.version,
+      license: pkg.license,
+      ecosystem: "npm",
+    })),
 ].sort((a, b) => a.ecosystem.localeCompare(b.ecosystem) || a.name.localeCompare(b.name));
 
 const json = (value) => JSON.stringify(value, null, 2);
@@ -181,5 +197,9 @@ export const NPM_COMPONENT_COUNT = ${npm.length};
 
 fs.writeFileSync(outputPath, source, "utf8");
 console.log(`Wrote ${path.relative(rootDir, outputPath)}`);
-console.log(`  Rust crates: ${rust.length} (${direct.filter((pkg) => pkg.ecosystem === "rust").length} direct)`);
-console.log(`  npm packages: ${npm.length} (${direct.filter((pkg) => pkg.ecosystem === "npm").length} direct)`);
+console.log(
+  `  Rust crates: ${rust.length} (${direct.filter((pkg) => pkg.ecosystem === "rust").length} direct)`,
+);
+console.log(
+  `  npm packages: ${npm.length} (${direct.filter((pkg) => pkg.ecosystem === "npm").length} direct)`,
+);

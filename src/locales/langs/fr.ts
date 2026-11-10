@@ -102,18 +102,23 @@ export const fr: TranslationSchema = {
     cancel: "Annuler",
     confirm: "Confirmer",
     recycleTitle: "Déplacer les Dossiers Sélectionnés vers la Corbeille ?",
-    recycleDescription: (count: number, size: string) => `${count} dossiers node_modules (${size}) seront déplacés vers la Corbeille. Vous pouvez les restaurer à tout moment.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} dossiers node_modules (${size}) seront déplacés vers la Corbeille. Vous pouvez les restaurer à tout moment.`,
     recycleConfirmButton: "Mettre à la Corbeille",
     permanentTitle: "Supprimer Définitivement les Dossiers Sélectionnés ?",
-    permanentDescription: (count: number, size: string) => `${count} dossiers node_modules (${size}) seront définitivement supprimés du disque. Cette action est irréversible.`,
-    permanentWarning: "ATTENTION : Cette action est irréversible ! Les dossiers ne seront pas envoyés à la Corbeille.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} dossiers node_modules (${size}) seront définitivement supprimés du disque. Cette action est irréversible.`,
+    permanentWarning:
+      "ATTENTION : Cette action est irréversible ! Les dossiers ne seront pas envoyés à la Corbeille.",
     permanentConfirmButton: "Supprimer Définitivement",
     deletingInProgress: "Suppression en cours...",
     recycleSuccess: (count: number) => `${count} dossiers déplacés vers la Corbeille avec succès.`,
     permanentSuccess: (count: number) => `${count} dossiers supprimés définitivement avec succès.`,
     partialErrorTitle: "Rapport de Suppression Partielle",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} dossiers nettoyés, mais ${errorCount} dossiers n'ont pas pu être supprimés.`,
-    lockedOrPermissionNote: "Certains fichiers peuvent être verrouillés par des processus en cours ou nécessiter des autorisations d'administrateur.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} dossiers nettoyés, mais ${errorCount} dossiers n'ont pas pu être supprimés.`,
+    lockedOrPermissionNote:
+      "Certains fichiers peuvent être verrouillés par des processus en cours ou nécessiter des autorisations d'administrateur.",
   },
   settings: {
     title: "Paramètres",
@@ -145,7 +150,8 @@ export const fr: TranslationSchema = {
     systemDefault: "Langue du Système",
     performance: "Performances & Animations",
     reduceMotion: "Réduire les Animations",
-    reduceMotionDesc: "Désactive les animations et effets pour réduire l'utilisation des ressources.",
+    reduceMotionDesc:
+      "Désactive les animations et effets pour réduire l'utilisation des ressources.",
     favoritesManagement: "Gestion des Favoris",
     noFavorites: "Aucun favori enregistré pour le moment.",
     deleteFavoriteConfirm: "Voulez-vous vraiment supprimer cet emplacement favori ?",
@@ -155,7 +161,8 @@ export const fr: TranslationSchema = {
     version: "Version",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Éditeur : Vellium • © 2026 Vellium. Tous droits réservés.",
-    privacyNote: "Toutes les analyses et suppressions s'exécutent à 100% localement sur votre ordinateur. Zéro télémétrie.",
+    privacyNote:
+      "Toutes les analyses et suppressions s'exécutent à 100% localement sur votre ordinateur. Zéro télémétrie.",
     close: "Fermer",
   },
   errors: {
@@ -164,7 +171,8 @@ export const fr: TranslationSchema = {
     pathNotFound: "Le chemin spécifié est introuvable.",
     scanCancelled: "L'analyse a été annulée par l'utilisateur.",
     scanFailed: "Une erreur est survenue lors de l'analyse.",
-    unsafeDeleteTarget: "Par sécurité, les dossiers système et racine ne peuvent pas être supprimés.",
+    unsafeDeleteTarget:
+      "Par sécurité, les dossiers système et racine ne peuvent pas être supprimés.",
     recycleBinFailed: "Échec du déplacement vers la Corbeille.",
     permanentDeleteFailed: "Échec de la suppression définitive.",
     settingsReadFailed: "Impossible de lire le fichier de paramètres.",

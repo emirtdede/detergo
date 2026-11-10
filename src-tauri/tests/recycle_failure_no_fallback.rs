@@ -1,7 +1,7 @@
-﻿use std::fs;
-use std::os::windows::fs::OpenOptionsExt;
 use node_cleaner_lib::cleanup::RecycleBinService;
 use node_cleaner_lib::safety::GuardContext;
+use std::fs;
+use std::os::windows::fs::OpenOptionsExt;
 
 #[test]
 fn recycle_failure_reports_error_and_never_deletes_permanently() {
@@ -22,13 +22,22 @@ fn recycle_failure_reports_error_and_never_deletes_permanently() {
         .expect("open with exclusive sharing");
 
     let roots = vec![parent.clone()];
-    let guard = GuardContext { scan_roots: &roots, protected_paths: &[] };
+    let guard = GuardContext {
+        scan_roots: &roots,
+        protected_paths: &[],
+    };
     let result = RecycleBinService::new().recycle(&target, &guard);
     drop(handle);
 
     assert!(result.is_err(), "recycling an in-use folder must fail");
-    assert!(target.exists(), "a failed recycle must leave the target in place");
-    assert!(busy.exists(), "no permanent fallback may delete the payload");
+    assert!(
+        target.exists(),
+        "a failed recycle must leave the target in place"
+    );
+    assert!(
+        busy.exists(),
+        "no permanent fallback may delete the payload"
+    );
 
     let _ = fs::remove_dir_all(&parent);
 }

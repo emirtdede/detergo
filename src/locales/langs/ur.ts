@@ -102,18 +102,23 @@ export const ur: TranslationSchema = {
     cancel: "منسوخ کریں",
     confirm: "تصدیق کریں",
     recycleTitle: "کیا منتخب فولڈرز کو ری سائیکل بن میں منتقل کریں؟",
-    recycleDescription: (count: number, size: string) => `${count} node_modules فولڈرز (${size}) ری سائیکل بن میں منتقل کر دیے جائیں گے۔ آپ انہیں کسی بھی وقت بحال کر سکتے ہیں۔`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules فولڈرز (${size}) ری سائیکل بن میں منتقل کر دیے جائیں گے۔ آپ انہیں کسی بھی وقت بحال کر سکتے ہیں۔`,
     recycleConfirmButton: "ری سائیکل بن میں منتقل کریں",
     permanentTitle: "کیا منتخب فولڈرز کو مستقل طور پر حذف کریں؟",
-    permanentDescription: (count: number, size: string) => `${count} node_modules فولڈرز (${size}) ڈسک سے مستقل طور پر حذف کر دیے جائیں گے۔ یہ عمل واپس نہیں کیا جا سکتا۔`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules فولڈرز (${size}) ڈسک سے مستقل طور پر حذف کر دیے جائیں گے۔ یہ عمل واپس نہیں کیا جا سکتا۔`,
     permanentWarning: "انتباہ: یہ عمل مستقل ہے! فولڈرز ری سائیکل بن میں نہیں بھیجے جائیں گے۔",
     permanentConfirmButton: "مستقل طور پر حذف کریں",
     deletingInProgress: "حذف کیا جا رہا ہے...",
-    recycleSuccess: (count: number) => `${count} فولڈرز کامیابی کے ساتھ ری سائیکل بن میں منتقل ہو گئے۔`,
+    recycleSuccess: (count: number) =>
+      `${count} فولڈرز کامیابی کے ساتھ ری سائیکل بن میں منتقل ہو گئے۔`,
     permanentSuccess: (count: number) => `${count} فولڈرز کامیابی کے ساتھ مستقل طور پر حذف ہو گئے۔`,
     partialErrorTitle: "جزوی حذف کی رپورٹ",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} فولڈرز صاف کیے گئے، لیکن ${errorCount} فولڈرز حذف نہیں ہو سکے۔`,
-    lockedOrPermissionNote: "کچھ فائلیں چل رہے پراسیسز کی وجہ سے مقفل ہو سکتی ہیں یا منتظم کی اجازت درکار ہو سکتی ہے۔",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} فولڈرز صاف کیے گئے، لیکن ${errorCount} فولڈرز حذف نہیں ہو سکے۔`,
+    lockedOrPermissionNote:
+      "کچھ فائلیں چل رہے پراسیسز کی وجہ سے مقفل ہو سکتی ہیں یا منتظم کی اجازت درکار ہو سکتی ہے۔",
   },
   settings: {
     title: "ترتیبات",
@@ -155,7 +160,8 @@ export const ur: TranslationSchema = {
     version: "ورژن",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "پبلشر: Vellium • © 2026 Vellium. جملہ حقوق محفوظ ہیں۔",
-    privacyNote: "تمام اسکیننگ اور حذف کرنے کے عمل آپ کے کمپیوٹر پر 100% مقامی طور پر ہوتے ہیں۔ کوئی ڈیٹا باہر نہیں جاتا۔",
+    privacyNote:
+      "تمام اسکیننگ اور حذف کرنے کے عمل آپ کے کمپیوٹر پر 100% مقامی طور پر ہوتے ہیں۔ کوئی ڈیٹا باہر نہیں جاتا۔",
     close: "بند کریں",
   },
   errors: {

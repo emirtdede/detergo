@@ -23,7 +23,7 @@ import { scannerApi } from "@/lib/tauri/scanner-api";
 import { KnownLocation, ScanScope } from "@/types";
 import { useUIText } from "@/lib/ui-text";
 import { truncatePath } from "@/lib/formatters";
-import { maskPath } from "@/features/items/ItemTable";
+import { maskPath } from "@/lib/format/path";
 import { getKnownLocationLabel } from "./scan-helpers";
 import { useScanController } from "./useScanController";
 import "./scan.css";
@@ -71,8 +71,10 @@ export const ScanHeader: React.FC = () => {
   };
 
   const isAllDrives = scanScope === "allDrives";
-  const allDrivesLabel =
-    knownLocations.find((loc) => loc.source === "all-drives")?.label ?? ui.common.allDrives;
+  const allDrivesLoc = knownLocations.find((loc) => loc.source === "all-drives");
+  const allDrivesLabel = allDrivesLoc
+    ? getKnownLocationLabel(allDrivesLoc, ui)
+    : ui.common.allDrives;
 
   const shownPath = (path: string, maxChars: number) =>
     truncatePath(maskPaths ? maskPath(path) : path, maxChars);
@@ -115,7 +117,7 @@ export const ScanHeader: React.FC = () => {
     isSelectingFolderRef.current = true;
     setIsLocationMenuOpen(false);
     try {
-      const selected = await scannerApi.selectFolderDialog();
+      const selected = await scannerApi.selectFolderDialog(ui.header.folderNotSelected);
       if (selected) {
         useScanStore.getState().resetScan();
         useScanStore.setState({ currentRootPath: selected });
@@ -153,20 +155,22 @@ export const ScanHeader: React.FC = () => {
 
   const handleStartScan = (pathOverride?: string) => {
     const view = useAppStore.getState().view;
-    const scope: ScanScope =
-      view === "agents" ? "agents" : isAllDrives ? "allDrives" : "project";
+    const scope: ScanScope = view === "agents" ? "agents" : isAllDrives ? "allDrives" : "project";
     if (view === "caches") {
       void useCacheStore.getState().startMeasure();
       return;
     }
     startScan(scope === "allDrives" ? undefined : pathOverride, scope);
 
-    // Birleşik Tam Tarama: Proje taramasıyla birlikte araç önbelleklerini de ölç
+    // Combined Full Scan: measure tool caches alongside the project scan
     if (view !== "agents" && !useCacheStore.getState().measuring) {
       if (!useCacheStore.getState().loaded) {
-        useCacheStore.getState().loadProviders().then(() => {
-          void useCacheStore.getState().startMeasure();
-        });
+        useCacheStore
+          .getState()
+          .loadProviders()
+          .then(() => {
+            void useCacheStore.getState().startMeasure();
+          });
       } else {
         void useCacheStore.getState().startMeasure();
       }
@@ -180,10 +184,7 @@ export const ScanHeader: React.FC = () => {
   return (
     <header className="top-command-bar" data-tauri-drag-region="deep">
       {/* 1. Left: Single Brand Title */}
-      <div
-        className="command-brand"
-        data-tauri-drag-region="false"
-      >
+      <div className="command-brand" data-tauri-drag-region="false">
         <Logo size={18} showWordmark={false} />
         <span className="command-brand-title">Dev Cleaner</span>
       </div>
@@ -261,7 +262,7 @@ export const ScanHeader: React.FC = () => {
               className="location-dropdown-menu"
               data-tauri-drag-region="false"
             >
-              {/* 1. En Başta: Farklı Bir Konum Seç */}
+              {/* 1. First: choose a different location */}
               <div className="location-menu-section">
                 <button
                   type="button"
@@ -299,13 +300,7 @@ export const ScanHeader: React.FC = () => {
                       type="button"
                       className={`location-menu-item ${isSelected ? "is-selected" : ""}`}
                       onClick={() => handleSelectLocation(loc.path, loc.source)}
-                      title={
-                        isVirtual
-                          ? label
-                          : maskPaths
-                            ? maskPath(loc.path)
-                            : loc.path
-                      }
+                      title={isVirtual ? label : maskPaths ? maskPath(loc.path) : loc.path}
                     >
                       <div className="location-menu-item-icon">
                         <Folder size={15} />
@@ -354,7 +349,9 @@ export const ScanHeader: React.FC = () => {
                           </div>
                           <div className="location-menu-item-info">
                             <span className="location-menu-item-title">{fav.label}</span>
-                            <span className="location-menu-item-path">{shownPath(fav.path, 30)}</span>
+                            <span className="location-menu-item-path">
+                              {shownPath(fav.path, 30)}
+                            </span>
                           </div>
                           {isSelected && (
                             <div className="location-menu-item-check">

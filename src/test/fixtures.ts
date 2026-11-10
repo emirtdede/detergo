@@ -43,7 +43,7 @@ export function makeItem(overrides: Partial<CleanupItem> = {}): CleanupItem {
 export function makeUpdate(
   id: string,
   bytes: number,
-  status: MeasurementUpdate["status"] = "ready"
+  status: MeasurementUpdate["status"] = "ready",
 ): MeasurementUpdate {
   return {
     id,

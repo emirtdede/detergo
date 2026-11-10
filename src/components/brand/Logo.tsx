@@ -6,11 +6,7 @@ export interface LogoProps {
   showWordmark?: boolean;
 }
 
-export const Logo: React.FC<LogoProps> = ({
-  size = 22,
-  className = "",
-  showWordmark = false,
-}) => {
+export const Logo: React.FC<LogoProps> = ({ size = 22, className = "", showWordmark = false }) => {
   return (
     <div
       className={`logo-container ${className}`}
@@ -27,28 +23,35 @@ export const Logo: React.FC<LogoProps> = ({
         viewBox="0 0 32 32"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        aria-label="Dev Cleaner Logo"
+        aria-label="Dev Cleaner"
       >
         <defs>
-          <linearGradient id="nc-grad-primary" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+          <linearGradient
+            id="nc-grad-primary"
+            x1="2"
+            y1="2"
+            x2="30"
+            y2="30"
+            gradientUnits="userSpaceOnUse"
+          >
             <stop stopColor="#0A84FF" />
             <stop offset="1" stopColor="#0055D4" />
           </linearGradient>
-          <linearGradient id="nc-grad-glass" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+          <linearGradient
+            id="nc-grad-glass"
+            x1="4"
+            y1="4"
+            x2="28"
+            y2="28"
+            gradientUnits="userSpaceOnUse"
+          >
             <stop stopColor="rgba(255, 255, 255, 0.45)" />
             <stop offset="1" stopColor="rgba(255, 255, 255, 0.05)" />
           </linearGradient>
         </defs>
 
         {/* Outer Rounded Hexagon / Module Base */}
-        <rect
-          x="3"
-          y="3"
-          width="26"
-          height="26"
-          rx="7"
-          fill="url(#nc-grad-primary)"
-        />
+        <rect x="3" y="3" width="26" height="26" rx="7" fill="url(#nc-grad-primary)" />
 
         {/* Clean Facet Inner Overlay */}
         <path
@@ -92,4 +95,3 @@ export const Logo: React.FC<LogoProps> = ({
     </div>
   );
 };
-

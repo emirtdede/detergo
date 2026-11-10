@@ -102,18 +102,22 @@ export const ja: TranslationSchema = {
     cancel: "キャンセル",
     confirm: "確認",
     recycleTitle: "選択したフォルダーをごみ箱に移動しますか？",
-    recycleDescription: (count: number, size: string) => `${count} 個の node_modules フォルダー（${size}）をごみ箱に移動します。いつでも復元できます。`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} 個の node_modules フォルダー（${size}）をごみ箱に移動します。いつでも復元できます。`,
     recycleConfirmButton: "ごみ箱へ移動",
     permanentTitle: "選択したフォルダーを完全に削除しますか？",
-    permanentDescription: (count: number, size: string) => `${count} 個の node_modules フォルダー（${size}）をディスクから完全に削除します。この操作は取り消せません。`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} 個の node_modules フォルダー（${size}）をディスクから完全に削除します。この操作は取り消せません。`,
     permanentWarning: "警告: この操作は取り消せません！フォルダーはごみ箱に送られません。",
     permanentConfirmButton: "完全に削除",
     deletingInProgress: "削除処理中...",
     recycleSuccess: (count: number) => `${count} 個のフォルダーをごみ箱に移動しました。`,
     permanentSuccess: (count: number) => `${count} 個のフォルダーを完全に削除しました。`,
     partialErrorTitle: "一部削除レポート",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} 個のフォルダーを削除しましたが、${errorCount} 個のフォルダーを削除できませんでした。`,
-    lockedOrPermissionNote: "一部のファイルが実行中のプロセスによってロックされているか、管理者権限が必要な可能性があります。",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} 個のフォルダーを削除しましたが、${errorCount} 個のフォルダーを削除できませんでした。`,
+    lockedOrPermissionNote:
+      "一部のファイルが実行中のプロセスによってロックされているか、管理者権限が必要な可能性があります。",
   },
   settings: {
     title: "設定",
@@ -155,7 +159,8 @@ export const ja: TranslationSchema = {
     version: "バージョン",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "発行者: Vellium • © 2026 Vellium. All rights reserved.",
-    privacyNote: "すべてのスキャンおよび削除は、お使いのコンピューター上で100%ローカルに実行されます。テレメトリはありません。",
+    privacyNote:
+      "すべてのスキャンおよび削除は、お使いのコンピューター上で100%ローカルに実行されます。テレメトリはありません。",
     close: "閉じる",
   },
   errors: {

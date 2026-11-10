@@ -18,16 +18,18 @@ impl PermanentDeleteService {
             .map_err(|e| AppError::PermanentDeleteFailed(e.to_string()))?;
 
         if meta.is_dir() {
-            fs::remove_dir_all(&canonical)
-                .map_err(|e| AppError::PermanentDeleteFailed(format!("{}: {}", canonical.display(), e)))?;
+            fs::remove_dir_all(&canonical).map_err(|e| {
+                AppError::PermanentDeleteFailed(format!("{}: {}", canonical.display(), e))
+            })?;
         } else {
-            fs::remove_file(&canonical)
-                .map_err(|e| AppError::PermanentDeleteFailed(format!("{}: {}", canonical.display(), e)))?;
+            fs::remove_file(&canonical).map_err(|e| {
+                AppError::PermanentDeleteFailed(format!("{}: {}", canonical.display(), e))
+            })?;
         }
 
         if canonical.exists() {
             return Err(AppError::PermanentDeleteFailed(
-                "Silme sonrası hedef hâlâ mevcut.".to_string(),
+                "Target still exists after permanent delete.".to_string(),
             ));
         }
 

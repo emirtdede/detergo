@@ -62,17 +62,22 @@ export const AboutView: React.FC<AboutViewProps> = ({
   const openLegalDoc = useUiStore((s) => s.openLegalDoc);
   const closeLegalDoc = useUiStore((s) => s.closeLegalDoc);
   const locale = resolveUiLocale(language);
-  const tr = locale === "tr";
   const legalDocs = getLegalDocMeta(locale);
 
   const [internalBuild, setInternalBuild] = useState<BuildInfo | null>(null);
   const [internalCatalog, setInternalCatalog] = useState<CatalogDto | null>(null);
   useEffect(() => {
     if (!propBuildInfo) {
-      scannerApi.getBuildInfo().then(setInternalBuild).catch(() => {});
+      scannerApi
+        .getBuildInfo()
+        .then(setInternalBuild)
+        .catch(() => {});
     }
     if (!propCatalog) {
-      scannerApi.getCatalog().then(setInternalCatalog).catch(() => {});
+      scannerApi
+        .getCatalog()
+        .then(setInternalCatalog)
+        .catch(() => {});
     }
   }, [propBuildInfo, propCatalog]);
 
@@ -83,7 +88,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
     return countCatalogStats(catalog?.rules ?? []);
   }, [propCatalogStats, catalog]);
 
-  const builtAt = formatBuiltAt(buildInfo?.builtAt, tr ? "tr-TR" : "en-US");
+  const builtAt = formatBuiltAt(buildInfo?.builtAt, locale);
   const backButtonRef = useRef<HTMLButtonElement | null>(null);
   const returnFocusDocRef = useRef<string | null>(null);
   const wasLegalRef = useRef(false);
@@ -99,9 +104,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
       const docId = returnFocusDocRef.current;
       returnFocusDocRef.current = null;
       if (docId) {
-        document
-          .querySelector<HTMLButtonElement>(`[data-legal-doc="${docId}"]`)
-          ?.focus();
+        document.querySelector<HTMLButtonElement>(`[data-legal-doc="${docId}"]`)?.focus();
       }
     }
   }, [aboutPane]);
@@ -112,9 +115,9 @@ export const AboutView: React.FC<AboutViewProps> = ({
 
   const profileLabel = buildInfo
     ? buildInfo.profile === "release"
-      ? tr ? "Kararlı" : "Stable"
-      : tr ? "Geliştirme" : "Development"
-    : tr ? "Bilinmiyor" : "Unknown";
+      ? ui.settings.buildProfileRelease
+      : ui.settings.buildProfileDev
+    : ui.settings.buildProfileUnknown;
 
   if (aboutPane === "legal") {
     return (
@@ -149,7 +152,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
               icon={<Globe size={13} />}
               onClick={() => openUrl(VELLIUM_URL)}
             >
-              Resmi Web Sitesi <ExternalLink size={12} />
+              {ui.settings.aboutVisit} <ExternalLink size={12} />
             </Button>
           }
         />
@@ -165,8 +168,10 @@ export const AboutView: React.FC<AboutViewProps> = ({
             </span>
           </div>
           <div className="nc-kpi-card-body">
-            <span className="nc-kpi-card-value">v{buildInfo?.version ?? "2.0.0"}</span>
-            <span className="nc-kpi-card-sub">{profileLabel} {ui.settings.buildProfile}</span>
+            <span className="nc-kpi-card-value">v{buildInfo?.version ?? "—"}</span>
+            <span className="nc-kpi-card-sub">
+              {profileLabel} {ui.settings.buildProfile}
+            </span>
           </div>
         </div>
 
@@ -178,7 +183,9 @@ export const AboutView: React.FC<AboutViewProps> = ({
             </span>
           </div>
           <div className="nc-kpi-card-body">
-            <span className="nc-kpi-card-value">{catalogStats.rules} {ui.settings.rules}</span>
+            <span className="nc-kpi-card-value">
+              {catalogStats.rules} {ui.settings.rules}
+            </span>
             <span className="nc-kpi-card-sub">{ui.about.kpiRulesSub}</span>
           </div>
         </div>
@@ -191,7 +198,9 @@ export const AboutView: React.FC<AboutViewProps> = ({
             </span>
           </div>
           <div className="nc-kpi-card-body">
-            <span className="nc-kpi-card-value">{catalogStats.ecosystems} {ui.settings.ecosystems}</span>
+            <span className="nc-kpi-card-value">
+              {catalogStats.ecosystems} {ui.settings.ecosystems}
+            </span>
             <span className="nc-kpi-card-sub">{ui.about.kpiEcoSub}</span>
           </div>
         </div>
@@ -219,7 +228,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
               <VelliumLogo size={46} color="var(--accent)" />
             </div>
             <div className="about-panel-title-group">
-              <h2 className="about-panel-title">Dev Cleaner by Vellium</h2>
+              <h2 className="about-panel-title">{ui.settings.aboutTitleBy}</h2>
               <span className="about-panel-desc">{ui.settings.aboutTagline}</span>
             </div>
           </div>
@@ -227,13 +236,11 @@ export const AboutView: React.FC<AboutViewProps> = ({
           <div className="about-meta-list">
             <div className="about-meta-row">
               <span className="about-meta-label">{ui.about.appVersion}</span>
-              <span className="about-meta-value">v{buildInfo?.version ?? "2.0.0"}</span>
+              <span className="about-meta-value">v{buildInfo?.version ?? "—"}</span>
             </div>
             <div className="about-meta-row">
               <span className="about-meta-label">{ui.about.gitCommitHash}</span>
-              <span className="about-meta-value">
-                {buildInfo ? buildInfo.commitShort : "release-v2"}
-              </span>
+              <span className="about-meta-value">{buildInfo ? buildInfo.commitShort : "—"}</span>
             </div>
             <div className="about-meta-row">
               <span className="about-meta-label">{ui.settings.buildProfile}</span>
@@ -262,7 +269,8 @@ export const AboutView: React.FC<AboutViewProps> = ({
             <div className="about-panel-title-group">
               <h2 className="about-panel-title">{ui.about.catalogTitle}</h2>
               <span className="about-panel-desc">
-                {catalogStats.rules} {ui.settings.rules} · {catalogStats.categories} {ui.settings.categories} · {catalogStats.ecosystems} {ui.settings.ecosystems}
+                {catalogStats.rules} {ui.settings.rules} · {catalogStats.categories}{" "}
+                {ui.settings.categories} · {catalogStats.ecosystems} {ui.settings.ecosystems}
               </span>
             </div>
           </div>
@@ -310,7 +318,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
                 <span className="about-rule-name">{ui.about.ruleCaches}</span>
                 <span className="about-rule-badge">{ui.common.on}</span>
               </div>
-              <span className="about-rule-scope">npm cache, Cargo registry, pip cache, yarn</span>
+              <span className="about-rule-scope">{ui.about.ecoCacheScope}</span>
             </div>
 
             <div className="about-rule-card">
@@ -351,8 +359,14 @@ export const AboutView: React.FC<AboutViewProps> = ({
         </div>
 
         <div className="about-contacts-grid">
-          <a href="mailto:contact@vellium.dev" className="about-contact-card" title="contact@vellium.dev">
-            <div className="about-contact-icon about-contact-icon--blue"><Mail size={16} /></div>
+          <a
+            href="mailto:contact@vellium.dev"
+            className="about-contact-card"
+            title="contact@vellium.dev"
+          >
+            <div className="about-contact-icon about-contact-icon--blue">
+              <Mail size={16} />
+            </div>
             <div className="about-contact-info">
               <span className="about-contact-label">{ui.about.contactGeneral}</span>
               <strong className="about-contact-email">contact@vellium.dev</strong>
@@ -360,8 +374,14 @@ export const AboutView: React.FC<AboutViewProps> = ({
             </div>
           </a>
 
-          <a href="mailto:billing@vellium.dev" className="about-contact-card" title="billing@vellium.dev">
-            <div className="about-contact-icon about-contact-icon--purple"><CreditCard size={16} /></div>
+          <a
+            href="mailto:billing@vellium.dev"
+            className="about-contact-card"
+            title="billing@vellium.dev"
+          >
+            <div className="about-contact-icon about-contact-icon--purple">
+              <CreditCard size={16} />
+            </div>
             <div className="about-contact-info">
               <span className="about-contact-label">{ui.about.contactSupport}</span>
               <strong className="about-contact-email">billing@vellium.dev</strong>
@@ -369,8 +389,14 @@ export const AboutView: React.FC<AboutViewProps> = ({
             </div>
           </a>
 
-          <a href="mailto:legal@vellium.dev" className="about-contact-card" title="legal@vellium.dev">
-            <div className="about-contact-icon about-contact-icon--warning"><ScrollText size={16} /></div>
+          <a
+            href="mailto:legal@vellium.dev"
+            className="about-contact-card"
+            title="legal@vellium.dev"
+          >
+            <div className="about-contact-icon about-contact-icon--warning">
+              <ScrollText size={16} />
+            </div>
             <div className="about-contact-info">
               <span className="about-contact-label">{ui.about.contactLegal}</span>
               <strong className="about-contact-email">legal@vellium.dev</strong>
@@ -378,8 +404,14 @@ export const AboutView: React.FC<AboutViewProps> = ({
             </div>
           </a>
 
-          <a href="mailto:privacy@vellium.dev" className="about-contact-card" title="privacy@vellium.dev">
-            <div className="about-contact-icon about-contact-icon--green"><Lock size={16} /></div>
+          <a
+            href="mailto:privacy@vellium.dev"
+            className="about-contact-card"
+            title="privacy@vellium.dev"
+          >
+            <div className="about-contact-icon about-contact-icon--green">
+              <Lock size={16} />
+            </div>
             <div className="about-contact-info">
               <span className="about-contact-label">{ui.about.contactPrivacy}</span>
               <strong className="about-contact-email">privacy@vellium.dev</strong>
@@ -387,8 +419,14 @@ export const AboutView: React.FC<AboutViewProps> = ({
             </div>
           </a>
 
-          <a href="mailto:security@vellium.dev" className="about-contact-card" title="security@vellium.dev">
-            <div className="about-contact-icon about-contact-icon--red"><ShieldAlert size={16} /></div>
+          <a
+            href="mailto:security@vellium.dev"
+            className="about-contact-card"
+            title="security@vellium.dev"
+          >
+            <div className="about-contact-icon about-contact-icon--red">
+              <ShieldAlert size={16} />
+            </div>
             <div className="about-contact-info">
               <span className="about-contact-label">{ui.about.contactSecurity}</span>
               <strong className="about-contact-email">security@vellium.dev</strong>
@@ -396,8 +434,14 @@ export const AboutView: React.FC<AboutViewProps> = ({
             </div>
           </a>
 
-          <a href="mailto:support@vellium.dev" className="about-contact-card" title="support@vellium.dev">
-            <div className="about-contact-icon about-contact-icon--accent"><Headphones size={16} /></div>
+          <a
+            href="mailto:support@vellium.dev"
+            className="about-contact-card"
+            title="support@vellium.dev"
+          >
+            <div className="about-contact-icon about-contact-icon--accent">
+              <Headphones size={16} />
+            </div>
             <div className="about-contact-info">
               <span className="about-contact-label">{ui.about.contactSupport}</span>
               <strong className="about-contact-email">support@vellium.dev</strong>
@@ -437,7 +481,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
               </div>
               <p className="about-legal-btn-desc">{doc.hint}</p>
               <span className="about-legal-btn-rev">
-                Revizyon: {LEGAL_REVISION[locale === "tr" ? "tr" : "en"]}
+                {ui.settings.aboutLegalRevision}: {LEGAL_REVISION[locale === "tr" ? "tr" : "en"]}
               </span>
             </button>
           ))}
@@ -445,7 +489,10 @@ export const AboutView: React.FC<AboutViewProps> = ({
 
         <footer className="about-footer-bar">
           <span>
-            <Copyright size={12} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} />
+            <Copyright
+              size={12}
+              style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }}
+            />
             {new Date().getFullYear()} Vellium. {ui.settings.aboutCopyright}
           </span>
           <span>{ui.settings.aboutLocalFirst}</span>

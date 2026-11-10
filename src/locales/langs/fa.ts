@@ -102,18 +102,22 @@ export const fa: TranslationSchema = {
     cancel: "لغو",
     confirm: "تأیید",
     recycleTitle: "پوشه‌های انتخاب شده به سطل زباله منتقل شوند؟",
-    recycleDescription: (count: number, size: string) => `${count} پوشه node_modules (${size}) به سطل زباله منتقل خواهند شد. هر زمان می‌توانید آن‌ها را بازیابی کنید.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} پوشه node_modules (${size}) به سطل زباله منتقل خواهند شد. هر زمان می‌توانید آن‌ها را بازیابی کنید.`,
     recycleConfirmButton: "انتقال به سطل زباله",
     permanentTitle: "پوشه‌های انتخاب شده برای همیشه حذف شوند؟",
-    permanentDescription: (count: number, size: string) => `${count} پوشه node_modules (${size}) برای همیشه از دیسک حذف خواهند شد. این عمل غیرقابل بازگشت است.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} پوشه node_modules (${size}) برای همیشه از دیسک حذف خواهند شد. این عمل غیرقابل بازگشت است.`,
     permanentWarning: "هشدار: این عمل دائمی است! پوشه‌ها به سطل زباله فرستاده نخواهند شد.",
     permanentConfirmButton: "حذف دائمی",
     deletingInProgress: "در حال حذف...",
     recycleSuccess: (count: number) => `${count} پوشه با موفقیت به سطل زباله منتقل شد.`,
     permanentSuccess: (count: number) => `${count} پوشه با موفقیت برای همیشه حذف شد.`,
     partialErrorTitle: "گزارش حذف ناقص",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} پوشه پاکسازی شد، اما ${errorCount} پوشه حذف نشد.`,
-    lockedOrPermissionNote: "برخی از فایل‌ها ممکن است توسط فرآیندهای در حال اجرا قفل شده باشند یا نیاز به دسترسی سرپرست داشته باشند.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} پوشه پاکسازی شد، اما ${errorCount} پوشه حذف نشد.`,
+    lockedOrPermissionNote:
+      "برخی از فایل‌ها ممکن است توسط فرآیندهای در حال اجرا قفل شده باشند یا نیاز به دسترسی سرپرست داشته باشند.",
   },
   settings: {
     title: "تنظیمات",
@@ -155,7 +159,8 @@ export const fa: TranslationSchema = {
     version: "نسخه",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "ناشر: Vellium • © 2026 Vellium. کلیه حقوق محفوظ است.",
-    privacyNote: "تمام اسکن‌ها و حذف‌ها به صورت ۱۰۰٪ محلی روی رایانه شما انجام می‌شود. بدون ارسال داده.",
+    privacyNote:
+      "تمام اسکن‌ها و حذف‌ها به صورت ۱۰۰٪ محلی روی رایانه شما انجام می‌شود. بدون ارسال داده.",
     close: "بستن",
   },
   errors: {

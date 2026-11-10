@@ -45,7 +45,8 @@ export const ka: TranslationSchema = {
   },
   scan: {
     idleTitle: "დაიბრუნეთ თქვენი დისკის ადგილი",
-    idleSubtitle: "უსაფრთხოდ იპოვეთ და გაასუფთავეთ node_modules საქაღალდეები თქვენს ყველა პროექტში.",
+    idleSubtitle:
+      "უსაფრთხოდ იპოვეთ და გაასუფთავეთ node_modules საქაღალდეები თქვენს ყველა პროექტში.",
     selectFolderFirst: "სკანირების დასაწყებად აირჩიეთ საქაღალდე ზემოთ.",
     discovering: "პროექტების ძიება...",
     measuring: "ზომების გამოთვლა...",
@@ -102,18 +103,22 @@ export const ka: TranslationSchema = {
     cancel: "გაუქმება",
     confirm: "დადასტურება",
     recycleTitle: "გადავიტანოთ არჩეული საქაღალდეები ურნაში?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules საქაღალდე (${size}) გადატანილი იქნება ნაგვის ურნაში. მათი აღდგენა ნებისმიერ დროს შეგიძლიათ.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules საქაღალდე (${size}) გადატანილი იქნება ნაგვის ურნაში. მათი აღდგენა ნებისმიერ დროს შეგიძლიათ.`,
     recycleConfirmButton: "ურნაში გადატანა",
     permanentTitle: "წაიშალოს არჩეული საქაღალდეები სამუდამოდ?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules საქაღალდე (${size}) სამუდამოდ წაიშლება დისკიდან. ამ მოქმედების გაუქმება შეუძლებელია.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules საქაღალდე (${size}) სამუდამოდ წაიშლება დისკიდან. ამ მოქმედების გაუქმება შეუძლებელია.`,
     permanentWarning: "გაფრთხილება: ეს მოქმედება შეუქცევადია! საქაღალდეები არ გაიგზავნება ურნაში.",
     permanentConfirmButton: "სამუდამოდ წაშლა",
     deletingInProgress: "მიმდინარეობს წაშლა...",
     recycleSuccess: (count: number) => `${count} საქაღალდე წარმატებით გადავიდა ურნაში.`,
     permanentSuccess: (count: number) => `${count} საქაღალდე წარმატებით წაიშალა სამუდამოდ.`,
     partialErrorTitle: "ნაწილობრივი წაშლის ანგარიში",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} საქაღალდე გასუფთავდა, მაგრამ ${errorCount} საქაღალდის წაშლა ვერ მოხერხდა.`,
-    lockedOrPermissionNote: "ზოგიერთი ფაილი შეიძლება დაბლოკილი იყოს გაშვებული პროცესებით ან მოითხოვდეს ადმინისტრატორის უფლებებს.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} საქაღალდე გასუფთავდა, მაგრამ ${errorCount} საქაღალდის წაშლა ვერ მოხერხდა.`,
+    lockedOrPermissionNote:
+      "ზოგიერთი ფაილი შეიძლება დაბლოკილი იყოს გაშვებული პროცესებით ან მოითხოვდეს ადმინისტრატორის უფლებებს.",
   },
   settings: {
     title: "პარამეტრები",
@@ -155,7 +160,8 @@ export const ka: TranslationSchema = {
     version: "ვერსია",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "გამომცემელი: Vellium • © 2026 Vellium. ყველა უფლება დაცულია.",
-    privacyNote: "ყველა სკანირება და წაშლა ხორციელდება 100% ლოკალურად თქვენს კომპიუტერზე. ტელემეტრია არ გამოიყენება.",
+    privacyNote:
+      "ყველა სკანირება და წაშლა ხორციელდება 100% ლოკალურად თქვენს კომპიუტერზე. ტელემეტრია არ გამოიყენება.",
     close: "დახურვა",
   },
   errors: {

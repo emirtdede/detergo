@@ -102,18 +102,23 @@ export const eu: TranslationSchema = {
     cancel: "Utzi",
     confirm: "Berretsi",
     recycleTitle: "Hautatutako Karpetak Zakarrontzira Eraman?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules karpeta (${size}) Zakarrontzira eramango dira. Edozein unetan leheneratu ditzakezu.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules karpeta (${size}) Zakarrontzira eramango dira. Edozein unetan leheneratu ditzakezu.`,
     recycleConfirmButton: "Eraman Zakarrontzira",
     permanentTitle: "Hautatutako Karpetak Betiko Ezabatu?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules karpeta (${size}) diskotik betiko ezabatuko dira. Hau ezin da desegin.`,
-    permanentWarning: "OHARRA: Ekintza hau behin betikoa da! Karpetak ez dira Zakarrontzira bidaliko.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules karpeta (${size}) diskotik betiko ezabatuko dira. Hau ezin da desegin.`,
+    permanentWarning:
+      "OHARRA: Ekintza hau behin betikoa da! Karpetak ez dira Zakarrontzira bidaliko.",
     permanentConfirmButton: "Ezabatu Betiko",
     deletingInProgress: "Ezabatzen...",
     recycleSuccess: (count: number) => `${count} karpeta arrakastaz eraman dira Zakarrontzira.`,
     permanentSuccess: (count: number) => `${count} karpeta arrakastaz ezabatu dira betiko.`,
     partialErrorTitle: "Ezabatze Partzialaren Txostena",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} karpeta garbitu dira, baina ezin izan dira ${errorCount} karpeta ezabatu.`,
-    lockedOrPermissionNote: "Fitxategi batzuk martxan dauden prozesuek blokeatuta egon daitezke edo baimen bereziak behar dituzte.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} karpeta garbitu dira, baina ezin izan dira ${errorCount} karpeta ezabatu.`,
+    lockedOrPermissionNote:
+      "Fitxategi batzuk martxan dauden prozesuek blokeatuta egon daitezke edo baimen bereziak behar dituzte.",
   },
   settings: {
     title: "Ezarpenak",
@@ -155,7 +160,8 @@ export const eu: TranslationSchema = {
     version: "Bertsioa",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Argitaratzailea: Vellium • © 2026 Vellium. Eskubide guztiak erreserbatuta.",
-    privacyNote: "Eskaneatze eta ezabatze guztiak %100ean lokalean gertatzen dira zure ordenagailuan. Telemetriarik gabe.",
+    privacyNote:
+      "Eskaneatze eta ezabatze guztiak %100ean lokalean gertatzen dira zure ordenagailuan. Telemetriarik gabe.",
     close: "Itxi",
   },
   errors: {

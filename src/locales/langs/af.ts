@@ -102,18 +102,23 @@ export const af: TranslationSchema = {
     cancel: "Kanselleer",
     confirm: "Bevestig",
     recycleTitle: "Skuif Gekose Vouers na Asblik?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules-vouers (${size}) sal na die Asblik geskuif word. Jy kan hulle enige tyd herstel.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules-vouers (${size}) sal na die Asblik geskuif word. Jy kan hulle enige tyd herstel.`,
     recycleConfirmButton: "Skuif na Asblik",
     permanentTitle: "Vee Gekose Vouers Permanent Uit?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules-vouers (${size}) sal permanent van die skyf verwyder word. Hierdie aksie kan nie ongedaan gemaak word nie.`,
-    permanentWarning: "WAARSKUWING: Hierdie aksie is permanent! Vouers sal nie na die Asblik gestuur word nie.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules-vouers (${size}) sal permanent van die skyf verwyder word. Hierdie aksie kan nie ongedaan gemaak word nie.`,
+    permanentWarning:
+      "WAARSKUWING: Hierdie aksie is permanent! Vouers sal nie na die Asblik gestuur word nie.",
     permanentConfirmButton: "Vee Permanent Uit",
     deletingInProgress: "Verwyder tans...",
     recycleSuccess: (count: number) => `${count} vouers suksesvol na die Asblik geskuif.`,
     permanentSuccess: (count: number) => `${count} vouers suksesvol permanent uitgevee.`,
     partialErrorTitle: "Gedeeltelike Verwyderingsverslag",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} vouers skoongemaak, maar kon nie ${errorCount} vouers verwyder nie.`,
-    lockedOrPermissionNote: "Sommige lêers kan deur lopende prosesse gesluit wees of administrateurstoestemmings vereis.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} vouers skoongemaak, maar kon nie ${errorCount} vouers verwyder nie.`,
+    lockedOrPermissionNote:
+      "Sommige lêers kan deur lopende prosesse gesluit wees of administrateurstoestemmings vereis.",
   },
   settings: {
     title: "Instellings",
@@ -155,7 +160,8 @@ export const af: TranslationSchema = {
     version: "Weergawe",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Uitgewer: Vellium • © 2026 Vellium. Alle regte voorbehou.",
-    privacyNote: "Alle skandering en verwydering vind 100% plaaslik op jou rekenaar plaas. Geen data word versend nie.",
+    privacyNote:
+      "Alle skandering en verwydering vind 100% plaaslik op jou rekenaar plaas. Geen data word versend nie.",
     close: "Maak toe",
   },
   errors: {
@@ -164,7 +170,8 @@ export const af: TranslationSchema = {
     pathNotFound: "Gespesifiseerde pad nie gevind nie.",
     scanCancelled: "Skandering is deur gebruiker gekanselleer.",
     scanFailed: "'n Fout het voorgekom tydens skandering.",
-    unsafeDeleteTarget: "Weens veiligheidsredes kan wortel- of stelselvouers nie verwyder word nie.",
+    unsafeDeleteTarget:
+      "Weens veiligheidsredes kan wortel- of stelselvouers nie verwyder word nie.",
     recycleBinFailed: "Kon nie vouers na Asblik skuif nie.",
     permanentDeleteFailed: "Kon nie vouers permanent verwyder nie.",
     settingsReadFailed: "Kon nie instellingslêer lees nie.",

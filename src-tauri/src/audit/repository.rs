@@ -32,6 +32,13 @@ pub struct AuditRecord {
     pub moved_bytes: u64,
     pub duration_ms: u64,
     pub entries: Vec<AuditEntry>,
+    /// True when the user cancelled before every eligible item was processed.
+    #[serde(default)]
+    pub cancelled: bool,
+    #[serde(default)]
+    pub processed_count: u64,
+    #[serde(default)]
+    pub skipped_count: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -114,12 +121,13 @@ impl AuditRepository {
             .create(true)
             .append(true)
             .open(&self.snapshots_path)
-            .map_err(|e| AppError::SettingsWriteFailed(format!("Snapshot yazılamadı: {}", e)))?;
+            .map_err(|e| {
+                AppError::SettingsWriteFailed(format!("Failed to write storage snapshot: {}", e))
+            })?;
         for snapshot in snapshots {
             let line = serde_json::to_string(snapshot)
                 .map_err(|e| AppError::SettingsWriteFailed(e.to_string()))?;
-            writeln!(file, "{}", line)
-                .map_err(|e| AppError::SettingsWriteFailed(e.to_string()))?;
+            writeln!(file, "{}", line).map_err(|e| AppError::SettingsWriteFailed(e.to_string()))?;
         }
         Ok(())
     }
@@ -136,8 +144,6 @@ impl AuditRepository {
         read_json_lines(&self.actions_path, limit)
     }
 
-    /// Removes every persisted history/snapshot/action record. Missing files are
-    /// treated as already cleared, but a real delete failure is reported.
     /// Removes only cleanup history and storage snapshot files, keeping action logs intact.
     pub fn clear_cleanups(&self) -> Result<(), AppError> {
         for path in [&self.history_path, &self.snapshots_path] {
@@ -146,7 +152,7 @@ impl AuditRepository {
                 Err(err) if err.kind() == std::io::ErrorKind::NotFound => {}
                 Err(err) => {
                     return Err(AppError::SettingsWriteFailed(format!(
-                        "Temizlik geçmişi dosyası silinemedi ({}): {}",
+                        "Failed to delete cleanup history file ({}): {}",
                         path.display(),
                         err
                     )))
@@ -163,7 +169,7 @@ impl AuditRepository {
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => {}
             Err(err) => {
                 return Err(AppError::SettingsWriteFailed(format!(
-                    "Komut geçmişi dosyası silinemedi ({}): {}",
+                    "Failed to delete action history file ({}): {}",
                     self.actions_path.display(),
                     err
                 )))
@@ -172,6 +178,8 @@ impl AuditRepository {
         Ok(())
     }
 
+    /// Removes every persisted history/snapshot/action record. Missing files are
+    /// treated as already cleared, but a real delete failure is reported.
     pub fn clear_all(&self) -> Result<(), AppError> {
         for path in [&self.history_path, &self.snapshots_path, &self.actions_path] {
             match fs::remove_file(path) {
@@ -179,7 +187,7 @@ impl AuditRepository {
                 Err(err) if err.kind() == std::io::ErrorKind::NotFound => {}
                 Err(err) => {
                     return Err(AppError::SettingsWriteFailed(format!(
-                        "Geçmiş dosyası silinemedi ({}): {}",
+                        "Failed to delete history file ({}): {}",
                         path.display(),
                         err
                     )))
@@ -200,15 +208,17 @@ fn append_json_line<T: Serialize>(path: &Path, value: &T) -> Result<(), AppError
     if let Some(parent) = path.parent() {
         let _ = fs::create_dir_all(parent);
     }
-    let line = serde_json::to_string(value)
-        .map_err(|e| AppError::SettingsWriteFailed(format!("Geçmiş serileştirilemedi: {}", e)))?;
+    let line = serde_json::to_string(value).map_err(|e| {
+        AppError::SettingsWriteFailed(format!("Failed to serialize audit record: {}", e))
+    })?;
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
         .open(path)
-        .map_err(|e| AppError::SettingsWriteFailed(format!("Geçmiş dosyası açılamadı: {}", e)))?;
-    writeln!(file, "{}", line)
-        .map_err(|e| AppError::SettingsWriteFailed(format!("Geçmiş yazılamadı: {}", e)))?;
+        .map_err(|e| AppError::SettingsWriteFailed(format!("Failed to open audit file: {}", e)))?;
+    writeln!(file, "{}", line).map_err(|e| {
+        AppError::SettingsWriteFailed(format!("Failed to write audit record: {}", e))
+    })?;
     Ok(())
 }
 
@@ -283,7 +293,8 @@ mod tests {
     fn action_list_is_limited_to_the_newest_records() {
         let (_dir, repo) = repo();
         for i in 0..5 {
-            repo.append_action(&action(&format!("a-{i}"), true, 0)).unwrap();
+            repo.append_action(&action(&format!("a-{i}"), true, 0))
+                .unwrap();
         }
         let list = repo.list_actions(2);
         assert_eq!(list.len(), 2);

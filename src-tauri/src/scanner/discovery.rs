@@ -13,9 +13,7 @@ use crate::safety::evidence_guard::EvidenceSnapshot;
 use crate::safety::{git_guard, ActiveUse};
 use crate::scanner::cancellation::CancellationToken;
 use crate::scanner::limits::{ScanBudget, ScanLimits, StopReason};
-use crate::scanner::models::{
-    CleanupItem, ItemStatus, ScanProgress, StoredTarget,
-};
+use crate::scanner::models::{CleanupItem, ItemStatus, ScanProgress, StoredTarget};
 
 /// Excluded at any depth.
 const DEFAULT_EXCLUSIONS: &[&str] = &[
@@ -82,6 +80,17 @@ impl<'a> DiscoveryEngine<'a> {
         }
     }
 
+    /// Single gate for the candidate budget: atomically checks the limit and
+    /// increments the counter. Splitting the check and the increment lets a
+    /// candidate slip through after the limit was reached.
+    fn try_add_candidate(&mut self) -> bool {
+        if self.budget.candidates() >= self.budget.limits().max_candidates {
+            return false;
+        }
+        self.budget.note_candidate();
+        true
+    }
+
     pub fn discover<B, P>(
         &mut self,
         config: DiscoveryConfig<'_>,
@@ -99,13 +108,12 @@ impl<'a> DiscoveryEngine<'a> {
         }
         if !config.root.is_dir() {
             return Err(AppError::InvalidPath(
-                "Tarama kökü bir klasör olmalıdır.".to_string(),
+                "Scan root must be a directory.".to_string(),
             ));
         }
         if crate::platform::is_reparse_point(config.root) {
             return Err(AppError::InvalidPath(
-                "Tarama kökü bir yeniden ayrıştırma noktası (junction/symlink) olamaz."
-                    .to_string(),
+                "Scan root cannot be a reparse point (junction or symlink).".to_string(),
             ));
         }
 
@@ -155,7 +163,11 @@ impl<'a> DiscoveryEngine<'a> {
                 Err(err) => {
                     let path = err.path().map(|p| p.to_string_lossy().to_string());
                     warnings.push((
-                        if err.io_error().map(|e| e.kind() == std::io::ErrorKind::PermissionDenied).unwrap_or(false) {
+                        if err
+                            .io_error()
+                            .map(|e| e.kind() == std::io::ErrorKind::PermissionDenied)
+                            .unwrap_or(false)
+                        {
                             "ACCESS_DENIED".to_string()
                         } else {
                             "WALK_ERROR".to_string()
@@ -252,13 +264,16 @@ impl<'a> DiscoveryEngine<'a> {
             };
 
             let parent = path.parent().unwrap_or(config.root);
-            let project = self.resolver.resolve(parent).unwrap_or_else(|| fallback_project(parent));
+            let project = self
+                .resolver
+                .resolve(parent)
+                .unwrap_or_else(|| fallback_project(parent));
             let classification = classify(&rule, &evidence);
 
             let path_key = crate::safety::path_guard::normalize_key(&path);
-            let user_protected = protected_keys
-                .iter()
-                .any(|key| path_key == *key || crate::safety::path_guard::is_within(&path_key, key));
+            let user_protected = protected_keys.iter().any(|key| {
+                path_key == *key || crate::safety::path_guard::is_within(&path_key, key)
+            });
 
             let mut warnings_for_item = classification.warnings.clone();
             // Project targets are checked against the live filesystem. A target
@@ -279,14 +294,16 @@ impl<'a> DiscoveryEngine<'a> {
                 selectable = false;
             }
 
-            if self.budget.candidates() >= self.budget.limits().max_candidates {
+            if !self.try_add_candidate() {
                 stop_reason = Some(StopReason::CandidateLimit);
                 break;
             }
 
             let item_id = format!("t{}", &uuid::Uuid::new_v4().simple().to_string()[..24]);
             let parent_item_id = ancestor.as_ref().map(|(_, id)| id.clone());
-            let sys_modified = std::fs::metadata(&path).ok().and_then(|m| m.modified().ok());
+            let sys_modified = std::fs::metadata(&path)
+                .ok()
+                .and_then(|m| m.modified().ok());
             let modified_at = sys_modified.map(system_time_to_iso);
             let last_modified_ms = sys_modified
                 .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
@@ -364,13 +381,13 @@ impl<'a> DiscoveryEngine<'a> {
 
             if entry.file_type().is_dir() {
                 if self.catalog.has_child_rules(&rule.id) {
-                    self.active.insert(path.clone(), (rule.id.clone(), item_id.clone()));
+                    self.active
+                        .insert(path.clone(), (rule.id.clone(), item_id.clone()));
                 } else {
                     it.skip_current_dir();
                 }
             }
 
-            self.budget.note_candidate();
             items.push(item.clone());
             batch.push(item);
             if batch.len() >= BATCH_SIZE {
@@ -439,7 +456,12 @@ fn entry_allowed(entry: &walkdir::DirEntry, exclusions: &HashSet<String>) -> boo
         return false;
     }
     if name == "packages" || name == "microsoft" {
-        if let Some(p) = entry.path().parent().and_then(|p| p.file_name()).map(|f| f.to_string_lossy().to_lowercase()) {
+        if let Some(p) = entry
+            .path()
+            .parent()
+            .and_then(|p| p.file_name())
+            .map(|f| f.to_string_lossy().to_lowercase())
+        {
             if p == "local" || p == "appdata" {
                 return false;
             }

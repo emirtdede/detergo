@@ -102,18 +102,22 @@ export const ru: TranslationSchema = {
     cancel: "Отмена",
     confirm: "Подтвердить",
     recycleTitle: "Переместить выбранные папки в корзину?",
-    recycleDescription: (count: number, size: string) => `${count} папок node_modules (${size}) будут перемещены в корзину. Вы сможете восстановить их в любое время.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} папок node_modules (${size}) будут перемещены в корзину. Вы сможете восстановить их в любое время.`,
     recycleConfirmButton: "В корзину",
     permanentTitle: "Удалить выбранные папки навсегда?",
-    permanentDescription: (count: number, size: string) => `${count} папок node_modules (${size}) будут безвозвратно удалены с диска.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} папок node_modules (${size}) будут безвозвратно удалены с диска.`,
     permanentWarning: "ВНИМАНИЕ: Это действие необратимо! Папки не будут отправлены в корзину.",
     permanentConfirmButton: "Удалить навсегда",
     deletingInProgress: "Удаление...",
     recycleSuccess: (count: number) => `${count} папок успешно перемещено в корзину.`,
     permanentSuccess: (count: number) => `${count} папок успешно удалено навсегда.`,
     partialErrorTitle: "Отчет о частичном удалении",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} папок очищено, но ${errorCount} папок не удалось удалить.`,
-    lockedOrPermissionNote: "Некоторые файлы могут быть заняты другими программами или требовать прав администратора.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} папок очищено, но ${errorCount} папок не удалось удалить.`,
+    lockedOrPermissionNote:
+      "Некоторые файлы могут быть заняты другими программами или требовать прав администратора.",
   },
   settings: {
     title: "Настройки",
@@ -155,7 +159,8 @@ export const ru: TranslationSchema = {
     version: "Версия",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Издатель: Vellium • © 2026 Vellium. Все права защищены.",
-    privacyNote: "Все проверки и удаления происходят на 100% локально на вашем компьютере. Телеметрия отсутствует.",
+    privacyNote:
+      "Все проверки и удаления происходят на 100% локально на вашем компьютере. Телеметрия отсутствует.",
     close: "Закрыть",
   },
   errors: {

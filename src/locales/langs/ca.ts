@@ -45,7 +45,8 @@ export const ca: TranslationSchema = {
   },
   scan: {
     idleTitle: "Recupereu el Vostre Espai de Disc",
-    idleSubtitle: "Trobeu i netegeu amb seguretat les carpetes node_modules dels vostres projectes.",
+    idleSubtitle:
+      "Trobeu i netegeu amb seguretat les carpetes node_modules dels vostres projectes.",
     selectFolderFirst: "Seleccioneu una carpeta a dalt per començar l'escaneig.",
     discovering: "Detectant projectes...",
     measuring: "Calculant mides...",
@@ -102,18 +103,23 @@ export const ca: TranslationSchema = {
     cancel: "Cancel·lar",
     confirm: "Confirmar",
     recycleTitle: "Moure les Carpetes Seleccionades a la Paperera?",
-    recycleDescription: (count: number, size: string) => `${count} carpetes node_modules (${size}) es mouran a la Paperera. Podeu restaurar-les en qualsevol moment.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} carpetes node_modules (${size}) es mouran a la Paperera. Podeu restaurar-les en qualsevol moment.`,
     recycleConfirmButton: "Moure a la Paperera",
     permanentTitle: "Eliminar Permanentment les Carpetes Seleccionades?",
-    permanentDescription: (count: number, size: string) => `${count} carpetes node_modules (${size}) s'eliminaran permanentment del disc. Aquesta acció no es pot desfer.`,
-    permanentWarning: "AVÍS: Aquesta acció és irreversible! Les carpetes no s'enviaran a la Paperera.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} carpetes node_modules (${size}) s'eliminaran permanentment del disc. Aquesta acció no es pot desfer.`,
+    permanentWarning:
+      "AVÍS: Aquesta acció és irreversible! Les carpetes no s'enviaran a la Paperera.",
     permanentConfirmButton: "Eliminar Permanentment",
     deletingInProgress: "Eliminació en curs...",
     recycleSuccess: (count: number) => `${count} carpetes mogudes a la Paperera amb èxit.`,
     permanentSuccess: (count: number) => `${count} carpetes eliminades permanentment amb èxit.`,
     partialErrorTitle: "Informe d'Eliminació Parcial",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} carpetes netejades, però ${errorCount} carpetes no s'han pogut eliminar.`,
-    lockedOrPermissionNote: "Alguns fitxers poden estar bloquejats per processos en execució o requerir permisos d'administrador.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} carpetes netejades, però ${errorCount} carpetes no s'han pogut eliminar.`,
+    lockedOrPermissionNote:
+      "Alguns fitxers poden estar bloquejats per processos en execució o requerir permisos d'administrador.",
   },
   settings: {
     title: "Configuració",
@@ -155,7 +161,8 @@ export const ca: TranslationSchema = {
     version: "Versió",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Editor: Vellium • © 2026 Vellium. Tots els drets reservats.",
-    privacyNote: "Tots els escanejos i eliminacions ocorren 100% localment al vostre equip. Zero telemetria.",
+    privacyNote:
+      "Tots els escanejos i eliminacions ocorren 100% localment al vostre equip. Zero telemetria.",
     close: "Tancar",
   },
   errors: {

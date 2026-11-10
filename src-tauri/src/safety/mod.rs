@@ -51,7 +51,9 @@ pub fn is_protected_component(name: &str) -> bool {
 
 pub fn is_hard_protected_name(name: &str) -> bool {
     let lower = name.to_lowercase();
-    HARD_PROTECTED_NAMES.iter().any(|n| n.eq_ignore_ascii_case(&lower))
+    HARD_PROTECTED_NAMES
+        .iter()
+        .any(|n| n.eq_ignore_ascii_case(&lower))
         || lower.starts_with(".env.")
         || lower == ".env"
 }

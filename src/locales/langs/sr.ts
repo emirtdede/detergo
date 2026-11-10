@@ -102,18 +102,22 @@ export const sr: TranslationSchema = {
     cancel: "Откажи",
     confirm: "Потврди",
     recycleTitle: "Преместити изабране фасцикле у Смеће?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules фасцикли (${size}) биће премештено у Смеће. Можете их вратити у било ком тренутку.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules фасцикли (${size}) биће премештено у Смеће. Можете их вратити у било ком тренутку.`,
     recycleConfirmButton: "Премести у Смеће",
     permanentTitle: "Трајно избрисати изабране фасцикле?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules фасцикли (${size}) биће трајно избрисано са диска. Ова радња се не може опозвати.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules фасцикли (${size}) биће трајно избрисано са диска. Ова радња се не може опозвати.`,
     permanentWarning: "УПОЗОРЕЊЕ: Ова радња је трајна! Фасцикле неће бити послате у Смеће.",
     permanentConfirmButton: "Трајно избриши",
     deletingInProgress: "Брисање у току...",
     recycleSuccess: (count: number) => `${count} фасцикли успешно премештено у Смеће.`,
     permanentSuccess: (count: number) => `${count} фасцикли успешно трајно избрисано.`,
     partialErrorTitle: "Извештај о делимичном брисању",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} фасцикли очишћено, али ${errorCount} фасцикли није могло бити избрисано.`,
-    lockedOrPermissionNote: "Неке датотеке могу бити закључане покренутим процесима или захтевати администраторске дозволе.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} фасцикли очишћено, али ${errorCount} фасцикли није могло бити избрисано.`,
+    lockedOrPermissionNote:
+      "Неке датотеке могу бити закључане покренутим процесима или захтевати администраторске дозволе.",
   },
   settings: {
     title: "Подешавања",
@@ -155,7 +159,8 @@ export const sr: TranslationSchema = {
     version: "Верзија",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Издавач: Vellium • © 2026 Vellium. Сва права задржана.",
-    privacyNote: "Сва скенирања и брисања се одвијају 100% локално на вашем рачунару. Без телеметрије.",
+    privacyNote:
+      "Сва скенирања и брисања се одвијају 100% локално на вашем рачунару. Без телеметрије.",
     close: "Затвори",
   },
   errors: {
@@ -164,7 +169,8 @@ export const sr: TranslationSchema = {
     pathNotFound: "Наведена путања није пронађена.",
     scanCancelled: "Скенирање је отказао корисник.",
     scanFailed: "Дошло је до грешке током скенирања.",
-    unsafeDeleteTarget: "Из безбедносних разлога коренске или системске фасцикле се не могу брисати.",
+    unsafeDeleteTarget:
+      "Из безбедносних разлога коренске или системске фасцикле се не могу брисати.",
     recycleBinFailed: "Премештање фасцикли у Смеће није успело.",
     permanentDeleteFailed: "Трајно брисање фасцикли није успело.",
     settingsReadFailed: "Датотека подешавања се не може прочитати.",

@@ -1,6 +1,6 @@
-use super::*;
 use super::git_guard::ensure_not_tracked;
 use super::path_guard::is_within;
+use super::*;
 use crate::catalog::CatalogIndex;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -153,12 +153,17 @@ fn evidence_revalidation_fails_when_marker_disappears() {
 
 #[test]
 fn protected_names_are_detected() {
-    for name in [".git", ".ssh", "auth.json", ".env.local", "CLAUDE.md", "brain"] {
+    for name in [
+        ".git",
+        ".ssh",
+        "auth.json",
+        ".env.local",
+        "CLAUDE.md",
+        "brain",
+    ] {
         assert!(is_hard_protected_name(name), "{} must be protected", name);
     }
     assert!(!is_hard_protected_name("node_modules"));
-
-
 }
 
 #[test]
@@ -177,7 +182,6 @@ fn vcs_and_secret_components_block_deletion() {
     assert!(!is_protected_component("src"));
     assert!(!is_protected_component("brain"));
 }
-
 
 #[test]
 fn path_guard_rejects_directory_junctions() {
@@ -200,7 +204,6 @@ fn path_guard_rejects_directory_junctions() {
 
     assert!(validate_target(&link, &single(root.path())).is_err());
 }
-
 
 #[test]
 fn system_roots_are_rejected_by_path_analysis() {

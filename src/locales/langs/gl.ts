@@ -45,7 +45,8 @@ export const gl: TranslationSchema = {
   },
   scan: {
     idleTitle: "Recupere o Seu Espazo en Disco",
-    idleSubtitle: "Atopa e limpa con seguridade cartafoles node_modules en todos os teus proxectos.",
+    idleSubtitle:
+      "Atopa e limpa con seguridade cartafoles node_modules en todos os teus proxectos.",
     selectFolderFirst: "Seleccione un cartafol arriba para comezar o escaneo.",
     discovering: "Detectando proxectos...",
     measuring: "Calculando tamaños...",
@@ -102,18 +103,23 @@ export const gl: TranslationSchema = {
     cancel: "Cancelar",
     confirm: "Confirmar",
     recycleTitle: "Mover os Cartafoles Seleccionados ao Lixo?",
-    recycleDescription: (count: number, size: string) => `${count} cartafoles node_modules (${size}) moveranse ao Lixo. Pode restauralos en calquera momento.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} cartafoles node_modules (${size}) moveranse ao Lixo. Pode restauralos en calquera momento.`,
     recycleConfirmButton: "Mover ao Lixo",
     permanentTitle: "Eliminar Definitivamente os Cartafoles Seleccionados?",
-    permanentDescription: (count: number, size: string) => `${count} cartafoles node_modules (${size}) eliminaranse definitivamente do disco. Esta acción non se pode desfacer.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} cartafoles node_modules (${size}) eliminaranse definitivamente do disco. Esta acción non se pode desfacer.`,
     permanentWarning: "AVISO: Esta acción é permanente! Os cartafoles non se enviarán ao Lixo.",
     permanentConfirmButton: "Eliminar Definitivamente",
     deletingInProgress: "Eliminación en curso...",
     recycleSuccess: (count: number) => `${count} cartafoles movidos ao Lixo con éxito.`,
-    permanentSuccess: (count: number) => `${count} cartafoles eliminados definitivamente con éxito.`,
+    permanentSuccess: (count: number) =>
+      `${count} cartafoles eliminados definitivamente con éxito.`,
     partialErrorTitle: "Informe de Eliminación Parcial",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} cartafoles limpados, pero ${errorCount} cartafoles non se puideron eliminar.`,
-    lockedOrPermissionNote: "Algúns ficheiros poden estar bloqueados por procesos en execución ou requirir permisos de administrador.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} cartafoles limpados, pero ${errorCount} cartafoles non se puideron eliminar.`,
+    lockedOrPermissionNote:
+      "Algúns ficheiros poden estar bloqueados por procesos en execución ou requirir permisos de administrador.",
   },
   settings: {
     title: "Axustes",
@@ -155,7 +161,8 @@ export const gl: TranslationSchema = {
     version: "Versión",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Editor: Vellium • © 2026 Vellium. Todos os dereitos reservados.",
-    privacyNote: "Todos os escaneos e eliminacións ocorren 100% localmente no seu ordenador. Sen telemetría.",
+    privacyNote:
+      "Todos os escaneos e eliminacións ocorren 100% localmente no seu ordenador. Sen telemetría.",
     close: "Pechar",
   },
   errors: {

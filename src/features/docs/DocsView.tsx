@@ -3,7 +3,7 @@ import { Search } from "lucide-react";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUIText, resolveUiLocale } from "@/lib/ui-text";
 import { getDocsTopics } from "./docs-topics";
-import { DocsContentTr } from "./DocsContentTr";
+import { McpIdeKey } from "./docs-data";
 import { DocsContentEn } from "./DocsContentEn";
 import "./docs.css";
 
@@ -12,7 +12,7 @@ export const DocsView: React.FC = () => {
   const language = usePreferencesStore((s) => s.language);
   const isTr = resolveUiLocale(language) === "tr";
 
-  const topics = useMemo(() => getDocsTopics(isTr), [isTr]);
+  const topics = useMemo(() => getDocsTopics(language ?? "en"), [language]);
   const [activeTopicId, setActiveTopicId] = useState<string>("quickstart");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -22,7 +22,15 @@ export const DocsView: React.FC = () => {
   const [cliShell, setCliShell] = useState<"powershell" | "cmd" | "bash">("powershell");
 
   // CLI Builder State
-  const [cliPath, setCliPath] = useState<string>("D:\\projeler");
+  const [cliPath, setCliPath] = useState<string>(() => (isTr ? "D:\\projeler" : "D:\\projects"));
+
+  useEffect(() => {
+    setCliPath((prev) => {
+      if (prev === "D:\\projeler" && !isTr) return "D:\\projects";
+      if (prev === "D:\\projects" && isTr) return "D:\\projeler";
+      return prev;
+    });
+  }, [isTr]);
   const [cliScope, setCliScope] = useState<string>("projects");
   const [cliAutoClean, setCliAutoClean] = useState<boolean>(true);
   const [cliDryRun, setCliDryRun] = useState<boolean>(false);
@@ -32,7 +40,7 @@ export const DocsView: React.FC = () => {
   const [cliWebhook, setCliWebhook] = useState<string>("");
 
   // MCP IDE Switcher State
-  const [activeIde, setActiveIde] = useState<"cursor" | "windsurf" | "claude" | "antigravity">("cursor");
+  const [activeIde, setActiveIde] = useState<McpIdeKey>("cursor");
 
   // Global Keyboard Shortcuts (Ctrl+K or / to search, Esc to clear)
   useEffect(() => {
@@ -245,11 +253,25 @@ export const DocsView: React.FC = () => {
 
       {/* Content Pane */}
       <main className="docs-content-pane">
-        {isTr ? (
-          <DocsContentTr {...contentProps} />
-        ) : (
-          <DocsContentEn {...contentProps} />
+        {resolveUiLocale(language) !== "en" && (
+          <div
+            role="note"
+            className="docs-english-notice"
+            style={{
+              margin: "0 0 16px",
+              padding: "10px 14px",
+              border: "1px solid var(--border)",
+              borderRadius: 8,
+              background: "var(--surface-2, rgba(127,127,127,0.08))",
+              color: "var(--text-muted, inherit)",
+              fontSize: 13,
+              lineHeight: 1.5,
+            }}
+          >
+            {ui.docs.englishNotice}
+          </div>
         )}
+        <DocsContentEn {...contentProps} />
       </main>
     </div>
   );

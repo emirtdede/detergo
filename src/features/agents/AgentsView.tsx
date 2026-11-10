@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+
 import {
   Bot,
   EyeOff,
@@ -10,76 +11,124 @@ import {
   Trash2,
   TrendingUp,
 } from "lucide-react";
-import { Button } from "@/components/primitives/Button";
-import { Dialog } from "@/components/primitives/Dialog";
-import { EmptyState } from "@/components/primitives/EmptyState";
-import { PageHeader } from "@/components/primitives/PageHeader";
-import { useScanStore } from "@/stores/scan-store";
-import { useScanController } from "@/features/scan/useScanController";
-import { useUIText } from "@/lib/ui-text";
-import { scannerApi } from "@/lib/tauri/scanner-api";
-import { formatBytes } from "@/lib/formatters";
-import { AgentProviderInfo, AppSettings } from "@/types";
-import { ItemTable, maskPath } from "@/features/items/ItemTable";
-import { usePreferencesStore } from "@/stores/preferences-store";
-import { useUiStore } from "@/stores/ui-store";
-import "../items/items.css";
-import "../shell/shell.css";
 
-function describeError(err: unknown): string {
-  if (err && typeof err === "object" && "message" in err) {
-    return String((err as { message: string }).message);
-  }
-  return String(err);
-}
+import { Button } from "@/components/primitives/Button";
+
+import { Dialog } from "@/components/primitives/Dialog";
+
+import { EmptyState } from "@/components/primitives/EmptyState";
+
+import { PageHeader } from "@/components/primitives/PageHeader";
+
+import { useScanStore } from "@/stores/scan-store";
+
+import { useScanController } from "@/features/scan/useScanController";
+
+import { useUIText, localizeAppError, localizeBackendNote } from "@/lib/ui-text";
+
+import { scannerApi } from "@/lib/tauri/scanner-api";
+
+import { formatBytes } from "@/lib/formatters";
+
+import { AgentProviderInfo, AppSettings } from "@/types";
+
+import { ItemTable } from "@/features/items/ItemTable";
+import { maskPath } from "@/lib/format/path";
+import { describeError } from "@/lib/errors/user-message";
+
+import { usePreferencesStore } from "@/stores/preferences-store";
+
+import { useUiStore } from "@/stores/ui-store";
+
+import "../items/items.css";
+
+import "../shell/shell.css";
 
 const BUILTIN_NAMES: Record<string, string> = {
   codex: "Codex",
+
   "claude-code": "Claude Code",
+
   antigravity: "Antigravity",
+
   opencode: "OpenCode",
+
   t3code: "T3 Code",
+
   bionic: "Bionic",
+
   cursor: "Cursor",
+
   windsurf: "Windsurf",
+
   ollama: "Ollama",
 };
 
 export const AgentsView: React.FC = () => {
   const ui = useUIText();
+
   const { startScan, isScanning } = useScanController();
+
   const itemsById = useScanStore((s) => s.itemsById);
+
   const itemIds = useScanStore((s) => s.itemIds);
+
   const status = useScanStore((s) => s.status);
+
   const error = useScanStore((s) => s.error);
+
   const progress = useScanStore((s) => s.progress);
+
   const restored = useScanStore((s) => s.restored);
+
   const [providers, setProviders] = useState<AgentProviderInfo[]>([]);
+
   const [loading, setLoading] = useState(false);
+
   const [loadError, setLoadError] = useState<string | null>(null);
+
   const maskPaths = usePreferencesStore((s) => s.maskPaths);
+
   const hiddenProviders = usePreferencesStore((s) => s.hiddenBuiltinProviders);
+
   const loadPreferences = usePreferencesStore((s) => s.loadPreferences);
+
   const showToast = useUiStore((s) => s.showToast);
 
+  const language = usePreferencesStore((s) => s.language);
+
   const [addOpen, setAddOpen] = useState(false);
+
   const [toolName, setToolName] = useState("");
+
   const [toolRoots, setToolRoots] = useState<string[]>([]);
+
   const [saving, setSaving] = useState(false);
+  const [pendingRemove, setPendingRemove] = useState<AgentProviderInfo | null>(null);
+  const [tab, setTab] = useState<"items" | "providers">("items");
 
   const loadProviders = (silent = false) => {
     if (loading) return;
+
     setLoading(true);
+
     setLoadError(null);
-    scannerApi.getAgentProviders()
+
+    scannerApi
+      .getAgentProviders()
+
       .then((list) => {
         setProviders(list);
+
         if (!silent) showToast(ui.agents.toastRefreshed, "info");
       })
+
       .catch((err) => {
         setLoadError(describeError(err));
+
         showToast(ui.agents.toastError(describeError(err)), "error");
       })
+
       .finally(() => setLoading(false));
   };
 
@@ -89,38 +138,51 @@ export const AgentsView: React.FC = () => {
 
   const applySettings = (settings: AppSettings) => {
     loadPreferences(settings);
+
     loadProviders();
   };
 
   const items = useMemo(
     () =>
       itemIds
+
         .map((id) => itemsById[id])
+
         .filter((item) => item && item.provider !== "project" && item.status !== "deleted"),
-    [itemIds, itemsById]
+
+    [itemIds, itemsById],
   );
 
   const providerStats = useMemo(() => {
-    const map: Record<string, { protectedBytes: number; cleanableBytes: number; active: boolean }> = {};
+    const map: Record<string, { protectedBytes: number; cleanableBytes: number; active: boolean }> =
+      {};
+
     for (const item of items) {
       const entry = map[item.provider] ?? { protectedBytes: 0, cleanableBytes: 0, active: false };
+
       const bytes = item.estimatedReclaimBytes ?? 0;
+
       if (item.protected) entry.protectedBytes += bytes;
       else entry.cleanableBytes += bytes;
+
       if (item.activeUse === "yes") entry.active = true;
+
       map[item.provider] = entry;
     }
+
     return map;
   }, [items]);
 
   const resetAddForm = () => {
     setToolName("");
+
     setToolRoots([]);
   };
 
   const pickRoot = async () => {
     try {
       const selected = await scannerApi.selectFolderDialog(ui.agents.toolRoots);
+
       if (selected && !toolRoots.some((root) => root.toLowerCase() === selected.toLowerCase())) {
         setToolRoots((prev) => [...prev, selected]);
       }
@@ -131,13 +193,20 @@ export const AgentsView: React.FC = () => {
 
   const addTool = async () => {
     const name = toolName.trim();
+
     if (!name || toolRoots.length === 0 || saving) return;
+
     setSaving(true);
+
     try {
       const settings = await scannerApi.addCustomAgentProvider(name, toolRoots);
+
       applySettings(settings);
+
       showToast(ui.agents.added, "success");
+
       setAddOpen(false);
+
       resetAddForm();
     } catch (err) {
       showToast(`${ui.agents.saveError}: ${describeError(err)}`, "error", 6000);
@@ -147,7 +216,7 @@ export const AgentsView: React.FC = () => {
   };
 
   const removeTool = async (provider: AgentProviderInfo) => {
-    if (!window.confirm(ui.agents.removeToolConfirm)) return;
+    setPendingRemove(null);
     try {
       const settings = await scannerApi.removeCustomAgentProvider(provider.id);
       applySettings(settings);
@@ -160,7 +229,9 @@ export const AgentsView: React.FC = () => {
   const setHidden = async (providerId: string, hidden: boolean) => {
     try {
       const settings = await scannerApi.setAgentProviderHidden(providerId, hidden);
+
       applySettings(settings);
+
       showToast(hidden ? ui.agents.hidden : ui.agents.shown, "success");
     } catch (err) {
       showToast(`${ui.agents.saveError}: ${describeError(err)}`, "error", 6000);
@@ -168,8 +239,11 @@ export const AgentsView: React.FC = () => {
   };
 
   // The AI storage table distinguishes the same four scan states as Projects,
+
   // so "nothing scanned yet" is not shown after a failed or empty scan.
+
   const isLoadedOrScanned = status === "completed" || itemIds.length > 0 || restored;
+
   const emptyTitle = isScanning
     ? ui.common.scanning
     : status === "failed"
@@ -177,24 +251,34 @@ export const AgentsView: React.FC = () => {
       : isLoadedOrScanned
         ? ui.agents.emptyTitleClean
         : ui.agents.emptyTitleIdle;
+
   const emptyDescription = isScanning
     ? `${progress?.entriesFound ?? 0} / ${progress?.entriesMeasured ?? 0}`
     : status === "failed"
-      ? error?.message ?? ui.overview.startHint
+      ? error
+        ? localizeAppError(error, ui)
+        : ui.overview.startHint
       : isLoadedOrScanned
         ? ui.agents.emptyDescClean
         : ui.agents.emptyDescIdle;
 
   const agentTotals = useMemo(() => {
     let cleanable = 0;
+
     let safe = 0;
+
     for (const item of items) {
       if (item.protected || item.safetyClass === "keep" || !item.selectable) continue;
+
       const b = item.estimatedReclaimBytes ?? 0;
+
       cleanable += b;
+
       if (item.safetyClass === "safe") safe += b;
     }
+
     const detectedCount = providers.filter((p) => p.installed).length;
+
     return { cleanable, safe, detectedCount };
   }, [items, providers]);
 
@@ -211,11 +295,13 @@ export const AgentsView: React.FC = () => {
               icon={<Plus size={13} />}
               onClick={() => {
                 resetAddForm();
+
                 setAddOpen(true);
               }}
             >
               {ui.agents.addTool}
             </Button>
+
             <Button
               variant="secondary"
               size="sm"
@@ -225,6 +311,7 @@ export const AgentsView: React.FC = () => {
             >
               {ui.common.refresh}
             </Button>
+
             <Button
               variant="primary"
               size="sm"
@@ -239,26 +326,28 @@ export const AgentsView: React.FC = () => {
       />
 
       {/* Shared Bento KPI Strip for Agents */}
+
       <div className="nc-bento-strip nc-bento-strip--3">
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
             <span className="nc-kpi-card-label">{ui.agents.kpiStorage}</span>
+
             <span className="nc-kpi-card-icon nc-kpi-card-icon--accent">
               <Bot size={14} />
             </span>
           </div>
+
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">
               {items.length > 0
-                ? formatBytes(agentTotals.cleanable)
+                ? formatBytes(agentTotals.cleanable, language)
                 : agentTotals.detectedCount > 0
                   ? ui.agents.notScanned
                   : "0 B"}
             </span>
+
             <span className="nc-kpi-card-sub">
-              {items.length > 0
-                ? ui.agents.itemsSub(items.length)
-                : ui.agents.scanHint}
+              {items.length > 0 ? ui.agents.itemsSub(items.length) : ui.agents.scanHint}
             </span>
           </div>
         </div>
@@ -266,18 +355,21 @@ export const AgentsView: React.FC = () => {
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
             <span className="nc-kpi-card-label">{ui.agents.kpiSafeReclaim}</span>
+
             <span className="nc-kpi-card-icon nc-kpi-card-icon--success">
               <ShieldCheck size={14} />
             </span>
           </div>
+
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">
               {items.length > 0
-                ? formatBytes(agentTotals.safe)
+                ? formatBytes(agentTotals.safe, language)
                 : agentTotals.detectedCount > 0
                   ? ui.agents.notScanned
                   : "0 B"}
             </span>
+
             <span className="nc-kpi-card-sub">{ui.agents.kpiSafeReclaimSub}</span>
           </div>
         </div>
@@ -285,15 +377,18 @@ export const AgentsView: React.FC = () => {
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
             <span className="nc-kpi-card-label">{ui.agents.kpiInstalled}</span>
+
             <span className="nc-kpi-card-icon nc-kpi-card-icon--purple">
               <TrendingUp size={14} />
             </span>
           </div>
+
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">
               {agentTotals.detectedCount} / {providers.length} {ui.overview.ecoAgent}
             </span>
-            <span className="nc-kpi-card-sub">Claude Code, Cursor, Codex...</span>
+
+            <span className="nc-kpi-card-sub">{ui.about.ruleAgents}</span>
           </div>
         </div>
       </div>
@@ -304,107 +399,184 @@ export const AgentsView: React.FC = () => {
         </p>
       )}
 
-      {hiddenProviders.length > 0 && (
-        <div className="subpage-toolbar" style={{ marginBottom: 12 }}>
-          <span className="items-meta">
-            <EyeOff size={13} /> {ui.agents.hiddenTools}
-          </span>
-          {hiddenProviders.map((id) => (
+      <div className="subpage-toolbar" role="tablist" aria-label={ui.agents.title}>
+        {(["items", "providers"] as const).map((id, index, all) => {
+          const active = tab === id;
+          return (
             <button
               key={id}
+              id={`agents-tab-${id}`}
               type="button"
-              className="history-tab"
-              onClick={() => setHidden(id, false)}
-              title={ui.agents.showHidden}
+              role="tab"
+              aria-selected={active}
+              aria-controls={`agents-panel-${id}`}
+              tabIndex={active ? 0 : -1}
+              className={`history-tab ${active ? "active" : ""}`}
+              onClick={() => setTab(id)}
+              onKeyDown={(event) => {
+                if (
+                  event.key !== "ArrowRight" &&
+                  event.key !== "ArrowLeft" &&
+                  event.key !== "Home" &&
+                  event.key !== "End"
+                ) {
+                  return;
+                }
+                event.preventDefault();
+                let next = index;
+                if (event.key === "ArrowRight") next = (index + 1) % all.length;
+                else if (event.key === "ArrowLeft") next = (index - 1 + all.length) % all.length;
+                else if (event.key === "Home") next = 0;
+                else next = all.length - 1;
+                setTab(all[next]);
+                document.getElementById(`agents-tab-${all[next]}`)?.focus();
+              }}
             >
-              {BUILTIN_NAMES[id] ?? id}
+              <span>{id === "items" ? ui.agents.tabItems : ui.agents.tabProviders}</span>
             </button>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </div>
 
-      {providers.length === 0 ? (
-        <EmptyState
-          live={loading}
-          icon={<Bot size={22} />}
-          title={loading ? ui.common.loading : ui.agents.noProviders}
-        />
-      ) : (
-        <div className="agents-provider-grid">
-          {providers.map((provider) => {
-            const stats = providerStats[provider.id];
-            const isCustom = provider.id.startsWith("custom:");
-            return (
-              <article key={provider.id} className="agents-provider-card">
-                <header>
-                  <span className="provider-card-name" title={provider.name}>
-                    {provider.name}
-                  </span>
-                  {isCustom && <span className="chip">{ui.agents.customTool}</span>}
-                  {provider.readOnly && <span className="chip">{ui.agents.readOnly}</span>}
-                  {isCustom && <span className="chip ok">{ui.agents.keepOnly}</span>}
-                  {stats?.active && <span className="chip warn">{ui.agents.active}</span>}
-                  {!provider.installed && <span className="chip">{ui.agents.notInstalled}</span>}
-                </header>
-                <div className="provider-paths">
-                  {provider.roots
-                    .filter((root) => root.exists)
-                    .slice(0, 4)
-                    .map((root) => (
-                      <span key={root.path} title={maskPaths ? maskPath(root.path) : root.path}>
-                        {maskPaths ? maskPath(root.path) : root.path}
-                      </span>
-                    ))}
-                </div>
-                <div className="form-row">
-                  <span>{ui.agents.protectedBytes}</span>
-                  <strong>{formatBytes(stats?.protectedBytes ?? 0)}</strong>
-                </div>
-                <div className="form-row">
-                  <span>{ui.overview.cleanable}</span>
-                  <strong>{formatBytes(stats?.cleanableBytes ?? 0)}</strong>
-                </div>
-                <p className="plan-note">{provider.note || "\u00A0"}</p>
-                <div className="provider-actions">
-                  {isCustom ? (
-                    <Button
-                      variant="danger-outline"
-                      size="sm"
-                      icon={<Trash2 size={12} />}
-                      onClick={() => removeTool(provider)}
-                    >
-                      {ui.agents.removeTool}
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      icon={<EyeOff size={12} />}
-                      onClick={() => setHidden(provider.id, true)}
-                    >
-                      {ui.agents.hide}
-                    </Button>
-                  )}
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      )}
+      <div
+        id="agents-panel-providers"
+        role="tabpanel"
+        aria-labelledby="agents-tab-providers"
+        hidden={tab !== "providers"}
+      >
+        {hiddenProviders.length > 0 && (
+          <div className="subpage-toolbar" style={{ marginBottom: 12 }}>
+            <span className="items-meta">
+              <EyeOff size={13} /> {ui.agents.hiddenTools}
+            </span>
 
-      {items.length > 0 ? (
-        <ItemTable items={items} showProject={false} />
-      ) : (
-        <div className="agents-scan-results-card">
+            {hiddenProviders.map((id) => (
+              <button
+                key={id}
+                type="button"
+                className="history-tab"
+                onClick={() => setHidden(id, false)}
+                title={ui.agents.showHidden}
+              >
+                {BUILTIN_NAMES[id] ?? id}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {providers.length === 0 ? (
           <EmptyState
-            variant="compact"
-            live={isScanning}
-            icon={isLoadedOrScanned ? <ShieldCheck size={28} style={{ color: "var(--success)" }} /> : <ShieldAlert size={28} />}
-            title={emptyTitle}
-            description={emptyDescription}
+            live={loading}
+            icon={<Bot size={22} />}
+            title={loading ? ui.common.loading : ui.agents.noProviders}
           />
-        </div>
-      )}
+        ) : (
+          <div className="agents-provider-grid">
+            {providers.map((provider) => {
+              const stats = providerStats[provider.id];
+
+              const isCustom = provider.id.startsWith("custom:");
+
+              return (
+                <article key={provider.id} className="agents-provider-card">
+                  <header>
+                    <span className="provider-card-name" title={provider.name}>
+                      {provider.name}
+                    </span>
+
+                    {isCustom && <span className="chip">{ui.agents.customTool}</span>}
+
+                    {provider.readOnly && <span className="chip">{ui.agents.readOnly}</span>}
+
+                    {isCustom && <span className="chip ok">{ui.agents.keepOnly}</span>}
+
+                    {stats?.active && <span className="chip warn">{ui.agents.active}</span>}
+
+                    {!provider.installed && <span className="chip">{ui.agents.notInstalled}</span>}
+                  </header>
+
+                  <div className="provider-paths">
+                    {provider.roots
+
+                      .filter((root) => root.exists)
+
+                      .slice(0, 4)
+
+                      .map((root) => (
+                        <span key={root.path} title={maskPaths ? maskPath(root.path) : root.path}>
+                          {maskPaths ? maskPath(root.path) : root.path}
+                        </span>
+                      ))}
+                  </div>
+
+                  <div className="form-row">
+                    <span>{ui.agents.protectedBytes}</span>
+
+                    <strong>{formatBytes(stats?.protectedBytes ?? 0, language)}</strong>
+                  </div>
+
+                  <div className="form-row">
+                    <span>{ui.overview.cleanable}</span>
+
+                    <strong>{formatBytes(stats?.cleanableBytes ?? 0, language)}</strong>
+                  </div>
+
+                  <p className="plan-note">{localizeBackendNote(provider.note, ui) || "\u00A0"}</p>
+
+                  <div className="provider-actions">
+                    {isCustom ? (
+                      <Button
+                        variant="danger-outline"
+                        size="sm"
+                        icon={<Trash2 size={12} />}
+                        onClick={() => setPendingRemove(provider)}
+                      >
+                        {ui.agents.removeTool}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        icon={<EyeOff size={12} />}
+                        onClick={() => setHidden(provider.id, true)}
+                      >
+                        {ui.agents.hide}
+                      </Button>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div
+        id="agents-panel-items"
+        role="tabpanel"
+        aria-labelledby="agents-tab-items"
+        hidden={tab !== "items"}
+      >
+        {tab === "items" && items.length > 0 ? (
+          <ItemTable items={items} showProject={false} />
+        ) : tab === "items" ? (
+          <div className="agents-scan-results-card">
+            <EmptyState
+              variant="compact"
+              live={isScanning}
+              icon={
+                isLoadedOrScanned ? (
+                  <ShieldCheck size={28} style={{ color: "var(--success)" }} />
+                ) : (
+                  <ShieldAlert size={28} />
+                )
+              }
+              title={emptyTitle}
+              description={emptyDescription}
+            />
+          </div>
+        ) : null}
+      </div>
 
       <Dialog
         isOpen={addOpen}
@@ -415,9 +587,15 @@ export const AgentsView: React.FC = () => {
         maxWidth="560px"
         footer={
           <>
-            <Button variant="secondary" size="sm" onClick={() => setAddOpen(false)} disabled={saving}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setAddOpen(false)}
+              disabled={saving}
+            >
               {ui.common.cancel}
             </Button>
+
             <Button
               variant="primary"
               size="sm"
@@ -430,8 +608,10 @@ export const AgentsView: React.FC = () => {
         }
       >
         <p className="plan-note">{ui.agents.addToolHint}</p>
+
         <label className="form-row">
           <span>{ui.agents.toolName}</span>
+
           <input
             type="text"
             value={toolName}
@@ -440,13 +620,16 @@ export const AgentsView: React.FC = () => {
             maxLength={64}
           />
         </label>
+
         <div className="plan-note" style={{ marginTop: 8 }}>
           {ui.agents.toolRoots}
         </div>
+
         <div className="list-editor">
           {toolRoots.map((root) => (
             <div key={root} className="list-row">
               <span>{maskPaths ? maskPath(root) : root}</span>
+
               <button
                 type="button"
                 className="icon-btn icon-btn-sm"
@@ -458,11 +641,40 @@ export const AgentsView: React.FC = () => {
             </div>
           ))}
         </div>
+
         <div style={{ marginTop: 8 }}>
           <Button variant="secondary" size="sm" icon={<FolderPlus size={12} />} onClick={pickRoot}>
             {ui.agents.addRoot}
           </Button>
         </div>
+      </Dialog>
+
+      <Dialog
+        isOpen={pendingRemove !== null}
+        onClose={() => setPendingRemove(null)}
+        title={ui.agents.removeTool}
+        maxWidth="440px"
+        footer={
+          <>
+            <Button variant="secondary" size="sm" onClick={() => setPendingRemove(null)}>
+              {ui.common.cancel}
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => {
+                if (pendingRemove) void removeTool(pendingRemove);
+              }}
+            >
+              {ui.agents.removeTool}
+            </Button>
+          </>
+        }
+      >
+        <p className="plan-note">
+          {ui.agents.removeToolConfirm}
+          {pendingRemove ? ` (${pendingRemove.name})` : ""}
+        </p>
       </Dialog>
     </div>
   );

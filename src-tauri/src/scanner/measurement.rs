@@ -91,7 +91,8 @@ pub fn measure_path_with_deadline(
         .follow_links(false)
         .into_iter()
         .filter_entry(|e| {
-            e.depth() == 0 || (!e.file_type().is_symlink() && !crate::platform::is_reparse_point(e.path()))
+            e.depth() == 0
+                || (!e.file_type().is_symlink() && !crate::platform::is_reparse_point(e.path()))
         });
 
     for entry in walker {
@@ -216,9 +217,7 @@ impl MeasurementEngine {
                         id,
                         logical_bytes: size.logical_bytes,
                         allocated_bytes: size.allocated_bytes,
-                        estimated_reclaim_bytes: size
-                            .allocated_bytes
-                            .unwrap_or(size.logical_bytes),
+                        estimated_reclaim_bytes: size.allocated_bytes.unwrap_or(size.logical_bytes),
                         file_count: size.file_count,
                         hardlink_dedup_bytes: size.hardlink_dedup_bytes,
                         status: ItemStatus::Ready,
@@ -312,6 +311,9 @@ mod tests {
         std::fs::write(dir.join("a.bin"), vec![b'x'; 1024]).unwrap();
         let token = CancellationToken::new();
         let deadline = Instant::now() - Duration::from_secs(1);
-        assert!(measure_path_with_deadline(&dir, TargetKind::Directory, &token, Some(deadline)).is_none());
+        assert!(
+            measure_path_with_deadline(&dir, TargetKind::Directory, &token, Some(deadline))
+                .is_none()
+        );
     }
 }

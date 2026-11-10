@@ -47,7 +47,8 @@ export const useSelectionStore = create<SelectionState>((set, get) => ({
 
   selectAll: (allVisibleIds: string[]) =>
     set((state) => {
-      const allSelected = allVisibleIds.length > 0 && allVisibleIds.every((id) => state.selectedIds.has(id));
+      const allSelected =
+        allVisibleIds.length > 0 && allVisibleIds.every((id) => state.selectedIds.has(id));
       if (allSelected) {
         // Deselect all visible
         const next = new Set(state.selectedIds);

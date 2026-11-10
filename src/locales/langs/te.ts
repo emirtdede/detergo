@@ -45,7 +45,8 @@ export const te: TranslationSchema = {
   },
   scan: {
     idleTitle: "మీ డిస్క్ స్థలాన్ని తిరిగి పొందండి",
-    idleSubtitle: "మీ అన్ని ప్రాజెక్ట్‌లలోని node_modules ఫోల్డర్‌లను సురక్షితంగా కనుగొని శుభ్రం చేయండి.",
+    idleSubtitle:
+      "మీ అన్ని ప్రాజెక్ట్‌లలోని node_modules ఫోల్డర్‌లను సురక్షితంగా కనుగొని శుభ్రం చేయండి.",
     selectFolderFirst: "స్కాన్ ప్రారంభించడానికి పైన ఒక ఫోల్డర్‌ను ఎంచుకోండి.",
     discovering: "ప్రాజెక్ట్‌లను కనుగొంటోంది...",
     measuring: "పరిమాణాలను లెక్కిస్తోంది...",
@@ -102,18 +103,23 @@ export const te: TranslationSchema = {
     cancel: "రద్దు చేయి",
     confirm: "ధృవీకరించు",
     recycleTitle: "ఎంచుకున్న ఫోల్డర్‌లను రీసైకిల్ బిన్‌కు తరలించాలా?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules ఫోల్డర్‌లు (${size}) రీసైకిల్ బిన్‌కు తరలించబడతాయి. మీరు వాటిని ఎప్పుడైనా పునరుద్ధరించవచ్చు.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules ఫోల్డర్‌లు (${size}) రీసైకిల్ బిన్‌కు తరలించబడతాయి. మీరు వాటిని ఎప్పుడైనా పునరుద్ధరించవచ్చు.`,
     recycleConfirmButton: "రీసైకిల్ బిన్‌కు తరలించండి",
     permanentTitle: "ఎంచుకున్న ఫోల్డర్‌లను శాశ్వతంగా తొలగించాలా?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules ఫోల్డర్‌లు (${size}) డిస్క్ నుండి శాశ్వతంగా తొలగించబడతాయి. ఈ చర్యను రద్దు చేయలేరు.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules ఫోల్డర్‌లు (${size}) డిస్క్ నుండి శాశ్వతంగా తొలగించబడతాయి. ఈ చర్యను రద్దు చేయలేరు.`,
     permanentWarning: "హెచ్చరిక: ఈ చర్య శాశ్వతమైనది! ఫోల్డర్‌లు రీసైకిల్ బిన్‌కు పంపబడవు.",
     permanentConfirmButton: "శాశ్వతంగా తొలగించండి",
     deletingInProgress: "తొలగిస్తోంది...",
-    recycleSuccess: (count: number) => `${count} ఫోల్డర్‌లు విజయవంతంగా రీసైకిల్ బిన్‌కు తరలించబడ్డాయి.`,
+    recycleSuccess: (count: number) =>
+      `${count} ఫోల్డర్‌లు విజయవంతంగా రీసైకిల్ బిన్‌కు తరలించబడ్డాయి.`,
     permanentSuccess: (count: number) => `${count} ఫోల్డర్‌లు విజయవంతంగా శాశ్వతంగా తొలగించబడ్డాయి.`,
     partialErrorTitle: "పాక్షిక తొలగింపు నివేదిక",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} ఫోల్డర్‌లు శుభ్రం చేయబడ్డాయి, కానీ ${errorCount} ఫోల్డర్‌లను తొలగించడం సాధ్యం కాలేదు.`,
-    lockedOrPermissionNote: "కొన్ని ఫైల్‌లు రన్ అవుతున్న ప్రాసెస్‌ల ద్వారా లాక్ చేయబడి ఉండవచ్చు లేదా అడ్మినిస్ట్రేటర్ అనుమతులు అవసరం కావచ్చు.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} ఫోల్డర్‌లు శుభ్రం చేయబడ్డాయి, కానీ ${errorCount} ఫోల్డర్‌లను తొలగించడం సాధ్యం కాలేదు.`,
+    lockedOrPermissionNote:
+      "కొన్ని ఫైల్‌లు రన్ అవుతున్న ప్రాసెస్‌ల ద్వారా లాక్ చేయబడి ఉండవచ్చు లేదా అడ్మినిస్ట్రేటర్ అనుమతులు అవసరం కావచ్చు.",
   },
   settings: {
     title: "సెట్టింగ్‌లు",
@@ -155,7 +161,8 @@ export const te: TranslationSchema = {
     version: "వెర్షన్",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "ప్రచురణకర్త: Vellium • © 2026 Vellium. సర్వ హక్కులు ప్రత్యేకించబడ్డాయి.",
-    privacyNote: "అన్ని స్కాన్‌లు మరియు తొలగింపులు మీ కంప్యూటర్‌లోనే 100% స్థానికంగా జరుగుతాయి. ఎలాంటి డేటా బయటకు వెళ్లదు.",
+    privacyNote:
+      "అన్ని స్కాన్‌లు మరియు తొలగింపులు మీ కంప్యూటర్‌లోనే 100% స్థానికంగా జరుగుతాయి. ఎలాంటి డేటా బయటకు వెళ్లదు.",
     close: "మూసివేయి",
   },
   errors: {

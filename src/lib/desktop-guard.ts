@@ -212,11 +212,10 @@ export function installDesktopGuard(options?: DesktopGuardOptions): () => void {
 
   return () => {
     window.removeEventListener("keydown", onKeyDown, { capture: true });
-    window.removeEventListener("wheel", onWheel);
+    window.removeEventListener("wheel", onWheel, { capture: true });
     window.removeEventListener("dragover", onDragOver, { capture: true });
     window.removeEventListener("drop", onDrop, { capture: true });
     window.removeEventListener("contextmenu", onContextMenu, { capture: true });
     window.removeEventListener("pointerdown", onPointerDown, { capture: true });
   };
 }
-

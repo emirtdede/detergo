@@ -41,9 +41,10 @@ pub fn analyze_growth(snapshots: &[StorageSnapshot]) -> Vec<GrowthEntry> {
         }
         let previous = list[list.len() - 2];
         let current = list[list.len() - 1];
-        let (Some(prev_time), Some(cur_time)) =
-            (parse_time(&previous.timestamp), parse_time(&current.timestamp))
-        else {
+        let (Some(prev_time), Some(cur_time)) = (
+            parse_time(&previous.timestamp),
+            parse_time(&current.timestamp),
+        ) else {
             continue;
         };
         let window = (cur_time.timestamp() - prev_time.timestamp()).max(1) as u64;

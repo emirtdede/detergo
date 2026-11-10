@@ -102,18 +102,23 @@ export const bn: TranslationSchema = {
     cancel: "বাতিল",
     confirm: "নিশ্চিত করুন",
     recycleTitle: "নির্বাচিত ফোল্ডারগুলি রিসাইকেল বিনে সরাতে চান?",
-    recycleDescription: (count: number, size: string) => `${count} টি node_modules ফোল্ডার (${size}) রিসাইকেল বিনে সরানো হবে। আপনি যে কোনো সময় এগুলো পুনরুদ্ধার করতে পারেন।`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} টি node_modules ফোল্ডার (${size}) রিসাইকেল বিনে সরানো হবে। আপনি যে কোনো সময় এগুলো পুনরুদ্ধার করতে পারেন।`,
     recycleConfirmButton: "রিসাইকেল বিনে পাঠান",
     permanentTitle: "নির্বাচিত ফোল্ডারগুলি স্থায়ীভাবে মুছে ফেলতে চান?",
-    permanentDescription: (count: number, size: string) => `${count} টি node_modules ফোল্ডার (${size}) ডিস্ক থেকে স্থায়ীভাবে মুছে যাবে। এই ক্রিয়াটি পূর্বাবস্থায় ফেরানো যাবে না।`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} টি node_modules ফোল্ডার (${size}) ডিস্ক থেকে স্থায়ীভাবে মুছে যাবে। এই ক্রিয়াটি পূর্বাবস্থায় ফেরানো যাবে না।`,
     permanentWarning: "সতর্কতা: এই কাজটি স্থায়ী! ফোল্ডারগুলি রিসাইকেল বিনে পাঠানো হবে না।",
     permanentConfirmButton: "স্থায়ীভাবে মুছুন",
     deletingInProgress: "মোছা হচ্ছে...",
     recycleSuccess: (count: number) => `${count} টি ফোল্ডার সফলভাবে রিসাইকেল বিনে সরানো হয়েছে।`,
-    permanentSuccess: (count: number) => `${count} টি ফোল্ডার সফলভাবে স্থায়ীভাবে মুছে ফেলা হয়েছে।`,
+    permanentSuccess: (count: number) =>
+      `${count} টি ফোল্ডার সফলভাবে স্থায়ীভাবে মুছে ফেলা হয়েছে।`,
     partialErrorTitle: "আংশিক মুছে ফেলার রিপোর্ট",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} টি ফোল্ডার পরিষ্কার করা হয়েছে, কিন্তু ${errorCount}টি ফোল্ডার মোছা যায়নি।`,
-    lockedOrPermissionNote: "কিছু ফাইল চলমান প্রক্রিয়া দ্বারা লক করা থাকতে পারে বা প্রশাসকের অনুমতির প্রয়োজন হতে পারে।",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} টি ফোল্ডার পরিষ্কার করা হয়েছে, কিন্তু ${errorCount}টি ফোল্ডার মোছা যায়নি।`,
+    lockedOrPermissionNote:
+      "কিছু ফাইল চলমান প্রক্রিয়া দ্বারা লক করা থাকতে পারে বা প্রশাসকের অনুমতির প্রয়োজন হতে পারে।",
   },
   settings: {
     title: "সেটিংস",
@@ -155,7 +160,8 @@ export const bn: TranslationSchema = {
     version: "সংস্করণ",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "প্রকাশক: Vellium • © 2026 Vellium. সর্বস্বত্ব সংরক্ষিত।",
-    privacyNote: "সমস্ত স্ক্যান এবং মোছার কাজ আপনার কম্পিউটারে 100% স্থানীয়ভাবে ঘটে। কোনো তথ্য বাইরে যায় না।",
+    privacyNote:
+      "সমস্ত স্ক্যান এবং মোছার কাজ আপনার কম্পিউটারে 100% স্থানীয়ভাবে ঘটে। কোনো তথ্য বাইরে যায় না।",
     close: "বন্ধ করুন",
   },
   errors: {

@@ -102,18 +102,22 @@ export const km: TranslationSchema = {
     cancel: "បោះបង់",
     confirm: "បញ្ជាក់",
     recycleTitle: "ផ្លាស់ទីថតដែលបានជ្រើសរើសទៅធុងសំរាម?",
-    recycleDescription: (count: number, size: string) => `${count} ថត node_modules (${size}) នឹងត្រូវផ្លាស់ទីទៅធុងសំរាម។ អ្នកអាចស្តារឡើងវិញបានគ្រប់ពេល។`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} ថត node_modules (${size}) នឹងត្រូវផ្លាស់ទីទៅធុងសំរាម។ អ្នកអាចស្តារឡើងវិញបានគ្រប់ពេល។`,
     recycleConfirmButton: "ផ្លាស់ទីទៅធុងសំរាម",
     permanentTitle: "លុបថតដែលបានជ្រើសរើសជាអចិន្ត្រៃយ៍?",
-    permanentDescription: (count: number, size: string) => `${count} ថត node_modules (${size}) នឹងត្រូវលុបជាអចិន្ត្រៃយ៍ពីថាស។ សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} ថត node_modules (${size}) នឹងត្រូវលុបជាអចិន្ត្រៃយ៍ពីថាស។ សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។`,
     permanentWarning: "ការព្រមាន៖ សកម្មភាពនេះគឺអចិន្ត្រៃយ៍! ថតនឹងមិនត្រូវបានផ្ញើទៅធុងសំរាមទេ។",
     permanentConfirmButton: "លុបជាអចិន្ត្រៃយ៍",
     deletingInProgress: "កំពុងលុប...",
     recycleSuccess: (count: number) => `${count} ថតត្រូវបានផ្លាស់ទីទៅធុងសំរាមដោយជោគជ័យ។`,
     permanentSuccess: (count: number) => `${count} ថតត្រូវបានលុបជាអចិន្ត្រៃយ៍ដោយជោគជ័យ។`,
     partialErrorTitle: "របាយការណ៍លុបមួយផ្នែក",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} ថតត្រូវបានសម្អាត ប៉ុន្តែមិនអាចលុប ${errorCount} ថតបានទេ។`,
-    lockedOrPermissionNote: "ឯកសារមួយចំនួនអាចត្រូវបានចាក់សោដោយដំណើរការដែលកំពុងដំណើរការ ឬទាមទារសិទ្ធិជាអ្នកគ្រប់គ្រង។",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} ថតត្រូវបានសម្អាត ប៉ុន្តែមិនអាចលុប ${errorCount} ថតបានទេ។`,
+    lockedOrPermissionNote:
+      "ឯកសារមួយចំនួនអាចត្រូវបានចាក់សោដោយដំណើរការដែលកំពុងដំណើរការ ឬទាមទារសិទ្ធិជាអ្នកគ្រប់គ្រង។",
   },
   settings: {
     title: "ការកំណត់",
@@ -155,7 +159,8 @@ export const km: TranslationSchema = {
     version: "កំណែ",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "អ្នកបោះពុម្ពផ្សាយ: Vellium • © 2026 Vellium. រក្សាសិទ្ធិគ្រប់យ៉ាង។",
-    privacyNote: "ការស្កេននិងការលុបទាំងអស់ដំណើរការ ១០០% នៅលើកុំព្យូទ័ររបស់អ្នក។ គ្មានទិន្នន័យបញ្ជូនទៅក្រៅទេ។",
+    privacyNote:
+      "ការស្កេននិងការលុបទាំងអស់ដំណើរការ ១០០% នៅលើកុំព្យូទ័ររបស់អ្នក។ គ្មានទិន្នន័យបញ្ជូនទៅក្រៅទេ។",
     close: "បិទ",
   },
   errors: {

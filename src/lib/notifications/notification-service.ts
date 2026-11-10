@@ -2,6 +2,7 @@ import { getUIText } from "@/lib/ui-text";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
 import { formatBytes } from "@/lib/formatters";
+import { log } from "@/lib/logging";
 import { NotificationChannel } from "@/types";
 
 export interface ScanCompletedEvent {
@@ -35,28 +36,30 @@ export interface WebhookEvent {
 
 class NotificationService {
   private hasPermission = false;
+  private audioCtx: AudioContext | null = null;
+  private audioPrimed = false;
 
   constructor() {
-    this.checkPermission();
+    // Only read the current permission. Asking here would show a system prompt
+    // before the user has done anything; the request belongs to an explicit
+    // user action (Settings → notifications).
+    this.readPermission();
+    this.primeAudio();
   }
 
-  private async checkPermission() {
+  private readPermission() {
     if (typeof window !== "undefined" && "Notification" in window) {
-      if (Notification.permission === "granted") {
-        this.hasPermission = true;
-      } else if (Notification.permission !== "denied") {
-        try {
-          const res = await Notification.requestPermission();
-          this.hasPermission = res === "granted";
-        } catch {
-          this.hasPermission = false;
-        }
-      }
+      this.hasPermission = Notification.permission === "granted";
     }
   }
 
   public async requestDesktopPermission(): Promise<boolean> {
     if (typeof window === "undefined" || !("Notification" in window)) {
+      return false;
+    }
+    if (Notification.permission === "denied") {
+      // The browser will not show the prompt again; report the stored decision.
+      this.hasPermission = false;
       return false;
     }
     try {
@@ -68,9 +71,45 @@ class NotificationService {
     }
   }
 
-  private playChime() {
+  /**
+   * One context for the whole session (MDN: create one AudioContext and reuse
+   * it). Creating a context per chime leaks hardware handles.
+   */
+  private getAudioContext(): AudioContext | null {
+    if (typeof window === "undefined") return null;
+    if (this.audioCtx && this.audioCtx.state !== "closed") return this.audioCtx;
+    const Ctor =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctor) return null;
     try {
-      const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      this.audioCtx = new Ctor();
+      return this.audioCtx;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Resumes a suspended context; browsers require a user gesture first. */
+  private primeAudio() {
+    if (this.audioPrimed) return;
+    this.audioPrimed = true;
+    const unlock = () => {
+      const ctx = this.getAudioContext();
+      if (ctx && ctx.state === "suspended") void ctx.resume();
+    };
+    window.addEventListener("pointerdown", unlock, { once: true, capture: true });
+    window.addEventListener("keydown", unlock, { once: true, capture: true });
+  }
+
+  private playChime() {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === "suspended") {
+      void ctx.resume();
+      return;
+    }
+    try {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
@@ -80,6 +119,10 @@ class NotificationService {
       osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15); // A5
       gain.gain.setValueAtTime(0.1, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.onended = () => {
+        osc.disconnect();
+        gain.disconnect();
+      };
       osc.start();
       osc.stop(ctx.currentTime + 0.3);
     } catch {
@@ -89,10 +132,14 @@ class NotificationService {
 
   private sendDesktop(title: string, body: string) {
     if (!this.hasPermission) {
-      this.checkPermission();
+      this.readPermission();
     }
     try {
-      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+      if (
+        typeof window !== "undefined" &&
+        "Notification" in window &&
+        Notification.permission === "granted"
+      ) {
         new Notification(title, {
           body,
           icon: "/icons/icon.png",
@@ -100,7 +147,7 @@ class NotificationService {
         });
       }
     } catch (e) {
-      console.warn("Desktop notification error:", e);
+      log.warn("Desktop notification error", e);
     }
   }
 
@@ -108,7 +155,7 @@ class NotificationService {
     channel: NotificationChannel,
     title: string,
     message: string,
-    level: "info" | "success" | "warning" | "error" = "info"
+    level: "info" | "success" | "warning" | "error" = "info",
   ) {
     if (channel === "none") return;
 
@@ -129,32 +176,43 @@ class NotificationService {
   }
 
   public notifyScanComplete(evt: ScanCompletedEvent) {
-    const ui = getUIText();
+    const lang = usePreferencesStore.getState().language;
+    const ui = getUIText(lang);
     const channel = usePreferencesStore.getState().notifications?.scanComplete ?? "both";
     const title = ui.notifications.scanDoneTitle;
-    const body = ui.notifications.scanDoneBody(evt.targetCount, formatBytes(evt.reclaimBytes));
+    const body = ui.notifications.scanDoneBody(
+      evt.targetCount,
+      formatBytes(evt.reclaimBytes, lang),
+    );
     this.dispatch(channel, title, body, "success");
   }
 
   public notifyCleanComplete(evt: CleanCompletedEvent) {
-    const ui = getUIText();
+    const lang = usePreferencesStore.getState().language;
+    const ui = getUIText(lang);
     const channel = usePreferencesStore.getState().notifications?.cleanComplete ?? "both";
     const dest = evt.destination ?? ui.notifications.destTrash;
     const title = ui.notifications.cleanDoneTitle;
-    const body = ui.notifications.cleanDoneBody(evt.count, dest, formatBytes(evt.bytes));
+    const body = ui.notifications.cleanDoneBody(evt.count, dest, formatBytes(evt.bytes, lang));
     this.dispatch(channel, title, body, "success");
   }
 
   public notifyDiskPressure(evt: DiskPressureEvent) {
-    const ui = getUIText();
+    const lang = usePreferencesStore.getState().language;
+    const ui = getUIText(lang);
     const channel = usePreferencesStore.getState().notifications?.diskPressure ?? "both";
     const title = ui.notifications.diskAlertTitle;
-    const body = ui.notifications.diskAlertBody(evt.drive, Number(evt.percentUsed.toFixed(0)), formatBytes(evt.freeBytes));
+    const body = ui.notifications.diskAlertBody(
+      evt.drive,
+      Number(evt.percentUsed.toFixed(0)),
+      formatBytes(evt.freeBytes, lang),
+    );
     this.dispatch(channel, title, body, "warning");
   }
 
   public notifyProcessLock(evt: ProcessLockEvent) {
-    const ui = getUIText();
+    const lang = usePreferencesStore.getState().language;
+    const ui = getUIText(lang);
     const channel = usePreferencesStore.getState().notifications?.processLock ?? "in_app";
     const title = ui.notifications.lockAlertTitle;
     const body = ui.notifications.lockAlertBody(evt.path);
@@ -162,23 +220,36 @@ class NotificationService {
   }
 
   public notifyAutomationWebhook(evt: WebhookEvent) {
-    const ui = getUIText();
+    const lang = usePreferencesStore.getState().language;
+    const ui = getUIText(lang);
     const channel = usePreferencesStore.getState().notifications?.automationWebhook ?? "both";
     if (evt.status === "success") {
-      this.dispatch(channel, ui.notifications.webhookSuccess, ui.notifications.webhookSuccessBody(evt.url), "success");
+      this.dispatch(
+        channel,
+        ui.notifications.webhookSuccess,
+        ui.notifications.webhookSuccessBody(evt.url),
+        "success",
+      );
     } else {
-      this.dispatch(channel, ui.notifications.webhookError, ui.notifications.webhookErrorBody(evt.error ?? evt.url), "error");
+      this.dispatch(
+        channel,
+        ui.notifications.webhookError,
+        ui.notifications.webhookErrorBody(evt.error ?? evt.url),
+        "error",
+      );
     }
   }
 
   public testDesktopNotification() {
-    const ui = getUIText();
+    const lang = usePreferencesStore.getState().language;
+    const ui = getUIText(lang);
     this.sendDesktop(ui.notifications.testDesktopTitle, ui.notifications.testDesktopBody);
     this.playChime();
   }
 
   public testInAppNotification() {
-    const ui = getUIText();
+    const lang = usePreferencesStore.getState().language;
+    const ui = getUIText(lang);
     useUiStore.getState().showToast(ui.notifications.testInAppToast, "info");
     this.playChime();
   }

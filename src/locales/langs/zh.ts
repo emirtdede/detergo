@@ -102,17 +102,20 @@ export const zh: TranslationSchema = {
     cancel: "取消",
     confirm: "确认",
     recycleTitle: "将所选文件夹移至回收站？",
-    recycleDescription: (count: number, size: string) => `${count} 个 node_modules 文件夹 (${size}) 将被移至回收站。您可以随时恢复它们。`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} 个 node_modules 文件夹 (${size}) 将被移至回收站。您可以随时恢复它们。`,
     recycleConfirmButton: "移至回收站",
     permanentTitle: "永久删除所选文件夹？",
-    permanentDescription: (count: number, size: string) => `${count} 个 node_modules 文件夹 (${size}) 将从磁盘永久删除。此操作无法撤销。`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} 个 node_modules 文件夹 (${size}) 将从磁盘永久删除。此操作无法撤销。`,
     permanentWarning: "警告：此操作不可撤销！文件夹不会被发送到回收站。",
     permanentConfirmButton: "永久删除",
     deletingInProgress: "正在删除...",
     recycleSuccess: (count: number) => `${count} 个文件夹已成功移至回收站。`,
     permanentSuccess: (count: number) => `${count} 个文件夹已成功永久删除。`,
     partialErrorTitle: "部分删除报告",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} 个文件夹已清理，但有 ${errorCount} 个文件夹未能删除。`,
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} 个文件夹已清理，但有 ${errorCount} 个文件夹未能删除。`,
     lockedOrPermissionNote: "某些文件可能被正在运行的进程锁定或需要管理员权限。",
   },
   settings: {

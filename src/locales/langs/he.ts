@@ -102,18 +102,22 @@ export const he: TranslationSchema = {
     cancel: "ביטול",
     confirm: "אישור",
     recycleTitle: "להעביר את התיקיות שנבחרו לסל המיחזור?",
-    recycleDescription: (count: number, size: string) => `${count} תיקיות node_modules (${size}) יועברו לסל המיחזור. תוכל לשחזר אותן בכל עת.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} תיקיות node_modules (${size}) יועברו לסל המיחזור. תוכל לשחזר אותן בכל עת.`,
     recycleConfirmButton: "העבר לסל המיחזור",
     permanentTitle: "למחוק את התיקיות שנבחרו לצמיתות?",
-    permanentDescription: (count: number, size: string) => `${count} תיקיות node_modules (${size}) יימחקו לצמיתות מהדיסק. לא ניתן לבטל פעולה זו.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} תיקיות node_modules (${size}) יימחקו לצמיתות מהדיסק. לא ניתן לבטל פעולה זו.`,
     permanentWarning: "אזהרה: פעולה זו היא בלתי הפיכה! התיקיות לא יישלחו לסל המיחזור.",
     permanentConfirmButton: "מחק לצמיתות",
     deletingInProgress: "מוחק...",
     recycleSuccess: (count: number) => `${count} תיקיות הועברו לסל המיחזור בהצלחה.`,
     permanentSuccess: (count: number) => `${count} תיקיות נמחקו לצמיתות בהצלחה.`,
     partialErrorTitle: "דוח מחיקה חלקית",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} תיקיות נוקו, אך לא ניתן היה למחוק ${errorCount} תיקיות.`,
-    lockedOrPermissionNote: "ייתכן שחלק מהקבצים נעולים על ידי תהליכים פועלים או דורשים הרשאות מנהל.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} תיקיות נוקו, אך לא ניתן היה למחוק ${errorCount} תיקיות.`,
+    lockedOrPermissionNote:
+      "ייתכן שחלק מהקבצים נעולים על ידי תהליכים פועלים או דורשים הרשאות מנהל.",
   },
   settings: {
     title: "הגדרות",

@@ -3,7 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 
-const OUT_DIR = "C:\\Users\\emir\\Desktop\\NODE_CLEANER_PREMIUM_UI_FINAL_REVIEW\\03_SCREENSHOTS_AFTER";
+const OUT_DIR =
+  "C:\\Users\\emir\\Desktop\\NODE_CLEANER_PREMIUM_UI_FINAL_REVIEW\\03_SCREENSHOTS_AFTER";
 if (!fs.existsSync(OUT_DIR)) {
   fs.mkdirSync(OUT_DIR, { recursive: true });
 }
@@ -65,13 +66,15 @@ test("Capture all post-implementation final screenshots", async ({ page }) => {
   await page.setViewportSize({ width: 1180, height: 760 });
   await page.goto("/");
   await page.locator("#primary-navigation").getByRole("button", { name: "History" }).click();
-  
+
   // Click Clear History button to open themed Dialog
   const clearBtn = page.getByRole("button", { name: "Clear History", exact: false });
-  if (await clearBtn.isVisible() && !(await clearBtn.isDisabled())) {
+  if ((await clearBtn.isVisible()) && !(await clearBtn.isDisabled())) {
     await clearBtn.click();
     await page.waitForTimeout(150);
-    const dlgBuf = await page.screenshot({ path: path.join(OUT_DIR, "FINAL_MODAL_CLEAR_HISTORY_DIALOG.png") });
+    const dlgBuf = await page.screenshot({
+      path: path.join(OUT_DIR, "FINAL_MODAL_CLEAR_HISTORY_DIALOG.png"),
+    });
     captured.push({
       view: "MODAL_CLEAR_HISTORY",
       theme: "dark-black",
@@ -90,7 +93,9 @@ test("Capture all post-implementation final screenshots", async ({ page }) => {
   if (await firstDoc.isVisible()) {
     await firstDoc.click();
     await page.waitForTimeout(150);
-    const legalBuf = await page.screenshot({ path: path.join(OUT_DIR, "FINAL_07_LEGAL_EULA_VIEWER.png") });
+    const legalBuf = await page.screenshot({
+      path: path.join(OUT_DIR, "FINAL_07_LEGAL_EULA_VIEWER.png"),
+    });
     captured.push({
       view: "LEGAL_EULA_VIEWER",
       theme: "dark-black",
@@ -102,8 +107,7 @@ test("Capture all post-implementation final screenshots", async ({ page }) => {
 
   fs.writeFileSync(
     path.join(OUT_DIR, "FINAL_SCREENSHOT_MANIFEST.json"),
-    JSON.stringify({ total: captured.length, screenshots: captured }, null, 2)
+    JSON.stringify({ total: captured.length, screenshots: captured }, null, 2),
   );
   console.log(`Successfully captured ${captured.length} final post-implementation screenshots.`);
 });
-

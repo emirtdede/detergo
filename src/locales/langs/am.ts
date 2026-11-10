@@ -102,17 +102,20 @@ export const am: TranslationSchema = {
     cancel: "ይቅር",
     confirm: "አረጋግጥ",
     recycleTitle: "የተመረጡትን አቃፊዎች ወደ ሪሳይክል ቢን ማንቀሳቀስ ይፈልጋሉ?",
-    recycleDescription: (count: number, size: string) => `${count} የ node_modules አቃፊዎች (${size}) ወደ ሪሳይክል ቢን ይንቀሳቀሳሉ። በማንኛውም ጊዜ መልሰው ማግኘት ይችላሉ።`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} የ node_modules አቃፊዎች (${size}) ወደ ሪሳይክል ቢን ይንቀሳቀሳሉ። በማንኛውም ጊዜ መልሰው ማግኘት ይችላሉ።`,
     recycleConfirmButton: "ወደ ሪሳይክል ቢን አንቀሳቅስ",
     permanentTitle: "የተመረጡትን አቃፊዎች በቋሚነት መሰረዝ ይፈልጋሉ?",
-    permanentDescription: (count: number, size: string) => `${count} የ node_modules አቃፊዎች (${size}) ከዲስክ በቋሚነት ይሰረዛሉ። ይህ እርምጃ ሊቀለበስ አይችልም።`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} የ node_modules አቃፊዎች (${size}) ከዲስክ በቋሚነት ይሰረዛሉ። ይህ እርምጃ ሊቀለበስ አይችልም።`,
     permanentWarning: "ማስጠንቀቂያ፡ ይህ እርምጃ ቋሚ ነው! አቃፊዎች ወደ ሪሳይክል ቢን አይላኩም።",
     permanentConfirmButton: "በቋሚነት ሰርዝ",
     deletingInProgress: "እየሰረዘ ነው...",
     recycleSuccess: (count: number) => `${count} አቃፊዎች በተሳካ ሁኔታ ወደ ሪሳይክል ቢን ተንቀሳቅሰዋል።`,
     permanentSuccess: (count: number) => `${count} አቃፊዎች በተሳካ ሁኔታ በቋሚነት ተሰርዘዋል።`,
     partialErrorTitle: "ከፊል ስረዛ ሪፖርት",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} አቃፊዎች ተጠርገዋል፣ ነገር ግን ${errorCount} አቃፊዎችን መሰረዝ አልተቻለም።`,
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} አቃፊዎች ተጠርገዋል፣ ነገር ግን ${errorCount} አቃፊዎችን መሰረዝ አልተቻለም።`,
     lockedOrPermissionNote: "አንዳንድ ፋይሎች በሚሰሩ ሂደቶች ተቆልፈው ሊሆኑ ይችላሉ ወይም የአስተዳዳሪ ፈቃዶችን ይፈልጋሉ።",
   },
   settings: {

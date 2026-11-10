@@ -183,10 +183,7 @@ fn found_markers(dir: &Path, markers: &[String]) -> Vec<String> {
         .collect()
 }
 
-fn find_workspace_root(
-    start: &Path,
-    boundary: Option<&Path>,
-) -> (Option<PathBuf>, Option<String>) {
+fn find_workspace_root(start: &Path, boundary: Option<&Path>) -> (Option<PathBuf>, Option<String>) {
     let mut current = Some(start);
     let mut depth = 0;
     while let Some(dir) = current {
@@ -324,7 +321,12 @@ fn read_pyproject_name(dir: &Path) -> Option<String> {
     let name = value
         .get("project")
         .and_then(|p| p.get("name"))
-        .or_else(|| value.get("tool").and_then(|t| t.get("poetry")).and_then(|p| p.get("name")))
+        .or_else(|| {
+            value
+                .get("tool")
+                .and_then(|t| t.get("poetry"))
+                .and_then(|p| p.get("name"))
+        })
         .and_then(|n| n.as_str())?
         .trim();
     if name.is_empty() {

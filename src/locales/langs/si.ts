@@ -102,18 +102,22 @@ export const si: TranslationSchema = {
     cancel: "අවලංගු කරන්න",
     confirm: "තහවුරු කරන්න",
     recycleTitle: "තෝරාගත් ෆෝල්ඩර ප්‍රතිචක්‍රීකරණ බඳුනට දමන්නද?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules ෆෝල්ඩර (${size}) ප්‍රතිචක්‍රීකරණ බඳුනට දමනු ඇත. ඔබට ඕනෑම වේලාවක ඒවා නැවත ලබාගත හැක.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules ෆෝල්ඩර (${size}) ප්‍රතිචක්‍රීකරණ බඳුනට දමනු ඇත. ඔබට ඕනෑම වේලාවක ඒවා නැවත ලබාගත හැක.`,
     recycleConfirmButton: "ප්‍රතිචක්‍රීකරණ බඳුනට දමන්න",
     permanentTitle: "තෝරාගත් ෆෝල්ඩර ස්ථිරවම මකා දමන්නද?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules ෆෝල්ඩර (${size}) තැටියෙන් ස්ථිරවම මකා දැමෙනු ඇත. මෙම ක්‍රියාව ආපසු හැරවිය නොහැක.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules ෆෝල්ඩර (${size}) තැටියෙන් ස්ථිරවම මකා දැමෙනු ඇත. මෙම ක්‍රියාව ආපසු හැරවිය නොහැක.`,
     permanentWarning: "අවවාදයයි: මෙම ක්‍රියාව ස්ථිරයි! ෆෝල්ඩර ප්‍රතිචක්‍රීකරණ බඳුනට යවනු නොලැබේ.",
     permanentConfirmButton: "ස්ථිරවම මකන්න",
     deletingInProgress: "මකා දැමීම සිදුවෙමින් පවතී...",
     recycleSuccess: (count: number) => `${count} ෆෝල්ඩර සාර්ථකව ප්‍රතිචක්‍රීකරණ බඳුනට දමන ලදී.`,
     permanentSuccess: (count: number) => `${count} ෆෝල්ඩර සාර්ථකව ස්ථිරවම මකා දමන ලදී.`,
     partialErrorTitle: "අර්ධ මකාදැමීමේ වාර්තාව",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} ෆෝල්ඩර පිරිසිදු කරන ලදී, නමුත් ෆෝල්ඩර ${errorCount}ක් මකා දැමීමට නොහැකි විය.`,
-    lockedOrPermissionNote: "සමහර ගොනු ධාවනය වන ක්‍රියාවලි මඟින් අගුලු දමා තිබිය හැක හෝ පරිපාලක අවසර අවශ්‍ය විය හැක.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} ෆෝල්ඩර පිරිසිදු කරන ලදී, නමුත් ෆෝල්ඩර ${errorCount}ක් මකා දැමීමට නොහැකි විය.`,
+    lockedOrPermissionNote:
+      "සමහර ගොනු ධාවනය වන ක්‍රියාවලි මඟින් අගුලු දමා තිබිය හැක හෝ පරිපාලක අවසර අවශ්‍ය විය හැක.",
   },
   settings: {
     title: "සැකසුම්",
@@ -155,7 +159,8 @@ export const si: TranslationSchema = {
     version: "අනුවාදය",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "ප්‍රකාශක: Vellium • © 2026 Vellium. සියලුම හිමිකම් ඇවිරිණි.",
-    privacyNote: "සියලුම ස්කෑන් කිරීම් සහ මකාදැමීම් 100% ක් ඔබගේ පරිගණකයේ දේශීයව සිදු වේ. ටෙලිමෙට්‍රි නොමැත.",
+    privacyNote:
+      "සියලුම ස්කෑන් කිරීම් සහ මකාදැමීම් 100% ක් ඔබගේ පරිගණකයේ දේශීයව සිදු වේ. ටෙලිමෙට්‍රි නොමැත.",
     close: "වසන්න",
   },
   errors: {

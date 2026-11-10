@@ -45,7 +45,8 @@ export const sq: TranslationSchema = {
   },
   scan: {
     idleTitle: "Riktheni Hapësirën Tuaj të Diskut",
-    idleSubtitle: "Gjeni dhe pastroni në mënyrë të sigurt dosjet node_modules në të gjitha projektet tuaja.",
+    idleSubtitle:
+      "Gjeni dhe pastroni në mënyrë të sigurt dosjet node_modules në të gjitha projektet tuaja.",
     selectFolderFirst: "Zgjidhni një dosje më lart për të filluar skanimin.",
     discovering: "Po zbulohen projektet...",
     measuring: "Po llogariten madhësitë...",
@@ -102,18 +103,24 @@ export const sq: TranslationSchema = {
     cancel: "Anulo",
     confirm: "Konfirmo",
     recycleTitle: "Të zhvendosen dosjet e zgjedhura në Koshin e Riciklimit?",
-    recycleDescription: (count: number, size: string) => `${count} dosje node_modules (${size}) do të zhvendosen në Koshin e Riciklimit. Mund t'i rikthini në çdo kohë.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} dosje node_modules (${size}) do të zhvendosen në Koshin e Riciklimit. Mund t'i rikthini në çdo kohë.`,
     recycleConfirmButton: "Zhvendos në Kosh",
     permanentTitle: "Të fshihen përgjithmonë dosjet e zgjedhura?",
-    permanentDescription: (count: number, size: string) => `${count} dosje node_modules (${size}) do të fshihen përgjithmonë nga disku. Ky veprim nuk mund të zhbëhet.`,
-    permanentWarning: "PARALAJMËRIM: Ky veprim është i përhershëm! Dosjet nuk do të dërgohen në Kosh.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} dosje node_modules (${size}) do të fshihen përgjithmonë nga disku. Ky veprim nuk mund të zhbëhet.`,
+    permanentWarning:
+      "PARALAJMËRIM: Ky veprim është i përhershëm! Dosjet nuk do të dërgohen në Kosh.",
     permanentConfirmButton: "Fshi Përgjithmonë",
     deletingInProgress: "Fshirja në vazhdim...",
-    recycleSuccess: (count: number) => `${count} dosje u zhvendosën me sukses në Koshin e Riciklimit.`,
+    recycleSuccess: (count: number) =>
+      `${count} dosje u zhvendosën me sukses në Koshin e Riciklimit.`,
     permanentSuccess: (count: number) => `${count} dosje u fshinë përgjithmonë me sukses.`,
     partialErrorTitle: "Raporti i Fshirjes së Pjesshme",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} dosje u pastruan, por ${errorCount} dosje nuk mund të fshiheshin.`,
-    lockedOrPermissionNote: "Disa skedarë mund të jenë të bllokuar nga procese aktive ose kërkojnë leje administratori.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} dosje u pastruan, por ${errorCount} dosje nuk mund të fshiheshin.`,
+    lockedOrPermissionNote:
+      "Disa skedarë mund të jenë të bllokuar nga procese aktive ose kërkojnë leje administratori.",
   },
   settings: {
     title: "Cilësimet",
@@ -155,7 +162,8 @@ export const sq: TranslationSchema = {
     version: "Versioni",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Botuesi: Vellium • © 2026 Vellium. Të gjitha të drejtat të rezervuara.",
-    privacyNote: "Të gjitha skanimet dhe fshirjet ndodhin 100% lokalisht në kompjuterin tuaj. Pa telemetri.",
+    privacyNote:
+      "Të gjitha skanimet dhe fshirjet ndodhin 100% lokalisht në kompjuterin tuaj. Pa telemetri.",
     close: "Mbyll",
   },
   errors: {

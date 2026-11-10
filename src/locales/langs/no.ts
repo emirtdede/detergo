@@ -102,18 +102,23 @@ export const no: TranslationSchema = {
     cancel: "Avbryt",
     confirm: "Bekreft",
     recycleTitle: "Flytte Valgte Mapper til Papirkurven?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules-mapper (${size}) flyttes til Papirkurven. Du kan gjenopprette dem når som helst.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules-mapper (${size}) flyttes til Papirkurven. Du kan gjenopprette dem når som helst.`,
     recycleConfirmButton: "Flytt til Papirkurv",
     permanentTitle: "Slette Valgte Mapper Permanent?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules-mapper (${size}) slettes permanent fra disken. Dette kan ikke angres.`,
-    permanentWarning: "ADVARSEL: Denne handlingen er permanent! Mapper sendes ikke til Papirkurven.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules-mapper (${size}) slettes permanent fra disken. Dette kan ikke angres.`,
+    permanentWarning:
+      "ADVARSEL: Denne handlingen er permanent! Mapper sendes ikke til Papirkurven.",
     permanentConfirmButton: "Slett Permanent",
     deletingInProgress: "Sletting pågår...",
     recycleSuccess: (count: number) => `${count} mapper flyttet til Papirkurven med suksess.`,
     permanentSuccess: (count: number) => `${count} mapper slettet permanent med suksess.`,
     partialErrorTitle: "Rapport om Delvis Sletting",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} mapper renset, men ${errorCount} mapper kunne ikke slettes.`,
-    lockedOrPermissionNote: "Noen filer kan være låst av prosesser som kjører eller kreve administratorrettigheter.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} mapper renset, men ${errorCount} mapper kunne ikke slettes.`,
+    lockedOrPermissionNote:
+      "Noen filer kan være låst av prosesser som kjører eller kreve administratorrettigheter.",
   },
   settings: {
     title: "Innstillinger",
@@ -155,7 +160,8 @@ export const no: TranslationSchema = {
     version: "Versjon",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Utgiver: Vellium • © 2026 Vellium. Alle rettigheter forbeholdt.",
-    privacyNote: "Alle skanninger og slettinger skjer 100 % lokalt på datamaskinen din. Ingen telemetri.",
+    privacyNote:
+      "Alle skanninger og slettinger skjer 100 % lokalt på datamaskinen din. Ingen telemetri.",
     close: "Lukk",
   },
   errors: {

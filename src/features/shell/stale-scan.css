@@ -6,11 +6,7 @@
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--accent-subtle);
   border-radius: var(--radius-md);
-  background: linear-gradient(
-    135deg,
-    var(--accent-subtle),
-    var(--surface) 70%
-  );
+  background: linear-gradient(135deg, var(--accent-subtle), var(--surface) 70%);
   box-shadow: var(--shadow-sm);
 }
 

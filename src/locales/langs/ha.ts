@@ -102,18 +102,24 @@ export const ha: TranslationSchema = {
     cancel: "Soke",
     confirm: "Tabbatar",
     recycleTitle: "Matsar da Jakunkunan da aka Zaɓa zuwa Kwandon Shara?",
-    recycleDescription: (count: number, size: string) => `${count} jakunkunan node_modules (${size}) za a matsar da su zuwa Kwandon Shara. Kuna iya dawo da su a kowane lokaci.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} jakunkunan node_modules (${size}) za a matsar da su zuwa Kwandon Shara. Kuna iya dawo da su a kowane lokaci.`,
     recycleConfirmButton: "Matsar zuwa Kwandon Shara",
     permanentTitle: "Goge Jakunkunan da aka Zaɓa Gabaɗaya?",
-    permanentDescription: (count: number, size: string) => `${count} jakunkunan node_modules (${size}) za a goge su gabaɗaya daga faifai. Wannan aikin ba za a iya soke shi ba.`,
-    permanentWarning: "GARGADI: Wannan aikin na dindindin ne! Ba za a tura jakunkuna zuwa Kwandon Shara ba.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} jakunkunan node_modules (${size}) za a goge su gabaɗaya daga faifai. Wannan aikin ba za a iya soke shi ba.`,
+    permanentWarning:
+      "GARGADI: Wannan aikin na dindindin ne! Ba za a tura jakunkuna zuwa Kwandon Shara ba.",
     permanentConfirmButton: "Goge Gabaɗaya",
     deletingInProgress: "Ana kan gogewa...",
-    recycleSuccess: (count: number) => `${count} jakunkuna an yi nasarar matsar da su zuwa Kwandon Shara.`,
+    recycleSuccess: (count: number) =>
+      `${count} jakunkuna an yi nasarar matsar da su zuwa Kwandon Shara.`,
     permanentSuccess: (count: number) => `${count} jakunkuna an yi nasarar goge su gabaɗaya.`,
     partialErrorTitle: "Rahoton Goge Sashe",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} jakunkuna an share su, amma ba a iya goge jakunkuna ${errorCount} ba.`,
-    lockedOrPermissionNote: "Wasu fayiloli na iya kasancewa a kulle ta hanyar ayyukan da ke gudana ko kuma suna buƙatar izinin mai gudanarwa.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} jakunkuna an share su, amma ba a iya goge jakunkuna ${errorCount} ba.`,
+    lockedOrPermissionNote:
+      "Wasu fayiloli na iya kasancewa a kulle ta hanyar ayyukan da ke gudana ko kuma suna buƙatar izinin mai gudanarwa.",
   },
   settings: {
     title: "Saituna",
@@ -155,7 +161,8 @@ export const ha: TranslationSchema = {
     version: "Sigar",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Mawallafi: Vellium • © 2026 Vellium. An kiyaye duk haƙƙoƙi.",
-    privacyNote: "Duk bincike da gogewa suna faruwa 100% a cikin kwamfutarka. Babu bayanan da ake aikawa waje.",
+    privacyNote:
+      "Duk bincike da gogewa suna faruwa 100% a cikin kwamfutarka. Babu bayanan da ake aikawa waje.",
     close: "Rufe",
   },
   errors: {

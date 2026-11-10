@@ -9,6 +9,7 @@ import {
   ScanSummary,
 } from "@/types";
 import { isTauriEnvironment, scannerApi } from "@/lib/tauri/scanner-api";
+import { log } from "@/lib/logging";
 
 export type ScanStatus =
   | "idle"
@@ -20,6 +21,7 @@ export type ScanStatus =
   | "failed";
 
 const LAST_SCAN_SCHEMA_VERSION = 1;
+export const LAST_SCAN_SCHEMA_SUPPORTED = LAST_SCAN_SCHEMA_VERSION;
 const PERSIST_DEBOUNCE_MS = 600;
 
 interface ScanState {
@@ -70,11 +72,7 @@ function applyUpdate(item: CleanupItem, update: MeasurementUpdate): CleanupItem 
     allocatedBytes: update.allocatedBytes,
     estimatedReclaimBytes: update.estimatedReclaimBytes,
     status:
-      update.status === "error"
-        ? "error"
-        : item.status === "blocked"
-          ? "blocked"
-          : update.status,
+      update.status === "error" ? "error" : item.status === "blocked" ? "blocked" : update.status,
   };
 }
 
@@ -105,28 +103,38 @@ function toSnapshot(state: ScanState): LastScanSnapshot | null {
 }
 
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
+let persistChain: Promise<void> = Promise.resolve();
 
 /**
- * Writes the current results as the "last scan". Errors are intentionally
- * silent: a failed convenience cache must never interrupt a scan or a cleanup.
+ * Writes the current results as the "last scan". Errors are logged but never
+ * surfaced: a failed convenience cache must not interrupt a scan or a cleanup.
  */
 export async function persistLastScanNow(): Promise<void> {
   const snapshot = toSnapshot(useScanStore.getState());
   if (!snapshot) return;
-  try {
-    await scannerApi.saveLastScan(snapshot);
-    useScanStore.setState({ lastSavedAt: snapshot.savedAt });
-  } catch (err) {
-    console.warn("Last scan could not be saved:", err);
+  persistChain = persistChain.then(async () => {
+    try {
+      await scannerApi.saveLastScan(snapshot);
+      useScanStore.setState({ lastSavedAt: snapshot.savedAt });
+    } catch (err) {
+      log.warn("Last scan could not be saved", err);
+    }
+  });
+  return persistChain;
+}
+
+/** Cancels a pending debounce so a reset cannot resurrect deleted results. */
+export function cancelScheduledPersist(): void {
+  if (persistTimer !== null) {
+    clearTimeout(persistTimer);
+    persistTimer = null;
   }
 }
 
 /** Coalesces rapid item mutations (cleanup deletes many rows at once). */
 export function scheduleLastScanPersist(): void {
   if (!isTauriEnvironment()) return;
-  if (persistTimer !== null) {
-    clearTimeout(persistTimer);
-  }
+  cancelScheduledPersist();
   persistTimer = setTimeout(() => {
     persistTimer = null;
     void persistLastScanNow();
@@ -180,9 +188,7 @@ export const useScanStore = create<ScanState>((set, get) => ({
         restored: false,
         lastSavedAt: null,
         previousSummary: hasPrevious ? state.summary : state.previousSummary,
-        previousCleanableBytes: hasPrevious
-          ? cleanableBytes(state)
-          : state.previousCleanableBytes,
+        previousCleanableBytes: hasPrevious ? cleanableBytes(state) : state.previousCleanableBytes,
         previousItemCount: hasPrevious ? state.itemIds.length : state.previousItemCount,
         staleBannerDismissed: false,
         staleAcknowledged: false,
@@ -191,6 +197,15 @@ export const useScanStore = create<ScanState>((set, get) => ({
 
   restoreScan: (snapshot) =>
     set(() => {
+      if (snapshot.schemaVersion !== LAST_SCAN_SCHEMA_VERSION) {
+        // Never load a snapshot produced by another schema; the caller drops
+        // the incompatible file and starts from an empty state instead.
+        log.warn(
+          `Ignoring last scan with unsupported schema ${snapshot.schemaVersion} ` +
+            `(expected ${LAST_SCAN_SCHEMA_VERSION})`,
+        );
+        return {};
+      }
       const itemsById: Record<string, CleanupItem> = {};
       const itemIds: string[] = [];
       for (const item of snapshot.items) {
@@ -309,7 +324,10 @@ export const useScanStore = create<ScanState>((set, get) => ({
 
   acknowledgeStale: () => set({ staleAcknowledged: true, staleBannerDismissed: true }),
 
-  resetScan: () =>
+  resetScan: () => {
+    // A debounced write scheduled before the reset must not persist the old
+    // scan after the user asked for a clean slate.
+    cancelScheduledPersist();
     set({
       scanId: null,
       status: "idle",
@@ -326,5 +344,6 @@ export const useScanStore = create<ScanState>((set, get) => ({
       lastSavedAt: null,
       staleBannerDismissed: false,
       staleAcknowledged: false,
-    }),
+    });
+  },
 }));

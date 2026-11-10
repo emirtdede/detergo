@@ -102,18 +102,22 @@ export const cs: TranslationSchema = {
     cancel: "Zrušit",
     confirm: "Potvrdit",
     recycleTitle: "Přesunout Vybrané Složky do Koše?",
-    recycleDescription: (count: number, size: string) => `${count} složek node_modules (${size}) bude přesunuto do Koše. Kdykoli je můžete obnovit.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} složek node_modules (${size}) bude přesunuto do Koše. Kdykoli je můžete obnovit.`,
     recycleConfirmButton: "Přesunout do Koše",
     permanentTitle: "Trvale Smazat Vybrané Složky?",
-    permanentDescription: (count: number, size: string) => `${count} složek node_modules (${size}) bude trvale smazáno z disku. Tuto akci nelze vrátit zpět.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} složek node_modules (${size}) bude trvale smazáno z disku. Tuto akci nelze vrátit zpět.`,
     permanentWarning: "VAROVÁNÍ: Tato akce je trvalá! Složky nebudou odeslány do Koše.",
     permanentConfirmButton: "Trvale Smazat",
     deletingInProgress: "Probíhá mazání...",
     recycleSuccess: (count: number) => `${count} složek úspěšně přesunuto do Koše.`,
     permanentSuccess: (count: number) => `${count} složek úspěšně trvale smazáno.`,
     partialErrorTitle: "Zpráva o Částečném Smazání",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} složek vyčištěno, ale ${errorCount} složek se nepodařilo smazat.`,
-    lockedOrPermissionNote: "Některé soubory mohou být uzamčeny běžícími procesy nebo vyžadovat oprávnění správce.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} složek vyčištěno, ale ${errorCount} složek se nepodařilo smazat.`,
+    lockedOrPermissionNote:
+      "Některé soubory mohou být uzamčeny běžícími procesy nebo vyžadovat oprávnění správce.",
   },
   settings: {
     title: "Nastavení",
@@ -155,7 +159,8 @@ export const cs: TranslationSchema = {
     version: "Verze",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Vydavatel: Vellium • © 2026 Vellium. Všechna práva vyhrazena.",
-    privacyNote: "Veškeré skenování a mazání probíhá 100% lokálně na vašem počítači. Žádná telemetrie.",
+    privacyNote:
+      "Veškeré skenování a mazání probíhá 100% lokálně na vašem počítači. Žádná telemetrie.",
     close: "Zavřít",
   },
   errors: {

@@ -45,7 +45,8 @@ export const az: TranslationSchema = {
   },
   scan: {
     idleTitle: "Disk Sahənizi Geri Qazanın",
-    idleSubtitle: "Bütün layihələrinizdəki node_modules qovluqlarını təhlükəsiz tapın və təmizləyin.",
+    idleSubtitle:
+      "Bütün layihələrinizdəki node_modules qovluqlarını təhlükəsiz tapın və təmizləyin.",
     selectFolderFirst: "Skan etməyə başlamaq üçün yuxarıdan bir qovluq seçin.",
     discovering: "Layihələr aşkar edilir...",
     measuring: "Ölçülər hesablanır...",
@@ -102,18 +103,23 @@ export const az: TranslationSchema = {
     cancel: "Ləğv et",
     confirm: "Təsdiq et",
     recycleTitle: "Seçilmiş Qovluqlar Zibil Qutusuna Daşınsın?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules qovluğu (${size}) Zibil Qutusuna daşınacaq. İstənilən vaxt onları bərpa edə bilərsiniz.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules qovluğu (${size}) Zibil Qutusuna daşınacaq. İstənilən vaxt onları bərpa edə bilərsiniz.`,
     recycleConfirmButton: "Zibil Qutusuna Daşı",
     permanentTitle: "Seçilmiş Qovluqlar Həmişəlik Silinsin?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules qovluğu (${size}) diskdən tamamilə və geri qaytarıla bilməyən şəkildə silinəcək.`,
-    permanentWarning: "DİQQƏT: Bu əməliyyat geri qaytarıla bilməz! Qovluqlar Zibil Qutusuna göndərilməyəcək.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules qovluğu (${size}) diskdən tamamilə və geri qaytarıla bilməyən şəkildə silinəcək.`,
+    permanentWarning:
+      "DİQQƏT: Bu əməliyyat geri qaytarıla bilməz! Qovluqlar Zibil Qutusuna göndərilməyəcək.",
     permanentConfirmButton: "Həmişəlik Sil",
     deletingInProgress: "Silinir...",
     recycleSuccess: (count: number) => `${count} qovluq uğurla Zibil Qutusuna göndərildi.`,
     permanentSuccess: (count: number) => `${count} qovluq uğurla həmişəlik silindi.`,
     partialErrorTitle: "Qismən Silinmə Hesabatı",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} qovluq təmizləndi, lakin ${errorCount} qovluq silinə bilmədi.`,
-    lockedOrPermissionNote: "Bəzi fayllar işləyən proseslər tərəfindən kilidlənmiş ola bilər və ya inzibatçı icazələri tələb edə bilər.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} qovluq təmizləndi, lakin ${errorCount} qovluq silinə bilmədi.`,
+    lockedOrPermissionNote:
+      "Bəzi fayllar işləyən proseslər tərəfindən kilidlənmiş ola bilər və ya inzibatçı icazələri tələb edə bilər.",
   },
   settings: {
     title: "Tənzimləmələr",
@@ -155,7 +161,8 @@ export const az: TranslationSchema = {
     version: "Versiya",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Nəşriyyatçı: Vellium • © 2026 Vellium. Bütün hüquqlar qorunur.",
-    privacyNote: "Bütün skan və silinmə əməliyyatları 100% lokal olaraq kompüterinizdə baş verir. Sıfır telemetriya.",
+    privacyNote:
+      "Bütün skan və silinmə əməliyyatları 100% lokal olaraq kompüterinizdə baş verir. Sıfır telemetriya.",
     close: "Bağla",
   },
   errors: {

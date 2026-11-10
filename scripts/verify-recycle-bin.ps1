@@ -60,8 +60,34 @@ Write-Host "Existing recycled items: $($before.Count)"
 
 Write-Host "`nRunning the ignored Rust round-trip test (marker: $marker)..."
 $env:NC_TRASH_MARKER = $marker
-& cargo test --manifest-path (Join-Path $repoRoot "src-tauri\Cargo.toml") --offline --test recycle_bin_roundtrip -- --ignored --nocapture
-$testExit = $LASTEXITCODE
+# The old `trash` crate could hang behind a shell dialog. The round-trip is
+# bounded by a watchdog so a hang fails the verification instead of blocking
+# the terminal forever.
+$logOut = Join-Path $env:TEMP ("nc-trash-probe-" + [guid]::NewGuid().ToString("N") + ".out.log")
+$logErr = Join-Path $env:TEMP ("nc-trash-probe-" + [guid]::NewGuid().ToString("N") + ".err.log")
+$watchdogSeconds = 180
+$manifestPath = Join-Path $repoRoot "src-tauri\Cargo.toml"
+$process = Start-Process -FilePath "cargo" `
+    -ArgumentList @("test", "--manifest-path", "`"$manifestPath`"", "--offline", "--test", "recycle_bin_roundtrip", "--", "--ignored", "--nocapture") `
+    -NoNewWindow -PassThru -RedirectStandardOutput $logOut -RedirectStandardError $logErr
+
+if (-not $process.WaitForExit($watchdogSeconds * 1000)) {
+    Write-Warning "Round-trip did not finish within $watchdogSeconds s; terminating the hung process."
+    try { Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue } catch {}
+    Get-Content -LiteralPath $logOut -ErrorAction SilentlyContinue
+    Get-Content -LiteralPath $logErr -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $logOut, $logErr -Force -ErrorAction SilentlyContinue
+    Write-Error "Recycle Bin round-trip hung; a blocking shell operation is a defect."
+    exit 1
+}
+
+Get-Content -LiteralPath $logOut -ErrorAction SilentlyContinue
+Get-Content -LiteralPath $logErr -ErrorAction SilentlyContinue
+$process.WaitForExit()
+$process.Refresh()
+$testExit = $process.ExitCode
+if ($null -eq $testExit) { $testExit = 0 }
+Remove-Item -LiteralPath $logOut, $logErr -Force -ErrorAction SilentlyContinue
 if ($testExit -ne 0) {
     Write-Error "Rust round-trip test failed with exit code $testExit"
     exit $testExit

@@ -11,22 +11,17 @@ use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 
-use node_cleaner_lib::audit::{
-    AuditEntry, AuditRecord, AuditRepository,
-};
+use node_cleaner_lib::audit::{AuditEntry, AuditRecord, AuditRepository};
 use node_cleaner_lib::catalog::CatalogIndex;
-use node_cleaner_lib::cleanup::{build_plan, DeleteMode};
 use node_cleaner_lib::cleanup::CleanupPolicy;
+use node_cleaner_lib::cleanup::{build_plan, DeleteMode};
 use node_cleaner_lib::scanner::cancellation::CancellationToken;
 use node_cleaner_lib::scanner::models::{ScanRequest, ScanScope};
 use node_cleaner_lib::scanner::run_scan;
 use node_cleaner_lib::scanner::ScanRegistry;
 
 fn canary() -> String {
-    format!(
-        "SK-FAKE-LEAK-CANARY-{}",
-        uuid::Uuid::new_v4().simple()
-    )
+    format!("SK-FAKE-LEAK-CANARY-{}", uuid::Uuid::new_v4().simple())
 }
 
 fn write_project(root: &Path, secret: &str) {
@@ -53,7 +48,8 @@ fn scan_and_audit_never_persist_file_contents_or_secrets() {
     let root = std::env::temp_dir().join(format!("nc-leak-{}", uuid::Uuid::new_v4().simple()));
     write_project(&root, &secret);
 
-    let audit_dir = std::env::temp_dir().join(format!("nc-audit-{}", uuid::Uuid::new_v4().simple()));
+    let audit_dir =
+        std::env::temp_dir().join(format!("nc-audit-{}", uuid::Uuid::new_v4().simple()));
     let repo = AuditRepository::with_paths(
         audit_dir.join("history.jsonl"),
         audit_dir.join("snapshots.jsonl"),
@@ -93,15 +89,24 @@ fn scan_and_audit_never_persist_file_contents_or_secrets() {
             |_| {},
         ))
         .expect("scan failed");
-    assert!(summary.total_entries >= 1, "fixture must produce a candidate");
+    assert!(
+        summary.total_entries >= 1,
+        "fixture must produce a candidate"
+    );
 
     // Build a plan for whatever the scan found, then persist a real audit record
     // exactly as `execute_cleanup` would.
     let handle = session.lock().unwrap();
     let target_ids: Vec<String> = handle.targets.keys().cloned().collect();
     assert!(!target_ids.is_empty(), "expected a stored target");
-    let plan = build_plan(&handle, &target_ids, DeleteMode::RecycleBin, &catalog, &policy)
-        .expect("plan");
+    let plan = build_plan(
+        &handle,
+        &target_ids,
+        DeleteMode::RecycleBin,
+        &catalog,
+        &policy,
+    )
+    .expect("plan");
     let record = AuditRecord {
         id: "h-test".to_string(),
         timestamp: "2026-11-01T00:00:00Z".to_string(),
@@ -126,6 +131,9 @@ fn scan_and_audit_never_persist_file_contents_or_secrets() {
                 bytes: item.logical_bytes,
             })
             .collect(),
+        cancelled: false,
+        processed_count: 1,
+        skipped_count: 0,
     };
     drop(handle);
 
@@ -160,7 +168,10 @@ fn scan_and_audit_never_persist_file_contents_or_secrets() {
         );
         checked += 1;
     }
-    assert!(checked >= 2, "expected history and snapshots files to exist");
+    assert!(
+        checked >= 2,
+        "expected history and snapshots files to exist"
+    );
 
     // The record itself must still be usable: the secret-free path is stored.
     let records = repo.list_records(10);

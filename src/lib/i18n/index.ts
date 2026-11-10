@@ -3,33 +3,20 @@ import { SupportedLanguage } from "@/types";
 import { DICTIONARIES } from "@/locales/dictionaries";
 import { TranslationSchema, LegalSchema, FullTranslationSchema } from "@/locales/types";
 import { LANGUAGES_LIST, detectSystemLanguage, isRtlLanguage } from "@/locales/languages";
-import trDict from "@/locales/langs/tr";
-import enDict from "@/locales/langs/en";
 
 export { LANGUAGES_LIST, detectSystemLanguage, isRtlLanguage };
 export type { TranslationSchema, LegalSchema, FullTranslationSchema };
 
-export function getTranslation(lang?: SupportedLanguage): FullTranslationSchema {
+export function getTranslation(lang?: SupportedLanguage): TranslationSchema {
   const currentLang = lang || usePreferencesStore.getState().language || "en";
-  const dict = DICTIONARIES[currentLang] || DICTIONARIES["en"] || DICTIONARIES["tr"];
-  const legal = (dict.legal || (currentLang === "tr" ? trDict.legal : enDict.legal)) as LegalSchema;
-  return {
-    ...dict,
-    legal,
-  };
+  return DICTIONARIES[currentLang] || DICTIONARIES["en"] || DICTIONARIES["tr"];
 }
 
 export function useI18n() {
   const language = usePreferencesStore((s) => s.language) || "en";
   const setLanguage = usePreferencesStore((s) => s.setLanguage);
   const isRtl = isRtlLanguage(language);
-  const dict = DICTIONARIES[language] || DICTIONARIES["en"] || DICTIONARIES["tr"];
-  const legal = (dict.legal || (language === "tr" ? trDict.legal : enDict.legal)) as LegalSchema;
-
-  const t: FullTranslationSchema = {
-    ...dict,
-    legal,
-  };
+  const t: TranslationSchema = DICTIONARIES[language] || DICTIONARIES["en"] || DICTIONARIES["tr"];
 
   return {
     language,
@@ -53,7 +40,8 @@ export function createTranslationProxy(): TranslationSchema {
         return new Proxy(section, {
           get(_secTarget, propKey: string) {
             const currentLang = usePreferencesStore.getState().language || "en";
-            const currentDict = DICTIONARIES[currentLang] || DICTIONARIES["en"] || DICTIONARIES["tr"];
+            const currentDict =
+              DICTIONARIES[currentLang] || DICTIONARIES["en"] || DICTIONARIES["tr"];
             const currentSection = (currentDict as any)[sectionKey] || {};
             return currentSection[propKey] ?? (dict as any)[sectionKey]?.[propKey];
           },

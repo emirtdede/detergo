@@ -181,7 +181,7 @@ Bu model **node_modules için iyi bir başlangıç**, fakat genel amaçlı temiz
 - `node_modules`, `.npm`, `.pnpm-store`, `.yarn/cache`, `.next`, `.nuxt`, `.angular`, `.svelte-kit`, `.vite`, `.nx`, `.turbo`, `.parcel-cache`, `.eslintcache`, `coverage`, `.nyc_output`, `storybook-static`, `.docusaurus` gibi geniş bir liste.
 - Python için `__pycache__`, `.pytest_cache`, `.mypy_cache`, `.ruff_cache`, `.tox`, `.venv`, `venv`, `htmlcov`.
 - Rust için `target`; Java için `target`, `.gradle`, `out`; .NET için `obj`, `TestResults`, `.vs`; Unity için `Library`, `Temp`, `Obj`.
-- Global `node_modules` klasörlerinin bazı uygulamaları bozabileceğini ⚠️ ile işaretliyor.
+- Global `node_modules` klasörlerinin bazı uygulamaları bozabileceğini [DİKKAT] uyarısı ile işaretliyor.
 
 **Çıkarım:** Kategori taksonomisi hazır alınabilir; ancak npkill'in “ad eşleşmesi” yaklaşımı generic isimlerde (`build`, `out`, `target`, `Library`, `Temp`) yanlış pozitif üretir. Node Cleaner'ın kanıt katmanıyla bunu iyileştirmesi gerekir.
 
@@ -259,10 +259,10 @@ Aşağıdaki tablo, “silmek güvenli mi?” sorusunun teknik dayanağını gö
 
 | Kova | Anlam | Varsayılan seçim | Örnek |
 |---|---|---|---|
-| `safe` | Salt cache; uygulama kendi yeniden oluşturur, veri kaybı yok | ✅ seçili | `.vite`, `.turbo`, `.parcel-cache`, `.eslintcache`, `__pycache__` |
-| `regen` | Build/install ile geri gelir; zaman ve ağ maliyeti var | ⚠️ kullanıcı seçerse | `node_modules`, `.next`, `dist`, `target`, `coverage` |
-| `decide` | Gerçek veri veya pahalı ortam; kullanıcı karar vermeli | ❌ seçili değil | `.venv`, `vendor`, `Pods`, Unity `Library`, `*.bak` |
-| `keep` | Asla silinmez; yalnızca bilgi amaçlı listelenir | ❌ | `.git`, `.env`, `*.sqlite`, `src`, `assets`, `migrations` |
+| `safe` | Salt cache; uygulama kendi yeniden oluşturur, veri kaybı yok | [EVET] seçili | `.vite`, `.turbo`, `.parcel-cache`, `.eslintcache`, `__pycache__` |
+| `regen` | Build/install ile geri gelir; zaman ve ağ maliyeti var | [UYARI] kullanıcı seçerse | `node_modules`, `.next`, `dist`, `target`, `coverage` |
+| `decide` | Gerçek veri veya pahalı ortam; kullanıcı karar vermeli | [HAYIR] seçili değil | `.venv`, `vendor`, `Pods`, Unity `Library`, `*.bak` |
+| `keep` | Asla silinmez; yalnızca bilgi amaçlı listelenir | [HAYIR] | `.git`, `.env`, `*.sqlite`, `src`, `assets`, `migrations` |
 
 **Varsayılan davranış:** Yalnızca `safe` kovalı hedefler otomatik seçilir. `regen` hedefler gösterilir ama seçili gelmez; “Tümünü seç” dendiğinde bile `decide` hariç tutulur. `decide` için satır bazında onay gerekir.
 

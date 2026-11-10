@@ -102,18 +102,22 @@ export const ar: TranslationSchema = {
     cancel: "إلغاء",
     confirm: "تأكيد",
     recycleTitle: "نقل المجلدات المحددة إلى سلة المحذوفات؟",
-    recycleDescription: (count: number, size: string) => `${count} مجلدات node_modules (${size}) سيتم نقلها إلى سلة المحذوفات. يمكنك استعادتها في أي وقت.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} مجلدات node_modules (${size}) سيتم نقلها إلى سلة المحذوفات. يمكنك استعادتها في أي وقت.`,
     recycleConfirmButton: "نقل إلى سلة المحذوفات",
     permanentTitle: "حذف المجلدات المحددة نهائياً؟",
-    permanentDescription: (count: number, size: string) => `${count} مجلدات node_modules (${size}) سيتم حذفها نهائياً من القرص. لا يمكن التراجع عن هذا الإجراء.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} مجلدات node_modules (${size}) سيتم حذفها نهائياً من القرص. لا يمكن التراجع عن هذا الإجراء.`,
     permanentWarning: "تحذير: هذا الإجراء دائم! لن يتم إرسال المجلدات إلى سلة المحذوفات.",
     permanentConfirmButton: "حذف نهائي",
     deletingInProgress: "جاري الحذف...",
     recycleSuccess: (count: number) => `${count} مجلد تم نقلها بنجاح إلى سلة المحذوفات.`,
     permanentSuccess: (count: number) => `${count} مجلد تم حذفها نهائياً بنجاح.`,
     partialErrorTitle: "تقرير الحذف الجزئي",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} مجلد تم تنظيفها، ولكن تعذر حذف ${errorCount} مجلد.`,
-    lockedOrPermissionNote: "قد تكون بعض الملفات مقفلة بواسطة عمليات قيد التشغيل أو تتطلب أذونات المسؤول.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} مجلد تم تنظيفها، ولكن تعذر حذف ${errorCount} مجلد.`,
+    lockedOrPermissionNote:
+      "قد تكون بعض الملفات مقفلة بواسطة عمليات قيد التشغيل أو تتطلب أذونات المسؤول.",
   },
   settings: {
     title: "الإعدادات",
@@ -155,7 +159,8 @@ export const ar: TranslationSchema = {
     version: "الإصدار",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "الناشر: Vellium • © 2026 Vellium. جميع الحقوق محفوظة.",
-    privacyNote: "تتم جميع عمليات الفحص والحذف محلياً 100% على جهازك. لا يوجد تتبع أو إرسال بيانات.",
+    privacyNote:
+      "تتم جميع عمليات الفحص والحذف محلياً 100% على جهازك. لا يوجد تتبع أو إرسال بيانات.",
     close: "إغلاق",
   },
   errors: {

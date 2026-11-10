@@ -88,7 +88,9 @@ pub fn collect_evidence(
     git_state: Option<GitState>,
 ) -> Evidence {
     let mut evidence = Evidence {
-        git_repo: git_state.map(|s| s != GitState::NotRepository).unwrap_or(false),
+        git_repo: git_state
+            .map(|s| s != GitState::NotRepository)
+            .unwrap_or(false),
         git_state,
         ..Default::default()
     };

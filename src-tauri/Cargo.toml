@@ -1,6 +1,6 @@
 [package]
 name = "node-cleaner"
-version = "2.0.0"
+version = "2.2.1"
 description = "Dev Cleaner by Vellium - multi-ecosystem developer artifact and AI agent storage cleaner"
 authors = ["Vellium"]
 edition = "2021"
@@ -20,13 +20,13 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 chrono = { version = "0.4.44", features = ["serde"] }
 tokio = { version = "1.49.0", features = ["full"] }
-trash = "5"
 walkdir = "2"
 toml = "0.8"
 uuid = { version = "1", features = ["v4"] }
 rayon = "1.10"
 crossbeam-channel = "0.5"
 mimalloc = "0.1.52"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "blocking"] }
 
 [profile.dev]
 codegen-units = 1
@@ -52,3 +52,5 @@ windows = { version = "0.58", features = [
 
 [dev-dependencies]
 tempfile = "3"
+httpmock = "0.7"
+serde_json = "1"

@@ -67,14 +67,15 @@ impl LastScanRepository {
 
     pub fn save(&self, snapshot: &LastScanSnapshot) -> Result<(), AppError> {
         let parent = self.path.parent().unwrap_or_else(|| Path::new("."));
-        fs::create_dir_all(parent)
-            .map_err(|e| AppError::SettingsWriteFailed(format!("Son tarama klasörü: {}", e)))?;
+        fs::create_dir_all(parent).map_err(|e| {
+            AppError::SettingsWriteFailed(format!("Failed to create last-scan directory: {}", e))
+        })?;
 
         let json = serde_json::to_vec(snapshot)
             .map_err(|e| AppError::SettingsWriteFailed(e.to_string()))?;
         if json.len() > MAX_SNAPSHOT_BYTES {
             return Err(AppError::SettingsWriteFailed(format!(
-                "Son tarama kaydı çok büyük ({} bayt).",
+                "Last-scan record is too large ({} bytes).",
                 json.len()
             )));
         }
@@ -95,7 +96,7 @@ impl LastScanRepository {
         if let Err(e) = write_result {
             let _ = fs::remove_file(&temp_path);
             return Err(AppError::SettingsWriteFailed(format!(
-                "Son tarama geçici dosyası yazılamadı: {}",
+                "Failed to write temporary last-scan file: {}",
                 e
             )));
         }
@@ -103,7 +104,7 @@ impl LastScanRepository {
         if let Err(e) = replace_file(&temp_path, &self.path) {
             let _ = fs::remove_file(&temp_path);
             return Err(AppError::SettingsWriteFailed(format!(
-                "Son tarama dosyası değiştirilemedi: {}",
+                "Failed to replace last-scan file: {}",
                 e
             )));
         }
@@ -115,7 +116,7 @@ impl LastScanRepository {
             Ok(()) => Ok(()),
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
             Err(e) => Err(AppError::SettingsWriteFailed(format!(
-                "Son tarama kaydı silinemedi: {}",
+                "Failed to delete last-scan record: {}",
                 e
             ))),
         }
@@ -133,7 +134,7 @@ fn replace_file(from: &Path, to: &Path) -> std::io::Result<()> {
     use std::os::windows::ffi::OsStrExt;
     use windows::core::PCWSTR;
     use windows::Win32::Storage::FileSystem::{
-        MoveFileExW, MOVE_FILE_FLAGS, MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH,
+        MoveFileExW, MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH, MOVE_FILE_FLAGS,
     };
 
     fn wide(path: &Path) -> Vec<u16> {
@@ -281,4 +282,3 @@ mod tests {
         let _ = fs::remove_file(path);
     }
 }
-

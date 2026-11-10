@@ -17,7 +17,9 @@
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background-color 0.12s ease, color 0.12s ease;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
   user-select: none;
 }
 
@@ -31,11 +33,11 @@
 }
 
 .win-close:hover {
-  background-color: #E81123 !important;
-  color: #FFFFFF !important;
+  background-color: #e81123 !important;
+  color: #ffffff !important;
 }
 
 .win-close:active {
-  background-color: #BF0F1D !important;
-  color: #FFFFFF !important;
+  background-color: #bf0f1d !important;
+  color: #ffffff !important;
 }

@@ -23,10 +23,10 @@ impl PathGuard {
         }
 
         let meta = fs::symlink_metadata(target)
-            .map_err(|e| AppError::InvalidPath(format!("Meta veri okunamadı: {}", e)))?;
+            .map_err(|e| AppError::InvalidPath(format!("Failed to read metadata: {}", e)))?;
         if meta.file_type().is_symlink() {
             return Err(AppError::UnsafeDeleteTarget(format!(
-                "Sembolik bağlantı hedefi silinemez: {}",
+                "Symbolic link target cannot be deleted: {}",
                 target.display()
             )));
         }
@@ -34,18 +34,18 @@ impl PathGuard {
         // never deleted either: the real payload may live elsewhere.
         if is_reparse_point(target) {
             return Err(AppError::UnsafeDeleteTarget(format!(
-                "Reparse point hedefi silinemez: {}",
+                "Reparse point target cannot be deleted: {}",
                 target.display()
             )));
         }
 
         let canonical = fs::canonicalize(target)
-            .map_err(|e| AppError::InvalidPath(format!("Canonicalize başarısız: {}", e)))?;
+            .map_err(|e| AppError::InvalidPath(format!("Failed to canonicalize path: {}", e)))?;
         let target_key = normalize_key(&canonical);
 
         if target_key.starts_with(r"\\") {
             return Err(AppError::UnsafeDeleteTarget(
-                "UNC veya aygıt yolları silinemez.".to_string(),
+                "UNC or device paths cannot be deleted.".to_string(),
             ));
         }
 
@@ -66,11 +66,11 @@ impl PathGuard {
                 .any(|r| normalize_key(r) == target_key)
             {
                 return Err(AppError::UnsafeDeleteTarget(
-                    "Tarama kökü silinemez.".to_string(),
+                    "Scan root cannot be deleted.".to_string(),
                 ));
             }
             return Err(AppError::UnsafeDeleteTarget(format!(
-                "Hedef tarama kökünün dışında: {}",
+                "Target is outside scan root: {}",
                 canonical.display()
             )));
         };
@@ -82,7 +82,7 @@ impl PathGuard {
 
         if is_remote_path(&canonical) {
             return Err(AppError::UnsafeDeleteTarget(
-                "Ağ konumlarındaki hedefler güvenli biçimde çöp kutusuna taşınamaz.".to_string(),
+                "Network path targets cannot be safely moved to Recycle Bin.".to_string(),
             ));
         }
 
@@ -91,11 +91,13 @@ impl PathGuard {
             .map(|n| n.to_string_lossy().to_string())
             .unwrap_or_default();
         if name.is_empty() {
-            return Err(AppError::UnsafeDeleteTarget("Geçersiz hedef adı.".to_string()));
+            return Err(AppError::UnsafeDeleteTarget(
+                "Invalid target name.".to_string(),
+            ));
         }
         if is_hard_protected_name(&name) {
             return Err(AppError::UnsafeDeleteTarget(format!(
-                "Korunan ad silinemez: {}",
+                "Protected name cannot be deleted: {}",
                 name
             )));
         }
@@ -109,7 +111,7 @@ impl PathGuard {
         for part in relative.split('\\') {
             if is_protected_component(part) {
                 return Err(AppError::UnsafeDeleteTarget(format!(
-                    "Korunan dizin bileşeni içeriyor: {}",
+                    "Contains protected directory component: {}",
                     part
                 )));
             }
@@ -162,7 +164,7 @@ pub(crate) fn validate_system_path(key: &str) -> Result<(), AppError> {
     let parts = path_components(key);
     if parts.len() < 2 {
         return Err(AppError::UnsafeDeleteTarget(
-            "Sürücü kökü silinemez.".to_string(),
+            "Drive root cannot be deleted.".to_string(),
         ));
     }
 
@@ -180,25 +182,19 @@ pub(crate) fn validate_system_path(key: &str) -> Result<(), AppError> {
         "system32",
         "syswow64",
     ];
-    if parts.len() >= 2 {
-        let first = parts[1].as_str();
-        if system_roots.contains(&first) {
+    // Check every path component, not just the first one below the drive root:
+    // `C:\Users\me\AppData\Windows` must be rejected just like `C:\Windows`.
+    for part in parts.iter().skip(1) {
+        if system_roots.contains(&part.as_str()) {
             return Err(AppError::UnsafeDeleteTarget(format!(
-                "Sistem dizini korumalı: {}",
+                "System directory is protected: {}",
                 key
             )));
         }
     }
-    for part in &parts {
-        if part == "system volume information" || part == "$recycle.bin" {
-            return Err(AppError::UnsafeDeleteTarget(
-                "Sistem/çöp kutusu dizini korumalı.".to_string(),
-            ));
-        }
-    }
     if parts.len() < 3 {
         return Err(AppError::UnsafeDeleteTarget(format!(
-            "Yol güvenlik derinliği yetersiz: {}",
+            "Path depth is insufficient for safe deletion: {}",
             key
         )));
     }
@@ -207,13 +203,13 @@ pub(crate) fn validate_system_path(key: &str) -> Result<(), AppError> {
         let profile_key = normalize_key(Path::new(&profile));
         if key == profile_key {
             return Err(AppError::UnsafeDeleteTarget(
-                "Kullanıcı profil kökü silinemez.".to_string(),
+                "User profile root cannot be deleted.".to_string(),
             ));
         }
         let parent = Path::new(key).parent().map(normalize_key);
         if parent.as_deref() == Some(profile_key.as_str()) {
             return Err(AppError::UnsafeDeleteTarget(
-                "Kullanıcı profil kökünün doğrudan alt öğesi silinemez.".to_string(),
+                "Direct children of user profile root cannot be deleted.".to_string(),
             ));
         }
     }
@@ -229,7 +225,7 @@ fn validate_protected_paths(key: &str, protected: &[String]) -> Result<(), AppEr
         }
         if key == protected_key || is_within(key, &protected_key) {
             return Err(AppError::UnsafeDeleteTarget(format!(
-                "Hedef kullanıcı koruma listesinde: {}",
+                "Target is in user protected paths: {}",
                 raw
             )));
         }
@@ -243,7 +239,7 @@ fn validate_ancestors(target: &Path, scan_root: &Path) -> Result<(), AppError> {
         if let Ok(meta) = fs::symlink_metadata(dir) {
             if meta.file_type().is_symlink() {
                 return Err(AppError::UnsafeDeleteTarget(format!(
-                    "Üst dizin sembolik bağlantı: {}",
+                    "Parent directory is a symlink: {}",
                     dir.display()
                 )));
             }
@@ -267,4 +263,84 @@ fn directory_prefix(path: &Path) -> String {
         })
         .collect::<Vec<_>>()
         .join("\\")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn is_blocked(key: &str) -> bool {
+        let normalized = normalize_key(Path::new(key));
+        matches!(
+            validate_system_path(&normalized),
+            Err(AppError::UnsafeDeleteTarget(_))
+        )
+    }
+
+    fn is_allowed(key: &str) -> bool {
+        let normalized = normalize_key(Path::new(key));
+        validate_system_path(&normalized).is_ok()
+    }
+
+    #[test]
+    fn drive_root_is_blocked() {
+        assert!(is_blocked("C:\\"));
+    }
+
+    #[test]
+    fn windows_directory_is_blocked() {
+        assert!(is_blocked("C:\\Windows\\Temp"));
+    }
+
+    #[test]
+    fn program_files_is_blocked() {
+        assert!(is_blocked("C:\\Program Files\\App\\cache"));
+    }
+
+    #[test]
+    fn system32_is_blocked() {
+        assert!(is_blocked("D:\\Windows\\System32\\foo"));
+    }
+
+    #[test]
+    fn system_directory_nested_below_user_profile_is_blocked() {
+        // Regression for Y-9: only checking the first component missed this.
+        assert!(is_blocked("C:\\Users\\me\\AppData\\Windows\\foo"));
+    }
+
+    #[test]
+    fn programdata_nested_is_blocked() {
+        assert!(is_blocked("C:\\Users\\me\\tmp\\ProgramData\\foo"));
+    }
+
+    #[test]
+    fn shallow_path_is_blocked() {
+        assert!(is_blocked("C:\\Temp"));
+    }
+
+    #[test]
+    fn ordinary_project_node_modules_is_allowed() {
+        assert!(is_allowed("C:\\Code\\my-app\\node_modules"));
+    }
+
+    #[test]
+    fn ordinary_target_directory_is_allowed() {
+        assert!(is_allowed("D:\\work\\proj\\target\\debug"));
+    }
+
+    #[test]
+    fn appdata_cache_is_allowed() {
+        assert!(is_allowed("C:\\Users\\me\\AppData\\Local\\npm-cache"));
+    }
+
+    #[test]
+    fn name_containing_windows_substring_is_allowed() {
+        // Component-aware check: `WindowsApps` is not the `windows` component.
+        assert!(is_allowed("C:\\Users\\me\\WindowsApps\\cache"));
+    }
+
+    #[test]
+    fn recycle_bin_component_is_blocked() {
+        assert!(is_blocked("C:\\$Recycle.Bin\\S-1-5-21"));
+    }
 }

@@ -65,7 +65,10 @@ pub fn process_has_window(pid: u32) -> bool {
             LPARAM(&mut state as *mut WindowSearchState as isize),
         );
     }
-    state.found_windows.iter().any(|&hwnd| unsafe { IsWindowVisible(hwnd).as_bool() })
+    state
+        .found_windows
+        .iter()
+        .any(|&hwnd| unsafe { IsWindowVisible(hwnd).as_bool() })
 }
 
 /// Pre-flight orphan cleanup:
@@ -99,14 +102,16 @@ pub fn preflight_cleanup_zombies() {
                         .to_string_lossy()
                         .to_lowercase();
 
-                    if exe_name.contains("dev-cleaner") || exe_name.contains("dev cleaner") || exe_name.contains("node-cleaner") || exe_name.contains("node cleaner") {
+                    if exe_name.contains("dev-cleaner")
+                        || exe_name.contains("dev cleaner")
+                        || exe_name.contains("node-cleaner")
+                        || exe_name.contains("node cleaner")
+                    {
                         // Check if this instance has a visible window
                         let has_win = process_has_window(pid);
                         if !has_win {
                             // Headless zombie process holding the lock! Terminate it.
-                            if let Ok(proc_handle) =
-                                OpenProcess(PROCESS_TERMINATE, false, pid)
-                            {
+                            if let Ok(proc_handle) = OpenProcess(PROCESS_TERMINATE, false, pid) {
                                 let _ = TerminateProcess(proc_handle, 1);
                                 let _ = windows::Win32::Foundation::CloseHandle(proc_handle);
                             }
@@ -123,4 +128,3 @@ pub fn preflight_cleanup_zombies() {
         let _ = windows::Win32::Foundation::CloseHandle(snapshot);
     }
 }
-

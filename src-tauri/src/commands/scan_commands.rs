@@ -72,7 +72,7 @@ pub async fn start_scan(
     }
     if allowed_roots.is_empty() {
         return Err(AppError::InvalidPath(
-            "Tarama kökü belirtilmedi.".to_string(),
+            "Scan root was not specified.".to_string(),
         ));
     }
     let session_root = allowed_roots[0].clone();
@@ -80,9 +80,16 @@ pub async fn start_scan(
         .registry
         .create_session(request.scope, session_root, allowed_roots);
 
-    let result = run_scan(request, session, token.clone(), catalog, &policy, move |event| {
-        let _ = on_event.send(event);
-    })
+    let result = run_scan(
+        request,
+        session,
+        token.clone(),
+        catalog,
+        &policy,
+        move |event| {
+            let _ = on_event.send(event);
+        },
+    )
     .await;
 
     if let Ok(mut current) = state.scan_token.lock() {
@@ -150,14 +157,14 @@ pub fn get_known_locations() -> Vec<KnownLocation> {
 
 fn validate_shell_argument(value: &str, label: &str) -> Result<(), AppError> {
     if value.trim().is_empty() {
-        return Err(AppError::InvalidPath(format!("{} boş olamaz.", label)));
+        return Err(AppError::InvalidPath(format!("{} cannot be empty.", label)));
     }
     if value
         .chars()
         .any(|c| c == '"' || c == '\0' || c == '\r' || c == '\n')
     {
         return Err(AppError::InvalidPath(format!(
-            "{} geçersiz karakter içeriyor.",
+            "{} contains invalid characters.",
             label
         )));
     }
@@ -166,11 +173,11 @@ fn validate_shell_argument(value: &str, label: &str) -> Result<(), AppError> {
 
 #[tauri::command]
 pub fn open_path_in_explorer(path: String) -> Result<(), AppError> {
-    validate_shell_argument(&path, "Yol")?;
+    validate_shell_argument(&path, "Path")?;
     let p = std::path::Path::new(&path);
     if !p.is_absolute() {
         return Err(AppError::InvalidPath(
-            "Açılacak yol mutlak olmalıdır.".to_string(),
+            "Path to open must be absolute.".to_string(),
         ));
     }
     if !p.exists() {
@@ -198,7 +205,7 @@ pub fn open_url(url: String) -> Result<(), AppError> {
     validate_shell_argument(&url, "URL")?;
     let allowed = ["http://", "https://", "mailto:"];
     if !allowed.iter().any(|p| url.starts_with(p)) {
-        return Err(AppError::Unknown("Geçersiz URL protokolü".to_string()));
+        return Err(AppError::Unknown("Invalid URL protocol".to_string()));
     }
     #[cfg(target_os = "windows")]
     {
@@ -245,9 +252,9 @@ mod tests {
 
     #[test]
     fn shell_arguments_reject_line_breaks_and_quotes() {
-        assert!(validate_shell_argument("C:\\Work\\app", "Yol").is_ok());
-        assert!(validate_shell_argument("C:\\Work\\a\"b", "Yol").is_err());
-        assert!(validate_shell_argument("C:\\Work\\a\nb", "Yol").is_err());
-        assert!(validate_shell_argument("  ", "Yol").is_err());
+        assert!(validate_shell_argument("C:\\Work\\app", "Path").is_ok());
+        assert!(validate_shell_argument("C:\\Work\\a\"b", "Path").is_err());
+        assert!(validate_shell_argument("C:\\Work\\a\nb", "Path").is_err());
+        assert!(validate_shell_argument("  ", "Path").is_err());
     }
 }

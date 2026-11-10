@@ -95,7 +95,7 @@
 .results-metric-tag.highlight {
   background: rgba(10, 132, 255, 0.12);
   border-color: rgba(10, 132, 255, 0.3);
-  color: #5AC8FA;
+  color: #5ac8fa;
   font-weight: 600;
 }
 
@@ -150,8 +150,8 @@
 [data-theme^="light"] .results-sort-select option,
 [data-theme="white"] .results-sort-select option,
 [data-theme="white-transparent"] .results-sort-select option {
-  background-color: #FFFFFF !important;
-  color: #0F172A !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
 }
 
 /* All Dark Themes (Black, Gray, Blue, Purple, Green, Red, Orange, Yellow) */
@@ -174,10 +174,10 @@
 [data-theme="black"] .results-sort-select option,
 [data-theme="transparent"] .results-sort-select option {
   background-color: #141418 !important;
-  color: #F8FAFC !important;
+  color: #f8fafc !important;
 }
 
-/* 3 Quick Buttons (Masaüstü, Belgeler, Farklı) */
+/* 3 Quick Buttons (Desktop, Documents, Other) */
 .toolbar-quick-buttons {
   display: flex;
   align-items: center;
@@ -209,7 +209,7 @@
 .toolbar-chip-btn.active {
   background: rgba(10, 132, 255, 0.15);
   border-color: rgba(10, 132, 255, 0.35);
-  color: #5AC8FA;
+  color: #5ac8fa;
   font-weight: 600;
 }
 

@@ -30,6 +30,9 @@ fn audit_records_roundtrip_and_are_ordered() {
                 error_code: None,
                 bytes: 100,
             }],
+            cancelled: false,
+            processed_count: 1,
+            skipped_count: 0,
         };
         repo.append_record(&record).unwrap();
     }

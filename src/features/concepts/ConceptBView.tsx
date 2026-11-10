@@ -1,4 +1,5 @@
 import React from "react";
+import { useUIText } from "@/lib/ui-text";
 import {
   Folder,
   Trash2,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 import { ConceptScreen, MOCK_PROJECT_ITEMS } from "./concept-types";
 import "./concept-b.css";
+import { translateBackendText } from "@/lib/ui-text/backend-i18n";
 
 interface Props {
   screen: ConceptScreen;
@@ -23,11 +25,8 @@ interface Props {
   onNavigate?: (screen: ConceptScreen) => void;
 }
 
-export const ConceptBView: React.FC<Props> = ({
-  screen,
-  theme = "dark",
-  onNavigate,
-}) => {
+export const ConceptBView: React.FC<Props> = ({ screen, theme = "dark", onNavigate }) => {
+  const ui = useUIText();
   return (
     <div className={`concept-b-root ${theme === "light" ? "cb-light" : ""}`}>
       {/* 220px Fluent Sidebar */}
@@ -37,19 +36,19 @@ export const ConceptBView: React.FC<Props> = ({
           <div>
             <div className="cb-app-title">Dev Cleaner</div>
             <div style={{ fontSize: "11px", color: "var(--cb-text-muted)" }}>
-              Windows Masaüstü
+              {ui.about.appVersion}
             </div>
           </div>
         </div>
 
-        <div className="cb-nav-section-title">TEMİZLİK KAPSAMI</div>
+        <div className="cb-nav-section-title">{ui.overview.title.toUpperCase()}</div>
         <button
           className={`cb-nav-link ${screen === "overview" ? "active" : ""}`}
           onClick={() => onNavigate?.("overview")}
         >
           <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Layers size={16} />
-            Genel Bakış
+            {ui.nav.overview}
           </span>
           <span className="cb-badge">12.4 GB</span>
         </button>
@@ -59,19 +58,19 @@ export const ConceptBView: React.FC<Props> = ({
         >
           <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Folder size={16} />
-            Projeler
+            {ui.nav.projects}
           </span>
           <span className="cb-badge">6</span>
         </button>
 
-        <div className="cb-nav-section-title">GELİŞTİRİCİ ARAÇLARI</div>
+        <div className="cb-nav-section-title">{ui.nav.agents.toUpperCase()}</div>
         <button
           className={`cb-nav-link ${screen === "agents" ? "active" : ""}`}
           onClick={() => onNavigate?.("agents")}
         >
           <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Bot size={16} />
-            AI Ajanları
+            {ui.nav.agents}
           </span>
           <span className="cb-badge">3</span>
         </button>
@@ -81,18 +80,18 @@ export const ConceptBView: React.FC<Props> = ({
         >
           <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Database size={16} />
-            Araç Önbellekleri
+            {ui.nav.caches}
           </span>
         </button>
 
-        <div className="cb-nav-section-title">TERCİHLER & KAYIT</div>
+        <div className="cb-nav-section-title">{ui.nav.settings.toUpperCase()}</div>
         <button
           className={`cb-nav-link ${screen === "history" ? "active" : ""}`}
           onClick={() => onNavigate?.("history")}
         >
           <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <History size={16} />
-            Geçmiş
+            {ui.nav.history}
           </span>
         </button>
         <div style={{ flex: 1 }} />
@@ -102,7 +101,7 @@ export const ConceptBView: React.FC<Props> = ({
         >
           <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Settings size={16} />
-            Ayarlar
+            {ui.nav.settings}
           </span>
         </button>
       </aside>
@@ -113,7 +112,7 @@ export const ConceptBView: React.FC<Props> = ({
         <header className="cb-top-header">
           <div className="cb-search-bar">
             <Search size={14} />
-            <span style={{ flex: 1 }}>Proje veya hedef ara...</span>
+            <span style={{ flex: 1 }}>{ui.table.searchPlaceholder}</span>
             <span className="cb-search-kbd">Ctrl K</span>
           </div>
 
@@ -124,7 +123,7 @@ export const ConceptBView: React.FC<Props> = ({
             </button>
             <button className="cb-btn cb-btn-primary">
               <Sparkles size={14} />
-              <span>Hızlı Temizle</span>
+              <span>{ui.common.scan}</span>
             </button>
           </div>
         </header>
@@ -137,41 +136,71 @@ export const ConceptBView: React.FC<Props> = ({
               <div className="cb-stage-card">
                 <div className="cb-stage-header">
                   <div className="cb-stage-num">1</div>
-                  <div className="cb-stage-title">Tarama Kapsamı & Hedef Klasör</div>
+                  <div className="cb-stage-title">{ui.header.chooseFolderSub}</div>
                 </div>
-                <div className="cb-stage-body">
-                  Şu an <strong>D:\dev\projects</strong> dizini taranmış durumda. Toplam 18 proje ve bağımlılık dizini tespit edildi.
-                </div>
+                <div className="cb-stage-body">{ui.stale.bannerBody("D:\\dev\\projects")}</div>
               </div>
 
               {/* Stage 2: Health Analysis */}
               <div className="cb-stage-card">
                 <div className="cb-stage-header">
                   <div className="cb-stage-num">2</div>
-                  <div className="cb-stage-title">Depolama Durumu & Risk Analizi</div>
-                  <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px", color: "var(--cb-success)", fontSize: "13px" }}>
+                  <div className="cb-stage-title">{ui.overview.kpiCleanable}</div>
+                  <div
+                    style={{
+                      marginLeft: "auto",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      color: "var(--cb-success)",
+                      fontSize: "13px",
+                    }}
+                  >
                     <CheckCircle2 size={16} />
-                    <span>%100 Güvenli & Geri Alınabilir</span>
+                    <span>{ui.safety.safe}</span>
                   </div>
                 </div>
-                <div className="cb-stage-body" style={{ display: "flex", gap: "24px", marginTop: "12px" }}>
+                <div
+                  className="cb-stage-body"
+                  style={{ display: "flex", gap: "24px", marginTop: "12px" }}
+                >
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: "28px", fontWeight: 700, color: "var(--cb-text-primary)", marginBottom: "4px" }}>
+                    <div
+                      style={{
+                        fontSize: "28px",
+                        fontWeight: 700,
+                        color: "var(--cb-text-primary)",
+                        marginBottom: "4px",
+                      }}
+                    >
                       12.4 GB
                     </div>
-                    <div>Geliştirici artıklarından kurtarılabilecek toplam disk alanı.</div>
+                    <div>{ui.overview.kpiCleanableSub}</div>
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px", minWidth: "220px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "6px",
+                      minWidth: "220px",
+                    }}
+                  >
+                    <div
+                      style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}
+                    >
                       <span>Node.js node_modules</span>
                       <strong>4.2 GB</strong>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
-                      <span>Rust target derlemeleri</span>
+                    <div
+                      style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}
+                    >
+                      <span>{translateBackendText("Rust target builds")}</span>
                       <strong>3.8 GB</strong>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
-                      <span>Python .venv paketleri</span>
+                    <div
+                      style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}
+                    >
+                      <span>{translateBackendText("Python .venv packages")}</span>
                       <strong>2.1 GB</strong>
                     </div>
                   </div>
@@ -182,15 +211,16 @@ export const ConceptBView: React.FC<Props> = ({
               <div className="cb-stage-card" style={{ borderColor: "var(--cb-accent-subtle)" }}>
                 <div className="cb-stage-header">
                   <div className="cb-stage-num">3</div>
-                  <div className="cb-stage-title">Önerilen Güvenli Temizlik</div>
+                  <div className="cb-stage-title">{ui.overview.kpiSafeReclaim}</div>
                 </div>
-                <div className="cb-stage-body" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div>
-                    Seçilen <strong>6 proje dizini</strong> önce Windows Çöp Kutusuna taşınacak şekilde hazırlandı.
-                  </div>
+                <div
+                  className="cb-stage-body"
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
+                >
+                  <div>{ui.plan.confirmTrash}</div>
                   <button className="cb-btn cb-btn-primary">
                     <Trash2 size={14} />
-                    <span>Çöp Kutusuna Taşı (12.4 GB)</span>
+                    <span>{ui.plan.confirmTrash} (12.4 GB)</span>
                   </button>
                 </div>
               </div>
@@ -215,7 +245,13 @@ export const ConceptBView: React.FC<Props> = ({
                   <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                     <input type="checkbox" defaultChecked={item.selected} />
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--cb-text-primary)" }}>
+                      <div
+                        style={{
+                          fontWeight: 600,
+                          fontSize: "14px",
+                          color: "var(--cb-text-primary)",
+                        }}
+                      >
                         {item.name}
                       </div>
                       <div style={{ fontSize: "12px", color: "var(--cb-text-secondary)" }}>
@@ -224,7 +260,14 @@ export const ConceptBView: React.FC<Props> = ({
                     </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                    <span style={{ fontSize: "12px", background: "var(--cb-surface-elevated)", padding: "3px 8px", borderRadius: "12px" }}>
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        background: "var(--cb-surface-elevated)",
+                        padding: "3px 8px",
+                        borderRadius: "12px",
+                      }}
+                    >
                       {item.ecosystem}
                     </span>
                     <span style={{ fontWeight: 700, fontSize: "14px" }}>
@@ -242,21 +285,21 @@ export const ConceptBView: React.FC<Props> = ({
               {[
                 {
                   name: "OpenAI Codex / CLI",
-                  desc: "Kodlama komut istemi geçmişi ve geçici analiz önbellekleri.",
+                  desc: ui.agents.subtitle,
                   size: "1.42 GB",
-                  safety: "Tamamen güvenli temizlenebilir.",
+                  safety: ui.safety.safe,
                 },
                 {
                   name: "Claude Code",
-                  desc: "Oturum çalışma alanları, token önbellekleri ve hata ayıklama kayıtları.",
+                  desc: ui.agents.subtitle,
                   size: "2.84 GB",
-                  safety: "Oturumlar silinir, kaynak kod etkilenmez.",
+                  safety: ui.safety.review,
                 },
                 {
                   name: "Google Antigravity",
-                  desc: "Ajan muhakeme grafları, geçici kod çalışma dosyaları ve transcriptler.",
+                  desc: ui.agents.subtitle,
                   size: "4.12 GB",
-                  safety: "Tamamen güvenli; tekrar taranabilir.",
+                  safety: ui.safety.safe,
                 },
               ].map((agent, i) => (
                 <div
@@ -275,10 +318,24 @@ export const ConceptBView: React.FC<Props> = ({
                     <div style={{ fontWeight: 700, fontSize: "15px", marginBottom: "4px" }}>
                       {agent.name}
                     </div>
-                    <div style={{ fontSize: "13px", color: "var(--cb-text-secondary)", marginBottom: "6px" }}>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        color: "var(--cb-text-secondary)",
+                        marginBottom: "6px",
+                      }}
+                    >
                       {agent.desc}
                     </div>
-                    <div style={{ fontSize: "12px", color: "var(--cb-success)", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: "var(--cb-success)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
                       <CheckCircle2 size={13} />
                       {agent.safety}
                     </div>
@@ -287,8 +344,11 @@ export const ConceptBView: React.FC<Props> = ({
                     <div style={{ fontSize: "20px", fontWeight: 700, marginBottom: "8px" }}>
                       {agent.size}
                     </div>
-                    <button className="cb-btn cb-btn-secondary" style={{ padding: "5px 12px", fontSize: "12px" }}>
-                      Depolamayı Boşalt
+                    <button
+                      className="cb-btn cb-btn-secondary"
+                      style={{ padding: "5px 12px", fontSize: "12px" }}
+                    >
+                      {ui.caches.runAction}
                     </button>
                   </div>
                 </div>
@@ -299,9 +359,21 @@ export const ConceptBView: React.FC<Props> = ({
           {screen === "caches" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {[
-                { name: "npm Paket İndirme Önbelleği", size: "3.45 GB", desc: "Global npm modül arşivi." },
-                { name: "Python pip Wheel Önbelleği", size: "1.82 GB", desc: "İndirilen ve derlenen Python paketleri." },
-                { name: "Cargo Registry Önbelleği", size: "5.20 GB", desc: "crates.io kaynak ve paket arşivi." },
+                {
+                  name: translateBackendText("npm Package Download Cache"),
+                  size: "3.45 GB",
+                  desc: translateBackendText("Global npm module archive."),
+                },
+                {
+                  name: translateBackendText("Python pip Wheel Cache"),
+                  size: "1.82 GB",
+                  desc: translateBackendText("Downloaded and compiled Python wheels."),
+                },
+                {
+                  name: translateBackendText("Cargo Registry Cache"),
+                  size: "5.20 GB",
+                  desc: translateBackendText("crates.io sources and package archive."),
+                },
               ].map((c, i) => (
                 <div
                   key={i}
@@ -317,12 +389,17 @@ export const ConceptBView: React.FC<Props> = ({
                 >
                   <div>
                     <div style={{ fontWeight: 600 }}>{c.name}</div>
-                    <div style={{ fontSize: "12px", color: "var(--cb-text-secondary)" }}>{c.desc}</div>
+                    <div style={{ fontSize: "12px", color: "var(--cb-text-secondary)" }}>
+                      {c.desc}
+                    </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
                     <span style={{ fontWeight: 700 }}>{c.size}</span>
-                    <button className="cb-btn cb-btn-secondary" style={{ fontSize: "12px", padding: "5px 12px" }}>
-                      Önbelleği Temizle
+                    <button
+                      className="cb-btn cb-btn-secondary"
+                      style={{ fontSize: "12px", padding: "5px 12px" }}
+                    >
+                      {ui.caches.runAction}
                     </button>
                   </div>
                 </div>
@@ -333,9 +410,21 @@ export const ConceptBView: React.FC<Props> = ({
           {screen === "history" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {[
-                { date: "4 Kasım 2026, 20:15", title: "18 proje hedefi Çöp Kutusuna taşındı", gain: "4.25 GB" },
-                { date: "2 Kasım 2026, 14:40", title: "8 hedef başarıyla temizlendi", gain: "1.85 GB" },
-                { date: "29 Ekim 2026, 09:12", title: "Kalıcı silme ile 32 hedef temizlendi", gain: "14.10 GB" },
+                {
+                  date: "2026-11-04 20:15",
+                  title: translateBackendText("18 project targets moved to Recycle Bin"),
+                  gain: "4.25 GB",
+                },
+                {
+                  date: "2026-11-02 14:40",
+                  title: translateBackendText("8 targets successfully cleaned"),
+                  gain: "1.85 GB",
+                },
+                {
+                  date: "2026-10-29 09:12",
+                  title: translateBackendText("32 targets permanently deleted"),
+                  gain: "14.10 GB",
+                },
               ].map((h, i) => (
                 <div
                   key={i}
@@ -350,7 +439,13 @@ export const ConceptBView: React.FC<Props> = ({
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: "12px", color: "var(--cb-text-muted)", marginBottom: "2px" }}>
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: "var(--cb-text-muted)",
+                        marginBottom: "2px",
+                      }}
+                    >
                       {h.date}
                     </div>
                     <div style={{ fontWeight: 600 }}>{h.title}</div>
@@ -374,13 +469,19 @@ export const ConceptBView: React.FC<Props> = ({
                   padding: "16px 20px",
                 }}
               >
-                <div style={{ fontWeight: 600, marginBottom: "8px" }}>Görünüm ve Tema</div>
+                <div style={{ fontWeight: 600, marginBottom: "8px" }}>{ui.settings.general}</div>
                 <div style={{ display: "flex", gap: "12px" }}>
-                  <button className="cb-btn cb-btn-secondary" style={{ flex: 1, justifyContent: "center" }}>
-                    Karanlık Mod (Varsayılan)
+                  <button
+                    className="cb-btn cb-btn-secondary"
+                    style={{ flex: 1, justifyContent: "center" }}
+                  >
+                    {ui.settings.themeDark}
                   </button>
-                  <button className="cb-btn cb-btn-secondary" style={{ flex: 1, justifyContent: "center" }}>
-                    Açık Mod
+                  <button
+                    className="cb-btn cb-btn-secondary"
+                    style={{ flex: 1, justifyContent: "center" }}
+                  >
+                    {ui.settings.themeLight}
                   </button>
                 </div>
               </div>
@@ -393,13 +494,19 @@ export const ConceptBView: React.FC<Props> = ({
                   padding: "16px 20px",
                 }}
               >
-                <div style={{ fontWeight: 600, marginBottom: "8px" }}>Varsayılan Silme Yöntemi</div>
-                <div style={{ fontSize: "13px", color: "var(--cb-text-secondary)", marginBottom: "12px" }}>
-                  Tavsiye edilen yöntem Windows Çöp Kutusu'dur. Dosyalar istenildiğinde geri kurtarılabilir.
+                <div style={{ fontWeight: 600, marginBottom: "8px" }}>{ui.plan.method}</div>
+                <div
+                  style={{
+                    fontSize: "13px",
+                    color: "var(--cb-text-secondary)",
+                    marginBottom: "12px",
+                  }}
+                >
+                  {ui.plan.trashNote}
                 </div>
                 <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <input type="radio" name="delete_mode" defaultChecked />
-                  <span>Windows Çöp Kutusuna Gönder (Önerilen)</span>
+                  <span>{ui.plan.trash}</span>
                 </label>
               </div>
             </div>
@@ -409,11 +516,8 @@ export const ConceptBView: React.FC<Props> = ({
           {screen === "cleanup-modal" && (
             <div className="cb-modal-overlay">
               <div className="cb-modal">
-                <div className="cb-modal-title">Temizleme İşlemini Onaylayın</div>
-                <div className="cb-modal-desc">
-                  Seçilen <strong>6 adet proje dizini</strong> Windows Çöp Kutusuna taşınacaktır.
-                  Bu işlem diskte <strong>12.4 GB</strong> alan açacaktır.
-                </div>
+                <div className="cb-modal-title">{ui.plan.title}</div>
+                <div className="cb-modal-desc">{ui.plan.confirmTrash}</div>
                 <div
                   style={{
                     backgroundColor: "var(--cb-surface-elevated)",
@@ -423,19 +527,25 @@ export const ConceptBView: React.FC<Props> = ({
                     fontSize: "13px",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--cb-success)", marginBottom: "4px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      color: "var(--cb-success)",
+                      marginBottom: "4px",
+                    }}
+                  >
                     <CheckCircle2 size={15} />
-                    <strong>Güvenli Taşıma Modu</strong>
+                    <strong>{ui.safety.safe}</strong>
                   </div>
-                  <div style={{ color: "var(--cb-text-secondary)" }}>
-                    İhtiyaç duyarsanız dosyaları Çöp Kutusundan geri alabilirsiniz.
-                  </div>
+                  <div style={{ color: "var(--cb-text-secondary)" }}>{ui.plan.trashNote}</div>
                 </div>
                 <div className="cb-modal-actions">
-                  <button className="cb-btn cb-btn-secondary">Vazgeç</button>
+                  <button className="cb-btn cb-btn-secondary">{ui.common.cancel}</button>
                   <button className="cb-btn cb-btn-primary">
                     <Trash2 size={14} />
-                    <span>Çöp Kutusuna Gönder</span>
+                    <span>{ui.plan.confirmTrash}</span>
                   </button>
                 </div>
               </div>
@@ -446,14 +556,21 @@ export const ConceptBView: React.FC<Props> = ({
           {screen === "permanent-modal" && (
             <div className="cb-modal-overlay">
               <div className="cb-modal" style={{ borderColor: "var(--cb-danger)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--cb-danger)", marginBottom: "8px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    color: "var(--cb-danger)",
+                    marginBottom: "8px",
+                  }}
+                >
                   <ShieldAlert size={20} />
-                  <div className="cb-modal-title" style={{ margin: 0 }}>Kalıcı Olarak Silinsin mi?</div>
+                  <div className="cb-modal-title" style={{ margin: 0 }}>
+                    {ui.plan.confirmPermanent}
+                  </div>
                 </div>
-                <div className="cb-modal-desc">
-                  Bu işlem dosyaları diskinizden <strong>tamamen ve geri alınamaz biçimde</strong> silecektir.
-                  Windows Çöp Kutusu kullanılmayacaktır.
-                </div>
+                <div className="cb-modal-desc">{ui.plan.permanentNote}</div>
                 <div
                   style={{
                     backgroundColor: "var(--cb-danger-subtle)",
@@ -465,16 +582,21 @@ export const ConceptBView: React.FC<Props> = ({
                     color: "var(--cb-text-primary)",
                   }}
                 >
-                  <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                  <label
+                    style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}
+                  >
                     <input type="checkbox" defaultChecked />
-                    <span>Dosyaların kurtarılamaz şekilde silineceğini anlıyorum ve onaylıyorum.</span>
+                    <span>{ui.plan.permanentAck}</span>
                   </label>
                 </div>
                 <div className="cb-modal-actions">
-                  <button className="cb-btn cb-btn-secondary">İptal</button>
-                  <button className="cb-btn" style={{ background: "var(--cb-danger)", color: "#fff" }}>
+                  <button className="cb-btn cb-btn-secondary">{ui.common.cancel}</button>
+                  <button
+                    className="cb-btn"
+                    style={{ background: "var(--cb-danger)", color: "#fff" }}
+                  >
                     <Trash2 size={14} />
-                    <span>Kalıcı Olarak Sil</span>
+                    <span>{ui.plan.confirmPermanent}</span>
                   </button>
                 </div>
               </div>

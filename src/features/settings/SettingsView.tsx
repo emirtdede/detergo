@@ -6,6 +6,7 @@ import {
   ShieldCheck,
   Cpu,
   X,
+  Check,
   Palette,
   Bell,
   Send,
@@ -19,11 +20,18 @@ import { NumberField } from "@/components/primitives/NumberField";
 import { PageHeader } from "@/components/primitives/PageHeader";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
-import { useUIText, resolveUiLocale, UIText } from "@/lib/ui-text";
+import { useUIText, resolveUiLocale, UIText, localizeAppError } from "@/lib/ui-text";
 import { LANGUAGES_LIST } from "@/locales/languages";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { countCatalogStats } from "@/lib/catalog-stats";
-import { CatalogDto, BuildInfo, SupportedLanguage, ThemeMode, DEFAULT_SHORTCUTS, RESERVED_SHORTCUTS } from "@/types";
+import {
+  CatalogDto,
+  BuildInfo,
+  SupportedLanguage,
+  ThemeMode,
+  DEFAULT_SHORTCUTS,
+  RESERVED_SHORTCUTS,
+} from "@/types";
 import { useSettingsSections } from "./settings-sections";
 import { AboutView } from "./AboutView";
 import "../items/items.css";
@@ -54,19 +62,19 @@ const THEMES: ThemeMode[] = [
 function themeLabel(theme: ThemeMode | string, ui: UIText): string {
   const t = ui.settings;
   const isDark = theme.startsWith("dark");
-  const modeLabel = isDark ? (t.themeDark ?? "Koyu") : (t.themeLight ?? "Açık");
+  const modeLabel = isDark ? t.themeDark || "Dark" : t.themeLight || "Light";
 
   const nameMap: Record<string, string> = {
-    black: t.themeBlack ?? "Siyah",
-    gray: t.themeGray ?? "Gri",
-    blue: t.themeBlue ?? "Mavi",
-    purple: t.themePurple ?? "Mor",
-    green: t.themeGreen ?? "Yeşil",
-    red: t.themeRed ?? "Kırmızı",
-    orange: t.themeOrange ?? "Turuncu",
-    yellow: t.themeYellow ?? "Sarı",
-    white: t.themeWhite ?? "Beyaz",
-    transparent: t.themeDark === "Dark" ? "Transparent" : "Şeffaf",
+    black: t.themeBlack || "Black",
+    gray: t.themeGray || "Gray",
+    blue: t.themeBlue || "Blue",
+    purple: t.themePurple || "Purple",
+    green: t.themeGreen || "Green",
+    red: t.themeRed || "Red",
+    orange: t.themeOrange || "Orange",
+    yellow: t.themeYellow || "Yellow",
+    white: t.themeWhite || "White",
+    transparent: t.themeTransparent || "Transparent",
   };
 
   const suffix = theme.replace(/^(dark|light)-/, "");
@@ -74,7 +82,10 @@ function themeLabel(theme: ThemeMode | string, ui: UIText): string {
   return `${modeLabel} - ${colorName}`;
 }
 
-const PROFILE_DEFAULTS: Record<string, { maxDepth: number; maxCandidates: number; timeoutMinutes: number }> = {
+const PROFILE_DEFAULTS: Record<
+  string,
+  { maxDepth: number; maxCandidates: number; timeoutMinutes: number }
+> = {
   fast: { maxDepth: 16, maxCandidates: 10000, timeoutMinutes: 5 },
   balanced: { maxDepth: 32, maxCandidates: 50000, timeoutMinutes: 15 },
   deep: { maxDepth: 64, maxCandidates: 200000, timeoutMinutes: 30 },
@@ -108,24 +119,41 @@ export const SettingsView: React.FC = () => {
   const catalogStats = useMemo(() => countCatalogStats(catalog?.rules ?? []), [catalog]);
 
   const [testingWebhook, setTestingWebhook] = useState(false);
-  const [webhookTestStatus, setWebhookTestStatus] = useState<string | null>(null);
+  const [webhookTestStatus, setWebhookTestStatus] = useState<{
+    success: boolean;
+    text: string;
+  } | null>(null);
   const [recordingId, setRecordingId] = useState<string | null>(null);
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
 
-  const shortcutDefs = useMemo(() => [
-    { id: "toggleSidebar", label: ui.settings.scToggleSidebar, hint: ui.settings.scToggleSidebarHint },
-    { id: "focusSearch", label: ui.settings.scFocusSearch, hint: ui.settings.scFocusSearchHint },
-    { id: "startStopScan", label: ui.settings.scStartStopScan, hint: ui.settings.scStartStopScanHint },
-    { id: "navOverview", label: ui.settings.scNavOverview, hint: ui.settings.scNavOverviewHint },
-    { id: "navProjects", label: ui.settings.scNavProjects, hint: ui.settings.scNavProjectsHint },
-    { id: "navAgents", label: ui.settings.scNavAgents, hint: ui.settings.scNavAgentsHint },
-    { id: "navCaches", label: ui.settings.scNavCaches, hint: ui.settings.scNavCachesHint },
-    { id: "navDocs", label: ui.settings.scNavDocs, hint: ui.settings.scNavDocsHint },
-    { id: "navHistory", label: ui.settings.scNavHistory, hint: ui.settings.scNavHistoryHint },
-    { id: "navSettings", label: ui.settings.scNavSettings, hint: ui.settings.scNavSettingsHint },
-  ], [ui.settings]);
+  const shortcutDefs = useMemo(
+    () => [
+      {
+        id: "toggleSidebar",
+        label: ui.settings.scToggleSidebar,
+        hint: ui.settings.scToggleSidebarHint,
+      },
+      { id: "focusSearch", label: ui.settings.scFocusSearch, hint: ui.settings.scFocusSearchHint },
+      {
+        id: "startStopScan",
+        label: ui.settings.scStartStopScan,
+        hint: ui.settings.scStartStopScanHint,
+      },
+      { id: "navOverview", label: ui.settings.scNavOverview, hint: ui.settings.scNavOverviewHint },
+      { id: "navProjects", label: ui.settings.scNavProjects, hint: ui.settings.scNavProjectsHint },
+      { id: "navAgents", label: ui.settings.scNavAgents, hint: ui.settings.scNavAgentsHint },
+      { id: "navCaches", label: ui.settings.scNavCaches, hint: ui.settings.scNavCachesHint },
+      { id: "navDocs", label: ui.settings.scNavDocs, hint: ui.settings.scNavDocsHint },
+      { id: "navHistory", label: ui.settings.scNavHistory, hint: ui.settings.scNavHistoryHint },
+      { id: "navSettings", label: ui.settings.scNavSettings, hint: ui.settings.scNavSettingsHint },
+    ],
+    [ui.settings],
+  );
 
-  const updateNotify = (key: keyof NonNullable<typeof prefs.notifications>, channel: NotificationChannel | boolean) => {
+  const updateNotify = (
+    key: keyof NonNullable<typeof prefs.notifications>,
+    channel: NotificationChannel | boolean,
+  ) => {
     const current = prefs.notifications ?? {
       scanComplete: "both",
       cleanComplete: "both",
@@ -151,34 +179,30 @@ export const SettingsView: React.FC = () => {
     setTestingWebhook(true);
     setWebhookTestStatus(null);
     try {
-      await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          event: "test_ping",
-          timestamp: new Date().toISOString(),
-          product: "Dev Cleaner by Vellium",
-          message: ui.settings.webhookSent,
-        }),
-        mode: "no-cors",
+      const result = await scannerApi.testWebhook(url, {
+        event: "test_ping",
+        timestamp: new Date().toISOString(),
+        product: "Dev Cleaner by Vellium",
+        message: ui.settings.webhookSent,
       });
-      setWebhookTestStatus(`✓ ${ui.settings.webhookSent}`);
-      showToast(ui.settings.webhookSent, "success");
+      if (result.ok) {
+        setWebhookTestStatus({ success: true, text: ui.settings.webhookSent });
+        showToast(ui.settings.webhookSent, "success");
+      } else {
+        const text = `${result.message} (HTTP ${result.status})`;
+        setWebhookTestStatus({ success: false, text });
+        showToast(`${ui.settings.webhookTitle}: ${text}`, "error");
+      }
     } catch (err) {
-      setWebhookTestStatus(`❌ Hata: ${String(err)}`);
-      showToast(`Webhook: ${String(err)}`, "error");
+      setWebhookTestStatus({ success: false, text: localizeAppError(err, ui) });
+      showToast(`${ui.settings.webhookTitle}: ${localizeAppError(err, ui)}`, "error");
     } finally {
       setTestingWebhook(false);
     }
   };
 
   const sections = useSettingsSections();
-  const uiLanguages = useMemo(
-    () => LANGUAGES_LIST,
-    []
-  );
+  const uiLanguages = useMemo(() => LANGUAGES_LIST, []);
 
   const activeSection = sections.find((s) => s.id === section) ?? sections[0];
 
@@ -219,7 +243,7 @@ export const SettingsView: React.FC = () => {
 
       const activeShortcuts = prefs.shortcuts ?? DEFAULT_SHORTCUTS;
       const existing = Object.entries(activeShortcuts).find(
-        ([id, val]) => id !== recordingId && val.toLowerCase() === combo.toLowerCase()
+        ([id, val]) => id !== recordingId && val.toLowerCase() === combo.toLowerCase(),
       );
 
       if (existing) {
@@ -240,8 +264,10 @@ export const SettingsView: React.FC = () => {
 
   const moveTab = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
     let next = index;
-    if (event.key === "ArrowRight" || event.key === "ArrowDown") next = (index + 1) % sections.length;
-    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = (index - 1 + sections.length) % sections.length;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown")
+      next = (index + 1) % sections.length;
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp")
+      next = (index - 1 + sections.length) % sections.length;
     else if (event.key === "Home") next = 0;
     else if (event.key === "End") next = sections.length - 1;
     else return;
@@ -256,11 +282,7 @@ export const SettingsView: React.FC = () => {
       await usePreferencesStore.getState().persistSettings();
       showToast(ui.settings.saved, "success", 1500);
     } catch (err) {
-      const detail =
-        err && typeof err === "object" && "message" in err
-          ? String((err as { message: string }).message)
-          : String(err);
-      showToast(`${ui.settings.saveError}: ${detail}`, "error", 6000);
+      showToast(`${ui.settings.saveError}: ${localizeAppError(err, ui)}`, "error", 6000);
     }
   };
 
@@ -271,10 +293,7 @@ export const SettingsView: React.FC = () => {
 
   return (
     <div className="settings-page">
-      <PageHeader
-        title={ui.nav.settings}
-        description={ui.settings.subtitle}
-      />
+      <PageHeader title={ui.nav.settings} description={ui.settings.subtitle} />
 
       {catalog && !catalog.valid && (
         <p className="items-warning" style={{ marginBottom: 12 }}>
@@ -296,7 +315,8 @@ export const SettingsView: React.FC = () => {
               {themeLabel(prefs.theme, ui)}
             </span>
             <span className="nc-kpi-card-sub">
-              {ui.settings.language}: {resolveUiLocale(prefs.language).toUpperCase()} · {prefs.reduceMotion ? ui.settings.reducedMotion : ui.settings.standardMotion}
+              {ui.settings.language}: {resolveUiLocale(prefs.language).toUpperCase()} ·{" "}
+              {prefs.reduceMotion ? ui.settings.reducedMotion : ui.settings.standardMotion}
             </span>
           </div>
         </div>
@@ -313,7 +333,8 @@ export const SettingsView: React.FC = () => {
               {prefs.scanProfile.toUpperCase()}
             </span>
             <span className="nc-kpi-card-sub">
-              {ui.settings.maxDepth}: {prefs.maxDepth} · {ui.settings.maxCandidates}: {(prefs.maxCandidates / 1000).toFixed(0)}k
+              {ui.settings.maxDepth}: {prefs.maxDepth} · {ui.settings.maxCandidates}:{" "}
+              {(prefs.maxCandidates / 1000).toFixed(0)}k
             </span>
           </div>
         </div>
@@ -353,8 +374,10 @@ export const SettingsView: React.FC = () => {
               aria-controls="settings-panel"
               tabIndex={active ? 0 : -1}
             >
-              <span className="settings-tab-icon" aria-hidden="true">{item.icon}</span>
-              <span>{item.label}</span>
+              <span className="settings-tab-icon" aria-hidden="true">
+                {item.icon}
+              </span>
+              <span className="settings-tab-label">{item.label}</span>
             </button>
           );
         })}
@@ -367,16 +390,22 @@ export const SettingsView: React.FC = () => {
         <select
           id="settings-section-select"
           value={activeSection.id}
-          onChange={(event) => setSettingsSection(event.target.value as (typeof sections)[number]["id"])}
+          onChange={(event) =>
+            setSettingsSection(event.target.value as (typeof sections)[number]["id"])
+          }
         >
           {sections.map((item) => (
-            <option key={item.id} value={item.id}>{item.label}</option>
+            <option key={item.id} value={item.id}>
+              {item.label}
+            </option>
           ))}
         </select>
       </div>
 
       <div className="settings-section-header">
-        <span className="settings-section-icon" aria-hidden="true">{activeSection.icon}</span>
+        <span className="settings-section-icon" aria-hidden="true">
+          {activeSection.icon}
+        </span>
         <div className="settings-section-copy">
           <span className="settings-section-title">{activeSection.label}</span>
           <span className="settings-section-hint">{activeSection.hint}</span>
@@ -395,7 +424,9 @@ export const SettingsView: React.FC = () => {
               <span>{ui.settings.theme}</span>
               <select value={prefs.theme} onChange={(e) => prefs.setTheme(e.target.value)}>
                 {THEMES.map((theme) => (
-                  <option key={theme} value={theme}>{themeLabel(theme, ui)}</option>
+                  <option key={theme} value={theme}>
+                    {themeLabel(theme, ui)}
+                  </option>
                 ))}
               </select>
             </label>
@@ -406,7 +437,9 @@ export const SettingsView: React.FC = () => {
                 onChange={(e) => prefs.setLanguage(e.target.value as SupportedLanguage)}
               >
                 {uiLanguages.map((language) => (
-                  <option key={language.id} value={language.id}>{language.nativeName}</option>
+                  <option key={language.id} value={language.id}>
+                    {language.nativeName}
+                  </option>
                 ))}
               </select>
             </label>
@@ -424,7 +457,9 @@ export const SettingsView: React.FC = () => {
               <span>{ui.settings.sidebar}</span>
               <select
                 value={prefs.sidebarMode}
-                onChange={(e) => prefs.setSidebarMode(e.target.value === "collapsed" ? "collapsed" : "expanded")}
+                onChange={(e) =>
+                  prefs.setSidebarMode(e.target.value === "collapsed" ? "collapsed" : "expanded")
+                }
               >
                 <option value="expanded">{ui.settings.sidebarExpanded}</option>
                 <option value="collapsed">{ui.settings.sidebarCollapsed}</option>
@@ -436,9 +471,7 @@ export const SettingsView: React.FC = () => {
                 value={prefs.closeAction}
                 onChange={(e) =>
                   prefs.setCloseAction(
-                    e.target.value === "tray" || e.target.value === "quit"
-                      ? e.target.value
-                      : "ask"
+                    e.target.value === "tray" || e.target.value === "quit" ? e.target.value : "ask",
                   )
                 }
               >
@@ -451,7 +484,9 @@ export const SettingsView: React.FC = () => {
               <span>{ui.settings.cacheMeasure}</span>
               <select
                 value={prefs.cacheMeasureMode}
-                onChange={(e) => prefs.setCacheMeasureMode(e.target.value === "full" ? "full" : "fast")}
+                onChange={(e) =>
+                  prefs.setCacheMeasureMode(e.target.value === "full" ? "full" : "fast")
+                }
               >
                 <option value="fast">{ui.settings.cacheMeasureFast}</option>
                 <option value="full">{ui.settings.cacheMeasureFull}</option>
@@ -524,9 +559,19 @@ export const SettingsView: React.FC = () => {
 
         {activeSection.id === "notifications" && (
           <section className="settings-card">
-            <div className="settings-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div
+              className="settings-banner"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
               <div>
-                <h3 className="settings-group-title" style={{ margin: 0 }}>{ui.settings.notifTitle}</h3>
+                <h3 className="settings-group-title" style={{ margin: 0 }}>
+                  {ui.settings.notifTitle}
+                </h3>
                 <p className="settings-hint" style={{ margin: "4px 0 0" }}>
                   {ui.settings.notifDesc}
                 </p>
@@ -558,11 +603,13 @@ export const SettingsView: React.FC = () => {
               <Switch
                 checked={prefs.notifications?.soundEnabled ?? true}
                 onChange={(checked) => updateNotify("soundEnabled", checked)}
-                aria-label="Bildirim Sesleri"
+                aria-label={ui.settings.notifSounds}
               />
             </div>
 
-            <h4 className="settings-group-title" style={{ marginTop: 20, marginBottom: 8 }}>{ui.settings.eventMatrixTitle}</h4>
+            <h4 className="settings-group-title" style={{ marginTop: 20, marginBottom: 8 }}>
+              {ui.settings.eventMatrixTitle}
+            </h4>
 
             <label className="form-row">
               <div>
@@ -571,7 +618,9 @@ export const SettingsView: React.FC = () => {
               </div>
               <select
                 value={prefs.notifications?.scanComplete ?? "both"}
-                onChange={(e) => updateNotify("scanComplete", e.target.value as NotificationChannel)}
+                onChange={(e) =>
+                  updateNotify("scanComplete", e.target.value as NotificationChannel)
+                }
               >
                 <option value="both">{ui.settings.chBoth}</option>
                 <option value="in_app">{ui.settings.chInApp}</option>
@@ -587,7 +636,9 @@ export const SettingsView: React.FC = () => {
               </div>
               <select
                 value={prefs.notifications?.cleanComplete ?? "both"}
-                onChange={(e) => updateNotify("cleanComplete", e.target.value as NotificationChannel)}
+                onChange={(e) =>
+                  updateNotify("cleanComplete", e.target.value as NotificationChannel)
+                }
               >
                 <option value="both">{ui.settings.chBoth}</option>
                 <option value="in_app">{ui.settings.chInApp}</option>
@@ -603,7 +654,9 @@ export const SettingsView: React.FC = () => {
               </div>
               <select
                 value={prefs.notifications?.diskPressure ?? "both"}
-                onChange={(e) => updateNotify("diskPressure", e.target.value as NotificationChannel)}
+                onChange={(e) =>
+                  updateNotify("diskPressure", e.target.value as NotificationChannel)
+                }
               >
                 <option value="both">{ui.settings.chBoth}</option>
                 <option value="in_app">{ui.settings.chInApp}</option>
@@ -635,7 +688,9 @@ export const SettingsView: React.FC = () => {
               </div>
               <select
                 value={prefs.notifications?.automationWebhook ?? "both"}
-                onChange={(e) => updateNotify("automationWebhook", e.target.value as NotificationChannel)}
+                onChange={(e) =>
+                  updateNotify("automationWebhook", e.target.value as NotificationChannel)
+                }
               >
                 <option value="both">{ui.settings.chBoth}</option>
                 <option value="in_app">{ui.settings.chInApp}</option>
@@ -651,9 +706,7 @@ export const SettingsView: React.FC = () => {
             <div className="shortcuts-header-row">
               <div>
                 <h3 className="settings-group-title">{ui.settings.shortcutsTitle}</h3>
-                <p className="settings-hint">
-                  {ui.settings.shortcutsDesc}
-                </p>
+                <p className="settings-hint">{ui.settings.shortcutsDesc}</p>
               </div>
               <Button
                 variant="secondary"
@@ -687,7 +740,8 @@ export const SettingsView: React.FC = () => {
               </thead>
               <tbody>
                 {shortcutDefs.map((def) => {
-                  const currentShortcut = (prefs.shortcuts ?? DEFAULT_SHORTCUTS)[def.id] ?? DEFAULT_SHORTCUTS[def.id];
+                  const currentShortcut =
+                    (prefs.shortcuts ?? DEFAULT_SHORTCUTS)[def.id] ?? DEFAULT_SHORTCUTS[def.id];
                   const isRecording = recordingId === def.id;
 
                   return (
@@ -701,9 +755,7 @@ export const SettingsView: React.FC = () => {
                       <td style={{ textAlign: "right" }}>
                         <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                           {isRecording ? (
-                            <span className="shortcut-recording-badge">
-                              {ui.settings.pressKey}
-                            </span>
+                            <span className="shortcut-recording-badge">{ui.settings.pressKey}</span>
                           ) : (
                             <span className="shortcut-key-badge">{currentShortcut}</span>
                           )}
@@ -743,10 +795,10 @@ export const SettingsView: React.FC = () => {
             <div className="form-row form-row--stretch">
               <input
                 type="url"
-                placeholder="https://n8n.sirket.com/webhook/dev-cleaner"
+                placeholder={ui.settings.webhookPlaceholder}
                 value={prefs.webhookUrl ?? ""}
                 onChange={(e) => save({ webhookUrl: e.target.value || null })}
-                aria-label="Webhook URL"
+                aria-label={ui.settings.webhookUrl}
               />
               <Button
                 variant="primary"
@@ -760,8 +812,18 @@ export const SettingsView: React.FC = () => {
             </div>
 
             {webhookTestStatus && (
-              <p className="plan-note" style={{ marginTop: 8, color: webhookTestStatus.startsWith("✓") ? "var(--color-success)" : "var(--color-danger)" }}>
-                {webhookTestStatus}
+              <p
+                className="plan-note"
+                style={{
+                  marginTop: 8,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  color: webhookTestStatus.success ? "var(--color-success)" : "var(--color-danger)",
+                }}
+              >
+                {webhookTestStatus.success ? <Check size={14} /> : <X size={14} />}
+                <span>{webhookTestStatus.text}</span>
               </p>
             )}
 
@@ -773,7 +835,7 @@ export const SettingsView: React.FC = () => {
               <Switch
                 checked={prefs.webhookOnScan ?? true}
                 onChange={(checked) => save({ webhookOnScan: checked })}
-                aria-label="Tarama Webhook"
+                aria-label={ui.settings.webhookScanDone}
               />
             </div>
 
@@ -785,7 +847,19 @@ export const SettingsView: React.FC = () => {
               <Switch
                 checked={prefs.webhookOnClean ?? true}
                 onChange={(checked) => save({ webhookOnClean: checked })}
-                aria-label="Temizlik Webhook"
+                aria-label={ui.settings.webhookCleanDone}
+              />
+            </div>
+
+            <div className="form-row">
+              <div>
+                <span>{ui.settings.mcpDestructiveTitle}</span>
+                <p className="settings-hint">{ui.settings.mcpDestructiveHint}</p>
+              </div>
+              <Switch
+                checked={prefs.mcpAllowDestructive ?? false}
+                onChange={(checked) => save({ mcpAllowDestructive: checked })}
+                aria-label={ui.settings.mcpDestructiveTitle}
               />
             </div>
           </section>
@@ -808,28 +882,47 @@ export const SettingsView: React.FC = () => {
                   size="sm"
                   icon={<FolderOpen size={12} />}
                   onClick={async () => {
-                    const selected = await scannerApi.selectFolderDialog(ui.settings.protectedPaths);
+                    const selected = await scannerApi.selectFolderDialog(
+                      ui.settings.protectedPaths,
+                    );
                     if (selected) setProtectedInput(selected);
                   }}
                 >
                   {ui.common.browse}
                 </Button>
-                <Button variant="secondary" size="sm" icon={<Plus size={12} />} onClick={() => {
-                  const value = protectedInput.trim();
-                  if (!value) return;
-                  if (!prefs.protectedPaths.some((p) => p.toLowerCase() === value.toLowerCase())) {
-                    save({ protectedPaths: [...prefs.protectedPaths, value] });
-                  }
-                  setProtectedInput("");
-                }}>{ui.common.add}</Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={<Plus size={12} />}
+                  onClick={() => {
+                    const value = protectedInput.trim();
+                    if (!value) return;
+                    if (
+                      !prefs.protectedPaths.some((p) => p.toLowerCase() === value.toLowerCase())
+                    ) {
+                      save({ protectedPaths: [...prefs.protectedPaths, value] });
+                    }
+                    setProtectedInput("");
+                  }}
+                >
+                  {ui.common.add}
+                </Button>
               </div>
               <div className="list-editor">
-                {prefs.protectedPaths.length === 0 && <span className="plan-note">{ui.common.none}</span>}
+                {prefs.protectedPaths.length === 0 && (
+                  <span className="plan-note">{ui.common.none}</span>
+                )}
                 {prefs.protectedPaths.map((path) => (
                   <div key={path} className="list-row">
                     <span>{path}</span>
-                    <button type="button" className="icon-btn icon-btn-sm" aria-label={`${ui.settings.remove}: ${path}`}
-                      onClick={() => save({ protectedPaths: prefs.protectedPaths.filter((p) => p !== path) })}>
+                    <button
+                      type="button"
+                      className="icon-btn icon-btn-sm"
+                      aria-label={`${ui.settings.remove}: ${path}`}
+                      onClick={() =>
+                        save({ protectedPaths: prefs.protectedPaths.filter((p) => p !== path) })
+                      }
+                    >
                       <X size={12} />
                     </button>
                   </div>
@@ -847,20 +940,35 @@ export const SettingsView: React.FC = () => {
                   aria-label={ui.settings.excludedNames}
                   onChange={(e) => setExcludedInput(e.target.value)}
                 />
-                <Button variant="secondary" size="sm" icon={<Plus size={12} />} onClick={() => {
-                  const value = excludedInput.trim();
-                  if (!value) return;
-                  save({ excludedNames: [...prefs.excludedNames, value] });
-                  setExcludedInput("");
-                }}>{ui.common.add}</Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={<Plus size={12} />}
+                  onClick={() => {
+                    const value = excludedInput.trim();
+                    if (!value) return;
+                    save({ excludedNames: [...prefs.excludedNames, value] });
+                    setExcludedInput("");
+                  }}
+                >
+                  {ui.common.add}
+                </Button>
               </div>
               <div className="list-editor">
-                {prefs.excludedNames.length === 0 && <span className="plan-note">{ui.common.none}</span>}
+                {prefs.excludedNames.length === 0 && (
+                  <span className="plan-note">{ui.common.none}</span>
+                )}
                 {prefs.excludedNames.map((name) => (
                   <div key={name} className="list-row">
                     <span>{name}</span>
-                    <button type="button" className="icon-btn icon-btn-sm" aria-label={`${ui.settings.remove}: ${name}`}
-                      onClick={() => save({ excludedNames: prefs.excludedNames.filter((n) => n !== name) })}>
+                    <button
+                      type="button"
+                      className="icon-btn icon-btn-sm"
+                      aria-label={`${ui.settings.remove}: ${name}`}
+                      onClick={() =>
+                        save({ excludedNames: prefs.excludedNames.filter((n) => n !== name) })
+                      }
+                    >
                       <X size={12} />
                     </button>
                   </div>
@@ -879,7 +987,9 @@ export const SettingsView: React.FC = () => {
                 onLabel={ui.common.on}
                 offLabel={ui.common.off}
                 aria-label={ui.settings.agentCacheCleanup}
-                onChange={(v) => save({ agentPolicy: { ...prefs.agentPolicy, allowCacheCleanup: v } })}
+                onChange={(v) =>
+                  save({ agentPolicy: { ...prefs.agentPolicy, allowCacheCleanup: v } })
+                }
               />
             </div>
             <div className="form-row">
@@ -889,10 +999,15 @@ export const SettingsView: React.FC = () => {
                 onLabel={ui.common.on}
                 offLabel={ui.common.off}
                 aria-label={ui.settings.browserRecordings}
-                onChange={(v) => save({ agentPolicy: { ...prefs.agentPolicy, protectBrowserRecordings: v } })}
+                onChange={(v) =>
+                  save({ agentPolicy: { ...prefs.agentPolicy, protectBrowserRecordings: v } })
+                }
               />
             </div>
-            <div className="plan-note" style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+            <div
+              className="plan-note"
+              style={{ display: "flex", gap: 6, alignItems: "flex-start" }}
+            >
               <ShieldCheck size={14} /> {ui.agents.subtitle}
             </div>
           </section>
@@ -925,7 +1040,12 @@ export const SettingsView: React.FC = () => {
         )}
 
         {activeSection.id === "about" && (
-          <AboutView buildInfo={buildInfo} catalog={catalog} catalogStats={catalogStats} isStandalone={false} />
+          <AboutView
+            buildInfo={buildInfo}
+            catalog={catalog}
+            catalogStats={catalogStats}
+            isStandalone={false}
+          />
         )}
       </div>
     </div>

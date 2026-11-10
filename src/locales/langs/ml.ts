@@ -45,7 +45,8 @@ export const ml: TranslationSchema = {
   },
   scan: {
     idleTitle: "നിങ്ങളുടെ ഡിസ്ക് സ്പേസ് വീണ്ടെടുക്കുക",
-    idleSubtitle: "നിങ്ങളുടെ എല്ലാ പ്രോജക്റ്റുകളിലെയും node_modules ഫോൾഡറുകൾ സുരക്ഷിതമായി കണ്ടെത്തി വൃത്തിയാക്കുക.",
+    idleSubtitle:
+      "നിങ്ങളുടെ എല്ലാ പ്രോജക്റ്റുകളിലെയും node_modules ഫോൾഡറുകൾ സുരക്ഷിതമായി കണ്ടെത്തി വൃത്തിയാക്കുക.",
     selectFolderFirst: "സ്കാൻ ആരംഭിക്കാൻ മുകളിൽ ഒരു ഫോൾഡർ തിരഞ്ഞെടുക്കുക.",
     discovering: "പ്രോജക്റ്റുകൾ കണ്ടെത്തുന്നു...",
     measuring: "വലിപ്പം കണക്കാക്കുന്നു...",
@@ -102,18 +103,24 @@ export const ml: TranslationSchema = {
     cancel: "റദ്ദാക്കുക",
     confirm: "സ്ഥിരീകരിക്കുക",
     recycleTitle: "തിരഞ്ഞെടുത്ത ഫോൾഡറുകൾ റീസൈക്കിൾ ബിന്നിലേക്ക് മാറ്റണോ?",
-    recycleDescription: (count: number, size: string) => `${count} node_modules ഫോൾഡറുകൾ (${size}) റീസൈക്കിൾ ബിന്നിലേക്ക് മാറ്റും. നിങ്ങൾക്ക് എപ്പോൾ വേണമെങ്കിലും അവ പുനഃസ്ഥാപിക്കാം.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} node_modules ഫോൾഡറുകൾ (${size}) റീസൈക്കിൾ ബിന്നിലേക്ക് മാറ്റും. നിങ്ങൾക്ക് എപ്പോൾ വേണമെങ്കിലും അവ പുനഃസ്ഥാപിക്കാം.`,
     recycleConfirmButton: "റീസൈക്കിൾ ബിന്നിലേക്ക് മാറ്റുക",
     permanentTitle: "തിരഞ്ഞെടുത്ത ഫോൾഡറുകൾ പൂർണ്ണമായി ഇല്ലാതാക്കണോ?",
-    permanentDescription: (count: number, size: string) => `${count} node_modules ഫോൾഡറുകൾ (${size}) ഡിസ്കിൽ നിന്ന് പൂർണ്ണമായി ഇല്ലാതാക്കും. ഈ പ്രവർത്തനം പഴയപടിയാക്കാൻ കഴിയില്ല.`,
-    permanentWarning: "മുന്നറിയിപ്പ്: ഈ പ്രവർത്തനം ശാശ്വതമാണ്! ഫോൾഡറുകൾ റീസൈക്കിൾ ബിന്നിലേക്ക് അയയ്ക്കില്ല.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} node_modules ഫോൾഡറുകൾ (${size}) ഡിസ്കിൽ നിന്ന് പൂർണ്ണമായി ഇല്ലാതാക്കും. ഈ പ്രവർത്തനം പഴയപടിയാക്കാൻ കഴിയില്ല.`,
+    permanentWarning:
+      "മുന്നറിയിപ്പ്: ഈ പ്രവർത്തനം ശാശ്വതമാണ്! ഫോൾഡറുകൾ റീസൈക്കിൾ ബിന്നിലേക്ക് അയയ്ക്കില്ല.",
     permanentConfirmButton: "പൂർണ്ണമായി ഇല്ലാതാക്കുക",
     deletingInProgress: "ഇല്ലാതാക്കുന്നു...",
-    recycleSuccess: (count: number) => `${count} ഫോൾഡറുകൾ വിജയകരമായി റീസൈക്കിൾ ബിന്നിലേക്ക് മാറ്റി.`,
+    recycleSuccess: (count: number) =>
+      `${count} ഫോൾഡറുകൾ വിജയകരമായി റീസൈക്കിൾ ബിന്നിലേക്ക് മാറ്റി.`,
     permanentSuccess: (count: number) => `${count} ഫോൾഡറുകൾ വിജയകരമായി പൂർണ്ണമായി ഇല്ലാതാക്കി.`,
     partialErrorTitle: "ഭാഗിക ഇല്ലാതാക്കൽ റിപ്പോർട്ട്",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} ഫോൾഡറുകൾ വൃത്തിയാക്കി, എന്നാൽ ${errorCount} ഫോൾഡറുകൾ ഇല്ലാതാക്കാൻ കഴിഞ്ഞില്ല.`,
-    lockedOrPermissionNote: "ചില ഫയലുകൾ പ്രവർത്തിക്കുന്ന പ്രക്രിയകളാൽ ലോക്ക് ചെയ്തിരിക്കാം അല്ലെങ്കിൽ അഡ്മിനിസ്ട്രേറ്റർ അനുമതികൾ ആവശ്യമായി വന്നേക്കാം.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} ഫോൾഡറുകൾ വൃത്തിയാക്കി, എന്നാൽ ${errorCount} ഫോൾഡറുകൾ ഇല്ലാതാക്കാൻ കഴിഞ്ഞില്ല.`,
+    lockedOrPermissionNote:
+      "ചില ഫയലുകൾ പ്രവർത്തിക്കുന്ന പ്രക്രിയകളാൽ ലോക്ക് ചെയ്തിരിക്കാം അല്ലെങ്കിൽ അഡ്മിനിസ്ട്രേറ്റർ അനുമതികൾ ആവശ്യമായി വന്നേക്കാം.",
   },
   settings: {
     title: "ക്രമീകരണങ്ങൾ",
@@ -148,14 +155,16 @@ export const ml: TranslationSchema = {
     reduceMotionDesc: "വിഭവങ്ങൾ ലാഭിക്കാൻ ആനിമേഷനുകൾ പ്രവർത്തനരഹിതമാക്കുന്നു.",
     favoritesManagement: "പ്രിയപ്പെട്ടവയുടെ മാനേജ്മെന്റ്",
     noFavorites: "ഇതുവരെ സംരക്ഷിച്ച പ്രിയപ്പെട്ട ലൊക്കേഷനുകൾ ഒന്നുമില്ല.",
-    deleteFavoriteConfirm: "ഈ പ്രിയപ്പെട്ട ലൊക്കേഷൻ നീക്കംചെയ്യാൻ നിങ്ങൾ ആഗ്രഹിക്കുന്നുവെന്ന് ഉറപ്പാണോ?",
+    deleteFavoriteConfirm:
+      "ഈ പ്രിയപ്പെട്ട ലൊക്കേഷൻ നീക്കംചെയ്യാൻ നിങ്ങൾ ആഗ്രഹിക്കുന്നുവെന്ന് ഉറപ്പാണോ?",
     favoriteRemoved: "പ്രിയപ്പെട്ട ലൊക്കേഷൻ നീക്കംചെയ്തു.",
     favoriteAdded: "പ്രിയപ്പെട്ടവയിലേക്ക് ചേർത്തു.",
     about: "വിവരം",
     version: "പതിപ്പ്",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "പ്രസാധകൻ: Vellium • © 2026 Vellium. എല്ലാ അവകാശങ്ങളും നിക്ഷിപ്തം.",
-    privacyNote: "എല്ലാ സ്കാനിംഗും ഇല്ലാതാക്കലും നിങ്ങളുടെ കമ്പ്യൂട്ടറിൽ 100% പ്രാദേശികമായി നടക്കുന്നു. ഡാറ്റ പുറത്തേക്ക് അയയ്ക്കില്ല.",
+    privacyNote:
+      "എല്ലാ സ്കാനിംഗും ഇല്ലാതാക്കലും നിങ്ങളുടെ കമ്പ്യൂട്ടറിൽ 100% പ്രാദേശികമായി നടക്കുന്നു. ഡാറ്റ പുറത്തേക്ക് അയയ്ക്കില്ല.",
     close: "അടയ്ക്കുക",
   },
   errors: {
@@ -164,7 +173,8 @@ export const ml: TranslationSchema = {
     pathNotFound: "നിർദ്ദിഷ്ട പാത കണ്ടെത്തിയില്ല.",
     scanCancelled: "ഉപയോക്താവ് സ്കാൻ റദ്ദാക്കി.",
     scanFailed: "സ്കാൻ ചെയ്യുമ്പോൾ ഒരു പിശക് സംഭവിച്ചു.",
-    unsafeDeleteTarget: "സുരക്ഷാ കാരണങ്ങളാൽ റൂട്ട് അല്ലെങ്കിൽ സിസ്റ്റം ഫോൾഡറുകൾ ഇല്ലാതാക്കാൻ കഴിയില്ല.",
+    unsafeDeleteTarget:
+      "സുരക്ഷാ കാരണങ്ങളാൽ റൂട്ട് അല്ലെങ്കിൽ സിസ്റ്റം ഫോൾഡറുകൾ ഇല്ലാതാക്കാൻ കഴിയില്ല.",
     recycleBinFailed: "ഫോൾഡറുകൾ റീസൈക്കിൾ ബിന്നിലേക്ക് മാറ്റാൻ കഴിഞ്ഞില്ല.",
     permanentDeleteFailed: "ഫോൾഡറുകൾ പൂർണ്ണമായി ഇല്ലാതാക്കാൻ കഴിഞ്ഞില്ല.",
     settingsReadFailed: "ക്രമീകരണ ഫയൽ വായിക്കാൻ കഴിഞ്ഞില്ല.",

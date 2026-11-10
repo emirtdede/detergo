@@ -102,18 +102,24 @@ export const uz: TranslationSchema = {
     cancel: "Bekor qilish",
     confirm: "Tasdiqlash",
     recycleTitle: "Tanlangan Papkalar Chiqindi Qutisiga Yuborilsinmi?",
-    recycleDescription: (count: number, size: string) => `${count} ta node_modules papkasi (${size}) Chiqindi qutisiga yuboriladi. Istalgan vaqtda ularni qayta tiklashingiz mumkin.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} ta node_modules papkasi (${size}) Chiqindi qutisiga yuboriladi. Istalgan vaqtda ularni qayta tiklashingiz mumkin.`,
     recycleConfirmButton: "Chiqindi Qutisiga Yuborish",
     permanentTitle: "Tanlangan Papkalar Butunlay O'chirilsinmi?",
-    permanentDescription: (count: number, size: string) => `${count} ta node_modules papkasi (${size}) diskdan butunlay o'chiriladi. Bu amalni qaytarib bo'lmaydi.`,
-    permanentWarning: "OGOHLANTIRISH: Ushbu amal qaytarilmas! Papkalar Chiqindi qutisiga yuborilmaydi.",
+    permanentDescription: (count: number, size: string) =>
+      `${count} ta node_modules papkasi (${size}) diskdan butunlay o'chiriladi. Bu amalni qaytarib bo'lmaydi.`,
+    permanentWarning:
+      "OGOHLANTIRISH: Ushbu amal qaytarilmas! Papkalar Chiqindi qutisiga yuborilmaydi.",
     permanentConfirmButton: "Butunlay O'chirish",
     deletingInProgress: "O'chirilmoqda...",
-    recycleSuccess: (count: number) => `${count} ta papka Chiqindi qutisiga muvaffaqiyatli yuborildi.`,
+    recycleSuccess: (count: number) =>
+      `${count} ta papka Chiqindi qutisiga muvaffaqiyatli yuborildi.`,
     permanentSuccess: (count: number) => `${count} ta papka butunlay muvaffaqiyatli o'chirildi.`,
     partialErrorTitle: "Qisman O'chirish Hisoboti",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} ta papka tozalandi, ammo ${errorCount} ta papkani o'chirib bo'lmadi.`,
-    lockedOrPermissionNote: "Ba'zi fayllar ishlayotgan jarayonlar tomonidan band qilingan bo'lishi yoki administrator ruxsatlarini talab qilishi mumkin.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} ta papka tozalandi, ammo ${errorCount} ta papkani o'chirib bo'lmadi.`,
+    lockedOrPermissionNote:
+      "Ba'zi fayllar ishlayotgan jarayonlar tomonidan band qilingan bo'lishi yoki administrator ruxsatlarini talab qilishi mumkin.",
   },
   settings: {
     title: "Sozlamalar",
@@ -155,7 +161,8 @@ export const uz: TranslationSchema = {
     version: "Versiya",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Nashriyotchi: Vellium • © 2026 Vellium. Barcha huquqlar himoyalangan.",
-    privacyNote: "Barcha skanerlash va o'chirish jarayonlari 100% kompyuteringizda amalga oshiriladi. Hech qanday ma'lumot uzatilmaydi.",
+    privacyNote:
+      "Barcha skanerlash va o'chirish jarayonlari 100% kompyuteringizda amalga oshiriladi. Hech qanday ma'lumot uzatilmaydi.",
     close: "Yopish",
   },
   errors: {

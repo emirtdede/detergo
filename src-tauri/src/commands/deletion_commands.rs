@@ -1,9 +1,14 @@
+use tauri::ipc::{Channel, JavaScriptChannelId};
 use tauri::State;
 
 use crate::audit::{AuditEntry, AuditRecord};
-use crate::cleanup::{build_plan, execute_plan, CleanupPlan, CleanupReport, DeleteMode};
+use crate::cleanup::{
+    build_plan, coordinator::execute_plan_with_hooks, CleanupEvent, CleanupPlan, CleanupReport,
+    DeleteMode,
+};
 use crate::commands::AppState;
 use crate::error::AppError;
+use crate::scanner::cancellation::CancellationToken;
 use crate::scanner::models::ItemStatus;
 
 #[tauri::command]
@@ -29,7 +34,65 @@ pub async fn execute_cleanup(
     plan_id: String,
     confirmation_token: String,
     permanent_acknowledged: bool,
+    on_event: Option<JavaScriptChannelId>,
+    webview: tauri::Webview,
     state: State<'_, AppState>,
+) -> Result<CleanupReport, AppError> {
+    // `Channel<T>` itself is not optional as a command argument, so the raw
+    // JavaScript channel id is accepted and upgraded here. Callers without a
+    // channel (CLI-style probes) simply receive no progress events.
+    let on_event: Option<Channel<CleanupEvent>> = on_event.map(|id| id.channel_on(webview.clone()));
+    // Acquire the slot before consuming the plan: a second concurrent request
+    // must be rejected instead of invalidating the plan the first one is using.
+    let token = {
+        let mut slot = state.cleanup_token.lock().unwrap();
+        if slot.is_some() {
+            return Err(AppError::Blocked(
+                "A cleanup is already running.".to_string(),
+            ));
+        }
+        let token = CancellationToken::new();
+        *slot = Some(token.clone());
+        token
+    };
+
+    let outcome = run_cleanup(
+        plan_id,
+        confirmation_token,
+        permanent_acknowledged,
+        on_event,
+        &state,
+        token,
+    )
+    .await;
+
+    // The slot is released on every exit path (success, blocked, error), and
+    // only after the run above has fully finished. `cancel_cleanup` therefore
+    // keeps seeing the token until cancellation has taken effect.
+    {
+        let mut slot = state.cleanup_token.lock().unwrap();
+        *slot = None;
+    }
+
+    outcome
+}
+
+#[tauri::command]
+pub fn cancel_cleanup(state: State<'_, AppState>) -> Result<(), AppError> {
+    let current = state.cleanup_token.lock().unwrap();
+    if let Some(token) = current.as_ref() {
+        token.cancel();
+    }
+    Ok(())
+}
+
+async fn run_cleanup(
+    plan_id: String,
+    confirmation_token: String,
+    permanent_acknowledged: bool,
+    on_event: Option<Channel<CleanupEvent>>,
+    state: &AppState,
+    token: CancellationToken,
 ) -> Result<CleanupReport, AppError> {
     let plan = state.registry.consume_plan(&plan_id)?;
     let handle = state.registry.get_session(&plan.session_id)?;
@@ -39,19 +102,30 @@ pub async fn execute_cleanup(
 
     let plan_for_task = plan.clone();
     let handle_for_task = handle.clone();
+    let token_for_task = token.clone();
     let report = tokio::task::spawn_blocking(move || {
         let session = handle_for_task.lock().unwrap();
-        execute_plan(
+        let observer = |event: CleanupEvent| {
+            if let Some(channel) = on_event.as_ref() {
+                // A dropped frontend channel must never abort a cleanup; the
+                // run continues and the final report is still returned.
+                let _ = channel.send(event);
+            }
+        };
+        execute_plan_with_hooks(
             &plan_for_task,
             &session,
             &catalog,
             &policy,
             &confirmation_token,
             permanent_acknowledged,
+            &crate::safety::active_use_for_provider,
+            &observer,
+            &token_for_task,
         )
     })
     .await
-    .map_err(|e| AppError::Unknown(format!("Silme görevi başarısız: {}", e)))??;
+    .map_err(|e| AppError::Unknown(format!("Delete task failed: {}", e)))??;
 
     {
         let mut session = handle.lock().unwrap();
@@ -90,12 +164,15 @@ pub async fn execute_cleanup(
                     bytes: r.measured_bytes,
                 })
                 .collect(),
+            cancelled: report.cancelled,
+            processed_count: report.processed_count,
+            skipped_count: report.skipped_count,
         };
         // A failed history write must never be reported as success without a
         // hint: the user has to know that the audit trail is incomplete.
         if let Err(err) = state.audit.append_record(&record) {
             return Ok(CleanupReport {
-                audit_error: Some(format!("Temizlik geçmişi yazılamadı: {}", err)),
+                audit_error: Some(format!("Failed to record cleanup audit: {}", err)),
                 ..report
             });
         }

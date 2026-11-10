@@ -156,6 +156,12 @@ export interface TranslationSchema {
     privacyNote: string;
     close: string;
   };
+  /**
+   * Optional: only the TR and EN dictionaries embed the full legal schema.
+   * Other locales intentionally omit it; `LegalView` reads localized legal
+   * text from `legal-content.ts` + `legal-locales/*.json` instead. Consumers
+   * of `TranslationSchema` must not assume `legal` is present.
+   */
   legal?: LegalSchema;
   errors: {
     invalidPath: string;
@@ -210,8 +216,13 @@ export interface LegalSchema {
   securityIntro: string;
   securitySections: Array<{ title: string; content: string }>;
   licensesIntro: string;
-  licensesList: Array<{ name: string; version: string; license: string; description: string; url: string }>;
+  licensesList: Array<{
+    name: string;
+    version: string;
+    license: string;
+    description: string;
+    url: string;
+  }>;
 }
 
 export type FullTranslationSchema = TranslationSchema & { legal: LegalSchema };
-

@@ -45,7 +45,8 @@ export const sk: TranslationSchema = {
   },
   scan: {
     idleTitle: "Získajte Späť Miesto na Disku",
-    idleSubtitle: "Nájdite a bezpečne vyčistite priečinky node_modules vo všetkých svojich projektoch.",
+    idleSubtitle:
+      "Nájdite a bezpečne vyčistite priečinky node_modules vo všetkých svojich projektoch.",
     selectFolderFirst: "Vyberte priečinok vyššie na spustenie skenovania.",
     discovering: "Zisťovanie projektov...",
     measuring: "Výpočet veľkostí...",
@@ -102,18 +103,22 @@ export const sk: TranslationSchema = {
     cancel: "Zrušiť",
     confirm: "Potvrdiť",
     recycleTitle: "Presunúť Vybrané Priečinky do Koša?",
-    recycleDescription: (count: number, size: string) => `${count} priečinkov node_modules (${size}) sa presunie do Koša. Môžete ich kedykoľvek obnoviť.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} priečinkov node_modules (${size}) sa presunie do Koša. Môžete ich kedykoľvek obnoviť.`,
     recycleConfirmButton: "Presunúť do Koša",
     permanentTitle: "Trvalo Zmazať Vybrané Priečinky?",
-    permanentDescription: (count: number, size: string) => `${count} priečinkov node_modules (${size}) sa natrvalo vymaže z disku. Túto akciu nemožno vrátiť späť.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} priečinkov node_modules (${size}) sa natrvalo vymaže z disku. Túto akciu nemožno vrátiť späť.`,
     permanentWarning: "VAROVANIE: Táto akcia je trvalá! Priečinky nebudú odoslané do Koša.",
     permanentConfirmButton: "Trvalo Zmazať",
     deletingInProgress: "Prebieha mazanie...",
     recycleSuccess: (count: number) => `${count} priečinkov úspešne presunutých do Koša.`,
     permanentSuccess: (count: number) => `${count} priečinkov úspešne natrvalo zmazaných.`,
     partialErrorTitle: "Správa o Čiastočnom Zmazaní",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} priečinkov vyčistených, ale ${errorCount} priečinkov sa nepodarilo zmazať.`,
-    lockedOrPermissionNote: "Niektoré súbory môžu byť uzamknuté spustenými procesmi alebo vyžadovať administrátorské práva.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} priečinkov vyčistených, ale ${errorCount} priečinkov sa nepodarilo zmazať.`,
+    lockedOrPermissionNote:
+      "Niektoré súbory môžu byť uzamknuté spustenými procesmi alebo vyžadovať administrátorské práva.",
   },
   settings: {
     title: "Nastavenia",
@@ -155,7 +160,8 @@ export const sk: TranslationSchema = {
     version: "Verzia",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Vydavateľ: Vellium • © 2026 Vellium. Všetky práva vyhradené.",
-    privacyNote: "Všetky skenovania a mazania prebiehajú 100% lokálne vo vašom počítači. Žiadna telemetria.",
+    privacyNote:
+      "Všetky skenovania a mazania prebiehajú 100% lokálne vo vašom počítači. Žiadna telemetria.",
     close: "Zavrieť",
   },
   errors: {
@@ -164,7 +170,8 @@ export const sk: TranslationSchema = {
     pathNotFound: "Zadaná cesta sa nenašla.",
     scanCancelled: "Skenovanie bolo zrušené používateľom.",
     scanFailed: "Počas skenovania došlo k chybe.",
-    unsafeDeleteTarget: "Z bezpečnostných dôvodov nie je možné mazať koreňové ani systémové priečinky.",
+    unsafeDeleteTarget:
+      "Z bezpečnostných dôvodov nie je možné mazať koreňové ani systémové priečinky.",
     recycleBinFailed: "Presunutie priečinkov do Koša zlyhalo.",
     permanentDeleteFailed: "Trvalé zmazanie priečinkov zlyhalo.",
     settingsReadFailed: "Nepodarilo sa prečítať súbor nastavení.",

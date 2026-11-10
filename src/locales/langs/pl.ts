@@ -45,7 +45,8 @@ export const pl: TranslationSchema = {
   },
   scan: {
     idleTitle: "Odzyskaj miejsce na dysku",
-    idleSubtitle: "Bezpiecznie znajdź i wyczyść foldery node_modules we wszystkich swoich projektach.",
+    idleSubtitle:
+      "Bezpiecznie znajdź i wyczyść foldery node_modules we wszystkich swoich projektach.",
     selectFolderFirst: "Wybierz folder powyżej, aby rozpocząć skanowanie.",
     discovering: "Wykrywanie projektów...",
     measuring: "Obliczanie rozmiarów...",
@@ -102,18 +103,22 @@ export const pl: TranslationSchema = {
     cancel: "Anuluj",
     confirm: "Potwierdź",
     recycleTitle: "Przenieść wybrane foldery do Kosza?",
-    recycleDescription: (count: number, size: string) => `${count} folderów node_modules (${size}) zostanie przeniesionych do Kosza. Możesz je przywrócić w dowolnym momencie.`,
+    recycleDescription: (count: number, size: string) =>
+      `${count} folderów node_modules (${size}) zostanie przeniesionych do Kosza. Możesz je przywrócić w dowolnym momencie.`,
     recycleConfirmButton: "Przenieś do Kosza",
     permanentTitle: "Trwale usunąć wybrane foldery?",
-    permanentDescription: (count: number, size: string) => `${count} folderów node_modules (${size}) zostanie trwale usuniętych z dysku. Tej operacji nie można cofnąć.`,
+    permanentDescription: (count: number, size: string) =>
+      `${count} folderów node_modules (${size}) zostanie trwale usuniętych z dysku. Tej operacji nie można cofnąć.`,
     permanentWarning: "OSTRZEŻENIE: Ta operacja jest nieodwracalna! Foldery nie trafią do Kosza.",
     permanentConfirmButton: "Usuń trwale",
     deletingInProgress: "Usuwanie w toku...",
     recycleSuccess: (count: number) => `${count} folderów pomyślnie przeniesiono do Kosza.`,
     permanentSuccess: (count: number) => `${count} folderów pomyślnie usunięto trwale.`,
     partialErrorTitle: "Raport częściowego usunięcia",
-    partialErrorDescription: (successCount: number, errorCount: number) => `${successCount} folderów wyczyszczono, ale ${errorCount} folderów nie udało się usunąć.`,
-    lockedOrPermissionNote: "Niektóre pliki mogą być zablokowane przez uruchomione procesy lub wymagać uprawnień administratora.",
+    partialErrorDescription: (successCount: number, errorCount: number) =>
+      `${successCount} folderów wyczyszczono, ale ${errorCount} folderów nie udało się usunąć.`,
+    lockedOrPermissionNote:
+      "Niektóre pliki mogą być zablokowane przez uruchomione procesy lub wymagać uprawnień administratora.",
   },
   settings: {
     title: "Ustawienia",
@@ -155,7 +160,8 @@ export const pl: TranslationSchema = {
     version: "Wersja",
     platform: "Tauri v2 + React 18 + Rust",
     publisher: "Wydawca: Vellium • © 2026 Vellium. Wszelkie prawa zastrzeżone.",
-    privacyNote: "Wszystkie skanowania i operacje usuwania odbywają się w 100% lokalnie na Twoim komputerze. Brak telemetrii.",
+    privacyNote:
+      "Wszystkie skanowania i operacje usuwania odbywają się w 100% lokalnie na Twoim komputerze. Brak telemetrii.",
     close: "Zamknij",
   },
   errors: {
@@ -164,7 +170,8 @@ export const pl: TranslationSchema = {
     pathNotFound: "Nie znaleziono określonej ścieżki.",
     scanCancelled: "Skanowanie zostało anulowane przez użytkownika.",
     scanFailed: "Wystąpił błąd podczas skanowania.",
-    unsafeDeleteTarget: "Ze względów bezpieczeństwa foldery główne i systemowe nie mogą zostać usunięte.",
+    unsafeDeleteTarget:
+      "Ze względów bezpieczeństwa foldery główne i systemowe nie mogą zostać usunięte.",
     recycleBinFailed: "Nie udało się przenieść folderów do Kosza.",
     permanentDeleteFailed: "Nie udało się trwale usunąć folderów.",
     settingsReadFailed: "Nie można odczytać pliku ustawień.",
