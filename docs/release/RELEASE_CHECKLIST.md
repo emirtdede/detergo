@@ -19,7 +19,7 @@ go straight to users; no staging, no canary)
 | G5 | 2.2.1 → 2.2.2 upgrade | **PARTIAL** | `npm run verify:upgrade -Kind NSIS` 8/8 PASS; `-Kind MSI` still pending |
 | G6 | Clean release build + provenance | **PASS** | `npm run build:release` from a clean tree, then `npm run check:build-info` → clean tree, 3 artifacts |
 | G7 | Exe icon frame gate | **PASS** | 15 frames / 15 `RT_ICON` in the portable EXE, setup EXE and raw release binary |
-| G8 | Windows 10 22H2 support claim | **PENDING** | VM availability; if unavailable, remove the untested "1809+" claim from README and the spec |
+| G8 | Windows 10 support claim | **PASS (claim removed)** | No 22H2 host was available, so the untested "1809+" claim was removed from README and `MASTER_SPEC.md`; Windows 11 x64 is the verified target |
 | G9 | Design-board visual approval | **PENDING** | `docs/brand/QA_2.2.2.md` + `docs/brand/qa/` (recorded); signature still missing |
 
 Historical 2.2.1 evidence remains in
@@ -52,7 +52,7 @@ deliverable and never patch a shipped executable in place.
 - [ ] Design-board visual approval (G9)
 - [ ] MSI per-machine run from an elevated session on a separate host (G4)
 - [ ] Clean-VM repeat of the NSIS harnesses (G3)
-- [ ] Windows 10 22H2 verification or support-claim removal (G8)
+- [x] Windows 10 support claim removed (no 22H2 host available)
 
 ## Verification commands
 
@@ -106,7 +106,7 @@ Copy-Item <share>\Dev-Cleaner-2.2.1-x64.msi        release_output\baseline-2.2.1
 - [x] Portable PASS (smoke 10/10)
 - [x] `SHA256SUMS.txt` and `BUILD_INFO.json` generated
 - [x] `check:build-info` reports `dirty: false` and the audited commit
-- [ ] Windows 10 22H2 smoke test or support claim removed
+- [x] Windows 10 support claim removed from README and the spec
 
 ### MSI scope note
 
@@ -135,8 +135,9 @@ recorded so they are not mistaken for 2.2.2 breakage.
    after any further source change, because the gate requires the recorded commit
    to equal `HEAD`.
 3. **Code signing (F-6).** Binaries are unsigned; SmartScreen warns.
-4. **Windows 10 (F-4).** No 22H2 host has been available. Either verify it or
-   remove the untested support claim.
+4. **Windows 10 (F-4).** No 22H2 host has been available, so 2.2.2 does not
+   advertise Windows 10; the claim was removed from README and `MASTER_SPEC.md`.
+   Re-introduce it only with a 22H2 smoke run.
 5. **Clean-VM repeat (G3).** The NSIS harnesses passed on the development host.
    A pristine Windows 11 image should still be used once before publication, so
    the evidence covers a machine that never had a prior installation.
@@ -154,7 +155,6 @@ recorded so they are not mistaken for 2.2.2 breakage.
    keep the console output with the release evidence.
 4. **Design approval (G9).** The recorded QA sheets must be signed off before
    the packages are published.
-5. **Windows 10 (G8).** Verify 22H2 or remove the support claim.
 
 ## Decision
 
@@ -162,4 +162,4 @@ recorded so they are not mistaken for 2.2.2 breakage.
   shell surfaces, NSIS upgrade path, portable smoke and brand gates are recorded
   in `docs/release/TEST_MATRIX.md`. G4, the clean-VM repeat and G9 remain open.
 - **Public production (DIRECT-LIVE):** **NO-GO** until G0, G4, the clean-VM
-  repeat, G9 and (if Windows 10 is still advertised) G8 are PASS.
+  repeat and G9 are PASS.

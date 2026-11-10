@@ -1,7 +1,7 @@
 # Node Cleaner 2.0 — Master Specification
 
 **Status:** Normative. Where older documents disagree, this document wins.
-**Product:** Node Cleaner 2.0.0 · Vellium · Windows 10/11 x64
+**Product:** Node Cleaner 2.0.0 · Vellium · Windows 11 x64 (Windows 10 unverified)
 **Date:** 2026-10-28
 **Stack:** Tauri 2 · Rust · React 19 · TypeScript · Zustand
 

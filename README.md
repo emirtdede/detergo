@@ -44,12 +44,13 @@ Rust-backed and guarded by automated tests, and the previously pending verificat
 work has been executed (real Recycle Bin round-trip, 10k/50k/1M-entry/300k-recording
 benchmarks, crash-during-delete, offline/no-telemetry, installer round-trips).
 
-**Public production is GO for the current packages**, which were built from a
-clean tree: `release_output/BUILD_INFO.json` reports `"dirty": false` and a commit
-equal to `HEAD`, and the running binary reports the same commit via
-`get_build_info`. That manifest is the authoritative hash/commit record for a
-download. Two non-code gaps remain documented: the Windows 10 clean-install smoke
-test and the OneDrive cloud-only placeholder. See:
+**Public production is NO-GO for 2.2.2** until the open gates close. The 2.2.2
+packages were built from a clean tree: `release_output/BUILD_INFO.json` reports
+`"dirty": false` and a commit equal to `HEAD`. That manifest is the authoritative
+hash/commit record for a download. Open items are legal clearance (G0), the
+elevated MSI run (G4), a clean-VM repeat of the installer harnesses, the
+design-board sign-off (G9) and Windows 10 support, which is no longer advertised.
+See:
 
 - `docs/README.md` — documentation index and reading order
 - `docs/release/RELEASE_CHECKLIST.md` — gates and remaining items
@@ -271,8 +272,9 @@ flowchart TD
 
 - **Node.js**: Version 18.0.0 or higher
 - **Rust & Cargo**: Version 1.75.0 or higher
-- **Windows**: Windows 10 (1809+) or Windows 11 (64-bit x64)
-- **WebView2**: Included by default in Windows 10/11
+- **Windows**: Windows 11 (64-bit x64), verified. Windows 10 is not verified for
+  2.2.2 and is not advertised as supported.
+- **WebView2**: Included by default in Windows 11
 
 ### Step-by-Step Developer Setup
 
@@ -523,8 +525,9 @@ Node-Cleaner/
 
 - **Node.js**: Sürüm 18.0.0 veya üzeri
 - **Rust & Cargo**: Sürüm 1.75.0 veya üzeri
-- **İşletim Sistemi**: Windows 10 (1809+) veya Windows 11 (64-bit x64)
-- **WebView2 Çalışma Zamanı**: Windows 10 ve 11'de varsayılan olarak yerleşiktir
+- **İşletim Sistemi**: Windows 11 (64-bit x64), doğrulandı. Windows 10, 2.2.2
+  için doğrulanmadı ve desteklenen sistem olarak sunulmuyor.
+- **WebView2 Çalışma Zamanı**: Windows 11'de varsayılan olarak yerleşiktir
 
 ### Adım Adım Geliştirici Kurulumu
 

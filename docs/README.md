@@ -123,7 +123,9 @@ The installer harnesses are split by scope:
   `DisplayIcon`, installed `app.ico` and PE frames.
 
 Still open: the MSI run, a repeat of the NSIS harnesses on a pristine VM, the
-design-board signature (G9), counsel (G0) and the Windows 10 claim (G8).
+design-board signature (G9) and counsel (G0). Because no Windows 10 22H2 host was
+available, 2.2.2 no longer advertises Windows 10; Windows 11 x64 is the verified
+target (G8 closed by removing the claim).
 `npm run check:contrast` has a pre-existing token-vocabulary failure documented
 in the release checklist; it is not caused by the brand work.
 See [`release/RELEASE_CHECKLIST.md`](release/RELEASE_CHECKLIST.md),
