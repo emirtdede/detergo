@@ -48,6 +48,8 @@ deliverable and never patch a shipped executable in place.
 - [x] CI runs `check:icons` and `check:brand`; `build:release` runs the PE gate
 - [x] Visual QA record and sheets in `docs/brand/QA_2.2.2.md` and `docs/brand/qa/`
 - [x] NSIS install, shell-surface and 2.2.1 → 2.2.2 upgrade checks (dev host)
+- [x] Real shell captures at 100% scaling (desktop, Start, Explorer, taskbar, tray, in-app)
+- [ ] Shell captures at 125–300% scaling (needs sign-out at each scale on a test image)
 - [ ] Legal counsel sign-off (G0)
 - [ ] Design-board visual approval (G9)
 - [ ] MSI per-machine run from an elevated session on a separate host (G4)

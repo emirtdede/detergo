@@ -19,6 +19,7 @@ are listed under [Still pending](#still-pending).
 | [`qa/tray-zoom.png`](qa/tray-zoom.png) | `src-tauri/icons/tray-16…48.png` | Every tray size reads on dark and light notification areas |
 | [`qa/installer-art.png`](qa/installer-art.png) | `src-tauri/nsis/*.bmp`, `src-tauri/wix/*.bmp` | NSIS sidebar/header/unheader and WiX banner/dialog layout |
 | [`qa/scales.png`](qa/scales.png) | `assets/brand/dev-cleaner-icon-256.png` | 100/150/200/300% resampling has no halo or fuzzy edge |
+| [`qa/shell/`](qa/shell/) | installed 2.2.2 on Windows 11 at 100% | Desktop, Start menu, Explorer, taskbar, tray and in-app chrome render the new mark |
 | `assets/brand/github/social-preview.png` | generated | 1280×640 GitHub social card, no old mark |
 | `assets/brand/github/avatar-1024.png` | generated | Circle-safe 1024 avatar on a dark canvas |
 
@@ -59,6 +60,24 @@ are listed under [Still pending](#still-pending).
 | V-17 | GitHub avatar | **PASS** | Subject centred inside the inscribed circle; dark canvas hides the square edge |
 | V-18 | Retired identity | **PASS** | No blue gradient, old glyph, `setup.ico`, wordmark-in-icon or baked text in any inspected asset |
 
+### Installed shell surfaces, 100% scaling (2026-11-10)
+
+Captured from a real NSIS per-user install of `Dev-Cleaner-2.2.2-x64-Setup.exe`
+on the Windows 11 development host at 1920×1080 / 96 DPI. The desktop
+wallpaper was temporarily replaced with a neutral gradient so personal files
+would not appear in the evidence; the original wallpaper and icon settings were
+restored afterwards. Crops are labelled `*-100.png` and live in
+[`qa/shell/`](qa/shell/).
+
+| # | Check | Result | Observation |
+|---|---|---|---|
+| V-19 | Desktop shortcut | **PASS** | `Dev Cleaner` shortcut carries the 15-frame tile with the shortcut arrow; no old logo |
+| V-20 | Start menu search result | **PASS** | `</>` tile in the result list and the detail panel; name reads `Dev Cleaner` |
+| V-21 | Explorer extra-large icons | **PASS** | `app.ico`, `node-cleaner.exe` and `uninstall.exe` all render the same squircle and spark at 256 px |
+| V-22 | Running taskbar button | **PASS** | The active taskbar button shows the dark tile with the white glyph at 32 px |
+| V-23 | Notification-area overflow | **PASS** | Tray icon appears in the overflow flyout at 16 px; the tile stays legible next to light and dark app icons |
+| V-24 | In-app chrome | **PASS** | The title bar and sidebar render the glyph-only mark in `currentColor`; no version label in the sidebar |
+
 ## Notes for the design board
 
 1. The mark intentionally carries no text; the lockup lives in the README and
@@ -75,13 +94,12 @@ are listed under [Still pending](#still-pending).
 
 ## Still pending
 
-- Real taskbar, Start menu, Explorer and notification-area screenshots after an
-  NSIS install on 100%, 125%, 150%, 175%, 200%, 225%, 250% and 300% displays.
-  The generated sheets prove the assets and `npm run verify:shell-icons` proves
-  the shortcuts and `DisplayIcon` resolve inside the install directory, but no
-  screenshot has been captured yet.
+- Real taskbar, Start menu, Explorer and notification-area captures at 125%,
+  150%, 175%, 200%, 225%, 250% and 300% scaling. The 100% pass is recorded above
+  (V-19…V-24); other scales need separate DPI sessions on a test image, because
+  Windows only re-renders shell surfaces after a sign-out at the new scale.
 - Design-board signature below.
-- Windows 10 22H2 inspection, if that support claim is kept (G8).
+- Windows 10 22H2 inspection, if that support claim is reintroduced.
 
 ## Sign-off
 

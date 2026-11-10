@@ -66,7 +66,8 @@ results prove the packages behave, not that a pristine image is unaffected.
 | NSIS install/uninstall | `npm run verify:installer` | **8/8 PASS** — silent install, version, installed EXE 15 frames, installed `app.ico` 15 frames and byte-identical, uninstaller 15 frames, silent uninstall, queued folder cleanup, no leftovers |
 | Shell surfaces | `npm run verify:shell-icons` | **8/8 PASS** — `DisplayIcon` resolves to `app.ico`; desktop and Start menu shortcuts resolve their icon inside `$INSTDIR`; clean uninstall |
 | 2.2.1 → 2.2.2 upgrade (NSIS) | `npm run verify:upgrade -- -Kind NSIS` | **8/8 PASS** — 2.2.1 installs, upgrades in place, reports 2.2.2, single Apps & Features entry at 2.2.2, upgraded EXE 15 frames, clean removal |
-| MSI elevation guard | `npm run verify:msi` (non-elevated) | **Correctly aborts (exit 2)** — refuses to test the per-machine package as a per-user install |
+| MSI elevation guard | `npm run verify:msi` (non-elevated) | **Correctly aborts (exit 2)** - refuses to test the per-machine package as a per-user install |
+| Installed shell surfaces, 100% | manual capture after the same NSIS install | **6/6 PASS** - desktop shortcut, Start menu result, Explorer extra-large icons, running taskbar button, tray overflow and in-app chrome all show the new mark ([`docs/brand/qa/shell/`](../brand/qa/shell/)) |
 
 Two harness defects were found and fixed by these runs: `Get-FileHash` does not
 resolve in a Windows PowerShell session with a stripped `PSModulePath`, and the
