@@ -59,6 +59,7 @@ are listed under [Still pending](#still-pending).
 | V-16 | GitHub social preview | **PASS** | 1280×640; title, tagline, mark and `vellium.dev` inside the safe area |
 | V-17 | GitHub avatar | **PASS** | Subject centred inside the inscribed circle; dark canvas hides the square edge |
 | V-18 | Retired identity | **PASS** | No blue gradient, old glyph, `setup.ico`, wordmark-in-icon or baked text in any inspected asset |
+| V-18b | Glyph inset matches the supplied original | **PASS** | The mark uses the original geometry with no scale transform; brackets keep visible margin inside the squircle at 16–256 px (frame sheet reviewed at 4× nearest-neighbour) |
 
 ### Installed shell surfaces, 100% scaling (2026-11-10)
 
@@ -68,6 +69,12 @@ wallpaper was temporarily replaced with a neutral gradient so personal files
 would not appear in the evidence; the original wallpaper and icon settings were
 restored afterwards. Crops are labelled `*-100.png` and live in
 [`qa/shell/`](qa/shell/).
+
+These crops predate V-18b: the glyph in them still carries the retired 1.15
+scale, so the brackets sit closer to the tile edge than in the shipping build.
+Every other property they evidence (tile, colour, shortcut arrow, tray
+behaviour, `DisplayIcon`) is unchanged, and the corrected inset is verified at
+frame level by V-18b.
 
 | # | Check | Result | Observation |
 |---|---|---|---|

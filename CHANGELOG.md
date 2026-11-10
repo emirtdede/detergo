@@ -13,6 +13,8 @@ unchanged from 2.2.1.
 
 - Replaced the previous blue app identity with the canonical `</>` + spark mark:
   dark obsidian squircle, white glyph, no text and no font dependency.
+- The mark uses the supplied original geometry unscaled, so the brackets keep a
+  clear margin from the squircle edge at every size.
 - Every Windows surface now uses one 15-frame ICO
   (`16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72, 80, 96, 128, 256`): app window,
   taskbar, Explorer, shortcuts, NSIS setup/uninstaller and the portable EXE.
