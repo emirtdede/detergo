@@ -5,42 +5,82 @@
   "platform": "win32",
   "arch": "x64",
   "master": "assets/brand/dev-cleaner-icon.svg",
-  "masterSha256": "76f8257eeb17daf893e7bcbc316fb1314e89455cce07c20ebc756b7f6030706b",
-  "icoSizes": [16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72, 80, 96, 128, 256],
-  "traySizes": [16, 20, 24, 28, 32, 36, 40, 48],
+  "masterSha256": "1d8a99a4ed36593614863b2f72f74705e3b08e78c49a733664066efca1e44fad",
+  "icoSizes": [
+    16,
+    20,
+    24,
+    28,
+    32,
+    36,
+    40,
+    48,
+    56,
+    64,
+    72,
+    80,
+    96,
+    128,
+    256
+  ],
+  "traySizes": [
+    16,
+    20,
+    24,
+    28,
+    32,
+    36,
+    40,
+    48
+  ],
   "bmpSizes": {
-    "src-tauri/nsis/sidebar.bmp": [164, 314],
-    "src-tauri/nsis/header.bmp": [150, 57],
-    "src-tauri/nsis/unheader.bmp": [150, 57],
-    "src-tauri/wix/banner.bmp": [493, 58],
-    "src-tauri/wix/dialog.bmp": [493, 312]
+    "src-tauri/nsis/sidebar.bmp": [
+      164,
+      314
+    ],
+    "src-tauri/nsis/header.bmp": [
+      150,
+      57
+    ],
+    "src-tauri/nsis/unheader.bmp": [
+      150,
+      57
+    ],
+    "src-tauri/wix/banner.bmp": [
+      493,
+      58
+    ],
+    "src-tauri/wix/dialog.bmp": [
+      493,
+      312
+    ]
   },
   "outputs": {
-    "assets/brand/dev-cleaner-icon-1024.png": "22aff8b9ac41fb72635c2506cf82e375a23014de444a2af304e719ced125d951",
-    "assets/brand/dev-cleaner-icon-256.png": "ca6e932a703b96743d288610828b5518585625f35ff24f5bac0b6504e37aa017",
-    "assets/brand/github/avatar-1024.png": "d6df3445a36b7c174ab161fecfc352b28dc9cfb2c63c74f36cf825d20e5c655e",
-    "assets/brand/github/social-preview.png": "16253fd575c9f3db27499472d50e91ab48e275f7f64efc17797e0b310057a4b3",
-    "docs/brand/dev-cleaner-icon.png": "bb6f524e90ca6f4a3e5191a7a9f4fe8e0936e28f01a47be0b64d93c8b7598ec6",
-    "public/favicon.ico": "51f1eb6c15e5b19f23dd87f41da87a1635a65d9a873fefd93a83d6bb8d8b4c34",
-    "public/favicon.svg": "9108e9052f4f50dd6cff5f713d124ee20513ebf18b55fc6a32ab732acbcb55b5",
-    "public/icons/notification.png": "ca6e932a703b96743d288610828b5518585625f35ff24f5bac0b6504e37aa017",
-    "src-tauri/icons/128x128.png": "7daa96cab1039ca2451db7acf5ed888b67fb923c27c6273c0672cc8b4befb19d",
-    "src-tauri/icons/128x128@2x.png": "ca6e932a703b96743d288610828b5518585625f35ff24f5bac0b6504e37aa017",
-    "src-tauri/icons/32x32.png": "d41d6703011917da700d1a65b00416efceb065a163d228149ec46ad0e70f68c4",
-    "src-tauri/icons/icon.ico": "769446aaf6ff87e59e32bdc9b4cd232bfbbd8fdb62f771754419f72cc3497df3",
-    "src-tauri/icons/icon.png": "bb6f524e90ca6f4a3e5191a7a9f4fe8e0936e28f01a47be0b64d93c8b7598ec6",
-    "src-tauri/icons/tray-16.png": "1a4edb825ef0073884c5c51ce810ef2362a388c372b2cc369d1240db1f58f474",
-    "src-tauri/icons/tray-20.png": "3276dacc457d1598d076a1647c526af8aede03a87e7491e563de23c002183f5f",
-    "src-tauri/icons/tray-24.png": "a112102d495bf19d277ae9e3f859144fd709ec0f68c98b23bf3900d5a114be1c",
-    "src-tauri/icons/tray-28.png": "cbf61544070a08c6cc04b73fde0884025d4d11badd6796d71a72eb9f0011629b",
-    "src-tauri/icons/tray-32.png": "d41d6703011917da700d1a65b00416efceb065a163d228149ec46ad0e70f68c4",
-    "src-tauri/icons/tray-36.png": "6a5dd489b9ff7c30d7a9bc384ead3d1223512aa1695956d0d2e5c071ed53d7cd",
-    "src-tauri/icons/tray-40.png": "113980aaebac6216eef496cefc111f55478d3836e784c5db99c5df1689a615ee",
-    "src-tauri/icons/tray-48.png": "bec2add0dc353c2c66baaf3a36642131e7b95df345833e37ce11ea3a96bda042",
-    "src-tauri/nsis/header.bmp": "8a8dd4c5cd8ec925bb61cb6ce8129d3fcbfa59690aacda8091bd6daf2073618c",
-    "src-tauri/nsis/sidebar.bmp": "09f1a23bca68105ef04075823b36dc99a695ddd5b03ce10fb60eab26bbc616c9",
-    "src-tauri/nsis/unheader.bmp": "f7b2b1ae257fcbf6cf0fcd4a774ea0840bcde0b7621f2741334f9311d952708f",
-    "src-tauri/wix/banner.bmp": "18a5b2398e8d946e73fb3629b116803e7876eb935aae583b9f9b9befad9cebb7",
-    "src-tauri/wix/dialog.bmp": "92f30f250fb8d7299449b544e20bb1d43ab5aaa3f056a517260578b672aac332"
+    "assets/brand/dev-cleaner-icon-1024.png": "407cbd368fd9486041775ce9f54471c848d017df7a29db90affa5674c0e2ccd7",
+    "assets/brand/dev-cleaner-icon-256.png": "c06257d1256649256de3c8186f51c32b8a559e49e6906b1a8616dd5dec65710b",
+    "assets/brand/github/avatar-1024.png": "c337bd2f761ebdb0d2d08293fe5ba91262ffefe463e8c99d94225127d186dd0c",
+    "assets/brand/github/social-preview.png": "d7a731680bd680003816ec52c00ecdc82acd94b769948406fee59346d95253d8",
+    "docs/brand/dev-cleaner-icon.png": "438736f37745f3ef8c780458dc489227d86198aefcc4f795d4c3209c4b7586d2",
+    "public/favicon.ico": "ecb0ea7def05cc10b859e4c72f2b8d19a3e85b2b3774dce4b84deec3cfaac2d9",
+    "public/favicon.svg": "802580e0188f721b6ac1b5bb12e7c8379eddb051fd1d77a0eb863771e47962b0",
+    "public/icons/notification.png": "c06257d1256649256de3c8186f51c32b8a559e49e6906b1a8616dd5dec65710b",
+    "src-tauri/icons/128x128.png": "63aed66d9d4888050414bf731b87bfdd39a124596bdac4745dc3398f0d74d5c7",
+    "src-tauri/icons/128x128@2x.png": "c06257d1256649256de3c8186f51c32b8a559e49e6906b1a8616dd5dec65710b",
+    "src-tauri/icons/32x32.png": "9b9307beb668c8895d1942488eae0925f5068a4cd4d83c4b25efe856f658b982",
+    "src-tauri/icons/icon.ico": "8c86fdbb5ee53a3518bcc8470ea432d9a343a904eaecb39fb752932b53d9b154",
+    "src-tauri/icons/icon.png": "438736f37745f3ef8c780458dc489227d86198aefcc4f795d4c3209c4b7586d2",
+    "src-tauri/icons/tray-16.png": "e95a894d47b634af85d8b83caf22fbc645e93315def9d4e288286f41a693424f",
+    "src-tauri/icons/tray-20.png": "e3704cd33dbfa66c6ff81bf6e148b579fd4040c592a0a2880fefdd00f0891613",
+    "src-tauri/icons/tray-24.png": "02fd4de29b9304aa14610103ad81cad46c17f2e35e5582eca064d9d81ab9bce1",
+    "src-tauri/icons/tray-28.png": "695edc92788d0ecdf7bb36b269359258e2ab2e5fa64dc715d95775a3e323fcc5",
+    "src-tauri/icons/tray-32.png": "9b9307beb668c8895d1942488eae0925f5068a4cd4d83c4b25efe856f658b982",
+    "src-tauri/icons/tray-36.png": "75ba8d1e3d65e8aed51f38f37d9a65de48405d90804245270d07c12a3b501245",
+    "src-tauri/icons/tray-40.png": "75fe58bcefd5864a318172a2389391a601125e3d4fade0de6248e452362c0ce4",
+    "src-tauri/icons/tray-48.png": "2cd86ba6f2a2eca679f6c14d72b39bc3dae00cad3a791adfc2d2a7789f63a7e9",
+    "src-tauri/nsis/header.bmp": "3153e3beb4e95952e9a4cb3367743ac68594a3af7f1f9067a7d2271e6240ef5b",
+    "src-tauri/nsis/sidebar.bmp": "63aff6ada28870914423aec192e642ef6dacfcf118926d1a79f85b49a59686ca",
+    "src-tauri/nsis/unheader.bmp": "03b938a7c3d75d0e41f7d146944227d43f9dd2704e7bb0696cef29a8bdce14e9",
+    "src-tauri/wix/banner.bmp": "bfa25faad3a3c47d6bc12c408c8c203d5000cf2bfb6c3ced14ba64ff12ee58ba",
+    "src-tauri/wix/dialog.bmp": "d3677c633faa5575cc830aea31baaf0687b47824fdbc4b12dd466c7189836542"
   }
 }

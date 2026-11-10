@@ -7,3 +7,5 @@ playwright-report
 test-results
 src-tauri/gen/schemas
 assets/brand/icon-manifest.json
+# User-supplied original brand reference (ground truth; never reformat)
+assets/brand/reference/

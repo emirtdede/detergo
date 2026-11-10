@@ -31,11 +31,7 @@ export const Logo: React.FC<LogoProps> = ({ size = 22, className = "", showWordm
         role="img"
         aria-label="Dev Cleaner"
       >
-        <g
-          transform="translate(256 256) scale(1.15) translate(-256 -256)"
-          stroke="currentColor"
-          fill="none"
-        >
+        <g stroke="currentColor" fill="none">
           <path
             d="M166 172L86 256L166 340"
             strokeWidth="34"

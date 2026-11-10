@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="32 118 448 264" width="448" height="264" fill="none" data-glyph="mark" role="img" aria-labelledby="dc-glyph-title">
     <title id="dc-glyph-title">Dev Cleaner mark</title>
-    <g transform="translate(256 256) scale(1.15) translate(-256 -256)" stroke="currentColor" fill="none">
+    <g stroke="currentColor" fill="none">
         <path d="M166 172L86 256L166 340" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M346 172L426 256L346 340" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M225.5 336.1L259.6 246.5" stroke-width="34" stroke-linecap="round"/>
