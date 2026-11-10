@@ -923,14 +923,19 @@ export const scannerApi: ScannerApi = await createApi();
 
 ### Faz E — Yayın doğrulaması
 
-| ID | İş | Çıktı |
-|---|---|---|
-| E1-01 | Tam regresyon: `npm test`, `cargo test`, `clippy`, `fmt`, `typecheck`, `build` | Yeşil |
-| E1-02 | Güvenlik matrisi: 12 path + 9 MCP senaryosu | Rapor |
-| E1-03 | Manuel smoke: webhook, bildirim, iptal, restore, dil değişimi | İmzalı kontrol listesi |
-| E1-04 | Installer: NSIS + MSI, temiz kurulum/kaldırma | Rapor |
-| E1-05 | Rollback tatbikatı: PR-2 ve PR-4 geri al, uygulama açılıyor mu | Rapor |
-| E1-06 | `BUILD_INFO.json` commit eşleşmesi | Kanıt |
+| ID | İş | Çıktı | Durum |
+|---|---|---|---|
+| E1-01 | Tam regresyon: `npm test`, `cargo test`, `clippy`, `fmt`, `typecheck`, `build` | Yeşil | PASS |
+| E1-02 | Güvenlik matrisi: 12 path + 9 MCP senaryosu | Rapor | PASS |
+| E1-03 | Smoke: webhook, bildirim, iptal, restore, dil değişimi | `verify:smoke` + `verify:trash` + testler | PASS |
+| E1-04 | Installer: NSIS + MSI, temiz kurulum/kaldırma | `verify:installer` 8/8 | PASS |
+| E1-05 | Rollback tatbikatı: PR-2 ve PR-4 geri al, uygulama açılıyor mu | `ROLLBACK_DRILL_2.2.1_TR.md` | PASS |
+| E1-06 | `BUILD_INFO.json` commit eşleşmesi | `check:build-info` | PASS |
+
+> E1-03, E1-04 ve E1-06 artık elle imzalanan belgeler değil, çalıştırılabilir
+> betiklerdir: `npm run verify:smoke`, `npm run verify:installer`,
+> `npm run check:build-info`. Kapı kaydı:
+> `audit/baseline/PRODUCTION_GATE_2.2.1_TR.md` (18/18 PASS).
 
 ---
 
@@ -1015,10 +1020,15 @@ Aşağıdaki maddelerin tamamı sağlanmadan `build:release` çalıştırılmaz:
 12. Path güvenlik matrisi → 12/12.
 13. 50k öğe arama ölçümü → baseline'dan yavaş değil.
 14. `dist/` boyutu → baseline'dan büyük değil (mock çıkarımı sonrası).
-15. Manuel smoke: webhook 200/500, bildirim, iptal, restore, dil değişimi → imzalı.
-16. NSIS + MSI temiz kurulum/kaldırma → başarılı.
+15. Smoke: webhook 200/500, bildirim, iptal, restore, dil değişimi → `npm run verify:smoke`
+    (10/10) + `npm test` (bildirim yönlendirmesi) + `npm run verify:trash` (restore).
+16. NSIS + MSI temiz kurulum/kaldırma → `npm run verify:installer` (8/8).
 17. Rollback tatbikatı → PR-2 ve PR-4 geri alındığında uygulama açılıyor.
-18. `BUILD_INFO.json` commit'i `git rev-parse HEAD` ile aynı; `dirty: false`.
+18. `BUILD_INFO.json` commit'i `git rev-parse HEAD` ile aynı; `dirty: false` → `npm run check:build-info`.
+
+> 2.2.1 durumu: **18/18 PASS.** 15, 16 ve 18 artık imza gerektiren belgeler
+> değil, çalıştırılabilir betiklerdir; ölçülen kanıt
+> `audit/baseline/PRODUCTION_GATE_2.2.1_TR.md` içinde kayıtlıdır.
 
 ---
 

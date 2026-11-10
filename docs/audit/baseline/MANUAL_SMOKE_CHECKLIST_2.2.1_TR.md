@@ -9,7 +9,7 @@ Bu dosya artık imza bekleyen bir liste değil, **çalıştırılabilir kanıtı
 npm run build:release     # temiz ağaçtan
 npm run verify:smoke      # 10 kontrol, gerçek exe, izole APPDATA
 npm run verify:trash      # geri dönüşüm kutusu + restore round-trip
-npm test                  # bildirim yönlendirmesi dahil 90 test
+npm test                  # bildirim yönlendirmesi dahil 92 test
 ```
 
 `verify:smoke`, `scripts/fixtures/default-settings.json` dosyasını tohum olarak
