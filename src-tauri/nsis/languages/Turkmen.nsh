@@ -82,13 +82,13 @@
 
 !ifdef MUI_FINISHPAGE
   ${LangFileString} MUI_TEXT_FINISH_INFO_TITLE "$(^NameDA) gurnamasyny tamamlamak"
-  ${LangFileString} MUI_TEXT_FINISH_INFO_TEXT "$(^NameDA) kompýuteriňize gurnaldy. $ \ R$\n $ \ r$\n Sazlamany ýapmak üçin Finish düwmesine basyň."
+  ${LangFileString} MUI_TEXT_FINISH_INFO_TEXT "$(^NameDA) kompýuteriňize gurnaldy. $ \ R$\n $ \ r$\n Sazlamany ýapmak üçin Tamamla düwmesine basyň."
   ${LangFileString} MUI_TEXT_FINISH_INFO_REBOOT "$(^NameDA) gurnamasyny tamamlamak üçin kompýuteriňizi täzeden açmaly. Indi gaýtadan açmak isleýärsiňizmi?"
 !endif
 
 !ifdef MUI_UNFINISHPAGE
   ${LangFileString} MUI_UNTEXT_FINISH_INFO_TITLE "$(^NameDA) Aýyrmak"
-  ${LangFileString} MUI_UNTEXT_FINISH_INFO_TEXT "$(^NameDA) kompýuteriňizden aýryldy. $ \ R$\n $ \ r$\n Sazlamany ýapmak üçin Finish düwmesine basyň."
+  ${LangFileString} MUI_UNTEXT_FINISH_INFO_TEXT "$(^NameDA) kompýuteriňizden aýryldy. $ \ R$\n $ \ r$\n Sazlamany ýapmak üçin Tamamla düwmesine basyň."
   ${LangFileString} MUI_UNTEXT_FINISH_INFO_REBOOT "$(^NameDA)-i aýyrmagy tamamlamak üçin kompýuteriňizi täzeden açmaly. Indi gaýtadan açmak isleýärsiňizmi?"
 !endif
 

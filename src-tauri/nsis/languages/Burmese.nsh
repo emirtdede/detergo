@@ -9,14 +9,14 @@
 !endif
 
 !ifdef MUI_UNWELCOMEPAGE
-  ${LangFileString} MUI_UNTEXT_WELCOME_INFO_TITLE "$(^NameDA) Uninstall မှလှိုက်လှဲစွာကြိုဆိုပါသည်။"
+  ${LangFileString} MUI_UNTEXT_WELCOME_INFO_TITLE "$(^NameDA) ဖြုတ်ပါ။ မှလှိုက်လှဲစွာကြိုဆိုပါသည်။"
   ${LangFileString} MUI_UNTEXT_WELCOME_INFO_TEXT "စနစ်ထည့်သွင်းခြင်းသည် $(^NameDA) ကို ဖြုတ်ချခြင်းတွင် သင့်အား လမ်းညွှန်ပေးပါမည်။$\r$\n$\r$\n ဖယ်ရှားခြင်းကို မစတင်မီ၊ $(^NameDA) မလည်ပတ်ကြောင်း သေချာပါစေ။$\r$\n$\r$\n$_CLICK"
 !endif
 
 !ifdef MUI_LICENSEPAGE
   ${LangFileString} MUI_TEXT_LICENSE_TITLE "လိုင်စင်သဘောတူညီချက်"
   ${LangFileString} MUI_TEXT_LICENSE_SUBTITLE "$(^NameDA) ကိုမထည့်သွင်းမီ လိုင်စင်စည်းကမ်းချက်များကို ပြန်လည်သုံးသပ်ပါ။"
-  ${LangFileString} MUI_INNERTEXT_LICENSE_BOTTOM "သဘောတူညီချက်၏ စည်းကမ်းချက်များကို သင်လက်ခံပါက ရှေ့ဆက်ရန် I Agree ကိုနှိပ်ပါ။ $(^NameDA) ထည့်သွင်းရန် သဘောတူညီချက်ကို သင်လက်ခံရပါမည်။"
+  ${LangFileString} MUI_INNERTEXT_LICENSE_BOTTOM "သဘောတူညီချက်၏ စည်းကမ်းချက်များကို သင်လက်ခံပါက ရှေ့ဆက်ရန် ငါ သဘောတူတယ်။ ကိုနှိပ်ပါ။ $(^NameDA) ထည့်သွင်းရန် သဘောတူညီချက်ကို သင်လက်ခံရပါမည်။"
   ${LangFileString} MUI_INNERTEXT_LICENSE_BOTTOM_CHECKBOX "သဘောတူညီချက်၏ စည်းကမ်းချက်များကို သင်လက်ခံပါက အောက်ပါ checkbox ကိုနှိပ်ပါ။ $(^NameDA) ထည့်သွင်းရန် သဘောတူညီချက်ကို သင်လက်ခံရပါမည်။ $_CLICK"
   ${LangFileString} MUI_INNERTEXT_LICENSE_BOTTOM_RADIOBUTTONS "သဘောတူညီချက်၏ စည်းကမ်းချက်များကို သင်လက်ခံပါက၊ အောက်ဖော်ပြပါ ပထမရွေးချယ်မှုကို ရွေးချယ်ပါ။ $(^NameDA) ထည့်သွင်းရန် သဘောတူညီချက်ကို သင်လက်ခံရပါမည်။ $_CLICK"
 !endif
@@ -24,7 +24,7 @@
 !ifdef MUI_UNLICENSEPAGE
   ${LangFileString} MUI_UNTEXT_LICENSE_TITLE "လိုင်စင်သဘောတူညီချက်"
   ${LangFileString} MUI_UNTEXT_LICENSE_SUBTITLE "$(^NameDA) ကိုမဖြုတ်မီ လိုင်စင်စည်းကမ်းချက်များကို ပြန်လည်သုံးသပ်ပါ။"
-  ${LangFileString} MUI_UNINNERTEXT_LICENSE_BOTTOM "သဘောတူညီချက်၏ စည်းကမ်းချက်များကို သင်လက်ခံပါက ရှေ့ဆက်ရန် I Agree ကိုနှိပ်ပါ။ $(^NameDA) ကိုဖြုတ်ရန် သဘောတူညီချက်ကို သင်လက်ခံရပါမည်။"
+  ${LangFileString} MUI_UNINNERTEXT_LICENSE_BOTTOM "သဘောတူညီချက်၏ စည်းကမ်းချက်များကို သင်လက်ခံပါက ရှေ့ဆက်ရန် ငါ သဘောတူတယ်။ ကိုနှိပ်ပါ။ $(^NameDA) ကိုဖြုတ်ရန် သဘောတူညီချက်ကို သင်လက်ခံရပါမည်။"
   ${LangFileString} MUI_UNINNERTEXT_LICENSE_BOTTOM_CHECKBOX "သဘောတူညီချက်၏ စည်းကမ်းချက်များကို သင်လက်ခံပါက အောက်ပါ checkbox ကိုနှိပ်ပါ။ $(^NameDA) ကိုဖြုတ်ရန် သဘောတူညီချက်ကို သင်လက်ခံရပါမည်။ $_CLICK"
   ${LangFileString} MUI_UNINNERTEXT_LICENSE_BOTTOM_RADIOBUTTONS "သဘောတူညီချက်၏ စည်းကမ်းချက်များကို သင်လက်ခံပါက၊ အောက်ဖော်ပြပါ ပထမရွေးချယ်မှုကို ရွေးချယ်ပါ။ $(^NameDA) ကိုဖြုတ်ရန် သဘောတူညီချက်ကို သင်လက်ခံရပါမည်။ $_CLICK"
 !endif
@@ -53,12 +53,12 @@
 !endif
 
 !ifdef MUI_DIRECTORYPAGE
-  ${LangFileString} MUI_TEXT_DIRECTORY_TITLE "Install Location ကို ရွေးပါ။"
+  ${LangFileString} MUI_TEXT_DIRECTORY_TITLE "တပ်ဆင်ပါ။ Location ကို ရွေးပါ။"
   ${LangFileString} MUI_TEXT_DIRECTORY_SUBTITLE "$(^NameDA) ထည့်သွင်းရန် ဖိုင်တွဲကို ရွေးချယ်ပါ။"
 !endif
 
 !ifdef MUI_UNDIRECTORYPAGE
-  ${LangFileString} MUI_UNTEXT_DIRECTORY_TITLE "Uninstall Location ကို ရွေးပါ။"
+  ${LangFileString} MUI_UNTEXT_DIRECTORY_TITLE "ဖြုတ်ပါ။ Location ကို ရွေးပါ။"
   ${LangFileString} MUI_UNTEXT_DIRECTORY_SUBTITLE "$(^NameDA) ကို ဖြုတ်ရန် ဖိုင်တွဲကို ရွေးပါ။"
 !endif
 
@@ -75,20 +75,20 @@
   ${LangFileString} MUI_UNTEXT_UNINSTALLING_TITLE "ဖြုတ်နေသည်"
   ${LangFileString} MUI_UNTEXT_UNINSTALLING_SUBTITLE "$(^NameDA) ကို ဖြုတ်နေချိန်တွင် စောင့်ပါ။"
   ${LangFileString} MUI_UNTEXT_FINISH_TITLE "Uninstallation အပြီးသတ်"
-  ${LangFileString} MUI_UNTEXT_FINISH_SUBTITLE "Uninstall ကို အောင်မြင်စွာ ပြီးဆုံးသွားပါပြီ။"
+  ${LangFileString} MUI_UNTEXT_FINISH_SUBTITLE "ဖြုတ်ပါ။ ကို အောင်မြင်စွာ ပြီးဆုံးသွားပါပြီ။"
   ${LangFileString} MUI_UNTEXT_ABORT_TITLE "ဖြုတ်ချခြင်းကို ဖျက်သိမ်းထားသည်။"
-  ${LangFileString} MUI_UNTEXT_ABORT_SUBTITLE "Uninstall ကို အောင်မြင်စွာ မပြီးမြောက်ခဲ့ပါ။"
+  ${LangFileString} MUI_UNTEXT_ABORT_SUBTITLE "ဖြုတ်ပါ။ ကို အောင်မြင်စွာ မပြီးမြောက်ခဲ့ပါ။"
 !endif
 
 !ifdef MUI_FINISHPAGE
   ${LangFileString} MUI_TEXT_FINISH_INFO_TITLE "$(^NameDA) စနစ်ထည့်သွင်းမှု အပြီးသတ်ခြင်း။"
-  ${LangFileString} MUI_TEXT_FINISH_INFO_TEXT "$(^NameDA) ကို သင့်ကွန်ပြူတာတွင် ထည့်သွင်းထားပါသည်။$\r$\n$\r$\n Setup ကိုပိတ်ရန် Finish ကိုနှိပ်ပါ။"
+  ${LangFileString} MUI_TEXT_FINISH_INFO_TEXT "$(^NameDA) ကို သင့်ကွန်ပြူတာတွင် ထည့်သွင်းထားပါသည်။$\r$\n$\r$\n Setup ကိုပိတ်ရန် ပြီးအောင် ကိုနှိပ်ပါ။"
   ${LangFileString} MUI_TEXT_FINISH_INFO_REBOOT "$(^NameDA) တပ်ဆင်ခြင်းကို အပြီးသတ်ရန်အတွက် သင့်ကွန်ပျူတာကို ပြန်လည်စတင်ရပါမည်။ ယခု ပြန်လည်စတင်လိုပါသလား။"
 !endif
 
 !ifdef MUI_UNFINISHPAGE
-  ${LangFileString} MUI_UNTEXT_FINISH_INFO_TITLE "$(^NameDA) Uninstall ပြီးအောင်လုပ်ခြင်း။"
-  ${LangFileString} MUI_UNTEXT_FINISH_INFO_TEXT "$(^NameDA) ကို သင့်ကွန်ပြူတာမှ ဖြုတ်လိုက်ပါပြီ။$\r$\n$\r$\n သတ်မှတ်မှုကို ပိတ်ရန် Finish ကို နှိပ်ပါ။"
+  ${LangFileString} MUI_UNTEXT_FINISH_INFO_TITLE "$(^NameDA) ဖြုတ်ပါ။ ပြီးအောင်လုပ်ခြင်း။"
+  ${LangFileString} MUI_UNTEXT_FINISH_INFO_TEXT "$(^NameDA) ကို သင့်ကွန်ပြူတာမှ ဖြုတ်လိုက်ပါပြီ။$\r$\n$\r$\n သတ်မှတ်မှုကို ပိတ်ရန် ပြီးအောင် ကို နှိပ်ပါ။"
   ${LangFileString} MUI_UNTEXT_FINISH_INFO_REBOOT "$(^NameDA) ကို ဖြုတ်ချခြင်းကို အပြီးသတ်ရန်အတွက် သင့်ကွန်ပျူတာကို ပြန်လည်စတင်ရပါမည်။ ယခု ပြန်လည်စတင်လိုပါသလား။"
 !endif
 
@@ -117,7 +117,7 @@
 !endif
 
 !ifdef MUI_UNABORTWARNING
-  ${LangFileString} MUI_UNTEXT_ABORTWARNING "$(^Name) Uninstall မှထွက်လိုသည်မှာ သေချာပါသလား။"
+  ${LangFileString} MUI_UNTEXT_ABORTWARNING "$(^Name) ဖြုတ်ပါ။ မှထွက်လိုသည်မှာ သေချာပါသလား။"
 !endif
 
 !ifdef MULTIUSER_INSTALLMODEPAGE

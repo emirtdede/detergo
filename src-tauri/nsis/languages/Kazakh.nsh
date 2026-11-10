@@ -9,7 +9,7 @@
 !endif
 
 !ifdef MUI_UNWELCOMEPAGE
-  ${LangFileString} MUI_UNTEXT_WELCOME_INFO_TITLE "$(^NameDA) Uninstall қолданбасына қош келдіңіз"
+  ${LangFileString} MUI_UNTEXT_WELCOME_INFO_TITLE "$(^NameDA) Жою қолданбасына қош келдіңіз"
   ${LangFileString} MUI_UNTEXT_WELCOME_INFO_TEXT "Орнату сізге $(^NameDA) қолданбасын жоюға нұсқау береді.$\r$\n$\r$\n Жоюды бастамас бұрын, $(^NameDA) іске қосылмағанын тексеріңіз.$\r$\n$\r$\n$_CLICK"
 !endif
 
@@ -117,7 +117,7 @@
 !endif
 
 !ifdef MUI_UNABORTWARNING
-  ${LangFileString} MUI_UNTEXT_ABORTWARNING "$(^Name) Uninstall бағдарламасынан шығуды шынымен қалайсыз ба?"
+  ${LangFileString} MUI_UNTEXT_ABORTWARNING "$(^Name) Жою бағдарламасынан шығуды шынымен қалайсыз ба?"
 !endif
 
 !ifdef MULTIUSER_INSTALLMODEPAGE

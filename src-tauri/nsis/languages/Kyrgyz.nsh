@@ -9,7 +9,7 @@
 !endif
 
 !ifdef MUI_UNWELCOMEPAGE
-  ${LangFileString} MUI_UNTEXT_WELCOME_INFO_TITLE "$(^NameDA) Uninstall кош келиңиз"
+  ${LangFileString} MUI_UNTEXT_WELCOME_INFO_TITLE "$(^NameDA) Чыгаруу кош келиңиз"
   ${LangFileString} MUI_UNTEXT_WELCOME_INFO_TEXT "Орнотуу $(^NameDA).$\r$\n$\r$\n. Орнотуудан мурун, $(^NameDA) иштебей турганын текшериңиз.$\r$\n$\r$\n$_CLICK"
 !endif
 
@@ -117,7 +117,7 @@
 !endif
 
 !ifdef MUI_UNABORTWARNING
-  ${LangFileString} MUI_UNTEXT_ABORTWARNING "$(^Name) Uninstall'тан чын эле чыккыңыз келеби?"
+  ${LangFileString} MUI_UNTEXT_ABORTWARNING "$(^Name) Чыгаруу'тан чын эле чыккыңыз келеби?"
 !endif
 
 !ifdef MULTIUSER_INSTALLMODEPAGE

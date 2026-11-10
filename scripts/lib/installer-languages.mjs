@@ -143,3 +143,63 @@ export function projectTauriLanguages() {
 export function nativeLanguageNames() {
   return INSTALLER_LANGUAGES;
 }
+
+/* ------------------------------------------------------------------ */
+/* Button labels inside sentences                                      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Sentence strings name the buttons: "Click Next to continue.", "Click Install
+ * to start the installation.", "click I Agree", "Click Finish to close Setup."
+ * Machine translation keeps those words in Latin script, which then contradicts
+ * the fully translated button right below them. The generator replaces every
+ * literal occurrence of an English button label with its localized label; the
+ * gate re-runs the same comparison to make sure no leak ships.
+ */
+
+export function cleanButtonLabel(label) {
+  return label
+    .replace(/&/g, "")
+    .replace(/\.{3,}/g, "")
+    .replace(/[<>]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Button labels live in `*Btn` keys plus MUI's dedicated Finish label. */
+export function isButtonKey(key) {
+  return /Btn$/.test(key) || key === "MUI_BUTTONTEXT_FINISH";
+}
+
+export function escapeRegExp(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Pairs of (English label, localized label) for every button whose label really
+ * changed. Longest English label first so "I Do Not Accept" is replaced before
+ * the shorter "I Accept" could match a prefix of it.
+ */
+export function buttonLabelPairs(englishByKey, localizedByKey) {
+  const pairs = [];
+  for (const [key, english] of englishByKey) {
+    if (!isButtonKey(key)) continue;
+    const localized = localizedByKey.get(key);
+    if (!localized) continue;
+    const from = cleanButtonLabel(english);
+    const to = cleanButtonLabel(localized);
+    if (from.length < 3 || !to || from === to) continue;
+    if (!/[A-Za-z]/.test(from)) continue;
+    pairs.push({ from, to });
+  }
+  pairs.sort((a, b) => b.from.length - a.from.length);
+  return pairs;
+}
+
+export function substituteButtonLabels(text, pairs) {
+  let out = text;
+  for (const { from, to } of pairs) {
+    out = out.replace(new RegExp(`\\b${escapeRegExp(from)}\\b`, "g"), to);
+  }
+  return out;
+}

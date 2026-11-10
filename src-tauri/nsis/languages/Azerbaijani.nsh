@@ -9,7 +9,7 @@
 !endif
 
 !ifdef MUI_UNWELCOMEPAGE
-  ${LangFileString} MUI_UNTEXT_WELCOME_INFO_TITLE "$(^NameDA) Uninstall-a xoş gəlmisiniz"
+  ${LangFileString} MUI_UNTEXT_WELCOME_INFO_TITLE "$(^NameDA) Silin-a xoş gəlmisiniz"
   ${LangFileString} MUI_UNTEXT_WELCOME_INFO_TEXT "Quraşdırma sizə $(^NameDA) proqramının silinməsi ilə bağlı bələdçilik edəcək.$\r$\n$\r$\n Quraşdırmaya başlamazdan əvvəl $(^NameDA)-nin işləmədiyinə əmin olun.$\r$\n$\r$\n$_CLICK"
 !endif
 
@@ -117,7 +117,7 @@
 !endif
 
 !ifdef MUI_UNABORTWARNING
-  ${LangFileString} MUI_UNTEXT_ABORTWARNING "$(^Name) Uninstall-dan çıxmaq istədiyinizə əminsiniz?"
+  ${LangFileString} MUI_UNTEXT_ABORTWARNING "$(^Name) Silin-dan çıxmaq istədiyinizə əminsiniz?"
 !endif
 
 !ifdef MULTIUSER_INSTALLMODEPAGE

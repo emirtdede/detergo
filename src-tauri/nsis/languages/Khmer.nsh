@@ -9,14 +9,14 @@
 !endif
 
 !ifdef MUI_UNWELCOMEPAGE
-  ${LangFileString} MUI_UNTEXT_WELCOME_INFO_TITLE "សូមស្វាគមន៍មកកាន់ $(^NameDA) Uninstall"
+  ${LangFileString} MUI_UNTEXT_WELCOME_INFO_TITLE "សូមស្វាគមន៍មកកាន់ $(^NameDA) លុប"
   ${LangFileString} MUI_UNTEXT_WELCOME_INFO_TEXT "ការដំឡើងនឹងណែនាំអ្នកតាមរយៈការលុប $(^NameDA)។$\r$\n$\r$\n មុនពេលចាប់ផ្តើមការលុប សូមប្រាកដថា $(^NameDA) មិនដំណើរការ។$\r$\n$\r$\n$_CLICK"
 !endif
 
 !ifdef MUI_LICENSEPAGE
   ${LangFileString} MUI_TEXT_LICENSE_TITLE "កិច្ចព្រមព្រៀងអាជ្ញាប័ណ្ណ"
   ${LangFileString} MUI_TEXT_LICENSE_SUBTITLE "សូមពិនិត្យមើលលក្ខខណ្ឌអាជ្ញាប័ណ្ណមុនពេលដំឡើង $(^NameDA) ។"
-  ${LangFileString} MUI_INNERTEXT_LICENSE_BOTTOM "ប្រសិនបើអ្នកទទួលយកលក្ខខណ្ឌនៃកិច្ចព្រមព្រៀង សូមចុច I Agree ដើម្បីបន្ត។ អ្នកត្រូវតែទទួលយកកិច្ចព្រមព្រៀងដើម្បីដំឡើង $(^NameDA) ។"
+  ${LangFileString} MUI_INNERTEXT_LICENSE_BOTTOM "ប្រសិនបើអ្នកទទួលយកលក្ខខណ្ឌនៃកិច្ចព្រមព្រៀង សូមចុច ខ្ញុំយល់ស្រប ដើម្បីបន្ត។ អ្នកត្រូវតែទទួលយកកិច្ចព្រមព្រៀងដើម្បីដំឡើង $(^NameDA) ។"
   ${LangFileString} MUI_INNERTEXT_LICENSE_BOTTOM_CHECKBOX "ប្រសិនបើអ្នកទទួលយកលក្ខខណ្ឌនៃកិច្ចព្រមព្រៀង សូមចុចប្រអប់ធីកខាងក្រោម។ អ្នកត្រូវតែទទួលយកកិច្ចព្រមព្រៀងដើម្បីដំឡើង $(^NameDA) ។ $_CLICK"
   ${LangFileString} MUI_INNERTEXT_LICENSE_BOTTOM_RADIOBUTTONS "ប្រសិនបើអ្នកទទួលយកលក្ខខណ្ឌនៃកិច្ចព្រមព្រៀង សូមជ្រើសរើសជម្រើសទីមួយខាងក្រោម។ អ្នកត្រូវតែទទួលយកកិច្ចព្រមព្រៀងដើម្បីដំឡើង $(^NameDA) ។ $_CLICK"
 !endif
@@ -24,7 +24,7 @@
 !ifdef MUI_UNLICENSEPAGE
   ${LangFileString} MUI_UNTEXT_LICENSE_TITLE "កិច្ចព្រមព្រៀងអាជ្ញាប័ណ្ណ"
   ${LangFileString} MUI_UNTEXT_LICENSE_SUBTITLE "សូមពិនិត្យមើលលក្ខខណ្ឌអាជ្ញាប័ណ្ណមុនពេលលុបការដំឡើង $(^NameDA) ។"
-  ${LangFileString} MUI_UNINNERTEXT_LICENSE_BOTTOM "ប្រសិនបើអ្នកទទួលយកលក្ខខណ្ឌនៃកិច្ចព្រមព្រៀង សូមចុច I Agree ដើម្បីបន្ត។ អ្នកត្រូវតែទទួលយកកិច្ចព្រមព្រៀងដើម្បីលុប $(^NameDA) ។"
+  ${LangFileString} MUI_UNINNERTEXT_LICENSE_BOTTOM "ប្រសិនបើអ្នកទទួលយកលក្ខខណ្ឌនៃកិច្ចព្រមព្រៀង សូមចុច ខ្ញុំយល់ស្រប ដើម្បីបន្ត។ អ្នកត្រូវតែទទួលយកកិច្ចព្រមព្រៀងដើម្បីលុប $(^NameDA) ។"
   ${LangFileString} MUI_UNINNERTEXT_LICENSE_BOTTOM_CHECKBOX "ប្រសិនបើអ្នកទទួលយកលក្ខខណ្ឌនៃកិច្ចព្រមព្រៀង សូមចុចប្រអប់ធីកខាងក្រោម។ អ្នកត្រូវតែទទួលយកកិច្ចព្រមព្រៀងដើម្បីលុប $(^NameDA) ។ $_CLICK"
   ${LangFileString} MUI_UNINNERTEXT_LICENSE_BOTTOM_RADIOBUTTONS "ប្រសិនបើអ្នកទទួលយកលក្ខខណ្ឌនៃកិច្ចព្រមព្រៀង សូមជ្រើសរើសជម្រើសទីមួយខាងក្រោម។ អ្នកត្រូវតែទទួលយកកិច្ចព្រមព្រៀងដើម្បីលុប $(^NameDA) ។ $_CLICK"
 !endif
@@ -82,13 +82,13 @@
 
 !ifdef MUI_FINISHPAGE
   ${LangFileString} MUI_TEXT_FINISH_INFO_TITLE "កំពុងបញ្ចប់ការដំឡើង $(^NameDA)"
-  ${LangFileString} MUI_TEXT_FINISH_INFO_TEXT "$(^NameDA) ត្រូវបានដំឡើងនៅលើកុំព្យូទ័ររបស់អ្នក។$\r$\n$\r$\n ចុច Finish ដើម្បីបិទការដំឡើង។"
+  ${LangFileString} MUI_TEXT_FINISH_INFO_TEXT "$(^NameDA) ត្រូវបានដំឡើងនៅលើកុំព្យូទ័ររបស់អ្នក។$\r$\n$\r$\n ចុច បញ្ចប់ ដើម្បីបិទការដំឡើង។"
   ${LangFileString} MUI_TEXT_FINISH_INFO_REBOOT "កុំព្យូទ័ររបស់អ្នកត្រូវតែចាប់ផ្តើមឡើងវិញ ដើម្បីបញ្ចប់ការដំឡើង $(^NameDA) ។ តើអ្នកចង់ចាប់ផ្ដើមឡើងវិញឥឡូវនេះទេ?"
 !endif
 
 !ifdef MUI_UNFINISHPAGE
   ${LangFileString} MUI_UNTEXT_FINISH_INFO_TITLE "ការបញ្ចប់ការលុប $(^NameDA)"
-  ${LangFileString} MUI_UNTEXT_FINISH_INFO_TEXT "$(^NameDA) ត្រូវបានលុបចេញពីកុំព្យូទ័ររបស់អ្នក។$\r$\n$\r$\n ចុច Finish ដើម្បីបិទការដំឡើង។"
+  ${LangFileString} MUI_UNTEXT_FINISH_INFO_TEXT "$(^NameDA) ត្រូវបានលុបចេញពីកុំព្យូទ័ររបស់អ្នក។$\r$\n$\r$\n ចុច បញ្ចប់ ដើម្បីបិទការដំឡើង។"
   ${LangFileString} MUI_UNTEXT_FINISH_INFO_REBOOT "កុំព្យូទ័ររបស់អ្នកត្រូវតែចាប់ផ្តើមឡើងវិញ ដើម្បីបញ្ចប់ការលុប $(^NameDA) ។ តើអ្នកចង់ចាប់ផ្ដើមឡើងវិញឥឡូវនេះទេ?"
 !endif
 
@@ -117,7 +117,7 @@
 !endif
 
 !ifdef MUI_UNABORTWARNING
-  ${LangFileString} MUI_UNTEXT_ABORTWARNING "តើអ្នកប្រាកដថាចង់ចាកចេញពី $(^Name) Uninstall មែនទេ?"
+  ${LangFileString} MUI_UNTEXT_ABORTWARNING "តើអ្នកប្រាកដថាចង់ចាកចេញពី $(^Name) លុប មែនទេ?"
 !endif
 
 !ifdef MULTIUSER_INSTALLMODEPAGE

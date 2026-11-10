@@ -82,13 +82,13 @@
 
 !ifdef MUI_FINISHPAGE
   ${LangFileString} MUI_TEXT_FINISH_INFO_TITLE "$(^NameDA) සැකසුම සම්පූර්ණ කරමින්"
-  ${LangFileString} MUI_TEXT_FINISH_INFO_TEXT "$(^NameDA) ඔබගේ පරිගණකයේ ස්ථාපනය කර ඇත.$\r$\n$\r$\n පිහිටුවීම වැසීමට Finish ක්ලික් කරන්න."
+  ${LangFileString} MUI_TEXT_FINISH_INFO_TEXT "$(^NameDA) ඔබගේ පරිගණකයේ ස්ථාපනය කර ඇත.$\r$\n$\r$\n පිහිටුවීම වැසීමට අවසන් කරන්න ක්ලික් කරන්න."
   ${LangFileString} MUI_TEXT_FINISH_INFO_REBOOT "$(^NameDA) ස්ථාපනය සම්පූර්ණ කිරීම සඳහා ඔබේ පරිගණකය නැවත ආරම්භ කළ යුතුය. ඔබට දැන් නැවත ආරම්භ කිරීමට අවශ්‍යද?"
 !endif
 
 !ifdef MUI_UNFINISHPAGE
   ${LangFileString} MUI_UNTEXT_FINISH_INFO_TITLE "$(^NameDA) අස්ථාපනය සම්පූර්ණ කරමින්"
-  ${LangFileString} MUI_UNTEXT_FINISH_INFO_TEXT "$(^NameDA) ඔබේ පරිගණකයෙන් අස්ථාපනය කර ඇත.$\r$\n$\r$\n පිහිටුවීම වැසීමට Finish ක්ලික් කරන්න."
+  ${LangFileString} MUI_UNTEXT_FINISH_INFO_TEXT "$(^NameDA) ඔබේ පරිගණකයෙන් අස්ථාපනය කර ඇත.$\r$\n$\r$\n පිහිටුවීම වැසීමට අවසන් කරන්න ක්ලික් කරන්න."
   ${LangFileString} MUI_UNTEXT_FINISH_INFO_REBOOT "$(^NameDA) අස්ථාපනය කිරීම සම්පූර්ණ කිරීම සඳහා ඔබේ පරිගණකය නැවත ආරම්භ කළ යුතුය. ඔබට දැන් නැවත ආරම්භ කිරීමට අවශ්‍යද?"
 !endif
 

@@ -82,13 +82,13 @@
 
 !ifdef MUI_FINISHPAGE
   ${LangFileString} MUI_TEXT_FINISH_INFO_TITLE "$(^NameDA) سیٹ اپ مکمل ہو رہا ہے۔"
-  ${LangFileString} MUI_TEXT_FINISH_INFO_TEXT "$(^NameDA) آپ کے کمپیوٹر پر انسٹال ہو چکا ہے۔$\r$\n$\r$\n سیٹ اپ کو بند کرنے کے لیے Finish پر کلک کریں۔"
+  ${LangFileString} MUI_TEXT_FINISH_INFO_TEXT "$(^NameDA) آپ کے کمپیوٹر پر انسٹال ہو چکا ہے۔$\r$\n$\r$\n سیٹ اپ کو بند کرنے کے لیے ختم پر کلک کریں۔"
   ${LangFileString} MUI_TEXT_FINISH_INFO_REBOOT "$(^NameDA) کی تنصیب مکمل کرنے کے لیے آپ کے کمپیوٹر کو دوبارہ شروع کرنا ضروری ہے۔ کیا آپ ابھی ریبوٹ کرنا چاہتے ہیں؟"
 !endif
 
 !ifdef MUI_UNFINISHPAGE
   ${LangFileString} MUI_UNTEXT_FINISH_INFO_TITLE "$(^NameDA) اَن انسٹال مکمل کرنا"
-  ${LangFileString} MUI_UNTEXT_FINISH_INFO_TEXT "$(^NameDA) کو آپ کے کمپیوٹر سے ان انسٹال کر دیا گیا ہے۔$\r$\n$\r$\n سیٹ اپ کو بند کرنے کے لیے Finish پر کلک کریں۔"
+  ${LangFileString} MUI_UNTEXT_FINISH_INFO_TEXT "$(^NameDA) کو آپ کے کمپیوٹر سے ان انسٹال کر دیا گیا ہے۔$\r$\n$\r$\n سیٹ اپ کو بند کرنے کے لیے ختم پر کلک کریں۔"
   ${LangFileString} MUI_UNTEXT_FINISH_INFO_REBOOT "$(^NameDA) کی ان انسٹالیشن کو مکمل کرنے کے لیے آپ کے کمپیوٹر کو دوبارہ شروع کرنا ضروری ہے۔ کیا آپ ابھی ریبوٹ کرنا چاہتے ہیں؟"
 !endif
 

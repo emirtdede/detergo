@@ -16,7 +16,7 @@ Nullsoft Install System %s
 # ^SetupCaption
 $(^Name) Орнотуу
 # ^UninstallCaption
-$(^Name) Uninstall
+$(^Name) Чыгаруу
 # ^LicenseSubCaption
 : Лицензиялык келишим
 # ^ComponentsSubCaption
@@ -64,7 +64,7 @@ $(^Name) Uninstall
 # ^ClickInstall
 Орнотууну баштоо үчүн орнотууну басыңыз.
 # ^ClickUninstall
-Орнотууну баштоо үчүн Uninstall дегенди басыңыз.
+Орнотууну баштоо үчүн Чыгаруу дегенди басыңыз.
 # ^Name
 аты
 # ^Completed

@@ -64,6 +64,8 @@ are listed under [Still pending](#still-pending).
 | V-18d | Wizard chrome in a generated language | **PASS** | Sinhala (1115), Tamil (1097) and Urdu (1056) captured from the shipped setup: title, welcome text, directory page, buttons and footer all localized; the body sentence names the localized button (`ඊළඟ`, `அடுத்து`) instead of `Next`; Urdu mirrors the header to the left without mirroring the wordmark |
 | V-18e | Language picker with a remembered language | **PASS** | With `HKCU\...\Installer Language` = 1031 the picker still opened and preselected German; with 1115 it preselected Sinhala and listed the autonym `සිංහල` |
 | V-18f | Wizard footer | **PASS** | Reads `© 2026 Vellium` in every language; the English sentence `All rights reserved.` is gone because NSIS emits one `BrandingText` for all languages |
+| V-18g | Uninstaller branding and chrome | **PASS** | Uninstaller welcome, confirm and finish pages of a real 2.2.2 install (Sinhala, 1115): the `unheader.bmp` lockup sits inset in the header panel with the wizard title left-aligned next to it, the sidebar finish page shows the icon + `DEV CLEANER` lockup with 34 px side margins, and every string is translated — including `Click Uninstall` (`... ඉවත් කරන්න ක්ලික් කරන්න.`) and `Click Finish` (`... ස්ථාපනය කරන්න ක්ලික් කරන්න.`) |
+| V-18h | Installer finish page | **PASS** | The 2.2.2 setup's finish page (Sinhala) renders the full sidebar lockup, the two localized checkboxes and the footer `© 2026 Vellium`; no English `Next`, `Install`, `Uninstall`, `I Agree` or `Finish` remains in any translated sentence |
 
 ### Installed shell surfaces, 100% scaling (2026-11-10)
 

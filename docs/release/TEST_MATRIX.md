@@ -80,6 +80,7 @@ results prove the packages behave, not that a pristine image is unaffected.
 | Installer message packs present | `npm run check:languages` + generated `installer.nsi` | **PASS** — 54 `customLanguageFiles` entries are passed to makensis; Polish (`pl`) is among them, so the languages that would otherwise fall back to English for Tauri's own messages now have their own strings |
 | Installer language picker, remembered language | open the setup with `Installer Language` = 1031 and 1115 | **PASS** — the dialog is shown on both runs and preselects the remembered language under its native name (`Deutsch`, `සිංහල`) |
 | Generated-language wizard chrome | Sinhala (1115), Tamil (1097), Urdu (1056) wizard captures | **PASS** — title, welcome text, directory page, buttons, body sentence and footer localized; `Next >`/`Browse...` no longer leak; Urdu mirrors the header to the left |
+| Uninstaller chrome and branding | real 2.2.2 install, Sinhala uninstaller welcome/confirm/finish captures | **PASS** — `unheader.bmp` lockup inset beside the title, sidebar finish page lockup with 34 px margins, footer `© 2026 Vellium`, and every sentence localized including `Click Uninstall` and `Click Finish` |
 | Installed shell surfaces, 100% | manual capture after the same NSIS install | **6/6 PASS** - desktop shortcut, Start menu result, Explorer extra-large icons, running taskbar button, tray overflow and in-app chrome all show the new mark ([`docs/brand/qa/shell/`](../brand/qa/shell/)) |
 
 Two harness defects were found and fixed by these runs: `Get-FileHash` does not

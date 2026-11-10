@@ -24,6 +24,8 @@ import {
   INSTALLER_LANGUAGES,
   NATIVE_NAMES,
   PROJECT_LANGUAGE_DIR,
+  buttonLabelPairs,
+  substituteButtonLabels,
 } from "./lib/installer-languages.mjs";
 
 const NSIS_DIR = join(
@@ -95,52 +97,14 @@ function applyMnemonic(text, marked) {
 }
 
 /**
- * Sentence strings in `English.nlf` name the buttons ("Click Next to
- * continue.", "Click Install to start the installation."). Machine translation
- * happily keeps `Next` in Latin script, which then contradicts the fully
- * translated button right below it. Once the button labels are translated we can
- * substitute the local label into the sentence.
+ * Sentence strings name the buttons: "Click Next to continue.", "Click
+ * Install to start the installation.", "click I Agree", "Click Finish to close
+ * Setup." Machine translation happily keeps those words in Latin script, which
+ * then contradicts the fully translated button right below them — that is how
+ * `Next`, `Install`, `Uninstall` and `I Agree` survived in otherwise translated
+ * wizards. `buttonLabelPairs`/`substituteButtonLabels` (shared with the gate)
+ * replace every literal occurrence of the English label with the localized one.
  */
-const BUTTON_WORDS = {
-  Next: "NextBtn",
-  Back: "BackBtn",
-  Browse: "BrowseBtn",
-  Install: "InstallBtn",
-  Cancel: "CancelBtn",
-  Close: "CloseBtn",
-};
-
-function cleanButtonLabel(label) {
-  return label
-    .replace(/&/g, "")
-    .replace(/\.{3,}/g, "")
-    .replace(/[<>]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function substituteButtonWords(outLines, allValues, translatable, translated) {
-  const byKey = new Map();
-  translatable.forEach((item, index) => byKey.set(item.key, translated.get(`nlf-${index}`)));
-
-  const localizedLabel = (key) => {
-    const english = allValues.find((item) => item.key === key)?.value;
-    const value = byKey.get(key);
-    if (!english || !value || value === english) return null;
-    return cleanButtonLabel(value) || null;
-  };
-
-  translatable.forEach((item, index) => {
-    let value = translated.get(`nlf-${index}`) ?? item.value;
-    for (const [word, key] of Object.entries(BUTTON_WORDS)) {
-      if (!new RegExp(`\\b${word}\\b`).test(item.value)) continue;
-      const label = localizedLabel(key);
-      if (!label) continue;
-      value = value.replace(new RegExp(`\\b${word}\\b`, "g"), label);
-    }
-    outLines[item.index] = value;
-  });
-}
 
 const cache = existsSync(CACHE_PATH) ? JSON.parse(readFileSync(CACHE_PATH, "utf8")) : {};
 let cacheDirty = false;
@@ -283,6 +247,15 @@ if (!SOURCE_NLF || !SOURCE_MUI) {
 const englishNlf = readFileSync(SOURCE_NLF, "utf8").replace(/^\uFEFF/, "");
 const englishMui = readFileSync(SOURCE_MUI, "utf8").replace(/^\uFEFF/, "");
 
+// Canonical English button labels, shared by every generated file. NSIS's own
+// tables (source: "nsis") already translate their buttons; their Tauri message
+// packs still quote "Next", so the pairs are needed for those 33 languages too.
+const englishButtonLabels = new Map();
+for (const item of parseNlf(englishNlf).values) englishButtonLabels.set(item.key, item.value);
+for (const match of englishMui.matchAll(/\$\{LangFileString\}\s+(\S+)\s+"((?:[^"\\]|\\.)*)"/g)) {
+  englishButtonLabels.set(match[1], match[2]);
+}
+
 // Tauri's own custom-message strings come from a Tauri build. Reuse the copy the
 // bundler emitted for English when present, otherwise fall back to the file we
 // keep in the repo.
@@ -309,6 +282,13 @@ for (const entry of INSTALLER_LANGUAGES) {
   const native = NATIVE_NAMES[entry.locale];
   const generated = [];
 
+  // Button (English -> localized) pairs are shared by all three files of a
+  // language: `.nlf` holds the button labels, `.nsh` the Finish label, and the
+  // Tauri pack quotes "click Next to continue". A sentence may reference a
+  // button defined in another file, so collect both maps before substituting.
+  const localizedByKey = new Map();
+  let sharedButtonPairs = [];
+
   if (entry.source === "project") {
     if (!native) throw new Error(`missing native name for ${entry.locale}`);
 
@@ -319,12 +299,38 @@ for (const entry of INSTALLER_LANGUAGES) {
       translatable.map((item, index) => ({ key: `nlf-${index}`, text: item.value })),
       entry.locale,
     );
+    translatable.forEach((item, index) => {
+      localizedByKey.set(item.key, nlfMap.get(`nlf-${index}`) ?? item.value);
+    });
+
+    /* --- MUI .nsh ------------------------------------------------------ */
+    const muiText = englishMui
+      .replace(
+        /!insertmacro LANGFILE "[^"]*" "[^"]*" "[^"]*" "[^"]*"/,
+        `!insertmacro LANGFILE "${entry.name}" "${entry.name}" "${native.native}" "${native.ascii}"`,
+      )
+      .replace(/;Language: English \(1033\)/, `;Language: ${entry.name} (${entry.lcid})`);
+
+    const muiStrings = [...muiText.matchAll(/\$\{LangFileString\}\s+(\S+)\s+"((?:[^"\\]|\\.)*)"/g)];
+    const muiMap = await translateAll(
+      muiStrings.map((match, index) => ({
+        key: `mui-${index}`,
+        text: match[2],
+      })),
+      entry.locale,
+    );
+
+    muiStrings.forEach((match, index) => {
+      localizedByKey.set(match[1], muiMap.get(`mui-${index}`) ?? match[2]);
+    });
+
+    const buttonPairs = buttonLabelPairs(englishButtonLabels, localizedByKey);
 
     const outLines = [...lines];
     translatable.forEach((item, index) => {
-      outLines[item.index] = nlfMap.get(`nlf-${index}`);
+      const value = nlfMap.get(`nlf-${index}`) ?? item.value;
+      outLines[item.index] = substituteButtonLabels(value, buttonPairs);
     });
-    substituteButtonWords(outLines, values, translatable, nlfMap);
 
     // Header block: language id, font, codepage, RTL.
     const idIndex = outLines.findIndex((line) => line.trim() === "# Language ID");
@@ -344,34 +350,36 @@ for (const entry of INSTALLER_LANGUAGES) {
 
     writeBom(join(PROJECT_LANGUAGE_DIR, `${entry.name}.nlf`), outLines.join("\n"));
 
-    /* --- MUI .nsh ------------------------------------------------------ */
-    const muiText = englishMui
-      .replace(
-        /!insertmacro LANGFILE "[^"]*" "[^"]*" "[^"]*" "[^"]*"/,
-        `!insertmacro LANGFILE "${entry.name}" "${entry.name}" "${native.native}" "${native.ascii}"`,
-      )
-      .replace(/;Language: English \(1033\)/, `;Language: ${entry.name} (${entry.lcid})`);
-
-    const muiStrings = [...muiText.matchAll(/\$\{LangFileString\}\s+(\S+)\s+"((?:[^"\\]|\\.)*)"/g)];
-    const muiMap = await translateAll(
-      muiStrings.map((match, index) => ({
-        key: `mui-${index}`,
-        text: match[2],
-      })),
-      entry.locale,
-    );
-
     const muiOut = muiText.replace(
       /\$\{LangFileString\}\s+(\S+)\s+"((?:[^"\\]|\\.)*)"/g,
       (full, name, value) => {
         const index = muiStrings.findIndex((match) => match[1] === name && match[2] === value);
         const translated = muiMap.get(`mui-${index}`) ?? value;
-        return `\${LangFileString} ${name} "${escapeNsis(translated)}"`;
+        return `\${LangFileString} ${name} "${escapeNsis(substituteButtonLabels(translated, buttonPairs))}"`;
       },
     );
 
     writeBom(join(PROJECT_LANGUAGE_DIR, `${entry.name}.nsh`), muiOut);
     generated.push(`${translatable.length} nlf`, `${muiStrings.length} mui`);
+
+    sharedButtonPairs = buttonPairs;
+  } else if (entry.tauri === "project") {
+    // NSIS already ships a translated table for this language, so read it back
+    // from the toolset to learn how it names the buttons. Its Tauri message pack
+    // is ours and may still quote "Next" in Latin script.
+    for (const extension of [".nlf", ".nsh"]) {
+      const file = join(LANG_DIR, `${entry.name}${extension}`);
+      if (!existsSync(file)) continue;
+      const text = readFileSync(file, "utf8").replace(/^\uFEFF/, "");
+      const labels =
+        extension === ".nlf"
+          ? parseNlf(text).values.map((item) => [item.key, item.value])
+          : [...text.matchAll(/\$\{LangFileString\}\s+(\S+)\s+"((?:[^"\\]|\\.)*)"/g)].map(
+              (match) => [match[1], match[2]],
+            );
+      for (const [key, value] of labels) localizedByKey.set(key, value);
+    }
+    sharedButtonPairs = buttonLabelPairs(englishButtonLabels, localizedByKey);
   }
 
   if (entry.tauri === "project") {
@@ -382,13 +390,20 @@ for (const entry of INSTALLER_LANGUAGES) {
       entry.locale,
     );
 
+    // The maintenance page says "click Next to continue." (and "Uninstall
+    // before installing" is an option, not the button). Reuse the button pairs
+    // from the NSIS tables so the quoted label matches the wizard button. Tauri
+    // covers 19 languages with hand-written strings, so for those no pairs
+    // exist and the pack is not generated at all.
+    const buttonPairs = sharedButtonPairs;
+
     const tauriOut = tauriEnglish
       .replace(
         /LangString\s+(\S+)\s+\$\{LANG_ENGLISH\}\s+"((?:[^"\\]|\\.)*)"/g,
         (full, name, value) => {
           const index = tauriStrings.findIndex((match) => match[1] === name && match[2] === value);
           const translated = tauriMap.get(`tauri-${index}`) ?? value;
-          return `LangString ${name} \${${langConst}} "${escapeNsis(translated)}"`;
+          return `LangString ${name} \${${langConst}} "${escapeNsis(substituteButtonLabels(translated, buttonPairs))}"`;
         },
       )
       .replace(/\$\{LANG_ENGLISH\}/g, `\${${langConst}}`);

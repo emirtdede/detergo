@@ -59,9 +59,14 @@ resolved relative to `src-tauri` (`nsis/languages/tauri/<locale>.nsh`).
    token and machine translation mangles it; a space after the newline is
    visually identical and keeps the token separate.
 6. **Sentence strings name the buttons.** `ClickNext` ("Click Next to
-   continue.") keeps `Next` in Latin script after translation, contradicting the
-   translated button. The generator substitutes the localized label once the
-   button itself is translated.
+   continue."), `ClickInstall`, `ClickUninstall`, `LicenseText` ("click I
+   Agree") and MUI's "Click Finish to close Setup" all keep the English button
+   word after translation, contradicting the translated button right below. The
+   generator replaces every literal English button label (`*Btn` keys plus
+   `MUI_BUTTONTEXT_FINISH`) with its localized label across the `.nlf`, `.nsh`
+   and Tauri message files of that language. For the 33 languages whose table
+   NSIS ships, the generator reads NSIS's own translated buttons so the quoted
+   label still matches.
 7. **The footer is one string for all languages.** `bundle.copyright` becomes
    `BrandingText`, so it must stay language-neutral (`© 2026 Vellium`), not
    `© 2026 Vellium. All rights reserved.`.
@@ -75,8 +80,9 @@ resolved relative to `src-tauri` (`nsis/languages/tauri/<locale>.nsh`).
 - a missing `.nlf`/`.nsh` pair, wrong LCID, codepage other than 1200;
 - an English sentinel line (`License Agreement`, `Choose Install Location`,
   `Installation Complete`, `Please wait`);
-- a `.nlf` sentence that still says `Next`/`Install` while the matching button
-  label is translated;
+- an English button label (`Next`, `Install`, `Uninstall`, `I Agree`, `Finish`,
+  `Browse`) inside any translated string of that language, while the matching
+  button label in the same language *is* translated;
 - a message pack with the wrong `LANG_*` constant, a `LANG_ENGLISH` reference, a
   BOM, or `\"` instead of `$\"`;
 - a `customLanguageFiles` entry pointing at a missing file or at a language

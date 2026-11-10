@@ -15,6 +15,8 @@ import {
   NATIVE_NAMES,
   PROJECT_LANGUAGE_DIR,
   buildInstallerLanguageOrder,
+  buttonLabelPairs,
+  escapeRegExp,
   projectLanguages,
   projectTauriLanguages,
 } from "./lib/installer-languages.mjs";
@@ -22,12 +24,68 @@ import {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const errors = [];
 
+// makensis only resolves language files from inside its own installation.
+const nsisLanguageDir = path.join(
+  process.env.LOCALAPPDATA ?? "",
+  "tauri",
+  "NSIS",
+  "Contrib",
+  "Language files",
+);
+
 function fail(message) {
   errors.push(message);
 }
 
 function readJson(relativePath) {
   return JSON.parse(fs.readFileSync(path.join(root, relativePath), "utf8"));
+}
+
+/* ------------------------------------------------------------------ */
+/* Language-file parsers (label maps only, order preserved)            */
+/* ------------------------------------------------------------------ */
+
+function parseNlfLabels(text) {
+  const map = new Map();
+  for (const match of text.matchAll(/^# \^(\w+)\r?\n(.*)$/gm)) map.set(match[1], match[2]);
+  return map;
+}
+
+function parseMuiLabels(text) {
+  const map = new Map();
+  for (const match of text.matchAll(/\$\{LangFileString\}\s+(\S+)\s+"((?:[^"\\]|\\.)*)"/g)) {
+    map.set(match[1], match[2]);
+  }
+  return map;
+}
+
+function parseTauriLabels(text) {
+  const map = new Map();
+  for (const match of text.matchAll(
+    /LangString\s+(\S+)\s+\$\{LANG_[A-Z_]+\}\s+"((?:[^"\\]|\\.)*)"/g,
+  )) {
+    map.set(match[1], match[2]);
+  }
+  return map;
+}
+
+// English button labels are the reference for the leak check: if a language
+// translates `NextBtn` but still writes "Next" inside a sentence, that is the
+// half-English wizard we are guarding against.
+const templateDir = path.join(root, PROJECT_LANGUAGE_DIR, "_template");
+const englishButtonLabels = new Map();
+for (const [file, parser] of [
+  ["English.nlf", parseNlfLabels],
+  ["English.nsh", parseMuiLabels],
+]) {
+  const full = path.join(templateDir, file);
+  if (!fs.existsSync(full)) {
+    fail(`missing English template ${PROJECT_LANGUAGE_DIR}/_template/${file}`);
+    continue;
+  }
+  for (const [key, value] of parser(fs.readFileSync(full, "utf8").replace(/^\uFEFF/, ""))) {
+    englishButtonLabels.set(key, value);
+  }
 }
 
 // 1. App locales on disk must match the catalogue one-to-one.
@@ -85,28 +143,57 @@ for (const entry of projectLanguages()) {
         fail(`${entry.name}${extension}: still contains the English line "${sentinel}"`);
       }
     }
+  }
 
-    if (extension === ".nlf") {
-      // Sentence strings name the buttons ("Click Next to continue."). If the
-      // button itself is translated but the sentence still says "Next", the user
-      // reads a half-English wizard — exactly the leak this gate exists for.
-      const pick = (key) => {
-        const match = text.match(new RegExp(`# \\^${key}\\r?\\n([^\\r\\n]*)`));
-        return match ? match[1] : "";
-      };
-      for (const [word, key] of [
-        ["Next", "NextBtn"],
-        ["Install", "InstallBtn"],
-        ["Browse", "BrowseBtn"],
-      ]) {
-        const label = pick(key);
-        if (!label || !/[A-Za-z]/.test(label)) continue; // label left in English
-        for (const sentence of ["ClickNext", "ClickInstall"]) {
-          const value = pick(sentence);
-          if (new RegExp(`\\b${word}\\b`).test(value)) {
-            fail(`${entry.name}.nlf: ${sentence} still says "${word}" while ${key} is translated`);
-          }
-        }
+  // 3a. No English button word may survive inside a translated sentence. The
+  // sentence strings name the buttons ("Click Next to continue.", "click I
+  // Agree"), and machine translation happily keeps those words in Latin script
+  // while the button itself is translated — a half-English wizard. The three
+  // files of a language share their button labels, so compare across all of
+  // them: `.nlf` defines Next/Install/Uninstall/Agree, `.nsh` defines Finish,
+  // and the Tauri pack is the one that says "click Next to continue".
+  const localized = new Map();
+  const values = [];
+  const collect = (file, parser, label, recordValues = true) => {
+    if (!fs.existsSync(file)) return;
+    const text = fs.readFileSync(file, "utf8").replace(/^\uFEFF/, "");
+    for (const [key, value] of parser(text)) {
+      // `Branding` ("Nullsoft Install System %s") is intentionally untranslated
+      // and is never displayed: the wizard footer uses BrandingText instead.
+      if (key === "Branding") continue;
+      localized.set(key, value);
+      if (recordValues) values.push({ label, key, value });
+    }
+  };
+  collect(
+    path.join(root, PROJECT_LANGUAGE_DIR, `${entry.name}.nlf`),
+    parseNlfLabels,
+    `${entry.name}.nlf`,
+  );
+  collect(
+    path.join(root, PROJECT_LANGUAGE_DIR, `${entry.name}.nsh`),
+    parseMuiLabels,
+    `${entry.name}.nsh`,
+  );
+  if (entry.tauri === "project") {
+    collect(
+      path.join(root, PROJECT_LANGUAGE_DIR, "tauri", `${entry.locale}.nsh`),
+      parseTauriLabels,
+      `tauri/${entry.locale}.nsh`,
+    );
+  }
+  // NSIS supplies the table for the other languages; read it only to learn their
+  // button labels, because their Tauri message pack is the file we generated.
+  if (entry.source === "nsis" && entry.tauri === "project") {
+    collect(path.join(nsisLanguageDir, `${entry.name}.nlf`), parseNlfLabels, entry.name, false);
+    collect(path.join(nsisLanguageDir, `${entry.name}.nsh`), parseMuiLabels, entry.name, false);
+  }
+
+  const pairs = buttonLabelPairs(englishButtonLabels, localized);
+  for (const { label, key, value } of values) {
+    for (const { from } of pairs) {
+      if (new RegExp(`\\b${escapeRegExp(from)}\\b`).test(value)) {
+        fail(`${label}: ${key} still says "${from}" while the matching button is translated`);
       }
     }
   }
@@ -201,13 +288,7 @@ if (!/^©\s*\d{4}\s+\S+$/.test(copyright.trim())) {
 }
 
 // 6. When the NSIS toolchain is present, verify every language is resolvable.
-const nlfDir = path.join(
-  process.env.LOCALAPPDATA ?? "",
-  "tauri",
-  "NSIS",
-  "Contrib",
-  "Language files",
-);
+const nlfDir = nsisLanguageDir;
 let toolchainChecked = false;
 if (nsisDirExists(nlfDir)) {
   toolchainChecked = true;

@@ -16,7 +16,7 @@
 !ifdef MUI_LICENSEPAGE
   ${LangFileString} MUI_TEXT_LICENSE_TITLE "Kasunduan sa Lisensya"
   ${LangFileString} MUI_TEXT_LICENSE_SUBTITLE "Pakisuri ang mga tuntunin ng lisensya bago i-install ang $(^NameDA)."
-  ${LangFileString} MUI_INNERTEXT_LICENSE_BOTTOM "Kung tatanggapin mo ang mga tuntunin ng kasunduan, i-click ang I Agree para magpatuloy. Dapat mong tanggapin ang kasunduan sa pag-install ng $(^NameDA)."
+  ${LangFileString} MUI_INNERTEXT_LICENSE_BOTTOM "Kung tatanggapin mo ang mga tuntunin ng kasunduan, i-click ang Sumasang-ayon ako para magpatuloy. Dapat mong tanggapin ang kasunduan sa pag-install ng $(^NameDA)."
   ${LangFileString} MUI_INNERTEXT_LICENSE_BOTTOM_CHECKBOX "Kung tinatanggap mo ang mga tuntunin ng kasunduan, i-click ang check box sa ibaba. Dapat mong tanggapin ang kasunduan sa pag-install ng $(^NameDA). $_CLICK"
   ${LangFileString} MUI_INNERTEXT_LICENSE_BOTTOM_RADIOBUTTONS "Kung tatanggapin mo ang mga tuntunin ng kasunduan, piliin ang unang opsyon sa ibaba. Dapat mong tanggapin ang kasunduan sa pag-install ng $(^NameDA). $_CLICK"
 !endif
@@ -24,7 +24,7 @@
 !ifdef MUI_UNLICENSEPAGE
   ${LangFileString} MUI_UNTEXT_LICENSE_TITLE "Kasunduan sa Lisensya"
   ${LangFileString} MUI_UNTEXT_LICENSE_SUBTITLE "Pakisuri ang mga tuntunin ng lisensya bago i-uninstall ang $(^NameDA)."
-  ${LangFileString} MUI_UNINNERTEXT_LICENSE_BOTTOM "Kung tatanggapin mo ang mga tuntunin ng kasunduan, i-click ang I Agree para magpatuloy. Dapat mong tanggapin ang kasunduan sa pag-uninstall ng $(^NameDA)."
+  ${LangFileString} MUI_UNINNERTEXT_LICENSE_BOTTOM "Kung tatanggapin mo ang mga tuntunin ng kasunduan, i-click ang Sumasang-ayon ako para magpatuloy. Dapat mong tanggapin ang kasunduan sa pag-uninstall ng $(^NameDA)."
   ${LangFileString} MUI_UNINNERTEXT_LICENSE_BOTTOM_CHECKBOX "Kung tinatanggap mo ang mga tuntunin ng kasunduan, i-click ang check box sa ibaba. Dapat mong tanggapin ang kasunduan sa pag-uninstall ng $(^NameDA). $_CLICK"
   ${LangFileString} MUI_UNINNERTEXT_LICENSE_BOTTOM_RADIOBUTTONS "Kung tatanggapin mo ang mga tuntunin ng kasunduan, piliin ang unang opsyon sa ibaba. Dapat mong tanggapin ang kasunduan sa pag-uninstall ng $(^NameDA). $_CLICK"
 !endif
@@ -87,7 +87,7 @@
 !endif
 
 !ifdef MUI_UNFINISHPAGE
-  ${LangFileString} MUI_UNTEXT_FINISH_INFO_TITLE "Pagkumpleto ng $(^NameDA) Uninstall"
+  ${LangFileString} MUI_UNTEXT_FINISH_INFO_TITLE "Pagkumpleto ng $(^NameDA) I-uninstall"
   ${LangFileString} MUI_UNTEXT_FINISH_INFO_TEXT "Ang $(^NameDA) ay na-uninstall mula sa iyong computer.$\r$\n$\r$\n I-click ang Tapos upang isara ang Setup."
   ${LangFileString} MUI_UNTEXT_FINISH_INFO_REBOOT "Dapat na i-restart ang iyong computer upang makumpleto ang pag-uninstall ng $(^NameDA). Gusto mo bang mag-reboot ngayon?"
 !endif
@@ -117,7 +117,7 @@
 !endif
 
 !ifdef MUI_UNABORTWARNING
-  ${LangFileString} MUI_UNTEXT_ABORTWARNING "Sigurado ka bang gusto mong ihinto ang $(^Name) Uninstall?"
+  ${LangFileString} MUI_UNTEXT_ABORTWARNING "Sigurado ka bang gusto mong ihinto ang $(^Name) I-uninstall?"
 !endif
 
 !ifdef MULTIUSER_INSTALLMODEPAGE

@@ -9,7 +9,7 @@
 !endif
 
 !ifdef MUI_UNWELCOMEPAGE
-  ${LangFileString} MUI_UNTEXT_WELCOME_INFO_TITLE "Barka da zuwa Uninstall $(^NameDA)"
+  ${LangFileString} MUI_UNTEXT_WELCOME_INFO_TITLE "Barka da zuwa Cire shigarwa $(^NameDA)"
   ${LangFileString} MUI_UNTEXT_WELCOME_INFO_TEXT "Saita zai jagorance ku ta hanyar cirewar $(^NameDA).$\r$\n$\r$\n Kafin fara cirewa, tabbatar cewa $(^NameDA) baya gudana.$\r$\n$\r$\nXQ7QXZ"
 !endif
 
@@ -58,7 +58,7 @@
 !endif
 
 !ifdef MUI_UNDIRECTORYPAGE
-  ${LangFileString} MUI_UNTEXT_DIRECTORY_TITLE "Zaɓi Uninstall Wuri"
+  ${LangFileString} MUI_UNTEXT_DIRECTORY_TITLE "Zaɓi Cire shigarwa Wuri"
   ${LangFileString} MUI_UNTEXT_DIRECTORY_SUBTITLE "Zaɓi babban fayil ɗin da za a cire $(^NameDA)."
 !endif
 
@@ -117,7 +117,7 @@
 !endif
 
 !ifdef MUI_UNABORTWARNING
-  ${LangFileString} MUI_UNTEXT_ABORTWARNING "Shin kun tabbata kuna son barin $(^Name) Uninstall?"
+  ${LangFileString} MUI_UNTEXT_ABORTWARNING "Shin kun tabbata kuna son barin $(^Name) Cire shigarwa?"
 !endif
 
 !ifdef MULTIUSER_INSTALLMODEPAGE

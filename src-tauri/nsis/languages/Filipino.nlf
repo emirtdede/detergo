@@ -70,13 +70,13 @@ Pangalan
 # ^Completed
 Nakumpleto
 # ^LicenseText
-Pakisuri ang kasunduan sa lisensya bago i-install ang $(^NameDA). Kung tatanggapin mo ang lahat ng mga tuntunin ng kasunduan, i-click ang I Agree.
+Pakisuri ang kasunduan sa lisensya bago i-install ang $(^NameDA). Kung tatanggapin mo ang lahat ng mga tuntunin ng kasunduan, i-click ang Sumasang-ayon ako.
 # ^LicenseTextCB
 Pakisuri ang kasunduan sa lisensya bago i-install ang $(^NameDA). Kung tinatanggap mo ang lahat ng mga tuntunin ng kasunduan, i-click ang check box sa ibaba. $_CLICK
 # ^LicenseTextRB
 Pakisuri ang kasunduan sa lisensya bago i-install ang $(^NameDA). Kung tatanggapin mo ang lahat ng mga tuntunin ng kasunduan, piliin ang unang opsyon sa ibaba. $_CLICK
 # ^UnLicenseText
-Pakisuri ang kasunduan sa lisensya bago i-uninstall ang $(^NameDA). Kung tatanggapin mo ang lahat ng mga tuntunin ng kasunduan, i-click ang I Agree.
+Pakisuri ang kasunduan sa lisensya bago i-uninstall ang $(^NameDA). Kung tatanggapin mo ang lahat ng mga tuntunin ng kasunduan, i-click ang Sumasang-ayon ako.
 # ^UnLicenseTextCB
 Pakisuri ang kasunduan sa lisensya bago i-uninstall ang $(^NameDA). Kung tinatanggap mo ang lahat ng mga tuntunin ng kasunduan, i-click ang check box sa ibaba. $_CLICK
 # ^UnLicenseTextRB

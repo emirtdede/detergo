@@ -31,6 +31,13 @@ unchanged from 2.2.1.
   (sidebar, header, uninstaller header, WiX banner and dialog). The header image
   is right-aligned (`MUI_HEADERIMAGE_RIGHT`); the stray chevron and the cropped
   watermark are gone.
+- Sentences that name a button ("Click Next to continue.", "Click Install to
+  start the installation.", "click I Agree", "Click Finish to close Setup")
+  used to keep that word in Latin script after translation. Each English button
+  label is now replaced with the localized one across the `.nlf`, `.nsh` and
+  Tauri message files of the language, so the sentence quotes the button the
+  user actually sees. For the 33 languages NSIS translates itself, the
+  generator reads NSIS's own button labels.
 - The wizard footer uses the language-neutral `© 2026 Vellium` instead of the
   English sentence `All rights reserved.`, because NSIS renders one
   `BrandingText` for all languages.
@@ -38,7 +45,8 @@ unchanged from 2.2.1.
   all 73 dictionaries; no component read it, and it was the last value that was
   English in every language.
 - `npm run check:languages` now verifies 73 config entries, project `.nlf`/`.nsh`
-  pairs (language id, codepage 1200, no surviving English sentinels), Tauri
+  pairs (language id, codepage 1200, no surviving English sentinels, no English
+  button word inside a translated sentence), Tauri
   message packs (right `LANG_*` constant, no `LANG_ENGLISH`, no BOM, `$\"` not
   `\"`), `customLanguageFiles` paths and the language-neutral copyright.
   `npm run check:i18n` now also audits the legacy `src/locales/langs` dictionaries
