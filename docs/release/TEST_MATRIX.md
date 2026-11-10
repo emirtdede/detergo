@@ -50,15 +50,17 @@ binary, produced the NSIS and MSI bundles, copied the three deliverables into
 
 | Check | Command | Result |
 |---|---|---|
-| Release build | `npm run build:release` | **PASS** — portable 18,489,856 B, MSI 8,454,144 B, NSIS ≈6.04 MB (NSIS output is not byte-reproducible; use the hashes in `release_output/`) |
+| Release build | `npm run build:release` | **PASS** — 3 artifacts; portable 18,489,856 B and MSI 8,454,144 B are stable, NSIS varies by a few KB. Hashes differ between builds because the binaries embed build metadata, so use the current `BUILD_INFO.json` |
 | PE frame gate | inside `build:release` | **PASS** — `Dev-Cleaner-2.2.2-Portable.exe` and `Dev-Cleaner-2.2.2-x64-Setup.exe` each 15 frames / 15 `RT_ICON` |
 | Raw binary frame gate | `npm run check:exe-icons -- src-tauri/target/release/node-cleaner.exe` | **PASS** — 15 frames |
 | Provenance | `npm run check:build-info` | **PASS** — version 2.2.2, recorded commit, `dirty: false`, 3 artifacts |
 
-The recorded evidence build is commit `29283d6`; sources and hashes for that run
-are in `release_output/BUILD_INFO.json` and `release_output/SHA256SUMS.txt`. Any
-later commit invalidates that manifest, so re-run `build:release` and
-`check:build-info` before publishing.
+The evidence build is the commit named in `release_output/BUILD_INFO.json`, and
+`check:build-info` enforces that it equals `HEAD` on a clean tree. `SHA256SUMS.txt`
+holds the hashes of exactly those files. Because each build embeds its own
+metadata, re-running `build:release` after any commit replaces those hashes and
+invalidates the manifest — rebuild and re-run `check:build-info` before
+publishing.
 
 ### 0.2 Runtime checks against the 2.2.2 packages (executed)
 
