@@ -50,10 +50,15 @@ binary, produced the NSIS and MSI bundles, copied the three deliverables into
 
 | Check | Command | Result |
 |---|---|---|
-| Release build | `npm run build:release` | **PASS** — portable 18,489,856 B, NSIS 6,037,816 B, MSI 8,454,144 B |
+| Release build | `npm run build:release` | **PASS** — portable 18,489,856 B, MSI 8,454,144 B, NSIS ≈6.04 MB (NSIS output is not byte-reproducible; use the hashes in `release_output/`) |
 | PE frame gate | inside `build:release` | **PASS** — `Dev-Cleaner-2.2.2-Portable.exe` and `Dev-Cleaner-2.2.2-x64-Setup.exe` each 15 frames / 15 `RT_ICON` |
 | Raw binary frame gate | `npm run check:exe-icons -- src-tauri/target/release/node-cleaner.exe` | **PASS** — 15 frames |
 | Provenance | `npm run check:build-info` | **PASS** — version 2.2.2, recorded commit, `dirty: false`, 3 artifacts |
+
+The recorded evidence build is commit `29283d6`; sources and hashes for that run
+are in `release_output/BUILD_INFO.json` and `release_output/SHA256SUMS.txt`. Any
+later commit invalidates that manifest, so re-run `build:release` and
+`check:build-info` before publishing.
 
 ### 0.2 Runtime checks against the 2.2.2 packages (executed)
 
