@@ -114,4 +114,11 @@ FunctionEnd
 !macro NSIS_HOOK_POSTUNINSTALL
   Delete "$INSTDIR\app.ico"
   System::Call "shell32::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)"
+
+  ; The uninstaller itself runs from $INSTDIR, so the template's `RMDir
+  ; "$INSTDIR"` fails while uninstall.exe is still locked and leaves an empty
+  ; folder behind. Queue an empty-only removal for the next logon, which is the
+  ; earliest moment the folder can really go away.
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\RunOnce" \
+    "DevCleanerRemoveInstallDir" 'cmd.exe /c rmdir /q "$INSTDIR"'
 !macroend

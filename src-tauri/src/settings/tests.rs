@@ -269,4 +269,21 @@ mod tests {
                 .expect("legacy settings must still deserialize");
         assert_eq!(legacy.close_action, "ask");
     }
+
+    /// The E1-03 smoke test seeds its sandbox config from this fixture and then
+    /// flips only `language`. If the schema grows without regenerating it, the
+    /// smoke test would silently fall back to defaults and stop proving anything.
+    #[test]
+    fn default_settings_fixture_matches_app_defaults() {
+        let fixture = include_str!("../../../scripts/fixtures/default-settings.json");
+        let parsed: AppSettings =
+            serde_json::from_str(fixture).expect("fixture must deserialize as AppSettings");
+
+        assert_eq!(
+            serde_json::to_value(parsed).unwrap(),
+            serde_json::to_value(AppSettings::default()).unwrap(),
+            "regenerate scripts/fixtures/default-settings.json: \
+             cargo run --manifest-path src-tauri/Cargo.toml --example dump-default-settings"
+        );
+    }
 }

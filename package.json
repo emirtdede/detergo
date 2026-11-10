@@ -21,6 +21,7 @@
     "check-version": "node scripts/check-version.js",
     "check:build-info": "node scripts/check-build-info.mjs",
     "build:release": "node scripts/build-release.js",
+    "verify:smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-smoke.ps1",
     "verify:trash": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-recycle-bin.ps1",
     "verify:offline": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-offline.ps1",
     "bench:scale": "cargo test --manifest-path src-tauri/Cargo.toml --release --test scale_benchmark -- --ignored --nocapture",

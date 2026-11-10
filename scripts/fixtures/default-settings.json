@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 4,
+  "theme": "dark-transparent",
+  "reduceMotion": false,
+  "favorites": [],
+  "recentLocations": [],
+  "lastScanPath": null,
+  "sort": {
+    "field": "size",
+    "direction": "desc"
+  },
+  "language": null,
+  "protectedPaths": [],
+  "excludedNames": [],
+  "scanProfile": "balanced",
+  "maxDepth": 32,
+  "maxCandidates": 50000,
+  "timeoutMinutes": 15,
+  "minSizeBytes": 0,
+  "maskPaths": false,
+  "historyEnabled": true,
+  "agentPolicy": {
+    "allowCacheCleanup": true,
+    "protectBrowserRecordings": true
+  },
+  "sidebarMode": "expanded",
+  "cacheMeasureMode": "fast",
+  "closeAction": "ask",
+  "customAgentProviders": [],
+  "hiddenBuiltinProviders": [],
+  "notifications": {
+    "scanComplete": "both",
+    "cleanComplete": "both",
+    "diskPressure": "both",
+    "processLock": "in_app",
+    "automationWebhook": "both",
+    "soundEnabled": true
+  },
+  "webhookUrl": null,
+  "webhookOnScan": true,
+  "webhookOnClean": true,
+  "shortcuts": null,
+  "mcpAllowDestructive": false
+}
