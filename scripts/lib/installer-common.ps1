@@ -122,7 +122,19 @@ function Get-IcoFrameCount {
 
 function Get-FileSha256 {
     param([Parameter(Mandatory = $true)][string]$Path)
-    return (Get-FileHash -Path $Path -Algorithm SHA256).Hash.ToUpperInvariant()
+    # Compute it through .NET: the harness can run Windows PowerShell with a
+    # stripped PSModulePath, where Get-FileHash (Microsoft.PowerShell.Utility)
+    # may not resolve.
+    $stream = [System.IO.File]::OpenRead($Path)
+    try {
+        $sha = [System.Security.Cryptography.SHA256]::Create()
+        try {
+            $bytes = $sha.ComputeHash($stream)
+            return ([System.BitConverter]::ToString($bytes)).Replace("-", "").ToUpperInvariant()
+        }
+        finally { $sha.Dispose() }
+    }
+    finally { $stream.Dispose() }
 }
 
 function Invoke-ExeIconCheck {
@@ -133,6 +145,23 @@ function Invoke-ExeIconCheck {
     $checker = Join-Path $Root "scripts\check-exe-icons.mjs"
     & node $checker @Paths
     return ($LASTEXITCODE -eq 0)
+}
+
+function Get-QueuedInstallDirCleanup {
+    return (Get-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce" `
+            -ErrorAction SilentlyContinue).DevCleanerRemoveInstallDir
+}
+
+function Invoke-QueuedInstallDirCleanup {
+    # The NSIS uninstaller queues an empty-only `rmdir` for the next logon
+    # because it cannot delete the folder it is running from. Run it now so a
+    # verification script leaves the machine as it found it.
+    $runOnce = Get-QueuedInstallDirCleanup
+    if ([string]::IsNullOrEmpty($runOnce)) { return $false }
+    cmd /c $runOnce | Out-Null
+    Remove-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce" `
+        -Name DevCleanerRemoveInstallDir -ErrorAction SilentlyContinue
+    return (Wait-Until { @(Get-DevCleanerInstallDirs).Count -eq 0 } 30)
 }
 
 function Remove-DevCleanerLeftovers {

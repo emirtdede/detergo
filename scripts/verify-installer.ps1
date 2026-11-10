@@ -103,20 +103,15 @@ try {
                 -not (Test-Path $installDir) -or
                 ((Get-ChildItem $installDir -Force -ErrorAction SilentlyContinue).Count -eq 0)
             } 60
-            $runOnce = (Get-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -ErrorAction SilentlyContinue).DevCleanerRemoveInstallDir
+            $runOnce = Get-QueuedInstallDirCleanup
             $pendingCleanup = (-not (Test-Path $installDir)) -or (-not [string]::IsNullOrEmpty($runOnce))
             $registryGone = @(Get-DevCleanerUninstallEntries).Count -eq 0
             Record-InstallerResult "I-06" "NSIS silent uninstall" `
                 ($(if ($filesGone -and $pendingCleanup -and $registryGone) { "PASS" } else { "FAIL" })) `
                 ("exit=$($up.ExitCode) filesGone=$filesGone dirPending=$pendingCleanup registryGone=$registryGone")
 
-            if ($pendingCleanup -and (Test-Path $installDir) -and -not [string]::IsNullOrEmpty($runOnce)) {
-                cmd /c $runOnce | Out-Null
-                $dirRemoved = Wait-Until { -not (Test-Path $installDir) } 30
-                if ($dirRemoved) {
-                    Remove-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce" `
-                        -Name DevCleanerRemoveInstallDir -ErrorAction SilentlyContinue
-                }
+            if ($pendingCleanup -and (Test-Path $installDir)) {
+                $dirRemoved = Invoke-QueuedInstallDirCleanup
                 Record-InstallerResult "I-06b" "queued install-folder cleanup works" `
                     ($(if ($dirRemoved) { "PASS" } else { "FAIL" })) ("dir removed=$dirRemoved")
             }

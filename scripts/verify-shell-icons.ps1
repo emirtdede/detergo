@@ -185,13 +185,7 @@ finally {
     Stop-InstalledApp
     Remove-DevCleanerLeftovers
     # The NSIS hook queues an empty-only directory removal for the next logon.
-    $runOnce = (Get-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce" `
-            -ErrorAction SilentlyContinue).DevCleanerRemoveInstallDir
-    if (-not [string]::IsNullOrEmpty($runOnce)) {
-        cmd /c $runOnce | Out-Null
-        Remove-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce" `
-            -Name DevCleanerRemoveInstallDir -ErrorAction SilentlyContinue
-    }
+    Invoke-QueuedInstallDirCleanup | Out-Null
 }
 
 exit (Complete-InstallerRun -Title "Shell icon checks")

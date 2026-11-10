@@ -154,28 +154,40 @@ try {
             }
             else {
                 if ($Kind -eq "NSIS") {
-                $uninstaller = Get-ChildItem -Path (Split-Path $newExe) -Filter "uninstall*.exe" `
-                    -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
-                if ($null -ne $uninstaller) {
-                    $removeProc = Start-Process -FilePath $uninstaller -ArgumentList "/S" -Wait -PassThru
-                    $removeExit = $removeProc.ExitCode
+                    $uninstaller = Get-ChildItem -Path (Split-Path $newExe) -Filter "uninstall*.exe" `
+                        -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+                    if ($null -ne $uninstaller) {
+                        $removeProc = Start-Process -FilePath $uninstaller -ArgumentList "/S" -Wait -PassThru
+                        $removeExit = $removeProc.ExitCode
+                    }
+                    else {
+                        $removeExit = -1
+                    }
                 }
                 else {
-                    $removeExit = -1
+                    $removeProc = Start-Process -FilePath "msiexec.exe" `
+                        -ArgumentList @("/x", "`"$newArtifact`"", "/qn", "/norestart") -Wait -PassThru
+                    $removeExit = $removeProc.ExitCode
                 }
-            }
-            else {
-                $removeProc = Start-Process -FilePath "msiexec.exe" `
-                    -ArgumentList @("/x", "`"$newArtifact`"", "/qn", "/norestart") -Wait -PassThru
-                $removeExit = $removeProc.ExitCode
-            }
-            $gone = Wait-Until {
-                @(Get-DevCleanerUninstallEntries).Count -eq 0 -and
-                @(Get-DevCleanerInstallDirs).Count -eq 0
-            } 120
-            Record-InstallerResult "U-07" "upgraded product uninstalls cleanly" `
-                ($(if ($removeExit -eq 0 -and $gone) { "PASS" } else { "FAIL" })) `
-                ("exit=$removeExit cleaned=$gone")
+
+                # The NSIS uninstaller cannot delete the folder it runs from, so
+                # it queues an empty-only removal for the next logon. An empty
+                # folder with that RunOnce entry pending is a clean uninstall.
+                $removeDir = Split-Path $newExe
+                $filesGone = Wait-Until {
+                    -not (Test-Path $removeDir) -or
+                    ((Get-ChildItem $removeDir -Force -ErrorAction SilentlyContinue).Count -eq 0)
+                } 60
+                $registryGone = Wait-Until { @(Get-DevCleanerUninstallEntries).Count -eq 0 } 60
+                $pendingCleanup = (-not (Test-Path $removeDir)) -or
+                    (-not [string]::IsNullOrEmpty((Get-QueuedInstallDirCleanup)))
+                $cleaned = $filesGone -and $registryGone -and $pendingCleanup
+                Record-InstallerResult "U-07" "upgraded product uninstalls cleanly" `
+                    ($(if ($removeExit -eq 0 -and $cleaned) { "PASS" } else { "FAIL" })) `
+                    ("exit=$removeExit filesGone=$filesGone registryGone=$registryGone dirPending=$pendingCleanup")
+
+                # Leave the machine as it was found so U-08 is a real check.
+                if ($pendingCleanup) { Invoke-QueuedInstallDirCleanup | Out-Null }
             }
         }
     }
