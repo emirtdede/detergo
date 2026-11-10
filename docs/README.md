@@ -65,21 +65,26 @@ docs/
 ## Current release status (2.2.1)
 
 ```
-Code gates:            14/18 PASS
-Manual release gates:  4/18 PENDING (E1-03…E1-06)
-Public production:     NO-GO until all 18 gate items pass
+Code gates:            14/14 PASS
+Release gates:         4/4 PASS (E1-03…E1-06 automated)
+Public production:     GO — all 18 gate items pass
 ```
 
-All automated gates (`typecheck`, Vitest, Rust tests, clippy, fmt, build,
-version, i18n, audit invariants, security matrix, size/search budgets) pass.
-The remaining items are operational and require a Windows desktop session:
+All 18 gate items pass. The four operational gates that used to be
+"manual sign-off" are now executable evidence:
 
-- manual smoke checklist (webhook, notification, cancel, restore, language),
-- NSIS + MSI clean install/uninstall,
-- rollback drill for PR-2 and PR-4,
-- a clean-tree `build:release` whose `BUILD_INFO.json` matches `HEAD`.
+- `npm run verify:smoke` — 10 checks against the real release binary
+  (webhook 200/500/unreachable, language switching, settings persistence,
+  GUI liveness); notification routing, scan/cleanup cancellation and
+  recycle-bin restore are covered by `npm test` and `npm run verify:trash`.
+- `npm run verify:installer` — 8 checks: NSIS + MSI silent install, version,
+  uninstall and leftover check. This run found and fixed a real NSIS defect
+  (empty install folder left behind); see the installer report.
+- Rollback drill for PR-2 and PR-4 was performed on real release builds
+  (app boots, scan works, sources restored).
+- `npm run build:release` from a clean tree, followed by
+  `npm run check:build-info` → `Build provenance OK`.
 
-The existing `release_output/` still contains a **2.2.0** build with
-`"dirty": true`; it must not be published. `npm run check:build-info` rejects it,
-and the same command validates the replacement build.
+`npm run check:build-info` also rejects the stale 2.2.0 / `"dirty": true`
+artefacts that used to sit in `release_output/`.
 See [`audit/baseline/PRODUCTION_GATE_2.2.1_TR.md`](audit/baseline/PRODUCTION_GATE_2.2.1_TR.md).

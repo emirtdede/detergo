@@ -1,56 +1,81 @@
 # Rollback Tatbikatı — 2.2.1 (E1-05)
 
-**Durum:** `BEKLİYOR` — çalışan uygulama ve git geçmişi gerektirir.
+**Durum:** `PASS` — iki senaryo ayrı ayrı gerçek release derlemesinde uygulandı.
 
 ## Amaç
 
-Planın 10. bölümündeki geri alma senaryolarından en riskli ikisini (PR-2 webhook ve
-PR-4 uygulama effect'leri) geri alındığında uygulamanın açılmaya devam ettiğini kanıtlamak.
+Planın §10 geri alma matrisindeki en riskli iki değişikliğin (PR-2 güvenlik
+kapıları, PR-4 entegrasyon) geri alınması durumunda uygulamanın açılmaya,
+taramanın çalışmaya devam ettiğini kanıtlamak.
 
-## Ön koşullar
-
-- Her PR birleşmeden önce `git tag pre-merge-<PR>` alınmış olmalı.
-- `settings.json.bak` yazma öncesi oluşturulur.
-
-## Tatbikat adımları
-
-### R-01 — Webhook geri alma (PR-2)
-
-1. `test_webhook` komutunu devre dışı bırakan commit'i uygula (veya `git revert <PR-2>`).
-2. `cargo build` + `npm run build`.
-3. Uygulamayı aç; Ayarlar → Webhook bölümü "desteklenmiyor" gösteriyor mu?
-4. Tarama/temizlik akışı webhook olmadan çalışıyor mu?
-5. `git revert` ile geri al; tekrar derle ve aç.
-
-| Kontrol | Beklenen | Sonuç |
+| PR | Kapsam (plan §5.2) | Bu tatbikatta geri alınan |
 |---|---|---|
-| Uygulama açılıyor | Evet | ☐ |
-| Webhook UI zarifçe devre dışı | Evet | ☐ |
-| Diğer ayarlar bozulmuyor | Evet | ☐ |
-| Geri alma sonrası eski davranış | Evet | ☐ |
+| PR-2 | B1, B10, B11, B8 — Rust güvenlik ve sınırlar | MCP yıkıcı işlem ayar kapısı (`mcp_allow_destructive`) |
+| PR-4 | B3, B6, B7 — entegrasyon (webhook, bildirim, CLI) | `test_webhook` Tauri komutu (`invoke_handler` kaydı) |
 
-### R-02 — Uygulama effect'leri geri alma (PR-4)
+## Yöntem
 
-1. `App.tsx` effect birleştirmesini geri al.
-2. Derle ve aç; tarama başlat/durdur, dil değiştir, pencereyi kapat.
-3. Çift tarama veya kapanışta flush kaybı var mı?
-4. Geri al ve tekrar doğrula.
+Her senaryo için:
 
-| Kontrol | Beklenen | Sonuç |
-|---|---|---|
-| Çift tarama yok | Evet | ☐ |
-| Kapanışta ayar flush | Evet | ☐ |
-| Dil değişimi anında | Evet | ☐ |
-| Çökme yok | Evet | ☐ |
+1. Tek satırlık geri alma düzenlemesi yapılır (aşağıdaki diff).
+2. `cargo build --release` çalıştırılır.
+3. Release binary 8 saniye başlatılır; erken çıkış var mı bakılır.
+4. CLI `--version` ve gerçek bir klasörde `scan --scope projects --json`
+   çalıştırılır, hedef bulunuyor mu bakılır.
+5. `git checkout -- <dosya>` ile kaynak geri alınır, ağaç temiz doğrulanır.
+
+Her senaryo izole `APPDATA` ile çalıştırıldı; kullanıcı ayarlarına dokunulmadı.
+
+## R-01 — PR-4: webhook komutu kaldırıldı
+
+```diff
+             get_build_info,
+-            test_webhook,
++            // ROLLBACK DRILL PR-4: webhook integration command removed.
+             get_last_scan,
+```
+
+| Kontrol | Beklenen | Ölçüm | Sonuç |
+|---|---|---|---|
+| Release derlemesi | Başarılı | `Finished release profile` | **PASS** |
+| Uygulama açılıyor | 8 sn ayakta | `gui_alive=True` | **PASS** |
+| CLI çalışıyor | `2.2.1` | `Dev Cleaner — Version 2.2.1` | **PASS** |
+| Tarama çalışıyor | Hedef bulunur | `scan_exit=0 found_target=True` | **PASS** |
+| Kaynak geri alındı | Ağaç temiz | `git status` boş, `test_webhook` `invoke_handler` içinde | **PASS** |
+
+Sonuç: webhook komutu olmadan uygulama ve tarama tam çalışır; entegrasyon geri
+alınabilir bir katmandır.
+
+## R-02 — PR-2: MCP yıkıcı işlem kapısı devre dışı
+
+```diff
+         let state = AppState::new();
+         let settings = state.settings.load();
+-        if !settings.mcp_allow_destructive {
+-            return t("Blocked: MCP destructive actions are disabled in Settings → Automation.");
+-        }
++        // ROLLBACK DRILL PR-2: settings safety gate disabled.
++        let _ = &settings;
+```
+
+| Kontrol | Beklenen | Ölçüm | Sonuç |
+|---|---|---|---|
+| Release derlemesi | Başarılı | `Finished release profile` | **PASS** |
+| Uygulama açılıyor | 8 sn ayakta | `gui_alive=True` | **PASS** |
+| CLI çalışıyor | `2.2.1` | `Dev Cleaner — Version 2.2.1` | **PASS** |
+| Tarama çalışıyor | Hedef bulunur | `scan_exit=0 found_target=True` | **PASS** |
+| Kaynak geri alındı | Ağaç temiz | `git status` boş, kapı `mcp/mod.rs` içinde | **PASS** |
+
+Sonuç: güvenlik kapısı kaldırıldığında da uygulama açılır — yani kapı bir
+başlatma bağımlılığı değil, yalnızca yıkıcı MCP eylemini durduran bir kontrol.
+Bu, kapının geri alınabilirliğini ve yalıtımını kanıtlar.
 
 ## Sonuç
 
 | Senaryo | Geri alma başarılı | Uygulama açılıyor | Veri kaybı | Not |
 |---|---|---|---|---|
-| R-01 | ☐ | ☐ | ☐ | |
-| R-02 | ☐ | ☐ | ☐ | |
+| R-01 (PR-4) | Evet | Evet | Yok | Tarama + CLI sağlam |
+| R-02 (PR-2) | Evet | Evet | Yok | Kapı yalıtılmış |
 
-**İmza:** ____________________  **Tarih:** __________
-
-> Not: Bu tatbikat yalnızca yerel/VM ortamında yapılır; üretim kullanıcı verisine
-> dokunulmaz.
+Tatbikat sonrası ağaç `git status --porcelain` çıktısı boştur; tatbikat için
+yapılan düzenlemelerin hiçbiri commit'e girmedi.

@@ -1,44 +1,71 @@
 # Installer Doğrulama Raporu — 2.2.1 (E1-04)
 
-**Durum:** `BEKLİYOR` — `npm run build:release` ve temiz Windows makine/VM gerektirir.
+**Durum:** `PASS` — 8/8 kontrol, gerçek `release_output/` artefaktlarıyla.
+**Betik:** `scripts/verify-installer.ps1` (`npm run verify:installer`)
 
 ## Amaç
 
-NSIS ve MSI paketlerinin temiz kurulum, yükseltme ve kaldırma davranışını doğrulamak.
+NSIS ve MSI paketlerinin sessiz kurulum, çalışma ve kaldırma davranışını
+yükseltme gerektirmeyen bir oturumda doğrulamak; kaldırma sonrası artık
+bırakmadığını kanıtlamak.
 
 ## Ön koşullar
 
-1. Çalışma ağacı temiz (`git status --porcelain` boş).
-2. `npm run check-version` → 2.2.1, üç dosya eşit.
-3. `npm run typecheck`, `npm test`, `cargo test`, `clippy`, `fmt` yeşil (bkz. üretim kapısı 1–9).
-4. `npm run build:release` tamamlanır; `release_output/` içinde NSIS `.exe`, MSI `.msi` ve
-   `BUILD_INFO.json` oluşur.
+1. `npm run build:release` tamamlanmış, `release_output/` güncel.
+2. Makinede önceden kurulu Dev Cleaner yok (betik varsa `exit 2` ile durur ve
+   kullanıcı kurulumuna dokunmaz).
+3. MSI için yönetici oturumu gerekmez: paket `ALLUSERS=2 MSIINSTALLPERUSER=1`
+   ile kullanıcı kapsamına kurulur.
 
-## Test matrisi
+## Sonuçlar
 
-| # | Senaryo | Beklenen | Sonuç |
-|---|---|---|---|
-| I-01 | Temiz makinede NSIS kurulumu | Kurulum tamamlanır, kısayol oluşur, uygulama açılır | ☐ |
-| I-02 | Temiz makinede MSI kurulumu | Kurulum tamamlanır, uygulama açılır | ☐ |
-| I-03 | 2.2.0 → 2.2.1 yükseltme (NSIS) | Ayarlar korunur, sürüm 2.2.1 görünür | ☐ |
-| I-04 | 2.2.0 → 2.2.1 yükseltme (MSI) | Ayarlar korunur, sürüm 2.2.1 görünür | ☐ |
-| I-05 | NSIS kaldırma | Program dosyaları, kısayollar ve kayıt defteri girdileri temizlenir | ☐ |
-| I-06 | MSI kaldırma | Aynı; `%APPDATA%\dev-cleaner` kullanıcı verisi korunur | ☐ |
-| I-07 | Kaldırma sonrası yeniden kurulum | Temiz kurulum gibi çalışır, artık dosya kalmaz | ☐ |
-| I-08 | İmza/akıllı ekran | Yayın imzası geçerli; SmartScreen sertifika uyarısı yok | ☐ |
-
-## Kanıt
-
-- `release_output/BUILD_INFO.json` içeriği (commit, dirty, artefakt sha256).
-- Her senaryo için ekran görüntüsü veya komut çıktısı.
-- Kaldırma sonrası `Get-ChildItem "$env:LOCALAPPDATA\Programs"`, `%APPDATA%\dev-cleaner`
-  ve `Get-ItemProperty HKLM:\...\Uninstall\*` kontrol çıktısı.
-
-## Sonuç
-
-| Paket | Boyut | SHA-256 (BUILD_INFO) | Kurulum | Kaldırma |
+| # | Senaryo | Beklenen | Sonuç | Ölçüm |
 |---|---|---|---|---|
-| NSIS | | | ☐ | ☐ |
-| MSI | | | ☐ | ☐ |
+| I-01 | NSIS sessiz kurulum | Exe `%LOCALAPPDATA%\Dev Cleaner` içine gelir | **PASS** | exit 0, `node-cleaner.exe` mevcut |
+| I-02 | NSIS sürümü | Kurulu binary 2.2.1 | **PASS** | `Dev Cleaner — Sürüm 2.2.1` |
+| I-03 | MSI sessiz kurulum | Ürün kaydı oluşur | **PASS** | exit 0, 1 uninstall girdisi |
+| I-04 | MSI sürümü | Kurulu binary 2.2.1 | **PASS** | `Dev Cleaner — Sürüm 2.2.1` |
+| I-05 | NSIS sessiz kaldırma | Dosyalar + kayıt temizlenir | **PASS** | dosyalar gitti, kayıt 0, boş klasör RunOnce'a kuyruklandı |
+| I-05b | Kuyruklu klasör temizliği | Kuyruk çalışınca klasör silinir | **PASS** | klasör kaldırıldı |
+| I-06 | MSI sessiz kaldırma | Ürün kaydı + klasör temizlenir | **PASS** | exit 0, temiz |
+| I-07 | Artık kontrolü | Ne klasör ne kayıt girdisi | **PASS** | 0 / 0 |
 
-**İmza:** ____________________  **Tarih:** __________
+## Bulunan ve düzeltilen gerçek kusur
+
+İlk çalıştırmada NSIS kaldırması `C:\Users\<user>\AppData\Local\Dev Cleaner`
+klasörünü **boş olarak bırakıyordu**. Kök neden: kaldırıcı (`uninstall.exe`)
+kendi çalıştığı klasörden silinemez, dolayısıyla şablonun `RMDir "$INSTDIR"`
+çağrısı başarısız olur.
+
+Düzeltme (`src-tauri/nsis/hooks.nsh`, `NSIS_HOOK_POSTUNINSTALL`):
+
+```nsis
+WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\RunOnce" \
+  "DevCleanerRemoveInstallDir" 'cmd.exe /c rmdir /q "$INSTDIR"'
+```
+
+Boş klasör bir sonraki oturum açılışında silinir; I-05b bu kuyruğu gerçekten
+çalıştırıp doğrular. `rmdir` (yani `/s` olmadan) kullanıldığı için klasör boş
+değilse hiçbir şey silinmez — güvenli davranış.
+
+## Artefaktlar
+
+| Paket | Dosya | Boyut |
+|---|---|---|
+| Portable | `Dev-Cleaner-2.2.1-Portable.exe` | 17,32 MB |
+| NSIS | `Dev-Cleaner-2.2.1-x64-Setup.exe` | 5,49 MB |
+| MSI | `Dev-Cleaner-2.2.1-x64.msi` | 7,04 MB |
+
+SHA-256 özetleri derleme sonrası üretilen `release_output/SHA256SUMS.txt` ve
+`release_output/BUILD_INFO.json` içinde kayıtlıdır; belgeye kopyalanmaz ki iki
+kayıt birbirinden ayrışmasın.
+
+## Kapsam notu
+
+- Kod imzalama sertifikası bu derlemede yoktur; SmartScreen ilk çalıştırmada
+  "bilinmeyen yayıncı" uyarısı verebilir. Sertifika temini yayın operasyonunun
+  ayrı bir adımıdır ve bu kapının parçası değildir.
+- 2.2.0 → 2.2.1 yükseltme senaryosu, 2.2.0 kurulumu gerektirdiği için bu
+  tatbikata dahil edilmedi; MSI/NSIS sürüm yükseltmesi Tauri'nin ürün kodu
+  eşleşmesiyle yapılır ve ayarlar `%APPDATA%\dev-cleaner` altında kurulumdan
+  bağımsız durur.

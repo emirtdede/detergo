@@ -70,6 +70,8 @@ $manifestPath = Join-Path $repoRoot "src-tauri\Cargo.toml"
 $process = Start-Process -FilePath "cargo" `
     -ArgumentList @("test", "--manifest-path", "`"$manifestPath`"", "--offline", "--test", "recycle_bin_roundtrip", "--", "--ignored", "--nocapture") `
     -NoNewWindow -PassThru -RedirectStandardOutput $logOut -RedirectStandardError $logErr
+# Accessing Handle forces PowerShell to populate ExitCode after the process exits.
+$null = $process.Handle
 
 if (-not $process.WaitForExit($watchdogSeconds * 1000)) {
     Write-Warning "Round-trip did not finish within $watchdogSeconds s; terminating the hung process."
@@ -137,9 +139,98 @@ if (Test-Path -LiteralPath $match.RFile) {
 }
 Write-Host "`nCleanup: removed only the probe item from the Recycle Bin."
 
+# S-07 restore proof: the app's restore action is the Windows shell "Restore"
+# verb, so exercising the same verb here proves the round trip a user performs
+# from the UI. Run after the accounting checks so a failed restore cannot hide
+# a byte-accounting defect.
+$restoreMarker = "nc-restore-probe-" + ([guid]::NewGuid().ToString("N").Substring(0, 16))
+$restoreRoot = Join-Path $env:TEMP $restoreMarker
+
+try {
+    $env:NC_TRASH_MARKER = $restoreMarker
+    $restoreLogOut = Join-Path $env:TEMP ("nc-restore-" + [guid]::NewGuid().ToString("N") + ".out.log")
+    $restoreLogErr = Join-Path $env:TEMP ("nc-restore-" + [guid]::NewGuid().ToString("N") + ".err.log")
+    $restoreProcess = Start-Process -FilePath "cargo" `
+        -ArgumentList @("test", "--manifest-path", "`"$manifestPath`"", "--offline", "--test", "recycle_bin_roundtrip", "--", "--ignored", "--nocapture") `
+        -NoNewWindow -PassThru -RedirectStandardOutput $restoreLogOut -RedirectStandardError $restoreLogErr
+    $null = $restoreProcess.Handle
+    if (-not $restoreProcess.WaitForExit($watchdogSeconds * 1000)) {
+        try { Stop-Process -Id $restoreProcess.Id -Force -ErrorAction SilentlyContinue } catch {}
+        throw "second round-trip hung"
+    }
+    $restoreProcess.WaitForExit()
+    $restoreProcess.Refresh()
+    if ($restoreProcess.ExitCode -ne 0) {
+        Get-Content -LiteralPath $restoreLogOut, $restoreLogErr -ErrorAction SilentlyContinue
+        throw "second round-trip failed with exit code $($restoreProcess.ExitCode)"
+    }
+    Remove-Item -LiteralPath $restoreLogOut, $restoreLogErr -Force -ErrorAction SilentlyContinue
+
+    $restoreEntry = @(Get-RecycleEntries -BinDir $binDir | Where-Object { $_.Original -like "*$restoreMarker*" }) |
+        Select-Object -First 1
+    if (-not $restoreEntry) { throw "restore probe was not recycled" }
+
+    $shellRestore = New-Object -ComObject Shell.Application
+    $restoreLeaf = Split-Path -Leaf $restoreEntry.Original
+    $restoreItem = @($shellRestore.Namespace(10).Items() | Where-Object {
+            $_.Name -like "$restoreLeaf*" -and
+            ($_.Path -eq $restoreEntry.RFile -or $_.Path -like "*$restoreMarker*")
+        }) | Select-Object -First 1
+    if (-not $restoreItem) {
+        # Some shells do not expose the $R path; fall back to the unique name.
+        $restoreItem = @($shellRestore.Namespace(10).Items() | Where-Object { $_.Name -like "$restoreLeaf*" }) |
+            Select-Object -First 1
+    }
+    if (-not $restoreItem) { throw "restore probe not visible through the shell namespace" }
+
+    # The verb name is localized ("&Restore" / "&Geri Yükle"), so match the
+    # stable part instead of hard-coding an English or Turkish label.
+    $restoreVerb = @($restoreItem.Verbs() | Where-Object { $_.Name -match "Restore|Geri Y" }) |
+        Select-Object -First 1
+    if (-not $restoreVerb) {
+        $available = @($restoreItem.Verbs() | ForEach-Object { $_.Name }) -join ", "
+        throw "no restore verb on the recycled item (verbs: $available)"
+    }
+    $restoreVerb.DoIt()
+
+    $deadline = (Get-Date).AddSeconds(20)
+    while ((Get-Date) -lt $deadline -and -not (Test-Path -LiteralPath $restoreEntry.Original)) {
+        Start-Sleep -Milliseconds 250
+    }
+    if (-not (Test-Path -LiteralPath $restoreEntry.Original)) {
+        throw "shell Restore verb did not put the folder back at $($restoreEntry.Original)"
+    }
+    $restoredFiles = @(Get-ChildItem -LiteralPath $restoreEntry.Original -Recurse -File)
+    $restoredBytes = ($restoredFiles | Measure-Object -Property Length -Sum).Sum
+    if ($restoredFiles.Count -lt 2 -or $restoredBytes -lt 6144) {
+        throw "restored folder is incomplete ($($restoredFiles.Count) files, $restoredBytes bytes)"
+    }
+    Write-Host "  Restore (S-07)    : PASS ($($restoredFiles.Count) files, $restoredBytes bytes back at original path)"
+}
+catch {
+    $restoreError = $_.Exception.Message
+    Write-Host "  Restore (S-07)    : FAIL - $restoreError"
+    # Fall back to deleting the probe from the bin so the machine is left clean.
+    $stale = @(Get-RecycleEntries -BinDir $binDir | Where-Object { $_.Original -like "*$restoreMarker*" })
+    foreach ($entry in $stale) {
+        Remove-Item -LiteralPath $entry.IndexFile -Force -ErrorAction SilentlyContinue
+        if (Test-Path -LiteralPath $entry.RFile) {
+            Remove-Item -LiteralPath $entry.RFile -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+    Write-Error "Recycle Bin restore verification failed: $restoreError"
+    exit 1
+}
+finally {
+    if (Test-Path -LiteralPath $restoreRoot) {
+        Remove-Item -LiteralPath $restoreRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
 Write-Host "`nRESULT: PASS"
 Write-Host "  - Guard-accepted temp folder moved to the Recycle Bin"
 Write-Host "  - Item visible via Shell.Application namespace 10"
 Write-Host "  - Source path removed, parent preserved"
+Write-Host "  - Shell Restore verb returns the folder to its original path"
 Write-Host "  - Probe removed from the bin; no user data touched"
 exit 0
