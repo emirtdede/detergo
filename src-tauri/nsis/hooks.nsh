@@ -102,15 +102,14 @@ FunctionEnd
 ; ============================================================
 ; Post-Install / Post-Uninstall: app.ico & Windows Shell Refresh
 ; ============================================================
-; SHCNF_FLUSH waits until the notification has been delivered to every
-; affected component before the installer continues. That is slower than the
-; non-blocking variant, but it guarantees the shortcut and Explorer icon caches
-; are invalidated before the finish page appears. Do not replace it with a
-; separate shell cache rebuild utility.
-!define SHCNE_ASSOCCHANGED 0x08000000
-!define SHCNE_UPDATEITEM    0x00002000
-!define SHCNF_FLUSH         0x1000
-!define SHCNF_PATHW         0x0005
+; Prefix the constants so they cannot collide with Tauri's FileAssociation.nsh,
+; which already defines SHCNE_ASSOCCHANGED and SHCNF_FLUSH.
+!define DC_SHCNE_ASSOCCHANGED 0x08000000
+!define DC_SHCNE_UPDATEITEM    0x00002000
+!define DC_SHCNF_FLUSH         0x1000
+; SHCNF_PATHW (0x0005) | SHCNF_FLUSH (0x1000). The System plugin takes a
+; literal, not an expression, so the combined flags are defined once.
+!define DC_SHCNF_PATHW_FLUSH   0x1005
 
 !macro NSIS_HOOK_POSTINSTALL
   ; One 15-frame ICO is shipped and copied verbatim; NSIS embeds every frame of
@@ -120,15 +119,15 @@ FunctionEnd
 
   ; Invalidate the shell icon/thumbnail cache, then target the surfaces that
   ; users see immediately.
-  System::Call 'shell32::SHChangeNotify(i ${SHCNE_ASSOCCHANGED}, i ${SHCNF_FLUSH}, p 0, p 0)'
-  System::Call 'shell32::SHChangeNotify(i ${SHCNE_UPDATEITEM}, i 0x1005, w "$INSTDIR\${MAINBINARYNAME}.exe", p 0)'
-  System::Call 'shell32::SHChangeNotify(i ${SHCNE_UPDATEITEM}, i 0x1005, w "$DESKTOP\${PRODUCTNAME}.lnk", p 0)'
-  System::Call 'shell32::SHChangeNotify(i ${SHCNE_UPDATEITEM}, i 0x1005, w "$SMPROGRAMS\$AppStartMenuFolder\${PRODUCTNAME}.lnk", p 0)'
+  System::Call 'shell32::SHChangeNotify(i ${DC_SHCNE_ASSOCCHANGED}, i ${DC_SHCNF_FLUSH}, p 0, p 0)'
+  System::Call 'shell32::SHChangeNotify(i ${DC_SHCNE_UPDATEITEM}, i ${DC_SHCNF_PATHW_FLUSH}, w "$INSTDIR\${MAINBINARYNAME}.exe", p 0)'
+  System::Call 'shell32::SHChangeNotify(i ${DC_SHCNE_UPDATEITEM}, i ${DC_SHCNF_PATHW_FLUSH}, w "$DESKTOP\${PRODUCTNAME}.lnk", p 0)'
+  System::Call 'shell32::SHChangeNotify(i ${DC_SHCNE_UPDATEITEM}, i ${DC_SHCNF_PATHW_FLUSH}, w "$SMPROGRAMS\$AppStartMenuFolder\${PRODUCTNAME}.lnk", p 0)'
 !macroend
 
 !macro NSIS_HOOK_POSTUNINSTALL
   Delete "$INSTDIR\app.ico"
-  System::Call 'shell32::SHChangeNotify(i ${SHCNE_ASSOCCHANGED}, i ${SHCNF_FLUSH}, p 0, p 0)'
+  System::Call 'shell32::SHChangeNotify(i ${DC_SHCNE_ASSOCCHANGED}, i ${DC_SHCNF_FLUSH}, p 0, p 0)'
 
   ; The uninstaller itself runs from $INSTDIR, so the template's `RMDir
   ; "$INSTDIR"` fails while uninstall.exe is still locked and leaves an empty
