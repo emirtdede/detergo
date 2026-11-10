@@ -139,10 +139,18 @@ if (fs.statSync(binary).mtimeMs < startedAt - 1000) {
   process.exit(1);
 }
 
-function firstMatch(dir, pattern) {
+function currentBundle(dir, version, suffix) {
   if (!fs.existsSync(dir)) return null;
-  const found = fs.readdirSync(dir).find((name) => pattern.test(name));
-  return found ? path.join(dir, found) : null;
+  // Tauri leaves bundles from earlier versions in `target`; never let a stale
+  // 2.2.1 setup satisfy a 2.2.2 build. The filename is
+  // `Dev Cleaner_<version>_<arch><suffix>`.
+  const escapedVersion = version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(`_${escapedVersion}_.*${suffix}$`, "i");
+  const matches = fs
+    .readdirSync(dir)
+    .filter((name) => pattern.test(name))
+    .sort();
+  return matches.length > 0 ? path.join(dir, matches[0]) : null;
 }
 
 const artifacts = [
@@ -151,11 +159,11 @@ const artifacts = [
     destName: `Dev-Cleaner-${version}-Portable.exe`,
   },
   {
-    src: firstMatch(path.join(targetDir, "bundle", "nsis"), /-setup\.exe$/i),
+    src: currentBundle(path.join(targetDir, "bundle", "nsis"), version, "-setup\\.exe"),
     destName: `Dev-Cleaner-${version}-x64-Setup.exe`,
   },
   {
-    src: firstMatch(path.join(targetDir, "bundle", "msi"), /\.msi$/i),
+    src: currentBundle(path.join(targetDir, "bundle", "msi"), version, "\\.msi"),
     destName: `Dev-Cleaner-${version}-x64.msi`,
   },
 ];
