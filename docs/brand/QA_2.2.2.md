@@ -77,8 +77,9 @@ are listed under [Still pending](#still-pending).
 
 - Real taskbar, Start menu, Explorer and notification-area screenshots after an
   NSIS install on 100%, 125%, 150%, 175%, 200%, 225%, 250% and 300% displays.
-  The generated sheets prove the assets; only an install proves the shell picks
-  them.
+  The generated sheets prove the assets and `npm run verify:shell-icons` proves
+  the shortcuts and `DisplayIcon` resolve inside the install directory, but no
+  screenshot has been captured yet.
 - Design-board signature below.
 - Windows 10 22H2 inspection, if that support claim is kept (G8).
 

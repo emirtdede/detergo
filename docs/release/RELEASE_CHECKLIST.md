@@ -14,11 +14,11 @@ go straight to users; no staging, no canary)
 | G0 | Trademark clearance signed | **PENDING** | `docs/brand/TRADEMARK_CLEARANCE.md` (counsel decision and signature) |
 | G1 | Code gates | **PASS** | `npm run typecheck`, `npm test` (105), `cargo test` (127 lib + 18 integration), `cargo clippy -D warnings`, `cargo fmt --check`, `npm run build` |
 | G2 | Brand asset gates | **PASS** | `npm run check:icons`, `npm run check:brand`, `npm run format:check` |
-| G3 | NSIS installer + shell surfaces | **PENDING** | `npm run verify:installer`, `npm run verify:shell-icons` on a clean Windows 11 VM |
-| G4 | MSI per-machine | **PENDING** | `npm run verify:msi` from an elevated session on a separate clean VM |
-| G5 | 2.2.1 → 2.2.2 upgrade | **PENDING** | `npm run verify:upgrade -Kind NSIS` and `-Kind MSI` with the baseline artifacts in `release_output/baseline-2.2.1/` |
-| G6 | Clean release build + provenance | **PENDING** | commit all changes, then `npm run build:release` and `npm run check:build-info` |
-| G7 | Exe icon frame gate | **PENDING** | `npm run check:exe-icons` output inside `build:release` (15/15 frames for portable and setup) |
+| G3 | NSIS installer + shell surfaces | **PASS (dev host)** | `npm run verify:installer` 8/8 and `npm run verify:shell-icons` 8/8 on the development Windows 11 host; clean-VM repeat still advisable |
+| G4 | MSI per-machine | **PENDING** | `npm run verify:msi` refuses a non-elevated session (verified); needs an elevated run on a separate host |
+| G5 | 2.2.1 → 2.2.2 upgrade | **PARTIAL** | `npm run verify:upgrade -Kind NSIS` 8/8 PASS; `-Kind MSI` still pending |
+| G6 | Clean release build + provenance | **PASS** | `npm run build:release` from a clean tree, then `npm run check:build-info` → clean tree, 3 artifacts |
+| G7 | Exe icon frame gate | **PASS** | 15 frames / 15 `RT_ICON` in the portable EXE, setup EXE and raw release binary |
 | G8 | Windows 10 22H2 support claim | **PENDING** | VM availability; if unavailable, remove the untested "1809+" claim from README and the spec |
 | G9 | Design-board visual approval | **PENDING** | `docs/brand/QA_2.2.2.md` + `docs/brand/qa/` (recorded); signature still missing |
 
@@ -47,9 +47,11 @@ deliverable and never patch a shipped executable in place.
 - [x] Brand scan fails on retired asset names and shell-cache shortcuts
 - [x] CI runs `check:icons` and `check:brand`; `build:release` runs the PE gate
 - [x] Visual QA record and sheets in `docs/brand/QA_2.2.2.md` and `docs/brand/qa/`
+- [x] NSIS install, shell-surface and 2.2.1 → 2.2.2 upgrade checks (dev host)
 - [ ] Legal counsel sign-off (G0)
 - [ ] Design-board visual approval (G9)
-- [ ] Installer, upgrade and shell checks on clean VMs (G3–G5)
+- [ ] MSI per-machine run from an elevated session on a separate host (G4)
+- [ ] Clean-VM repeat of the NSIS harnesses (G3)
 - [ ] Windows 10 22H2 verification or support-claim removal (G8)
 
 ## Verification commands
@@ -96,14 +98,14 @@ Copy-Item <share>\Dev-Cleaner-2.2.1-x64.msi        release_output\baseline-2.2.1
 - [x] Prettier PASS
 - [x] Brand and icon structure PASS
 - [x] Production frontend build PASS
-- [ ] Clean-tree release build PASS (2.2.2)
-- [ ] NSIS install → launch → icons → uninstall PASS
+- [x] Clean-tree release build PASS (2.2.2)
+- [x] NSIS install → launch → icons → uninstall PASS
 - [ ] MSI install → launch → uninstall PASS (elevated, per-machine)
-- [ ] 2.2.1 → 2.2.2 upgrade PASS (NSIS and MSI)
-- [ ] Shell shortcuts and `DisplayIcon` PASS
-- [ ] Portable PASS
-- [ ] `SHA256SUMS.txt` and `BUILD_INFO.json` generated
-- [ ] `check:build-info` reports `dirty: false` and the audited commit
+- [x] 2.2.1 → 2.2.2 upgrade PASS (NSIS; MSI pending)
+- [x] Shell shortcuts and `DisplayIcon` PASS
+- [x] Portable PASS (smoke 10/10)
+- [x] `SHA256SUMS.txt` and `BUILD_INFO.json` generated
+- [x] `check:build-info` reports `dirty: false` and the audited commit
 - [ ] Windows 10 22H2 smoke test or support claim removed
 
 ### MSI scope note
@@ -129,29 +131,35 @@ recorded so they are not mistaken for 2.2.2 breakage.
    This predates the brand rollout (`234140a`). It is not part of `build:release`
    or CI, but it blocks `npm run test:a11y` until the token vocabulary is
    reconciled.
-2. **`npm run check:build-info` fails against the stale 2.2.1**
-   `release_output/BUILD_INFO.json`. This is expected until the clean 2.2.2
-   build replaces it.
+2. **`npm run check:build-info`** now passes against the 2.2.2 build. Re-run it
+   after any further source change, because the gate requires the recorded commit
+   to equal `HEAD`.
 3. **Code signing (F-6).** Binaries are unsigned; SmartScreen warns.
 4. **Windows 10 (F-4).** No 22H2 host has been available. Either verify it or
    remove the untested support claim.
+5. **Clean-VM repeat (G3).** The NSIS harnesses passed on the development host.
+   A pristine Windows 11 image should still be used once before publication, so
+   the evidence covers a machine that never had a prior installation.
 
 ## Blockers for public production release
 
 1. **Legal (G0).** Counsel must fill and sign the decision in
    `docs/brand/TRADEMARK_CLEARANCE.md`. A `rename` decision starts a separate
    work item; do not use ® or claim exclusivity before registration.
-2. **Installer evidence (G3–G5, G7).** The scripts are ready but have not been
-   run against a 2.2.2 build. Run each on a clean VM and keep the console output
-   with the release evidence.
-3. **Clean commit (G6).** `build:release` refuses a dirty tree. Commit the brand
-   rollout first, then build from that exact commit.
-4. **Design approval (G9).** The visual QA sheets must be signed off before the
-   packages are published.
+2. **MSI evidence (G4).** `verify:msi` must run from an elevated session on a
+   host that does not also carry the NSIS build. The non-elevated guard is
+   already verified.
+3. **Clean-VM repeat (G3, G5).** Re-run `verify:installer`,
+   `verify:shell-icons` and `verify:upgrade -Kind NSIS` on a pristine image, and
+   keep the console output with the release evidence.
+4. **Design approval (G9).** The recorded QA sheets must be signed off before
+   the packages are published.
+5. **Windows 10 (G8).** Verify 22H2 or remove the support claim.
 
 ## Decision
 
-- **Internal / controlled beta:** GO once G3–G7 and G9 are recorded; G0 may run
-  in parallel but must close before any public download.
-- **Public production (DIRECT-LIVE):** **NO-GO** until G0, G3–G7 and G9 are
-  PASS. If Windows 10 remains advertised, G8 is also required.
+- **Internal / controlled beta:** GO. The clean build, provenance, NSIS install,
+  shell surfaces, NSIS upgrade path, portable smoke and brand gates are recorded
+  in `docs/release/TEST_MATRIX.md`. G4, the clean-VM repeat and G9 remain open.
+- **Public production (DIRECT-LIVE):** **NO-GO** until G0, G4, the clean-VM
+  repeat, G9 and (if Windows 10 is still advertised) G8 are PASS.

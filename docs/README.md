@@ -86,8 +86,10 @@ docs/
 ```
 Code gates:            14/14 PASS
 Brand gates:           3/3 PASS (check:icons, check:brand, format:check)
-Release gates:         PENDING — clean build, installer, upgrade, shell, legal
-Public production:     NO-GO until G0 and G3–G9 close
+Release build:         PASS — clean tree, 3 artifacts, 15/15 icon frames
+Runtime checks:        PASS — smoke 10/10, NSIS 8/8, shell 8/8, upgrade 8/8
+Release gates:         PENDING — MSI (G4), clean-VM repeat, legal (G0), design (G9)
+Public production:     NO-GO until G0, G4, clean-VM repeat and G9 close
 ```
 
 The 2.2.2 change set is a brand identity rollout; scanner and cleanup behaviour
@@ -99,18 +101,31 @@ is unchanged. Source gates executed on 2026-11-10:
 - `npm run check:icons`, `npm run check:brand`, `npm run check:audit`,
   `npm run format:check`, `npm run check-version` — PASS.
 
-The installer harnesses are now split by scope:
+Release build and runtime evidence:
+
+- `npm run build:release` from a clean tree produced the portable, NSIS and MSI
+  packages; the PE gate confirmed 15 frames / 15 `RT_ICON` in the portable and
+  setup EXEs, and `npm run check:build-info` reported a clean tree.
+- `npm run verify:smoke` passed 10/10 against the portable EXE.
+- `npm run verify:installer` and `npm run verify:shell-icons` passed 8/8 each on
+  the development Windows 11 host.
+- `npm run verify:upgrade -Kind NSIS` passed 8/8 (2.2.1 → 2.2.2, single Apps &
+  Features entry, upgraded version, 15-frame EXE, clean removal).
+
+The installer harnesses are split by scope:
 
 - `npm run verify:installer` — NSIS per-user install → launch → 15-frame icons →
   uninstall → leftover check.
 - `npm run verify:msi` — elevated per-machine MSI; refuses a non-elevated
-  session instead of silently testing a per-user configuration.
+  session (guard verified) instead of silently testing a per-user configuration.
 - `npm run verify:upgrade` — 2.2.1 → 2.2.2 in-place upgrade for NSIS or MSI.
 - `npm run verify:shell-icons` — desktop/Start menu shortcut icon sources,
   `DisplayIcon`, installed `app.ico` and PE frames.
 
-The clean 2.2.2 build, the installer/upgrade runs and the visual-board sign-off
-are still pending. `npm run check:contrast` has a pre-existing token-vocabulary
-failure documented in the release checklist; it is not caused by the brand work.
-See [`release/RELEASE_CHECKLIST.md`](release/RELEASE_CHECKLIST.md) and
+Still open: the MSI run, a repeat of the NSIS harnesses on a pristine VM, the
+design-board signature (G9), counsel (G0) and the Windows 10 claim (G8).
+`npm run check:contrast` has a pre-existing token-vocabulary failure documented
+in the release checklist; it is not caused by the brand work.
+See [`release/RELEASE_CHECKLIST.md`](release/RELEASE_CHECKLIST.md),
+[`release/TEST_MATRIX.md`](release/TEST_MATRIX.md) and
 [`release/baseline-2.2.1.md`](release/baseline-2.2.1.md).

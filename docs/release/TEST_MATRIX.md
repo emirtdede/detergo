@@ -38,9 +38,40 @@ detects the regression it was written for. The visual inspection sheets and
 their findings are recorded in `docs/brand/QA_2.2.2.md`; this closes the
 engineering side of G9, not the design-board signature.
 
-Still **NOT EXECUTED** for 2.2.2 (no 2.2.2 build yet): NSIS/MSI install,
-shell-shortcut inspection, 2.2.1 → 2.2.2 upgrade, PE frame gate on the new EXEs,
-and Windows 10 22H2. See `docs/release/RELEASE_CHECKLIST.md` G3–G8.
+Still **NOT EXECUTED** for 2.2.2: MSI install (needs an elevated session on a
+separate host), Windows 10 22H2, and a repeat of the installer harnesses on a
+clean VM. See `docs/release/RELEASE_CHECKLIST.md` G3–G8.
+
+### 0.1 Release artifacts (executed)
+
+`npm run build:release` was run from a clean tree. The build compiled the Rust
+binary, produced the NSIS and MSI bundles, copied the three deliverables into
+`release_output/`, and gated the packaged EXEs on icon frames.
+
+| Check | Command | Result |
+|---|---|---|
+| Release build | `npm run build:release` | **PASS** — portable 18,489,856 B, NSIS 6,037,816 B, MSI 8,454,144 B |
+| PE frame gate | inside `build:release` | **PASS** — `Dev-Cleaner-2.2.2-Portable.exe` and `Dev-Cleaner-2.2.2-x64-Setup.exe` each 15 frames / 15 `RT_ICON` |
+| Raw binary frame gate | `npm run check:exe-icons -- src-tauri/target/release/node-cleaner.exe` | **PASS** — 15 frames |
+| Provenance | `npm run check:build-info` | **PASS** — version 2.2.2, recorded commit, `dirty: false`, 3 artifacts |
+
+### 0.2 Runtime checks against the 2.2.2 packages (executed)
+
+Run on the Windows 11 x64 development host. This host is not a clean VM; the
+results prove the packages behave, not that a pristine image is unaffected.
+
+| Check | Command | Result |
+|---|---|---|
+| CLI/GUI smoke on the portable EXE | `npm run verify:smoke -- -Exe release_output\Dev-Cleaner-2.2.2-Portable.exe` | **10/10 PASS** — version, scan, webhook 200/500/unreachable, language switch both ways, settings persistence, GUI liveness, valid settings JSON |
+| NSIS install/uninstall | `npm run verify:installer` | **8/8 PASS** — silent install, version, installed EXE 15 frames, installed `app.ico` 15 frames and byte-identical, uninstaller 15 frames, silent uninstall, queued folder cleanup, no leftovers |
+| Shell surfaces | `npm run verify:shell-icons` | **8/8 PASS** — `DisplayIcon` resolves to `app.ico`; desktop and Start menu shortcuts resolve their icon inside `$INSTDIR`; clean uninstall |
+| 2.2.1 → 2.2.2 upgrade (NSIS) | `npm run verify:upgrade -- -Kind NSIS` | **8/8 PASS** — 2.2.1 installs, upgrades in place, reports 2.2.2, single Apps & Features entry at 2.2.2, upgraded EXE 15 frames, clean removal |
+| MSI elevation guard | `npm run verify:msi` (non-elevated) | **Correctly aborts (exit 2)** — refuses to test the per-machine package as a per-user install |
+
+Two harness defects were found and fixed by these runs: `Get-FileHash` does not
+resolve in a Windows PowerShell session with a stripped `PSModulePath`, and the
+upgrade script rejected the NSIS "empty folder queued for logon removal" end
+state that `verify-installer` already accepted.
 
 `npm run check:contrast` remains **FAIL** for the same four themes as 2.2.1:
 `src/styles/tokens.css` does not define the semantic tokens the checker expects.

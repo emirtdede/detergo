@@ -51,6 +51,16 @@ unchanged from 2.2.1.
   history and are not referenced by any shipping surface.
 - Mobile icon sets (`ios/`, `android/`); this is a Windows desktop product.
 
+### Verified
+
+- Clean-tree `npm run build:release`: portable, NSIS and MSI produced; the PE
+  gate found 15 frames / 15 `RT_ICON` in each EXE; `check:build-info` reported a
+  clean tree and the recorded commit.
+- `verify:smoke` 10/10 on the portable EXE; `verify:installer` and
+  `verify:shell-icons` 8/8 each; `verify:upgrade -Kind NSIS` 8/8 from 2.2.1.
+- Details and the still-open gates are in `docs/release/TEST_MATRIX.md` and
+  `docs/release/RELEASE_CHECKLIST.md`.
+
 ## [2.2.1] - 2026-11-10
 
 Remediation release for the pre-deployment audit. Behaviour changes are limited
