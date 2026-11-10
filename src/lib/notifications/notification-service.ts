@@ -155,7 +155,7 @@ class NotificationService {
       if (Notification.permission === "granted") {
         new Notification(title, {
           body,
-          icon: "/icons/icon.png",
+          icon: "/icons/notification.png",
           silent: false,
         });
       }

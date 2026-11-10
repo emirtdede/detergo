@@ -68,7 +68,7 @@ Where it conflicts with `docs/MASTER_SPEC.md`, the specification wins.
 # English Version
 
 <div align="center">
-  <img src="assets/brand/app-icon.svg" alt="Dev Cleaner Logo" width="130" height="130" />
+  <img src="assets/brand/dev-cleaner-icon-256.png" alt="Dev Cleaner Logo" width="130" height="130" />
   <h3>Dev Cleaner — High-Performance Multi-Ecosystem Developer Artifact & AI Agent Cleaner</h3>
   <p><em>Ultra-Fast Discovery, Monorepo Hierarchy Grouping & Safe Deletion for JavaScript & TypeScript Workspaces</em></p>
   <p><strong>Developed & Published by <a href="https://vellium.dev">Vellium</a></strong></p>
@@ -142,7 +142,7 @@ Dev Cleaner operates **100% locally** with zero telemetry, zero analytics, and z
 ```tree
 Node-Cleaner/
 ├── assets/                         # Vector brand assets & master logo
-│   └── brand/                      # app-icon.svg, logo-master.svg
+│   └── brand/                      # dev-cleaner-icon.svg, installer/, github/
 ├── docs/                           # All project documentation (see docs/README.md)
 │   ├── README.md                   # Documentation index & reading order
 │   ├── MASTER_SPEC.md              # Normative 2.0 specification
@@ -152,11 +152,13 @@ Node-Cleaner/
 │   ├── audit/                      # Pre-change baseline audit & test results
 │   └── archive/                    # Historical plans and research (not current truth)
 ├── public/                         # Public static web assets
+│   ├── favicon.svg / favicon.ico   # Simplified brand mark
+│   ├── icons/notification.png      # Dev-browser notification icon
 │   └── vellium.svg                 # Publisher logo
 ├── release_output/                 # Production builds (git-ignored, regenerated)
-│   ├── Node-Cleaner-2.0.0-x64-Setup.exe   # NSIS Setup Installer
-│   ├── Node-Cleaner-2.0.0-x64.msi         # MSI Enterprise Installer
-│   ├── Node-Cleaner-2.0.0-Portable.exe    # Standalone Portable Binary
+│   ├── Dev-Cleaner-2.2.2-x64-Setup.exe    # NSIS per-user installer
+│   ├── Dev-Cleaner-2.2.2-x64.msi          # MSI per-machine installer
+│   ├── Dev-Cleaner-2.2.2-Portable.exe     # Standalone portable binary
 │   ├── BUILD_INFO.json                    # Commit, dirty flag and per-artifact hashes
 │   ├── SHA256SUMS.txt                     # Cryptographic SHA-256 checksums
 │   └── verify-checksums.bat               # 1-Click SHA-256 verification tool
@@ -166,7 +168,10 @@ Node-Cleaner/
 │   ├── verify-ipc.mjs              # CSP + IPC + build-provenance probe on the packaged app
 │   ├── verify-offline.ps1          # No-telemetry / no-secret-persistence check
 │   ├── verify-recycle-bin.ps1      # Real Recycle Bin round-trip
-│   ├── verify-installer.ps1        # NSIS/MSI install -> launch -> uninstall
+│   ├── verify-installer.ps1        # NSIS install -> launch -> icons -> uninstall
+│   ├── verify-msi.ps1              # Per-machine MSI install -> launch -> uninstall
+│   ├── verify-upgrade.ps1          # 2.2.1 -> 2.2.2 in-place upgrade test
+│   ├── verify-shell-icons.ps1      # Explorer, shortcut and DisplayIcon shell check
 │   └── verify-checksums.bat        # Windows batch checksum verifier
 ├── src/                            # Frontend application source (React 19 + TS)
 │   ├── app/                        # App shell & layout orchestration
@@ -192,8 +197,9 @@ Node-Cleaner/
 │   └── main.tsx                    # React DOM entry point
 ├── src-tauri/                      # Rust backend & platform engine
 │   ├── assets/targets.toml         # Embedded 56-rule cleanup catalog
-│   ├── icons/                      # App icons (ICO, ICNS, PNGs, StoreLogo, Splash)
-│   ├── nsis/                       # NSIS installer bitmaps & hooks
+│   ├── icons/                      # 15-frame ICO, 8 tray PNGs, ICNS & Store assets
+│   ├── nsis/                       # NSIS installer bitmaps & shell-refresh hooks
+│   ├── wix/                        # WiX banner/dialog bitmaps
 │   ├── src/
 │   │   ├── audit/                  # Cleanup history & official-action JSONL audit
 │   │   ├── catalog/                # Rule model, matcher, project resolver
@@ -313,10 +319,17 @@ flowchart TD
 
 Ready-to-use production packages are generated into the `release_output/` directory (git-ignored; run `npm run build:release`):
 
-- **NSIS Setup Installer**: `Node-Cleaner-1.0.0-x64-Setup.exe` _(Full installer with desktop/start menu shortcuts)_
-- **MSI Enterprise Installer**: `Node-Cleaner-1.0.0-x64.msi` _(Enterprise & GPO silent deployment)_
-- **Standalone Portable**: `Node-Cleaner-1.0.0-Portable.exe` _(Zero installation, run standalone from USB or any folder)_
+- **NSIS Setup Installer**: `Dev-Cleaner-2.2.2-x64-Setup.exe` _(Per-user installer with desktop/start menu shortcuts)_
+- **MSI Enterprise Installer**: `Dev-Cleaner-2.2.2-x64.msi` _(Per-machine enterprise & GPO silent deployment)_
+- **Standalone Portable**: `Dev-Cleaner-2.2.2-Portable.exe` _(Zero installation, run standalone from USB or any folder)_
 - **Integrity Verification**: `verify-checksums.bat` & `SHA256SUMS.txt`
+
+> **Do not install the NSIS and MSI builds on the same machine.** They use
+> different install scopes (`currentUser` vs `perMachine`) and intentionally
+> produce separate Apps & Features entries. Pick one per machine.
+>
+> Brand assets are generated from `assets/brand/dev-cleaner-icon.svg`; see
+> `docs/brand/BRAND_GUIDELINES.md` before changing an icon.
 
 ---
 
@@ -337,7 +350,7 @@ Distributed under the **Proprietary License**. Copyright &copy; 2026 Vellium. Al
 # Türkçe Versiyon
 
 <div align="center">
-  <img src="assets/brand/app-icon.svg" alt="Dev Cleaner Logo" width="130" height="130" />
+  <img src="assets/brand/dev-cleaner-icon-256.png" alt="Dev Cleaner Logo" width="130" height="130" />
   <h3>Dev Cleaner — Yüksek Performanslı Çoklu Ekosistem Geliştirici Artığı ve AI Ajanı Temizleme Aracı</h3>
   <p><em>JavaScript ve TypeScript Projeleri İçin Ultra Hızlı Tarama, Monorepo Hiyerarşi Gruplama ve Güvenli Silme</em></p>
   <p><strong>Geliştirici ve Yayıncı: <a href="https://vellium.dev">Vellium</a></strong></p>
@@ -411,7 +424,7 @@ Uygulama **%100 yerel ve çevrimdışı** çalışır; hiçbir harici sunucuya b
 ```tree
 Node-Cleaner/
 ├── assets/                         # Vektörel marka varlıkları ve master logo
-│   └── brand/                      # app-icon.svg, logo-master.svg
+│   └── brand/                      # dev-cleaner-icon.svg, installer/, github/
 ├── docs/                           # Tüm proje dokümantasyonu (bkz. docs/README.md)
 │   ├── README.md                   # Doküman indeksi ve okuma sırası
 │   ├── MASTER_SPEC.md              # Normatif 2.0 spesifikasyonu
@@ -421,11 +434,13 @@ Node-Cleaner/
 │   ├── audit/                      # Değişiklik öncesi baseline denetimi ve test sonuçları
 │   └── archive/                    # Tarihsel plan ve araştırmalar (güncel doğru değil)
 ├── public/                         # Genel statik web varlıkları
+│   ├── favicon.svg / favicon.ico   # Sadeleştirilmiş marka işareti
+│   ├── icons/notification.png      # Geliştirme tarayıcısı bildirim ikonu
 │   └── vellium.svg                 # Yayıncı logosu
 ├── release_output/                 # Üretim paketleri (git-ignored, yeniden üretilir)
-│   ├── Node-Cleaner-2.0.0-x64-Setup.exe   # NSIS Kurulum Sihirbazı
-│   ├── Node-Cleaner-2.0.0-x64.msi         # MSI Kurumsal Kurulum Paketi
-│   ├── Node-Cleaner-2.0.0-Portable.exe    # Taşınabilir Tekil Exe
+│   ├── Dev-Cleaner-2.2.2-x64-Setup.exe    # NSIS kullanıcı bazlı kurulum
+│   ├── Dev-Cleaner-2.2.2-x64.msi          # MSI makine bazlı kurulum
+│   ├── Dev-Cleaner-2.2.2-Portable.exe     # Taşınabilir tekil exe
 │   ├── BUILD_INFO.json                    # Commit, dirty bayrağı ve artefakt hash'leri
 │   ├── SHA256SUMS.txt                     # Kriptografik SHA-256 sağlama özetleri
 │   └── verify-checksums.bat               # Tek tıkla hash doğrulama aracı
@@ -435,7 +450,10 @@ Node-Cleaner/
 │   ├── verify-ipc.mjs              # Paketlenmiş uygulamada CSP + IPC + derleme kökeni kontrolü
 │   ├── verify-offline.ps1          # Telemetri yok / sır sızıntısı yok kontrolü
 │   ├── verify-recycle-bin.ps1      # Gerçek Geri Dönüşüm Kutusu gidiş-dönüşü
-│   ├── verify-installer.ps1        # NSIS/MSI kur -> çalıştır -> kaldır
+│   ├── verify-installer.ps1        # NSIS kur -> çalıştır -> ikonlar -> kaldır
+│   ├── verify-msi.ps1              # Makine bazlı MSI kur -> çalıştır -> kaldır
+│   ├── verify-upgrade.ps1          # 2.2.1 -> 2.2.2 yerinde yükseltme testi
+│   ├── verify-shell-icons.ps1      # Explorer, kısayol ve DisplayIcon kabuk kontrolü
 │   └── verify-checksums.bat        # Windows batch checksum doğrulayıcı
 ├── src/                            # Ön yüz kaynak kodları (React 19 + TypeScript)
 │   ├── app/                        # Uygulama kabuğu ve düzen orkestrasyonu
@@ -461,8 +479,9 @@ Node-Cleaner/
 │   └── main.tsx                    # React DOM giriş noktası
 ├── src-tauri/                      # Rust arka uç ve platform çekirdeği
 │   ├── assets/targets.toml         # Gömülü 56 kurallı temizlik kataloğu
-│   ├── icons/                      # Uygulama ikonları (ICO, ICNS, PNG'ler, StoreLogo, Splash)
-│   ├── nsis/                       # NSIS kurulum görselleri ve hook'ları
+│   ├── icons/                      # 15 kareli ICO, 8 tray PNG'si, ICNS ve Store varlıkları
+│   ├── nsis/                       # NSIS kurulum görselleri ve shell yenileme hook'ları
+│   ├── wix/                        # WiX banner/dialog görselleri
 │   ├── src/
 │   │   ├── audit/                  # Temizlik geçmişi ve resmi işlem JSONL denetimi
 │   │   ├── catalog/                # Kural modeli, eşleştirici, proje çözümleyici
@@ -552,10 +571,18 @@ Node-Cleaner/
 
 Hazır derlenmiş resmi release paketleri `release_output/` klasörüne üretilir (git-ignored; `npm run build:release`):
 
-- **NSIS Kurulum Sihirbazı**: `Node-Cleaner-1.0.0-x64-Setup.exe` _(Masaüstü ve başlat menüsü kısayolları ile)_
-- **MSI Kurumsal Installer**: `Node-Cleaner-1.0.0-x64.msi` _(Sessiz kurulum ve GPO dağıtımına uygun)_
-- **Standalone Taşınabilir Sürüm**: `Node-Cleaner-1.0.0-Portable.exe` _(Kurulumsuz, doğrudan çalışır)_
+- **NSIS Kurulum Sihirbazı**: `Dev-Cleaner-2.2.2-x64-Setup.exe` _(Kullanıcı bazlı kurulum, masaüstü ve başlat menüsü kısayolları)_
+- **MSI Kurumsal Installer**: `Dev-Cleaner-2.2.2-x64.msi` _(Makine bazlı kurulum, sessiz kurulum ve GPO dağıtımı)_
+- **Standalone Taşınabilir Sürüm**: `Dev-Cleaner-2.2.2-Portable.exe` _(Kurulumsuz, doğrudan çalışır)_
 - **Bütünlük Doğrulama**: `verify-checksums.bat` ve `SHA256SUMS.txt`
+
+> **NSIS ve MSI sürümlerini aynı makinede kurmayın.** Kurulum kapsamları
+> farklıdır (`currentUser` ve `perMachine`) ve bilinçli olarak iki ayrı
+> "Uygulamalar ve özellikler" kaydı oluştururlar. Makine başına bir tanesini
+> seçin.
+>
+> Marka varlıkları `assets/brand/dev-cleaner-icon.svg` dosyasından üretilir;
+> ikon değiştirmeden önce `docs/brand/BRAND_GUIDELINES.md` dosyasını okuyun.
 
 ---
 

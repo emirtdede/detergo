@@ -102,18 +102,33 @@ FunctionEnd
 ; ============================================================
 ; Post-Install / Post-Uninstall: app.ico & Windows Shell Refresh
 ; ============================================================
+; SHCNF_FLUSH waits until the notification has been delivered to every
+; affected component before the installer continues. That is slower than the
+; non-blocking variant, but it guarantees the shortcut and Explorer icon caches
+; are invalidated before the finish page appears. Do not replace it with a
+; separate shell cache rebuild utility.
+!define SHCNE_ASSOCCHANGED 0x08000000
+!define SHCNE_UPDATEITEM    0x00002000
+!define SHCNF_FLUSH         0x1000
+!define SHCNF_PATHW         0x0005
+
 !macro NSIS_HOOK_POSTINSTALL
-  ; 8-katmanlı kristal netliğinde multi-res .ico dosyasını yükleme dizinine yaz
+  ; One 15-frame ICO is shipped and copied verbatim; NSIS embeds every frame of
+  ; ${INSTALLERICON}. Do not generate a second, lower-resolution fallback icon.
   File "/oname=$INSTDIR\app.ico" "${INSTALLERICON}"
-  ; Windows Denetim Masası (Control Panel) DisplayIcon kaydını doğrudan app.ico dosyasına bağla (GitHub Desktop ve Git yöntemi)
   WriteRegStr SHCTX "${UNINSTKEY}" "DisplayIcon" "$\"$INSTDIR\app.ico$\""
-  ; SHCNE_ASSOCCHANGED = 0x08000000, SHCNF_IDLIST = 0
-  System::Call "shell32::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)"
+
+  ; Invalidate the shell icon/thumbnail cache, then target the surfaces that
+  ; users see immediately.
+  System::Call 'shell32::SHChangeNotify(i ${SHCNE_ASSOCCHANGED}, i ${SHCNF_FLUSH}, p 0, p 0)'
+  System::Call 'shell32::SHChangeNotify(i ${SHCNE_UPDATEITEM}, i 0x1005, w "$INSTDIR\${MAINBINARYNAME}.exe", p 0)'
+  System::Call 'shell32::SHChangeNotify(i ${SHCNE_UPDATEITEM}, i 0x1005, w "$DESKTOP\${PRODUCTNAME}.lnk", p 0)'
+  System::Call 'shell32::SHChangeNotify(i ${SHCNE_UPDATEITEM}, i 0x1005, w "$SMPROGRAMS\$AppStartMenuFolder\${PRODUCTNAME}.lnk", p 0)'
 !macroend
 
 !macro NSIS_HOOK_POSTUNINSTALL
   Delete "$INSTDIR\app.ico"
-  System::Call "shell32::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)"
+  System::Call 'shell32::SHChangeNotify(i ${SHCNE_ASSOCCHANGED}, i ${SHCNF_FLUSH}, p 0, p 0)'
 
   ; The uninstaller itself runs from $INSTDIR, so the template's `RMDir
   ; "$INSTDIR"` fails while uninstall.exe is still locked and leaves an empty

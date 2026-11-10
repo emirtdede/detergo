@@ -1,133 +1,157 @@
 # Release Checklist & Gates
 
-**Version:** 2.0.0
-**Date:** 2026-11-02
-**Source revision:** the commit recorded in `release_output/BUILD_INFO.json`, which
-must equal `git rev-parse HEAD` at build time
-**Deployment mode:** DIRECT-LIVE (local Windows desktop; NSIS / MSI / portable go
-straight to users; no staging, no canary)
+**Version:** 2.2.2
+**Date:** 2026-11-10
+**Source revision:** the commit recorded in `release_output/BUILD_INFO.json`,
+which must equal `git rev-parse HEAD` at build time
+**Deployment mode:** DIRECT-LIVE (local Windows desktop; NSIS / MSI / portable
+go straight to users; no staging, no canary)
 
 ## Gate results
 
 | Gate | Requirement | Result | Evidence |
 |---|---|---|---|
-| G0 | Baseline verified | **PASS** | `docs/audit/BASELINE.md`, `BASELINE_TEST_RESULTS.md` |
-| G1 | Catalog + matcher tests | **PASS** | 56-rule positive/negative test, validation tests |
-| G2 | Guard + session tests | **PASS** | path/junction/symlink/git/evidence/session/plan tests |
-| G3 | Ecosystem rules | **PASS** | table-driven test across every rule |
-| G4 | AI provider safety | **PASS** | provider policy tests, active-use probe, 120 s idle-window tests |
-| G5 | Global cache commands | **PASS** | argv whitelist, unknown/read-only/forged-token tests, read-only providers rejected |
-| G6 | UI, i18n, migration | **PASS (EN/TR for 2.0 screens)** - legacy header keeps 75 locales; limitation F-5 | `npm run typecheck`, 32 frontend tests, v1→v3 migration test |
-| G7 | Windows tests | **PARTIAL** — Windows 11 install/launch/uninstall PASS, Windows 10 not executed (F-4) | `scripts/verify-installer.ps1` NSIS + MSI |
-| G8 | Final security audit | **PASS with 1 documented gap** — 29/30 executed (SEC-19) | `docs/security/FINAL_SECURITY_AUDIT.md` |
+| G0 | Trademark clearance signed | **PENDING** | `docs/brand/TRADEMARK_CLEARANCE.md` (counsel decision and signature) |
+| G1 | Code gates | **PASS** | `npm run typecheck`, `npm test` (105), `cargo test` (127 lib + 18 integration), `cargo clippy -D warnings`, `cargo fmt --check`, `npm run build` |
+| G2 | Brand asset gates | **PASS** | `npm run check:icons`, `npm run check:brand`, `npm run format:check` |
+| G3 | NSIS installer + shell surfaces | **PENDING** | `npm run verify:installer`, `npm run verify:shell-icons` on a clean Windows 11 VM |
+| G4 | MSI per-machine | **PENDING** | `npm run verify:msi` from an elevated session on a separate clean VM |
+| G5 | 2.2.1 → 2.2.2 upgrade | **PENDING** | `npm run verify:upgrade -Kind NSIS` and `-Kind MSI` with the baseline artifacts in `release_output/baseline-2.2.1/` |
+| G6 | Clean release build + provenance | **PENDING** | commit all changes, then `npm run build:release` and `npm run check:build-info` |
+| G7 | Exe icon frame gate | **PENDING** | `npm run check:exe-icons` output inside `build:release` (15/15 frames for portable and setup) |
+| G8 | Windows 10 22H2 support claim | **PENDING** | VM availability; if unavailable, remove the untested "1809+" claim from README and the spec |
+| G9 | Design-board visual approval | **PENDING** | `docs/brand/QA_2.2.2.md` + `docs/brand/qa/` (recorded); signature still missing |
 
-## Functional checklist
+Historical 2.2.1 evidence remains in
+`docs/audit/baseline/PRODUCTION_GATE_2.2.1_TR.md` and
+`docs/release/baseline-2.2.1.md`. Do not reuse a 2.2.1 installer as a 2.2.2
+deliverable and never patch a shipped executable in place.
 
-- [x] Previous `node_modules` cleaning works (end-to-end test)
-- [x] Catalog-based multi-ecosystem scanning (56 rules)
-- [x] Project and monorepo grouping
-- [x] Nested targets are not double counted
-- [x] Git protection (tracked → REVIEW + execution block)
-- [x] SAFE / REGENERATE / REVIEW / KEEP enforced
-- [x] Codex, Claude Code, Antigravity detected
-- [x] Codex sessions/worktrees shown separately and protected
-- [x] Claude `file-history` protected
-- [x] Antigravity recordings analysed with idle requirement
-- [x] Global cache commands use fixed official argv
-- [x] No deletion without user selection and plan confirmation
-- [x] Recycle Bin default, permanent requires separate ack
-- [x] Local audit/history and growth snapshots
-- [x] Last scan restored on startup, with a stale warning before acting on it
-- [x] Close guard + tray: closing asks first, work can continue in the tray
-- [x] Bulk select works after filtering without auto-selecting provider targets
+## Brand rollout checklist
 
-## Security checklist
+- [x] Canonical master at `assets/brand/dev-cleaner-icon.svg` (512×512, no text)
+- [x] Transparent `currentColor` glyph at `assets/brand/dev-cleaner-glyph.svg`
+- [x] 15-frame `src-tauri/icons/icon.ico`; 256 PNG, other frames 32-bit DIB, 16-first
+- [x] Eight tray PNGs (`16–48`) and runtime DPI selection; `image-png` enabled
+- [x] NSIS sidebar, header and uninstaller header BMPs
+- [x] WiX banner and dialog BMPs (light left side for native black text)
+- [x] Favicon SVG/ICO and notification PNG
+- [x] Tauri icon set regenerated; mobile icon directories removed
+- [x] `Logo.tsx` glyph-only; retired blue tokens removed
+- [x] NSIS `SHChangeNotify` uses `SHCNF_FLUSH`; no `FLUSHNOWAIT`, no cache utility
+- [x] WiX `UpgradeCode` pinned to `40ef2964-2821-54d7-ac14-2894d8e84709`
+- [x] `bundle.icon`, NSIS and WiX artwork paths point at generated files
+- [x] README logo, artifact names, tree and installer note updated
+- [x] GitHub social preview (1280×640) and circle-safe avatar
+- [x] Old identity archived in `docs/archive/brand-v1/`, not deleted
+- [x] Brand scan fails on retired asset names and shell-cache shortcuts
+- [x] CI runs `check:icons` and `check:brand`; `build:release` runs the PE gate
+- [x] Visual QA record and sheets in `docs/brand/QA_2.2.2.md` and `docs/brand/qa/`
+- [ ] Legal counsel sign-off (G0)
+- [ ] Design-board visual approval (G9)
+- [ ] Installer, upgrade and shell checks on clean VMs (G3–G5)
+- [ ] Windows 10 22H2 verification or support-claim removal (G8)
 
-- [x] 29/30 scenarios executed PASS
-- [x] SEC-19 (OneDrive cloud-only placeholder) **NOT EXECUTED** — no placeholder
-      available; the reparse-point hard block that defends it *is* executed
-- [x] No root escape in tests
-- [x] Symlink/junction blocked in tests
-- [x] No frontend path authority
-- [x] Expired sessions rejected
-- [x] Active AI agent data blocked by policy
-- [x] Unknown targets fail closed
-- [x] No file-content reads in scans/logs (`secret_persistence`, `verify:offline`)
-- [x] Zero outbound network connections during a real session (`verify:offline`)
-- [x] Interrupted multi-item delete leaves no audit record (`crash_during_delete`)
-- [x] Recycle failure never falls back to a permanent delete
+## Verification commands
 
-## Performance checklist
+```powershell
+npm run typecheck
+npm test
+cargo test --manifest-path src-tauri/Cargo.toml
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+npm run check:icons
+npm run check:brand
+npm run format:check
+npm run build
 
-All numbers measured on this machine; commands and fixtures are in
-`docs/release/TEST_MATRIX.md` §5.
+# After committing everything (clean tree required):
+npm run build:release
+npm run check:build-info
 
-- [x] Virtualized table (1,000-item micro-benchmarks: filter < 15 ms, sort < 10 ms)
-- [x] 10,000 candidates — **24.5 s**, 69.6 MB peak
-- [x] 50,000 candidates — **131.8 s**, 293.9 MB peak
-- [x] 300,000 recordings — **47.7 s**, 5.5 MB peak
-- [x] 1,000,000 directory entries — **122.0 s**, 7.1 MB peak
-- [x] Cancel reaction measured on a large tree (`cancel_latency_benchmark`)
-- [x] Long path handling implemented (verbatim-prefix normalisation)
-- [x] Large files measured without reading content
-- [x] Cancel/error/partial states distinct in the model
+# Installer harnesses, each on a clean machine:
+npm run verify:installer        # NSIS per-user
+npm run verify:shell-icons      # NSIS + Explorer/shortcut checks
+npm run verify:msi              # elevated, per-machine
+npm run verify:upgrade -Kind NSIS
+npm run verify:upgrade -Kind MSI   # elevated
+```
+
+`verify:upgrade` expects the 2.2.1 artifacts in
+`release_output/baseline-2.2.1/`:
+
+```powershell
+New-Item -ItemType Directory release_output\baseline-2.2.1
+Copy-Item <share>\Dev-Cleaner-2.2.1-x64-Setup.exe release_output\baseline-2.2.1\
+Copy-Item <share>\Dev-Cleaner-2.2.1-x64.msi        release_output\baseline-2.2.1\
+```
 
 ## Packaging checklist
 
-- [x] Rust tests PASS (97 lib + 4 integration, 5 opt-in heavy tests)
-- [x] Frontend tests PASS (32)
+- [x] Rust tests PASS (127 lib + 18 integration; 5 opt-in heavy tests ignored)
+- [x] Frontend tests PASS (105)
 - [x] Typecheck PASS
 - [x] Clippy PASS (0 warnings, all targets)
-- [x] Build provenance present — clean-tree gate, embedded commit, `BUILD_INFO.json`
-- [x] Release build PASS (2026-11-02) — clean tree, `dirty: false`, commit-stamped
-- [x] NSIS install → launch → uninstall PASS
-- [x] MSI install → launch → uninstall PASS (per-user mode; see below)
-- [x] Portable PASS
-- [x] SHA-256 file generated (`release_output/SHA256SUMS.txt`)
-- [x] Versions synchronised (2.0.0)
-- [x] Package sizes/hashes recorded in `release_output/BUILD_INFO.json` (authoritative, regenerated per build)
-- [x] Packaged IPC under production CSP verified — 15/15 checks (`scripts/verify-ipc.mjs`)
-- [x] README rewritten
-- [ ] Windows 10 install smoke test — **NOT EXECUTED** (F-4; no Windows 10 host)
-- [x] Publishable packages built from a **clean** commit — `BUILD_INFO.json` reports `"dirty": false`
-- [x] No known critical/high-severity deletion defect
+- [x] rustfmt PASS
+- [x] Prettier PASS
+- [x] Brand and icon structure PASS
+- [x] Production frontend build PASS
+- [ ] Clean-tree release build PASS (2.2.2)
+- [ ] NSIS install → launch → icons → uninstall PASS
+- [ ] MSI install → launch → uninstall PASS (elevated, per-machine)
+- [ ] 2.2.1 → 2.2.2 upgrade PASS (NSIS and MSI)
+- [ ] Shell shortcuts and `DisplayIcon` PASS
+- [ ] Portable PASS
+- [ ] `SHA256SUMS.txt` and `BUILD_INFO.json` generated
+- [ ] `check:build-info` reports `dirty: false` and the audited commit
+- [ ] Windows 10 22H2 smoke test or support claim removed
 
 ### MSI scope note
 
-Tauri's WiX template builds the MSI with `InstallScope="perMachine"`. A standard
-user gets **error 1925** from a plain `/i`. The consumer channel is the NSIS
-setup (per-user, no elevation). The MSI is for elevated / enterprise deployment.
-`scripts/verify-installer.ps1 -Kind msi` installs in `ALLUSERS=2
-MSIINSTALLPERUSER=1` mode when not elevated, so the payload itself is proven; run
-it elevated to exercise the native per-machine path.
+Tauri's WiX template builds the MSI with `InstallScope="perMachine"`. A
+non-elevated `/i` fails with error 1925. The MSI is for elevated / enterprise
+deployment; the consumer channel is the per-user NSIS setup.
+
+`scripts/verify-msi.ps1` refuses to run without elevation and checks the product
+registration under `HKLM`. Do not install the NSIS and MSI builds on the same
+machine: they intentionally produce separate Apps & Features entries and use
+different install scopes.
+
+## Known pre-existing issues
+
+These are not brand regressions. They were present in the 2.2.1 baseline and are
+recorded so they are not mistaken for 2.2.2 breakage.
+
+1. **`npm run check:contrast` fails on all four themes.** The checker expects
+   semantic tokens (`--on-accent`, `--accent-foreground`, `--warning-text`,
+   `--success-text`, `--danger-foreground`, `--focus-ring`) that
+   `src/styles/tokens.css` does not define, although several are used by CSS.
+   This predates the brand rollout (`234140a`). It is not part of `build:release`
+   or CI, but it blocks `npm run test:a11y` until the token vocabulary is
+   reconciled.
+2. **`npm run check:build-info` fails against the stale 2.2.1**
+   `release_output/BUILD_INFO.json`. This is expected until the clean 2.2.2
+   build replaces it.
+3. **Code signing (F-6).** Binaries are unsigned; SmartScreen warns.
+4. **Windows 10 (F-4).** No 22H2 host has been available. Either verify it or
+   remove the untested support claim.
 
 ## Blockers for public production release
 
-None block the code. Two environmental items remain:
-
-1. **Windows 10 smoke test** (F-4) — run `scripts/verify-installer.ps1` on a
-   Windows 10 host if Windows 10 is a supported target. The audit host is
-   Windows 11 (10.0.26200).
-2. **Re-verify after any rebuild** — `release_output/BUILD_INFO.json` must show
-   `"dirty": false`. Never publish an artifact whose manifest says otherwise;
-   `scripts/build-release.js` refuses to produce one unless `--allow-dirty` was
-   passed explicitly.
-
-Accepted residual risk (needs owner sign-off, does not block the code):
-
-3. **SEC-19** — OneDrive cloud-only placeholder not executed. Mitigated by the
-   reparse-point hard block, which is executed.
-4. **Code signing** (F-6) — unsigned binaries; SmartScreen warns.
-5. **EN/TR only** for 2.0 screens (F-5).
-6. **Dev-toolchain advisories** (F-8) — none ship in the release build.
+1. **Legal (G0).** Counsel must fill and sign the decision in
+   `docs/brand/TRADEMARK_CLEARANCE.md`. A `rename` decision starts a separate
+   work item; do not use ® or claim exclusivity before registration.
+2. **Installer evidence (G3–G5, G7).** The scripts are ready but have not been
+   run against a 2.2.2 build. Run each on a clean VM and keep the console output
+   with the release evidence.
+3. **Clean commit (G6).** `build:release` refuses a dirty tree. Commit the brand
+   rollout first, then build from that exact commit.
+4. **Design approval (G9).** The visual QA sheets must be signed off before the
+   packages are published.
 
 ## Decision
 
-- **Internal / controlled beta:** GO.
-- **Public production (DIRECT-LIVE, clean commit-stamped packages):** **GO**.
-  Every automated gate passes, the destructive path is guarded and tested, the
-  previously pending scenarios are executed, the packaged binary was probed under
-  the production CSP, and the shipped packages were built from a clean tree with
-  a commit stamp the runtime reports.
-- If Windows 10 is a supported target, run the installer harness there once
-  before advertising that support (F-4).
+- **Internal / controlled beta:** GO once G3–G7 and G9 are recorded; G0 may run
+  in parallel but must close before any public download.
+- **Public production (DIRECT-LIVE):** **NO-GO** until G0, G3–G7 and G9 are
+  PASS. If Windows 10 remains advertised, G8 is also required.

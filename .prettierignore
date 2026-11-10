@@ -6,3 +6,4 @@ docs
 playwright-report
 test-results
 src-tauri/gen/schemas
+assets/brand/icon-manifest.json

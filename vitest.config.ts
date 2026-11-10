@@ -14,6 +14,7 @@ export default defineConfig({
     globals: true,
     setupFiles: [],
     // Playwright specs live in e2e/ and must not be collected by Vitest.
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    // Brand writer tests live next to the dependency-free scripts they cover.
+    include: ["src/**/*.{test,spec}.{ts,tsx}", "scripts/lib/**/*.test.mjs"],
   },
 });

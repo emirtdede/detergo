@@ -24,6 +24,10 @@ jobs:
         run: npm run check-version
       - name: Audit invariants
         run: npm run check:audit
+      - name: Icon structure
+        run: npm run check:icons
+      - name: Brand integrity
+        run: npm run check:brand
       - name: i18n integrity
         run: npm run check:i18n
       - name: Prettier

@@ -14,10 +14,15 @@ evidence and release status. Documents are grouped by purpose, not by date.
 | 5 | [`architecture/MCP.md`](architecture/MCP.md) | MCP tool surface, preview→execute flow and the three destructive gates. |
 | 6 | [`architecture/SCAN_HISTORY_MIGRATION.md`](architecture/SCAN_HISTORY_MIGRATION.md) | Why scan history lives in localStorage for 2.2.1, and the 2.3 plan. |
 | 7 | [`architecture/NOTIFICATIONS.md`](architecture/NOTIFICATIONS.md) | Why WebView2 web notifications do not surface, and the 2.2.1 fallback. |
-| 7 | [`audit/PRE_DEPLOYMENT_QA_AUDIT_TR.md`](audit/PRE_DEPLOYMENT_QA_AUDIT_TR.md) | Pre-deployment audit: 42 findings (Turkish). |
-| 8 | [`audit/REMEDIATION_PLAN_TR.md`](audit/REMEDIATION_PLAN_TR.md) | Remediation plan and work packages P0–E1 (Turkish). |
-| 9 | [`audit/baseline/SECURITY_MATRIX_2.2.1_TR.md`](audit/baseline/SECURITY_MATRIX_2.2.1_TR.md) | 12 path + 9 MCP security scenarios with their tests. |
-| 10 | [`audit/baseline/PRODUCTION_GATE_2.2.1_TR.md`](audit/baseline/PRODUCTION_GATE_2.2.1_TR.md) | The 18-item production gate and its current status. |
+| 8 | [`audit/PRE_DEPLOYMENT_QA_AUDIT_TR.md`](audit/PRE_DEPLOYMENT_QA_AUDIT_TR.md) | Pre-deployment audit: 42 findings (Turkish). |
+| 9 | [`audit/REMEDIATION_PLAN_TR.md`](audit/REMEDIATION_PLAN_TR.md) | Remediation plan and work packages P0–E1 (Turkish). |
+| 10 | [`audit/baseline/SECURITY_MATRIX_2.2.1_TR.md`](audit/baseline/SECURITY_MATRIX_2.2.1_TR.md) | 12 path + 9 MCP security scenarios with their tests. |
+| 11 | [`audit/baseline/PRODUCTION_GATE_2.2.1_TR.md`](audit/baseline/PRODUCTION_GATE_2.2.1_TR.md) | The 18-item 2.2.1 production gate and its status. |
+| 12 | [`brand/BRAND_GUIDELINES.md`](brand/BRAND_GUIDELINES.md) | Canonical mark, DPI frames, installer art and the generation pipeline. |
+| 13 | [`brand/QA_2.2.2.md`](brand/QA_2.2.2.md) | Recorded visual inspection of the 15 frames, tray sizes and installer art. |
+| 14 | [`brand/TRADEMARK_CLEARANCE.md`](brand/TRADEMARK_CLEARANCE.md) | Pending counsel record for the "Dev Cleaner" mark. |
+| 15 | [`release/baseline-2.2.1.md`](release/baseline-2.2.1.md) | Shipped 2.2.1 hashes and the rebuild procedure. |
+| 16 | [`release/BRAND_ROLLOUT_PLAN_V3.1_TR.md`](release/BRAND_ROLLOUT_PLAN_V3.1_TR.md) | Approved 2.2.2 brand rollout plan (Turkish). |
 
 ## Layout
 
@@ -45,7 +50,19 @@ docs/
 │   │   └── ROLLBACK_DRILL_2.2.1_TR.md
 │   ├── BASELINE.md                  # pre-change inventory (WBS-001)
 │   └── BASELINE_TEST_RESULTS.md     # pre-change test run (WBS-002)
+├── brand/
+│   ├── BRAND_GUIDELINES.md          # canonical mark, frames, installer art
+│   ├── QA_2.2.2.md                  # recorded visual inspection (G9 evidence)
+│   ├── qa/                          # inspection sheets referenced by the record
+│   ├── TRADEMARK_CLEARANCE.md       # counsel record (pending signature)
+│   └── preview.html                 # local visual preview
+├── release/
+│   ├── RELEASE_CHECKLIST.md         # current gates (2.2.2)
+│   ├── TEST_MATRIX.md               # recorded results
+│   ├── baseline-2.2.1.md            # shipped 2.2.1 hashes
+│   └── BRAND_ROLLOUT_PLAN_V3.1_TR.md
 └── archive/                         # historical input, not current truth
+    ├── brand-v1/                    # retired identity; never shipped
     ├── node-cleaner-urun-gelistirme-ana-dokumani.md
     ├── GELISTIRME_RAPORU-Gelistirici-Artiklari.md
     └── NODE-CLEANER-NIHAI-PLAN.txt
@@ -64,29 +81,36 @@ docs/
 4. **Relative links only.** Documents link to each other with relative paths so
    the folder can be moved or read offline.
 
-## Current release status (2.2.1)
+## Current release status (2.2.2)
 
 ```
 Code gates:            14/14 PASS
-Release gates:         4/4 PASS (E1-03…E1-06 automated)
-Public production:     GO — all 18 gate items pass
+Brand gates:           3/3 PASS (check:icons, check:brand, format:check)
+Release gates:         PENDING — clean build, installer, upgrade, shell, legal
+Public production:     NO-GO until G0 and G3–G9 close
 ```
 
-All 18 gate items pass. The four operational gates that used to be
-"manual sign-off" are now executable evidence:
+The 2.2.2 change set is a brand identity rollout; scanner and cleanup behaviour
+is unchanged. Source gates executed on 2026-11-10:
 
-- `npm run verify:smoke` — 10 checks against the real release binary
-  (webhook 200/500/unreachable, language switching, settings persistence,
-  GUI liveness); notification routing, scan/cleanup cancellation and
-  recycle-bin restore are covered by `npm test` and `npm run verify:trash`.
-- `npm run verify:installer` — 8 checks: NSIS + MSI silent install, version,
-  uninstall and leftover check. This run found and fixed a real NSIS defect
-  (empty install folder left behind); see the installer report.
-- Rollback drill for PR-2 and PR-4 was performed on real release builds
-  (app boots, scan works, sources restored).
-- `npm run build:release` from a clean tree, followed by
-  `npm run check:build-info` → `Build provenance OK`.
+- `npm run typecheck`, `npm test` (105), `npm run build` — PASS.
+- `cargo test` (127 lib + 18 integration), `cargo clippy -D warnings`,
+  `cargo fmt --check` — PASS.
+- `npm run check:icons`, `npm run check:brand`, `npm run check:audit`,
+  `npm run format:check`, `npm run check-version` — PASS.
 
-`npm run check:build-info` also rejects the stale 2.2.0 / `"dirty": true`
-artefacts that used to sit in `release_output/`.
-See [`audit/baseline/PRODUCTION_GATE_2.2.1_TR.md`](audit/baseline/PRODUCTION_GATE_2.2.1_TR.md).
+The installer harnesses are now split by scope:
+
+- `npm run verify:installer` — NSIS per-user install → launch → 15-frame icons →
+  uninstall → leftover check.
+- `npm run verify:msi` — elevated per-machine MSI; refuses a non-elevated
+  session instead of silently testing a per-user configuration.
+- `npm run verify:upgrade` — 2.2.1 → 2.2.2 in-place upgrade for NSIS or MSI.
+- `npm run verify:shell-icons` — desktop/Start menu shortcut icon sources,
+  `DisplayIcon`, installed `app.ico` and PE frames.
+
+The clean 2.2.2 build, the installer/upgrade runs and the visual-board sign-off
+are still pending. `npm run check:contrast` has a pre-existing token-vocabulary
+failure documented in the release checklist; it is not caused by the brand work.
+See [`release/RELEASE_CHECKLIST.md`](release/RELEASE_CHECKLIST.md) and
+[`release/baseline-2.2.1.md`](release/baseline-2.2.1.md).

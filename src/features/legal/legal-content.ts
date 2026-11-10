@@ -33,8 +33,8 @@ export interface LegalDocMeta {
   hint: string;
 }
 
-const UPDATED_TR = "6 Kasım 2026 (v2.2.1)";
-const UPDATED_EN = "6 November 2026 (v2.2.1)";
+const UPDATED_TR = "6 Kasım 2026 (v2.2.2)";
+const UPDATED_EN = "6 November 2026 (v2.2.2)";
 
 const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
   eula: {
@@ -589,7 +589,7 @@ export function localizeRevisionDate(locale: string): string {
       month: "long",
       year: "numeric",
     }).format(new Date(Date.UTC(2026, 10, 6)));
-    return `${formatted} (v2.2.1)`;
+    return `${formatted} (v2.2.2)`;
   } catch {
     return UPDATED_EN;
   }

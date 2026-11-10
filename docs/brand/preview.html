@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dev Cleaner — Brand Preview</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #08080b;
+        --panel: #101015;
+        --line: #26262d;
+        --text: #f4f4f5;
+        --muted: #a1a1aa;
+        --light: #f6f6f8;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 40px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", system-ui, sans-serif;
+      }
+      h1 {
+        margin: 0 0 6px;
+        font-size: 28px;
+        letter-spacing: -0.02em;
+      }
+      p {
+        margin: 0;
+        color: var(--muted);
+      }
+      section {
+        margin-top: 36px;
+      }
+      h2 {
+        margin: 0 0 16px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        align-items: flex-end;
+      }
+      .tile {
+        display: grid;
+        place-items: center;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--panel);
+      }
+      .tile.light {
+        background: var(--light);
+      }
+      .tile img {
+        display: block;
+      }
+      .sizes img {
+        image-rendering: auto;
+      }
+      .label {
+        margin-top: 8px;
+        font-size: 11px;
+        font-family: "Cascadia Mono", Consolas, monospace;
+        color: var(--muted);
+        text-align: center;
+      }
+      .art {
+        max-width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+      }
+      .social {
+        max-width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+      .glyph {
+        color: var(--text);
+      }
+      .glyph.light {
+        color: #111;
+      }
+      .note {
+        margin-top: 16px;
+        max-width: 760px;
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+      code {
+        font-family: "Cascadia Mono", Consolas, monospace;
+        color: var(--text);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Dev Cleaner — Brand Preview</h1>
+    <p>Canonical master: <code>../../assets/brand/dev-cleaner-icon.svg</code></p>
+
+    <section>
+      <h2>App icon</h2>
+      <div class="row">
+        <div class="tile"><img src="../../assets/brand/dev-cleaner-icon.svg" width="256" height="256" alt="Dev Cleaner 256" /></div>
+        <div class="tile"><img src="../../assets/brand/dev-cleaner-icon.svg" width="128" height="128" alt="Dev Cleaner 128" /></div>
+        <div class="tile"><img src="../../assets/brand/dev-cleaner-icon.svg" width="64" height="64" alt="Dev Cleaner 64" /></div>
+        <div class="tile"><img src="../../assets/brand/dev-cleaner-icon.svg" width="48" height="48" alt="Dev Cleaner 48" /></div>
+        <div class="tile"><img src="../../assets/brand/dev-cleaner-icon.svg" width="32" height="32" alt="Dev Cleaner 32" /></div>
+        <div class="tile"><img src="../../assets/brand/dev-cleaner-icon.svg" width="24" height="24" alt="Dev Cleaner 24" /></div>
+        <div class="tile"><img src="../../assets/brand/dev-cleaner-icon.svg" width="20" height="20" alt="Dev Cleaner 20" /></div>
+        <div class="tile"><img src="../../assets/brand/dev-cleaner-icon.svg" width="16" height="16" alt="Dev Cleaner 16" /></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Glyph on dark and light</h2>
+      <div class="row sizes">
+        <div class="tile glyph"><img src="../../assets/brand/dev-cleaner-glyph.svg" width="62" height="36" alt="Glyph 36" /></div>
+        <div class="tile glyph"><img src="../../assets/brand/dev-cleaner-glyph.svg" width="31" height="18" alt="Glyph 18" /></div>
+        <div class="tile glyph light"><img src="../../assets/brand/dev-cleaner-glyph.svg" width="31" height="18" alt="Glyph 18 on light" /></div>
+        <div class="tile glyph light"><img src="../../assets/brand/dev-cleaner-glyph.svg" width="62" height="36" alt="Glyph 36 on light" /></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>NSIS installer artwork</h2>
+      <div class="row">
+        <div>
+          <img class="art" src="../../assets/brand/installer/sidebar.svg" width="164" height="314" alt="NSIS sidebar" />
+          <div class="label">sidebar 164x314</div>
+        </div>
+        <div>
+          <img class="art" src="../../assets/brand/installer/header.svg" width="150" height="57" alt="NSIS header" />
+          <div class="label">header 150x57</div>
+          <img class="art" src="../../assets/brand/installer/unheader.svg" width="150" height="57" alt="NSIS uninstaller header" style="margin-top: 12px" />
+          <div class="label">unheader 150x57</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>WiX installer artwork</h2>
+      <div class="row">
+        <div>
+          <img class="art" src="../../assets/brand/installer/wix-banner.svg" width="493" height="58" alt="WiX banner" />
+          <div class="label">banner 493x58</div>
+          <img class="art" src="../../assets/brand/installer/wix-dialog.svg" width="493" height="312" alt="WiX dialog" style="margin-top: 12px" />
+          <div class="label">dialog 493x312</div>
+        </div>
+      </div>
+      <p class="note">
+        The WiX left side stays light because the stock WixUI dialogs draw black
+        title and body text over the bitmap. The icon lives on the dark right
+        panel.
+      </p>
+    </section>
+
+    <section>
+      <h2>GitHub</h2>
+      <div class="row">
+        <div>
+          <img class="social" src="../../assets/brand/github/social-preview.png" width="640" height="320" alt="GitHub social preview" />
+          <div class="label">social preview 1280x640</div>
+        </div>
+        <div>
+          <img class="art" src="../../assets/brand/github/avatar-1024.png" width="180" height="180" alt="Circular-safe avatar" style="border-radius: 50%" />
+          <div class="label">avatar 1024 (circle crop)</div>
+        </div>
+      </div>
+    </section>
+
+    <p class="note">
+      Run <code>npm run generate:icons</code> on Windows after changing the master.
+      Generated files are committed; CI checks their structure and hashes, not
+      their pixels.
+    </p>
+  </body>
+</html>

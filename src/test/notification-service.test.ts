@@ -56,6 +56,7 @@ describe("notification service routing", () => {
     expect(FakeNotification.instances).toHaveLength(1);
     expect(FakeNotification.instances[0].title.length).toBeGreaterThan(0);
     expect(FakeNotification.instances[0].options?.body).toContain("3");
+    expect(FakeNotification.instances[0].options?.icon).toBe("/icons/notification.png");
     expect(useUiStore.getState().toast?.type).toBe("success");
   });
 

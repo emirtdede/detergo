@@ -6,6 +6,11 @@ export interface LogoProps {
   showWordmark?: boolean;
 }
 
+/**
+ * Canonical glyph-only mark. The path data is hand-maintained and mirrored
+ * exactly in `assets/brand/dev-cleaner-icon.svg`; `npm run check:brand` fails
+ * when the two drift apart.
+ */
 export const Logo: React.FC<LogoProps> = ({ size = 22, className = "", showWordmark = false }) => {
   return (
     <div
@@ -18,66 +23,38 @@ export const Logo: React.FC<LogoProps> = ({ size = 22, className = "", showWordm
       }}
     >
       <svg
-        width={size}
+        width={size * 1.697}
         height={size}
-        viewBox="0 0 32 32"
+        viewBox="32 118 448 264"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
+        role="img"
         aria-label="Dev Cleaner"
       >
-        <defs>
-          <linearGradient
-            id="nc-grad-primary"
-            x1="2"
-            y1="2"
-            x2="30"
-            y2="30"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop stopColor="#0A84FF" />
-            <stop offset="1" stopColor="#0055D4" />
-          </linearGradient>
-          <linearGradient
-            id="nc-grad-glass"
-            x1="4"
-            y1="4"
-            x2="28"
-            y2="28"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop stopColor="rgba(255, 255, 255, 0.45)" />
-            <stop offset="1" stopColor="rgba(255, 255, 255, 0.05)" />
-          </linearGradient>
-        </defs>
-
-        {/* Outer Rounded Hexagon / Module Base */}
-        <rect x="3" y="3" width="26" height="26" rx="7" fill="url(#nc-grad-primary)" />
-
-        {/* Clean Facet Inner Overlay */}
-        <path
-          d="M3 10C3 6.13401 6.13401 3 10 3H22C25.866 3 29 6.13401 29 10V16L16 29H10C6.13401 29 3 25.866 3 22V10Z"
-          fill="url(#nc-grad-glass)"
-        />
-
-        {/* Central Geometric Node Connections */}
-        <circle cx="16" cy="11" r="3.2" fill="#FFFFFF" />
-        <circle cx="10" cy="21" r="2.6" fill="#FFFFFF" />
-        <circle cx="22" cy="21" r="2.6" fill="#FFFFFF" />
-
-        {/* Node Connectivity Lines */}
-        <path
-          d="M16 11L10 21M16 11L22 21M10 21L22 21"
-          stroke="#FFFFFF"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-
-        {/* Clean Sparkle Highlight */}
-        <path
-          d="M24.5 5.5L25.2 7.2L26.9 7.9L25.2 8.6L24.5 10.3L23.8 8.6L22.1 7.9L23.8 7.2L24.5 5.5Z"
-          fill="#FFFFFF"
-        />
+        <g
+          transform="translate(256 256) scale(1.15) translate(-256 -256)"
+          stroke="currentColor"
+          fill="none"
+        >
+          <path
+            d="M166 172L86 256L166 340"
+            strokeWidth="34"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M346 172L426 256L346 340"
+            strokeWidth="34"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path d="M225.5 336.1L259.6 246.5" strokeWidth="34" strokeLinecap="round" />
+          <path
+            d="M283.4 146C283.4 173.8 293.6 184 321.4 184C293.6 184 283.4 194.2 283.4 222C283.4 194.2 273.2 184 245.4 184C273.2 184 283.4 173.8 283.4 146Z"
+            fill="currentColor"
+            stroke="none"
+          />
+        </g>
       </svg>
 
       {showWordmark && (

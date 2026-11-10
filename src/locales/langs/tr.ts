@@ -266,7 +266,7 @@ export const tr: TranslationSchema = {
     licensesList: [
       {
         name: "Tauri",
-        version: "2.2.1",
+        version: "2.11.5",
         license: "MIT / Apache-2.0",
         description: "Hafif ve güvenli yerel masaüstü uygulama çalışma zamanı ve mimarisi.",
         url: "https://tauri.app",

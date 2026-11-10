@@ -312,7 +312,7 @@ export const webhookSampleJson = JSON.stringify(
     event: "cleanup_completed",
     timestamp: "2026-11-06T02:30:00Z",
     product: "Dev Cleaner by Vellium",
-    version: "2.2.1",
+    version: "2.2.2",
     scope: "projects",
     target_count: 24,
     total_bytes: 45678901234,

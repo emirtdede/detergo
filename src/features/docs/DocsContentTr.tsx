@@ -159,7 +159,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
           <article className="docs-article">
             <div className="docs-badge-row">
               <span className="docs-category-pill">Genel Bakış</span>
-              <span className="docs-version-pill">v2.2.1</span>
+              <span className="docs-version-pill">v2.2.2</span>
             </div>
             <h1 className="docs-title">Dev Cleaner'a Hoş Geldiniz</h1>
             <p className="docs-lead">
@@ -781,7 +781,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
           <article className="docs-article">
             <div className="docs-badge-row">
               <span className="docs-category-pill">AI Protokolü</span>
-              <span className="docs-version-pill">MCP v2.2.1</span>
+              <span className="docs-version-pill">MCP v2.2.2</span>
             </div>
             <h1 className="docs-title">Model Context Protocol (MCP) Sunucusu</h1>
             <p className="docs-lead">

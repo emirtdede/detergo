@@ -66,7 +66,7 @@ console.log("\n[STEP 1/5] Eski çıktılar temizleniyor...");
 try {
   execSync(
     `powershell -NoProfile -ExecutionPolicy Bypass -Command "` +
-      `Get-Process -Name node-cleaner,'Node-Cleaner-${version}-Portable' -ErrorAction SilentlyContinue | ` +
+      `Get-Process -Name node-cleaner,'Node-Cleaner-${version}-Portable','Dev-Cleaner-${version}-Portable' -ErrorAction SilentlyContinue | ` +
       `Where-Object { $_.Path -and $_.Path -notlike '*node_cleaner_target*' -and $_.Path -notlike '*\\target\\*' } | ` +
       `Stop-Process -Force; exit 0"`,
     { stdio: "ignore" },
@@ -107,8 +107,10 @@ for (const profile of ["release", "debug"]) {
   }
 }
 
-console.log("\n[STEP 2/5] Sürüm senkronizasyonu kontrol ediliyor...");
+console.log("\n[STEP 2/5] Sürüm senkronizasyonu ve marka varlıkları kontrol ediliyor...");
 execSync("npm run check-version", { cwd: rootDir, stdio: "inherit" });
+execSync("npm run check:icons", { cwd: rootDir, stdio: "inherit" });
+execSync("npm run check:brand", { cwd: rootDir, stdio: "inherit" });
 
 const startedAt = Date.now();
 const buildEnv = {
@@ -183,6 +185,19 @@ const verifyScript = path.join(rootDir, "scripts", "verify-checksums.bat");
 if (fs.existsSync(verifyScript)) {
   fs.copyFileSync(verifyScript, path.join(releaseOutputDir, "verify-checksums.bat"));
 }
+
+// Release gate: the built EXEs must actually carry all 15 ICO frames. NSIS and
+// the PE resource compiler silently accept a source ICO and then omit frames;
+// checking the source file is not enough.
+const exeArtifacts = copiedFiles.filter((name) => name.toLowerCase().endsWith(".exe"));
+execFileSync(
+  process.execPath,
+  [
+    path.join(rootDir, "scripts", "check-exe-icons.mjs"),
+    ...exeArtifacts.map((name) => path.join(releaseOutputDir, name)),
+  ],
+  { cwd: rootDir, stdio: "inherit" },
+);
 
 console.log("\n[STEP 5/5] SHA-256 özetleri hesaplanıyor...");
 const checksumLines = [];

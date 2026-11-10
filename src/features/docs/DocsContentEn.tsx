@@ -172,7 +172,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
           <article className="docs-article">
             <div className="docs-badge-row">
               <span className="docs-category-pill">{t("Overview")}</span>
-              <span className="docs-version-pill">{t("v2.2.1")}</span>
+              <span className="docs-version-pill">{t("v2.2.2")}</span>
             </div>
             <h1 className="docs-title">{t("Welcome to Dev Cleaner")}</h1>
             <p className="docs-lead">
@@ -798,7 +798,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
           <article className="docs-article">
             <div className="docs-badge-row">
               <span className="docs-category-pill">{t("AI Protocol")}</span>
-              <span className="docs-version-pill">{t("MCP v2.2.1")}</span>
+              <span className="docs-version-pill">{t("MCP v2.2.2")}</span>
             </div>
             <h1 className="docs-title">{t("Model Context Protocol (MCP) Server")}</h1>
             <p className="docs-lead">

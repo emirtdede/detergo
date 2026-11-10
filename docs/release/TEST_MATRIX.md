@@ -10,6 +10,43 @@ issue only).
 > scenario still could not be executed, it is listed as **NOT EXECUTED** and the
 > reason is given. Nothing here is estimated.
 
+## 0. 2.2.2 brand rollout (2026-11-10)
+
+Source-level gates executed on Windows 11 x64 with Node 26.13.0 and the pinned
+Rust toolchain:
+
+| Suite | Command | Result |
+|---|---|---|
+| TypeScript | `npm run typecheck` | **PASS** |
+| Frontend unit/feature/stress | `npm test` | **105 passed** in 12 files, 0 failed |
+| Rust library | `cargo test --manifest-path src-tauri/Cargo.toml` | **127 passed**, 0 failed |
+| Rust integration | same command | **18 passed** (crash, git, MCP, recycle failure, secrets, webhook), 0 failed |
+| Heavy opt-in tests | same command | 5 ignored by design (scale, entries, measure, recycle round-trip) |
+| Clippy | `cargo clippy --all-targets -- -D warnings` | **PASS**, 0 warnings |
+| rustfmt | `cargo fmt -- --check` | **PASS** |
+| Prettier | `npm run format:check` | **PASS** |
+| Production frontend build | `npm run build` | **PASS** |
+| Icon structure | `npm run check:icons` | **PASS** — 15-frame ICO, 8 tray PNGs, 5 BMPs, manifest hashes |
+| Brand integrity | `npm run check:brand` | **PASS** — glyph sync, no retired references |
+| Audit invariants | `npm run check:audit` | **PASS** — 5 rules |
+| Version sync | `npm run check-version` | **PASS** — 2.2.2 everywhere |
+
+The ICO was inspected with PIL: 15 frames in the required order, 256 stored as
+PNG and the rest as 32-bit DIB. `scripts/check-exe-icons.mjs` was also run
+against the 2.2.1 binaries and correctly failed with 8 frames, proving the gate
+detects the regression it was written for. The visual inspection sheets and
+their findings are recorded in `docs/brand/QA_2.2.2.md`; this closes the
+engineering side of G9, not the design-board signature.
+
+Still **NOT EXECUTED** for 2.2.2 (no 2.2.2 build yet): NSIS/MSI install,
+shell-shortcut inspection, 2.2.1 → 2.2.2 upgrade, PE frame gate on the new EXEs,
+and Windows 10 22H2. See `docs/release/RELEASE_CHECKLIST.md` G3–G8.
+
+`npm run check:contrast` remains **FAIL** for the same four themes as 2.2.1:
+`src/styles/tokens.css` does not define the semantic tokens the checker expects.
+This is a pre-existing token-vocabulary gap, not a brand regression; it is
+recorded in the release checklist and is outside the 2.2.2 change set.
+
 ## 1. Automated results
 
 | Suite | Command | Result |

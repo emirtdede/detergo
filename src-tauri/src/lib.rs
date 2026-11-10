@@ -163,6 +163,40 @@ pub fn refresh_tray_labels(app: &tauri::AppHandle, language: Option<&str>) {
     }
 }
 
+/// Pick the tray bitmap for the primary monitor's DPI.
+///
+/// Windows asks the notification area for `SM_CXSMICON` pixels, which is
+/// `16 x scale` (28 px at 175%, 36 px at 225%, 48 px at 300%). The nearest
+/// pre-rendered size at or above the request is used so the shell never has to
+/// upscale a smaller bitmap.
+fn tray_icon(app: &tauri::App) -> Option<tauri::image::Image<'static>> {
+    let scale = app
+        .primary_monitor()
+        .ok()
+        .flatten()
+        .map(|monitor| monitor.scale_factor())
+        .unwrap_or(1.0);
+    let target = (16.0 * scale).round() as u32;
+    let size = [16u32, 20, 24, 28, 32, 36, 40, 48]
+        .into_iter()
+        .find(|candidate| *candidate >= target)
+        .unwrap_or(48);
+
+    let png: &'static [u8] = match size {
+        16 => include_bytes!("../icons/tray-16.png"),
+        20 => include_bytes!("../icons/tray-20.png"),
+        24 => include_bytes!("../icons/tray-24.png"),
+        28 => include_bytes!("../icons/tray-28.png"),
+        32 => include_bytes!("../icons/tray-32.png"),
+        36 => include_bytes!("../icons/tray-36.png"),
+        40 => include_bytes!("../icons/tray-40.png"),
+        48 => include_bytes!("../icons/tray-48.png"),
+        _ => return None,
+    };
+
+    tauri::image::Image::from_bytes(png).ok()
+}
+
 fn setup_tray(app: &mut tauri::App) -> tauri::Result<()> {
     use tauri::menu::{Menu, MenuItem};
     use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
@@ -194,7 +228,11 @@ fn setup_tray(app: &mut tauri::App) -> tauri::Result<()> {
             }
         });
 
-    if let Some(icon) = app.default_window_icon().cloned() {
+    if let Some(icon) = tray_icon(app) {
+        builder = builder.icon(icon);
+    } else if let Some(icon) = app.default_window_icon().cloned() {
+        // Decoding a PNG should never fail, but a missing tray must not stop
+        // the application from starting.
         builder = builder.icon(icon);
     }
 

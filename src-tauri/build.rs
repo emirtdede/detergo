@@ -2,6 +2,9 @@ use std::process::Command;
 
 fn main() {
     println!("cargo:rerun-if-changed=icons/icon.ico");
+    for size in [16, 20, 24, 28, 32, 36, 40, 48] {
+        println!("cargo:rerun-if-changed=icons/tray-{size}.png");
+    }
     println!("cargo:rerun-if-changed=tauri.conf.json");
     // The release artifact must be traceable to a commit. Re-run when the git
     // head moves so the embedded stamp never goes stale.
