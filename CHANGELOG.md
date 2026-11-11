@@ -25,8 +25,13 @@ unchanged from 2.2.1.
   network. See `docs/release/INSTALLER_LANGUAGES.md`.
 - The language picker is shown on every setup run, even when a language was
   remembered (`MUI_LANGDLL_ALWAYSSHOW`), preselects that language, and lists each
-  language under its native name. Registry cache lives at
-  `HKCU\Software\Vellium\Dev Cleaner\Installer Language`.
+  language under its native name. Its window title and info line are generated
+  for all 73 languages (`languages/picker.nsh`) instead of being English-only.
+  Registry cache lives at `HKCU\Software\Vellium\Dev Cleaner\Installer Language`.
+  LangDLL's own OK/Cancel labels are compiled into the plugin and cannot be
+  translated; the title follows the Windows UI language while the list
+  preselects the remembered one (MUI resolves the defines before it reads the
+  registry). See `docs/release/INSTALLER_LANGUAGES.md`.
 - Setup/uninstall artwork was redrawn as a DEV CLEANER icon + wordmark lockup
   (sidebar, header, uninstaller header, WiX banner and dialog). The header image
   is right-aligned (`MUI_HEADERIMAGE_RIGHT`); the stray chevron and the cropped
@@ -48,7 +53,9 @@ unchanged from 2.2.1.
   pairs (language id, codepage 1200, no surviving English sentinels, no English
   button word inside a translated sentence), Tauri
   message packs (right `LANG_*` constant, no `LANG_ENGLISH`, no BOM, `$\"` not
-  `\"`), `customLanguageFiles` paths and the language-neutral copyright.
+  `\"`), `picker.nsh` (title/info for every language, no English sentinel outside
+  English, wired into `hooks.nsh`), `customLanguageFiles` paths and the
+  language-neutral copyright.
   `npm run check:i18n` now also audits the legacy `src/locales/langs` dictionaries
   that previously escaped the untranslated-value gate.
 - `npm run sync:nsis-languages` copies the project packs into the Tauri NSIS

@@ -89,31 +89,88 @@ export const INSTALLER_LANGUAGES = [
 export const PROJECT_LANGUAGE_DIR = "src-tauri/nsis/languages";
 
 /**
- * Native display names for the project-supplied language files. NSIS shows
- * these in the language picker, so they must be the real autonyms.
+ * Native display names (autonyms) for every installer language.
+ *
+ * NSIS's own picker derives its list from each toolset `.nsh`, but LangDLL's
+ * dialog is English-only and its OK/Cancel labels are hard-coded inside the
+ * plugin. We replace that dialog with a real wizard page, so the names live
+ * here: one curated table instead of decoding 52 ANSI toolset files with their
+ * per-language code pages.
  */
 export const NATIVE_NAMES = {
+  en: { native: "English", ascii: "English" },
+  tr: { native: "Türkçe", ascii: "Turkce" },
+  af: { native: "Afrikaans", ascii: "Afrikaans" },
+  sq: { native: "Shqip", ascii: "Shqip" },
   am: { native: "አማርኛ", ascii: "Amharic" },
+  ar: { native: "العربية", ascii: "Arabic" },
+  hy: { native: "Հայերեն", ascii: "Hayeren" },
   az: { native: "Azərbaycanca", ascii: "Azerbaycanca" },
+  eu: { native: "Euskara", ascii: "Euskara" },
   bn: { native: "বাংলা", ascii: "Bangla" },
+  bs: { native: "Bosanski", ascii: "Bosanski" },
+  bg: { native: "Български", ascii: "Balgarski" },
+  ca: { native: "Català", ascii: "Catala" },
+  hr: { native: "Hrvatski", ascii: "Hrvatski" },
+  cs: { native: "Čeština", ascii: "Cestina" },
+  da: { native: "Dansk", ascii: "Dansk" },
+  nl: { native: "Nederlands", ascii: "Nederlands" },
+  et: { native: "Eesti", ascii: "Eesti" },
+  fa: { native: "فارسی", ascii: "Farsi" },
   fil: { native: "Filipino", ascii: "Filipino" },
+  fi: { native: "Suomi", ascii: "Suomi" },
+  fr: { native: "Français", ascii: "Francais" },
+  gl: { native: "Galego", ascii: "Galego" },
+  ka: { native: "ქართული", ascii: "Kartuli" },
+  de: { native: "Deutsch", ascii: "Deutsch" },
+  el: { native: "Ελληνικά", ascii: "Ellinika" },
   gu: { native: "ગુજરાતી", ascii: "Gujarati" },
   ha: { native: "Hausa", ascii: "Hausa" },
+  he: { native: "עברית", ascii: "Ivrit" },
+  hi: { native: "हिन्दी", ascii: "Hindi" },
+  hu: { native: "Magyar", ascii: "Magyar" },
+  is: { native: "Íslenska", ascii: "Islenska" },
+  id: { native: "Bahasa Indonesia", ascii: "Bahasa Indonesia" },
+  ga: { native: "Gaeilge", ascii: "Gaeilge" },
+  it: { native: "Italiano", ascii: "Italiano" },
+  ja: { native: "日本語", ascii: "Nihongo" },
   kn: { native: "ಕನ್ನಡ", ascii: "Kannada" },
   kk: { native: "Қазақша", ascii: "Kazaksha" },
   km: { native: "ខ្មែរ", ascii: "Khmer" },
+  ko: { native: "한국어", ascii: "Hangugeo" },
   ky: { native: "Кыргызча", ascii: "Kyrgyzcha" },
+  lv: { native: "Latviešu", ascii: "Latviesu" },
+  lt: { native: "Lietuvių", ascii: "Lietuviu" },
+  mk: { native: "Македонски", ascii: "Makedonski" },
+  ms: { native: "Bahasa Melayu", ascii: "Bahasa Melayu" },
   ml: { native: "മലയാളം", ascii: "Malayalam" },
   mr: { native: "मराठी", ascii: "Marathi" },
+  mn: { native: "Монгол", ascii: "Mongol" },
   my: { native: "မြန်မာ", ascii: "Myanmar" },
+  no: { native: "Norsk", ascii: "Norsk" },
   pa: { native: "ਪੰਜਾਬੀ", ascii: "Punjabi" },
+  pl: { native: "Polski", ascii: "Polski" },
+  pt: { native: "Português (Brasil)", ascii: "Portugues (Brasil)" },
+  ro: { native: "Română", ascii: "Romana" },
+  ru: { native: "Русский", ascii: "Russkiy" },
+  sr: { native: "Српски", ascii: "Srpski" },
   si: { native: "සිංහල", ascii: "Sinhala" },
+  sk: { native: "Slovenčina", ascii: "Slovencina" },
+  sl: { native: "Slovenščina", ascii: "Slovenscina" },
+  es: { native: "Español", ascii: "Espanol" },
   sw: { native: "Kiswahili", ascii: "Kiswahili" },
+  sv: { native: "Svenska", ascii: "Svenska" },
   ta: { native: "தமிழ்", ascii: "Tamil" },
   te: { native: "తెలుగు", ascii: "Telugu" },
+  th: { native: "ไทย", ascii: "Thai" },
   tk: { native: "Türkmençe", ascii: "Turkmence" },
+  uk: { native: "Українська", ascii: "Ukrainska" },
   ur: { native: "اردو", ascii: "Urdu" },
+  uz: { native: "Oʻzbekcha", ascii: "Ozbekcha" },
+  vi: { native: "Tiếng Việt", ascii: "Tieng Viet" },
   yo: { native: "Yorùbá", ascii: "Yoruba" },
+  zh: { native: "简体中文", ascii: "Hanyu (Jiantizi)" },
+  "zh-tw": { native: "繁體中文", ascii: "Hanyu (Fantizi)" },
 };
 
 /** Installer order: English first (fallback), Turkish second, rest alphabetical. */

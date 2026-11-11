@@ -1,14 +1,29 @@
 ; ============================================================
 ; Dev Cleaner NSIS installer / uninstaller hooks
 ;
-; Content is ASCII-only on purpose: NSIS reads this file with the system code
-; page, so non-ASCII comments used to turn into mojibake.
+; Content is ASCII-only on purpose except the !include line: NSIS reads this
+; file with the system code page, so non-ASCII comments turn into mojibake. The
+; generated picker strings (languages/picker.nsh) carry the Unicode text.
 ; ============================================================
 
-; --- Always offer the language picker ---
-; MUI_LANGDLL_DISPLAY only shows the dialog when no language is stored in the
-; registry, so after the first install the picker silently disappeared. The
-; saved choice is still preselected: MUI_LANGDLL_DISPLAY reads it first.
+; --- Localized language picker ---
+; MUI_LANGDLL_DISPLAY reads the saved language from the registry in .onInit and
+; applies it before any page is built, which is the only moment NSIS honours a
+; language change. It then asks LangDLL for its dialog. LangDLL's title/info
+; come from the two defines below, so we point them at generated LangStrings:
+; the dialog speaks whatever language MUI just resolved.
+;
+; Its OK/Cancel captions are compiled into LangDLL.dll and cannot be overridden
+; (checked: only MUI_LANGDLL_WINDOWTITLE/INFO are parameters). Everything the
+; dialog can say is localized; those two stock buttons stay as Windows draws
+; them for the plugin.
+!include "${__FILEDIR__}\languages\picker.nsh"
+
+!define MUI_LANGDLL_WINDOWTITLE "$(DcPickerTitle)"
+!define MUI_LANGDLL_INFO "$(DcPickerInfo)"
+
+; Show the picker on every run, not only on the first install. The saved choice
+; is still preselected because MUI reads the registry first.
 !define MUI_LANGDLL_ALWAYSSHOW
 
 ; --- Header bitmap on the right, art block aligns with the window edge ---

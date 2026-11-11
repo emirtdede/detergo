@@ -227,6 +227,46 @@ for (const entry of projectTauriLanguages()) {
     fail(`${entry.locale}.nsh uses \\" instead of the NSIS escape $\\"`);
   }
 }
+// 3c. MUI's language picker (LangDLL) takes its window title and info line from
+// two per-language LangStrings that we generate, so the dialog is not stuck in
+// English. Every language must have both, and no non-English entry may still be
+// the English sentinel (that would mean the translation step failed silently).
+const pickerFile = path.join(root, PROJECT_LANGUAGE_DIR, "picker.nsh");
+const PICKER_ENGLISH = {
+  DcPickerTitle: "Installer Language",
+  DcPickerInfo: "Please select a language.",
+};
+if (!fs.existsSync(pickerFile)) {
+  fail(`missing ${PROJECT_LANGUAGE_DIR}/picker.nsh (run \`npm run sync:nsis-languages\`)`);
+} else {
+  const pickerText = fs.readFileSync(pickerFile, "utf8").replace(/^\uFEFF/, "");
+  const pickerValues = new Map();
+  for (const match of pickerText.matchAll(
+    /LangString\s+(DcPicker\w+)\s+(\d+)\s+"((?:[^"\\]|\\.)*)"/g,
+  )) {
+    pickerValues.set(`${match[2]}:${match[1]}`, match[3]);
+  }
+  for (const entry of INSTALLER_LANGUAGES) {
+    for (const [key, english] of Object.entries(PICKER_ENGLISH)) {
+      const value = pickerValues.get(`${entry.lcid}:${key}`);
+      if (value === undefined) {
+        fail(`picker.nsh is missing ${key} for ${entry.locale} (lcid ${entry.lcid})`);
+      } else if (entry.locale !== "en" && value.trim() === english) {
+        fail(`picker.nsh ${key} for ${entry.locale} is still the English sentinel`);
+      }
+    }
+  }
+  const pickerHooks = fs.readFileSync(path.join(root, "src-tauri/nsis/hooks.nsh"), "utf8");
+  if (!/!include\s+"\$\{__FILEDIR__\}\\languages\\picker\.nsh"/.test(pickerHooks)) {
+    fail("hooks.nsh must include languages/picker.nsh so the picker strings exist");
+  }
+  for (const define of ["MUI_LANGDLL_WINDOWTITLE", "MUI_LANGDLL_INFO"]) {
+    if (!new RegExp(`!define\\s+${define}\\s+"\\$\\(DcPicker`).test(pickerHooks)) {
+      fail(`hooks.nsh must point ${define} at a DcPicker LangString`);
+    }
+  }
+}
+
 // 4. Config must declare every language in the documented order, and map the
 //    project packs through custom_language_files.
 const config = readJson("src-tauri/tauri.conf.json");

@@ -13,6 +13,7 @@ languages from the picker.
 | `.nlf` core language table | 21 | `src-tauri/nsis/languages/_template/English.nlf` | `npm run generate:nsis-languages` |
 | `.nsh` MUI string table | 21 | `src-tauri/nsis/languages/_template/English.nsh` | same |
 | Tauri installer messages (`tauri/<locale>.nsh`) | 54 | `_template/tauri-English.nsh` | same |
+| Picker title/info (`languages/picker.nsh`) | 73 | English constants in the generator | same |
 
 The 19 languages Tauri itself ships messages for (English, Arabic, Bulgarian,
 Dutch, French, German, Italian, Japanese, Korean, Norwegian, Portuguese,
@@ -40,6 +41,32 @@ before bundling — both in `build:release` and manually when iterating.
 The 54 message packs are different: they are passed to makensis through
 `bundle.windows.nsis.customLanguageFiles` in `tauri.conf.json`, with paths
 resolved relative to `src-tauri` (`nsis/languages/tauri/<locale>.nsh`).
+
+## The language picker
+
+The language list itself is MUI's `MUI_LANGDLL_DISPLAY`, kept because it is the
+only mechanism that applies a language *before* NSIS builds the wizard pages.
+(A custom page cannot: NSIS resolves every `LangString` table at GUI creation, so
+assigning `$LANGUAGE` from a combo box never re-renders `$(...)` text — verified
+with standalone probes.) `MUI_LANGDLL_ALWAYSSHOW` makes it appear on every run;
+the previously chosen language is still preselected from
+`HKCU\Software\Vellium\Dev Cleaner\Installer Language`.
+
+LangDLL takes its window title and info line from `MUI_LANGDLL_WINDOWTITLE` and
+`MUI_LANGDLL_INFO`. Both now point at generated `LangString`s in
+`languages/picker.nsh` (`DcPickerTitle`, `DcPickerInfo`), so the dialog is
+localized in all 73 languages instead of being hard-coded English.
+
+Two limits come from the plugin and are accepted:
+
+- **The OK/Cancel labels are compiled into `LangDLL.dll`.** They are UTF-16
+  English at fixed offsets and no define changes them. They are the same stock
+  buttons Windows shows for the plugin, not text Dev Cleaner controls.
+- **The title/info follow the OS language, not the remembered one.** MUI evaluates
+  `MUI_LANGDLL_WINDOWTITLE`/`MUI_LANGDLL_INFO` in `.onInit` *before* `MUI_LANGDLL_DISPLAY`
+  reads the registry, so the title is in the Windows UI language while the combo
+  correctly preselects the saved language. Once the user confirms, the entire
+  wizard switches to the chosen language.
 
 ## Rules that are easy to get wrong
 
@@ -85,6 +112,9 @@ resolved relative to `src-tauri` (`nsis/languages/tauri/<locale>.nsh`).
   button label in the same language *is* translated;
 - a message pack with the wrong `LANG_*` constant, a `LANG_ENGLISH` reference, a
   BOM, or `\"` instead of `$\"`;
+- a `picker.nsh` that is missing, lacks a title/info for a language, still uses
+  the English sentinel for a non-English language, or is not wired into
+  `hooks.nsh` through `MUI_LANGDLL_WINDOWTITLE`/`MUI_LANGDLL_INFO`;
 - a `customLanguageFiles` entry pointing at a missing file or at a language
   Tauri already covers;
 - a `tauri.conf.json` language list that differs from the catalogue order
