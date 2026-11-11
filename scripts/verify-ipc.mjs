@@ -19,10 +19,19 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 
+const releaseDir = path.join(rootDir, "release_output");
+const newestPortable = fs.existsSync(releaseDir)
+  ? fs
+      .readdirSync(releaseDir)
+      .filter((name) => /^Dev-Cleaner-.*-Portable\.exe$/i.test(name))
+      .map((name) => path.join(releaseDir, name))
+      .sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs)[0]
+  : undefined;
+
 const candidates = [
   process.argv[2],
-  path.join(rootDir, "release_output", "Node-Cleaner-2.0.0-Portable.exe"),
-  path.join(rootDir, "src-tauri", "target", "release", "node-cleaner.exe"),
+  newestPortable,
+  path.join(rootDir, "src-tauri", "target", "release", "dev-cleaner.exe"),
 ].filter(Boolean);
 
 const exe = candidates.find((p) => fs.existsSync(p));

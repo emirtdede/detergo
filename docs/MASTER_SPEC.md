@@ -1,13 +1,13 @@
-# Node Cleaner 2.0 — Master Specification
+# Dev Cleaner 2.0 — Master Specification
 
 **Status:** Normative. Where older documents disagree, this document wins.
-**Product:** Node Cleaner 2.0.0 · Vellium · Windows 11 x64 (Windows 10 unverified)
+**Product:** Dev Cleaner 2.0.0 · Vellium · Windows 11 x64 (Windows 10 unverified)
 **Date:** 2026-10-28
 **Stack:** Tauri 2 · Rust · React 19 · TypeScript · Zustand
 
 ## 1. Product scope
 
-Node Cleaner detects and safely removes reproducible developer artifacts across
+Dev Cleaner detects and safely removes reproducible developer artifacts across
 ecosystems and analyses AI coding agent storage. Everything runs locally. There
 is no telemetry, account, server, advertisement or cloud dependency.
 
@@ -150,7 +150,7 @@ go clean -modcache
 ```
 
 Unknown tool, missing executable or read-only provider → no execution.
-Docker volumes/images and WSL VHDX files are never deleted by Node Cleaner.
+Docker volumes/images and WSL VHDX files are never deleted by Dev Cleaner.
 
 ## 10. Settings (schema v2)
 

@@ -32,7 +32,7 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($Exe)) {
-    $Exe = Join-Path $root "src-tauri\target\release\node-cleaner.exe"
+    $Exe = Join-Path $root "src-tauri\target\release\dev-cleaner.exe"
 }
 if (-not (Test-Path $Exe)) {
     Write-Host "[FAIL] binary not found: $Exe"
@@ -249,7 +249,7 @@ finally {
         Stop-Process -Id $gui.Id -Force -ErrorAction SilentlyContinue
     }
     $env:APPDATA = $previousAppData
-    Get-Process -Name "node-cleaner" -ErrorAction SilentlyContinue |
+    Get-Process -Name "dev-cleaner", "node-cleaner" -ErrorAction SilentlyContinue |
         Where-Object { $_.Path -eq $Exe } |
         Stop-Process -Force -ErrorAction SilentlyContinue
     Remove-Item $sandbox -Recurse -Force -ErrorAction SilentlyContinue

@@ -39,8 +39,8 @@ function readRustPackages() {
     { cwd: rootDir, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 },
   );
   const metadata = parseJson(raw);
-  const rootPackage = metadata.packages.find((pkg) => pkg.name === "node-cleaner");
-  if (!rootPackage) throw new Error("node-cleaner package not found in cargo metadata");
+  const rootPackage = metadata.packages.find((pkg) => pkg.name === "dev-cleaner");
+  if (!rootPackage) throw new Error("dev-cleaner package not found in cargo metadata");
 
   const nodes = new Map(metadata.resolve.nodes.map((node) => [node.id, node]));
   const packages = new Map(metadata.packages.map((pkg) => [pkg.id, pkg]));

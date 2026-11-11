@@ -1,5 +1,5 @@
+use dev_cleaner_lib::commands::webhook_commands::{post_webhook_blocking, validate_webhook_url};
 use httpmock::prelude::*;
-use node_cleaner_lib::commands::webhook_commands::{post_webhook_blocking, validate_webhook_url};
 
 #[test]
 fn rejects_unsupported_scheme() {

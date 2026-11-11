@@ -76,7 +76,9 @@ function Wait-Until {
 }
 
 function Stop-InstalledApp {
-    Get-Process -Name "node-cleaner" -ErrorAction SilentlyContinue |
+    # Kill the current binary and any legacy 2.2.1 install still running under the
+    # pre-rename name, so a harness never measures a stale process.
+    Get-Process -Name "dev-cleaner", "node-cleaner" -ErrorAction SilentlyContinue |
         Where-Object { $_.Path -and $_.Path -notlike "*\target\*" } |
         Stop-Process -Force -ErrorAction SilentlyContinue
 }
@@ -107,8 +109,10 @@ function Assert-NoExistingInstall {
 
 function Find-InstalledExe {
     foreach ($dir in @(Get-DevCleanerInstallDirs)) {
-        $candidate = Join-Path $dir "node-cleaner.exe"
-        if (Test-Path $candidate) { return $candidate }
+        foreach ($name in @("dev-cleaner.exe", "node-cleaner.exe")) {
+            $candidate = Join-Path $dir $name
+            if (Test-Path $candidate) { return $candidate }
+        }
     }
     return $null
 }

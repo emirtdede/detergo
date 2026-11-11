@@ -86,7 +86,7 @@ frame level by V-18b.
 |---|---|---|---|
 | V-19 | Desktop shortcut | **PASS** | `Dev Cleaner` shortcut carries the 15-frame tile with the shortcut arrow; no old logo |
 | V-20 | Start menu search result | **PASS** | `</>` tile in the result list and the detail panel; name reads `Dev Cleaner` |
-| V-21 | Explorer extra-large icons | **PASS** | `app.ico`, `node-cleaner.exe` and `uninstall.exe` all render the same squircle and spark at 256 px |
+| V-21 | Explorer extra-large icons | **PASS** | `app.ico`, `dev-cleaner.exe` and `uninstall.exe` all render the same squircle and spark at 256 px |
 | V-22 | Running taskbar button | **PASS** | The active taskbar button shows the dark tile with the white glyph at 32 px |
 | V-23 | Notification-area overflow | **PASS** | Tray icon appears in the overflow flyout at 16 px; the tile stays legible next to light and dark app icons |
 | V-24 | In-app chrome | **PASS** | The title bar and sidebar render the glyph-only mark in `currentColor`; no version label in the sidebar |

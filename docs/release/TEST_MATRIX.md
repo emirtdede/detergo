@@ -54,7 +54,7 @@ binary, produced the NSIS and MSI bundles, copied the three deliverables into
 |---|---|---|
 | Release build | `npm run build:release` | **PASS** — 3 artifacts; portable 18,489,856 B and MSI 8,454,144 B are stable, NSIS varies by a few KB. Hashes differ between builds because the binaries embed build metadata, so use the current `BUILD_INFO.json` |
 | PE frame gate | inside `build:release` | **PASS** — `Dev-Cleaner-2.2.2-Portable.exe` and `Dev-Cleaner-2.2.2-x64-Setup.exe` each 15 frames / 15 `RT_ICON` |
-| Raw binary frame gate | `npm run check:exe-icons -- src-tauri/target/release/node-cleaner.exe` | **PASS** — 15 frames |
+| Raw binary frame gate | `npm run check:exe-icons -- src-tauri/target/release/dev-cleaner.exe` | **PASS** — 15 frames |
 | Provenance | `npm run check:build-info` | **PASS** — version 2.2.2, recorded commit, `dirty: false`, 3 artifacts |
 
 The evidence build is the commit named in `release_output/BUILD_INFO.json`, and

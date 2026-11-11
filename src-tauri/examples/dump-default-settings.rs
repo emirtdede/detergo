@@ -8,7 +8,7 @@
 //!   cargo run --manifest-path src-tauri/Cargo.toml --example dump-default-settings
 
 fn main() {
-    let settings = node_cleaner_lib::settings::AppSettings::default();
+    let settings = dev_cleaner_lib::settings::AppSettings::default();
     println!(
         "{}",
         serde_json::to_string_pretty(&settings).expect("default settings serialize")

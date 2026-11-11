@@ -3,7 +3,13 @@
 **Durum:** Onay bekliyor — bu dosya dışında hiçbir kaynak/asset değiştirilmedi.
 **Tarih:** 2026-11-10
 **Kapsam:** Windows'un tüm shipping yüzeyleri, NSIS/MSI kurulum sayfaları, README ve GitHub.
-**Kapsam dışı:** Ürün adının değiştirilmesi, web sitesi yeniden tasarımı, kod imzalama, native toast (2.3), `Node Cleaner` teknik adlarının toplu temizliği.
+**Kapsam dışı:** Ürün adının değiştirilmesi, web sitesi yeniden tasarımı, kod imzalama, native toast (2.3).
+
+> **Güncelleme (2.2.2):** Bu plandaki "`Node Cleaner` teknik adlarının toplu
+> temizliği kapsam dışı" maddesi geçersizdir. Kurulan ikili `dev-cleaner.exe`,
+> Cargo paketi `dev-cleaner`, Rust kütüphanesi `dev_cleaner_lib` ve npm paketi
+> `dev-cleaner` olarak yeniden adlandırıldı; eski sürümlerle uyum için yalnızca
+> veri dizini göçü ve süreç koruması eski adı tanımaya devam ediyor.
 
 ---
 
@@ -474,7 +480,7 @@ npm run generate:icons
 
 - `npm run typecheck`, `npm test`, `cargo test`, `cargo clippy -D warnings` PASS.
 - `npm run tauri build` PASS.
-- `node-cleaner.exe` RT_GROUP_ICON 15 kare.
+- `dev-cleaner.exe` RT_GROUP_ICON 15 kare.
 - Setup, uninstaller, portable 15 kare.
 
 ### G3 — Determinizm

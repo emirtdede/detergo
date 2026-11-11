@@ -3,7 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 
-const OUT_DIR = "C:\\Users\\emir\\Desktop\\NODE_CLEANER_PREMIUM_UI_FINAL_REVIEW\\01_CONCEPT_A_VS_B";
+const OUT_DIR =
+  process.env.DC_CAPTURE_DIR ?? path.join("e2e", "captures", "final-review", "01-concept-a-vs-b");
 const FRAMES_DIR = path.join(OUT_DIR, "comparative_frames");
 const EDGE_DIR = path.join(OUT_DIR, "edge_frames");
 

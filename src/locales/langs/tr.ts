@@ -204,7 +204,7 @@ export const tr: TranslationSchema = {
       {
         title: "3. Yerel Yapılandırma Depolaması",
         content:
-          "Seçtiğiniz tema, dil tercihi, pencere durumu ve eklediğiniz favori klasörler yalnızca cihazınızın yerel uygulama veri dizininde (%APPDATA%/com.vellium.nodecleaner) şifrelenmemiş yerel JSON formatında saklanır.",
+          "Seçtiğiniz tema, dil tercihi, pencere durumu ve eklediğiniz favori klasörler yalnızca cihazınızın yerel uygulama veri dizininde (%APPDATA%\\dev-cleaner) şifrelenmemiş yerel JSON formatında saklanır.",
       },
       {
         title: "4. Kullanıcı Kontrolü",

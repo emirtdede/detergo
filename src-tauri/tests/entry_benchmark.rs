@@ -18,12 +18,12 @@ use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
-use node_cleaner_lib::catalog::CatalogIndex;
-use node_cleaner_lib::cleanup::CleanupPolicy;
-use node_cleaner_lib::scanner::cancellation::CancellationToken;
-use node_cleaner_lib::scanner::models::{ScanRequest, ScanScope};
-use node_cleaner_lib::scanner::run_scan;
-use node_cleaner_lib::scanner::ScanRegistry;
+use dev_cleaner_lib::catalog::CatalogIndex;
+use dev_cleaner_lib::cleanup::CleanupPolicy;
+use dev_cleaner_lib::scanner::cancellation::CancellationToken;
+use dev_cleaner_lib::scanner::models::{ScanRequest, ScanScope};
+use dev_cleaner_lib::scanner::run_scan;
+use dev_cleaner_lib::scanner::ScanRegistry;
 
 /// Creates `dirs` folders of `files` files each, plus one real `node_modules`
 /// deep in the tree so discovery has something legitimate to find.

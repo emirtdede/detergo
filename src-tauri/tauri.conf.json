@@ -3,6 +3,7 @@
   "productName": "Dev Cleaner",
   "version": "2.2.2",
   "identifier": "com.vellium.devcleaner",
+  "mainBinaryName": "dev-cleaner",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1425",

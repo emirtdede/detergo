@@ -203,7 +203,7 @@ export const en: TranslationSchema = {
       {
         title: "3. Local Configuration Storage",
         content:
-          "Your preferences, selected themes, language choices, and saved favorite paths reside strictly within your operating system's standard application data directory (%APPDATA%/com.vellium.nodecleaner).",
+          "Your preferences, selected themes, language choices, and saved favorite paths reside strictly within your operating system's standard application data directory (%APPDATA%\\dev-cleaner).",
       },
       {
         title: "4. User-Directed Execution",

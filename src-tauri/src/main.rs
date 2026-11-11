@@ -5,7 +5,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 fn main() {
     #[cfg(windows)]
-    node_cleaner_lib::platform::preflight_cleanup_zombies();
+    dev_cleaner_lib::platform::preflight_cleanup_zombies();
 
     std::panic::set_hook(Box::new(|info| {
         let msg = format!("PANIC: {}\nLocation: {:?}\n", info, info.location());
@@ -14,9 +14,9 @@ fn main() {
     }));
 
     // If CLI or MCP commands are invoked from terminal, handle and exit!
-    if let Some(code) = node_cleaner_lib::cli::handle_cli() {
+    if let Some(code) = dev_cleaner_lib::cli::handle_cli() {
         std::process::exit(code);
     }
 
-    node_cleaner_lib::run();
+    dev_cleaner_lib::run();
 }

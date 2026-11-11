@@ -900,6 +900,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "dev-cleaner"
+version = "2.2.2"
+dependencies = [
+ "chrono",
+ "crossbeam-channel",
+ "httpmock",
+ "mimalloc",
+ "rayon",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-single-instance",
+ "tempfile",
+ "tokio",
+ "toml 0.8.2",
+ "uuid",
+ "walkdir",
+ "windows 0.58.0",
+]
+
+[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2551,30 +2575,6 @@ name = "new_debug_unreachable"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
-
-[[package]]
-name = "node-cleaner"
-version = "2.2.2"
-dependencies = [
- "chrono",
- "crossbeam-channel",
- "httpmock",
- "mimalloc",
- "rayon",
- "reqwest 0.12.28",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-single-instance",
- "tempfile",
- "tokio",
- "toml 0.8.2",
- "uuid",
- "walkdir",
- "windows 0.58.0",
-]
 
 [[package]]
 name = "num-conv"

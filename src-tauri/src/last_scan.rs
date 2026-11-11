@@ -234,7 +234,7 @@ mod tests {
 
     fn temp_path() -> PathBuf {
         std::env::temp_dir().join(format!(
-            "node-cleaner-last-scan-{}.json",
+            "dev-cleaner-last-scan-{}.json",
             uuid::Uuid::new_v4().simple()
         ))
     }

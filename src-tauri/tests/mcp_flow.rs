@@ -11,9 +11,9 @@ use std::time::Duration;
 use serde_json::{json, Value};
 use tempfile::tempdir;
 
-use node_cleaner_lib::mcp::{McpContext, McpOptions};
-use node_cleaner_lib::settings::model::AppSettings;
-use node_cleaner_lib::settings::SettingsRepository;
+use dev_cleaner_lib::mcp::{McpContext, McpOptions};
+use dev_cleaner_lib::settings::model::AppSettings;
+use dev_cleaner_lib::settings::SettingsRepository;
 
 fn parse(text: &str) -> Value {
     serde_json::from_str(text).unwrap_or_else(|_| json!({ "raw": text }))

@@ -1,5 +1,5 @@
-use node_cleaner_lib::cleanup::RecycleBinService;
-use node_cleaner_lib::safety::GuardContext;
+use dev_cleaner_lib::cleanup::RecycleBinService;
+use dev_cleaner_lib::safety::GuardContext;
 use std::fs;
 use std::os::windows::fs::OpenOptionsExt;
 

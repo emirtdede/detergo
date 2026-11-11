@@ -3,8 +3,8 @@
 //! Runs in its own process so temporarily clearing PATH cannot affect the
 //! unit-test process.
 
-use node_cleaner_lib::catalog::matcher::GitState;
-use node_cleaner_lib::safety::git_guard::git_state_for;
+use dev_cleaner_lib::catalog::matcher::GitState;
+use dev_cleaner_lib::safety::git_guard::git_state_for;
 
 #[test]
 fn unavailable_git_is_unknown_not_clean() {

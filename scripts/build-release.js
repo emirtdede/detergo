@@ -60,13 +60,13 @@ if (dirty !== "false") {
 console.log("\n[STEP 1/5] Eski çıktılar temizleniyor...");
 // Only stop copies that would lock the artefacts we are about to replace: the
 // installed app and a previously unpacked portable build. A blanket
-// `taskkill /IM node-cleaner.exe` also killed the debug binary that
+// `taskkill /IM dev-cleaner.exe` also killed the debug binary that
 // `tauri dev` runs, so every release build silently took the dev session down
 // with it (cargo reported "exit code: 0xffffffff").
 try {
   execSync(
     `powershell -NoProfile -ExecutionPolicy Bypass -Command "` +
-      `Get-Process -Name node-cleaner,'Node-Cleaner-${version}-Portable','Dev-Cleaner-${version}-Portable' -ErrorAction SilentlyContinue | ` +
+      `Get-Process -Name dev-cleaner,node-cleaner,'Node-Cleaner-${version}-Portable','Dev-Cleaner-${version}-Portable' -ErrorAction SilentlyContinue | ` +
       `Where-Object { $_.Path -and $_.Path -notlike '*node_cleaner_target*' -and $_.Path -notlike '*\\target\\*' } | ` +
       `Stop-Process -Force; exit 0"`,
     { stdio: "ignore" },
@@ -101,7 +101,7 @@ for (const profile of ["release", "debug"]) {
   const buildDir = path.join(cargoTargetDir, profile, "build");
   if (!fs.existsSync(buildDir)) continue;
   for (const entry of fs.readdirSync(buildDir)) {
-    if (entry.startsWith("node-cleaner-")) {
+    if (entry.startsWith("dev-cleaner-") || entry.startsWith("node-cleaner-")) {
       fs.rmSync(path.join(buildDir, entry), { recursive: true, force: true });
     }
   }
@@ -129,7 +129,7 @@ console.log("\n[STEP 3/5] Tauri release derlemesi başlatılıyor...");
 execSync("npm run tauri build", { cwd: rootDir, stdio: "inherit", env: buildEnv });
 
 const targetDir = path.join(cargoTargetDir, "release");
-const binary = path.join(targetDir, "node-cleaner.exe");
+const binary = path.join(targetDir, "dev-cleaner.exe");
 if (!fs.existsSync(binary)) {
   console.error(`[ERROR] Derleme çıktısı bulunamadı: ${binary}`);
   process.exit(1);

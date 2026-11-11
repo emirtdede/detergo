@@ -1,12 +1,12 @@
 [package]
-name = "node-cleaner"
+name = "dev-cleaner"
 version = "2.2.2"
 description = "Dev Cleaner by Vellium - multi-ecosystem developer artifact and AI agent storage cleaner"
 authors = ["Vellium"]
 edition = "2021"
 
 [lib]
-name = "node_cleaner_lib"
+name = "dev_cleaner_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

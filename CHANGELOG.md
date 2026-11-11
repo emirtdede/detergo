@@ -11,6 +11,19 @@ unchanged from 2.2.1.
 
 ### Changed
 
+- Renamed every user-visible technical identifier: the installed binary is now
+  `dev-cleaner.exe` (was `node-cleaner.exe`, visible in Task Manager and in the
+  shortcut target), the Cargo package is `dev-cleaner` (was `node-cleaner`), the
+  Rust library is `dev_cleaner_lib`, and the npm package is `dev-cleaner`. The
+  NSIS template removes the old binary on upgrade through its
+  `MainBinaryName` registry value; the 2.2.1 data directory
+  (`%APPDATA%\node-cleaner`) is still migrated on first launch and a legacy
+  process is still detected so it cannot hold the instance lock.
+- Removed the last stale references to the pre-rename identity: the privacy text
+  no longer names `%APPDATA%/com.vellium.nodecleaner`, the offline canary probe
+  now watches `%APPDATA%\dev-cleaner` (it silently watched the old path and
+  could not have caught a leak), and the IPC/offline scripts locate the newest
+  release artifact instead of a hard-coded `Node-Cleaner-2.0.0` file.
 - Replaced the previous blue app identity with the canonical `</>` + spark mark:
   dark obsidian squircle, white glyph, no text and no font dependency.
 - The mark uses the supplied original geometry unscaled, so the brackets keep a

@@ -4,7 +4,8 @@ import path from "node:path";
 import crypto from "node:crypto";
 
 const OUT_DIR =
-  "C:\\Users\\emir\\Desktop\\NODE_CLEANER_PREMIUM_UI_FINAL_REVIEW\\03_SCREENSHOTS_AFTER";
+  process.env.DC_CAPTURE_DIR ??
+  path.join("e2e", "captures", "final-review", "03-screenshots-after");
 if (!fs.existsSync(OUT_DIR)) {
   fs.mkdirSync(OUT_DIR, { recursive: true });
 }

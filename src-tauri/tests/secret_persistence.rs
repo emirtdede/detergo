@@ -11,14 +11,14 @@ use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 
-use node_cleaner_lib::audit::{AuditEntry, AuditRecord, AuditRepository};
-use node_cleaner_lib::catalog::CatalogIndex;
-use node_cleaner_lib::cleanup::CleanupPolicy;
-use node_cleaner_lib::cleanup::{build_plan, DeleteMode};
-use node_cleaner_lib::scanner::cancellation::CancellationToken;
-use node_cleaner_lib::scanner::models::{ScanRequest, ScanScope};
-use node_cleaner_lib::scanner::run_scan;
-use node_cleaner_lib::scanner::ScanRegistry;
+use dev_cleaner_lib::audit::{AuditEntry, AuditRecord, AuditRepository};
+use dev_cleaner_lib::catalog::CatalogIndex;
+use dev_cleaner_lib::cleanup::CleanupPolicy;
+use dev_cleaner_lib::cleanup::{build_plan, DeleteMode};
+use dev_cleaner_lib::scanner::cancellation::CancellationToken;
+use dev_cleaner_lib::scanner::models::{ScanRequest, ScanScope};
+use dev_cleaner_lib::scanner::run_scan;
+use dev_cleaner_lib::scanner::ScanRegistry;
 
 fn canary() -> String {
     format!("SK-FAKE-LEAK-CANARY-{}", uuid::Uuid::new_v4().simple())
@@ -138,7 +138,7 @@ fn scan_and_audit_never_persist_file_contents_or_secrets() {
     drop(handle);
 
     repo.append_record(&record).expect("audit write");
-    repo.append_snapshots(&[node_cleaner_lib::audit::StorageSnapshot {
+    repo.append_snapshots(&[dev_cleaner_lib::audit::StorageSnapshot {
         timestamp: "2026-11-01T00:00:00Z".to_string(),
         provider: "project".to_string(),
         category: "dependencies".to_string(),

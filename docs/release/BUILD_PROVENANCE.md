@@ -1,6 +1,6 @@
 # Build Provenance & Reproducibility
 
-**Applies to:** Node Cleaner 2.0.0 and later
+**Applies to:** Dev Cleaner 2.0.0 and later
 **Introduced:** 2026-11-01 (release-gate audit follow-up)
 
 ## Why this exists
@@ -18,7 +18,7 @@ able to prove which commit a user is running.
 | Clean tree | `scripts/build-release.js` aborts if `git status --porcelain` is non-empty. Override only with `--allow-dirty`, which also marks the build as unpublishable. |
 | Commit stamp | The same script exports `NC_BUILD_COMMIT`, `NC_BUILD_DIRTY` and `NC_BUILD_TIME`; `src-tauri/build.rs` bakes them into the binary. |
 | Runtime proof | The About card calls `get_build_info` and shows the short commit plus `(+uncommitted changes)` when the tree was dirty. |
-| Freshness | The script refuses to package a `node-cleaner.exe`, NSIS or MSI file whose mtime predates the current run, so stale artifacts cannot be re-shipped. |
+| Freshness | The script refuses to package a `dev-cleaner.exe`, NSIS or MSI file whose mtime predates the current run, so stale artifacts cannot be re-shipped. |
 | Artifact manifest | `release_output/BUILD_INFO.json` records commit, branch, dirty flag, build time, and the size + SHA-256 of every artifact. |
 | Machine independence | `.cargo/config.toml` no longer pins a developer-specific `target-dir` or MSVC/SDK `LIBPATH` values, so the same commit builds on any configured toolchain. |
 
