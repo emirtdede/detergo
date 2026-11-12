@@ -3,7 +3,6 @@ import { TranslationSchema } from "../types";
 export const vi: TranslationSchema = {
   app: {
     title: "Dev Cleaner",
-    tagline: "Trình dọn dẹp node_modules",
     description: "Lấy lại dung lượng ổ đĩa của nhà phát triển ngay lập tức.",
   },
   header: {

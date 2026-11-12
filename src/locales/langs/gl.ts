@@ -3,7 +3,6 @@ import { TranslationSchema } from "../types";
 export const gl: TranslationSchema = {
   app: {
     title: "Dev Cleaner",
-    tagline: "Limpador de node_modules",
     description: "Recupere espazo en disco de desenvolvedor ao instante.",
   },
   header: {

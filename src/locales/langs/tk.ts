@@ -3,7 +3,6 @@ import { TranslationSchema } from "../types";
 export const tk: TranslationSchema = {
   app: {
     title: "Dev Cleaner",
-    tagline: "node_modules Arassalaýjy",
     description: "Döredijiniň disk ýerini derrew yzyna alyň.",
   },
   header: {

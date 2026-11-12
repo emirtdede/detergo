@@ -49,10 +49,11 @@
 
     <text x="423" y="199" text-anchor="middle" font-family="Segoe UI, Segoe UI Semibold, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="4" fill="url(#wd-word)">DEV</text>
     <text x="423" y="217" text-anchor="middle" font-family="Segoe UI, Segoe UI Semibold, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="1.8" fill="url(#wd-word)">CLEANER</text>
-    <text x="423" y="233" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="6.6" letter-spacing="1.2" fill="#8C939D">NODE_MODULES CLEANER</text>
+    <!-- No tagline here: at 140 px wide the 26-character line would need ~5 px
+         type, which renders as a smear. Same rule as the NSIS header. -->
 
-    <rect x="396" y="248" width="54" height="1" fill="#FFFFFF" fill-opacity="0.12"/>
-    <rect x="413" y="247.5" width="20" height="2" rx="1" fill="#FFFFFF" fill-opacity="0.65"/>
+    <rect x="396" y="236" width="54" height="1" fill="#FFFFFF" fill-opacity="0.12"/>
+    <rect x="413" y="235.5" width="20" height="2" rx="1" fill="#FFFFFF" fill-opacity="0.65"/>
 
     <!-- Faint glyph texture on the light side -->
     <use href="#wd-glyph" transform="translate(24 236) scale(0.16) translate(-32 -32)" opacity="0.04"/>

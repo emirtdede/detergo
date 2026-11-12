@@ -3,7 +3,6 @@ import { TranslationSchema } from "../types";
 export const sw: TranslationSchema = {
   app: {
     title: "Dev Cleaner",
-    tagline: "Kisafishaji cha node_modules",
     description: "Rejesha nafasi ya diski ya msanidi programu papo hapo.",
   },
   header: {

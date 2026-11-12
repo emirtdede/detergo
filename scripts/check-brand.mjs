@@ -227,6 +227,36 @@ if (hooks) {
   if (hooks.includes("FLUSHNOWAIT")) fail("hooks.nsh must not use SHCNF_FLUSHNOWAIT");
 }
 
+// Scope-claim guard. Dev Cleaner is multi-ecosystem (56 rules across 14
+// ecosystems in src-tauri/assets/targets.toml), so no shipping surface may
+// describe the product as a cleaner for a single ecosystem. The retired claim
+// was "NODE_MODULES CLEANER" on the installer art and in the legacy `tagline`
+// dictionary key; both are gone, and this rule keeps them gone.
+const installerArtDir = path.join(root, "assets", "brand", "installer");
+for (const file of fs.readdirSync(installerArtDir)) {
+  if (!file.toLowerCase().endsWith(".svg")) continue;
+  const absolute = path.join(installerArtDir, file);
+  // Comments are not rendered; scan only the markup that the renderer sees.
+  const text = fs
+    .readFileSync(absolute, "utf8")
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .toLowerCase();
+  if (/node[_\s-]*modules|package\.json/.test(text)) {
+    fail(`installer art ${file} scopes the product to a single ecosystem`);
+  }
+}
+const schema = readText("src/locales/types.ts");
+if (schema && /\btagline\s*:/.test(schema)) {
+  fail("TranslationSchema reintroduces `tagline`; the product scope is not a tagline");
+}
+for (const file of fs.readdirSync(path.join(root, "src", "locales", "langs"))) {
+  if (!file.endsWith(".ts")) continue;
+  const text = fs.readFileSync(path.join(root, "src", "locales", "langs", file), "utf8");
+  if (/^\s*tagline\s*:/m.test(text)) {
+    fail(`src/locales/langs/${file} reintroduces a single-ecosystem tagline`);
+  }
+}
+
 // Frontend brand wiring.
 const indexHtml = readText("index.html");
 if (!indexHtml.includes("/favicon.svg")) fail("index.html must link /favicon.svg");

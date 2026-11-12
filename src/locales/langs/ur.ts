@@ -3,7 +3,6 @@ import { TranslationSchema } from "../types";
 export const ur: TranslationSchema = {
   app: {
     title: "Dev Cleaner",
-    tagline: "node_modules کلینر",
     description: "ڈویلپر ڈسک کی جگہ فوری طور پر واپس حاصل کریں۔",
   },
   header: {

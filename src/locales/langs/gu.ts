@@ -3,7 +3,6 @@ import { TranslationSchema } from "../types";
 export const gu: TranslationSchema = {
   app: {
     title: "Dev Cleaner",
-    tagline: "node_modules ક્લીનર",
     description: "ડેવલપર ડિસ્ક સ્પેસ તરત જ પુનઃપ્રાપ્ત કરો.",
   },
   header: {

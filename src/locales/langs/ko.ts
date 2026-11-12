@@ -3,7 +3,6 @@ import { TranslationSchema } from "../types";
 export const ko: TranslationSchema = {
   app: {
     title: "Dev Cleaner",
-    tagline: "node_modules 정리기",
     description: "개발자 디스크 공간을 즉시 확보하세요.",
   },
   header: {

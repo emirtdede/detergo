@@ -3,7 +3,6 @@ import { TranslationSchema } from "../types";
 export const uz: TranslationSchema = {
   app: {
     title: "Dev Cleaner",
-    tagline: "node_modules Tozalagichi",
     description: "Dasturchi disk maydonini darhol qaytarib oling.",
   },
   header: {

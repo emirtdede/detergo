@@ -3,7 +3,6 @@ import { TranslationSchema } from "../types";
 export const ky: TranslationSchema = {
   app: {
     title: "Dev Cleaner",
-    tagline: "node_modules тазалагычы",
     description: "Иштеп чыгуучунун диск мейкиндигин дароо бошотуңуз.",
   },
   header: {

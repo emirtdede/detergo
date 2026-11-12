@@ -3,7 +3,6 @@ import { TranslationSchema } from "../types";
 export const ha: TranslationSchema = {
   app: {
     title: "Dev Cleaner",
-    tagline: "Mai Share node_modules",
     description: "Dawo da sararin faifan mai haɓakawa nan take.",
   },
   header: {

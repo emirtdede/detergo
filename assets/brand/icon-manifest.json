@@ -78,9 +78,9 @@
     "src-tauri/icons/tray-40.png": "75fe58bcefd5864a318172a2389391a601125e3d4fade0de6248e452362c0ce4",
     "src-tauri/icons/tray-48.png": "2cd86ba6f2a2eca679f6c14d72b39bc3dae00cad3a791adfc2d2a7789f63a7e9",
     "src-tauri/nsis/header.bmp": "91577b0d701978ca0ef44777b70254a635347852cdccbdae14182c6e5d722f3a",
-    "src-tauri/nsis/sidebar.bmp": "3735f2d000b97677e3e92902c37af4d6f8696f8fe93ce6cd084805db5bbbb6f5",
+    "src-tauri/nsis/sidebar.bmp": "3cc3d5636c3842d60a3bd8662210254d2fc306e258d076be6226c553633d3a78",
     "src-tauri/nsis/unheader.bmp": "4fc00ad9f2daa51b490b6682a250f38791a7d2cd53a1ca6e154ab38425dba120",
     "src-tauri/wix/banner.bmp": "ebab8f9f7ebf1b4f1768c4340b301c8ebe8a8d2649ee8a248e5b92ed35bb14d9",
-    "src-tauri/wix/dialog.bmp": "e0c7b561f8a4d2c64ac951e008825eb7de0b9f4497185862fab6caeb2f0f753a"
+    "src-tauri/wix/dialog.bmp": "a824f26a1140db15e8c0dcbc7767e59f5e3bf285bc75be7c13b3db999993e6a7"
   }
 }

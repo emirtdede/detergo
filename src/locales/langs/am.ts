@@ -3,7 +3,6 @@ import { TranslationSchema } from "../types";
 export const am: TranslationSchema = {
   app: {
     title: "Dev Cleaner",
-    tagline: "የ node_modules ማጽጃ",
     description: "የገንቢ ዲስክ ቦታን ወዲያውኑ መልሰው ያግኙ።",
   },
   header: {

@@ -1,7 +1,6 @@
 export interface TranslationSchema {
   app: {
     title: string;
-    tagline: string;
     description: string;
   };
   header: {

@@ -3,7 +3,6 @@ import { TranslationSchema } from "../types";
 export const nl: TranslationSchema = {
   app: {
     title: "Dev Cleaner",
-    tagline: "node_modules Opschoner",
     description: "Win direct schijfruimte voor ontwikkelaars terug.",
   },
   header: {

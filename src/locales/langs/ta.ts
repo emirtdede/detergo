@@ -3,7 +3,6 @@ import { TranslationSchema } from "../types";
 export const ta: TranslationSchema = {
   app: {
     title: "Dev Cleaner",
-    tagline: "node_modules துப்புரவாளர்",
     description: "டெவலப்பர் வட்டு இடத்தை உடனடியாக மீட்டெடுக்கவும்.",
   },
   header: {

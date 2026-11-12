@@ -3,7 +3,6 @@ import { TranslationSchema } from "../types";
 export const my: TranslationSchema = {
   app: {
     title: "Dev Cleaner",
-    tagline: "node_modules သန့်ရှင်းရေးစနစ်",
     description: "ဆော့ဖ်ဝဲရေးသားသူ၏ ဒစ်ခ်နေရာလွတ်ကို ချက်ချင်းပြန်လည်ရယူပါ။",
   },
   header: {

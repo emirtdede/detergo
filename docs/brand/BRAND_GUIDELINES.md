@@ -73,14 +73,28 @@ size at or above the request: 16, 20, 24, 28, 32, 36, 40, 48.
 
 | Surface | Size | Notes |
 |---|---:|---|
-| NSIS sidebar | 164x314 | Dark, icon at top, faint glyph watermark |
+| NSIS sidebar | 164x314 | Dark, icon at top, faint glyph watermark, scope line `DEVELOPER ARTIFACT CLEANER` |
 | NSIS header | 150x57 | Dark rounded tile, icon + wordmark centred; no tagline (it would render at 5.7 px) |
 | NSIS uninstaller header | 150x57 | Same, slightly dimmed |
 | WiX banner | 493x58 | Light left for native black title text, dark icon panel on the right |
-| WiX dialog | 493x312 | Light left for native text, dark icon panel on the right |
+| WiX dialog | 493x312 | Light left for native text, dark icon panel on the right; wordmark only |
 
 The WiX artwork is deliberately light where native WiX text is drawn. Do not
 darken it: the stock WixUI text is black and would become unreadable.
+
+### The scope line must name the whole product
+
+Dev Cleaner cleans 56 rules across 14 ecosystems (`src-tauri/assets/targets.toml`).
+Artwork must never describe it as a cleaner for one ecosystem: `NODE_MODULES
+CLEANER`, `npm cleaner` and similar lines are wrong even when the type fits. Use
+`DEVELOPER ARTIFACT CLEANER`, the same wording as the GitHub social card, and
+only where it stays at 7 px or larger. Below that, drop the line rather than
+shrink it — a 5 px line is a smear, not a claim.
+
+`npm run check:brand` enforces this: it fails if any SVG in
+`assets/brand/installer` mentions `node_modules` or `package.json` outside a
+comment, or if `TranslationSchema`/the legacy dictionaries reintroduce a
+`tagline` key.
 
 The wizard progress bar is part of the identity too. Windows draws it green by
 default and ignores `MUI_INSTFILESPAGE_COLORS` once the control is themed, so
