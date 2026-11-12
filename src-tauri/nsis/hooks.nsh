@@ -34,6 +34,60 @@
 ; --- Keep the wizard chrome neutral so the brand art stays the accent ---
 !define MUI_ABORTWARNING
 
+; --- Branded progress bar -----------------------------------------------
+; MUI falls back to the stock Windows green bar, the only surface in the
+; wizard that is not part of the identity. `colored` makes the fill use the
+; first InstallColors value and the trough (plus the details log) the second,
+; so an obsidian fill on a light trough replaces the system green while the
+; log stays dark-on-light and readable.
+!define MUI_INSTFILESPAGE_PROGRESSBAR "smooth colored"
+!define MUI_INSTFILESPAGE_COLORS "17171E EFF0F3"
+
+; InstallColors alone is not enough: a themed progress bar ignores the classic
+; bar/trough colours, which is why the wizard still showed Windows green. The
+; helper below strips the theme from the bar and paints the brand pair directly.
+; It runs from PREINSTALL/PREUNINSTALL, the first moment the page controls exist.
+; Colours are Win32 COLORREF (0x00BBGGRR), hence the reversed byte order.
+; The fill is the app accent (#3B82F6) so a completed bar reads as progress
+; instead of a solid graphite slab, and it matches the native blue wizard
+; controls. The trough stays light so the bar never looks empty.
+!define DC_PBM_SETBARCOLOR 0x0409
+!define DC_PBM_SETBKCOLOR  0x2001
+!define DC_BAR_COLOR       0x00F6823B
+!define DC_TROUGH_COLOR    0x00F2EDEC
+
+; Shared body: the installer and uninstaller are separate script contexts, so
+; each needs its own function, but the code must not drift between them.
+!macro DC_STYLE_PROGRESSBAR_BODY
+  ; The page's inner dialog holds the bar as control 1004 (MUI InstallFiles.nsh).
+  FindWindow $0 "#32770" "" $HWNDPARENT
+  ${If} $0 != 0
+    GetDlgItem $1 $0 1004
+    ${If} $1 != 0
+      ; Empty theme name + empty id list = classic, colour-capable control.
+      System::Call 'uxtheme::SetWindowTheme(p r1, w "", w "") i .r2'
+      System::Call 'user32::SendMessage(p r1, i ${DC_PBM_SETBKCOLOR}, p 0, p ${DC_TROUGH_COLOR}) i .r2'
+      System::Call 'user32::SendMessage(p r1, i ${DC_PBM_SETBARCOLOR}, p 0, p ${DC_BAR_COLOR}) i .r2'
+    ${EndIf}
+  ${EndIf}
+!macroend
+
+Function DcStyleProgressBar
+  !insertmacro DC_STYLE_PROGRESSBAR_BODY
+FunctionEnd
+
+Function un.DcStyleProgressBar
+  !insertmacro DC_STYLE_PROGRESSBAR_BODY
+FunctionEnd
+
+!macro NSIS_HOOK_PREINSTALL
+  Call DcStyleProgressBar
+!macroend
+
+!macro NSIS_HOOK_PREUNINSTALL
+  Call un.DcStyleProgressBar
+!macroend
+
 ; ============================================================
 ; Post-install / post-uninstall: app.ico and Windows shell refresh
 ; ============================================================

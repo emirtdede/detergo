@@ -91,6 +91,25 @@ frame level by V-18b.
 | V-23 | Notification-area overflow | **PASS** | Tray icon appears in the overflow flyout at 16 px; the tile stays legible next to light and dark app icons |
 | V-24 | In-app chrome | **PASS** | The title bar and sidebar render the glyph-only mark in `currentColor`; no version label in the sidebar |
 
+### Wizard page-by-page pass, 2026-11-12
+
+Captured from the rebuilt `Dev Cleaner_2.2.2_x64-setup.exe` (branch
+`feat/2.0-multi-ecosystem-engine`) at 100% scaling, 1920x1080, English (1033).
+Every page of both wizards was opened in a real run; the maintenance page was
+reached by installing once and re-running the setup, and the uninstaller pages
+came from a real per-user install.
+
+| # | Check | Result | Observation |
+|---|---|---|---|
+| V-25 | Progress bar identity | **PASS** | The stock Windows green bar is gone from both wizards. The fill is the app accent `#3B82F6`, the trough is `#ECEDF2`. `MUI_INSTFILESPAGE_COLORS` alone does nothing on a themed bar, so `hooks.nsh` strips the theme (`uxtheme::SetWindowTheme`) and paints the control with `PBM_SETBARCOLOR` / `PBM_SETBKCOLOR` from the install and uninstall hooks. Mid-copy, complete and uninstall captures all show the accent fill. |
+| V-26 | Details log legibility | **PASS** | With `Show details` expanded the log renders dark text on the light trough colour; lines (`Output folder`, `Extract`, `Create shortcut`, `Completed`) are readable at 100%, and the bar keeps its accent fill above the log on both the install and uninstall pages. |
+| V-27 | Header lockup at 150x57 | **PASS with change** | The `NODE_MODULES CLEANER` line in the header rendered at 5.7 px and read as a blurred smear, so the header and unheader now carry the wordmark alone and are optically centred on the panel (icon at x=11, baseline y=31.9). The WiX banner already worked this way. |
+| V-28 | Sidebar balance | **PASS with change** | `RECLAIM YOUR DISK` moved from y=245 to y=262 so the lockup is optically centred in the 314 px strip instead of hugging the top; the divider and footer glow moved with it. A `vellium.dev` micro line was tried at y=296 and removed: at 164 px wide it is 7 px type and rendered unreadable, and unreadable type is a defect, not decoration. |
+| V-29 | Maintenance page | **PASS** | Re-running the setup over a 2.2.2 install shows `Already Installed / Choose the maintenance option to perform.` with the two radio buttons, the full sidebar lockup and the neutral footer; no missing string and no unstyled control. |
+| V-30 | Finish pages | **PASS** | Installer: `Completing Dev Cleaner Setup`, both checkboxes pre-ticked, `Finish` as the default button, sidebar lockup and footer intact. Uninstaller: `Uninstallation Complete`, `Close` as the default button, same chrome. |
+| V-31 | Uninstaller pages | **PASS** | Confirm page keeps the `Delete the application data` checkbox with correct spacing and the unheader lockup inset in the panel; the progress page and completion page use the same accent bar and readable log as the installer. |
+| V-32 | Wizard button and footer consistency | **PASS** | `Next`, `Back`, `Cancel`, `Install`, `Uninstall`, `Close` and `Finish` all keep the native themed rendering; the footer reads `© 2026 Vellium` on every page of both wizards. |
+
 ## Notes for the design board
 
 1. The mark intentionally carries no text; the lockup lives in the README and

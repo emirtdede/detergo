@@ -29,8 +29,10 @@
     <rect width="150" height="57" fill="url(#hd-bg)"/>
     <rect x="0" y="0" width="1" height="57" fill="#FFFFFF" fill-opacity="0.10"/>
 
-    <use href="#hd-icon" transform="translate(11 14) scale(0.064732) translate(-32 -32)"/>
+    <!-- 57 px tall: the tagline would render at 5.7 px and read as a smudge, so
+         the header carries the wordmark only, like the WiX banner. The lockup is
+         centred in the panel; the icon geometry is untouched. -->
+    <use href="#hd-icon" transform="translate(11 16) scale(0.064732) translate(-32 -32)"/>
 
-    <text x="47" y="27" font-family="Segoe UI, Segoe UI Semibold, Arial, sans-serif" font-size="9.6" font-weight="700" letter-spacing="1.1" fill="#FFFFFF">DEV CLEANER</text>
-    <text x="47" y="38.5" font-family="Segoe UI, Arial, sans-serif" font-size="5.7" letter-spacing="0.9" fill="#8C939D">NODE_MODULES CLEANER</text>
+    <text x="47" y="31.9" font-family="Segoe UI, Segoe UI Semibold, Arial, sans-serif" font-size="9.6" font-weight="700" letter-spacing="1.1" fill="#FFFFFF">DEV CLEANER</text>
 </svg>

@@ -30,8 +30,7 @@
     <rect x="0" y="0" width="1" height="57" fill="#FFFFFF" fill-opacity="0.08"/>
 
     <g opacity="0.82">
-        <use href="#uhd-icon" transform="translate(11 14) scale(0.064732) translate(-32 -32)"/>
-        <text x="47" y="27" font-family="Segoe UI, Segoe UI Semibold, Arial, sans-serif" font-size="9.6" font-weight="700" letter-spacing="1.1" fill="#FFFFFF">DEV CLEANER</text>
-        <text x="47" y="38.5" font-family="Segoe UI, Arial, sans-serif" font-size="5.7" letter-spacing="0.9" fill="#8C939D">NODE_MODULES CLEANER</text>
+        <use href="#uhd-icon" transform="translate(11 16) scale(0.064732) translate(-32 -32)"/>
+        <text x="47" y="31.9" font-family="Segoe UI, Segoe UI Semibold, Arial, sans-serif" font-size="9.6" font-weight="700" letter-spacing="1.1" fill="#FFFFFF">DEV CLEANER</text>
     </g>
 </svg>

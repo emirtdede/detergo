@@ -74,13 +74,20 @@ size at or above the request: 16, 20, 24, 28, 32, 36, 40, 48.
 | Surface | Size | Notes |
 |---|---:|---|
 | NSIS sidebar | 164x314 | Dark, icon at top, faint glyph watermark |
-| NSIS header | 150x57 | Dark rounded tile, icon centred |
+| NSIS header | 150x57 | Dark rounded tile, icon + wordmark centred; no tagline (it would render at 5.7 px) |
 | NSIS uninstaller header | 150x57 | Same, slightly dimmed |
 | WiX banner | 493x58 | Light left for native black title text, dark icon panel on the right |
 | WiX dialog | 493x312 | Light left for native text, dark icon panel on the right |
 
 The WiX artwork is deliberately light where native WiX text is drawn. Do not
 darken it: the stock WixUI text is black and would become unreadable.
+
+The wizard progress bar is part of the identity too. Windows draws it green by
+default and ignores `MUI_INSTFILESPAGE_COLORS` once the control is themed, so
+`src-tauri/nsis/hooks.nsh` strips the theme and paints the bar itself: fill
+`#3B82F6` (the app accent) on a `#ECEDF2` trough. Keep those two values in sync
+with `--accent` in `src/styles/tokens.css` and keep the trough light, because
+the same background colour is used for the details log.
 
 ## 6. Typography and wordmark
 
