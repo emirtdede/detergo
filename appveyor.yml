@@ -1,0 +1,68 @@
+# Free CI fallback for public repositories.
+#
+# GitHub Actions is the primary pipeline (see .github/workflows). This file
+# exists because a GitHub account-level billing lock stops every Actions job
+# before its first step, and public-repo minutes do not lift that lock.
+# AppVeyor builds open-source projects for free, including Windows images, so
+# the same gates keep running while the GitHub account issue is resolved.
+#
+# Enable once: https://ci.appveyor.com -> sign in with GitHub -> New project ->
+# select this repository. Nothing else is required; the job list below mirrors
+# .github/workflows/{ci,a11y,i18n}.yml.
+
+version: 1.0.{build}
+
+image:
+  - Ubuntu
+  - Visual Studio 2022
+
+# Third-party installs are pinned through package-lock.json / Cargo.lock, so a
+# cached restore is safe and keeps a build near the GitHub Actions duration.
+cache:
+  - node_modules -> package-lock.json
+  - src-tauri/target -> src-tauri/Cargo.lock
+
+for:
+  - matrix:
+      only:
+        - image: Ubuntu
+    install:
+      - npm ci
+      - npm run check-version
+    build_script:
+      - npm run typecheck
+      - npm test
+      - npm run build
+      - npm run check:gates
+      - npm run check:audit
+      - npm run check:i18n
+      - npm run check:contrast
+      - npm run check:icons
+      - npm run check:brand
+      - npm run format:check
+      - npx playwright install --with-deps chromium
+      - npx playwright test
+    # Traces make a visual failure debuggable instead of a red cross.
+    artifacts:
+      - path: test-results
+        name: playwright-trace
+        optional: true
+
+  - matrix:
+      only:
+        - image: Visual Studio 2022
+    install:
+      - npm ci
+      - rustup component add rustfmt clippy
+    build_script:
+      # `--locked` makes CI build the committed dependency graph; a Cargo.toml
+      # edit without a lock update fails here instead of drifting.
+      - cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+      - cargo check --locked --manifest-path src-tauri/Cargo.toml
+      - cargo clippy --locked --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+      - cargo test --locked --manifest-path src-tauri/Cargo.toml
+      # The generated TypeScript contract must match the Rust IPC types.
+      - cargo run --locked --manifest-path src-tauri/Cargo.toml --features bindings --bin export_bindings -- --check
+
+# A pull request must fail for the same reasons it would on GitHub Actions.
+test: off
