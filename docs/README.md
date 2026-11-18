@@ -89,10 +89,11 @@ Release gates:         PENDING — signed installers (G4), clean-VM repeat, lega
 Source availability:   PUBLIC — MIT licensed, contributions welcome
 ```
 
-Source gates are run on every push by the GitHub workflows in `.github/workflows`
-and recorded locally in `docs/release/TEST_MATRIX.md`. Any package must be built
-from a clean tree so `release_output/BUILD_INFO.json` reports `"dirty": false`
-and `npm run check:build-info` passes.
+Source gates run on every push and pull request in AppVeyor (see
+`appveyor.yml`; GitHub Actions is not used) and the results are recorded in
+`docs/release/TEST_MATRIX.md`. Any package must be built from a clean tree so
+`release_output/BUILD_INFO.json` reports `"dirty": false` and
+`npm run check:build-info` passes.
 
 Still open: code-signing the installers, a repeat of the installer harnesses on a
 pristine VM, the design-board signature (G9) and legal clearance (G0). Windows 10

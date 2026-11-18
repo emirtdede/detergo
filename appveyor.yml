@@ -1,14 +1,20 @@
-# Free CI fallback for public repositories.
+# Continuous integration and release pipeline.
 #
-# GitHub Actions is the primary pipeline (see .github/workflows). This file
-# exists because a GitHub account-level billing lock stops every Actions job
-# before its first step, and public-repo minutes do not lift that lock.
+# AppVeyor is the only CI for this project. GitHub Actions is not used: the
+# account has no payment method on file, so every Actions job is refused before
+# its first step ("The job was not started because your account is locked due to
+# a billing issue"), and no amount of public-repo minutes lifts that lock.
 # AppVeyor builds open-source projects for free, including Windows images, so
-# the same gates keep running while the GitHub account issue is resolved.
+# the same gates run there instead.
 #
-# Enable once: https://ci.appveyor.com -> sign in with GitHub -> New project ->
-# select this repository. Nothing else is required; the job list below mirrors
-# .github/workflows/{ci,a11y,i18n}.yml.
+# Setup, once:
+#   1. https://ci.appveyor.com -> sign in with GitHub -> New project -> this repo.
+#   2. Project settings -> Environment -> add a variable named `github_token`
+#      holding a GitHub personal access token with the `repo` scope, marked
+#      "secure". It is used only by the tag deployment below.
+#   3. Tag a release: `git tag -a v1.0.1 -m "..." && git push origin v1.0.1`.
+#      The build runs, `release_output/` is produced and the GitHub Release is
+#      created for that tag with the installers attached.
 
 version: 1.0.{build}
 
@@ -17,12 +23,13 @@ image:
   - Visual Studio 2022
 
 # Third-party installs are pinned through package-lock.json / Cargo.lock, so a
-# cached restore is safe and keeps a build near the GitHub Actions duration.
+# cached restore is safe and keeps a build near the previous duration.
 cache:
   - node_modules -> package-lock.json
   - src-tauri/target -> src-tauri/Cargo.lock
 
 for:
+  # ---------------------------------------------------------------- Linux ----
   - matrix:
       only:
         - image: Ubuntu
@@ -48,6 +55,7 @@ for:
         name: playwright-trace
         optional: true
 
+  # -------------------------------------------------------------- Windows ----
   - matrix:
       only:
         - image: Visual Studio 2022
@@ -63,6 +71,37 @@ for:
       - cargo test --locked --manifest-path src-tauri/Cargo.toml
       # The generated TypeScript contract must match the Rust IPC types.
       - cargo run --locked --manifest-path src-tauri/Cargo.toml --features bindings --bin export_bindings -- --check
+    # A tag build also produces the installers and the provenance manifest. A
+    # branch build skips this so a normal push stays fast.
+    after_build:
+      - ps: |
+          if ($env:APPVEYOR_REPO_TAG -eq "true") {
+            npm run build:release
+            npm run check:build-info
+          }
+    artifacts:
+      - path: release_output\*.exe
+        optional: true
+      - path: release_output\*.msi
+        optional: true
+      - path: release_output\SHA256SUMS.txt
+        optional: true
+      - path: release_output\BUILD_INFO.json
+        optional: true
+    # Attach the installers to the GitHub Release for the pushed tag. The
+    # release is created from the tag; `docs/CHANGELOG.md` holds the notes.
+    deploy:
+      - provider: GitHub
+        release: $(APPVEYOR_REPO_TAG_NAME)
+        description: "See docs/CHANGELOG.md in the repository."
+        auth_token:
+          secure: $(github_token)
+        artifact: /Dev-Cleaner-.*\.(exe|msi)|SHA256SUMS\.txt|BUILD_INFO\.json/
+        draft: false
+        prerelease: false
+        force_update: true
+        on:
+          appveyor_repo_tag: true
 
-# A pull request must fail for the same reasons it would on GitHub Actions.
+# A pull request must fail for the same reasons it would anywhere else.
 test: off

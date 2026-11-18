@@ -58,7 +58,8 @@ npm run build
 ## Quality gates
 
 Run the same gates CI runs before opening a pull request. All of them must be
-green.
+green. AppVeyor runs this list on every push and pull request (see
+`appveyor.yml`); GitHub Actions is not used by this project.
 
 | Area                   | Command                                                                          |
 | ---------------------- | -------------------------------------------------------------------------------- |

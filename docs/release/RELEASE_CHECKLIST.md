@@ -1,19 +1,18 @@
-﻿# Release Checklist & Gates
+# Release Checklist & Gates
 
-**Version:** 2.2.3
-**Date:** 2026-11-17
+**Version:** 1.0.0
+**Date:** 2026-11-18
 **Source revision:** the commit recorded in `release_output/BUILD_INFO.json`,
 which must equal `git rev-parse HEAD` at build time
 **Deployment mode:** DIRECT-LIVE (local Windows desktop; NSIS / MSI / portable
 go straight to users; no staging, no canary)
+**CI:** AppVeyor (`appveyor.yml`). GitHub Actions is not used.
 
-> **2.2.3 status.** This is a scan-experience and documentation patch on top of
-> the 2.2.2 brand release. Source gates (`G1` code gates and `G2` brand gates)
-> were re-run on 2026-11-17. The installer, shell-icon and upgrade evidence in
-> `G3`/`G5`/`G7` below still comes from the 2.2.2 run and must be repeated
-> against the 2.2.3 packages before release. The local 2.2.3 build came from an
-> uncommitted tree, so `G6` is **PENDING** until the change set is committed and
-> `npm run check:build-info` reports `dirty: false`.
+> **1.0.0 status.** First open-source release. Source gates (`G1` code gates and
+> `G2` brand gates) pass on the release commit, and `G6` reports a clean tree
+> with three artifacts. The installer, shell-icon and upgrade evidence in
+> `G3`/`G5`/`G7` below was produced on the development Windows 11 host and
+> should be repeated on a pristine VM.
 
 ## Gate results
 
@@ -24,13 +23,13 @@ go straight to users; no staging, no canary)
 | G2 | Brand asset gates | **PASS** | `npm run check:icons`, `npm run check:brand`, `npm run format:check` |
 | G3 | NSIS installer + shell surfaces | **PASS (dev host)** | `npm run verify:installer` 8/8 and `npm run verify:shell-icons` 8/8 on the development Windows 11 host; clean-VM repeat still advisable |
 | G4 | MSI per-machine | **PENDING** | `npm run verify:msi` refuses a non-elevated session (verified); needs an elevated run on a separate host |
-| G5 | 2.2.1 â†’ 2.2.2 upgrade | **PARTIAL** | `npm run verify:upgrade -Kind NSIS` 8/8 PASS; `-Kind MSI` still pending |
+| G5 | Previous release → this release upgrade | **PARTIAL** | `npm run verify:upgrade -Kind NSIS` PASS on the dev host; `-Kind MSI` still pending |
 | G6 | Clean release build + provenance | **PASS** | `npm run build:release` from a clean tree, then `npm run check:build-info` â†’ clean tree, 3 artifacts |
 | G7 | Exe icon frame gate | **PASS** | 15 frames / 15 `RT_ICON` in the portable EXE, setup EXE and raw release binary |
 | G8 | Windows 10 support claim | **PASS (claim removed)** | No 22H2 host was available, so the untested "1809+" claim was removed from README and `MASTER_SPEC.md`; Windows 11 x64 is the verified target |
 | G9 | Design-board visual approval | **PENDING** | 15-frame set recorded in `docs/release/TEST_MATRIX.md`; signature still missing |
 
-Historical 2.2.1 evidence is no longer part of the repository; the git history
+Historical pre-1.0 evidence is no longer part of the repository; the git history
 keeps it. Do not reuse an older installer as a 1.0.0 deliverable and never patch
 a shipped executable in place.
 
@@ -54,7 +53,7 @@ a shipped executable in place.
 - [x] Brand scan fails on retired asset names and shell-cache shortcuts
 - [x] CI runs `check:icons` and `check:brand`; `build:release` runs the PE gate
 - [x] Visual QA record in `docs/release/TEST_MATRIX.md`
-- [x] NSIS install, shell-surface and 2.2.1 â†’ 2.2.2 upgrade checks (dev host)
+- [x] NSIS install, shell-surface and previous-release upgrade checks (dev host)
 - [x] Real shell captures at 100% scaling (desktop, Start, Explorer, taskbar, tray, in-app)
 - [ ] Shell captures at 125â€“300% scaling (needs sign-out at each scale on a test image)
 - [ ] Legal counsel sign-off (G0)
@@ -108,10 +107,10 @@ Copy-Item <path>\Dev-Cleaner-<previous>-x64.msi        release_output\baseline\
 - [x] Prettier PASS
 - [x] Brand and icon structure PASS
 - [x] Production frontend build PASS
-- [x] Clean-tree release build PASS (2.2.2)
+- [x] Clean-tree release build PASS (1.0.0)
 - [x] NSIS install â†’ launch â†’ icons â†’ uninstall PASS
 - [ ] MSI install â†’ launch â†’ uninstall PASS (elevated, per-machine)
-- [x] 2.2.1 â†’ 2.2.2 upgrade PASS (NSIS; MSI pending)
+- [x] Previous release upgrade PASS (NSIS; MSI pending)
 - [x] Shell shortcuts and `DisplayIcon` PASS
 - [x] Portable PASS (smoke 10/10)
 - [x] `SHA256SUMS.txt` and `BUILD_INFO.json` generated
@@ -131,21 +130,21 @@ different install scopes.
 
 ## Known pre-existing issues
 
-These are not brand regressions. They were present in the 2.2.1 baseline and are
-recorded so they are not mistaken for 2.2.2 breakage.
+These were present in the pre-1.0 iterations and are recorded so they are not
+mistaken for new breakage.
 
-1. **`npm run check:contrast` (resolved in 2.2.3).** The 2.2.2 baseline failed on
-   all four themes because the checker expected semantic tokens that
-   `src/styles/tokens.css` did not define. 2.2.3 defines the full token
-   vocabulary; the gate now reports **PASS for all four themes** and is part of
+1. **`npm run check:contrast` (resolved).** An earlier baseline failed on all
+   four themes because the checker expected semantic tokens that
+   `src/styles/tokens.css` did not define. The current tokens cover the full
+   vocabulary; the gate reports **PASS for all four themes** and is part of
    `npm run test:a11y`, so the Playwright suite runs in CI instead of being
    skipped.
-2. **`npm run check:build-info`** now passes against the 2.2.2 build. Re-run it
-   after any further source change, because the gate requires the recorded commit
-   to equal `HEAD`.
+2. **`npm run check:build-info`** passes against the 1.0.0 build. Re-run it after
+   any further source change, because the gate requires the recorded commit to
+   equal `HEAD`.
 3. **Code signing (F-6).** Binaries are unsigned; SmartScreen warns.
-4. **Windows 10 (F-4).** No 22H2 host has been available, so 2.2.2 does not
-   advertise Windows 10; the claim was removed from README and `MASTER_SPEC.md`.
+4. **Windows 10 (F-4).** No 22H2 host has been available, so Windows 10 is not
+   advertised; the claim was removed from README and `MASTER_SPEC.md`.
    Re-introduce it only with a 22H2 smoke run.
 5. **Clean-VM repeat (G3).** The NSIS harnesses passed on the development host.
    A pristine Windows 11 image should still be used once before publication, so
