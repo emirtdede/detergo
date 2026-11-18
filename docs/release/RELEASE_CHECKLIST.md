@@ -1,23 +1,31 @@
-# Release Checklist & Gates
+﻿# Release Checklist & Gates
 
-**Version:** 2.2.2
-**Date:** 2026-11-10
+**Version:** 2.2.3
+**Date:** 2026-11-17
 **Source revision:** the commit recorded in `release_output/BUILD_INFO.json`,
 which must equal `git rev-parse HEAD` at build time
 **Deployment mode:** DIRECT-LIVE (local Windows desktop; NSIS / MSI / portable
 go straight to users; no staging, no canary)
+
+> **2.2.3 status.** This is a scan-experience and documentation patch on top of
+> the 2.2.2 brand release. Source gates (`G1` code gates and `G2` brand gates)
+> were re-run on 2026-11-17. The installer, shell-icon and upgrade evidence in
+> `G3`/`G5`/`G7` below still comes from the 2.2.2 run and must be repeated
+> against the 2.2.3 packages before release. The local 2.2.3 build came from an
+> uncommitted tree, so `G6` is **PENDING** until the change set is committed and
+> `npm run check:build-info` reports `dirty: false`.
 
 ## Gate results
 
 | Gate | Requirement | Result | Evidence |
 |---|---|---|---|
 | G0 | Trademark clearance signed | **PENDING** | `docs/brand/TRADEMARK_CLEARANCE.md` (counsel decision and signature) |
-| G1 | Code gates | **PASS** | `npm run typecheck`, `npm test` (105), `cargo test` (127 lib + 18 integration), `cargo clippy -D warnings`, `cargo fmt --check`, `npm run build` |
+| G1 | Code gates | **PASS** | `npm run typecheck`, `npm test` (237), `cargo test` (230 lib + 21 integration, 5 opt-in ignored), `cargo clippy -D warnings`, `cargo fmt --check`, `npm run build`, `npm run test:a11y` (13 Playwright tests) |
 | G2 | Brand asset gates | **PASS** | `npm run check:icons`, `npm run check:brand`, `npm run format:check` |
 | G3 | NSIS installer + shell surfaces | **PASS (dev host)** | `npm run verify:installer` 8/8 and `npm run verify:shell-icons` 8/8 on the development Windows 11 host; clean-VM repeat still advisable |
 | G4 | MSI per-machine | **PENDING** | `npm run verify:msi` refuses a non-elevated session (verified); needs an elevated run on a separate host |
-| G5 | 2.2.1 → 2.2.2 upgrade | **PARTIAL** | `npm run verify:upgrade -Kind NSIS` 8/8 PASS; `-Kind MSI` still pending |
-| G6 | Clean release build + provenance | **PASS** | `npm run build:release` from a clean tree, then `npm run check:build-info` → clean tree, 3 artifacts |
+| G5 | 2.2.1 â†’ 2.2.2 upgrade | **PARTIAL** | `npm run verify:upgrade -Kind NSIS` 8/8 PASS; `-Kind MSI` still pending |
+| G6 | Clean release build + provenance | **PASS** | `npm run build:release` from a clean tree, then `npm run check:build-info` â†’ clean tree, 3 artifacts |
 | G7 | Exe icon frame gate | **PASS** | 15 frames / 15 `RT_ICON` in the portable EXE, setup EXE and raw release binary |
 | G8 | Windows 10 support claim | **PASS (claim removed)** | No 22H2 host was available, so the untested "1809+" claim was removed from README and `MASTER_SPEC.md`; Windows 11 x64 is the verified target |
 | G9 | Design-board visual approval | **PENDING** | `docs/brand/QA_2.2.2.md` + `docs/brand/qa/` (recorded); signature still missing |
@@ -29,10 +37,10 @@ deliverable and never patch a shipped executable in place.
 
 ## Brand rollout checklist
 
-- [x] Canonical master at `assets/brand/dev-cleaner-icon.svg` (512×512, no text)
+- [x] Canonical master at `assets/brand/dev-cleaner-icon.svg` (512Ã—512, no text)
 - [x] Transparent `currentColor` glyph at `assets/brand/dev-cleaner-glyph.svg`
 - [x] 15-frame `src-tauri/icons/icon.ico`; 256 PNG, other frames 32-bit DIB, 16-first
-- [x] Eight tray PNGs (`16–48`) and runtime DPI selection; `image-png` enabled
+- [x] Eight tray PNGs (`16â€“48`) and runtime DPI selection; `image-png` enabled
 - [x] NSIS sidebar, header and uninstaller header BMPs
 - [x] WiX banner and dialog BMPs (light left side for native black text)
 - [x] Favicon SVG/ICO and notification PNG
@@ -42,14 +50,14 @@ deliverable and never patch a shipped executable in place.
 - [x] WiX `UpgradeCode` pinned to `40ef2964-2821-54d7-ac14-2894d8e84709`
 - [x] `bundle.icon`, NSIS and WiX artwork paths point at generated files
 - [x] README logo, artifact names, tree and installer note updated
-- [x] GitHub social preview (1280×640) and circle-safe avatar
+- [x] GitHub social preview (1280Ã—640) and circle-safe avatar
 - [x] Old identity archived in `docs/archive/brand-v1/`, not deleted
 - [x] Brand scan fails on retired asset names and shell-cache shortcuts
 - [x] CI runs `check:icons` and `check:brand`; `build:release` runs the PE gate
 - [x] Visual QA record and sheets in `docs/brand/QA_2.2.2.md` and `docs/brand/qa/`
-- [x] NSIS install, shell-surface and 2.2.1 → 2.2.2 upgrade checks (dev host)
+- [x] NSIS install, shell-surface and 2.2.1 â†’ 2.2.2 upgrade checks (dev host)
 - [x] Real shell captures at 100% scaling (desktop, Start, Explorer, taskbar, tray, in-app)
-- [ ] Shell captures at 125–300% scaling (needs sign-out at each scale on a test image)
+- [ ] Shell captures at 125â€“300% scaling (needs sign-out at each scale on a test image)
 - [ ] Legal counsel sign-off (G0)
 - [ ] Design-board visual approval (G9)
 - [ ] MSI per-machine run from an elevated session on a separate host (G4)
@@ -92,8 +100,9 @@ Copy-Item <share>\Dev-Cleaner-2.2.1-x64.msi        release_output\baseline-2.2.1
 
 ## Packaging checklist
 
-- [x] Rust tests PASS (127 lib + 18 integration; 5 opt-in heavy tests ignored)
-- [x] Frontend tests PASS (105)
+- [x] Rust tests PASS (230 lib + 21 integration; 5 opt-in heavy tests ignored)
+- [x] Frontend tests PASS (237 in 28 files)
+- [x] Playwright accessibility gate PASS (13 tests: axe on all views and four themes, APG tabs, focus traps, table semantics, 320 px reflow)
 - [x] Typecheck PASS
 - [x] Clippy PASS (0 warnings, all targets)
 - [x] rustfmt PASS
@@ -101,9 +110,9 @@ Copy-Item <share>\Dev-Cleaner-2.2.1-x64.msi        release_output\baseline-2.2.1
 - [x] Brand and icon structure PASS
 - [x] Production frontend build PASS
 - [x] Clean-tree release build PASS (2.2.2)
-- [x] NSIS install → launch → icons → uninstall PASS
-- [ ] MSI install → launch → uninstall PASS (elevated, per-machine)
-- [x] 2.2.1 → 2.2.2 upgrade PASS (NSIS; MSI pending)
+- [x] NSIS install â†’ launch â†’ icons â†’ uninstall PASS
+- [ ] MSI install â†’ launch â†’ uninstall PASS (elevated, per-machine)
+- [x] 2.2.1 â†’ 2.2.2 upgrade PASS (NSIS; MSI pending)
 - [x] Shell shortcuts and `DisplayIcon` PASS
 - [x] Portable PASS (smoke 10/10)
 - [x] `SHA256SUMS.txt` and `BUILD_INFO.json` generated
@@ -126,13 +135,12 @@ different install scopes.
 These are not brand regressions. They were present in the 2.2.1 baseline and are
 recorded so they are not mistaken for 2.2.2 breakage.
 
-1. **`npm run check:contrast` fails on all four themes.** The checker expects
-   semantic tokens (`--on-accent`, `--accent-foreground`, `--warning-text`,
-   `--success-text`, `--danger-foreground`, `--focus-ring`) that
-   `src/styles/tokens.css` does not define, although several are used by CSS.
-   This predates the brand rollout (`234140a`). It is not part of `build:release`
-   or CI, but it blocks `npm run test:a11y` until the token vocabulary is
-   reconciled.
+1. **`npm run check:contrast` (resolved in 2.2.3).** The 2.2.2 baseline failed on
+   all four themes because the checker expected semantic tokens that
+   `src/styles/tokens.css` did not define. 2.2.3 defines the full token
+   vocabulary; the gate now reports **PASS for all four themes** and is part of
+   `npm run test:a11y`, so the Playwright suite runs in CI instead of being
+   skipped.
 2. **`npm run check:build-info`** now passes against the 2.2.2 build. Re-run it
    after any further source change, because the gate requires the recorded commit
    to equal `HEAD`.
@@ -148,7 +156,7 @@ recorded so they are not mistaken for 2.2.2 breakage.
 
 1. **Legal (G0).** Counsel must fill and sign the decision in
    `docs/brand/TRADEMARK_CLEARANCE.md`. A `rename` decision starts a separate
-   work item; do not use ® or claim exclusivity before registration.
+   work item; do not use Â® or claim exclusivity before registration.
 2. **MSI evidence (G4).** `verify:msi` must run from an elevated session on a
    host that does not also carry the NSIS build. The non-elevated guard is
    already verified.

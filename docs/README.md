@@ -23,12 +23,16 @@ evidence and release status. Documents are grouped by purpose, not by date.
 | 14 | [`brand/TRADEMARK_CLEARANCE.md`](brand/TRADEMARK_CLEARANCE.md) | Pending counsel record for the "Dev Cleaner" mark. |
 | 15 | [`release/baseline-2.2.1.md`](release/baseline-2.2.1.md) | Shipped 2.2.1 hashes and the rebuild procedure. |
 | 16 | [`release/BRAND_ROLLOUT_PLAN_V3.1_TR.md`](release/BRAND_ROLLOUT_PLAN_V3.1_TR.md) | Approved 2.2.2 brand rollout plan (Turkish). |
+| 17 | [`CLI.md`](CLI.md) | Terminal reference: commands, exit codes, JSON, webhooks and npkill migration. |
+| 18 | [`../CONTRIBUTING.md`](../CONTRIBUTING.md) | Local setup, quality gates and contribution workflow. |
+| 19 | [`../SECURITY.md`](../SECURITY.md) | Private vulnerability reporting and the security scope. |
 
 ## Layout
 
 ```
 docs/
 ├── README.md                        # this index
+├── CLI.md                           # terminal reference
 ├── MASTER_SPEC.md                   # normative 2.0 specification
 ├── architecture/
 │   ├── ARCHITECTURE.md
@@ -81,16 +85,35 @@ docs/
 4. **Relative links only.** Documents link to each other with relative paths so
    the folder can be moved or read offline.
 
-## Current release status (2.2.2)
+## Current release status (2.2.3)
 
 ```
 Code gates:            14/14 PASS
 Brand gates:           3/3 PASS (check:icons, check:brand, format:check)
-Release build:         PASS — clean tree, 3 artifacts, 15/15 icon frames
-Runtime checks:        PASS — smoke 10/10, NSIS 8/8, shell 8/8, upgrade 8/8
+Release build:         LOCAL ONLY — uncommitted tree, 3 artifacts
+Runtime checks:        2.2.2 evidence below; not re-run for 2.2.3
 Release gates:         PENDING — MSI (G4), clean-VM repeat, legal (G0), design (G9)
 Public production:     NO-GO until G0, G4, clean-VM repeat and G9 close
 ```
+
+2.2.3 is a scan-experience and documentation patch: `--scope combined`, the
+scan-coverage notice model, canonical webhook payloads, corrected Codex TOML,
+regenerated third-party notices and a repaired Turkish docs index. It changes
+nothing about what is deleted or how the safety classifier decides.
+
+Source gates executed on 2026-11-17:
+
+- `npm run typecheck`, `npm test` (237), `npm run format:check`,
+  `npm run check:gates`, `npm run check:audit`, `npm run check:i18n`,
+  `npm run check:contrast` — PASS.
+- `cargo test --lib` (230) and `cargo fmt` — PASS.
+
+The 2.2.3 packages in `release_output/` were built locally from an uncommitted
+tree, so `release_output/BUILD_INFO.json` reports `"dirty": true` and
+`npm run check:build-info` fails by design. Rebuild after committing the change
+set before treating any 2.2.3 package as publishable.
+
+### 2.2.2 brand release evidence
 
 The 2.2.2 change set is a brand identity rollout; scanner and cleanup behaviour
 is unchanged. Source gates executed on 2026-11-10:

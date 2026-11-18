@@ -1,0 +1,87 @@
+name: Bug report
+description: Something crashed, showed a wrong result, or refused to delete a target.
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please redact personal paths and never paste a
+        webhook URL: it contains a bearer token.
+        Security problems belong in a private advisory, not here.
+
+  - type: input
+    id: version
+    attributes:
+      label: Dev Cleaner version
+      description: Output of `dev-cleaner --version`, or the version on the About screen.
+      placeholder: "2.2.3"
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version and architecture
+      placeholder: "Windows 11 24H2, x64"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where did it happen?
+      options:
+        - Desktop app (GUI)
+        - CLI
+        - MCP server
+        - Installer / uninstaller
+        - Documentation
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: A short, numbered list. Include the scan scope and the target type if relevant.
+      placeholder: |
+        1. Run `dev-cleaner scan D:\Projects`
+        2. Select the `node_modules` row for project X
+        3. Choose Recycle Bin and confirm
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: Paste error text or a screenshot. Redact usernames and tokens.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Optional. Delete or mask anything private.
+      render: text
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues for the same problem.
+          required: true
+        - label: I am on the latest 2.2.x release.
+          required: true
+        - label: This is not a security vulnerability (those go to a private advisory).
+          required: true

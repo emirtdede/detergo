@@ -1,0 +1,71 @@
+name: Feature request
+description: Suggest a target, a workflow, a language or an integration.
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Good feature requests describe the problem first and the solution second.
+        Dev Cleaner deletes files, so new targets must have a documented,
+        regenerable source.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the situation, not the implementation.
+      placeholder: "After a build I have 40 GB of ... and I have to delete it by hand."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What should Dev Cleaner do? Include the command or screen you imagine.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Existing tools, manual steps, or other designs.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - New cleanup target / catalog rule
+        - Scanner and measurement
+        - Safety and deletion
+        - User interface
+        - CLI
+        - MCP server
+        - Localisation
+        - Documentation
+        - Packaging and installer
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: safety
+    attributes:
+      label: Safety notes
+      description: |
+        For a new target: where does it live, what recreates it, and can it
+        contain user-authored data? If it can, it must be classified as
+        `review` or `keep`, never `safe`.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and discussions.
+          required: true
+        - label: This request is about Dev Cleaner itself, not a third-party tool.
+          required: true

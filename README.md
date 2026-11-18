@@ -26,7 +26,7 @@
 ![Zustand](https://img.shields.io/badge/Zustand-5.0-4338CA?style=for-the-badge)
 ![TanStack Virtual](https://img.shields.io/badge/TanStack-Virtual_3-FF4154?style=for-the-badge)
 ![Windows](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D6?style=for-the-badge&logo=windows&logoColor=white)
-![License](https://img.shields.io/badge/License-Proprietary-yellow?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 ![Languages](https://img.shields.io/badge/Languages-73%20Supported-success?style=for-the-badge&logo=google-translate)
 ![Safety](https://img.shields.io/badge/Safety-Recycle%20Bin%20%7C%20Zero%20Data%20Loss-brightgreen?style=for-the-badge&logo=windows)
 ![MCP](https://img.shields.io/badge/MCP-Server%20Builtin-blueviolet?style=for-the-badge)
@@ -35,32 +35,35 @@
 
 ---
 
-## Release status (2.2.0 — Dev Cleaner)
+## Release status (2.2.3 — Dev Cleaner)
 
-This repository contains **Dev Cleaner 2.2**: a comprehensive, catalog-driven, multi-ecosystem
-developer-artifact and AI-agent storage reclaimer featuring 73 fully supported languages,
-customizable keyboard shortcuts, MCP server capabilities, and automated OS locale detection during Windows setup. The destructive path is
-Rust-backed and guarded by automated tests, and the previously pending verification
-work has been executed (real Recycle Bin round-trip, 10k/50k/1M-entry/300k-recording
-benchmarks, crash-during-delete, offline/no-telemetry, installer round-trips).
+Dev Cleaner 2.2 is a catalog-driven, multi-ecosystem developer-artifact and
+AI-agent storage reclaimer for Windows 11 x64. It ships 73 languages, a
+56-rule cleanup catalog, 21 supported developer-tool caches, a built-in MCP
+server, a scriptable CLI and a reversible Recycle Bin deletion path guarded by
+the Rust safety layer.
 
-**Public production is NO-GO for 2.2.2** until the open gates close. The 2.2.2
-packages were built from a clean tree: `release_output/BUILD_INFO.json` reports
-`"dirty": false` and a commit equal to `HEAD`. That manifest is the authoritative
-hash/commit record for a download. Open items are legal clearance (G0), the
-elevated MSI run (G4), a clean-VM repeat of the installer harnesses, the
-design-board sign-off (G9) and Windows 10 support, which is no longer advertised.
-See:
+Source quality gates pass: 237 frontend tests, 230 Rust library tests plus 21
+integration tests, zero Clippy warnings and the full accessibility suite
+(13 Playwright/axe checks). See `docs/release/TEST_MATRIX.md` for the recorded
+run.
+
+The installers attached to the tagged release are the supported downloads.
+Items tracked in `docs/release/RELEASE_CHECKLIST.md` that need a human
+sign-off — legal clearance, the elevated MSI run on a clean VM and design
+approval — are listed there rather than hidden.
 
 - `docs/README.md` — documentation index and reading order
+- `docs/CLI.md` — terminal reference and npkill migration
 - `docs/release/RELEASE_CHECKLIST.md` — gates and remaining items
 - `docs/release/BUILD_PROVENANCE.md` — how a binary is tied to a commit
 - `docs/security/FINAL_SECURITY_AUDIT.md` — executed evidence
 - `docs/release/TEST_MATRIX.md` — test results
 - `docs/MASTER_SPEC.md` — normative 2.0 specification
 
-The text below is partly written for the earlier `node_modules`-only product.
-Where it conflicts with `docs/MASTER_SPEC.md`, the specification wins.
+Dev Cleaner is free software under the MIT License. Contributions are welcome;
+start with [`CONTRIBUTING.md`](CONTRIBUTING.md) and report vulnerabilities
+privately as described in [`SECURITY.md`](SECURITY.md).
 
 ---
 
@@ -79,7 +82,7 @@ Where it conflicts with `docs/MASTER_SPEC.md`, the specification wins.
 
 ## Project Overview
 
-**Dev Cleaner** is a Windows desktop application built with **Tauri 2 (Rust)** and **React 19 (TypeScript)**. Version 2.0 discovers reproducible developer artifacts across JavaScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart and other ecosystems, analyses AI coding-agent storage (Codex, Claude Code, Antigravity) without reading file contents, and safely cleans selected targets. Every scan, measurement, classification and deletion runs in the Rust backend; the frontend only presents and selects backend-owned target IDs.
+**Dev Cleaner** is a Windows desktop application built with **Tauri 2 (Rust)** and **React 19 (TypeScript)**. Version 2.2 discovers reproducible developer artifacts across JavaScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart and other ecosystems, analyses AI coding-agent storage (Codex, Claude Code, Antigravity) without reading file contents, and safely cleans selected targets. Every scan, measurement, classification and deletion runs in the Rust backend; the frontend only presents and selects backend-owned target IDs.
 
 Traditional filesystem scanners freeze system I/O by recursing deep into nested dependency subfolders. **Dev Cleaner** solves this with an **Optimized Pruning Directory Traversal Engine**: as soon as a `node_modules` directory is discovered, deep recursive traversal is bypassed, and size calculation is offloaded to asynchronous worker pools.
 
@@ -91,6 +94,9 @@ Dev Cleaner operates **100% locally** with zero telemetry, zero analytics, and z
 
 ## Key Features
 
+- **One catalog, many ecosystems**: 56 evidence-backed rules cover JavaScript/TypeScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart, package-manager caches and AI coding-agent storage, each with a safety class and a regeneration hint.
+- **Terminal-native when you want it**: `dev-cleaner scan .` prints a size-ranked table, `-i` turns it into a numbered picker, `--json` feeds CI, and `--webhook` reports to n8n/Slack/Discord. See [`docs/CLI.md`](docs/CLI.md).
+- **Built-in MCP server**: coding agents can discover and preview cleanups over the Model Context Protocol, with a mandatory preview → token → execute gate.
 - **Blazing-Fast Discovery Engine**: Traverses massive disk trees with millisecond response times, instantly skipping nested sub-directory recursion inside `node_modules` to find hundreds of projects without UI stutter.
 - **Multi-Layer Safety Guard (`SEC-DEL`)**: Hardened path boundary checks prevent deletion of Windows system directories, user root folders, non-`node_modules` targets, or drive roots (`C:\`).
 - **Monorepo & Workspace Hierarchy Detection**: Intelligently groups nested package folders under their respective monorepo root workspaces (`pnpm-workspace`, `Turbo`, `Lerna`, `Nx`, `Yarn Workspaces`, `Bun`).
@@ -111,7 +117,7 @@ Dev Cleaner operates **100% locally** with zero telemetry, zero analytics, and z
 
 ![Tauri](https://img.shields.io/badge/Tauri_2.2-24C8D8?style=for-the-badge&logo=tauri&logoColor=white)
 ![Rust](https://img.shields.io/badge/Rust_2021-DEA584?style=for-the-badge&logo=rust&logoColor=black)
-![React](https://img.shields.io/badge/React_18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![React](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript_5.7-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite_6.2-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![Zustand](https://img.shields.io/badge/Zustand_5-443E3B?style=for-the-badge)
@@ -157,9 +163,9 @@ Node-Cleaner/
 │   ├── icons/notification.png      # Dev-browser notification icon
 │   └── vellium.svg                 # Publisher logo
 ├── release_output/                 # Production builds (git-ignored, regenerated)
-│   ├── Dev-Cleaner-2.2.2-x64-Setup.exe    # NSIS per-user installer
-│   ├── Dev-Cleaner-2.2.2-x64.msi          # MSI per-machine installer
-│   ├── Dev-Cleaner-2.2.2-Portable.exe     # Standalone portable binary
+│   ├── Dev-Cleaner-2.2.3-x64-Setup.exe    # NSIS per-user installer
+│   ├── Dev-Cleaner-2.2.3-x64.msi          # MSI per-machine installer
+│   ├── Dev-Cleaner-2.2.3-Portable.exe     # Standalone portable binary
 │   ├── BUILD_INFO.json                    # Commit, dirty flag and per-artifact hashes
 │   ├── SHA256SUMS.txt                     # Cryptographic SHA-256 checksums
 │   └── verify-checksums.bat               # 1-Click SHA-256 verification tool
@@ -171,7 +177,7 @@ Node-Cleaner/
 │   ├── verify-recycle-bin.ps1      # Real Recycle Bin round-trip
 │   ├── verify-installer.ps1        # NSIS install -> launch -> icons -> uninstall
 │   ├── verify-msi.ps1              # Per-machine MSI install -> launch -> uninstall
-│   ├── verify-upgrade.ps1          # 2.2.1 -> 2.2.2 in-place upgrade test
+│   ├── verify-upgrade.ps1          # 2.2.2 -> 2.2.3 in-place upgrade test
 │   ├── verify-shell-icons.ps1      # Explorer, shortcut and DisplayIcon shell check
 │   └── verify-checksums.bat        # Windows batch checksum verifier
 ├── src/                            # Frontend application source (React 19 + TS)
@@ -189,7 +195,7 @@ Node-Cleaner/
 │   │   ├── settings/               # Backend-owned settings editor
 │   │   └── shell/                  # Navigation rail
 │   ├── lib/                        # Tauri IPC client, formatters, i18n, UI text
-│   ├── locales/                    # 75-locale legacy dictionary (2.0 screens: EN/TR)
+│   │   └── ui-text/                # 73-language UI text and backend locale catalogues
 │   ├── stores/                     # Zustand stores (scan, selection, prefs, ui, app)
 │   ├── styles/                     # Design tokens & global CSS
 │   ├── test/                       # Vitest suites
@@ -273,7 +279,7 @@ flowchart TD
 - **Node.js**: Version 18.0.0 or higher
 - **Rust & Cargo**: Version 1.75.0 or higher
 - **Windows**: Windows 11 (64-bit x64), verified. Windows 10 is not verified for
-  2.2.2 and is not advertised as supported.
+  2.2.3 and is not advertised as supported.
 - **WebView2**: Included by default in Windows 11
 
 ### Step-by-Step Developer Setup
@@ -315,15 +321,33 @@ flowchart TD
    npm run build:release
    ```
 
+### Command line
+
+The installed binary doubles as a terminal tool:
+
+```bash
+dev-cleaner scan .                 # list the largest reclaimable targets under .
+dev-cleaner scan . --top 10        # show only the ten largest
+dev-cleaner scan . --interactive   # pick targets by number, move them to the Recycle Bin
+dev-cleaner scan . --json          # one machine-readable document
+dev-cleaner caches --clean npm     # run the official npm cache clean
+dev-cleaner history                # past cleanup records
+```
+
+Full reference, JSON schema and npkill migration table:
+[`docs/CLI.md`](docs/CLI.md). Exit codes are part of the automation contract
+(`0` success, `1` scan failure, `2` cleanup failure, `3` argument error,
+`4` blocked).
+
 ---
 
 ## Pre-Compiled Distribution Packages
 
 Ready-to-use production packages are generated into the `release_output/` directory (git-ignored; run `npm run build:release`):
 
-- **NSIS Setup Installer**: `Dev-Cleaner-2.2.2-x64-Setup.exe` _(Per-user installer with desktop/start menu shortcuts)_
-- **MSI Enterprise Installer**: `Dev-Cleaner-2.2.2-x64.msi` _(Per-machine enterprise & GPO silent deployment)_
-- **Standalone Portable**: `Dev-Cleaner-2.2.2-Portable.exe` _(Zero installation, run standalone from USB or any folder)_
+- **NSIS Setup Installer**: `Dev-Cleaner-2.2.3-x64-Setup.exe` _(Per-user installer with desktop/start menu shortcuts)_
+- **MSI Enterprise Installer**: `Dev-Cleaner-2.2.3-x64.msi` _(Per-machine enterprise & GPO silent deployment)_
+- **Standalone Portable**: `Dev-Cleaner-2.2.3-Portable.exe` _(Zero installation, run standalone from USB or any folder)_
 - **Integrity Verification**: `verify-checksums.bat` & `SHA256SUMS.txt`
 
 > **Do not install the NSIS and MSI builds on the same machine.** They use
@@ -335,9 +359,22 @@ Ready-to-use production packages are generated into the `release_output/` direct
 
 ---
 
+## Contributing
+
+Dev Cleaner is open source under the MIT License and welcomes contributions of
+all sizes: bug reports, new catalog rules, translations, documentation and
+code. Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for the local setup and the
+quality gates, and [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) for the
+community rules. Security problems must be reported privately following
+[`SECURITY.md`](SECURITY.md).
+
+---
+
 ## License
 
-Distributed under the **Proprietary License**. Copyright &copy; 2026 Vellium. All rights reserved.
+Distributed under the **MIT License**. Copyright &copy; 2026 Emir Dede.
+
+See [`LICENSE`](LICENSE) for the full text.
 
 **Official Website**: [Vellium.dev](https://vellium.dev) &bull; **Publisher**: Vellium
 
@@ -362,7 +399,7 @@ Distributed under the **Proprietary License**. Copyright &copy; 2026 Vellium. Al
 
 ## Project Overview (Proje Genel Bakışı)
 
-**Dev Cleaner**, **Tauri 2 (Rust)** ve **React 19 (TypeScript)** ile geliştirilmiş bir Windows masaüstü uygulamasıdır. 2.0 sürümü JavaScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart ve diğer ekosistemlerdeki yeniden üretilebilir geliştirici artıklarını bulur; Codex, Claude Code ve Antigravity gibi AI kodlama ajanlarının depolamasını dosya içeriğini okumadan analiz eder ve seçilen hedefleri güvenle temizler. Tarama, ölçüm, sınıflandırma ve silme tamamen Rust arka ucunda çalışır; ön yüz yalnızca arka ucun ürettiği hedef kimliklerini gösterir ve seçer.
+**Dev Cleaner**, **Tauri 2 (Rust)** ve **React 19 (TypeScript)** ile geliştirilmiş bir Windows masaüstü uygulamasıdır. 2.2 sürümü JavaScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart ve diğer ekosistemlerdeki yeniden üretilebilir geliştirici artıklarını bulur; Codex, Claude Code ve Antigravity gibi AI kodlama ajanlarının depolamasını dosya içeriğini okumadan analiz eder ve seçilen hedefleri güvenle temizler. Tarama, ölçüm, sınıflandırma ve silme tamamen Rust arka ucunda çalışır; ön yüz yalnızca arka ucun ürettiği hedef kimliklerini gösterir ve seçer.
 
 Geleneksel dosya tarayıcıları iç içe geçmiş bağımlılık ağaçlarında takılarak sistemi kilitler. **Dev Cleaner**, geliştirdiği **Budamalı Dizin Tarama Motoru** ile `node_modules` klasörüne ulaştığı anda derin özyinelemeli taramayı durdurarak boyutu arka plan iş parçacığı havuzlarına devreder ve yüzlerce projeyi saniyeler içinde listeler.
 
@@ -374,6 +411,9 @@ Uygulama **%100 yerel ve çevrimdışı** çalışır; hiçbir harici sunucuya b
 
 ## Key Features (Önemli Özellikler)
 
+- **Tek katalog, çoklu ekosistem**: 56 kanıta dayalı kural JavaScript/TypeScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart, paket yöneticisi önbellekleri ve AI kodlama ajanı depolamasını kapsar; her kuralın bir güvenlik sınıfı ve yeniden üretim ipucu vardır.
+- **İstediğinizde terminal aracı**: `dev-cleaner scan .` boyuta göre sıralı tablo yazdırır, `-i` numaralı seçim moduna geçer, `--json` CI'ı besler, `--webhook` n8n/Slack/Discord'a rapor gönderir. Ayrıntı: [`docs/CLI.md`](docs/CLI.md).
+- **Yerleşik MCP sunucusu**: kodlama ajanları Model Context Protocol üzerinden temizlik keşfedip önizleyebilir; yıkıcı işlem zorunlu önizleme → token → çalıştırma kapısından geçer.
 - **Işık Hızında Tarama Motoru**: Milyonlarca dosya içeren disk ağaçlarını tararken `node_modules` alt dizinlerine gereksiz girmeyerek taramayı budar ve sistemi dondurmadan yüzlerce projeyi saniyeler içinde bulur.
 - **Çok Katmanlı Güvenlik Kalkanı (`SEC-DEL`)**: Windows sistem kökü (`C:\`), `Windows`, `Program Files`, kullanıcı profil dizinleri veya `node_modules` dışındaki klasörlerin yanlışlıkla silinmesini kesin olarak engeller.
 - **Monorepo ve Çalışma Alanı Gruplama**: İç içe geçmiş paketleri bağlı oldukları monorepo kök dizini altında akıllıca gruplar (`pnpm-workspace`, `Turbo`, `Lerna`, `Nx`, `Yarn Workspaces`, `Bun`).
@@ -394,7 +434,7 @@ Uygulama **%100 yerel ve çevrimdışı** çalışır; hiçbir harici sunucuya b
 
 ![Tauri](https://img.shields.io/badge/Tauri_2.2-24C8D8?style=for-the-badge&logo=tauri&logoColor=white)
 ![Rust](https://img.shields.io/badge/Rust_2021-DEA584?style=for-the-badge&logo=rust&logoColor=black)
-![React](https://img.shields.io/badge/React_18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![React](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript_5.7-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite_6.2-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![Zustand](https://img.shields.io/badge/Zustand_5-443E3B?style=for-the-badge)
@@ -440,9 +480,9 @@ Node-Cleaner/
 │   ├── icons/notification.png      # Geliştirme tarayıcısı bildirim ikonu
 │   └── vellium.svg                 # Yayıncı logosu
 ├── release_output/                 # Üretim paketleri (git-ignored, yeniden üretilir)
-│   ├── Dev-Cleaner-2.2.2-x64-Setup.exe    # NSIS kullanıcı bazlı kurulum
-│   ├── Dev-Cleaner-2.2.2-x64.msi          # MSI makine bazlı kurulum
-│   ├── Dev-Cleaner-2.2.2-Portable.exe     # Taşınabilir tekil exe
+│   ├── Dev-Cleaner-2.2.3-x64-Setup.exe    # NSIS kullanıcı bazlı kurulum
+│   ├── Dev-Cleaner-2.2.3-x64.msi          # MSI makine bazlı kurulum
+│   ├── Dev-Cleaner-2.2.3-Portable.exe     # Taşınabilir tekil exe
 │   ├── BUILD_INFO.json                    # Commit, dirty bayrağı ve artefakt hash'leri
 │   ├── SHA256SUMS.txt                     # Kriptografik SHA-256 sağlama özetleri
 │   └── verify-checksums.bat               # Tek tıkla hash doğrulama aracı
@@ -454,7 +494,7 @@ Node-Cleaner/
 │   ├── verify-recycle-bin.ps1      # Gerçek Geri Dönüşüm Kutusu gidiş-dönüşü
 │   ├── verify-installer.ps1        # NSIS kur -> çalıştır -> ikonlar -> kaldır
 │   ├── verify-msi.ps1              # Makine bazlı MSI kur -> çalıştır -> kaldır
-│   ├── verify-upgrade.ps1          # 2.2.1 -> 2.2.2 yerinde yükseltme testi
+│   ├── verify-upgrade.ps1          # 2.2.2 -> 2.2.3 yerinde yükseltme testi
 │   ├── verify-shell-icons.ps1      # Explorer, kısayol ve DisplayIcon kabuk kontrolü
 │   └── verify-checksums.bat        # Windows batch checksum doğrulayıcı
 ├── src/                            # Ön yüz kaynak kodları (React 19 + TypeScript)
@@ -472,7 +512,7 @@ Node-Cleaner/
 │   │   ├── settings/               # Arka uç sahipli ayar editörü
 │   │   └── shell/                  # Navigasyon rayı
 │   ├── lib/                        # Tauri IPC istemcisi, biçimlendiriciler, i18n, UI metinleri
-│   ├── locales/                    # 75 dilli eski sözlük (2.0 ekranları: EN/TR)
+│   │   └── ui-text/                # 73 dilli UI metinleri ve arka uç yerel katalogları
 │   ├── stores/                     # Zustand depoları (scan, selection, prefs, ui, app)
 │   ├── styles/                     # Tasarım token'ları ve global CSS
 │   ├── test/                       # Vitest test paketleri
@@ -525,7 +565,7 @@ Node-Cleaner/
 
 - **Node.js**: Sürüm 18.0.0 veya üzeri
 - **Rust & Cargo**: Sürüm 1.75.0 veya üzeri
-- **İşletim Sistemi**: Windows 11 (64-bit x64), doğrulandı. Windows 10, 2.2.2
+- **İşletim Sistemi**: Windows 11 (64-bit x64), doğrulandı. Windows 10, 2.2.3
   için doğrulanmadı ve desteklenen sistem olarak sunulmuyor.
 - **WebView2 Çalışma Zamanı**: Windows 11'de varsayılan olarak yerleşiktir
 
@@ -568,15 +608,33 @@ Node-Cleaner/
    npm run build:release
    ```
 
+### Terminal kullanımı
+
+Kurulu uygulama aynı zamanda bir terminal aracıdır:
+
+```bash
+dev-cleaner scan .                 # . altındaki en büyük hedefleri listeler
+dev-cleaner scan . --top 10        # yalnızca en büyük 10 hedefi gösterir
+dev-cleaner scan . --interactive   # numarayla seç, Çöp Kutusu'na taşı
+dev-cleaner scan . --json          # tek makine-okunur belge
+dev-cleaner caches --clean npm     # resmî npm önbellek temizliğini çalıştırır
+dev-cleaner history                # geçmiş temizlik kayıtları
+```
+
+Komut referansı, JSON şeması ve npkill geçiş tablosu:
+[`docs/CLI.md`](docs/CLI.md). Çıkış kodları otomasyon sözleşmesinin parçasıdır
+(`0` başarı, `1` tarama hatası, `2` temizlik hatası, `3` argüman hatası,
+`4` güvenlik nedeniyle engellendi).
+
 ---
 
 ## Dağıtım Paketleri
 
 Hazır derlenmiş resmi release paketleri `release_output/` klasörüne üretilir (git-ignored; `npm run build:release`):
 
-- **NSIS Kurulum Sihirbazı**: `Dev-Cleaner-2.2.2-x64-Setup.exe` _(Kullanıcı bazlı kurulum, masaüstü ve başlat menüsü kısayolları)_
-- **MSI Kurumsal Installer**: `Dev-Cleaner-2.2.2-x64.msi` _(Makine bazlı kurulum, sessiz kurulum ve GPO dağıtımı)_
-- **Standalone Taşınabilir Sürüm**: `Dev-Cleaner-2.2.2-Portable.exe` _(Kurulumsuz, doğrudan çalışır)_
+- **NSIS Kurulum Sihirbazı**: `Dev-Cleaner-2.2.3-x64-Setup.exe` _(Kullanıcı bazlı kurulum, masaüstü ve başlat menüsü kısayolları)_
+- **MSI Kurumsal Installer**: `Dev-Cleaner-2.2.3-x64.msi` _(Makine bazlı kurulum, sessiz kurulum ve GPO dağıtımı)_
+- **Standalone Taşınabilir Sürüm**: `Dev-Cleaner-2.2.3-Portable.exe` _(Kurulumsuz, doğrudan çalışır)_
 - **Bütünlük Doğrulama**: `verify-checksums.bat` ve `SHA256SUMS.txt`
 
 > **NSIS ve MSI sürümlerini aynı makinede kurmayın.** Kurulum kapsamları
@@ -589,8 +647,22 @@ Hazır derlenmiş resmi release paketleri `release_output/` klasörüne üretili
 
 ---
 
+## Katkı
+
+Dev Cleaner MIT lisanslı açık kaynak bir projedir; hata bildirimi, yeni katalog
+kuralı, çeviri, dokümantasyon ve kod katkılarının her boyutu memnuniyetle
+karşılanır. Yerel kurulum ve kalite kapıları için
+[`CONTRIBUTING.md`](CONTRIBUTING.md), topluluk kuralları için
+[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) dosyasını okuyun. Güvenlik
+sorunları [`SECURITY.md`](SECURITY.md) içindeki özel bildirim yolundan
+iletilmelidir.
+
+---
+
 ## License (Lisans)
 
-Bu proje **Ticari / Özel (Proprietary)** lisans ile korunmaktadır. Telif Hakkı &copy; 2026 Vellium. Tüm hakları saklıdır.
+Bu proje **MIT Lisansı** ile dağıtılır. Telif Hakkı &copy; 2026 Emir Dede.
+
+Tam metin için [`LICENSE`](LICENSE) dosyasına bakın.
 
 **Resmi Web Sitesi**: [Vellium.dev](https://vellium.dev) &bull; **Yayıncı**: Vellium
