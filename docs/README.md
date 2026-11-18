@@ -88,12 +88,12 @@ docs/
 ## Current release status (2.2.3)
 
 ```
-Code gates:            14/14 PASS
+Code gates:            14/14 PASS (237 frontend tests, 230 Rust lib + 21 integration, clippy, rustfmt, build, 13/13 a11y)
 Brand gates:           3/3 PASS (check:icons, check:brand, format:check)
-Release build:         LOCAL ONLY — uncommitted tree, 3 artifacts
-Runtime checks:        2.2.2 evidence below; not re-run for 2.2.3
-Release gates:         PENDING — MSI (G4), clean-VM repeat, legal (G0), design (G9)
-Public production:     NO-GO until G0, G4, clean-VM repeat and G9 close
+Release build:         2.2.3 — commit 7c9d5f3, clean tree, 3 artifacts, published on GitHub Releases
+Runtime checks:        2.2.2 evidence below; the 2.2.3 installer harnesses were not re-run
+Release gates:         PENDING — signed MSI (G4), clean-VM repeat, legal (G0), design (G9)
+Source availability:   PUBLIC — MIT licensed, contributions welcome
 ```
 
 2.2.3 is a scan-experience and documentation patch: `--scope combined`, the
@@ -108,10 +108,10 @@ Source gates executed on 2026-11-17:
   `npm run check:contrast` — PASS.
 - `cargo test --lib` (230) and `cargo fmt` — PASS.
 
-The 2.2.3 packages in `release_output/` were built locally from an uncommitted
-tree, so `release_output/BUILD_INFO.json` reports `"dirty": true` and
-`npm run check:build-info` fails by design. Rebuild after committing the change
-set before treating any 2.2.3 package as publishable.
+The 2.2.3 packages attached to the GitHub Release were rebuilt from the clean
+commit `7c9d5f3`, so `release_output/BUILD_INFO.json` reports `"dirty": false`
+and `npm run check:build-info` passes. Any later package must be rebuilt from a
+clean tree so the manifest stays tied to a commit.
 
 ### 2.2.2 brand release evidence
 
