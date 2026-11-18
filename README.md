@@ -25,7 +25,7 @@
 ![Vite](https://img.shields.io/badge/Vite-6.2-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![Zustand](https://img.shields.io/badge/Zustand-5.0-4338CA?style=for-the-badge)
 ![TanStack Virtual](https://img.shields.io/badge/TanStack-Virtual_3-FF4154?style=for-the-badge)
-![Windows](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+![Windows](https://img.shields.io/badge/Platform-Windows%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 ![Languages](https://img.shields.io/badge/Languages-73%20Supported-success?style=for-the-badge&logo=google-translate)
 ![Safety](https://img.shields.io/badge/Safety-Recycle%20Bin%20%7C%20Zero%20Data%20Loss-brightgreen?style=for-the-badge&logo=windows)
