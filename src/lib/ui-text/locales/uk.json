@@ -8,7 +8,9 @@
     "about": "Про програму",
     "agents": "Інструменти AI",
     "caches": "Кеші інструментів",
-    "docs": "Документація"
+    "docs": "Документація",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Сканувати",

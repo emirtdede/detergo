@@ -8,7 +8,9 @@
     "about": "Относно",
     "agents": "AI инструменти",
     "caches": "Кешове на инструменти",
-    "docs": "Документи"
+    "docs": "Документи",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Сканиране",

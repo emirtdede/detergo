@@ -8,7 +8,9 @@
     "about": "Om",
     "agents": "AI-verktyg",
     "caches": "Verktygscacher",
-    "docs": "Dokument"
+    "docs": "Dokument",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Skanna",

@@ -28,12 +28,11 @@ go straight to users; no staging, no canary)
 | G6 | Clean release build + provenance | **PASS** | `npm run build:release` from a clean tree, then `npm run check:build-info` â†’ clean tree, 3 artifacts |
 | G7 | Exe icon frame gate | **PASS** | 15 frames / 15 `RT_ICON` in the portable EXE, setup EXE and raw release binary |
 | G8 | Windows 10 support claim | **PASS (claim removed)** | No 22H2 host was available, so the untested "1809+" claim was removed from README and `MASTER_SPEC.md`; Windows 11 x64 is the verified target |
-| G9 | Design-board visual approval | **PENDING** | `docs/brand/QA_2.2.2.md` + `docs/brand/qa/` (recorded); signature still missing |
+| G9 | Design-board visual approval | **PENDING** | 15-frame set recorded in `docs/release/TEST_MATRIX.md`; signature still missing |
 
-Historical 2.2.1 evidence remains in
-`docs/audit/baseline/PRODUCTION_GATE_2.2.1_TR.md` and
-`docs/release/baseline-2.2.1.md`. Do not reuse a 2.2.1 installer as a 2.2.2
-deliverable and never patch a shipped executable in place.
+Historical 2.2.1 evidence is no longer part of the repository; the git history
+keeps it. Do not reuse an older installer as a 1.0.0 deliverable and never patch
+a shipped executable in place.
 
 ## Brand rollout checklist
 
@@ -51,10 +50,10 @@ deliverable and never patch a shipped executable in place.
 - [x] `bundle.icon`, NSIS and WiX artwork paths point at generated files
 - [x] README logo, artifact names, tree and installer note updated
 - [x] GitHub social preview (1280Ã—640) and circle-safe avatar
-- [x] Old identity archived in `docs/archive/brand-v1/`, not deleted
+- [x] Old identity retired; no shipping file references it
 - [x] Brand scan fails on retired asset names and shell-cache shortcuts
 - [x] CI runs `check:icons` and `check:brand`; `build:release` runs the PE gate
-- [x] Visual QA record and sheets in `docs/brand/QA_2.2.2.md` and `docs/brand/qa/`
+- [x] Visual QA record in `docs/release/TEST_MATRIX.md`
 - [x] NSIS install, shell-surface and 2.2.1 â†’ 2.2.2 upgrade checks (dev host)
 - [x] Real shell captures at 100% scaling (desktop, Start, Explorer, taskbar, tray, in-app)
 - [ ] Shell captures at 125â€“300% scaling (needs sign-out at each scale on a test image)
@@ -89,13 +88,13 @@ npm run verify:upgrade -Kind NSIS
 npm run verify:upgrade -Kind MSI   # elevated
 ```
 
-`verify:upgrade` expects the 2.2.1 artifacts in
-`release_output/baseline-2.2.1/`:
+`verify:upgrade` expects the previous release's artifacts in
+`release_output/baseline/`:
 
 ```powershell
-New-Item -ItemType Directory release_output\baseline-2.2.1
-Copy-Item <share>\Dev-Cleaner-2.2.1-x64-Setup.exe release_output\baseline-2.2.1\
-Copy-Item <share>\Dev-Cleaner-2.2.1-x64.msi        release_output\baseline-2.2.1\
+New-Item -ItemType Directory release_output\baseline
+Copy-Item <path>\Dev-Cleaner-<previous>-x64-Setup.exe release_output\baseline\
+Copy-Item <path>\Dev-Cleaner-<previous>-x64.msi        release_output\baseline\
 ```
 
 ## Packaging checklist

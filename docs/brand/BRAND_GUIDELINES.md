@@ -2,8 +2,8 @@
 
 **Version:** 2.2.2
 **Canonical master:** `assets/brand/dev-cleaner-icon.svg`
-**Status:** shipping identity; the previous identity is archived in
-`docs/archive/brand-v1/` and must not be used.
+**Status:** shipping identity; earlier identities are superseded and must not be
+used.
 
 ## 1. The mark
 
@@ -135,15 +135,14 @@ npm run generate:icons:verify   # two consecutive runs, identical manifest
 `generate-icons.mjs` is Windows-only (Tauri icon + sharp). CI runs only the
 structural checks, so a Linux runner never needs to rasterise anything.
 
-The recorded visual inspection is `docs/brand/QA_2.2.2.md`; the sheets under
-`docs/brand/qa/` are the evidence for the design review. They are inspection
-outputs only, not generated shipping assets.
+The recorded visual inspection of the shipped frames lives in
+`docs/release/RELEASE_CHECKLIST.md` (G9). Inspection sheets were review-time
+outputs only, not generated shipping assets, and are not part of the repository.
 
 ## 9. Archive policy
 
-`docs/archive/brand-v1/` holds the retired identity. It is excluded from the
-brand scan, but no shipping file may reference it. Do not delete it: the review
-trail and the old store asset remain auditable.
+The retired identity is not kept in the repository. No shipping file may
+reference it; the git history and the release changelog preserve the trail.
 
 ## 10. Legal
 

@@ -1054,7 +1054,7 @@ kapsamındaki tüm bulgular kapanmış, tüm otomatik kapılar yeşildir.
 
 Kapı son durumu: `npm run test:a11y` → `check:contrast` 4/4 tema + **13/13 Playwright testi**.
 Ayrıntılı iş kırılımı, risk kaydı ve test matrisi:
-`docs/release/2026-11-18-remediation-wbs-risk-test-matrix.md`.
+`docs/CHANGELOG.md`.
 
 ### 9. Bağımsız denetim turu (18.11.2026)
 

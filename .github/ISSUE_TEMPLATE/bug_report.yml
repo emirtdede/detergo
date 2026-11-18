@@ -15,7 +15,7 @@ body:
     attributes:
       label: Dev Cleaner version
       description: Output of `dev-cleaner --version`, or the version on the About screen.
-      placeholder: "2.2.3"
+      placeholder: "1.0.0"
     validations:
       required: true
 

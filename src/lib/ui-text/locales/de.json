@@ -8,7 +8,9 @@
     "docs": "Dokumentation",
     "history": "Verlauf",
     "settings": "Einstellungen",
-    "about": "Über"
+    "about": "Über",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Scannen",

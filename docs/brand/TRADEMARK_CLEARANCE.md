@@ -4,7 +4,7 @@
 document.
 **Owner:** Vellium
 **Started:** 2026-11-10
-**Release blocked by:** G0 (see `docs/release/BRAND_ROLLOUT_PLAN_V3.1_TR.md` §9)
+**Release blocked by:** G0 (see `docs/release/RELEASE_CHECKLIST.md` §9)
 
 This is a record of the clearance work, not legal advice. Do not claim
 exclusivity or use the ® symbol until counsel has approved the mark.

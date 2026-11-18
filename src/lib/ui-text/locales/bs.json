@@ -8,7 +8,9 @@
     "about": "O Programu",
     "agents": "AI Alati",
     "caches": "Keševi Alata",
-    "docs": "Dokumentacija"
+    "docs": "Dokumentacija",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Skeniraj",

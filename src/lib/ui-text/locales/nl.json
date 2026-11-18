@@ -8,7 +8,9 @@
     "about": "Over",
     "agents": "AI-hulpmiddelen",
     "caches": "Hulpmiddelcaches",
-    "docs": "Documenten"
+    "docs": "Documenten",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Scannen",

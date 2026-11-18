@@ -101,7 +101,6 @@ const excludedDirs = [
   path.join(root, ".git"),
   path.join(root, "dist"),
   path.join(root, "release_output"),
-  path.join(root, "docs", "archive"),
 ];
 const textExtensions = new Set([
   ".ts",
@@ -278,7 +277,6 @@ if (exists("docs/brand/preview.html")) {
 }
 exists("docs/brand/BRAND_GUIDELINES.md");
 exists("docs/brand/TRADEMARK_CLEARANCE.md");
-exists("docs/archive/brand-v1/README.md");
 exists("assets/brand/icon-manifest.json");
 
 if (errors.length > 0) {

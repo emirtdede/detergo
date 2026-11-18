@@ -8,7 +8,9 @@
     "about": "Dastur Haqida",
     "agents": "AI vositalari",
     "caches": "Asbob keshlari",
-    "docs": "Hujjatlar"
+    "docs": "Hujjatlar",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Skanerlash",

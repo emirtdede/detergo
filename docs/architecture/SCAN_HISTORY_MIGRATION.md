@@ -1,7 +1,7 @@
 # Scan History Migration — 2.3 Draft
 
 **Status:** draft only. Not implemented in 2.2.1. See ADR-3 in
-`docs/audit/REMEDIATION_PLAN_TR.md`.
+`docs/audit/2026-11-17-pre-deployment-qa-audit-v3.md`.
 
 ## Current state (2.2.1)
 

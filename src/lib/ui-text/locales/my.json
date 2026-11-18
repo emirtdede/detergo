@@ -8,7 +8,9 @@
     "about": "အကြောင်း",
     "agents": "AI ကိရိယာများ",
     "caches": "ကိရိယာ cache များ",
-    "docs": "စာရွက်စာတမ်းများ"
+    "docs": "စာရွက်စာတမ်းများ",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "စကင်ဖတ်ရန်",

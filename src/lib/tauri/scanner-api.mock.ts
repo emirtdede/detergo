@@ -920,7 +920,7 @@ export function createMockScannerApi(): ScannerApi {
 
     async getBuildInfo(): Promise<BuildInfo> {
       return {
-        version: "2.2.3",
+        version: "1.0.0",
         commit: "demo",
         commitShort: "demo",
         dirty: false,

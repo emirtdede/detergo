@@ -8,7 +8,9 @@
     "about": "परिचय",
     "agents": "एआई टूल्स",
     "caches": "टूल कैशेज",
-    "docs": "दस्तावेज़"
+    "docs": "दस्तावेज़",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "स्कैन करें",

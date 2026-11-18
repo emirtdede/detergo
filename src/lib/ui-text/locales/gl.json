@@ -8,7 +8,9 @@
     "about": "Acerca de",
     "agents": "Ferramentas de IA",
     "caches": "Cachés de ferramentas",
-    "docs": "Documentos"
+    "docs": "Documentos",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Escanear",

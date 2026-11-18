@@ -8,7 +8,9 @@
     "about": "អំពី",
     "agents": "ឧបករណ៍ AI",
     "caches": "អង្គុយឧបករណ៍",
-    "docs": "សៀវភៅឯកសារ"
+    "docs": "សៀវភៅឯកសារ",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "ស្កេន",

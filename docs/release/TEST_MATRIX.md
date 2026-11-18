@@ -37,9 +37,9 @@ Rust toolchain:
 The ICO was inspected with PIL: 15 frames in the required order, 256 stored as
 PNG and the rest as 32-bit DIB. `scripts/check-exe-icons.mjs` was also run
 against the 2.2.1 binaries and correctly failed with 8 frames, proving the gate
-detects the regression it was written for. The visual inspection sheets and
-their findings are recorded in `docs/brand/QA_2.2.2.md`; this closes the
-engineering side of G9, not the design-board signature.
+detects the regression it was written for. The visual inspection findings are
+recorded in this document; this closes the engineering side of G9, not the
+design-board signature.
 
 Still **NOT EXECUTED** for 2.2.2: MSI install (needs an elevated session on a
 separate host), Windows 10 22H2, and a repeat of the installer harnesses on a
@@ -82,7 +82,7 @@ results prove the packages behave, not that a pristine image is unaffected.
 | Installer language picker, remembered language | open the setup with `Installer Language` = 1031 and 1115 | **PASS** â€” the dialog is shown on both runs, its title/info are localized (`YÃ¼kleyici Dili` / `LÃ¼tfen bir dil seÃ§in.` under the Turkish Windows UI language), and it preselects the remembered language under its native name (`Deutsch`, `à·ƒà·’à¶‚à·„à¶½`). The title follows the Windows UI language because MUI resolves the defines before it reads the registry; the stock LangDLL OK/Cancel labels are compiled into the plugin and stay English |
 | Generated-language wizard chrome | Sinhala (1115), Tamil (1097), Urdu (1056) wizard captures | **PASS** â€” title, welcome text, directory page, buttons, body sentence and footer localized; `Next >`/`Browse...` no longer leak; Urdu mirrors the header to the left |
 | Uninstaller chrome and branding | real 2.2.2 install, Sinhala uninstaller welcome/confirm/finish captures | **PASS** â€” `unheader.bmp` lockup inset beside the title, sidebar finish page lockup with 34 px margins, footer `Â© 2026 Vellium`, and every sentence localized including `Click Uninstall` and `Click Finish` |
-| Installed shell surfaces, 100% | manual capture after the same NSIS install | **6/6 PASS** - desktop shortcut, Start menu result, Explorer extra-large icons, running taskbar button, tray overflow and in-app chrome all show the new mark ([`docs/brand/qa/shell/`](../brand/qa/shell/)) |
+| Installed shell surfaces, 100% | manual capture after the same NSIS install | **6/6 PASS** - desktop shortcut, Start menu result, Explorer extra-large icons, running taskbar button, tray overflow and in-app chrome all show the new mark (captures were review artifacts, not committed) |
 
 Two harness defects were found and fixed by these runs: `Get-FileHash` does not
 resolve in a Windows PowerShell session with a stripped `PSModulePath`, and the

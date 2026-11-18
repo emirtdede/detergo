@@ -27,6 +27,8 @@ export interface UIText {
     history: string;
     settings: string;
     about: string;
+    github: string;
+    sponsor: string;
   };
   common: {
     scan: string;

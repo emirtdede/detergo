@@ -45,6 +45,17 @@
   margin-top: auto;
 }
 
+/* Repository and sponsorship links sit under the navigation, above the
+   collapse control, and keep the rail's icon-only shape when folded. */
+.nav-rail-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border);
+}
+
 /* The rail folds itself below the `narrowRail` breakpoint in `src/lib/layout.ts`
    (900px; keep the two in sync — CSS cannot import the TypeScript constant).
    While it does, the manual expand control would fight the automatic behaviour,

@@ -8,7 +8,9 @@
     "about": "O Programu",
     "agents": "AI alati",
     "caches": "Predmemorije alata",
-    "docs": "Dokumentacija"
+    "docs": "Dokumentacija",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Skeniraj",

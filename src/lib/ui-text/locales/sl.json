@@ -8,7 +8,9 @@
     "about": "O Programu",
     "agents": "AI Orodja",
     "caches": "Predpomnilniki orodij",
-    "docs": "Dokumentacija"
+    "docs": "Dokumentacija",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Preišči",

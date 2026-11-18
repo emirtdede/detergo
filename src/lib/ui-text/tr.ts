@@ -11,6 +11,8 @@ export const TR: UIText = {
     history: "Geçmiş",
     settings: "Ayarlar",
     about: "Hakkında",
+    github: "GitHub",
+    sponsor: "Sponsor",
   },
   common: {
     scan: "Tara",

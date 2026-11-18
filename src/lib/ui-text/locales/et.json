@@ -8,7 +8,9 @@
     "about": "Teave",
     "agents": "AI tööriistad",
     "caches": "Tööriista vahemälud",
-    "docs": "Dokumendid"
+    "docs": "Dokumendid",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Skanni",

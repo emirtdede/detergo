@@ -8,7 +8,9 @@
     "about": "Σχετικά",
     "agents": "Εργαλεία AI",
     "caches": "Κρυφές μνήμες εργαλείων",
-    "docs": "Έγγραφα"
+    "docs": "Έγγραφα",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Σάρωση",

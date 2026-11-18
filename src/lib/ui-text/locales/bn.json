@@ -8,7 +8,9 @@
     "about": "সম্পর্কে",
     "agents": "এআই টুলস",
     "caches": "টুল ক্যাশেস",
-    "docs": "ডকস"
+    "docs": "ডকস",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "স্ক্যান করুন",

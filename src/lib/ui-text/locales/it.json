@@ -8,7 +8,9 @@
     "about": "Informazioni",
     "agents": "Strumenti AI",
     "caches": "Cache degli Strumenti",
-    "docs": "Documenti"
+    "docs": "Documenti",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Scansiona",

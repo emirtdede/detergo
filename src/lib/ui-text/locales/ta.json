@@ -8,7 +8,9 @@
     "about": "பற்றி",
     "agents": "எஐ கருவிகள்",
     "caches": "கருவி காசேக்கள்",
-    "docs": "ஆவணங்கள்"
+    "docs": "ஆவணங்கள்",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "ஸ்கேன் செய்",

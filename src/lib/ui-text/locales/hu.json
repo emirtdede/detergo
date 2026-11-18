@@ -8,7 +8,9 @@
     "about": "Névjegy",
     "agents": "MI eszközök",
     "caches": "Szerszámgyorsítótárak",
-    "docs": "Dokumentumok"
+    "docs": "Dokumentumok",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Keresés",

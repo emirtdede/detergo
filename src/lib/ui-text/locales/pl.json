@@ -8,7 +8,9 @@
     "about": "O programie",
     "agents": "Narzędzia AI",
     "caches": "Pamięci podręczne narzędzi",
-    "docs": "Dokumentacja"
+    "docs": "Dokumentacja",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Skanuj",

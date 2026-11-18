@@ -8,7 +8,9 @@
     "about": "Perihal",
     "agents": "Alat AI",
     "caches": "Cache Alat",
-    "docs": "Dokumen"
+    "docs": "Dokumen",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Imbas",

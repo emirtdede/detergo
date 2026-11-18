@@ -8,7 +8,9 @@
     "about": "درباره",
     "agents": "ابزارهای هوش مصنوعی",
     "caches": "حافظه‌های ابزار",
-    "docs": "مستندات"
+    "docs": "مستندات",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "اسکن",

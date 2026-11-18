@@ -8,7 +8,9 @@
     "about": "Tietoja",
     "agents": "AI-työkalut",
     "caches": "Työkaluvälimuistit",
-    "docs": "Asiakirjat"
+    "docs": "Asiakirjat",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Skannaa",

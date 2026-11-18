@@ -8,7 +8,9 @@
     "about": "정보",
     "agents": "AI 도구",
     "caches": "도구 캐시",
-    "docs": "닥터들"
+    "docs": "닥터들",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "검사",

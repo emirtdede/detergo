@@ -8,7 +8,9 @@
     "about": "Um Forritið",
     "agents": "Gervigreindartól",
     "caches": "Tólatenglar",
-    "docs": "Skjöl"
+    "docs": "Skjöl",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Skanna",

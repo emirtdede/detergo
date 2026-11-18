@@ -8,7 +8,9 @@
     "about": "关于",
     "agents": "AI 工具",
     "caches": "工具缓存",
-    "docs": "文档"
+    "docs": "文档",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "扫描",

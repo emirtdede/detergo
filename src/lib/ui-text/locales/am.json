@@ -8,7 +8,9 @@
     "about": "ስለ መተግበሪያው",
     "agents": "AI መሳሪያዎች",
     "caches": "የመሳሪያ መሸጎጫዎች",
-    "docs": "ሰነዶች"
+    "docs": "ሰነዶች",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "ቃኝ",

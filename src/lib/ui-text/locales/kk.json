@@ -8,7 +8,9 @@
     "about": "Бағдарлама туралы",
     "agents": "ЖИ Құралдары",
     "caches": "Құрал Кэштері",
-    "docs": "Құжаттар"
+    "docs": "Құжаттар",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Сканерлеу",

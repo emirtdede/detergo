@@ -8,7 +8,9 @@
     "about": "เกี่ยวกับ",
     "agents": "เครื่องมือ AI",
     "caches": "แคชเครื่องมือ",
-    "docs": "เอกสาร"
+    "docs": "เอกสาร",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "สแกน",

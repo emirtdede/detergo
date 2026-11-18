@@ -8,7 +8,9 @@
     "about": "אודות",
     "agents": "כלים של בינה מלאכותית",
     "caches": "מטמון של הכלים",
-    "docs": "מסמכים"
+    "docs": "מסמכים",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "סרוק",

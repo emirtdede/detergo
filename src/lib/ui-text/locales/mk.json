@@ -8,7 +8,9 @@
     "about": "За Програмата",
     "agents": "АИ Алати",
     "caches": "Кеш на алатки",
-    "docs": "Документи"
+    "docs": "Документи",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Скенирај",

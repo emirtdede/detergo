@@ -30,6 +30,8 @@ const ALLOWED_IDENTICAL_VALUES = new Set([
   // Brand, product and platform names.
   "Dev Cleaner",
   "Dev Cleaner Terminal",
+  "GitHub",
+  "Sponsor",
   "Web / Node.js",
   "Python / venv",
   "Rust / Cargo",

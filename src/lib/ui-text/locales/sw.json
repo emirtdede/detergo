@@ -8,7 +8,9 @@
     "about": "Kuhusu",
     "agents": "Zana za AI",
     "caches": "Hifadhidata za Zana",
-    "docs": "Nyaraka"
+    "docs": "Nyaraka",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Changanua",

@@ -35,13 +35,13 @@
 
 ---
 
-## Release status (2.2.3 — Dev Cleaner)
+## Release status (1.0.0 — Dev Cleaner)
 
-Dev Cleaner 2.2 is a catalog-driven, multi-ecosystem developer-artifact and
-AI-agent storage reclaimer for Windows 11 x64. It ships 73 languages, a
-56-rule cleanup catalog, 21 supported developer-tool caches, a built-in MCP
-server, a scriptable CLI and a reversible Recycle Bin deletion path guarded by
-the Rust safety layer.
+Dev Cleaner is a catalog-driven, multi-ecosystem developer-artifact and
+AI-agent storage reclaimer for Windows 11 x64. Version 1.0.0 is the first
+open-source release: 73 languages, a 56-rule cleanup catalog, 21 supported
+developer-tool caches, a built-in MCP server, an interactive CLI and a
+reversible Recycle Bin deletion path guarded by the Rust safety layer.
 
 Source quality gates pass: 237 frontend tests, 230 Rust library tests plus 21
 integration tests, zero Clippy warnings and the full accessibility suite
@@ -55,15 +55,16 @@ approval — are listed there rather than hidden.
 
 - `docs/README.md` — documentation index and reading order
 - `docs/CLI.md` — terminal reference and npkill migration
+- `docs/CHANGELOG.md` — release history
 - `docs/release/RELEASE_CHECKLIST.md` — gates and remaining items
 - `docs/release/BUILD_PROVENANCE.md` — how a binary is tied to a commit
 - `docs/security/FINAL_SECURITY_AUDIT.md` — executed evidence
 - `docs/release/TEST_MATRIX.md` — test results
-- `docs/MASTER_SPEC.md` — normative 2.0 specification
+- `docs/MASTER_SPEC.md` — normative product specification
 
 Dev Cleaner is free software under the MIT License. Contributions are welcome;
-start with [`CONTRIBUTING.md`](CONTRIBUTING.md) and report vulnerabilities
-privately as described in [`SECURITY.md`](SECURITY.md).
+start with [`CONTRIBUTING.md`](.github/CONTRIBUTING.md) and report vulnerabilities
+privately as described in [`SECURITY.md`](.github/SECURITY.md).
 
 ---
 
@@ -152,20 +153,22 @@ dev-cleaner/
 │   └── brand/                      # dev-cleaner-icon.svg, installer/, github/
 ├── docs/                           # All project documentation (see docs/README.md)
 │   ├── README.md                   # Documentation index & reading order
-│   ├── MASTER_SPEC.md              # Normative 2.0 specification
+│   ├── CHANGELOG.md                # Release history
+│   ├── CLI.md                      # Terminal reference
+│   ├── MASTER_SPEC.md              # Normative product specification
 │   ├── architecture/               # ARCHITECTURE, CLEANUP_CATALOG, AGENT_PROVIDERS
 │   ├── security/                   # SECURITY_MODEL, FINAL_SECURITY_AUDIT
-│   ├── release/                    # TEST_MATRIX, RELEASE_CHECKLIST, release report
-│   ├── audit/                      # Pre-change baseline audit & test results
-│   └── archive/                    # Historical plans and research (not current truth)
+│   ├── release/                    # TEST_MATRIX, RELEASE_CHECKLIST, BUILD_PROVENANCE
+│   ├── audit/                      # Final pre-deployment QA audit
+│   └── brand/                      # Brand guidelines and trademark clearance
 ├── public/                         # Public static web assets
 │   ├── favicon.svg / favicon.ico   # Simplified brand mark
 │   ├── icons/notification.png      # Dev-browser notification icon
 │   └── vellium.svg                 # Publisher logo
 ├── release_output/                 # Production builds (git-ignored, regenerated)
-│   ├── Dev-Cleaner-2.2.3-x64-Setup.exe    # NSIS per-user installer
-│   ├── Dev-Cleaner-2.2.3-x64.msi          # MSI per-machine installer
-│   ├── Dev-Cleaner-2.2.3-Portable.exe     # Standalone portable binary
+│   ├── Dev-Cleaner-1.0.0-x64-Setup.exe    # NSIS per-user installer
+│   ├── Dev-Cleaner-1.0.0-x64.msi          # MSI per-machine installer
+│   ├── Dev-Cleaner-1.0.0-Portable.exe     # Standalone portable binary
 │   ├── BUILD_INFO.json                    # Commit, dirty flag and per-artifact hashes
 │   ├── SHA256SUMS.txt                     # Cryptographic SHA-256 checksums
 │   └── verify-checksums.bat               # 1-Click SHA-256 verification tool
@@ -177,7 +180,7 @@ dev-cleaner/
 │   ├── verify-recycle-bin.ps1      # Real Recycle Bin round-trip
 │   ├── verify-installer.ps1        # NSIS install -> launch -> icons -> uninstall
 │   ├── verify-msi.ps1              # Per-machine MSI install -> launch -> uninstall
-│   ├── verify-upgrade.ps1          # 2.2.2 -> 2.2.3 in-place upgrade test
+│   ├── verify-upgrade.ps1          # In-place upgrade test
 │   ├── verify-shell-icons.ps1      # Explorer, shortcut and DisplayIcon shell check
 │   └── verify-checksums.bat        # Windows batch checksum verifier
 ├── src/                            # Frontend application source (React 19 + TS)
@@ -279,7 +282,7 @@ flowchart TD
 - **Node.js**: Version 18.0.0 or higher
 - **Rust & Cargo**: Version 1.75.0 or higher
 - **Windows**: Windows 11 (64-bit x64), verified. Windows 10 is not verified for
-  2.2.3 and is not advertised as supported.
+  1.0.0 and is not advertised as supported.
 - **WebView2**: Included by default in Windows 11
 
 ### Step-by-Step Developer Setup
@@ -345,9 +348,9 @@ Full reference, JSON schema and npkill migration table:
 
 Ready-to-use production packages are generated into the `release_output/` directory (git-ignored; run `npm run build:release`):
 
-- **NSIS Setup Installer**: `Dev-Cleaner-2.2.3-x64-Setup.exe` _(Per-user installer with desktop/start menu shortcuts)_
-- **MSI Enterprise Installer**: `Dev-Cleaner-2.2.3-x64.msi` _(Per-machine enterprise & GPO silent deployment)_
-- **Standalone Portable**: `Dev-Cleaner-2.2.3-Portable.exe` _(Zero installation, run standalone from USB or any folder)_
+- **NSIS Setup Installer**: `Dev-Cleaner-1.0.0-x64-Setup.exe` _(Per-user installer with desktop/start menu shortcuts)_
+- **MSI Enterprise Installer**: `Dev-Cleaner-1.0.0-x64.msi` _(Per-machine enterprise & GPO silent deployment)_
+- **Standalone Portable**: `Dev-Cleaner-1.0.0-Portable.exe` _(Zero installation, run standalone from USB or any folder)_
 - **Integrity Verification**: `verify-checksums.bat` & `SHA256SUMS.txt`
 
 > **Do not install the NSIS and MSI builds on the same machine.** They use
@@ -363,10 +366,10 @@ Ready-to-use production packages are generated into the `release_output/` direct
 
 Dev Cleaner is open source under the MIT License and welcomes contributions of
 all sizes: bug reports, new catalog rules, translations, documentation and
-code. Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for the local setup and the
-quality gates, and [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) for the
+code. Read [`CONTRIBUTING.md`](.github/CONTRIBUTING.md) for the local setup and the
+quality gates, and [`CODE_OF_CONDUCT.md`](.github/CODE_OF_CONDUCT.md) for the
 community rules. Security problems must be reported privately following
-[`SECURITY.md`](SECURITY.md).
+[`SECURITY.md`](.github/SECURITY.md).
 
 ---
 
@@ -480,9 +483,9 @@ dev-cleaner/
 │   ├── icons/notification.png      # Geliştirme tarayıcısı bildirim ikonu
 │   └── vellium.svg                 # Yayıncı logosu
 ├── release_output/                 # Üretim paketleri (git-ignored, yeniden üretilir)
-│   ├── Dev-Cleaner-2.2.3-x64-Setup.exe    # NSIS kullanıcı bazlı kurulum
-│   ├── Dev-Cleaner-2.2.3-x64.msi          # MSI makine bazlı kurulum
-│   ├── Dev-Cleaner-2.2.3-Portable.exe     # Taşınabilir tekil exe
+│   ├── Dev-Cleaner-1.0.0-x64-Setup.exe    # NSIS kullanıcı bazlı kurulum
+│   ├── Dev-Cleaner-1.0.0-x64.msi          # MSI makine bazlı kurulum
+│   ├── Dev-Cleaner-1.0.0-Portable.exe     # Taşınabilir tekil exe
 │   ├── BUILD_INFO.json                    # Commit, dirty bayrağı ve artefakt hash'leri
 │   ├── SHA256SUMS.txt                     # Kriptografik SHA-256 sağlama özetleri
 │   └── verify-checksums.bat               # Tek tıkla hash doğrulama aracı
@@ -494,7 +497,7 @@ dev-cleaner/
 │   ├── verify-recycle-bin.ps1      # Gerçek Geri Dönüşüm Kutusu gidiş-dönüşü
 │   ├── verify-installer.ps1        # NSIS kur -> çalıştır -> ikonlar -> kaldır
 │   ├── verify-msi.ps1              # Makine bazlı MSI kur -> çalıştır -> kaldır
-│   ├── verify-upgrade.ps1          # 2.2.2 -> 2.2.3 yerinde yükseltme testi
+│   ├── verify-upgrade.ps1          # Yerinde yükseltme testi
 │   ├── verify-shell-icons.ps1      # Explorer, kısayol ve DisplayIcon kabuk kontrolü
 │   └── verify-checksums.bat        # Windows batch checksum doğrulayıcı
 ├── src/                            # Ön yüz kaynak kodları (React 19 + TypeScript)
@@ -565,7 +568,7 @@ dev-cleaner/
 
 - **Node.js**: Sürüm 18.0.0 veya üzeri
 - **Rust & Cargo**: Sürüm 1.75.0 veya üzeri
-- **İşletim Sistemi**: Windows 11 (64-bit x64), doğrulandı. Windows 10, 2.2.3
+- **İşletim Sistemi**: Windows 11 (64-bit x64), doğrulandı. Windows 10, 1.0.0
   için doğrulanmadı ve desteklenen sistem olarak sunulmuyor.
 - **WebView2 Çalışma Zamanı**: Windows 11'de varsayılan olarak yerleşiktir
 
@@ -632,9 +635,9 @@ Komut referansı, JSON şeması ve npkill geçiş tablosu:
 
 Hazır derlenmiş resmi release paketleri `release_output/` klasörüne üretilir (git-ignored; `npm run build:release`):
 
-- **NSIS Kurulum Sihirbazı**: `Dev-Cleaner-2.2.3-x64-Setup.exe` _(Kullanıcı bazlı kurulum, masaüstü ve başlat menüsü kısayolları)_
-- **MSI Kurumsal Installer**: `Dev-Cleaner-2.2.3-x64.msi` _(Makine bazlı kurulum, sessiz kurulum ve GPO dağıtımı)_
-- **Standalone Taşınabilir Sürüm**: `Dev-Cleaner-2.2.3-Portable.exe` _(Kurulumsuz, doğrudan çalışır)_
+- **NSIS Kurulum Sihirbazı**: `Dev-Cleaner-1.0.0-x64-Setup.exe` _(Kullanıcı bazlı kurulum, masaüstü ve başlat menüsü kısayolları)_
+- **MSI Kurumsal Installer**: `Dev-Cleaner-1.0.0-x64.msi` _(Makine bazlı kurulum, sessiz kurulum ve GPO dağıtımı)_
+- **Standalone Taşınabilir Sürüm**: `Dev-Cleaner-1.0.0-Portable.exe` _(Kurulumsuz, doğrudan çalışır)_
 - **Bütünlük Doğrulama**: `verify-checksums.bat` ve `SHA256SUMS.txt`
 
 > **NSIS ve MSI sürümlerini aynı makinede kurmayın.** Kurulum kapsamları
@@ -652,9 +655,9 @@ Hazır derlenmiş resmi release paketleri `release_output/` klasörüne üretili
 Dev Cleaner MIT lisanslı açık kaynak bir projedir; hata bildirimi, yeni katalog
 kuralı, çeviri, dokümantasyon ve kod katkılarının her boyutu memnuniyetle
 karşılanır. Yerel kurulum ve kalite kapıları için
-[`CONTRIBUTING.md`](CONTRIBUTING.md), topluluk kuralları için
-[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) dosyasını okuyun. Güvenlik
-sorunları [`SECURITY.md`](SECURITY.md) içindeki özel bildirim yolundan
+[`CONTRIBUTING.md`](.github/CONTRIBUTING.md), topluluk kuralları için
+[`CODE_OF_CONDUCT.md`](.github/CODE_OF_CONDUCT.md) dosyasını okuyun. Güvenlik
+sorunları [`SECURITY.md`](.github/SECURITY.md) içindeki özel bildirim yolundan
 iletilmelidir.
 
 ---

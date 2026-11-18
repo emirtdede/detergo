@@ -11,6 +11,8 @@ export const EN: UIText = {
     history: "History",
     settings: "Settings",
     about: "About",
+    github: "GitHub",
+    sponsor: "Sponsor",
   },
   common: {
     scan: "Scan",

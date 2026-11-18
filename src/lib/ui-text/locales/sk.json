@@ -8,7 +8,9 @@
     "about": "O Aplikácii",
     "agents": "AI Nástroje",
     "caches": "Nástrojové cache",
-    "docs": "Dokumenty"
+    "docs": "Dokumenty",
+    "github": "GitHub",
+    "sponsor": "Sponsor"
   },
   "common": {
     "scan": "Skenovať",
