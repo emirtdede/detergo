@@ -123,11 +123,17 @@ Two limits come from the plugin and are accepted:
   against the repository. This check exists because a generator fix that was
   never synced shipped `Next >` and `Browse...` in English.
 
-`npm run check:i18n` separately audits the legacy `src/locales/langs`
-dictionaries that back the deprecated `tr` proxy. They escaped the
-untranslated-value gate until 2.2.2, which is how the literal
-`settings.platform: "Tauri v2 + React 18 + Rust"` survived in 72 languages. That
-key had no reader and was removed.
+`npm run check:languages` verifies that the app locale catalogue
+(`src/lib/ui-text/locales/*.json` plus the English/Turkish modules) matches the
+installer catalogue one-to-one. `npm run check:i18n` separately audits every
+locale surface, including `src/lib/ui-text/error-boundary.json`, which carries
+the three strings the top-level error boundary needs.
+
+The legacy `src/locales/langs/*.ts` dictionaries these gates used to audit were
+retired in 2.2.2. They duplicated the JSON locales, escaped the
+untranslated-value gate for several releases — which is how the literal
+`settings.platform: "Tauri v2 + React 18 + Rust"` survived in 72 languages — and
+kept ~691 KiB of dead code in the repository.
 
 ## Translation quality
 

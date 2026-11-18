@@ -36,7 +36,9 @@
     "on": "Ar",
     "off": "As",
     "items": "{n} míreanna",
-    "showing": "{n} a thaispeántar"
+    "showing": "{n} a thaispeántar",
+    "scanAll": "Scanáil gach rud",
+    "scanAllDesc": "Tionscadail, stóras uirlisí AI agus taisce pacáistí"
   },
   "header": {
     "changeLocation": "Athraigh Suíomh",
@@ -49,7 +51,8 @@
     "addFavorite": "Cuir an suíomh reatha leis na Favorites",
     "removeFavorite": "Bain suíomh ó Favorites",
     "favoriteAdded": "Suíomh curtha leis na Favorites.",
-    "favoriteRemoved": "Suíomh bainte as na Favorites."
+    "favoriteRemoved": "Suíomh bainte as na Favorites.",
+    "changeLocationConfirmDesc": "Glanann athrú an láithreach na torthaí scanála reatha agus an roghnú. Caomhnaítear do stair scanála shábháilte agus an t-ábhar scanála deireanach."
   },
   "window": {
     "minimize": "Íoslaghdaigh",
@@ -133,7 +136,17 @@
     "ecoAgent": "Gníomhairí AI",
     "ecoCache": "Taiscí",
     "ecoOther": "Earraí Eile",
-    "distTotalBadge": "{size} is féidir a ghlanadh"
+    "distTotalBadge": "{size} is féidir a ghlanadh",
+    "noticeInfoTitle": "Eolas",
+    "noticeInfoHint": "Scipeáladh suíomhanna atá cosanta ag an gcóras. Ní gá aon ghníomh.",
+    "noticeIssueHint": "Níorbh fhéidir roinnt suíomhanna a léamh, mar sin b'fhéidir go mbeidh na torthaí neamhiomlán.",
+    "copyDetails": "Cóipeáil sonraí",
+    "detailsCopied": "Cóipeáladh na sonraí chuig an ngearrthaisce",
+    "coverage": "Clúdach an scanta",
+    "sectionSkipped": "Scipeáilte",
+    "sectionFailed": "Theip",
+    "sectionPartial": "Neamhiomlán",
+    "sectionNoRoot": "Níor roghnaíodh aon fhillteán"
   },
   "table": {
     "project": "Tionscadal",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Scrios go buan",
     "permanentAck": "Tuigim nach féidir seo a chur ar ais.",
     "blockedReasons": "Spriocanna blocáilte",
-    "expires": "Éiríonn an plean seo i 15 nóiméad.",
+    "expires": "Éiríonn an plean seo i 30 nóiméad.",
     "close": "Dún",
     "working": "Ag obair…",
     "runInBackground": "Rith sa chúlra",
@@ -223,7 +236,11 @@
     "cancelling": "Á chealú…",
     "progress": "Próiseáilte {processed} / {total}",
     "currentItem": "Reatha: {path}",
-    "alreadyRunning": "Tá glanadh ar siúl cheana féin."
+    "alreadyRunning": "Tá glanadh ar siúl cheana féin.",
+    "coveredByParent": "Blocáilte",
+    "noMethod": "Blocáilte",
+    "officialActionRequired": "Ordú oifigiúil",
+    "modeNotAllowed": "Buan"
   },
   "result": {
     "title": "Toradh glanadh",
@@ -238,6 +255,7 @@
     "verified": "daingnithe",
     "cancelled": "Glanadh curtha ar ceal",
     "cancelledNote": "{processed} rud próiseáilte, {skipped} scipeáilte.",
+    "progressIncomplete": "Níorbh fhéidir {count} nuashonrú dul chun cinn a thaispeáint.",
     "processed": "Próiseáilte",
     "skipped": "Scipeáilte",
     "viewResults": "Féach ar na torthaí",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Glan Scanadh",
     "scopeProjects": "Brathanna Tionscadail",
     "scopeAgents": "Gníomhaire AI",
-    "scopeAllDrives": "Gach Tiomántán"
+    "scopeAllDrives": "Gach Tiomántán",
+    "statusPartial": "Páirteach",
+    "totalCleaned": "Iomlán a aisghafa",
+    "statusDepthLimited": "Páirteach"
   },
   "settings": {
     "general": "Cuma",
@@ -451,6 +472,12 @@
     "protectionsHint": "Fillteáin nach mór a scriosadh riamh agus ainmneacha le scipeáil.",
     "agentsHint": "Polasaí glantacháin do chaches gníomhaire AI.",
     "privacyHint": "Stair áitiúil agus mascáil cosán ar scáileán.",
+    "resetAppDataTitle": "Athshocraigh sonraí uile na haipe",
+    "resetAppDataHint": "Scrios gach socrú, stair glanta, stair scanadh, logs gníomhaíochta, agus an scanadh deireanach a shábháil, restarts ansin an app. Ní féidir é seo a chealú.",
+    "resetAppDataConfirmBtn": "Scrios sonraí agus atosú",
+    "resetAppDataBusy": "Á athshocrú…",
+    "resetAppDataSuccess": "Athshocraíodh sonraí uile na haipe. Athchóiríodh na socruithe réamhshocraithe.",
+    "resetAppDataBlocked": "Tá scanadh nó glanta ar siúl. Stop é roimh resetting sonraí app.",
     "aboutHint": "Leagan, sonraí tógála, catalóg agus Vellium.",
     "legalHint": "Téarmaí úsáide, polasaí príobháideachais agus ceadúnais foinse oscailte.",
     "sidebar": "Taobh-bhord",
@@ -547,7 +574,11 @@
     "standardMotion": "Beochan Caighdeánach",
     "aboutTitleBy": "Dev Cleaner le Vellium",
     "mcpDestructiveTitle": "Ceadaigh gníomhartha millteacha MCP",
-    "mcpDestructiveHint": "Teastaíonn an bratach --allow-destructive; teastaíonn comhartha réamhamhairc aonúsáide ó gach forghníomhú fós"
+    "mcpDestructiveHint": "Teastaíonn an bratach --allow-destructive; teastaíonn comhartha réamhamhairc aonúsáide ó gach forghníomhú fós",
+    "pathMustBeAbsolute": "Caithfidh cosáin a bheith iomlán, mar shampla C:\\Tionscadail.",
+    "excludedNameInvalid": "Caithfidh riail a bheith ina comhad singil nó ina ainm fillteáin, gan deighilteoirí cosáin.",
+    "shortcutNeedsModifier": "Teastaíonn Ctrl, Alt nó Meta agus eochair nó eochair feidhme chun aicearra domhanda.",
+    "shortcutsResetWarning": "Athshocraíodh {count} aicearra(í) neamhbhailí chuig a réamhshocruithe."
   },
   "legal": {
     "docTabsLabel": "Doiciméid dhlí",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Níor aimsíodh aon ealaín tionscadail is féidir a ghlanadh",
     "emptyTitleIdle": "Níor rinneadh scanadh tionscadail fós",
     "emptyDescClean": "Tá an comhad roghnaithe glan. Níor aimsíodh aon node_modules, target, nó ealaín tógála is féidir a ghlanadh.",
-    "emptyDescIdle": "Roghnaigh fillteán agus scanáil é chun spléachais tionscadail agus ealaín tógála a liostáil."
+    "emptyDescIdle": "Roghnaigh fillteán agus scanáil é chun spléachais tionscadail agus ealaín tógála a liostáil.",
+    "kpiTargets": "Spriocanna is féidir a ghlanadh",
+    "kpiTargetsSub": "Thar {count} fhréamh tionscadail",
+    "kpiTargetsUnknown": "Scanáil arís chun líon na dtionscadal a athnuachan"
   },
   "about": {
     "kpiVersion": "Leagan",
@@ -616,7 +650,8 @@
     "contactSupport": "Tacaíocht do Chustaiméirí",
     "contactBillingDesc": "Fáiltiú billeála, fardal fiontraíochta, agus tacaíocht síntiús",
     "contactPrivacyDesc": "Slándáil sonraí, GDPR, agus fiosrúcháin príobháideachta",
-    "ecoCacheScope": "npm taisce, Cargo clárlann, pip taisce, yarn"
+    "ecoCacheScope": "npm taisce, Cargo clárlann, pip taisce, yarn",
+    "contactBilling": "Billeáil agus íocaíochtaí"
   },
   "docs": {
     "catGuide": "Treoirlínte & Ailtireacht",

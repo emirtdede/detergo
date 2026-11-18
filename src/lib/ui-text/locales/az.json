@@ -36,7 +36,9 @@
     "on": "Aktiv",
     "off": "Deaktiv",
     "items": "{n} element",
-    "showing": "{n} göstərildi"
+    "showing": "{n} göstərildi",
+    "scanAll": "Hamısını skan et",
+    "scanAllDesc": "Layihələr, AI alət yaddaşı və paket keşləri"
   },
   "header": {
     "changeLocation": "Məkanı Dəyişdir",
@@ -49,7 +51,8 @@
     "addFavorite": "Cari yeri favorilərə əlavə et",
     "removeFavorite": "Yeri favorilərdən çıxar",
     "favoriteAdded": "Yer favorilərə əlavə edildi.",
-    "favoriteRemoved": "Yer favorilərdən çıxarıldı."
+    "favoriteRemoved": "Yer favorilərdən çıxarıldı.",
+    "changeLocationConfirmDesc": "Konumun dəyişdirilməsi cari skan nəticələrini və seçimi təmizləyir. Yadda saxlanmış skan tarixçəniz və son skan anlıq görüntüsü qorunur."
   },
   "window": {
     "minimize": "Kiçilt",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI Agentləri",
     "ecoCache": "Kəşlər",
     "ecoOther": "Digər artefaktlar",
-    "distTotalBadge": "{size} təmizlənə bilər"
+    "distTotalBadge": "{size} təmizlənə bilər",
+    "noticeInfoTitle": "Məlumat",
+    "noticeInfoHint": "Sistem tərəfindən qorunan yerlər atlandı. Heç bir əməliyyat lazım deyil.",
+    "noticeIssueHint": "Bəzi yerlər oxuna bilmədi, ona görə nəticələr natamam ola bilər.",
+    "copyDetails": "Təfərrüatları kopyala",
+    "detailsCopied": "Təfərrüatlar buferə kopyalandı",
+    "coverage": "Skan əhatəsi",
+    "sectionSkipped": "Atlandı",
+    "sectionFailed": "Uğursuz",
+    "sectionPartial": "Natamam",
+    "sectionNoRoot": "Qovluq seçilməyib"
   },
   "table": {
     "project": "Layihə",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Daimi sil",
     "permanentAck": "Anlayıram ki, bu geri alınmaz.",
     "blockedReasons": "Bloklanmış hədəflər",
-    "expires": "Bu plan 15 dəqiqəyə bitir.",
+    "expires": "Bu plan 30 dəqiqəyə bitir.",
     "close": "Bağla",
     "working": "İşləyir…",
     "runInBackground": "Arxa planda işə sal",
@@ -223,7 +236,11 @@
     "cancelling": "Ləğv edilir…",
     "progress": "Emal edildi {processed} / {total}",
     "currentItem": "Cari: {path}",
-    "alreadyRunning": "Artıq təmizlik davam edir."
+    "alreadyRunning": "Artıq təmizlik davam edir.",
+    "coveredByParent": "Bloklanmış",
+    "noMethod": "Bloklanmış",
+    "officialActionRequired": "Rəsmi əmrlə",
+    "modeNotAllowed": "Daimi"
   },
   "result": {
     "title": "Təmizləmə nəticəsi",
@@ -238,6 +255,7 @@
     "verified": "təsdiqləndi",
     "cancelled": "Təmizlik ləğv edildi",
     "cancelledNote": "{processed} element emal edildi, {skipped} atlandı.",
+    "progressIncomplete": "{count} irəliləyiş yeniləməsi göstərilə bilmədi.",
     "processed": "Emal edildi",
     "skipped": "Atlandı",
     "viewResults": "Nəticələrə bax",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Skanları Sil",
     "scopeProjects": "Layihə Asılılıqları",
     "scopeAgents": "AI Agentləri",
-    "scopeAllDrives": "Bütün Sürücülər"
+    "scopeAllDrives": "Bütün Sürücülər",
+    "statusPartial": "Qismən",
+    "totalCleaned": "Ümumi bərpa edilmiş",
+    "statusDepthLimited": "Qismən"
   },
   "settings": {
     "general": "Görünüş",
@@ -451,6 +472,12 @@
     "protectionsHint": "Heç vaxt silinməməli qovluqlar və atlanacaq adlar.",
     "agentsHint": "AI agent keşləri üçün təmizləmə siyasəti.",
     "privacyHint": "Lokal tarixçə və ekranda yol gizlətməsi.",
+    "resetAppDataTitle": "Bütün proqram məlumatlarını sıfırlayın",
+    "resetAppDataHint": "Bütün parametrləri, təmizləmə tarixçəsini, skan tarixçəsini, fəaliyyət qeydlərini və saxlanılan son skanı silir, sonra proqramı yenidən işə salır. Bu geri qaytarıla bilməz.",
+    "resetAppDataConfirmBtn": "Məlumatları silin və yenidən başladın",
+    "resetAppDataBusy": "Sıfırlanır...",
+    "resetAppDataSuccess": "Bütün proqram datası sıfırlandı. Defolt parametrlər bərpa edildi.",
+    "resetAppDataBlocked": "Skan və ya təmizləmə işləyir. Tətbiq məlumatlarını sıfırlamadan əvvəl onu dayandırın.",
     "aboutHint": "Versiya, quruluş detalları, kataloq və Vellium.",
     "legalHint": "İstifadə şərtləri, gizlilik siyasəti və açıq mənbə lisenziyaları.",
     "sidebar": "Yan panel",
@@ -547,7 +574,11 @@
     "standardMotion": "Standart Animasiya",
     "aboutTitleBy": "Dev Cleaner tərəfindən Vellium",
     "mcpDestructiveTitle": "MCP dağıdıcı əməliyyatlarına icazə ver",
-    "mcpDestructiveHint": "--allow-destructive bayrağı tələb olunur; hər icra yenə də birdəfəlik önizləmə tokeni tələb edir"
+    "mcpDestructiveHint": "--allow-destructive bayrağı tələb olunur; hər icra yenə də birdəfəlik önizləmə tokeni tələb edir",
+    "pathMustBeAbsolute": "Yollar mütləq olmalıdır, məsələn, C:\\Projects.",
+    "excludedNameInvalid": "Qayda yol ayırıcıları olmayan tək fayl və ya qovluq adı olmalıdır.",
+    "shortcutNeedsModifier": "Qlobal qısa yola Ctrl, Alt və ya Meta üstəgəl bir düymə və ya funksiya düyməsi lazımdır.",
+    "shortcutsResetWarning": "{count} etibarsız qısayol(lar) defoltlarına sıfırlandı."
   },
   "legal": {
     "docTabsLabel": "Hüquqi sənədlər",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Təmizlənə biləcək layihə artifaktı tapılmadı",
     "emptyTitleIdle": "Hələ layihə skanı aparılmayıb",
     "emptyDescClean": "Seçilmiş qovluq təmizdir. Təmizlənə biləcək node_modules, target və ya quruluş artifaktları tapılmadı.",
-    "emptyDescIdle": "Layihə asılılıqları və quruluş artifaktlarını siyahıya salmaq üçün qovluq seçin və skan edin."
+    "emptyDescIdle": "Layihə asılılıqları və quruluş artifaktlarını siyahıya salmaq üçün qovluq seçin və skan edin.",
+    "kpiTargets": "Təmizlənə bilən hədəflər",
+    "kpiTargetsSub": "{count} layihə kökü üzrə",
+    "kpiTargetsUnknown": "Layihə sayını yeniləmək üçün yenidən skan edin"
   },
   "about": {
     "kpiVersion": "Versiya",
@@ -616,7 +650,8 @@
     "contactSupport": "Müştəri Dəstəyi",
     "contactBillingDesc": "Hesab-faktura, müəssisə satınalmaları və abunə dəstəyi",
     "contactPrivacyDesc": "Məlumat təhlükəsizliyi, GDPR və məxfilik sorğuları",
-    "ecoCacheScope": "npm keş, Cargo qeyd, pip keş, yarn"
+    "ecoCacheScope": "npm keş, Cargo qeyd, pip keş, yarn",
+    "contactBilling": "Hesab-faktura və ödənişlər"
   },
   "docs": {
     "catGuide": "Bələdçilər və Arxitektura",

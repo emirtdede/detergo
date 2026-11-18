@@ -27,9 +27,16 @@ export const CleanupProgressDock: React.FC = () => {
   const maskPaths = usePreferencesStore((s) => s.maskPaths);
 
   const active = progress?.background ? progress : null;
+  // While a cleanup is running (foreground or background) the live progress is
+  // the only truth. A report left from the previous run used to render in this
+  // dock and hide the fact that work was still in flight.
+  if (progress && !active) return null;
   if (!active && !lastReport) return null;
 
   const viewResults = () => {
+    // Never swap the plan/preview dialog for the result modal mid-run; the
+    // result it would show belongs to an older plan.
+    if (useCleanupRunStore.getState().progress) return;
     if (lastReport) setReport(lastReport);
     dismissRun();
     openModal("cleanup-result");

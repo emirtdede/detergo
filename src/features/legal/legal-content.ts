@@ -9,6 +9,7 @@
  */
 
 import { resolveUiLocale } from "@/lib/ui-locale";
+import { APP_VERSION } from "@/lib/app-version";
 
 export type LegalDocId = "eula" | "privacy" | "thirdParty";
 
@@ -33,8 +34,8 @@ export interface LegalDocMeta {
   hint: string;
 }
 
-const UPDATED_TR = "6 Kasım 2026 (v2.2.2)";
-const UPDATED_EN = "6 November 2026 (v2.2.2)";
+const UPDATED_TR = "17 Kasım 2026 (v" + APP_VERSION + ")";
+const UPDATED_EN = "17 November 2026 (v" + APP_VERSION + ")";
 
 const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
   eula: {
@@ -237,6 +238,7 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         heading: "12. İletişim",
         paragraphs: [
           "Gizlilikle ilgili sorularınız için: https://vellium.dev/contact. Veri sorumlusu Vellium'dur (vellium.dev).",
+          "Veri sorumlusunun kimlik ve iletişim bilgileri ile tebligat adresi talebi aynı iletişim kanalı üzerinden iletilebilir; talepler KVKK'nın öngördüğü süre içinde yanıtlanır. Uygulama hesap açmadığı ve veri aktarmadığı için Vellium'un elinde ayrıca bir kullanıcı kaydı bulunmaz.",
         ],
       },
     ],
@@ -483,6 +485,7 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         heading: "12. Contact",
         paragraphs: [
           "Privacy questions: https://vellium.dev/contact. The data controller is Vellium (vellium.dev).",
+          "You can request the controller's identification and contact details, including a postal address for formal notices, through the same contact channel; requests are answered within the period required by the applicable data-protection law. Because the app creates no account and transmits nothing, Vellium holds no separate user record to disclose.",
         ],
       },
     ],
@@ -539,18 +542,42 @@ export const LEGAL_DOCUMENTS: Record<"tr" | "en", Record<LegalDocId, LegalDocume
  * JSON dictionaries keyed by the exact English source string so the document
  * structure stays single-sourced.
  */
-const LEGAL_MODULES = import.meta.glob("./legal-locales/*.json", {
-  eager: true,
+const LEGAL_LOADERS = import.meta.glob("./legal-locales/*.json", {
   import: "default",
-}) as Record<string, Record<string, string>>;
+}) as Record<string, () => Promise<Record<string, string>>>;
 
 const LEGAL_DICTS: Record<string, Record<string, string>> = {};
-for (const [path, data] of Object.entries(LEGAL_MODULES)) {
-  const locale = path
-    .split("/")
-    .pop()
-    ?.replace(/\.json$/, "");
-  if (locale) LEGAL_DICTS[locale] = data as Record<string, string>;
+const pendingLegalLocales = new Map<string, Promise<void>>();
+
+/**
+ * Loads the convenience translation dictionary for a locale.
+ *
+ * Documents are single-sourced in English and translated sentence by sentence,
+ * so the dictionaries are large. They are fetched per language instead of being
+ * bundled into the entry chunk.
+ */
+export function loadLegalLocale(language: string | null | undefined): Promise<void> {
+  const locale = resolveUiLocale(language);
+  if (locale === "en" || locale === "tr" || LEGAL_DICTS[locale]) return Promise.resolve();
+
+  const inflight = pendingLegalLocales.get(locale);
+  if (inflight) return inflight;
+
+  const load = LEGAL_LOADERS[`./legal-locales/${locale}.json`];
+  const promise = (load ? load() : Promise.resolve({}))
+    .then((data) => {
+      LEGAL_DICTS[locale] = data ?? {};
+    })
+    .catch(() => {
+      // A missing dictionary leaves the English source in place.
+      LEGAL_DICTS[locale] = {};
+    })
+    .finally(() => {
+      pendingLegalLocales.delete(locale);
+    });
+
+  pendingLegalLocales.set(locale, promise);
+  return promise;
 }
 
 /** Notice shown above machine-translated documents. */
@@ -588,8 +615,8 @@ export function localizeRevisionDate(locale: string): string {
       day: "numeric",
       month: "long",
       year: "numeric",
-    }).format(new Date(Date.UTC(2026, 10, 6)));
-    return `${formatted} (v2.2.2)`;
+    }).format(new Date(Date.UTC(2026, 10, 17)));
+    return `${formatted} (v${APP_VERSION})`;
   } catch {
     return UPDATED_EN;
   }
@@ -634,14 +661,6 @@ export function getLegalDocMeta(language: string | null | undefined): LegalDocMe
     label: legalText(locale, meta.label),
     hint: legalText(locale, meta.hint),
   }));
-}
-
-/** Localized revision label for the active language. */
-export function getLegalRevision(language: string | null | undefined): string {
-  const locale = resolveUiLocale(language);
-  if (locale === "tr") return UPDATED_TR;
-  if (locale === "en") return UPDATED_EN;
-  return localizeRevisionDate(locale);
 }
 
 /** The revision date shared by every document, shown in the About page. */

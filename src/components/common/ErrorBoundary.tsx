@@ -1,8 +1,7 @@
 import { Component, ErrorInfo, ReactNode } from "react";
-import { DICTIONARIES } from "@/locales/dictionaries";
-import { SupportedLanguage } from "@/types";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { log } from "@/lib/logging";
+import { getErrorBoundaryText } from "./error-boundary-text";
 
 interface Props {
   children: ReactNode;
@@ -14,6 +13,14 @@ interface State {
   errorInfo: ErrorInfo | null;
 }
 
+/**
+ * Last-resort screen for an uncaught render error.
+ *
+ * It must not depend on the async locale loader, the theme store or the legacy
+ * dictionary map: any of those may be what failed. Copy comes from a small
+ * static table and colours from CSS variables so the screen follows the
+ * persisted light/dark theme instead of forcing a hard-coded dark palette.
+ */
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
@@ -33,20 +40,13 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   private getTranslation() {
+    let language: string | null = null;
     try {
-      const stored = (localStorage.getItem("dev_cleaner_language") ||
-        localStorage.getItem("node_cleaner_language")) as SupportedLanguage;
-      if (stored && DICTIONARIES[stored]) {
-        return DICTIONARIES[stored].errorBoundary;
-      }
-    } catch {}
-    try {
-      const active = usePreferencesStore.getState()?.language;
-      if (active && DICTIONARIES[active]) {
-        return DICTIONARIES[active].errorBoundary;
-      }
-    } catch {}
-    return (DICTIONARIES["en"] || DICTIONARIES["tr"]).errorBoundary;
+      language = usePreferencesStore.getState()?.language ?? null;
+    } catch {
+      // The store itself can be the crashed module; the table has a fallback.
+    }
+    return getErrorBoundaryText(language);
   }
 
   public render() {
@@ -54,10 +54,11 @@ export class ErrorBoundary extends Component<Props, State> {
       const t = this.getTranslation();
       return (
         <div
+          role="alert"
           style={{
             padding: "32px",
-            color: "#fff",
-            background: "#16161a",
+            color: "var(--text-primary, #fff)",
+            background: "var(--bg-app, #16161a)",
             minHeight: "100vh",
             fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
             display: "flex",
@@ -69,32 +70,54 @@ export class ErrorBoundary extends Component<Props, State> {
           <div
             style={{
               maxWidth: "600px",
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.12)",
+              background: "var(--surface-raised, #1F1F26)",
+              border: "1px solid var(--border-subtle, #2A2A31)",
               borderRadius: "16px",
               padding: "28px",
               boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
             }}
           >
-            <h2 style={{ color: "#E5484D", marginBottom: "12px", fontSize: "20px" }}>{t.title}</h2>
-            <p style={{ color: "#A4A4AA", fontSize: "14px", marginBottom: "16px" }}>
-              {t.unknownError}
-            </p>
-            <pre
+            <h2
               style={{
-                background: "rgba(0,0,0,0.5)",
-                padding: "12px",
-                borderRadius: "8px",
-                fontSize: "12px",
-                overflowX: "auto",
-                color: "#f5a623",
-                maxHeight: "200px",
+                color: "var(--danger, #E5484D)",
+                marginBottom: "12px",
+                fontSize: "20px",
               }}
             >
-              {this.state.error?.message ?? "—"}
-            </pre>
+              {t.title}
+            </h2>
+            <p
+              style={{
+                color: "var(--text-muted, #A4A4AA)",
+                fontSize: "14px",
+                marginBottom: "16px",
+              }}
+            >
+              {t.unknownError}
+            </p>
+            {import.meta.env.DEV && this.state.error?.message && (
+              <pre
+                style={{
+                  background: "var(--bg-sunken, rgba(0,0,0,0.5))",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                  overflowX: "auto",
+                  color: "var(--warning, #f5a623)",
+                  maxHeight: "200px",
+                }}
+              >
+                {this.state.error.message}
+              </pre>
+            )}
             {import.meta.env.DEV && this.state.error?.stack && (
-              <details style={{ marginTop: "8px", color: "#A4A4AA", fontSize: "12px" }}>
+              <details
+                style={{
+                  marginTop: "8px",
+                  color: "var(--text-muted, #A4A4AA)",
+                  fontSize: "12px",
+                }}
+              >
                 <summary>Stack trace (dev only)</summary>
                 <pre style={{ overflowX: "auto", maxHeight: "200px", marginTop: "6px" }}>
                   {this.state.error.stack}
@@ -106,7 +129,7 @@ export class ErrorBoundary extends Component<Props, State> {
               style={{
                 marginTop: "20px",
                 padding: "10px 20px",
-                background: "#0A84FF",
+                background: "var(--accent, #0A84FF)",
                 color: "#fff",
                 border: "none",
                 borderRadius: "8px",

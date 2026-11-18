@@ -45,8 +45,10 @@
   margin-top: auto;
 }
 
-/* The rail folds itself under 900px (see NavRail); while it does, the manual
-   expand control would fight the automatic behaviour, so it is hidden. */
+/* The rail folds itself below the `narrowRail` breakpoint in `src/lib/layout.ts`
+   (900px; keep the two in sync — CSS cannot import the TypeScript constant).
+   While it does, the manual expand control would fight the automatic behaviour,
+   so it is hidden. */
 .nav-rail.is-narrow .nav-collapse-toggle {
   display: none;
 }

@@ -44,18 +44,49 @@
   --leading-relaxed: 1.6;
 
   /* Functional Status Colors */
-  --danger: #ef4444;
-  --danger-hover: #dc2626;
-  --danger-active: #b91c1c;
-  --danger-subtle: rgba(239, 68, 68, 0.14);
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --danger-active: #991b1b;
+  --danger-subtle: rgba(220, 38, 38, 0.14);
   --danger-text: #ffffff;
+  --danger-foreground: #fca5a5;
 
   --success: #10b981;
   --success-hover: #059669;
   --success-subtle: rgba(16, 185, 129, 0.14);
+  --success-text: #6ee7b7;
 
   --warning: #f59e0b;
   --warning-subtle: rgba(245, 158, 11, 0.14);
+  --warning-text: #fcd34d;
+
+  /* Ecosystem distribution palette. These are data-series colours, not theme
+     surfaces, so they stay stable across light and dark themes. */
+  --eco-rust: #f97316;
+  --eco-agent: #8b5cf6;
+  --eco-cache: #ec4899;
+  --eco-build: #06b6d4;
+
+  /* The cache action console is deliberately dark in every theme so command
+     output keeps its terminal contrast. */
+  --terminal-bg: #080c14;
+  --terminal-header-bg: #0d131f;
+  --terminal-border: rgba(255, 255, 255, 0.1);
+  --terminal-border-subtle: rgba(255, 255, 255, 0.08);
+  --terminal-text: #e2e8f0;
+  --terminal-muted: #94a3b8;
+  --terminal-cyan: #38bdf8;
+  --terminal-purple: #a855f7;
+  --terminal-stdout: #cbd5e1;
+  --terminal-error: #f87171;
+  --terminal-success: #4ade80;
+  --terminal-icon: #00f0ff;
+
+  /* Foreground tokens for accent surfaces and keyboard focus. `on-accent` is
+     the text painted on `accent`/`accent-hover`; light themes override it. */
+  --on-accent: #0b1220;
+  --accent-foreground: #bfdbfe;
+  --focus-ring: #dbeafe;
 
   /* Transitions & Animation */
   --duration-fast: 120ms;
@@ -87,18 +118,22 @@
 
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-muted: #7c8ca3;
   --text-disabled: #475569;
 
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.16);
   --separator: rgba(255, 255, 255, 0.06);
+  --border-control: #6b7280;
 
   --accent: #3b82f6;
-  --accent-hover: #2563eb;
-  --accent-active: #1d4ed8;
+  --accent-hover: #60a5fa;
+  --accent-active: #93c5fd;
   --accent-subtle: rgba(59, 130, 246, 0.15);
   --accent-text: #ffffff;
+  --on-accent: #0b1220;
+  --accent-foreground: #bfdbfe;
+  --focus-ring: #dbeafe;
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
@@ -121,19 +156,23 @@
 
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-muted: #93a2b5;
   --text-disabled: #475569;
 
   --border: rgba(255, 255, 255, 0.09);
   --border-strong: rgba(255, 255, 255, 0.18);
   --separator: rgba(255, 255, 255, 0.07);
+  --border-control: #7d8a9e;
 
   --accent: #60a5fa;
-  --accent-hover: #3b82f6;
-  --accent-active: #2563eb;
+  --accent-hover: #93c5fd;
+  --accent-active: #bfdbfe;
   --accent-subtle: rgba(96, 165, 250, 0.15);
   /* A light accent needs dark text on top; white text only reaches 2.5:1. */
   --accent-text: #082f49;
+  --on-accent: #0b1220;
+  --accent-foreground: #dbeafe;
+  --focus-ring: #dbeafe;
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
@@ -366,18 +405,29 @@
 
   --text-primary: #0f172a;
   --text-secondary: #475569;
-  --text-muted: #64748b;
+  --text-muted: #52627a;
   --text-disabled: #94a3b8;
 
   --border: rgba(0, 0, 0, 0.08);
   --border-strong: rgba(0, 0, 0, 0.16);
   --separator: rgba(0, 0, 0, 0.06);
+  --border-control: #64748b;
+
+  --success: #047857;
+  --success-hover: #065f46;
+  --success-text: #065f46;
+  --warning: #b45309;
+  --warning-text: #92400e;
+  --danger-foreground: #b91c1c;
 
   --accent: #2563eb;
   --accent-hover: #1d4ed8;
   --accent-active: #1e40af;
   --accent-subtle: rgba(37, 99, 235, 0.12);
   --accent-text: #ffffff;
+  --on-accent: #ffffff;
+  --accent-foreground: #1e40af;
+  --focus-ring: #1e3a8a;
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -400,18 +450,29 @@
 
   --text-primary: #1e293b;
   --text-secondary: #475569;
-  --text-muted: #64748b;
+  --text-muted: #52627a;
   --text-disabled: #94a3b8;
 
   --border: rgba(0, 0, 0, 0.1);
   --border-strong: rgba(0, 0, 0, 0.18);
   --separator: rgba(0, 0, 0, 0.07);
+  --border-control: #64748b;
+
+  --success: #047857;
+  --success-hover: #065f46;
+  --success-text: #065f46;
+  --warning: #b45309;
+  --warning-text: #92400e;
+  --danger-foreground: #991b1b;
 
   --accent: #475569;
   --accent-hover: #334155;
   --accent-active: #1e293b;
   --accent-subtle: rgba(71, 85, 105, 0.14);
   --accent-text: #ffffff;
+  --on-accent: #ffffff;
+  --accent-foreground: #1e293b;
+  --focus-ring: #1e3a8a;
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.09);
@@ -643,4 +704,38 @@
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
+}
+
+/* Light-theme tokens for the remaining hue variants. The verified themes above
+   declare these inline; the shared block keeps the other palettes at the same
+   WCAG ratios without duplicating six identical declarations per hue. */
+[data-theme="light-blue"],
+[data-theme="light-purple"],
+[data-theme="light-green"],
+[data-theme="light-red"],
+[data-theme="light-orange"],
+[data-theme="light-yellow"] {
+  --border-control: #64748b;
+  --success: #047857;
+  --success-hover: #065f46;
+  --success-text: #065f46;
+  --warning: #b45309;
+  --warning-text: #92400e;
+  --danger-foreground: #991b1b;
+  --on-accent: #ffffff;
+  --accent-foreground: #1e293b;
+  --focus-ring: #1e3a8a;
+}
+
+/* Dark-theme tokens for the remaining hue variants. */
+[data-theme="dark-blue"],
+[data-theme="dark-purple"],
+[data-theme="dark-green"],
+[data-theme="dark-red"],
+[data-theme="dark-orange"],
+[data-theme="dark-yellow"] {
+  --border-control: #7d8a9e;
+  --on-accent: #0b1220;
+  --accent-foreground: #dbeafe;
+  --focus-ring: #dbeafe;
 }

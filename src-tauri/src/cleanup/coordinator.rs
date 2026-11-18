@@ -22,6 +22,7 @@ use crate::scanner::session::ScanSession;
 ///
 /// The frontend uses these to render per-item progress and to know that a
 /// cancellation took effect between two items.
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(
     tag = "type",
@@ -30,25 +31,33 @@ use crate::scanner::session::ScanSession;
 )]
 pub enum CleanupEvent {
     Started {
+        #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<usize>))]
         total: usize,
     },
     ItemStarted {
+        #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<usize>))]
         index: usize,
+        #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<usize>))]
         total: usize,
         display_path: String,
     },
     ItemFinished {
+        #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<usize>))]
         index: usize,
+        #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<usize>))]
         total: usize,
         success: bool,
         error_code: Option<String>,
     },
     Cancelled {
+        #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<usize>))]
         processed: usize,
+        #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<usize>))]
         skipped: usize,
     },
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CleanupResultItem {
@@ -59,23 +68,35 @@ pub struct CleanupResultItem {
     pub verified: bool,
     pub error_code: Option<String>,
     pub error: Option<String>,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub measured_bytes: u64,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub reclaim_bytes: u64,
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CleanupReport {
     pub plan_id: String,
     pub mode: DeleteMode,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub success_count: u64,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub error_count: u64,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub estimated_bytes: u64,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub moved_bytes: u64,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub reclaim_bytes: u64,
+    #[cfg_attr(feature = "bindings", specta(type = Option<specta_typescript::Number<u64>>))]
     pub volume_free_before: Option<u64>,
+    #[cfg_attr(feature = "bindings", specta(type = Option<specta_typescript::Number<u64>>))]
     pub volume_free_after: Option<u64>,
+    #[cfg_attr(feature = "bindings", specta(type = Option<specta_typescript::Number<i64>>))]
     pub volume_free_delta: Option<i64>,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub duration_ms: u64,
     pub results: Vec<CleanupResultItem>,
     pub started_at: String,
@@ -86,10 +107,18 @@ pub struct CleanupReport {
     pub cancelled: bool,
     /// Number of eligible items the run actually visited (`results.len()`).
     #[serde(default)]
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub processed_count: u64,
     /// Eligible items that were never visited because the run stopped.
     #[serde(default)]
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub skipped_count: u64,
+    /// Progress events that could not be delivered because the frontend
+    /// channel was gone. Stamped by the command layer after the run; a lost
+    /// event never aborts a cleanup.
+    #[serde(default)]
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
+    pub dropped_events: u64,
     /// Set when the cleanup finished but its history record could not be
     /// persisted. The cleanup itself is not rolled back.
     pub audit_error: Option<String>,
@@ -202,7 +231,7 @@ pub(crate) fn execute_plan_with_hooks(
     let recycle = RecycleBinService::new();
     let permanent = PermanentDeleteService::new();
 
-    let before_free = volume_free_bytes(&session.root);
+    let before_free = sample_volume_free(&session.allowed_roots);
 
     let eligible: Vec<&PlanItem> = plan.eligible_items().collect();
     let total = eligible.len();
@@ -216,7 +245,7 @@ pub(crate) fn execute_plan_with_hooks(
     let mut estimated: u64 = 0;
     let mut stopped_early = false;
 
-    for (offset, item) in eligible.iter().enumerate() {
+    'run: for (offset, item) in eligible.iter().enumerate() {
         if token.is_cancelled() {
             stopped_early = true;
             break;
@@ -272,8 +301,17 @@ pub(crate) fn execute_plan_with_hooks(
             // 1. The plan must still describe the same object. Directories are
             //    identified by NTFS object id; files additionally verify size
             //    and nanosecond mtime. Anything unverifiable fails closed.
-            let measure_token = CancellationToken::new();
-            let measured_size = measure_path(&target.path, target.kind, &measure_token);
+            //
+            //    The measurement shares the run token: a fresh token here could
+            //    never be cancelled, so cancelling during a multi-GB directory
+            //    kept the cleanup blocked until the walk finished.
+            let measured_size = measure_path(&target.path, target.kind, token);
+            if measured_size.is_none() && token.is_cancelled() {
+                // The item is not reported at all: it was never processed, so
+                // the outer loop stops and the summary counts it as skipped.
+                stopped_early = true;
+                break 'run;
+            }
             let measured_logical = measured_size.as_ref().map(|s| s.logical_bytes);
             let current_snapshot = TargetSnapshot::capture(&target.path);
             match verify_snapshot(
@@ -438,18 +476,22 @@ pub(crate) fn execute_plan_with_hooks(
         results.push(result);
     }
 
-    let processed_count = results.len() as u64;
-    let skipped_count = (total as u64).saturating_sub(processed_count);
+    // Kept as `usize` until the report is built: the old code widened to u64 and
+    // narrowed straight back, which is the only lossy-looking cast in the path
+    // and cannot truncate here anyway (`results.len() <= total`).
+    let processed_count = results.len();
+    let skipped_count = total.saturating_sub(processed_count);
     let cancelled = stopped_early && skipped_count > 0;
     if cancelled {
         observer(CleanupEvent::Cancelled {
-            processed: processed_count as usize,
-            skipped: skipped_count as usize,
+            processed: processed_count,
+            skipped: skipped_count,
         });
     }
 
-    let after_free = volume_free_bytes(&session.root);
-    let delta = signed_volume_delta(before_free, after_free);
+    let after_free = sample_volume_free(&session.allowed_roots);
+    let (volume_free_before, volume_free_after, delta) =
+        signed_volume_delta_across(&before_free, &after_free);
 
     Ok(CleanupReport {
         plan_id: plan.id.clone(),
@@ -459,16 +501,18 @@ pub(crate) fn execute_plan_with_hooks(
         estimated_bytes: estimated,
         moved_bytes,
         reclaim_bytes,
-        volume_free_before: before_free,
-        volume_free_after: after_free,
+        volume_free_before,
+        volume_free_after,
         volume_free_delta: delta,
-        duration_ms: started.elapsed().as_millis() as u64,
+        duration_ms: u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX),
         results,
         started_at,
         finished_at: chrono::Local::now().to_rfc3339(),
         cancelled,
-        processed_count,
-        skipped_count,
+        processed_count: processed_count as u64,
+        skipped_count: skipped_count as u64,
+        // The channel is owned by the command layer, which stamps the count.
+        dropped_events: 0,
         audit_error: None,
     })
 }
@@ -535,4 +579,61 @@ pub fn signed_volume_delta(before: Option<u64>, after: Option<u64>) -> Option<i6
         (Some(b), Some(a)) => Some(a as i64 - b as i64),
         _ => None,
     }
+}
+
+/// Stable key for the volume that contains `path` (`C:\` on Windows, `/` on
+/// Unix-like systems). Two roots on the same volume must be sampled once.
+fn volume_key(path: &Path) -> String {
+    path.ancestors()
+        .last()
+        .unwrap_or(path)
+        .to_string_lossy()
+        .to_string()
+}
+
+/// Samples free space for every unique local volume behind the scan roots. A
+/// full-disk cleanup can delete from several drives; reporting the delta of
+/// only the first one showed the wrong number to the user.
+fn sample_volume_free(
+    roots: &[std::path::PathBuf],
+) -> std::collections::HashMap<String, Option<u64>> {
+    let mut samples = std::collections::HashMap::new();
+    for root in roots {
+        let key = volume_key(root);
+        samples
+            .entry(key)
+            .or_insert_with(|| volume_free_bytes(root));
+    }
+    samples
+}
+
+/// Aggregates before/after samples for every sampled volume. Returns `None`
+/// for the aggregated values when any volume could not be sampled, so the UI
+/// never presents a partial sum as the real change.
+fn signed_volume_delta_across(
+    before: &std::collections::HashMap<String, Option<u64>>,
+    after: &std::collections::HashMap<String, Option<u64>>,
+) -> (Option<u64>, Option<u64>, Option<i64>) {
+    let mut before_total = 0u64;
+    let mut after_total = 0u64;
+    let mut any = false;
+    for (key, before_free) in before {
+        let Some(before_free) = before_free else {
+            return (None, None, None);
+        };
+        let Some(after_free) = after.get(key).and_then(|value| *value) else {
+            return (None, None, None);
+        };
+        before_total = before_total.saturating_add(*before_free);
+        after_total = after_total.saturating_add(after_free);
+        any = true;
+    }
+    if !any {
+        return (None, None, None);
+    }
+    (
+        Some(before_total),
+        Some(after_total),
+        Some(after_total as i64 - before_total as i64),
+    )
 }

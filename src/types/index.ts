@@ -1,40 +1,31 @@
-export type ThemeMode =
-  | "dark-black"
-  | "dark-gray"
-  | "dark-blue"
-  | "dark-purple"
-  | "dark-green"
-  | "dark-red"
-  | "dark-orange"
-  | "dark-yellow"
-  | "light-white"
-  | "light-gray"
-  | "light-blue"
-  | "light-purple"
-  | "light-green"
-  | "light-red"
-  | "light-orange"
-  | "light-yellow";
+/**
+ * Every selectable theme, in the order the settings picker renders them.
+ *
+ * This array is the single source of truth: the `ThemeMode` type is derived
+ * from it, the store validates against it and the picker maps over it. Three
+ * hand-maintained copies used to drift, and a theme missing from the store's
+ * set silently reset to black.
+ */
+export const THEME_MODES = [
+  "dark-black",
+  "dark-gray",
+  "dark-blue",
+  "dark-purple",
+  "dark-green",
+  "dark-red",
+  "dark-orange",
+  "dark-yellow",
+  "light-white",
+  "light-gray",
+  "light-blue",
+  "light-purple",
+  "light-green",
+  "light-red",
+  "light-orange",
+  "light-yellow",
+] as const;
 
-/** Theme ids persisted by releases before the four-theme consolidation. */
-export type LegacyThemeMode =
-  | "dark-blue"
-  | "dark-purple"
-  | "dark-green"
-  | "dark-red"
-  | "dark-orange"
-  | "dark-yellow"
-  | "light-blue"
-  | "light-purple"
-  | "light-green"
-  | "light-red"
-  | "light-orange"
-  | "light-yellow"
-  | "dark-transparent"
-  | "white-transparent"
-  | "transparent"
-  | "black"
-  | "white";
+export type ThemeMode = (typeof THEME_MODES)[number];
 
 export type SupportedLanguage =
   | "tr"
@@ -130,7 +121,32 @@ export type ActiveUse = "yes" | "no" | "unknown";
 export type CleanupMethod = "trash" | "permanent" | "officialTool" | "none";
 export type TargetKind = "directory" | "file" | "fileGroup";
 export type ItemStatus = "discovered" | "measuring" | "ready" | "blocked" | "error" | "deleted";
-export type ScanScope = "project" | "agents" | "globalCaches" | "allDrives";
+/**
+ * `combined` is the "scan everything" action: the project walk and the AI agent
+ * scan run in one backend session, so they share one progress stream, one cancel
+ * and one result set. Package cache measurement follows on the frontend.
+ */
+export type ScanScope = "project" | "agents" | "globalCaches" | "allDrives" | "combined";
+/**
+ * How much a scan notice affects trust in the result.
+ * - `info`: an expected skip (system-protected folder, locked temp dir).
+ * - `warning`: a path inside the selected scope could not be read.
+ * - `error`: the scan itself was blocked for a root.
+ */
+export type ScanNoticeSeverity = "info" | "warning" | "error";
+
+/** Per-step outcome of a combined scan. */
+export interface ScanSectionResult {
+  scope: ScanScope;
+  /** `completed`, `partial`, `failed` or `skipped`. */
+  status: string;
+  itemCount: number;
+  cleanableBytes: number;
+  errorCode?: string | null;
+}
+export type MarkerMode = "any" | "all";
+/** `denytracked`: tracked or modified content blocks automatic cleanup. */
+export type GitPolicy = "ignore" | "denytracked";
 
 export interface CleanupItem {
   id: string;
@@ -143,6 +159,12 @@ export interface CleanupItem {
   projectId?: string | null;
   projectName?: string | null;
   projectRoot?: string | null;
+  /**
+   * True when `projectRoot` was confirmed by a project manifest. Rows without a
+   * manifest are still cleanable but must never be counted as "projects".
+   * Older backends omit the field; treat it as true (previous behaviour).
+   */
+  projectDetected?: boolean;
   displayName: string;
   displayPath: string;
   logicalBytes: number | null;
@@ -213,6 +235,7 @@ export interface ScanSummary {
   totalBytes: number;
   totalAllocatedBytes: number;
   protectedBytes: number;
+  cleanableBytes: number;
   durationMs: number;
   errorsCount: number;
   warningsCount: number;
@@ -220,6 +243,26 @@ export interface ScanSummary {
   partial: boolean;
   stopReason?: string | null;
   providerTotals: ProviderTotal[];
+  /**
+   * Distinct project roots confirmed by a manifest. `null` when the snapshot
+   * predates the field; the UI must then ask for a rescan instead of showing a
+   * stale count.
+   */
+  detectedProjectCount?: number | null;
+  /** Per-step outcome of a combined scan; empty for single-scope scans. */
+  sections?: ScanSectionResult[];
+  /** Progress events the backend could not deliver (channel already closed). */
+  droppedEvents?: number;
+}
+
+/** A scan-level warning: an unreadable path, a failed volume, ... */
+export interface ScanWarning {
+  code: string;
+  path?: string | null;
+  /** Missing in snapshots written before severity classification existed. */
+  severity?: ScanNoticeSeverity;
+  /** Root of the walk that produced the notice. */
+  root?: string | null;
 }
 
 /** Only the most recent scan is persisted, so the app never opens empty. */
@@ -228,6 +271,8 @@ export interface LastScanSnapshot {
   savedAt: string;
   summary: ScanSummary;
   items: CleanupItem[];
+  /** Scan warnings are part of the result: they explain skipped paths. */
+  warnings?: ScanWarning[];
 }
 
 export type ScanEvent =
@@ -235,8 +280,16 @@ export type ScanEvent =
   | { type: "candidates"; items: CleanupItem[] }
   | { type: "measured"; updates: MeasurementUpdate[] }
   | { type: "progress"; progress: ScanProgress }
-  | { type: "warning"; code: string; path?: string | null }
+  | {
+      type: "warning";
+      code: string;
+      path?: string | null;
+      /** Older backends omit this; the UI classifies the code as a fallback. */
+      severity?: ScanNoticeSeverity;
+      root?: string | null;
+    }
   | { type: "completed"; summary: ScanSummary }
+  | { type: "partial"; summary: ScanSummary }
   | { type: "cancelled"; summary: ScanSummary }
   | { type: "failed"; error: AppErrorDto };
 
@@ -247,7 +300,7 @@ export interface CatalogRule {
   kind: TargetKind;
   names: string[];
   markers: string[];
-  markerMode: "any" | "all";
+  markerMode: MarkerMode;
   content: string[];
   minEvidence: number;
   safety: SafetyClass;
@@ -258,7 +311,7 @@ export interface CatalogRule {
   protected: boolean;
   nestedIn: string[];
   childRules: string[];
-  gitPolicy: string;
+  gitPolicy: GitPolicy;
   requiresIdle: boolean;
   maxDepth?: number | null;
   note?: string | null;
@@ -343,6 +396,8 @@ export interface CleanupReport {
   cancelled: boolean;
   processedCount: number;
   skippedCount: number;
+  /** Progress events lost because the frontend channel was already closed. */
+  droppedEvents?: number;
   auditError?: string | null;
 }
 
@@ -379,6 +434,8 @@ export interface CachePathInfo {
   path: string;
   exists: boolean;
   bytes: number | null;
+  /** `readOnly` / `error` when the path exists but could not be measured. */
+  unmeasuredReason?: string | null;
 }
 
 export interface OfficialActionInfo {
@@ -414,6 +471,7 @@ export type CacheMeasureEvent =
       path: string;
       exists: boolean;
       bytes: number | null;
+      unmeasuredReason?: string | null;
     }
   | { type: "providerFinished"; providerId: string; totalBytes: number }
   | { type: "finished" }
@@ -426,7 +484,8 @@ export interface OfficialActionPreview {
   executable: string;
   args: string[];
   beforeBytes: number;
-  warning: string;
+  /** The before-size measurement was time-limited; some paths are excluded. */
+  measurementTruncated: boolean;
   expiresMs: number;
 }
 
@@ -443,6 +502,7 @@ export interface OfficialActionResult {
   stdoutTail: string;
   stderrTail: string;
   note?: string | null;
+  measurementTruncated?: boolean;
   auditError?: string | null;
 }
 
@@ -484,14 +544,36 @@ export interface AuditRecord {
   movedBytes: number;
   durationMs: number;
   entries: AuditEntry[];
+  cancelled?: boolean;
+  processedCount?: number;
+  skippedCount?: number;
 }
 
+/** One per-category byte measurement, captured after a scan. */
 export interface StorageSnapshot {
   timestamp: string;
   provider: string;
   category: string;
   bytes: number;
   itemCount: number;
+}
+
+/** Lifetime totals from the complete cleanup history file. */
+export interface CleanupTotals {
+  reclaimedBytes: number;
+  movedBytes: number;
+  runs: number;
+  actionRuns: number;
+  successCount: number;
+  errorCount: number;
+}
+
+/** Free/total space of one local volume, reported by the backend. */
+export interface DiskSpaceInfo {
+  drive: string;
+  freeBytes: number;
+  totalBytes: number;
+  percentUsed: number;
 }
 
 export interface ActionAuditRecord {
@@ -567,6 +649,8 @@ export interface AppSettings {
   webhookOnClean?: boolean;
   shortcuts?: Record<string, string>;
   mcpAllowDestructive?: boolean;
+  /** Backend recovered fields from a malformed config; not persisted. */
+  recoveredFromCorrupt?: boolean;
 }
 
 export const DEFAULT_SHORTCUTS: Record<string, string> = {
@@ -629,6 +713,14 @@ export type AppErrorCode =
   | "ScanFailed"
   | "UnsafeDeleteTarget"
   | "RecycleBinFailed"
+  | "RecycleBinTooSmall"
+  | "RecycleBinDisabled"
+  | "RecycleBinNotFound"
+  | "RecycleBinPathTooLong"
+  | "RecycleBinSharingViolation"
+  | "RecycleBinAccessDenied"
+  | "RecycleBinAborted"
+  | "RecycleBinComFailed"
   | "PermanentDeleteFailed"
   | "SettingsReadFailed"
   | "SettingsWriteFailed"
@@ -639,6 +731,7 @@ export type AppErrorCode =
   | "PlanExpired"
   | "PlanChanged"
   | "Blocked"
+  | "Network"
   | "Unknown";
 
 export interface AppErrorDto {

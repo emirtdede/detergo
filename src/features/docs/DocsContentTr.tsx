@@ -18,6 +18,7 @@ import {
 import { NumberField } from "@/components/primitives/NumberField";
 import { McpIdeKey, mcpConfigs, webhookSampleJson } from "./docs-data";
 import { McpIdeSelector } from "./McpIdeSelector";
+import { APP_VERSION } from "@/lib/app-version";
 
 // Syntax highlighter function
 function highlightBash(code: string): React.ReactNode[] {
@@ -159,7 +160,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
           <article className="docs-article">
             <div className="docs-badge-row">
               <span className="docs-category-pill">Genel Bakış</span>
-              <span className="docs-version-pill">v2.2.2</span>
+              <span className="docs-version-pill">v{APP_VERSION}</span>
             </div>
             <h1 className="docs-title">Dev Cleaner'a Hoş Geldiniz</h1>
             <p className="docs-lead">
@@ -173,6 +174,15 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
               <div>
                 <strong>Sıfır Veri Kaybı Prensibi:</strong> Dev Cleaner ile temizlenen tüm proje ve AI artıkları doğrudan
                 <strong> Windows Geri Dönüşüm Kutusuna</strong> taşınır. Yanlışlıkla silinen hiçbir şey kalıcı olarak yok olmaz.
+              </div>
+            </div>
+
+            <div className="docs-callout">
+              <Cpu className="docs-callout-icon" size={18} />
+              <div>
+                <strong>Tümünü tara</strong> — Projeler, AI ajan depoları ve paket önbellekleri. Bu, komut çubuğundaki
+                eylemdir ve <code>--scope combined</code> ile aynıdır: projeler, AI ajan depoları ve paket önbelleği
+                ölçümü tek oturumda çalışır. Sayfa içindeki düğmeler yalnızca kendi kapsamlarını tarar.
               </div>
             </div>
 
@@ -529,9 +539,9 @@ dev-cleaner scan "D:\\projeler" --json`
                   </tr>
                   <tr>
                     <td><code>--scope &lt;kapsam&gt;</code></td>
-                    <td>projects | agents | caches | all</td>
+                    <td><code>projects | agents | combined | all</code></td>
                     <td><code>projects</code></td>
-                    <td>Taranacak hedef grubu (proje bağımlılıkları, AI depoları, paket önbellekleri).</td>
+                    <td>Taranacak hedef grubu (proje bağımlılıkları veya AI ajan depoları).</td>
                   </tr>
                   <tr>
                     <td><code>--auto-clean</code></td>
@@ -581,7 +591,7 @@ dev-cleaner scan "D:\\projeler" --json`
                 <button
                   type="button"
                   className="docs-copy-action"
-                  onClick={() => copyToClipboard("dev-cleaner caches --clean all", "cli-cache")}
+                  onClick={() => copyToClipboard("dev-cleaner caches --clean all --yes", "cli-cache")}
                 >
                   {copiedKey === "cli-cache" ? <Check size={13} /> : <Copy size={13} />}
                   {copiedKey === "cli-cache" ? "Kopyalandı" : "Kopyala"}
@@ -595,8 +605,11 @@ dev-cleaner caches
 # Belirli bir aracın önbelleğini temizle (örn. npm, pip, cargo, docker)
 dev-cleaner caches --clean npm
 
-# Tüm yüklü araçların önbelleklerini temizle
-dev-cleaner caches --clean all`
+# Hiçbir şey silmeden tam temizliği önizle
+dev-cleaner caches --clean all --dry-run
+
+# Tüm yüklü araçların önbelleklerini onaylayarak temizle
+dev-cleaner caches --clean all --yes`
                 )}
               </pre>
             </div>
@@ -642,7 +655,7 @@ dev-cleaner caches --clean all`
                   >
                     <option value="projects">Projeler (Dependencies, build, cache)</option>
                     <option value="agents">AI Ajanları (Claude, Cursor, Codex)</option>
-                    <option value="caches">Geliştirici Önbellekleri</option>
+                    <option value="combined">Projeler + AI Ajanları (Tümünü tara)</option>
                     <option value="all">Tam Tarama (Tümü)</option>
                   </select>
                 </div>
@@ -781,7 +794,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
           <article className="docs-article">
             <div className="docs-badge-row">
               <span className="docs-category-pill">AI Protokolü</span>
-              <span className="docs-version-pill">MCP v2.2.2</span>
+              <span className="docs-version-pill">MCP v{APP_VERSION}</span>
             </div>
             <h1 className="docs-title">Model Context Protocol (MCP) Sunucusu</h1>
             <p className="docs-lead">
@@ -832,10 +845,18 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
                   onClick={() => copyToClipboard(mcpConfigs[activeIde].json, `mcp-${activeIde}`)}
                 >
                   {copiedKey === `mcp-${activeIde}` ? <Check size={13} /> : <Copy size={13} />}
-                  {copiedKey === `mcp-${activeIde}` ? "Kopyalandı!" : "JSON'ı Kopyala"}
+                  {copiedKey === `mcp-${activeIde}`
+                    ? "Kopyalandı!"
+                    : mcpConfigs[activeIde].syntax === "toml"
+                      ? "Kopyala"
+                      : "JSON'ı Kopyala"}
                 </button>
               </div>
-              <pre className="docs-code-pre">{highlightJson(mcpConfigs[activeIde].json)}</pre>
+              <pre className="docs-code-pre">
+                {mcpConfigs[activeIde].syntax === "toml"
+                  ? highlightBash(mcpConfigs[activeIde].json)
+                  : highlightJson(mcpConfigs[activeIde].json)}
+              </pre>
             </div>
           </article>
         )}
@@ -923,26 +944,33 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             </div>
             <h1 className="docs-title">Dev Cleaner MCP Araçları Referansı</h1>
             <p className="docs-lead">
-              Dev Cleaner MCP sunucusu yapay zeka modellerine 6 otonom araç sağlar:
+              Dev Cleaner MCP sunucusu 8 araç sunar: 6 standart araç ve yalnızca
+              --allow-destructive ile görünen 2 yıkıcı araç.
             </p>
 
             <h2 className="docs-h2">1. `devcleaner_scan_workspace`</h2>
             <p className="docs-p">Çalışma alanını tarayarak temizlenebilir hedefleri JSON olarak sunar.</p>
 
-            <h2 className="docs-h2">2. `devcleaner_clean_safe`</h2>
-            <p className="docs-p">Doğrulanmış hedef ID'lerini Windows Geri Dönüşüm Kutusuna taşır.</p>
+            <h2 className="docs-h2">2. `devcleaner_preview_cleanup`</h2>
+            <p className="docs-p">Temizlik planı oluşturur, tek kullanımlık token döner ve hiçbir şeyi silmez.</p>
 
-            <h2 className="docs-h2">3. `devcleaner_list_caches`</h2>
+            <h2 className="docs-h2">3. `devcleaner_clean_safe` (kullanımdan kaldırıldı)</h2>
+            <p className="docs-p">devcleaner_preview_cleanup için eski takma addır. Yalnızca önizleme yapar; hiçbir şeyi silmez. Yeni akış preview_cleanup + execute_cleanup'tır.</p>
+
+            <h2 className="docs-h2">4. `devcleaner_list_caches`</h2>
             <p className="docs-p">21 geliştirici aracının paket önbellek boyutlarını raporlar.</p>
-
-            <h2 className="docs-h2">4. `devcleaner_clean_cache`</h2>
-            <p className="docs-p">Resmi paket yöneticisi komutuyla önbelleği temizler.</p>
 
             <h2 className="docs-h2">5. `devcleaner_get_history`</h2>
             <p className="docs-p">Geçmiş temizlik kayıtlarını döner.</p>
 
             <h2 className="docs-h2">6. `devcleaner_inspect_target`</h2>
             <p className="docs-p">Belirli bir dosya yolunun güvenlik sınıfını ve kurallarını inceler.</p>
+
+            <h2 className="docs-h2">7. `devcleaner_execute_cleanup` (yıkıcı)</h2>
+            <p className="docs-p">Önizlenen planı yürütür. confirm:true, tek kullanımlık token, --allow-destructive ve MCP yıkıcı işlem ayarı gerekir.</p>
+
+            <h2 className="docs-h2">8. `devcleaner_clean_cache` (yıkıcı)</h2>
+            <p className="docs-p">Resmi paket yöneticisi komutuyla önbelleği temizler. confirm:true, --allow-destructive ve MCP yıkıcı işlem ayarı gerekir.</p>
           </article>
         )}
 
@@ -993,6 +1021,35 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
               </div>
               <pre className="docs-code-pre">{highlightJson(webhookSampleJson)}</pre>
             </div>
+
+            <h2 className="docs-h2">Alan başvurusu</h2>
+            <p className="docs-p">
+              <code>event</code> her zaman <code>scan</code> veya <code>clean</code>&apos;dir.
+              Eski <code>scan_completed</code> ve <code>cleanup_completed</code> adları takma ad
+              olarak kabul edilir ve gönderimden önce standart adlara çevrilir.
+            </p>
+            <p className="docs-p">
+              <code>timestamp</code>, <code>product</code> ve <code>version</code> olayı üreten
+              kurulumu tanımlar; yük hiçbir zaman imzalanmaz.
+            </p>
+            <p className="docs-p">
+              <code>status</code>; <code>success</code>, <code>partial</code> (tarama erken durdu)
+              veya <code>cancelled</code> (kullanıcı Durdur&apos;a bastı) olur.
+            </p>
+            <p className="docs-p">
+              <code>total_bytes</code> ölçülen geri kazanılabilir alandır;{" "}
+              <code>total_human</code> bunun biçimlenmiş hâlidir. <code>cleaned_count</code> ve{" "}
+              <code>cleaned_bytes</code> yalnızca temizleme olaylarında bulunur.
+            </p>
+            <p className="docs-p">
+              Tarama olayları ayrıca <code>scan_id</code>, <code>root_path</code>,{" "}
+              <code>duration_ms</code> ve sonuç eksikse <code>stop_reason</code> taşır.
+            </p>
+            <p className="docs-p">
+              Masaüstü uygulamasından gelen temizleme olayları ayrıca <code>plan_id</code>,{" "}
+              <code>mode</code>, <code>success_count</code>, <code>error_count</code>,{" "}
+              <code>moved_bytes</code> ve <code>reclaim_bytes</code> taşır.
+            </p>
           </article>
         )}
 
@@ -1038,6 +1095,26 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
               Tarama veya temizleme işlemi sırasında Dev Cleaner koruma mekanizmaları devreye girdiğinde karşılaşabileceğiniz
               uyarı kodları ve çözüm adımları:
             </p>
+
+            <h2 className="docs-h2">Tarama kapsamı</h2>
+            <div className="docs-callout docs-callout--warning">
+              <Info className="docs-callout-icon" size={18} />
+              <div>
+                <p>
+                  <strong>Atlandı</strong> — Sistem tarafından korunan konumlar atlandı. Yapılacak bir şey yok.
+                </p>
+                <p>
+                  <strong>Uyarı</strong> — Bazı konumlar okunamadı; sonuçlar eksik olabilir.
+                </p>
+                <p>
+                  <strong>Hata</strong> — Kök klasör seçilmedi veya tarama engellendi.
+                </p>
+                <p>
+                  <strong>Eksik</strong> — Tarama erken durdu. Temizlemeden önce durma nedenine
+                  (<code>stop_reason</code>) bakın.
+                </p>
+              </div>
+            </div>
 
             <div className="docs-trouble-card">
               <div className="docs-faq-q">

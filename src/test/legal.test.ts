@@ -5,6 +5,7 @@ import {
   LEGAL_REVISION,
   getLegalDocMeta,
   getLegalDocument,
+  loadLegalLocale,
   type LegalDocId,
 } from "@/features/legal/legal-content";
 import {
@@ -73,12 +74,14 @@ describe("legal documents", () => {
     }
   });
 
-  it("localizes every other UI language instead of falling back to English", () => {
+  it("localizes every other UI language instead of falling back to English", async () => {
     // An unknown or missing language still resolves to the English original.
     expect(getLegalDocument(undefined, "eula")).toBe(LEGAL_DOCUMENTS.en.eula);
     expect(getLegalDocument(null, "thirdParty")).toBe(LEGAL_DOCUMENTS.en.thirdParty);
 
     for (const language of ["de", "ja", "ar"] as const) {
+      // Legal dictionaries load per language; wait before the sync accessors.
+      await loadLegalLocale(language);
       const document = getLegalDocument(language, "privacy");
       expect(document, `${language} privacy`).not.toBe(LEGAL_DOCUMENTS.en.privacy);
       expect(document.title, `${language} title`).not.toBe(LEGAL_DOCUMENTS.en.privacy.title);

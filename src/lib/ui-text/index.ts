@@ -1,12 +1,20 @@
+import { useEffect, useReducer, useState } from "react";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { EN } from "./en";
 import { TR } from "./tr";
-import { DICTIONARIES } from "@/locales/dictionaries";
-
-export { SUPPORTED_UI_LOCALES, resolveUiLocale, type UiLocale } from "@/lib/ui-locale";
+import { maskPath } from "@/lib/format/path";
+import { log } from "@/lib/logging";
 
 import { resolveUiLocale } from "@/lib/ui-locale";
-import { translateBackendText, translateActionDescription } from "./backend-i18n";
+// Public alias kept because views import the locale resolver from this module.
+export { resolveUiLocale };
+import {
+  translateBackendText,
+  translateActionDescription,
+  loadBackendLocale,
+  getBackendLocaleRevision,
+  subscribeBackendLocale,
+} from "./backend-i18n";
 
 export interface UIText {
   nav: {
@@ -47,9 +55,13 @@ export interface UIText {
     off: string;
     items: (n: number) => string;
     showing: (n: number) => string;
+    /** Top bar action: one pass over projects, AI storage and caches. */
+    scanAll: string;
+    scanAllDesc: string;
   };
   header: {
     changeLocation: string;
+    changeLocationConfirmDesc: string;
     folderNotSelected: string;
     chooseFolderSub: string;
     defaultLocations: string;
@@ -109,8 +121,20 @@ export interface UIText {
     kpiSafeReclaim: string;
     kpiSafeReclaimSub: string;
     kpiTargets: string;
-    kpiTargetsSubActive: (count: number) => string;
+    kpiTargetsSubActive: (count: string) => string;
     kpiTargetsSubIdle: string;
+    /** Severity-separated scan notices. */
+    noticeInfoTitle: string;
+    noticeInfoHint: string;
+    noticeIssueHint: string;
+    copyDetails: string;
+    detailsCopied: string;
+    /** Per-step outcome of a combined ("scan everything") run. */
+    coverage: string;
+    sectionSkipped: string;
+    sectionFailed: string;
+    sectionPartial: string;
+    sectionNoRoot: string;
     kpiLifetime: string;
     kpiLifetimeSubRuns: (count: number) => string;
     kpiLifetimeSubIdle: string;
@@ -215,6 +239,10 @@ export interface UIText {
     confirmPermanent: string;
     permanentAck: string;
     blockedReasons: string;
+    coveredByParent: string;
+    noMethod: string;
+    officialActionRequired: string;
+    modeNotAllowed: string;
     expires: string;
     close: string;
     working: string;
@@ -238,6 +266,7 @@ export interface UIText {
     verified: string;
     cancelled: string;
     cancelledNote: (processed: number, skipped: number) => string;
+    progressIncomplete: (count: number) => string;
     processed: string;
     skipped: string;
     viewResults: string;
@@ -358,6 +387,7 @@ export interface UIText {
     tabCleanups: string;
     tabActions: string;
     totalReclaimed: string;
+    totalCleaned: string;
     totalRuns: string;
     lastRun: string;
     tabScans: string;
@@ -366,7 +396,9 @@ export interface UIText {
     colPath: string;
     colEntries: string;
     statusCompleted: string;
+    statusDepthLimited: string;
     statusCancelled: string;
+    statusPartial: string;
     restoreScanTooltip: string;
     restoreScanBtn: string;
     prevScan: string;
@@ -437,6 +469,12 @@ export interface UIText {
     protectionsHint: string;
     agentsHint: string;
     privacyHint: string;
+    resetAppDataTitle: string;
+    resetAppDataHint: string;
+    resetAppDataConfirmBtn: string;
+    resetAppDataBusy: string;
+    resetAppDataSuccess: string;
+    resetAppDataBlocked: string;
     aboutHint: string;
     sidebar: string;
     sidebarExpanded: string;
@@ -462,6 +500,8 @@ export interface UIText {
     themeTransparent: string;
     webhookPlaceholder: string;
     webhookUrl: string;
+    pathMustBeAbsolute: string;
+    excludedNameInvalid: string;
     legalHint: string;
     aboutTagline: string;
     aboutMadeBy: string;
@@ -506,6 +546,8 @@ export interface UIText {
     changeKey: string;
     reservedWarning: (key: string) => string;
     conflictWarning: (key: string, name: string) => string;
+    shortcutNeedsModifier: string;
+    shortcutsResetWarning: (count: number) => string;
     toastShortcutUpdated: (key: string) => string;
     toastShortcutsReset: string;
     notifTitle: string;
@@ -576,6 +618,10 @@ export interface UIText {
     kpiSafeReclaimSub: string;
     kpiDetected: string;
     kpiDetectedSub: string;
+    /** Real "how many targets can I clean" number, not a row count. */
+    kpiTargets: string;
+    kpiTargetsSub: (count: string) => string;
+    kpiTargetsUnknown: string;
     emptyTitleClean: string;
     emptyTitleIdle: string;
     emptyDescClean: string;
@@ -616,6 +662,7 @@ export interface UIText {
     contactSecurity: string;
     contactSecurityDesc: string;
     contactSupport: string;
+    contactBilling: string;
     contactBillingDesc: string;
     contactPrivacyDesc: string;
   };
@@ -699,137 +746,200 @@ export interface UIText {
   };
 }
 
-function createFallbackProxy<T extends object>(target: any, fallback: T): T {
+/**
+ * A locale dictionary is a tree of leaves. A leaf is either a finished string
+ * or a template function built from its `{placeholder}` tokens.
+ */
+type LocaleLeaf = string | ((...args: unknown[]) => string);
+interface LocaleTree {
+  [key: string]: LocaleLeaf | LocaleTree;
+}
+
+function isLocaleTree(value: unknown): value is LocaleTree {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Fills missing/empty leaves of `target` from `fallback`.
+ *
+ * Both sides are re-checked at every level: a locale file is untrusted JSON, so
+ * a key that is an object in English may be `null` in a translation. Treating
+ * `typeof null === "object"` as a nested tree used to forward a `null` target
+ * into the next proxy and throw inside the `get` trap, which took the whole
+ * React tree down.
+ */
+function createFallbackProxy(target: LocaleTree, fallback: LocaleTree): LocaleTree {
   return new Proxy(target, {
-    get(obj, prop: string | symbol) {
-      if (typeof prop === "symbol") return obj[prop];
-      const val = obj[prop];
-      const fallbackVal = (fallback as any)[prop];
-      if (val === undefined || val === null || val === "") {
-        return fallbackVal;
+    get(obj, prop) {
+      if (typeof prop === "symbol") return Reflect.get(obj, prop);
+      const value = obj[prop];
+      const fallbackValue = fallback[prop];
+      if (value === undefined || value === null || value === "") {
+        return fallbackValue;
       }
-      if (
-        typeof val === "object" &&
-        val !== null &&
-        !Array.isArray(val) &&
-        typeof fallbackVal === "object"
-      ) {
-        return createFallbackProxy(val, fallbackVal);
+      if (isLocaleTree(value) && isLocaleTree(fallbackValue)) {
+        return createFallbackProxy(value, fallbackValue);
       }
-      return val;
+      return value;
     },
   });
 }
 
-function adaptDictionaryToUIText(dict: any, fallback: UIText): UIText {
-  if (!dict) return fallback;
-
-  // Locale JSON files are authored against the same UIText schema as the
-  // English dictionary, so they can be used directly. The fallback proxy
-  // fills in any missing or empty leaf with the English text.
-  return createFallbackProxy(dict, fallback);
-}
-
-const LOCALE_MODULES = import.meta.glob("./locales/*.json", { eager: true }) as Record<
+/**
+ * Locale JSON files are split into per-language chunks by Vite. `import.meta.glob`
+ * without `eager` yields `() => import(...)` per file, so only the active
+ * language is fetched and parsed.
+ */
+const LOCALE_LOADERS = import.meta.glob("./locales/*.json") as Record<
   string,
-  { default?: any } | any
+  () => Promise<{ default?: unknown }>
 >;
 
-const FUNCTION_PARAM_MAP: Record<string, string[]> = {
-  "common.items": ["n"],
-  "common.showing": ["n"],
-  "overview.kpiTargetsSubActive": ["count"],
-  "overview.kpiLifetimeSubRuns": ["count"],
-  "overview.hubHistoryDescActive": ["bytes"],
-  "overview.distTotalBadge": ["size"],
-  "table.selected": ["n"],
-  "stale.bannerBody": ["date"],
-  "stale.warningBody": ["date"],
-  "stale.cleanableDelta": ["value"],
-  "stale.itemsDelta": ["delta"],
-  "stale.restoredAt": ["date"],
-  "agents.itemsSub": ["count"],
-  "agents.toastError": ["err"],
-  "caches.measureProgress": ["done", "total"],
-  "caches.actionsReady": ["n"],
-  "caches.terminalFinished": ["ms", "code"],
-  "history.records": ["n"],
-  "settings.reservedWarning": ["key"],
-  "settings.conflictWarning": ["key", "name"],
-  "settings.toastShortcutUpdated": ["key"],
-  "settings.kpiFoldersDefined": ["count"],
-  "settings.kpiRulesDefined": ["count"],
-  "legal.lastUpdated": ["date"],
-  "plan.progress": ["processed", "total"],
-  "plan.currentItem": ["path"],
-  "result.cancelledNote": ["processed", "skipped"],
-  "notifications.scanDoneBody": ["targets", "bytes"],
-  "notifications.cleanDoneBody": ["count", "dest", "bytes"],
-  "notifications.diskAlertBody": ["drive", "percent", "free"],
-  "notifications.lockAlertBody": ["path"],
-  "notifications.webhookSuccessBody": ["url"],
-  "notifications.webhookErrorBody": ["err"],
-  "warnings.other": ["code"],
-};
+/** In-flight language loads, keyed by resolved locale. */
+const pendingLocales = new Map<string, Promise<UIText>>();
 
-function hydrateLocale(raw: any): UIText {
-  const result: any = {};
-  for (const [cat, keys] of Object.entries(raw)) {
-    if (typeof keys !== "object" || keys === null) continue;
-    result[cat] = {};
-    for (const [k, val] of Object.entries(keys as Record<string, any>)) {
-      const fullPath = `${cat}.${k}`;
-      const params = FUNCTION_PARAM_MAP[fullPath];
-      if (params) {
-        const template = String(val);
-        result[cat][k] = (...args: any[]) => {
-          let str = template;
-          params.forEach((param, idx) => {
-            str = str.replaceAll(`{${param}}`, String(args[idx] ?? ""));
-          });
-          return str;
-        };
-      } else {
-        result[cat][k] = val;
-      }
-    }
+/**
+ * Turns one parsed JSON node into the runtime shape.
+ *
+ * A string becomes a finished value or a template function; an object is
+ * hydrated recursively. Anything else (number, boolean, array) is dropped: it
+ * cannot be rendered and silently copying it would only hide a broken locale
+ * file until a call site tried to use it.
+ */
+function hydrateNode(raw: unknown): LocaleLeaf | LocaleTree | null {
+  if (typeof raw === "string") {
+    // Parameterised keys are derived from the `{placeholder}` tokens in the
+    // template. A hand-maintained key list silently turned a new key into a
+    // plain string, and the call site then threw "not a function".
+    const params = [...new Set(Array.from(raw.matchAll(/\{(\w+)\}/g), (m) => m[1]))];
+    if (params.length === 0) return raw;
+    return (...args: unknown[]) => {
+      let str = raw;
+      params.forEach((param, index) => {
+        str = str.replaceAll(`{${param}}`, String(args[index] ?? ""));
+      });
+      return str;
+    };
   }
-  return result as UIText;
+  if (!isLocaleTree(raw)) return null;
+
+  const node: LocaleTree = {};
+  for (const [key, value] of Object.entries(raw)) {
+    const child = hydrateNode(value);
+    if (child !== null) node[key] = child;
+  }
+  return node;
+}
+
+/** Hydrates a parsed locale file, or reports an unusable shape. */
+function hydrateLocale(raw: unknown): LocaleTree | null {
+  const node = hydrateNode(raw);
+  return isLocaleTree(node) ? node : null;
+}
+
+/**
+ * `UIText` is a hand-written interface while the runtime value is built from
+ * JSON. Keeping the single bridge here means the rest of the module never
+ * needs `any`.
+ */
+function asLocaleTree(text: UIText): LocaleTree {
+  return text as unknown as LocaleTree;
 }
 
 const UI_TEXT_CACHE = new Map<string, UIText>();
 UI_TEXT_CACHE.set("tr", TR);
 UI_TEXT_CACHE.set("en", EN);
 
+/**
+ * Loads and caches a locale dictionary.
+ *
+ * A missing or broken file resolves to English instead of rejecting: the UI
+ * must stay usable, and English is the documented fallback at leaf level.
+ */
+export function loadUIText(language?: string | null): Promise<UIText> {
+  const resolved = resolveUiLocale(language ?? usePreferencesStore.getState().language);
+  const cached = UI_TEXT_CACHE.get(resolved);
+  if (cached) return Promise.resolve(cached);
+
+  const inflight = pendingLocales.get(resolved);
+  if (inflight) return inflight;
+
+  const load = LOCALE_LOADERS[`./locales/${resolved}.json`];
+  const promise = (load ? load() : Promise.reject(new Error("missing-locale")))
+    .then((mod) => {
+      const raw = (mod as { default?: unknown }).default ?? mod;
+      const hydrated = hydrateLocale(raw);
+      if (hydrated === null) {
+        // A structurally broken chunk must not poison the cache: log it once and
+        // stay on English for this locale.
+        log.warn(`Locale "${resolved}" has an unexpected shape; using English`);
+        UI_TEXT_CACHE.set(resolved, EN);
+        return EN;
+      }
+      const text = createFallbackProxy(hydrated, asLocaleTree(EN)) as unknown as UIText;
+      UI_TEXT_CACHE.set(resolved, text);
+      return text;
+    })
+    .catch(() => EN)
+    .finally(() => {
+      pendingLocales.delete(resolved);
+    });
+
+  pendingLocales.set(resolved, promise);
+  return promise;
+}
+
+/**
+ * Synchronous accessor for non-React callers (stores, event handlers, dialogs).
+ * Returns English until `loadUIText` finished for the requested language; React
+ * components use `useUIText`, which re-renders once the dictionary arrives.
+ */
 export function getUIText(language?: string | null): UIText {
-  // Callers that run outside React (stores, event handlers, dialogs) omit the
-  // language argument. Falling back to English here would leak English text into
-  // every non-English UI, so resolve against the persisted preference instead.
+  // Callers that run outside React omit the language argument. Falling back to
+  // English here would leak English text into every non-English UI, so resolve
+  // against the persisted preference instead.
   const resolved = resolveUiLocale(language ?? usePreferencesStore.getState().language);
   if (resolved === "tr") return TR;
   if (resolved === "en") return EN;
-
-  let cached = UI_TEXT_CACHE.get(resolved);
-  if (!cached) {
-    const rawModule = LOCALE_MODULES[`./locales/${resolved}.json`];
-    const raw = rawModule?.default ?? rawModule;
-    if (raw) {
-      // A partially translated locale file must never surface raw keys to the
-      // user: fall back to English leaf-by-leaf.
-      cached = createFallbackProxy(hydrateLocale(raw), EN);
-      UI_TEXT_CACHE.set(resolved, cached);
-    } else {
-      const dict = DICTIONARIES[resolved];
-      cached = adaptDictionaryToUIText(dict, EN);
-      UI_TEXT_CACHE.set(resolved, cached);
-    }
-  }
-  return cached;
+  return UI_TEXT_CACHE.get(resolved) ?? EN;
 }
 
 export function useUIText(): UIText {
   const language = usePreferencesStore((s) => s.language);
+  const [, forceRender] = useReducer((tick: number) => tick + 1, 0);
+
+  useEffect(() => {
+    let alive = true;
+    // The backend dictionary is a separate per-language chunk; loading it in
+    // the same phase means one re-render swaps both UI and backend strings
+    // instead of leaving catalog text in English until the next state change.
+    void Promise.all([loadUIText(language), loadBackendLocale(language)]).then(() => {
+      if (alive) forceRender();
+    });
+    return () => {
+      alive = false;
+    };
+  }, [language]);
+
   return getUIText(language);
+}
+
+/**
+ * Revision counter for the lazily loaded backend catalog dictionary.
+ *
+ * `localizeCategory`/`localizeBackendNote`/`compareItems` are synchronous and
+ * read a module-level cache. Components that derive localized values inside a
+ * `useMemo` must include this value so the memo recomputes when the chunk
+ * arrives instead of keeping English labels.
+ */
+export function useBackendLocaleRevision(): number {
+  const [revision, setRevision] = useState(getBackendLocaleRevision);
+  useEffect(() => {
+    // A load may have finished between render and subscribe.
+    setRevision(getBackendLocaleRevision());
+    return subscribeBackendLocale(() => setRevision(getBackendLocaleRevision()));
+  }, []);
+  return revision;
 }
 
 /**
@@ -841,6 +951,13 @@ export function useUIText(): UIText {
 const TECHNICAL_CONTEXT_PATTERN =
   /(?:[A-Za-z]:\\|\\\\\?\\|^~\/|HRESULT 0x[0-9A-Fa-f]{8}|COM 0x[0-9A-Fa-f]{8}|OS error \d+|windows-only|worker-thread|\d+ UTF-16 units)/;
 
+/**
+ * Language-neutral, machine-readable diagnostics worth appending verbatim.
+ * Everything else (paths, English prose) either gets masked or dropped.
+ */
+const TECHNICAL_TOKEN_PATTERN =
+  /HRESULT 0x[0-9A-Fa-f]{8}|COM 0x[0-9A-Fa-f]{8}|OS error \d+|\d+ UTF-16 units/g;
+
 function withTechnicalContext(message: string, rawMsg?: string): string {
   const detail = rawMsg?.trim();
   if (!detail || detail === message) return message;
@@ -848,7 +965,49 @@ function withTechnicalContext(message: string, rawMsg?: string): string {
   // is provably machine-readable. Anything else stays behind the localized
   // message so no source language can leak.
   if (!TECHNICAL_CONTEXT_PATTERN.test(detail)) return message;
-  return `${message} (${detail})`;
+
+  const tokens = detail.match(TECHNICAL_TOKEN_PATTERN);
+  if (tokens && tokens.length > 0) return `${message} (${tokens.join(", ")})`;
+
+  // No opaque token: the remainder is prose or a path. Honour the masking
+  // preference so a full home directory never reaches a toast.
+  const masked = usePreferencesStore.getState().maskPaths ? maskPath(detail) : detail;
+  return `${message} (${masked})`;
+}
+
+/**
+ * Cleanup failures use stable SCREAMING_SNAKE_CASE codes while command errors
+ * use PascalCase enum variants. Normalise the former so both reach the same
+ * translated message instead of falling through to "unknown".
+ */
+function canonicalErrorCode(code: string): string {
+  // Already a PascalCase variant such as `RecycleBinTooSmall`.
+  if (!/[_-]/.test(code) && /[a-z]/.test(code)) return code;
+  return (
+    code
+      .split(/[_\s-]+/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join("") || code
+  );
+}
+
+/**
+ * True when the backend rejected the scan session because it is unknown or
+ * expired. A restored snapshot has no live session after a restart, so the UI
+ * must offer a rescan instead of a generic "cleanup failed" toast.
+ */
+export function isScanSessionError(err: unknown): boolean {
+  let code: string | undefined;
+  if (typeof err === "object" && err !== null && "code" in err) {
+    const candidate = (err as { code?: unknown }).code;
+    if (typeof candidate === "string") code = candidate;
+  } else if (typeof err === "string") {
+    code = err;
+  }
+  if (!code) return false;
+  const normalized = canonicalErrorCode(code);
+  return normalized === "SessionInvalid" || normalized === "SessionExpired";
 }
 
 export function localizeAppError(err: unknown, ui?: UIText): string {
@@ -859,18 +1018,23 @@ export function localizeAppError(err: unknown, ui?: UIText): string {
   let rawMsg: string | undefined;
 
   if (typeof err === "object" && err !== null) {
-    if ("code" in err && typeof (err as any).code === "string") {
-      code = (err as any).code;
+    // Narrow once instead of asserting `any` at every read: the payload may
+    // arrive from Rust, a rejected promise, or a synthetic test object.
+    const candidate = err as { code?: unknown; message?: unknown };
+    if (typeof candidate.code === "string") {
+      code = candidate.code;
     }
-    if ("message" in err && typeof (err as any).message === "string") {
-      rawMsg = (err as any).message;
+    if (typeof candidate.message === "string") {
+      rawMsg = candidate.message;
     }
   } else if (typeof err === "string") {
     rawMsg = err;
     code = err;
   }
 
-  switch (code) {
+  const normalizedCode = code ? canonicalErrorCode(code) : undefined;
+
+  switch (normalizedCode) {
     case "InvalidPath":
       return activeUi.errors.invalidPath;
     case "AccessDenied":
@@ -884,6 +1048,7 @@ export function localizeAppError(err: unknown, ui?: UIText): string {
     case "UnsafeDeleteTarget":
       return activeUi.errors.unsafeDeleteTarget;
     case "RecycleBinFailed":
+    case "RecycleFailed":
       return withTechnicalContext(activeUi.errors.recycleBinFailed, rawMsg);
     case "RecycleBinTooSmall":
       return withTechnicalContext(activeUi.errors.recycleBinTooSmall, rawMsg);
@@ -902,6 +1067,8 @@ export function localizeAppError(err: unknown, ui?: UIText): string {
     case "RecycleBinComFailed":
       return withTechnicalContext(activeUi.errors.recycleBinComFailed, rawMsg);
     case "PermanentDeleteFailed":
+    case "PermanentFailed":
+    case "DeleteFailed":
       return activeUi.errors.permanentDeleteFailed;
     case "SettingsReadFailed":
       return activeUi.errors.settingsReadFailed;
@@ -920,32 +1087,42 @@ export function localizeAppError(err: unknown, ui?: UIText): string {
     case "PlanExpired":
       return activeUi.errors.planExpired;
     case "PlanChanged":
-    case "PLAN_CHANGED":
       return activeUi.errors.planChanged;
-    case "CONTENT_CHANGED":
+    case "ContentChanged":
       return activeUi.errors.contentChanged;
-    case "NOT_MEASURED":
+    case "NotMeasured":
       return activeUi.errors.notMeasured;
     case "Blocked":
       return activeUi.errors.blocked;
-    case "GIT_GUARD":
+    case "GitGuard":
+    case "ProtectedTarget":
       return activeUi.warnings.protectedTarget;
-    case "AGENT_POLICY":
+    case "AgentPolicy":
+    case "AgentCacheDisabled":
       return activeUi.warnings.agentCacheDisabled;
-    case "IN_USE":
-    case "PROCESS_LOCK":
+    case "InUse":
+    case "ProcessLock":
+    case "TargetActive":
       return activeUi.warnings.targetActive;
-    case "PERMISSION_DENIED":
+    case "PermissionDenied":
       return activeUi.errors.accessDenied;
-    case "NOT_FOUND":
+    case "NotFound":
       return activeUi.errors.pathNotFound;
+    case "PathGuard":
+      return activeUi.errors.unsafeDeleteTarget;
+  }
+
+  // Warning codes share the same vocabulary (IN_USE, GIT_GUARD, ...). When the
+  // error carries no message, let the warning lookup cover the remaining codes
+  // instead of collapsing a known condition to "unknown".
+  if (!rawMsg && code) {
+    const warningLocalized = tryLocalizeWarningCode(code, activeUi);
+    if (warningLocalized) return warningLocalized;
   }
 
   if (rawMsg) {
     if (rawMsg.includes("Access denied") || rawMsg.includes("Permission denied"))
       return activeUi.errors.accessDenied;
-    if (rawMsg.includes("Path not found") || rawMsg.includes("not found"))
-      return activeUi.errors.pathNotFound;
     if (rawMsg.includes("Invalid path")) return activeUi.errors.invalidPath;
     if (rawMsg.includes("Scan cancelled")) return activeUi.errors.scanCancelled;
     if (rawMsg.includes("Scan failed")) return activeUi.errors.scanFailed;
@@ -989,21 +1166,55 @@ export function localizeAppError(err: unknown, ui?: UIText): string {
     if (rawMsg.includes("Target is tracked by Git")) return activeUi.warnings.protectedTarget;
     if (rawMsg.includes("Size not measured")) return activeUi.table.unmeasured;
     if (rawMsg.includes("smaller than minimum item size")) return activeUi.warnings.protectedTarget;
-    const warningLocalized = localizeWarningCode(code || rawMsg, activeUi);
-    if (warningLocalized !== (code || rawMsg) && warningLocalized !== activeUi.plan.blocked) {
-      return warningLocalized;
+    // A bare "… not found" is not proof of a missing filesystem path: missing
+    // tools, catalog lookups and search misses all use that wording, and the
+    // generic test used to run *before* the specific recycle-bin/delete rules
+    // and shadow them. Only the explicit path error (or the Windows / ENOENT
+    // system message) maps to "path not found"; everything else falls through
+    // to the specific rules above or the generic error below.
+    if (/^(Path not found|The system cannot find the (path|file)|ENOENT)/i.test(rawMsg)) {
+      return activeUi.errors.pathNotFound;
     }
+    const warningLocalized = tryLocalizeWarningCode(code || rawMsg, activeUi);
+    if (warningLocalized) return warningLocalized;
     // Backend diagnostics are English-only. Returning them verbatim would leak
     // the source language into the UI, so unknown messages collapse to the
-    // localized generic error instead.
-    return activeUi.errors.unknown;
+    // localized generic error. Machine-readable detail (paths, HRESULT/OS
+    // codes) is still appended when present so the user can act on it.
+    return withTechnicalContext(activeUi.errors.unknown, rawMsg);
   }
 
   return activeUi.errors.unknown;
 }
 
-export function localizeWarningCode(code: string | null | undefined, ui?: UIText): string {
+/**
+ * Maps a machine stop reason (`timeout`, `candidate-limit`, `depth-limit`,
+ * `cancelled`) to an already-localized phrase. Rendering the raw code leaked
+ * English identifiers into every locale.
+ */
+export function localizeStopReason(code: string | null | undefined, ui?: UIText): string {
   const activeUi = ui ?? getUIText();
+  if (!code) return activeUi.overview.partial;
+  switch (
+    code
+      .trim()
+      .toLowerCase()
+      .replace(/[_\s]+/g, "-")
+  ) {
+    case "candidate-limit":
+      return activeUi.settings.maxCandidates;
+    case "depth-limit":
+      return activeUi.settings.maxDepth;
+    case "timeout":
+      return activeUi.settings.timeout;
+    case "cancelled":
+      return activeUi.errors.scanCancelled;
+    default:
+      return activeUi.overview.partial;
+  }
+}
+
+function tryLocalizeWarningCode(code: string, activeUi: UIText): string | null {
   if (!code) return activeUi.plan.blocked;
 
   const normalized = code.toUpperCase().replace(/[-_\s]/g, "");
@@ -1025,6 +1236,17 @@ export function localizeWarningCode(code: string | null | undefined, ui?: UIText
     case "GITGUARD":
     case "PROTECTED":
       return activeUi.warnings.protectedTarget;
+    case "COVEREDBYPARENT":
+      return activeUi.plan.coveredByParent;
+    case "NOMETHOD":
+      return activeUi.plan.noMethod;
+    case "OFFICIALACTIONREQUIRED":
+    case "OFFICIALTOOL":
+      return activeUi.plan.officialActionRequired;
+    case "MODENOTALLOWED":
+      return activeUi.plan.modeNotAllowed;
+    case "ACTIVEUSE":
+      return activeUi.warnings.targetActive;
     case "PATHGUARD":
       return activeUi.errors.unsafeDeleteTarget;
     case "NOPROJECTMARKER":
@@ -1063,8 +1285,23 @@ export function localizeWarningCode(code: string | null | undefined, ui?: UIText
     case "ACCESSDENIED":
       return activeUi.errors.accessDenied;
     default:
-      return activeUi.warnings.other ? activeUi.warnings.other(code) : code;
+      // Never leak a raw machine code (for example `COVERED_BY_PARENT`) into
+      // the UI. Unknown codes are reported as `null` so callers can try their
+      // own fallback before the generic localized reason is used.
+      return null;
   }
+}
+
+/**
+ * Localizes a warning/block code. Unknown codes intentionally collapse to a
+ * localized generic reason instead of echoing the raw identifier.
+ */
+export function localizeWarningCode(code: string | null | undefined, ui?: UIText): string {
+  const activeUi = ui ?? getUIText();
+  if (!code) return activeUi.plan.blocked;
+  const localized = tryLocalizeWarningCode(code, activeUi);
+  if (localized) return localized;
+  return activeUi.warnings.other ? activeUi.warnings.other(code) : activeUi.plan.blocked;
 }
 
 export function localizeBackendNote(note: string | null | undefined, _ui?: UIText): string {

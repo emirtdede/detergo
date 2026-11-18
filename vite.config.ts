@@ -33,9 +33,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          if (id.includes("src/locales/langs") || id.includes("src/lib/ui-text/locales")) {
-            return "locales-bundle";
-          }
+          // Locale dictionaries must stay as individual dynamic imports.
+          // Grouping them here forced Vite to emit one `locales-bundle` chunk
+          // that every language switch had to download in full.
           if (id.includes("node_modules")) {
             if (id.includes("react") || id.includes("zustand") || id.includes("clsx")) {
               return "vendor-core";

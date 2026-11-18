@@ -116,6 +116,12 @@ export const CleanupResultDialog: React.FC = () => {
         </p>
       )}
 
+      {report.droppedEvents ? (
+        <p className="items-warning">
+          <AlertTriangle size={11} /> {ui.result.progressIncomplete(report.droppedEvents)}
+        </p>
+      ) : null}
+
       {failures.length > 0 && (
         <div className="plan-list">
           {failures.map((failure) => (

@@ -11,7 +11,9 @@ import {
   CleanupEvent,
   CleanupPlan,
   CleanupReport,
+  CleanupTotals,
   DeleteMode,
+  DiskSpaceInfo,
   GrowthReport,
   KnownLocation,
   LastScanSnapshot,
@@ -403,6 +405,7 @@ export function createMockScannerApi(): ScannerApi {
         cancelled: false,
         processedCount: 1,
         skippedCount: 0,
+        droppedEvents: 0,
         results: [
           {
             targetId: "item-1",
@@ -493,11 +496,18 @@ export function createMockScannerApi(): ScannerApi {
       ];
     },
 
-    async measureCacheProviders(_onEvent: (event: CacheMeasureEvent) => void): Promise<void> {
+    async measureCacheProviders(
+      _onEvent: (event: CacheMeasureEvent) => void,
+      _providerIds?: string[],
+    ): Promise<void> {
       return;
     },
 
     async cancelCacheMeasurement(): Promise<void> {
+      return;
+    },
+
+    async cancelCachePreview(): Promise<void> {
       return;
     },
 
@@ -512,7 +522,7 @@ export function createMockScannerApi(): ScannerApi {
         executable: "npm",
         args: ["cache", "clean", "--force"],
         beforeBytes: 3450000000,
-        warning: "",
+        measurementTruncated: false,
         expiresMs: Date.now() + 300000,
       };
     },
@@ -535,6 +545,44 @@ export function createMockScannerApi(): ScannerApi {
 
     async getCleanupHistory(limit = 200): Promise<AuditRecord[]> {
       return mockAuditRecords.slice(0, limit);
+    },
+
+    async getCleanupTotals(): Promise<CleanupTotals> {
+      return mockAuditRecords.reduce<CleanupTotals>(
+        (acc, record) => ({
+          reclaimedBytes: acc.reclaimedBytes + record.reclaimBytes,
+          movedBytes: acc.movedBytes + record.movedBytes,
+          runs: acc.runs + 1,
+          actionRuns: acc.actionRuns,
+          successCount: acc.successCount + record.successCount,
+          errorCount: acc.errorCount + record.errorCount,
+        }),
+        {
+          reclaimedBytes: 0,
+          movedBytes: 0,
+          runs: 0,
+          actionRuns: 0,
+          successCount: 0,
+          errorCount: 0,
+        },
+      );
+    },
+
+    async getDiskPressure(): Promise<DiskSpaceInfo[]> {
+      return [
+        {
+          drive: "C:\\",
+          freeBytes: 120_000_000_000,
+          totalBytes: 512_000_000_000,
+          percentUsed: 76.6,
+        },
+        {
+          drive: "D:\\",
+          freeBytes: 18_000_000_000,
+          totalBytes: 1_000_000_000_000,
+          percentUsed: 98.2,
+        },
+      ];
     },
 
     async getOfficialActionHistory(_limit = 200): Promise<ActionAuditRecord[]> {
@@ -585,8 +633,17 @@ export function createMockScannerApi(): ScannerApi {
       return memorySettings;
     },
 
-    async saveAppSettings(settings: AppSettings): Promise<void> {
+    async saveAppSettings(settings: AppSettings): Promise<AppSettings> {
       memorySettings = { ...settings };
+      return memorySettings;
+    },
+
+    async resetAppData(): Promise<void> {
+      const error = new Error(
+        "Application data can only be reset in the desktop application.",
+      ) as Error & { code?: string };
+      error.code = "PlatformUnsupported";
+      throw error;
     },
 
     async saveLastScan(_snapshot: LastScanSnapshot): Promise<void> {
@@ -605,6 +662,7 @@ export function createMockScannerApi(): ScannerApi {
           totalBytes: 10610000000,
           totalAllocatedBytes: 10610000000,
           protectedBytes: 890000000,
+          cleanableBytes: 9720000000,
           durationMs: 1420,
           errorsCount: 0,
           warningsCount: 0,
@@ -655,6 +713,7 @@ export function createMockScannerApi(): ScannerApi {
               protectedBytes: 0,
             },
           ],
+          droppedEvents: 0,
         },
         items: [
           {
@@ -861,7 +920,7 @@ export function createMockScannerApi(): ScannerApi {
 
     async getBuildInfo(): Promise<BuildInfo> {
       return {
-        version: "2.2.2",
+        version: "2.2.3",
         commit: "demo",
         commitShort: "demo",
         dirty: false,
@@ -873,6 +932,13 @@ export function createMockScannerApi(): ScannerApi {
     async testWebhook(
       _url: string,
       _payload?: Record<string, unknown>,
+    ): Promise<{ ok: boolean; status: number; latencyMs: number; message: string }> {
+      return { ok: true, status: 200, latencyMs: 12, message: "Simulated (browser preview)" };
+    },
+
+    async dispatchWebhook(
+      _event: "scan" | "clean",
+      _payload: Record<string, unknown>,
     ): Promise<{ ok: boolean; status: number; latencyMs: number; message: string }> {
       return { ok: true, status: 200, latencyMs: 12, message: "Simulated (browser preview)" };
     },

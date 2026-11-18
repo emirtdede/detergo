@@ -15,6 +15,7 @@ import {
   localizeBackendNote,
   localizeActionDescription,
   localizeUnavailableReason,
+  localizeAppError,
 } from "@/lib/ui-text";
 
 import { translateBackendText } from "@/lib/ui-text/backend-i18n";
@@ -25,12 +26,13 @@ import { formatBytes, formatSignedBytes } from "@/lib/formatters";
 
 import { usePreferencesStore } from "@/stores/preferences-store";
 
-import { OfficialActionPreview, OfficialActionResult } from "@/types";
+import { AppErrorDto, OfficialActionPreview, OfficialActionResult } from "@/types";
 
 import { useCacheStore } from "@/stores/cache-store";
 
 import { maskPath } from "@/lib/format/path";
-import { describeError } from "@/lib/errors/user-message";
+import { toAppError } from "@/lib/errors/app-error";
+import { log } from "@/lib/logging";
 
 import "../items/items.css";
 
@@ -47,7 +49,19 @@ export const CachesView: React.FC = () => {
 
   const [running, setRunning] = useState(false);
 
-  const [error, setError] = useState<string | null>(null);
+  // Previewing measures the real cache before opening the dialog. On large
+  // caches that takes a moment, so the action must report that it is busy
+  // instead of appearing to do nothing.
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  const previewRequestRef = useRef(0);
+
+  const [error, setError] = useState<AppErrorDto | null>(null);
+
+  // A failed execute still consumed the single-use confirmation token. Keeping
+  // the dialog open (so the error stays visible next to the command) must not
+  // offer a "Run" button whose token the backend already discarded.
+  const [tokenConsumed, setTokenConsumed] = useState(false);
 
   const providers = useCacheStore((s) => s.providers);
 
@@ -75,9 +89,7 @@ export const CachesView: React.FC = () => {
 
   const measureMode = usePreferencesStore((s) => s.cacheMeasureMode);
 
-  const load = () => {
-    void loadProviders(true);
-  };
+  const load = () => loadProviders(true);
 
   useEffect(() => {
     void loadProviders();
@@ -102,20 +114,53 @@ export const CachesView: React.FC = () => {
 
       void startMeasure();
     }
-  }, [loaded, measureMode, measuring, providers, startMeasure]);
+  }, [loaded, measureMode, providers, startMeasure]);
+
+  const previewAction = useMemo(
+    () =>
+      preview
+        ? providers
+            .find((p) => p.id === preview.providerId)
+            ?.actions.find((a) => a.id === preview.actionId)
+        : null,
+    [preview, providers],
+  );
 
   const openPreview = async (providerId: string, actionId: string) => {
     setError(null);
+    setTokenConsumed(false);
 
     setResult(null);
+    setPreviewLoading(true);
+
+    // Preview measurement can still take several seconds on huge caches. The
+    // request generation lets "Cancel" drop a late result instead of opening a
+    // dialog the user already dismissed.
+    const request = previewRequestRef.current + 1;
+    previewRequestRef.current = request;
 
     try {
       const next = await scannerApi.previewOfficialAction(providerId, actionId);
 
+      if (request !== previewRequestRef.current) return;
       setPreview(next);
     } catch (err) {
-      setError(describeError(err));
+      if (request !== previewRequestRef.current) return;
+      setError(toAppError(err));
+    } finally {
+      if (request === previewRequestRef.current) setPreviewLoading(false);
     }
+  };
+
+  const cancelPreview = () => {
+    previewRequestRef.current += 1;
+    setPreviewLoading(false);
+    setError(null);
+    // Drop the late result locally *and* stop the backend walk; without the
+    // command "Cancel" only hid the spinner while the disk kept being read.
+    void scannerApi.cancelCachePreview().catch((err) => {
+      log.warn("Could not cancel the cache preview measurement", err);
+    });
   };
 
   const runAction = async () => {
@@ -123,7 +168,9 @@ export const CachesView: React.FC = () => {
 
     // user must reopen the preview to run the command again.
 
-    if (!preview || running || result !== null) return;
+    if (!preview || running || result !== null || tokenConsumed) return;
+
+    const providerId = preview.providerId;
 
     setRunning(true);
 
@@ -134,13 +181,19 @@ export const CachesView: React.FC = () => {
 
       setResult(next);
 
-      load();
+      // Refresh provider metadata, then re-measure only the provider the
+      // action touched. A full re-measure made every other size on the page
+      // disappear and forced the user to wait for caches they did not clean.
+      await load();
+
+      void startMeasure([providerId]);
     } catch (err) {
-      setError(describeError(err));
+      setError(toAppError(err));
 
       // The token was consumed by the backend even though the command failed.
-
-      setPreview(null);
+      // Keep the preview and its error on screen instead of closing the dialog,
+      // but disable the action so it cannot be retried with a dead token.
+      setTokenConsumed(true);
     } finally {
       setRunning(false);
     }
@@ -152,6 +205,8 @@ export const CachesView: React.FC = () => {
     setResult(null);
 
     setError(null);
+
+    setTokenConsumed(false);
   };
 
   const cacheTotals = useMemo(() => {
@@ -159,7 +214,12 @@ export const CachesView: React.FC = () => {
 
     const measuredCount = providers.filter((p) => p.measured).length;
 
-    const actionsCount = providers.reduce((acc, p) => acc + p.actions.length, 0);
+    // The KPI must describe the same set the action buttons can actually run:
+    // counting unavailable actions advertised work the UI could not perform.
+    const actionsCount = providers.reduce(
+      (acc, p) => acc + p.actions.filter((action) => action.available).length,
+      0,
+    );
 
     return { totalBytes, measuredCount, actionsCount };
   }, [providers]);
@@ -173,6 +233,17 @@ export const CachesView: React.FC = () => {
         description={ui.caches.subtitle}
         actions={
           <>
+            {previewLoading && (
+              <Button
+                variant="danger-outline"
+                size="sm"
+                icon={<Square size={11} fill="currentColor" />}
+                onClick={cancelPreview}
+              >
+                {ui.common.cancel}
+              </Button>
+            )}
+
             {measuring ? (
               <Button
                 variant="danger-outline"
@@ -275,11 +346,21 @@ export const CachesView: React.FC = () => {
 
       {loadError && (
         <p className="items-warning">
-          {ui.caches.loadError} {loadError}
+          {ui.caches.loadError} {localizeAppError(loadError, ui)}
         </p>
       )}
 
-      {measureError && <p className="items-warning">{measureError}</p>}
+      {measureError && (
+        <p className="items-warning">
+          {ui.caches.measure}: {localizeAppError(measureError, ui)}
+        </p>
+      )}
+
+      {previewLoading && (
+        <p className="plan-note" aria-live="polite">
+          {ui.common.loading}
+        </p>
+      )}
 
       {measuring && (
         <p className="plan-note" aria-live="polite">
@@ -319,7 +400,13 @@ export const CachesView: React.FC = () => {
                   {maskPaths ? maskPath(path.path) : path.path}{" "}
                   {path.exists && path.bytes !== null && path.bytes !== undefined
                     ? `· ${formatBytes(path.bytes, language)}`
-                    : ""}
+                    : path.exists && path.unmeasuredReason
+                      ? `· ${
+                          path.unmeasuredReason === "readOnly"
+                            ? ui.caches.readOnly
+                            : ui.caches.notMeasured
+                        }`
+                      : ""}
                 </span>
               ))}
             </div>
@@ -351,7 +438,7 @@ export const CachesView: React.FC = () => {
                       variant="secondary"
                       size="sm"
                       icon={<Terminal size={12} />}
-                      disabled={!action.available}
+                      disabled={!action.available || previewLoading}
                       title={
                         action.available
                           ? localizeActionDescription(action.id || action.description, ui)
@@ -404,7 +491,7 @@ export const CachesView: React.FC = () => {
               variant="primary"
               size="sm"
               onClick={runAction}
-              disabled={running || result !== null}
+              disabled={running || result !== null || tokenConsumed}
             >
               {running ? ui.caches.running : ui.caches.runAction}
             </Button>
@@ -431,57 +518,23 @@ export const CachesView: React.FC = () => {
 
             {/* Dev Terminal Console */}
 
-            <div
-              style={{
-                marginTop: 14,
-
-                borderRadius: 8,
-
-                background: "#080c14",
-
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-
-                overflow: "hidden",
-
-                fontFamily: "var(--font-mono, monospace)",
-
-                fontSize: 12,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-
-                  alignItems: "center",
-
-                  justifyContent: "space-between",
-
-                  padding: "6px 12px",
-
-                  background: "#0d131f",
-
-                  borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
-
-                  color: "#94a3b8",
-
-                  fontSize: 11,
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <Terminal size={12} color="#00f0ff" />
+            <div className="cache-terminal">
+              <div className="cache-terminal-header">
+                <div className="cache-terminal-title">
+                  <Terminal size={12} className="cache-terminal-icon" />
 
                   <span>{ui.caches.terminalTitle}</span>
                 </div>
 
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                <div className="cache-terminal-status">
                   {result ? (
                     result.success ? (
-                      <Check size={12} color="#10b981" />
+                      <Check size={12} className="cache-terminal-success" />
                     ) : (
-                      <X size={12} color="#ef4444" />
+                      <X size={12} className="cache-terminal-error" />
                     )
                   ) : running ? (
-                    <Loader2 size={12} className="spin" color="#38bdf8" />
+                    <Loader2 size={12} className="cache-terminal-cyan spin" />
                   ) : null}
                   <span>
                     {result
@@ -495,45 +548,29 @@ export const CachesView: React.FC = () => {
                 </div>
               </div>
 
-              <div
-                style={{
-                  padding: "10px 12px",
-                  color: "#e2e8f0",
-                  lineHeight: 1.5,
-                  maxHeight: 180,
-                  overflowY: "auto",
-                }}
-              >
-                <div style={{ color: "#38bdf8" }}>
-                  <span style={{ color: "#a855f7" }}>$</span> {preview.executable}{" "}
+              <div className="cache-terminal-body">
+                <div className="cache-terminal-command">
+                  <span className="cache-terminal-prompt">$</span> {preview.executable}{" "}
                   {preview.args.join(" ")}
                 </div>
 
                 {running && (
-                  <div style={{ color: "#94a3b8", fontStyle: "italic", marginTop: 4 }}>
-                    {ui.caches.terminalBackground}
-                  </div>
+                  <div className="cache-terminal-running">{ui.caches.terminalBackground}</div>
                 )}
 
                 {result?.stdoutTail && (
-                  <pre style={{ margin: "6px 0", color: "#cbd5e1", whiteSpace: "pre-wrap" }}>
-                    {result.stdoutTail}
-                  </pre>
+                  <pre className="cache-terminal-stdout">{result.stdoutTail}</pre>
                 )}
 
                 {result?.stderrTail && (
-                  <pre style={{ margin: "6px 0", color: "#f87171", whiteSpace: "pre-wrap" }}>
-                    {result.stderrTail}
-                  </pre>
+                  <pre className="cache-terminal-stderr">{result.stderrTail}</pre>
                 )}
 
                 {result && (
                   <div
-                    style={{
-                      color: result.success ? "#4ade80" : "#f87171",
-                      marginTop: 6,
-                      fontSize: 11,
-                    }}
+                    className={`cache-terminal-result ${
+                      result.success ? "is-success" : "is-error"
+                    }`}
                   >
                     {ui.caches.terminalFinished(result.durationMs, result.exitCode ?? 0)}
                   </div>
@@ -541,11 +578,17 @@ export const CachesView: React.FC = () => {
               </div>
             </div>
 
-            <p className="plan-note" style={{ marginTop: 12 }}>
-              <strong>{ui.caches.warning}: </strong>
+            {previewAction && (
+              <p className="plan-note" style={{ marginTop: 12 }}>
+                <strong>{ui.caches.warning}: </strong>
 
-              {preview.warning}
-            </p>
+                {translateBackendText(previewAction.impact)}
+              </p>
+            )}
+
+            {preview.measurementTruncated && (
+              <p className="items-warning">{ui.errors.notMeasured}</p>
+            )}
 
             {providers
 
@@ -587,10 +630,16 @@ export const CachesView: React.FC = () => {
                 )}
 
                 {result.auditError && <p className="items-warning">{ui.caches.auditError}</p>}
+
+                {result.measurementTruncated && (
+                  <p className="items-warning">
+                    {ui.caches.delta}: {ui.caches.notMeasured}
+                  </p>
+                )}
               </>
             )}
 
-            {error && <p className="items-warning">{error}</p>}
+            {error && <p className="items-warning">{localizeAppError(error, ui)}</p>}
           </>
         )}
       </Dialog>

@@ -8,19 +8,34 @@ use std::time::{Duration, Instant};
 use crate::catalog::TargetKind;
 use crate::error::AppError;
 use crate::scanner::cancellation::CancellationToken;
-use crate::scanner::measurement::measure_path;
+use crate::scanner::measurement::{measure_path, measure_path_with_deadline};
 
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(600);
-const VERSION_TIMEOUT: Duration = Duration::from_secs(10);
+/// One `--version` probe is capped at 1.5 s. Probes for every provider run in
+/// parallel under [`VERSION_BUDGET`], so a slow shim (npx, conda) can no longer
+/// make the caches page take minutes to open.
+const VERSION_TIMEOUT: Duration = Duration::from_millis(1500);
+const VERSION_BUDGET: Duration = Duration::from_secs(2);
+/// Preview/after-measurement runs inside the command handler, so it must not
+/// walk a multi-gigabyte cache for minutes and freeze the dialog. Paths that
+/// cannot be measured within this budget are reported as "not measured".
+const PREVIEW_MEASURE_BUDGET: Duration = Duration::from_secs(8);
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CachePathInfo {
     pub path: String,
     pub exists: bool,
+    #[cfg_attr(feature = "bindings", specta(type = Option<specta_typescript::Number<u64>>))]
     pub bytes: Option<u64>,
+    /// Why `bytes` is `None` even though the path exists (`readOnly`, `error`).
+    /// Without this the UI could only say "not measured" and never explain that
+    /// a read-only provider is intentionally never walked.
+    pub unmeasured_reason: Option<String>,
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OfficialActionInfo {
@@ -35,6 +50,7 @@ pub struct OfficialActionInfo {
     pub impact: String,
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CacheProviderInfo {
@@ -43,6 +59,7 @@ pub struct CacheProviderInfo {
     pub detected: bool,
     pub version: Option<String>,
     pub cache_paths: Vec<CachePathInfo>,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub total_bytes: u64,
     pub actions: Vec<OfficialActionInfo>,
     pub read_only: bool,
@@ -52,6 +69,7 @@ pub struct CacheProviderInfo {
 }
 
 /// Progress events for the asynchronous cache measurement pass.
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize)]
 #[serde(
     tag = "type",
@@ -60,22 +78,27 @@ pub struct CacheProviderInfo {
 )]
 pub enum CacheMeasureEvent {
     Started {
+        #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<usize>))]
         provider_count: usize,
     },
     PathMeasured {
         provider_id: String,
         path: String,
         exists: bool,
+        #[cfg_attr(feature = "bindings", specta(type = Option<specta_typescript::Number<u64>>))]
         bytes: Option<u64>,
+        unmeasured_reason: Option<String>,
     },
     ProviderFinished {
         provider_id: String,
+        #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
         total_bytes: u64,
     },
     Finished,
     Cancelled,
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OfficialActionPreview {
@@ -84,11 +107,17 @@ pub struct OfficialActionPreview {
     pub action_id: String,
     pub executable: String,
     pub args: Vec<String>,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub before_bytes: u64,
-    pub warning: String,
+    /// True when the before-size measurement hit its time limit, so some paths
+    /// are not included. This flag is the machine-readable source of truth; the
+    /// old free-text `warning` duplicated it and was never rendered.
+    pub measurement_truncated: bool,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub expires_ms: u64,
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OfficialActionResult {
@@ -97,13 +126,20 @@ pub struct OfficialActionResult {
     pub provider_id: String,
     pub action_id: String,
     pub label: String,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub before_bytes: u64,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub after_bytes: u64,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<i64>))]
     pub delta_bytes: i64,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub duration_ms: u64,
     pub stdout_tail: String,
     pub stderr_tail: String,
     pub note: Option<String>,
+    /// True when the post-action size measurement was cut short (time budget),
+    /// so `delta_bytes` is a lower bound rather than a complete change value.
+    pub measurement_truncated: bool,
     /// Set when the cleanup completed but the audit/history record could not be
     /// written. The command still succeeds, but the failure is surfaced.
     pub audit_error: Option<String>,
@@ -575,7 +611,56 @@ fn run_command_with_timeout(mut cmd: Command, timeout: Duration) -> Result<Outpu
     }
 }
 
-fn command_for_executable(exe: &Path, args: &[String]) -> Command {
+/// Quotes one argument for `cmd.exe /C`. Rust's default argument quoting
+/// follows the MSVC runtime rules, but `cmd` applies its own parsing first, so
+/// a path such as `C:\Program Files\nodejs\npm.cmd` must reach it wrapped in
+/// explicit quotes.
+///
+/// Inside double quotes cmd treats `&`, `|`, `<`, `>` and `^` literally, so one
+/// pair of quotes per token is enough. A literal `"` becomes `""`.
+///
+/// `%NAME%` is *not* escapable on a `/C` command line: doubling it (the batch
+/// file rule) would insert a second percent sign here, and there is no other
+/// syntax that suppresses expansion. Since the executable path is *discovered*
+/// from disk (a user can own a directory literally named `%TEMP%`), silently
+/// expanding it could run a different program than the one that was previewed.
+/// Such a value is rejected instead of being passed through.
+fn quote_cmd_arg(value: &str) -> Result<String, CmdQuoteError> {
+    if value.contains('%') {
+        return Err(CmdQuoteError::PercentExpansion);
+    }
+    if value.chars().any(|c| c.is_control()) {
+        return Err(CmdQuoteError::ControlChar);
+    }
+    let escaped = value.replace('"', "\"\"");
+    Ok(format!("\"{escaped}\""))
+}
+
+/// Why a token cannot be handed to `cmd.exe /C` safely.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CmdQuoteError {
+    /// `%VAR%` would be expanded by cmd and cannot be escaped there.
+    PercentExpansion,
+    /// A control character could terminate the command line early.
+    ControlChar,
+}
+
+impl std::fmt::Display for CmdQuoteError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::PercentExpansion => write!(
+                f,
+                "the tool path contains '%', which cmd.exe would expand; \
+                 move the tool to a path without percent signs"
+            ),
+            Self::ControlChar => {
+                write!(f, "the tool path contains a control character")
+            }
+        }
+    }
+}
+
+fn command_for_executable(exe: &Path, args: &[String]) -> Result<Command, AppError> {
     if exe
         .extension()
         .map(|e| e.eq_ignore_ascii_case("exe"))
@@ -583,13 +668,35 @@ fn command_for_executable(exe: &Path, args: &[String]) -> Command {
     {
         let mut command = Command::new(exe);
         command.args(args);
-        command
-    } else {
-        let mut command = Command::new("cmd");
-        command.arg("/C").arg(exe);
-        command.args(args);
-        command
+        return Ok(command);
     }
+
+    // `.cmd`/`.bat` shims must run through cmd.exe. `Command::arg` would
+    // quote the executable for the MSVC runtime, not for cmd's own parser,
+    // so a space in the path broke the official cache cleanup (L14).
+    let mut command = Command::new("cmd");
+    command.arg("/C");
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        let mut line = quote_cmd_arg(&exe.to_string_lossy())
+            .map_err(|err| AppError::InvalidPath(format!("Cannot run {}: {err}", exe.display())))?;
+        for arg in args {
+            line.push(' ');
+            line.push_str(&quote_cmd_arg(arg).map_err(|err| {
+                AppError::InvalidPath(format!(
+                    "Cannot pass an argument to {}: {err}",
+                    exe.display()
+                ))
+            })?);
+        }
+        command.raw_arg(line);
+    }
+    #[cfg(not(windows))]
+    {
+        command.arg(exe).args(args);
+    }
+    Ok(command)
 }
 
 fn version_args(name: &str) -> &'static [&'static str] {
@@ -644,10 +751,54 @@ fn extract_version(line: &str) -> Option<String> {
     None
 }
 
+/// Probes every unique executable's version banner concurrently and returns a
+/// map keyed by executable name. The whole batch is bounded by
+/// [`VERSION_BUDGET`]; names that did not answer in time are simply absent.
+fn probe_versions(names: &[&str]) -> HashMap<String, String> {
+    let mut unique: Vec<String> = Vec::new();
+    for name in names {
+        if !unique.iter().any(|existing| existing == name) {
+            unique.push((*name).to_string());
+        }
+    }
+
+    let (tx, rx) = std::sync::mpsc::channel::<(String, Option<String>)>();
+    let total = unique.len();
+    for name in unique {
+        let tx = tx.clone();
+        std::thread::spawn(move || {
+            let version = tool_version(&name);
+            let _ = tx.send((name, version));
+        });
+    }
+    drop(tx);
+
+    let deadline = Instant::now() + VERSION_BUDGET;
+    let mut out = HashMap::with_capacity(total);
+    let mut received = 0usize;
+    while received < total {
+        let now = Instant::now();
+        let Some(remaining) = deadline.checked_duration_since(now) else {
+            break;
+        };
+        match rx.recv_timeout(remaining) {
+            Ok((name, Some(version))) => {
+                out.insert(name, version);
+                received += 1;
+            }
+            Ok((_, None)) => received += 1,
+            Err(_) => break,
+        }
+    }
+    out
+}
+
 fn tool_version(name: &str) -> Option<String> {
     let exe = find_executable(name)?;
     let args: Vec<String> = version_args(name).iter().map(|s| s.to_string()).collect();
-    let cmd = command_for_executable(&exe, &args);
+    // A path that cmd.exe would expand (`%TEMP%`) cannot be probed safely; the
+    // card then simply shows no version instead of running the wrong program.
+    let cmd = command_for_executable(&exe, &args).ok()?;
     let output = run_command_with_timeout(cmd, VERSION_TIMEOUT).ok()?;
     let text = if output.stdout.is_empty() {
         decode_output(&output.stderr)
@@ -702,6 +853,10 @@ fn action_infos(def: &ProviderDef) -> Vec<OfficialActionInfo> {
 /// fast call the UI renders first; sizes arrive later from
 /// [`measure_cache_providers`].
 pub fn list_cache_providers() -> Vec<CacheProviderInfo> {
+    let version_names: Vec<&str> = ACTIONS.iter().map(|def| def.version_exe).collect();
+    // One parallel batch instead of a blocking `--version` per provider (M9).
+    let versions = probe_versions(&version_names);
+
     ACTIONS
         .iter()
         .map(|def| {
@@ -714,6 +869,11 @@ pub fn list_cache_providers() -> Vec<CacheProviderInfo> {
                         path: expanded.to_string_lossy().to_string(),
                         exists: expanded.exists(),
                         bytes: None,
+                        unmeasured_reason: if def.read_only {
+                            Some("readOnly".to_string())
+                        } else {
+                            None
+                        },
                     }
                 })
                 .collect();
@@ -725,7 +885,7 @@ pub fn list_cache_providers() -> Vec<CacheProviderInfo> {
                 id: def.id.to_string(),
                 name: def.name.to_string(),
                 detected,
-                version: tool_version(def.version_exe),
+                version: versions.get(def.version_exe).cloned(),
                 cache_paths: paths,
                 total_bytes: 0,
                 actions: action_infos(def),
@@ -741,6 +901,8 @@ fn measure_dirs(
     paths: &[CachePathInfo],
     token: &CancellationToken,
     files_only: bool,
+    read_only: bool,
+    deadline: Option<Instant>,
 ) -> Vec<CachePathInfo> {
     paths
         .iter()
@@ -749,13 +911,19 @@ fn measure_dirs(
             let bytes = if !path.exists() || (files_only && !path.is_file()) {
                 None
             } else {
-                measure_path(&path, TargetKind::Directory, token)
+                measure_path_with_deadline(&path, TargetKind::Directory, token, deadline)
                     .map(|s| s.allocated_bytes.unwrap_or(s.logical_bytes))
+            };
+            let unmeasured_reason = if bytes.is_none() && path.exists() {
+                Some(if read_only { "readOnly" } else { "error" }.to_string())
+            } else {
+                None
             };
             CachePathInfo {
                 path: info.path.clone(),
                 exists: path.exists(),
                 bytes,
+                unmeasured_reason,
             }
         })
         .collect()
@@ -780,15 +948,30 @@ fn measure_cache_path(def: &ProviderDef, path: &Path, token: &CancellationToken)
 }
 
 /// Streams one event per measured path so the UI can show progress and cancel.
-pub fn measure_cache_providers<F>(token: &CancellationToken, mut emit: F)
-where
+///
+/// `provider_ids` narrows the run to the providers that actually changed (for
+/// example the one a just-executed official action touched). Passing `None` or
+/// an empty slice keeps the historical behaviour and measures everything.
+pub fn measure_cache_providers<F>(
+    token: &CancellationToken,
+    provider_ids: Option<&[String]>,
+    mut emit: F,
+) where
     F: FnMut(CacheMeasureEvent),
 {
+    let selected: Vec<&ProviderDef> = match provider_ids {
+        Some(ids) if !ids.is_empty() => ACTIONS
+            .iter()
+            .filter(|def| ids.iter().any(|id| id == def.id))
+            .collect(),
+        _ => ACTIONS.iter().collect(),
+    };
+
     emit(CacheMeasureEvent::Started {
-        provider_count: ACTIONS.len(),
+        provider_count: selected.len(),
     });
 
-    for def in ACTIONS {
+    for def in selected {
         if token.is_cancelled() {
             emit(CacheMeasureEvent::Cancelled);
             return;
@@ -805,11 +988,17 @@ where
             if let Some(bytes) = bytes {
                 total_bytes = total_bytes.saturating_add(bytes);
             }
+            let unmeasured_reason = if bytes.is_none() && exists {
+                Some(if def.read_only { "readOnly" } else { "error" }.to_string())
+            } else {
+                None
+            };
             emit(CacheMeasureEvent::PathMeasured {
                 provider_id: def.id.to_string(),
                 path: path.to_string_lossy().to_string(),
                 exists,
                 bytes,
+                unmeasured_reason,
             });
         }
         if token.is_cancelled() {
@@ -825,10 +1014,31 @@ where
     emit(CacheMeasureEvent::Finished);
 }
 
+/// Pending official-action previews kept at once.
+///
+/// Each entry is small, but the map was only pruned by age: a client that
+/// previews in a loop kept one entry per attempt for the whole five minute
+/// window. The newest token is the one the user/agent can still confirm, so the
+/// oldest is evicted.
+const MAX_PENDING_ACTIONS: usize = 16;
+
+const PENDING_TTL: Duration = Duration::from_secs(300);
+
 struct PendingAction {
     provider_id: String,
     action_id: String,
     before_bytes: u64,
+    /// The preview measurement hit its time budget, so `before_bytes` is a
+    /// lower bound. Carried to the result so the delta is not presented as an
+    /// exact change value.
+    before_truncated: bool,
+    /// The executable resolved for the preview.
+    ///
+    /// Execution used to resolve the name against `PATH` again, so a `PATH`
+    /// change (or a shim dropped into an earlier directory) between the preview
+    /// the user approved and the run could execute a different program than the
+    /// one shown in the dialog. The confirmed path is pinned here instead.
+    exe: PathBuf,
     created: Instant,
 }
 
@@ -850,33 +1060,51 @@ impl OfficialActionRegistry {
             .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
-    fn issue(&self, provider_id: &str, action_id: &str, before_bytes: u64) -> String {
+    fn issue(
+        &self,
+        provider_id: &str,
+        action_id: &str,
+        exe: PathBuf,
+        before_bytes: u64,
+        before_truncated: bool,
+    ) -> String {
         let token = uuid::Uuid::new_v4().simple().to_string();
         let mut pending = self.lock_pending();
-        pending.retain(|_, p| p.created.elapsed() < Duration::from_secs(300));
+        pending.retain(|_, p| p.created.elapsed() < PENDING_TTL);
+        if pending.len() >= MAX_PENDING_ACTIONS {
+            let oldest = pending
+                .iter()
+                .min_by_key(|(_, p)| p.created)
+                .map(|(token, _)| token.clone());
+            if let Some(token) = oldest {
+                pending.remove(&token);
+            }
+        }
         pending.insert(
             token.clone(),
             PendingAction {
                 provider_id: provider_id.to_string(),
                 action_id: action_id.to_string(),
                 before_bytes,
+                before_truncated,
+                exe,
                 created: Instant::now(),
             },
         );
         token
     }
 
-    fn take(&self, token: &str) -> Result<(String, String, u64), AppError> {
+    fn take(&self, token: &str) -> Result<PendingAction, AppError> {
         let mut pending = self.lock_pending();
         let action = pending
             .remove(token)
             .ok_or_else(|| AppError::PlanInvalid("Action preview token is invalid.".to_string()))?;
-        if action.created.elapsed() >= Duration::from_secs(300) {
+        if action.created.elapsed() >= PENDING_TTL {
             return Err(AppError::PlanExpired(
                 "Action preview token has expired.".to_string(),
             ));
         }
-        Ok((action.provider_id, action.action_id, action.before_bytes))
+        Ok(action)
     }
 }
 
@@ -888,6 +1116,7 @@ pub fn preview_action(
     registry: &OfficialActionRegistry,
     provider_id: &str,
     action_id: &str,
+    token: &CancellationToken,
 ) -> Result<OfficialActionPreview, AppError> {
     let (_, def) = provider_def(provider_id)
         .ok_or_else(|| AppError::InvalidPath(format!("Unknown provider: {}", provider_id)))?;
@@ -904,7 +1133,6 @@ pub fn preview_action(
     let exe = find_executable(action.exe)
         .ok_or_else(|| AppError::PlatformUnsupported(format!("'{}' not found.", action.exe)))?;
 
-    let token_cancel = CancellationToken::new();
     let paths: Vec<CachePathInfo> = def
         .cache_paths
         .iter()
@@ -914,12 +1142,20 @@ pub fn preview_action(
                 path: expanded.to_string_lossy().to_string(),
                 exists: expanded.exists(),
                 bytes: None,
+                unmeasured_reason: None,
             }
         })
         .collect();
-    let measured = measure_dirs(&paths, &token_cancel, false);
+    let measured = measure_dirs(
+        &paths,
+        token,
+        false,
+        false,
+        Some(Instant::now() + PREVIEW_MEASURE_BUDGET),
+    );
     let before: u64 = measured.iter().filter_map(|p| p.bytes).sum();
-    let token = registry.issue(provider_id, action_id, before);
+    let truncated = measured.iter().any(|p| p.exists && p.bytes.is_none());
+    let token = registry.issue(provider_id, action_id, exe.clone(), before, truncated);
 
     Ok(OfficialActionPreview {
         token,
@@ -928,10 +1164,7 @@ pub fn preview_action(
         executable: exe.to_string_lossy().to_string(),
         args: action.args.iter().map(|s| s.to_string()).collect(),
         before_bytes: before,
-        warning: format!(
-            "{} — This action only affects {} cache. {}",
-            action.label, def.name, action.impact
-        ),
+        measurement_truncated: truncated,
         expires_ms: crate::cleanup::plan::now_ms() + 300_000,
     })
 }
@@ -940,7 +1173,11 @@ pub fn execute_action(
     registry: &OfficialActionRegistry,
     token: &str,
 ) -> Result<OfficialActionResult, AppError> {
-    let (provider_id, action_id, before) = registry.take(token)?;
+    let pending = registry.take(token)?;
+    let provider_id = pending.provider_id;
+    let action_id = pending.action_id;
+    let before = pending.before_bytes;
+    let before_truncated = pending.before_truncated;
     let (_, def) = provider_def(&provider_id)
         .ok_or_else(|| AppError::InvalidPath("Unknown provider.".to_string()))?;
     let action = def
@@ -948,12 +1185,20 @@ pub fn execute_action(
         .iter()
         .find(|a| a.id == action_id)
         .ok_or_else(|| AppError::InvalidPath("Unknown action.".to_string()))?;
-    let exe = find_executable(action.exe)
-        .ok_or_else(|| AppError::PlatformUnsupported(format!("'{}' not found.", action.exe)))?;
+    // Run the exact executable that was measured and shown in the preview. It
+    // can still be missing (uninstalled in between), in which case the action is
+    // refused rather than silently resolving another program from `PATH`.
+    let exe = pending.exe;
+    if !exe.is_file() {
+        return Err(AppError::PlatformUnsupported(format!(
+            "'{}' is no longer available.",
+            action.exe
+        )));
+    }
 
     let started = Instant::now();
     let args: Vec<String> = action.args.iter().map(|s| s.to_string()).collect();
-    let cmd = command_for_executable(&exe, &args);
+    let cmd = command_for_executable(&exe, &args)?;
     let output = run_command_with_timeout(cmd, COMMAND_TIMEOUT)?;
     let status = output.status;
     let stdout_tail = tail(&String::from_utf8_lossy(&output.stdout), 2000);
@@ -969,12 +1214,24 @@ pub fn execute_action(
                 path: expanded.to_string_lossy().to_string(),
                 exists: expanded.exists(),
                 bytes: None,
+                unmeasured_reason: None,
             }
         })
         .collect();
-    let measured = measure_dirs(&paths, &token_cancel, false);
+    let measured = measure_dirs(
+        &paths,
+        &token_cancel,
+        false,
+        false,
+        Some(Instant::now() + PREVIEW_MEASURE_BUDGET),
+    );
     let after: u64 = measured.iter().filter_map(|p| p.bytes).sum();
+    let after_truncated = measured.iter().any(|p| p.exists && p.bytes.is_none());
     let delta = after as i64 - before as i64;
+    // A truncated "before" makes the delta just as unreliable as a truncated
+    // "after"; both must be reported so the UI never presents a partial number
+    // as the exact change.
+    let measurement_truncated = before_truncated || after_truncated;
 
     Ok(OfficialActionResult {
         success: status.success(),
@@ -988,11 +1245,24 @@ pub fn execute_action(
         duration_ms: started.elapsed().as_millis() as u64,
         stdout_tail,
         stderr_tail,
-        note: Some(format!(
-            "Exit code for {}: {:?}",
-            action.label,
-            status.code()
-        )),
+        note: Some(if measurement_truncated {
+            let reason = if before_truncated && after_truncated {
+                "Size measurements before and after the action were time-limited; the change value is incomplete."
+            } else if before_truncated {
+                "The size measurement before the action was time-limited; the change value is incomplete."
+            } else {
+                "Size measurement after the action was time-limited; the change value is incomplete."
+            };
+            format!(
+                "Exit code for {}: {:?}. {}",
+                action.label,
+                status.code(),
+                reason
+            )
+        } else {
+            format!("Exit code for {}: {:?}", action.label, status.code())
+        }),
+        measurement_truncated,
         audit_error: None,
     })
 }
@@ -1011,13 +1281,35 @@ fn tail(text: &str, max: usize) -> String {
     trimmed[start..].to_string()
 }
 
-pub fn _path_display(path: &Path) -> String {
-    path.to_string_lossy().to_string()
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{extract_version, tail, CacheMeasureEvent};
+    use super::{
+        extract_version, quote_cmd_arg, tail, CacheMeasureEvent, CmdQuoteError,
+        OfficialActionRegistry, MAX_PENDING_ACTIONS, PENDING_TTL,
+    };
+    use std::time::{Duration, Instant};
+
+    #[test]
+    fn quote_cmd_arg_keeps_shell_metacharacters_inside_quotes() {
+        assert_eq!(
+            quote_cmd_arg("C:\\Program Files\\nodejs\\npm.cmd").unwrap(),
+            "\"C:\\Program Files\\nodejs\\npm.cmd\""
+        );
+        assert_eq!(quote_cmd_arg("a&b|c<d>e^f").unwrap(), "\"a&b|c<d>e^f\"");
+        assert_eq!(quote_cmd_arg("say \"hi\"").unwrap(), "\"say \"\"hi\"\"\"");
+    }
+
+    #[test]
+    fn quote_cmd_arg_rejects_unrecoverable_tokens() {
+        // `%VAR%` is expanded by cmd.exe on a /C line and cannot be escaped.
+        assert_eq!(
+            quote_cmd_arg("C:\\Users\\me\\%TEMP%\\npm.cmd"),
+            Err(CmdQuoteError::PercentExpansion)
+        );
+        // A control character could terminate the command line early.
+        assert_eq!(quote_cmd_arg("a\nb"), Err(CmdQuoteError::ControlChar));
+        assert_eq!(quote_cmd_arg("a\0b"), Err(CmdQuoteError::ControlChar));
+    }
 
     #[test]
     fn tail_is_utf8_safe() {
@@ -1064,6 +1356,74 @@ mod tests {
     }
 
     #[test]
+    fn pending_actions_stay_bounded_and_drop_the_oldest() {
+        let registry = OfficialActionRegistry::new();
+        let mut tokens = Vec::new();
+        for _ in 0..MAX_PENDING_ACTIONS {
+            tokens.push(registry.issue(
+                "npm",
+                "npm.cache.clean",
+                std::path::PathBuf::from("npm.cmd"),
+                0,
+                false,
+            ));
+        }
+        // Make the order deterministic: the map is filled within microseconds,
+        // so rely on explicit ages instead of insertion timing.
+        {
+            let now = Instant::now();
+            let mut pending = registry.lock_pending();
+            for (index, token) in tokens.iter().enumerate() {
+                let age = u64::try_from(MAX_PENDING_ACTIONS - index).unwrap_or(0);
+                let action = pending.get_mut(token).expect("token was just issued");
+                action.created = now.checked_sub(Duration::from_secs(age)).unwrap_or(now);
+            }
+        }
+
+        let newest = registry.issue(
+            "npm",
+            "npm.cache.clean",
+            std::path::PathBuf::from("npm.cmd"),
+            0,
+            false,
+        );
+
+        // Exactly the oldest preview was evicted; the rest is still capped.
+        assert!(registry.take(&tokens[0]).is_err());
+        assert!(registry.take(&tokens[1]).is_ok());
+        assert!(registry.take(&newest).is_ok());
+        assert_eq!(
+            registry.lock_pending().len(),
+            MAX_PENDING_ACTIONS - 2,
+            "two tokens were consumed after exactly one was evicted"
+        );
+    }
+
+    #[test]
+    fn an_expired_action_token_is_rejected() {
+        let registry = OfficialActionRegistry::new();
+        let token = registry.issue(
+            "npm",
+            "npm.cache.clean",
+            std::path::PathBuf::from("npm.cmd"),
+            0,
+            false,
+        );
+        {
+            let mut pending = registry.lock_pending();
+            let action = pending.get_mut(&token).expect("token was just issued");
+            action.created = Instant::now()
+                .checked_sub(PENDING_TTL + Duration::from_secs(1))
+                .unwrap_or_else(Instant::now);
+        }
+        assert!(registry.take(&token).is_err());
+        assert!(
+            registry.lock_pending().is_empty(),
+            "an expired token is removed, not left to grow the map"
+        );
+    }
+
+    #[test]
     fn cache_measure_events_serialize_as_camel_case() {
         // The frontend switches on these exact keys; a snake_case regression
         // would silently freeze the progress display.
@@ -1077,6 +1437,7 @@ mod tests {
             path: "C:\\cache".to_string(),
             exists: true,
             bytes: Some(42),
+            unmeasured_reason: None,
         })
         .unwrap();
         assert_eq!(path["type"], "pathMeasured");

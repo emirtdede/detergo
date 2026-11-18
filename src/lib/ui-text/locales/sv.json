@@ -36,7 +36,9 @@
     "on": "På",
     "off": "Av",
     "items": "{n} objekt",
-    "showing": "{n} visade"
+    "showing": "{n} visade",
+    "scanAll": "Skanna allt",
+    "scanAllDesc": "Projekt, lagring för AI-verktyg och paketcachar"
   },
   "header": {
     "changeLocation": "Ändra Plats",
@@ -49,7 +51,8 @@
     "addFavorite": "Lägg till aktuell plats till favoriter",
     "removeFavorite": "Ta bort plats från favoriter",
     "favoriteAdded": "Plats tillagd till favoriter.",
-    "favoriteRemoved": "Plats borttagen från favoriter."
+    "favoriteRemoved": "Plats borttagen från favoriter.",
+    "changeLocationConfirmDesc": "Att ändra plats rensar aktuella skanningsresultat och markeringen. Din sparade skanningshistorik och den senaste skanningsögonblicksbilden bevaras."
   },
   "window": {
     "minimize": "Minimera",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI-agenter",
     "ecoCache": "Cachar",
     "ecoOther": "Andra artefakter",
-    "distTotalBadge": "{size} går att rengöra"
+    "distTotalBadge": "{size} går att rengöra",
+    "noticeInfoTitle": "Information",
+    "noticeInfoHint": "Systemskyddade platser hoppades över. Ingen åtgärd behövs.",
+    "noticeIssueHint": "Vissa platser kunde inte läsas, så resultaten kan vara ofullständiga.",
+    "copyDetails": "Kopiera detaljer",
+    "detailsCopied": "Detaljer kopierade till urklipp",
+    "coverage": "Skanningsomfattning",
+    "sectionSkipped": "Överhoppad",
+    "sectionFailed": "Misslyckades",
+    "sectionPartial": "Ofullständig",
+    "sectionNoRoot": "Ingen mapp vald"
   },
   "table": {
     "project": "Projekt",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Ta bort permanent",
     "permanentAck": "Jag förstår att detta inte kan ångras.",
     "blockedReasons": "Blockerade mål",
-    "expires": "Denna plan löper ut om 15 minuter.",
+    "expires": "Denna plan löper ut om 30 minuter.",
     "close": "Stäng",
     "working": "Arbetar…",
     "runInBackground": "Kör i bakgrunden",
@@ -223,7 +236,11 @@
     "cancelling": "Avbryter…",
     "progress": "Bearbetade {processed} / {total}",
     "currentItem": "Aktuell: {path}",
-    "alreadyRunning": "En rensning pågår redan."
+    "alreadyRunning": "En rensning pågår redan.",
+    "coveredByParent": "Blockerad",
+    "noMethod": "Blockerad",
+    "officialActionRequired": "Officiellt kommando",
+    "modeNotAllowed": "Permanent"
   },
   "result": {
     "title": "Rensningsresultat",
@@ -238,6 +255,7 @@
     "verified": "verifierad",
     "cancelled": "Rensning avbruten",
     "cancelledNote": "{processed} objekt bearbetade, {skipped} överhoppade.",
+    "progressIncomplete": "{count} förloppsuppdateringar kunde inte visas.",
     "processed": "Bearbetade",
     "skipped": "Överhoppade",
     "viewResults": "Visa resultat",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Rensa skanningar",
     "scopeProjects": "Projektberoenden",
     "scopeAgents": "AI-agenter",
-    "scopeAllDrives": "Alla enheter"
+    "scopeAllDrives": "Alla enheter",
+    "statusPartial": "Delvis",
+    "totalCleaned": "Totalt återvunnit",
+    "statusDepthLimited": "Delvis"
   },
   "settings": {
     "general": "Utseende",
@@ -451,6 +472,12 @@
     "protectionsHint": "Mappar som aldrig får raderas och namn att hoppa över.",
     "agentsHint": "Rengöringspolicy för AI-agentcacher.",
     "privacyHint": "Lokal historik och maskering av sökväg på skärmen.",
+    "resetAppDataTitle": "Återställ all appdata",
+    "resetAppDataHint": "Tar bort alla inställningar, rensningshistorik, skanningshistorik, åtgärdsloggar och den sparade senaste skanningen och startar sedan om appen. Detta kan inte ångras.",
+    "resetAppDataConfirmBtn": "Radera data och starta om",
+    "resetAppDataBusy": "Återställer...",
+    "resetAppDataSuccess": "All appdata har återställts. Standardinställningarna återställda.",
+    "resetAppDataBlocked": "En genomsökning eller rensning pågår. Stoppa det innan du återställer appdata.",
     "aboutHint": "Version, byggdetaljer, katalog och Vellium.",
     "legalHint": "Användarvillkor, sekretesspolicy och open-source-licenser.",
     "sidebar": "Sidofält",
@@ -547,7 +574,11 @@
     "standardMotion": "Standardanimation",
     "aboutTitleBy": "Dev Cleaner av Vellium",
     "mcpDestructiveTitle": "Tillåt destruktiva MCP-åtgärder",
-    "mcpDestructiveHint": "Kräver flaggan --allow-destructive; varje körning behöver fortfarande en engångstoken för förhandsgranskning"
+    "mcpDestructiveHint": "Kräver flaggan --allow-destructive; varje körning behöver fortfarande en engångstoken för förhandsgranskning",
+    "pathMustBeAbsolute": "Sökvägar måste vara absoluta, till exempel C:\\Projects.",
+    "excludedNameInvalid": "En regel måste vara ett enda fil- eller mappnamn, utan sökvägsavgränsare.",
+    "shortcutNeedsModifier": "En global genväg behöver Ctrl, Alt eller Meta plus en tangent eller en funktionstangent.",
+    "shortcutsResetWarning": "{count} ogiltiga genvägar har återställts till sina standardinställningar."
   },
   "legal": {
     "docTabsLabel": "Juridiska dokument",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Inga rensningsbara projektartefakter hittade",
     "emptyTitleIdle": "Ingen projektsökning har utförts än",
     "emptyDescClean": "Vald mapp är ren. Inga rensningsbara node_modules, target- eller byggartefakter hittades.",
-    "emptyDescIdle": "Välj en mapp och skanna för att lista projektberoenden och byggartefakter."
+    "emptyDescIdle": "Välj en mapp och skanna för att lista projektberoenden och byggartefakter.",
+    "kpiTargets": "Rengörbara mål",
+    "kpiTargetsSub": "Över {count} projektrötter",
+    "kpiTargetsUnknown": "Skanna igen för att uppdatera projektantalet"
   },
   "about": {
     "kpiVersion": "Version",
@@ -616,7 +650,8 @@
     "contactSupport": "Kundsupport",
     "contactBillingDesc": "Fakturering, företagsinköp och prenumerationssupport",
     "contactPrivacyDesc": "Datasäkerhet, GDPR och sekretessförfrågningar",
-    "ecoCacheScope": "npm cache, Cargo register, pip cache, yarn"
+    "ecoCacheScope": "npm cache, Cargo register, pip cache, yarn",
+    "contactBilling": "Fakturering och betalningar"
   },
   "docs": {
     "catGuide": "Guider & Arkitektur",

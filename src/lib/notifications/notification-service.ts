@@ -1,14 +1,37 @@
-import { getUIText } from "@/lib/ui-text";
+import { getUIText, localizeStopReason } from "@/lib/ui-text";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
 import { formatBytes } from "@/lib/formatters";
+import { maskPath } from "@/lib/format/path";
 import { log } from "@/lib/logging";
+import { isTauriEnvironment } from "@/lib/tauri/scanner-api";
+import { describeWebhookFailure } from "@/lib/errors/webhook-failure";
 import { NotificationChannel } from "@/types";
+
+/**
+ * Webhook URLs are bearer credentials: Discord/Slack/Teams embed a
+ * channel-scoped token in the path. Notifications are persisted by the OS
+ * (Action Center history, lock screen) and by CLI logs, so only the origin may
+ * be shown.
+ */
+export function redactWebhookUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return parsed.port
+      ? `${parsed.protocol}//${parsed.hostname}:${parsed.port}`
+      : `${parsed.protocol}//${parsed.hostname}`;
+  } catch {
+    return "webhook";
+  }
+}
 
 export interface ScanCompletedEvent {
   targetCount: number;
   reclaimBytes: number;
   durationMs?: number;
+  /** A limited/timed-out scan still deserves a completion notice. */
+  partial?: boolean;
+  stopReason?: string | null;
 }
 
 export interface CleanCompletedEvent {
@@ -40,20 +63,40 @@ class NotificationService {
   private audioPrimed = false;
 
   constructor() {
-    // Only read the current permission. Asking here would show a system prompt
-    // before the user has done anything; the request belongs to an explicit
-    // user action (Settings → notifications).
+    // Only read the current permission at startup. Requesting here would show a
+    // system prompt before the user has done anything; the prompt is deferred
+    // to the first delivery or to the explicit "test notification" action in
+    // Settings, which goes through `requestDesktopPermission` or `sendDesktop`.
     this.readPermission();
     this.primeAudio();
   }
 
   private readPermission() {
+    // Inside the Tauri shell permission is owned by the native notification
+    // plugin, not by `window.Notification` (which WebView2 never renders).
+    if (isTauriEnvironment()) return;
     if (typeof window !== "undefined" && "Notification" in window) {
       this.hasPermission = Notification.permission === "granted";
     }
   }
 
   public async requestDesktopPermission(): Promise<boolean> {
+    if (isTauriEnvironment()) {
+      try {
+        const { isPermissionGranted, requestPermission } = await import(
+          "@tauri-apps/plugin-notification"
+        );
+        let granted = await isPermissionGranted();
+        if (!granted) {
+          granted = (await requestPermission()) === "granted";
+        }
+        this.hasPermission = granted;
+        return granted;
+      } catch (e) {
+        log.warn("Desktop notification permission request failed", e);
+        return false;
+      }
+    }
     if (typeof window === "undefined" || !("Notification" in window)) {
       return false;
     }
@@ -131,23 +174,41 @@ class NotificationService {
   }
 
   /**
-   * True only when an OS toast can actually be rendered by the page.
+   * True only when an OS toast can actually be rendered.
    *
-   * Inside the Tauri shell the page is hosted by WebView2. WebView2 surfaces
-   * web notifications through `ICoreWebView2_24::add_NotificationReceived` and
-   * the host application is responsible for drawing the toast. wry (and
-   * therefore Tauri) registers no handler, so `new Notification()` constructs an
-   * object and shows nothing. See `docs/architecture/NOTIFICATIONS.md` for the
-   * evidence and for the 2.3 plan (native toast + AUMID).
+   * Inside the Tauri shell we use `tauri-plugin-notification`, which talks to
+   * the Windows toast APIs directly. A WebView2 `new Notification()` is a
+   * no-op because wry registers no `NotificationReceived` handler, so that path
+   * is only used by the browser preview.
    */
   private canShowDesktop(): boolean {
     if (typeof window === "undefined") return false;
-    if ("__TAURI_INTERNALS__" in window) return false;
+    if (isTauriEnvironment()) return true;
     return "Notification" in window;
   }
 
-  private sendDesktop(title: string, body: string) {
-    if (!this.canShowDesktop()) return;
+  private async sendDesktop(title: string, body: string): Promise<boolean> {
+    if (!this.canShowDesktop()) return false;
+
+    if (isTauriEnvironment()) {
+      try {
+        const { isPermissionGranted, requestPermission, sendNotification } = await import(
+          "@tauri-apps/plugin-notification"
+        );
+        let granted = await isPermissionGranted();
+        if (!granted) {
+          granted = (await requestPermission()) === "granted";
+        }
+        this.hasPermission = granted;
+        if (!granted) return false;
+        sendNotification({ title, body });
+        return true;
+      } catch (e) {
+        log.warn("Desktop notification error", e);
+        return false;
+      }
+    }
+
     if (!this.hasPermission) {
       this.readPermission();
     }
@@ -158,26 +219,24 @@ class NotificationService {
           icon: "/icons/notification.png",
           silent: false,
         });
+        return true;
       }
     } catch (e) {
       log.warn("Desktop notification error", e);
     }
+    return false;
   }
 
-  private dispatch(
+  private async dispatch(
     channel: NotificationChannel,
     title: string,
     message: string,
     level: "info" | "success" | "warning" | "error" = "info",
-  ) {
+  ): Promise<void> {
     if (channel === "none") return;
 
     const prefs = usePreferencesStore.getState().notifications;
     const sound = prefs?.soundEnabled ?? true;
-
-    if (sound && (channel === "both" || channel === "in_app" || channel === "desktop")) {
-      this.playChime();
-    }
 
     // An explicit desktop choice must never become a silent no-op: when the
     // shell cannot raise an OS toast, deliver the same message in-app instead.
@@ -188,10 +247,20 @@ class NotificationService {
 
     if (wantsInApp) {
       useUiStore.getState().showToast(`${title}: ${message}`, level);
+      // Chime only when something was actually delivered. A permission-denied
+      // desktop notification used to beep while showing nothing at all.
+      if (sound) this.playChime();
     }
 
     if (wantsDesktop && desktopAvailable) {
-      this.sendDesktop(title, message);
+      const delivered = await this.sendDesktop(title, message);
+      if (delivered) {
+        if (sound && !wantsInApp) this.playChime();
+      } else if (!wantsInApp) {
+        // Desktop-only preference fallback: never drop the message silently.
+        useUiStore.getState().showToast(`${title}: ${message}`, level);
+        if (sound) this.playChime();
+      }
     }
   }
 
@@ -200,11 +269,22 @@ class NotificationService {
     const ui = getUIText(lang);
     const channel = usePreferencesStore.getState().notifications?.scanComplete ?? "both";
     const title = ui.notifications.scanDoneTitle;
-    const body = ui.notifications.scanDoneBody(
+    const baseBody = ui.notifications.scanDoneBody(
       evt.targetCount,
       formatBytes(evt.reclaimBytes, lang),
     );
-    this.dispatch(channel, title, body, "success");
+    // A partial scan still finished; staying silent made the app look stuck.
+    // A depth-limit stop is reported as a completed scan, but it also hides
+    // deeper targets, so it must be explained too. Reuse existing localized
+    // strings so every locale mentions the limit.
+    const body =
+      evt.partial || evt.stopReason
+        ? `${baseBody} ${ui.overview.partial} (${ui.overview.stopReason}: ${localizeStopReason(
+            evt.stopReason,
+            ui,
+          )})`
+        : baseBody;
+    void this.dispatch(channel, title, body, "success");
   }
 
   public notifyCleanComplete(evt: CleanCompletedEvent) {
@@ -214,7 +294,7 @@ class NotificationService {
     const dest = evt.destination ?? ui.notifications.destTrash;
     const title = ui.notifications.cleanDoneTitle;
     const body = ui.notifications.cleanDoneBody(evt.count, dest, formatBytes(evt.bytes, lang));
-    this.dispatch(channel, title, body, "success");
+    void this.dispatch(channel, title, body, "success");
   }
 
   public notifyDiskPressure(evt: DiskPressureEvent) {
@@ -227,50 +307,66 @@ class NotificationService {
       Number(evt.percentUsed.toFixed(0)),
       formatBytes(evt.freeBytes, lang),
     );
-    this.dispatch(channel, title, body, "warning");
+    void this.dispatch(channel, title, body, "warning");
   }
 
   public notifyProcessLock(evt: ProcessLockEvent) {
-    const lang = usePreferencesStore.getState().language;
-    const ui = getUIText(lang);
-    const channel = usePreferencesStore.getState().notifications?.processLock ?? "in_app";
+    const prefs = usePreferencesStore.getState();
+    const ui = getUIText(prefs.language);
+    const channel = prefs.notifications?.processLock ?? "in_app";
     const title = ui.notifications.lockAlertTitle;
-    const body = ui.notifications.lockAlertBody(evt.path);
-    this.dispatch(channel, title, body, "warning");
+    // "Mask paths on screen" must cover every surface the user sees, including
+    // the OS notification center, not only the in-app table.
+    const body = ui.notifications.lockAlertBody(prefs.maskPaths ? maskPath(evt.path) : evt.path);
+    void this.dispatch(channel, title, body, "warning");
   }
 
   public notifyAutomationWebhook(evt: WebhookEvent) {
     const lang = usePreferencesStore.getState().language;
     const ui = getUIText(lang);
     const channel = usePreferencesStore.getState().notifications?.automationWebhook ?? "both";
+    // Never echo the full URL: its path is the credential. The failure reason is
+    // already classified (`http_404`, `network`, …) by the caller; anything else
+    // is replaced with the generic network message, because the OS keeps this
+    // text in the Action Center history.
+    const target = redactWebhookUrl(evt.url);
     if (evt.status === "success") {
-      this.dispatch(
+      void this.dispatch(
         channel,
         ui.notifications.webhookSuccess,
-        ui.notifications.webhookSuccessBody(evt.url),
+        ui.notifications.webhookSuccessBody(target),
         "success",
       );
     } else {
-      this.dispatch(
+      void this.dispatch(
         channel,
         ui.notifications.webhookError,
-        ui.notifications.webhookErrorBody(evt.error ?? evt.url),
+        ui.notifications.webhookErrorBody(describeWebhookFailure(evt.error, ui)),
         "error",
       );
     }
   }
 
-  public testDesktopNotification() {
+  public async testDesktopNotification(): Promise<void> {
     const lang = usePreferencesStore.getState().language;
     const ui = getUIText(lang);
     if (this.canShowDesktop()) {
-      this.sendDesktop(ui.notifications.testDesktopTitle, ui.notifications.testDesktopBody);
+      const delivered = await this.sendDesktop(
+        ui.notifications.testDesktopTitle,
+        ui.notifications.testDesktopBody,
+      );
+      if (!delivered) {
+        // Permission denied or the host cannot raise a toast: still prove the
+        // pipeline works with the same message in-app.
+        useUiStore.getState().showToast(ui.notifications.testDesktopBody, "info");
+      }
+      this.playChime();
     } else {
-      // The shell cannot raise an OS toast; show the same message in-app so the
+      // The host cannot raise an OS toast; show the same message in-app so the
       // user gets concrete feedback instead of a button that does nothing.
       useUiStore.getState().showToast(ui.notifications.testDesktopBody, "info");
+      this.playChime();
     }
-    this.playChime();
   }
 
   public testInAppNotification() {
@@ -279,6 +375,27 @@ class NotificationService {
     useUiStore.getState().showToast(ui.notifications.testInAppToast, "info");
     this.playChime();
   }
+
+  /**
+   * Releases the audio hardware. The session-scoped `AudioContext` keeps a
+   * device handle open until it is closed, and this window never unloads in
+   * Tauri, so it has to be closed explicitly when the page goes away (D-9).
+   */
+  public dispose() {
+    const ctx = this.audioCtx;
+    this.audioCtx = null;
+    this.audioPrimed = false;
+    if (ctx && ctx.state !== "closed") {
+      void ctx.close().catch(() => {
+        // A context that is already closing is fine.
+      });
+    }
+  }
 }
 
 export const notificationService = new NotificationService();
+
+/** Hook for `pagehide`/teardown paths that do not import the class directly. */
+export function disposeNotifications(): void {
+  notificationService.dispose();
+}

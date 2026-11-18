@@ -27,13 +27,37 @@ impl RecycleBinService {
 
         // The shell reports success once the item is queued for recycling.
         // Re-check the filesystem so a silently ignored operation is never
-        // reported as a successful cleanup.
-        if canonical.exists() {
+        // reported as a successful cleanup. The shell can still be releasing
+        // the handle when PerformOperations returns, so poll briefly instead
+        // of failing on the first, racy `exists()` check.
+        if !wait_until_removed(&canonical) {
             return Err(AppError::RecycleBinFailed(canonical.display().to_string()));
         }
 
         Ok(canonical)
     }
+}
+
+/// Waits up to three seconds for the recycle operation to disappear from the
+/// filesystem. A path that is still present after that is a real failure.
+///
+/// `IFileOperation::PerformOperations` can return before the shell has fully
+/// released its handle on a very large tree; polling for three seconds avoids
+/// reporting a successful recycle as `VERIFY_FAILED`. The wait is per item and
+/// only happens while the path still exists, so a failed/locked item is not
+/// penalised more than the budget itself.
+fn wait_until_removed(path: &Path) -> bool {
+    const ATTEMPTS: u32 = 60;
+    const DELAY: std::time::Duration = std::time::Duration::from_millis(50);
+    for attempt in 0..ATTEMPTS {
+        if !path.exists() {
+            return true;
+        }
+        if attempt + 1 < ATTEMPTS {
+            std::thread::sleep(DELAY);
+        }
+    }
+    !path.exists()
 }
 
 impl Default for RecycleBinService {
@@ -60,7 +84,10 @@ fn shell_path(canonical: &Path) -> String {
 }
 
 fn utf16_len(path: &Path) -> usize {
-    path.as_os_str().to_string_lossy().encode_utf16().count()
+    // Measure the path the shell actually receives. Canonicalization adds the
+    // `\\?\` prefix, which is not part of the user-visible name and pushed
+    // borderline paths over the Recycle Bin limit.
+    shell_path(path).encode_utf16().count()
 }
 
 fn path_too_long(path: &Path) -> bool {
@@ -237,5 +264,16 @@ mod tests {
         assert!(path_too_long(Path::new(&long)));
         let short = format!(r"C:\{}", "a".repeat(200));
         assert!(!path_too_long(Path::new(&short)));
+    }
+
+    #[test]
+    fn long_path_detection_ignores_extended_prefix() {
+        // 258 characters without the prefix, 262 with it. The shell limit
+        // applies to the former, so trimming the prefix is required.
+        let body = format!(r"C:\{}", "a".repeat(255));
+        let extended = format!(r"\\?\{}", body);
+        assert_eq!(body.encode_utf16().count(), 258);
+        assert!(extended.encode_utf16().count() > 259);
+        assert!(!path_too_long(Path::new(&extended)));
     }
 }

@@ -36,7 +36,9 @@
     "on": "Zapnuté",
     "off": "Vypnuté",
     "items": "{n} položiek",
-    "showing": "{n} zobrazených"
+    "showing": "{n} zobrazených",
+    "scanAll": "Skenovať všetko",
+    "scanAllDesc": "Projekty, úložisko nástrojov AI a vyrovnávacie pamäte balíkov"
   },
   "header": {
     "changeLocation": "Zmeniť Umiestnenie",
@@ -49,7 +51,8 @@
     "addFavorite": "Pridať aktuálne miesto medzi obľúbené",
     "removeFavorite": "Odstrániť miesto z obľúbených",
     "favoriteAdded": "Miesto pridane medzi obľúbené.",
-    "favoriteRemoved": "Miesto odstránené z obľúbených."
+    "favoriteRemoved": "Miesto odstránené z obľúbených.",
+    "changeLocationConfirmDesc": "Zmena umiestnenia vymaže aktuálne výsledky skenovania a výber. Uložená história skenovania a posledná snímka skenovania zostanú zachované."
   },
   "window": {
     "minimize": "Minimalizovať",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI agenti",
     "ecoCache": "Cache",
     "ecoOther": "Ostatné artefakty",
-    "distTotalBadge": "{size} možné vyčistiť"
+    "distTotalBadge": "{size} možné vyčistiť",
+    "noticeInfoTitle": "Informácie",
+    "noticeInfoHint": "Lokality chránené systémom boli preskočené. Nie je potrebná žiadna akcia.",
+    "noticeIssueHint": "Niektoré lokality nebolo možné prečítať, preto môžu byť výsledky neúplné.",
+    "copyDetails": "Kopírovať podrobnosti",
+    "detailsCopied": "Podrobnosti skopírované do schránky",
+    "coverage": "Pokrytie skenovania",
+    "sectionSkipped": "Preskočené",
+    "sectionFailed": "Zlyhalo",
+    "sectionPartial": "Neúplné",
+    "sectionNoRoot": "Nie je vybratý žiadny priečinok"
   },
   "table": {
     "project": "Projekt",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Trvalo vymazať",
     "permanentAck": "Chápem, že toto sa nedá vrátiť späť.",
     "blockedReasons": "Blokované ciele",
-    "expires": "Tento plán vyprší o 15 minút.",
+    "expires": "Tento plán vyprší o 30 minút.",
     "close": "Zavrieť",
     "working": "Pracuje sa…",
     "runInBackground": "Spustiť na pozadí",
@@ -223,7 +236,11 @@
     "cancelling": "Ruší sa…",
     "progress": "Spracované {processed} / {total}",
     "currentItem": "Aktuálne: {path}",
-    "alreadyRunning": "Čistenie už prebieha."
+    "alreadyRunning": "Čistenie už prebieha.",
+    "coveredByParent": "Blokované",
+    "noMethod": "Blokované",
+    "officialActionRequired": "Oficiálny príkaz",
+    "modeNotAllowed": "Trvalé"
   },
   "result": {
     "title": "Výsledok čistenia",
@@ -238,6 +255,7 @@
     "verified": "overené",
     "cancelled": "Čistenie zrušené",
     "cancelledNote": "Spracovaných {processed} položiek, preskočených {skipped}.",
+    "progressIncomplete": "Nepodarilo sa zobraziť {count} aktualizácií priebehu.",
     "processed": "Spracované",
     "skipped": "Preskočené",
     "viewResults": "Zobraziť výsledky",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Vymazať skenovania",
     "scopeProjects": "Projektové závislosti",
     "scopeAgents": "AI agenti",
-    "scopeAllDrives": "Všetky disky"
+    "scopeAllDrives": "Všetky disky",
+    "statusPartial": "Čiastočné",
+    "totalCleaned": "Celkom uvoľnené",
+    "statusDepthLimited": "Čiastočné"
   },
   "settings": {
     "general": "Vzhľad",
@@ -451,6 +472,12 @@
     "protectionsHint": "Zložky, ktoré sa nesmú nikdy vymazať, a názvy, ktoré sa majú preskočiť.",
     "agentsHint": "Politika čistenia pre cache AI agenta.",
     "privacyHint": "Lokálna história a maskovanie cesty na obrazovke.",
+    "resetAppDataTitle": "Obnovte všetky údaje aplikácie",
+    "resetAppDataHint": "Vymaže všetky nastavenia, históriu čistenia, históriu skenovania, denníky akcií a uloženú poslednú kontrolu a potom reštartuje aplikáciu. Toto sa nedá vrátiť späť.",
+    "resetAppDataConfirmBtn": "Vymažte údaje a reštartujte",
+    "resetAppDataBusy": "Resetuje sa…",
+    "resetAppDataSuccess": "Všetky údaje aplikácie boli resetované. Predvolené nastavenia boli obnovené.",
+    "resetAppDataBlocked": "Prebieha skenovanie alebo čistenie. Pred resetovaním údajov aplikácie zastavte.",
     "aboutHint": "Verzia, detaily zostavenia, katalóg a Vellium.",
     "legalHint": "Podmienky používania, zásady ochrany osobných údajov a licencie open-source.",
     "sidebar": "Bočný panel",
@@ -547,7 +574,11 @@
     "standardMotion": "Štandardná animácia",
     "aboutTitleBy": "Dev Cleaner od Vellium",
     "mcpDestructiveTitle": "Povoliť deštruktívne akcie MCP",
-    "mcpDestructiveHint": "Vyžaduje príznak --allow-destructive; každé spustenie stále potrebuje jednorazový token náhľadu"
+    "mcpDestructiveHint": "Vyžaduje príznak --allow-destructive; každé spustenie stále potrebuje jednorazový token náhľadu",
+    "pathMustBeAbsolute": "Cesty musia byť absolútne, napríklad C:\\Projects.",
+    "excludedNameInvalid": "Pravidlo musí byť jeden názov súboru alebo priečinka bez oddeľovačov ciest.",
+    "shortcutNeedsModifier": "Globálna skratka vyžaduje Ctrl, Alt alebo Meta plus kláves alebo funkčný kláves.",
+    "shortcutsResetWarning": "Neplatné skratky ({count}) boli obnovené na predvolené hodnoty."
   },
   "legal": {
     "docTabsLabel": "Právne dokumenty",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Neboli nájdené žiadne čistiace projektové artefakty",
     "emptyTitleIdle": "Zatiaľ nebolo vykonané žiadne skenovanie projektov",
     "emptyDescClean": "Vybraný adresár je čistý. Neboli nájdené žiadne čistiace node_modules, target alebo zostavené artefakty.",
-    "emptyDescIdle": "Vyberte priečinok a vykonajte skenovanie pre zobrazenie závislostí projektov a zostavených artefaktov."
+    "emptyDescIdle": "Vyberte priečinok a vykonajte skenovanie pre zobrazenie závislostí projektov a zostavených artefaktov.",
+    "kpiTargets": "Ciele na vyčistenie",
+    "kpiTargetsSub": "V {count} koreňoch projektov",
+    "kpiTargetsUnknown": "Obnovte počet projektov opätovným skenovaním"
   },
   "about": {
     "kpiVersion": "Verzia",
@@ -616,7 +650,8 @@
     "contactSupport": "Zákaznícka podpora",
     "contactBillingDesc": "Fakturácia, podnikový nákup a podpora predplatného",
     "contactPrivacyDesc": "Otázky týkajúce sa bezpečnosti údajov, GDPR a ochrany osobných údajov",
-    "ecoCacheScope": "npm vyrovnávacia pamäť, Cargo register, pip vyrovnávacia pamäť, yarn"
+    "ecoCacheScope": "npm vyrovnávacia pamäť, Cargo register, pip vyrovnávacia pamäť, yarn",
+    "contactBilling": "Fakturácia a platby"
   },
   "docs": {
     "catGuide": "Príručky a architektúra",

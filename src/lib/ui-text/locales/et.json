@@ -36,7 +36,9 @@
     "on": "Sees",
     "off": "Väljas",
     "items": "{n} elementi",
-    "showing": "{n} kuvatud"
+    "showing": "{n} kuvatud",
+    "scanAll": "Skaneeri kõik",
+    "scanAllDesc": "Projektid, AI-tööriistade salvestusruum ja paketivahemälud"
   },
   "header": {
     "changeLocation": "Muuda Asukohta",
@@ -49,7 +51,8 @@
     "addFavorite": "Lisa praegune asukoht lemmikutesse",
     "removeFavorite": "Eemalda asukoht lemmikute seast",
     "favoriteAdded": "Asukoht lisatud lemmikutesse.",
-    "favoriteRemoved": "Asukoht eemaldatud lemmikute seast."
+    "favoriteRemoved": "Asukoht eemaldatud lemmikute seast.",
+    "changeLocationConfirmDesc": "Asukoha muutmine tühjendab praegused skaneerimistulemused ja valiku. Salvestatud skaneerimisajalugu ja viimane skaneerimise hetktõmmis säilitatakse."
   },
   "window": {
     "minimize": "Minimeeri",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI agendid",
     "ecoCache": "Vahemälud",
     "ecoOther": "Muud artefaktid",
-    "distTotalBadge": "{size} korrastatav"
+    "distTotalBadge": "{size} korrastatav",
+    "noticeInfoTitle": "Teave",
+    "noticeInfoHint": "Süsteemi kaitstud asukohad jäeti vahele. Toimingut pole vaja.",
+    "noticeIssueHint": "Mõnda asukohta ei saanud lugeda, seega tulemused võivad olla puudulikud.",
+    "copyDetails": "Kopeeri üksikasjad",
+    "detailsCopied": "Üksikasjad kopeeriti lõikelauale",
+    "coverage": "Skaneerimise katvus",
+    "sectionSkipped": "Vahele jäetud",
+    "sectionFailed": "Ebaõnnestus",
+    "sectionPartial": "Puudulik",
+    "sectionNoRoot": "Kausta pole valitud"
   },
   "table": {
     "project": "Projekt",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Kustuta püsivalt",
     "permanentAck": "Ma mõistan, et seda ei saa tagasi võtta.",
     "blockedReasons": "Blokeeritud sihtmärgid",
-    "expires": "Selle plaani kehtivus lõpeb 15 minuti pärast.",
+    "expires": "Selle plaani kehtivus lõpeb 30 minuti pärast.",
     "close": "Sule",
     "working": "Töötamine…",
     "runInBackground": "Käivita taustal",
@@ -223,7 +236,11 @@
     "cancelling": "Tühistamine…",
     "progress": "Töödeldud {processed} / {total}",
     "currentItem": "Praegune: {path}",
-    "alreadyRunning": "Puhastamine on juba käimas."
+    "alreadyRunning": "Puhastamine on juba käimas.",
+    "coveredByParent": "Blokeeritud",
+    "noMethod": "Blokeeritud",
+    "officialActionRequired": "Ametlik käsk",
+    "modeNotAllowed": "Püsiv"
   },
   "result": {
     "title": "Puhastustulemus",
@@ -238,6 +255,7 @@
     "verified": "kinnitatud",
     "cancelled": "Puhastamine tühistatud",
     "cancelledNote": "Töödeldud {processed} üksust, vahele jäetud {skipped}.",
+    "progressIncomplete": "{count} edenemisvärskendust ei õnnestunud kuvada.",
     "processed": "Töödeldud",
     "skipped": "Vahele jäetud",
     "viewResults": "Vaata tulemusi",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Kustuta skannimised",
     "scopeProjects": "Projekti sõltuvused",
     "scopeAgents": "tehisintellekti agendid",
-    "scopeAllDrives": "Kõik kettad"
+    "scopeAllDrives": "Kõik kettad",
+    "statusPartial": "Osaline",
+    "totalCleaned": "Täielik tagasivõetud",
+    "statusDepthLimited": "Osaline"
   },
   "settings": {
     "general": "Välimus",
@@ -451,6 +472,12 @@
     "protectionsHint": "Kaustad, mida ei tohi kunagi kustutada, ja nimed, mida vahele jätta.",
     "agentsHint": "AI-agendi vahemälu puhastamise poliitika.",
     "privacyHint": "Kohalik ajalugu ja ekraanil tee varjamine.",
+    "resetAppDataTitle": "Lähtestage kõik rakenduse andmed",
+    "resetAppDataHint": "Kustutab kõik sätted, puhastusajaloo, skannimise ajaloo, toimingute logid ja salvestatud viimase skannimise ning seejärel taaskäivitab rakenduse. Seda ei saa tagasi võtta.",
+    "resetAppDataConfirmBtn": "Kustutage andmed ja taaskäivitage",
+    "resetAppDataBusy": "Lähtestamine…",
+    "resetAppDataSuccess": "Kõik rakenduse andmed on lähtestatud. Vaikesätted taastatud.",
+    "resetAppDataBlocked": "Käimas on skannimine või puhastamine. Peatage see enne rakenduse andmete lähtestamist.",
     "aboutHint": "Versioon, koostamisandmed, kataloog ja Vellium.",
     "legalHint": "Kasutustingimused, privaatsuspoliitika ja avatud lähtekoodi litsentsid.",
     "sidebar": "Külgriba",
@@ -547,7 +574,11 @@
     "standardMotion": "Standard animatsioon",
     "aboutTitleBy": "Dev Cleaner autor Vellium",
     "mcpDestructiveTitle": "Luba MCP hävitavad toimingud",
-    "mcpDestructiveHint": "Nõuab lippu --allow-destructive; iga täitmine vajab endiselt ühekordselt kasutatavat eelvaate tokenit"
+    "mcpDestructiveHint": "Nõuab lippu --allow-destructive; iga täitmine vajab endiselt ühekordselt kasutatavat eelvaate tokenit",
+    "pathMustBeAbsolute": "Teed peavad olema absoluutsed, näiteks C:\\Projects.",
+    "excludedNameInvalid": "Reegel peab olema ühe faili või kausta nimi, ilma tee eraldajateta.",
+    "shortcutNeedsModifier": "Globaalne otsetee vajab klahvikombinatsiooni Ctrl, Alt või Meta pluss klahvi või funktsiooniklahvi.",
+    "shortcutsResetWarning": "{count} kehtetu(t) otsetee(t) lähtestati vaikeseadetele."
   },
   "legal": {
     "docTabsLabel": "Juriidilised dokumendid",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Puhastatavaid projektiartefakte ei leitud",
     "emptyTitleIdle": "Projekti skannimist pole veel tehtud",
     "emptyDescClean": "Valitud kaust on puhas. Puhastatavaid node_modules, target või ehitusartefakte ei leitud.",
-    "emptyDescIdle": "Valige kaust ja skannige, et loetleda projekti sõltuvused ja ehitusartefaktid."
+    "emptyDescIdle": "Valige kaust ja skannige, et loetleda projekti sõltuvused ja ehitusartefaktid.",
+    "kpiTargets": "Puhastatavad sihtmärgid",
+    "kpiTargetsSub": "{count} projekti juure ulatuses",
+    "kpiTargetsUnknown": "Projektide arvu värskendamiseks skaneeri uuesti"
   },
   "about": {
     "kpiVersion": "Versioon",
@@ -616,7 +650,8 @@
     "contactSupport": "Klienditugi",
     "contactBillingDesc": "Arveldamine, ettevõtte hangete ja tellimuse tugi",
     "contactPrivacyDesc": "Andmeturve, GDPR ja privaatsuse päringud",
-    "ecoCacheScope": "npm vahemälu, Cargo register, pip vahemälu, yarn"
+    "ecoCacheScope": "npm vahemälu, Cargo register, pip vahemälu, yarn",
+    "contactBilling": "Arveldamine ja maksed"
   },
   "docs": {
     "catGuide": "Juhendid ja arhitektuur",

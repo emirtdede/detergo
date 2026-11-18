@@ -1,11 +1,15 @@
 pub mod audit;
+#[cfg(feature = "bindings")]
+pub mod bindings;
 pub mod build_info;
 pub mod catalog;
 pub mod cleanup;
 pub mod cli;
 pub mod commands;
 pub mod error;
+pub mod format;
 pub mod last_scan;
+pub mod logging;
 pub mod mcp;
 pub mod platform;
 pub mod providers;
@@ -19,6 +23,7 @@ use commands::*;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             window_commands::show_main_window(app);
         }))
@@ -74,8 +79,11 @@ pub fn run() {
             measure_cache_providers,
             cancel_cache_measurement,
             preview_official_action,
+            cancel_cache_preview,
             execute_official_action,
             get_cleanup_history,
+            get_cleanup_totals,
+            get_disk_pressure,
             get_growth_report,
             get_official_action_history,
             clear_all_history,
@@ -84,8 +92,10 @@ pub fn run() {
             clear_actions_history,
             get_app_settings,
             save_app_settings,
+            reset_app_data,
             get_build_info,
             test_webhook,
+            dispatch_webhook,
             get_last_scan,
             save_last_scan,
             clear_last_scan,
@@ -93,7 +103,13 @@ pub fn run() {
             quit_app
         ])
         .run(tauri::generate_context!())
-        .expect("Error while starting Dev Cleaner");
+        .unwrap_or_else(|err| {
+            // A panic here aborted the process with a backtrace-oriented message
+            // and no explanation. Log the real cause and exit deliberately so a
+            // support report has something actionable.
+            crate::logging::error("fatal: the desktop runtime could not start", err);
+            std::process::exit(1);
+        });
 }
 
 /// Native tray entry point: the app keeps running when the window is hidden,
@@ -200,6 +216,7 @@ fn tray_icon(app: &tauri::App) -> Option<tauri::image::Image<'static>> {
 fn setup_tray(app: &mut tauri::App) -> tauri::Result<()> {
     use tauri::menu::{Menu, MenuItem};
     use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+    use tauri::Manager;
 
     let settings = settings::SettingsRepository::new().load();
     let (show_label, quit_label) = tray_labels(settings.language.as_deref());
@@ -214,7 +231,15 @@ fn setup_tray(app: &mut tauri::App) -> tauri::Result<()> {
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id.as_ref() {
             "show" => window_commands::show_main_window(app),
-            "quit" => app.exit(0),
+            "quit" => {
+                // Route the tray through the same guard as the title-bar close
+                // button. Exiting here directly would kill a running cleanup.
+                window_commands::show_main_window(app);
+                use tauri::Emitter;
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.emit("close-requested", ());
+                }
+            }
             _ => {}
         })
         .on_tray_icon_event(|tray, event| {

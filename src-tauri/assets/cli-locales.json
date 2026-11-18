@@ -15,7 +15,7 @@
     "COMMANDS:": "OPDRAGTE:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Het altesaam 21 gereedskap nagegaan. Om skoon te maak: dev-cleaner caches --clean <tool|all>",
     "Cleanup execution failed: {}": "Opruimingsuitvoering het misluk: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER deur VELLIUM — CLI, MCP en outomatiseringsenjin (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER deur VELLIUM — CLI, MCP en outomatiseringsenjin",
     "Date": "Datum",
     "Delete Mode": "Vee modus uit",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Ontwikkelaarnutsmiddelkas",
@@ -87,7 +87,8 @@
     "Error: 'path' parameter is required.": "Fout: 'pad'-parameter word vereis.",
     "Unknown tool: {}": "Onbekende instrument: {}",
     "Parse error: Invalid JSON received": "Ontleedfout: Ongeldige JSON ontvang",
-    "Method not found": "Metode nie gevind nie"
+    "Method not found": "Metode nie gevind nie",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "am": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean የተገኙትን ደህንነታቸው የተጠበቀ ኢላማዎችን በራስ ሰር ወደ Recycle Bin ውሰድ",
@@ -105,7 +106,7 @@
     "COMMANDS:": "ትዕዛዞች፡-",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "በአጠቃላይ 21 መሳሪያዎች ተረጋግጠዋል። ለማጽዳት፡ dev-cleaner መሸጎጫዎች --clean <መሳሪያ|ሁሉም>",
     "Cleanup execution failed: {}": "የማጽዳት አፈጻጸም አልተሳካም፦ {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER በVELLIUM — CLI፣ MCP እና አውቶሜሽን ሞተር (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER በVELLIUM — CLI፣ MCP እና አውቶሜሽን ሞተር",
     "Date": "ቀን",
     "Delete Mode": "ሁነታን ሰርዝ",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: የገንቢ መሣሪያ መሸጎጫዎች",
@@ -177,7 +178,8 @@
     "Error: 'path' parameter is required.": "ስህተት፡ 'መንገድ' መለኪያ ያስፈልጋል።",
     "Unknown tool: {}": "ያልታወቀ መሳሪያ፡ {}",
     "Parse error: Invalid JSON received": "የመተንተን ስህተት፡ ልክ ያልሆነ JSON ደርሷል",
-    "Method not found": "ዘዴ አልተገኘም።"
+    "Method not found": "ዘዴ አልተገኘም።",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "ar": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean انقل الأهداف الآمنة التي تم العثور عليها تلقائيًا إلى Recycle Bin",
@@ -195,7 +197,7 @@
     "COMMANDS:": "الأوامر:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "تم فحص 21 أداة في المجموع. للتنظيف: dev-cleaner ذاكرة التخزين المؤقت --clean <الأداة|الكل>",
     "Cleanup execution failed: {}": "فشل تنفيذ التنظيف: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER بواسطة VELLIUM — CLI, MCP ومحرك الأتمتة (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER بواسطة VELLIUM — CLI, MCP ومحرك الأتمتة",
     "Date": "تاريخ",
     "Delete Mode": "وضع الحذف",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: ذاكرة التخزين المؤقت لأداة المطور",
@@ -267,7 +269,8 @@
     "Error: 'path' parameter is required.": "خطأ: معلمة \"المسار\" مطلوبة.",
     "Unknown tool: {}": "أداة غير معروفة: {}",
     "Parse error: Invalid JSON received": "خطأ في التحليل: تم تلقي JSON غير صالح",
-    "Method not found": "لم يتم العثور على الطريقة"
+    "Method not found": "لم يتم العثور على الطريقة",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "az": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Tapılmış təhlükəsiz hədəfləri avtomatik olaraq Recycle Bin-a köçürün",
@@ -285,7 +288,7 @@
     "COMMANDS:": "ƏMRLAR:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Ümumilikdə 21 alət yoxlanılıb. Təmizləmək üçün: dev-cleaner önbelleği --clean <alət|hamısı>",
     "Cleanup execution failed: {}": "Təmizləmə icrası alınmadı: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER tərəfindən VELLIUM — CLI, MCP & Avtomatlaşdırma Mühərriki (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER tərəfindən VELLIUM — CLI, MCP & Avtomatlaşdırma Mühərriki",
     "Date": "Tarix",
     "Delete Mode": "Silinmə rejimi",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Tərtibatçı Alət Keşləri",
@@ -357,7 +360,8 @@
     "Error: 'path' parameter is required.": "Xəta: 'yol' parametri tələb olunur.",
     "Unknown tool: {}": "Naməlum alət: {}",
     "Parse error: Invalid JSON received": "Təhlil xətası: Yanlış JSON qəbul edildi",
-    "Method not found": "Metod tapılmadı"
+    "Method not found": "Metod tapılmadı",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "bg": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Автоматично преместване на намерени безопасни цели на Recycle Bin",
@@ -375,7 +379,7 @@
     "COMMANDS:": "КОМАНДИ:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Проверени са общо 21 инструмента. За почистване: dev-cleaner кеш памети --clean <tool|all>",
     "Cleanup execution failed: {}": "Неуспешно изпълнение на почистването: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER от VELLIUM — CLI, MCP & Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER от VELLIUM — CLI, MCP & Automation Engine",
     "Date": "Дата",
     "Delete Mode": "Режим на изтриване",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Кешове на инструменти за разработчици",
@@ -447,7 +451,8 @@
     "Error: 'path' parameter is required.": "Грешка: Необходим е параметър 'path'.",
     "Unknown tool: {}": "Неизвестен инструмент: {}",
     "Parse error: Invalid JSON received": "Грешка при анализа: Получени са невалидни JSON.",
-    "Method not found": "Методът не е намерен"
+    "Method not found": "Методът не е намерен",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "bn": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean স্বয়ংক্রিয়ভাবে খুঁজে পাওয়া নিরাপদ লক্ষ্যগুলিকে রিসাইকেল বিনে স্থানান্তর করুন",
@@ -465,7 +470,7 @@
     "COMMANDS:": "আদেশ:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "মোট 21টি টুল চেক করা হয়েছে। পরিষ্কার করতে: dev-cleaner ক্যাশে --clean <tool|all>",
     "Cleanup execution failed: {}": "ক্লিনআপ সম্পাদন ব্যর্থ হয়েছে: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER by VELLIUM — CLI, MCP এবং অটোমেশন ইঞ্জিন (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER by VELLIUM — CLI, MCP এবং অটোমেশন ইঞ্জিন",
     "Date": "তারিখ",
     "Delete Mode": "মোড মুছুন",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: ডেভেলপার টুল ক্যাশে",
@@ -537,7 +542,8 @@
     "Error: 'path' parameter is required.": "ত্রুটি: 'পাথ' প্যারামিটার প্রয়োজন।",
     "Unknown tool: {}": "অজানা টুল: {}",
     "Parse error: Invalid JSON received": "পার্স ত্রুটি: অবৈধ JSON প্রাপ্ত",
-    "Method not found": "পদ্ধতি পাওয়া যায়নি"
+    "Method not found": "পদ্ধতি পাওয়া যায়নি",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "bs": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Automatski premjestite pronađene sigurne mete u kantu za otpatke",
@@ -555,7 +561,7 @@
     "COMMANDS:": "NAREDBE:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Provjeren ukupno 21 alat. Za čišćenje: dev-cleaner keš memorije --clean <alat|sve>",
     "Cleanup execution failed: {}": "Izvršenje čišćenja nije uspjelo: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER od VELLIUM — CLI, MCP i automatizacija (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER od VELLIUM — CLI, MCP i automatizacija",
     "Date": "Datum",
     "Delete Mode": "Način brisanja",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Keširanje alata za programere",
@@ -627,7 +633,8 @@
     "Error: 'path' parameter is required.": "Greška: parametar 'path' je obavezan.",
     "Unknown tool: {}": "Nepoznati alat: {}",
     "Parse error: Invalid JSON received": "Greška raščlanjivanja: Primljeno je nevažeće JSON.",
-    "Method not found": "Metoda nije pronađena"
+    "Method not found": "Metoda nije pronađena",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "ca": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Mou automàticament els objectius segurs trobats a la Paperera de reciclatge",
@@ -645,7 +652,7 @@
     "COMMANDS:": "COMANDES:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "S'han comprovat 21 eines en total. Per netejar: dev-cleaner memòria cau --clean <eina|tot>",
     "Cleanup execution failed: {}": "Ha fallat l'execució de la neteja: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER per VELLIUM — CLI, MCP i Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER per VELLIUM — CLI, MCP i Automation Engine",
     "Date": "Data",
     "Delete Mode": "Mode d'eliminació",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: memòria cau de l'eina de desenvolupador",
@@ -717,7 +724,8 @@
     "Error: 'path' parameter is required.": "Error: el paràmetre \"camí\" és obligatori.",
     "Unknown tool: {}": "Eina desconeguda: {}",
     "Parse error: Invalid JSON received": "Error d'anàlisi: JSON rebut no vàlid",
-    "Method not found": "No s'ha trobat el mètode"
+    "Method not found": "No s'ha trobat el mètode",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "cs": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Automaticky přesunout nalezené bezpečné cíle do koše",
@@ -735,7 +743,7 @@
     "COMMANDS:": "PŘÍKAZY:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Celkem zkontrolováno 21 nástrojů. Čištění: dev-cleaner mezipaměti --clean <nástroj|vše>",
     "Cleanup execution failed: {}": "Vyčištění se nezdařilo: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER od VELLIUM — CLI, MCP & Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER od VELLIUM — CLI, MCP & Automation Engine",
     "Date": "Datum",
     "Delete Mode": "Režim mazání",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Mezipaměť vývojářských nástrojů",
@@ -807,7 +815,8 @@
     "Error: 'path' parameter is required.": "Chyba: Je vyžadován parametr 'cesta'.",
     "Unknown tool: {}": "Neznámý nástroj: {}",
     "Parse error: Invalid JSON received": "Chyba analýzy: Bylo přijato neplatné JSON",
-    "Method not found": "Metoda nenalezena"
+    "Method not found": "Metoda nenalezena",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "da": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Flyt automatisk fundet sikre mål til papirkurven",
@@ -825,7 +834,7 @@
     "COMMANDS:": "KOMMANDOER:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Kontrollerede 21 værktøjer i alt. Sådan renses: dev-cleaner caches --clean <værktøj|alle>",
     "Cleanup execution failed: {}": "Udførelse af oprydning mislykkedes: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER af VELLIUM — CLI, MCP & Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER af VELLIUM — CLI, MCP & Automation Engine",
     "Date": "Dato",
     "Delete Mode": "Slet tilstand",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Caches for udviklerværktøj",
@@ -897,7 +906,8 @@
     "Error: 'path' parameter is required.": "Fejl: parameteren 'sti' er påkrævet.",
     "Unknown tool: {}": "Ukendt værktøj: {}",
     "Parse error: Invalid JSON received": "Parse fejl: Ugyldig JSON modtaget",
-    "Method not found": "Metoden blev ikke fundet"
+    "Method not found": "Metoden blev ikke fundet",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "de": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Verschieben Sie gefundene sichere Ziele automatisch in den Papierkorb",
@@ -915,7 +925,7 @@
     "COMMANDS:": "BEFEHLE:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Insgesamt 21 Werkzeuge überprüft. Zum Bereinigen: dev-cleaner Caches --clean <tool|all>",
     "Cleanup execution failed: {}": "Bereinigungsausführung fehlgeschlagen: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER von VELLIUM – CLI, MCP & Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER von VELLIUM – CLI, MCP & Automation Engine",
     "Date": "Datum",
     "Delete Mode": "Löschmodus",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Entwickler-Tool-Caches",
@@ -987,7 +997,8 @@
     "Error: 'path' parameter is required.": "Fehler: Der Parameter „Pfad“ ist erforderlich.",
     "Unknown tool: {}": "Unbekanntes Werkzeug: {}",
     "Parse error: Invalid JSON received": "Analysefehler: Ungültige JSON empfangen",
-    "Method not found": "Methode nicht gefunden"
+    "Method not found": "Methode nicht gefunden",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "el": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Αυτόματη μεταφορά ασφαλών στόχων στον Κάδο Ανακύκλωσης",
@@ -1005,7 +1016,7 @@
     "COMMANDS:": "ΕΝΤΟΛΕΣ:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Έλεγξε 21 εργαλεία συνολικά. Για καθαρισμό: dev-cleaner κρυφές μνήμες --clean <εργαλείο|όλα>",
     "Cleanup execution failed: {}": "Η εκτέλεση του καθαρισμού απέτυχε: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER από VELLIUM — CLI, MCP & Μηχανή Αυτοματισμού (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER από VELLIUM — CLI, MCP & Μηχανή Αυτοματισμού",
     "Date": "Ημερομηνία",
     "Delete Mode": "Λειτουργία διαγραφής",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Μνήμες εργαλείων προγραμματιστή",
@@ -1077,7 +1088,8 @@
     "Error: 'path' parameter is required.": "Σφάλμα: Απαιτείται η παράμετρος «διαδρομή».",
     "Unknown tool: {}": "Άγνωστο εργαλείο: {}",
     "Parse error: Invalid JSON received": "Σφάλμα ανάλυσης: Λήφθηκε μη έγκυρο JSON",
-    "Method not found": "Η μέθοδος δεν βρέθηκε"
+    "Method not found": "Η μέθοδος δεν βρέθηκε",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "es": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Mover automáticamente los objetivos seguros encontrados a la Papelera de reciclaje",
@@ -1095,7 +1107,7 @@
     "COMMANDS:": "COMANDOS:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Se revisaron 21 herramientas en total. Para limpiar: dev-cleaner cachés --clean <herramienta|todos>",
     "Cleanup execution failed: {}": "Error en la ejecución de la limpieza: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER por VELLIUM — CLI, MCP y motor de automatización (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER por VELLIUM — CLI, MCP y motor de automatización",
     "Date": "Fecha",
     "Delete Mode": "Modo de eliminación",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Cachés de herramientas para desarrolladores",
@@ -1167,7 +1179,8 @@
     "Error: 'path' parameter is required.": "Error: se requiere el parámetro 'ruta'.",
     "Unknown tool: {}": "Herramienta desconocida: {}",
     "Parse error: Invalid JSON received": "Error de análisis: JSON recibido no válido",
-    "Method not found": "Método no encontrado"
+    "Method not found": "Método no encontrado",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "et": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Teisaldage leitud turvalised sihtmärgid automaatselt prügikasti",
@@ -1185,7 +1198,7 @@
     "COMMANDS:": "KÄSUD:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Kokku kontrolliti 21 tööriista. Puhastamine: dev-cleaner vahemälud --clean <tööriist|kõik>",
     "Cleanup execution failed: {}": "Puhastamise käivitamine ebaõnnestus: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER autor: VELLIUM — CLI, MCP & Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER autor: VELLIUM — CLI, MCP & Automation Engine",
     "Date": "Kuupäev",
     "Delete Mode": "Kustuta režiim",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: arendaja tööriistade vahemälud",
@@ -1257,7 +1270,8 @@
     "Error: 'path' parameter is required.": "Viga: parameeter „path” on nõutav.",
     "Unknown tool: {}": "Tundmatu tööriist: {}",
     "Parse error: Invalid JSON received": "Parsimise viga: vastu võetud vigane JSON",
-    "Method not found": "Meetodit ei leitud"
+    "Method not found": "Meetodit ei leitud",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "eu": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Eraman automatikoki aurkitutako helburu seguruak Birziklapenera",
@@ -1275,7 +1289,7 @@
     "COMMANDS:": "KANDOAK:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "21 tresna egiaztatu ditu guztira. Garbitzeko: dev-cleaner cacheak --clean <tresna|guztiak>",
     "Cleanup execution failed: {}": "Garbiketa exekuzioak huts egin du: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER VELLIUM — CLI, MCP & Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER VELLIUM — CLI, MCP & Automation Engine",
     "Date": "Data",
     "Delete Mode": "Ezabatu modua",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Garatzaile-tresnaren cacheak",
@@ -1347,7 +1361,8 @@
     "Error: 'path' parameter is required.": "Errorea: 'path' parametroa beharrezkoa da.",
     "Unknown tool: {}": "Tresna ezezaguna: {}",
     "Parse error: Invalid JSON received": "Analisi-errorea: JSON baliogabea jaso da",
-    "Method not found": "Ez da metodoa aurkitu"
+    "Method not found": "Ez da metodoa aurkitu",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "fa": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean به طور خودکار اهداف ایمن پیدا شده را به سطل بازیافت منتقل کنید",
@@ -1365,7 +1380,7 @@
     "COMMANDS:": "دستورات:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "در مجموع 21 ابزار را بررسی کرد. برای تمیز کردن: dev-cleaner کش --clean <ابزار|همه>",
     "Cleanup execution failed: {}": "اجرای پاکسازی انجام نشد: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER توسط VELLIUM — CLI، MCP و موتور اتوماسیون (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER توسط VELLIUM — CLI، MCP و موتور اتوماسیون",
     "Date": "تاریخ",
     "Delete Mode": "حالت حذف",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: حافظه پنهان ابزار توسعه‌دهنده",
@@ -1437,7 +1452,8 @@
     "Error: 'path' parameter is required.": "خطا: پارامتر 'path' مورد نیاز است.",
     "Unknown tool: {}": "ابزار ناشناخته: {}",
     "Parse error: Invalid JSON received": "خطای تجزیه: JSON نامعتبر دریافت شد",
-    "Method not found": "روش پیدا نشد"
+    "Method not found": "روش پیدا نشد",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "fi": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Siirrä löydetyt turvalliset kohteet automaattisesti roskakoriin",
@@ -1455,7 +1471,7 @@
     "COMMANDS:": "KOMENNOT:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Tarkastettu yhteensä 21 työkalua. Puhdistaaksesi: dev-cleaner välimuistit --clean <työkalu|kaikki>",
     "Cleanup execution failed: {}": "Puhdistus epäonnistui: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER kirjoittaja VELLIUM — CLI, MCP & Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER kirjoittaja VELLIUM — CLI, MCP & Automation Engine",
     "Date": "Päivämäärä",
     "Delete Mode": "Poista tila",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Kehittäjätyökalujen välimuistit",
@@ -1527,7 +1543,8 @@
     "Error: 'path' parameter is required.": "Virhe: polku-parametri vaaditaan.",
     "Unknown tool: {}": "Tuntematon työkalu: {}",
     "Parse error: Invalid JSON received": "Jäsennysvirhe: Virheellinen JSON vastaanotettu",
-    "Method not found": "Menetelmää ei löydy"
+    "Method not found": "Menetelmää ei löydy",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "fil": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Awtomatikong ilipat ang mga natagpuang ligtas na target sa Recycle Bin",
@@ -1545,7 +1562,7 @@
     "COMMANDS:": "MGA UTOS:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Sinuri ang kabuuang 21 tool. Upang linisin: dev-cleaner mga cache --clean <tool|lahat>",
     "Cleanup execution failed: {}": "Nabigo ang pagsasagawa ng paglilinis: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER ni VELLIUM — CLI, MCP at Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER ni VELLIUM — CLI, MCP at Automation Engine",
     "Date": "Petsa",
     "Delete Mode": "Tanggalin ang Mode",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Mga Cache ng Tool ng Developer",
@@ -1617,7 +1634,8 @@
     "Error: 'path' parameter is required.": "Error: 'path' parameter ay kinakailangan.",
     "Unknown tool: {}": "Hindi kilalang tool: {}",
     "Parse error: Invalid JSON received": "Error sa pag-parse: Di-wastong JSON ang natanggap",
-    "Method not found": "Hindi natagpuan ang pamamaraan"
+    "Method not found": "Hindi natagpuan ang pamamaraan",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "fr": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Déplacer automatiquement les cibles sûres trouvées vers la corbeille",
@@ -1635,7 +1653,7 @@
     "COMMANDS:": "COMMANDES :",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "J'ai vérifié 21 outils au total. Pour nettoyer : dev-cleaner caches --clean <tool|all>",
     "Cleanup execution failed: {}": "Échec de l'exécution du nettoyage : {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER par VELLIUM — CLI, MCP et moteur d'automatisation (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER par VELLIUM — CLI, MCP et moteur d'automatisation",
     "Date": "Date",
     "Delete Mode": "Mode Supprimer",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner : caches des outils de développement",
@@ -1707,7 +1725,8 @@
     "Error: 'path' parameter is required.": "Erreur : le paramètre « chemin » est requis.",
     "Unknown tool: {}": "Outil inconnu : {}",
     "Parse error: Invalid JSON received": "Erreur d'analyse : JSON reçu non valide",
-    "Method not found": "Méthode introuvable"
+    "Method not found": "Méthode introuvable",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "ga": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Bog go huathoibríoch na spriocanna sábháilte aimsithe chuig an Araid Athchúrsála",
@@ -1725,7 +1744,7 @@
     "COMMANDS:": "ORDUITHE:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Seiceáladh 21 uirlis san iomlán. Chun glanadh: dev-cleaner taisce --clean <uirlis|all>",
     "Cleanup execution failed: {}": "Theip ar chur i gcrích glanta: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER le VELLIUM — CLI, MCP & Inneall Uathoibrithe (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER le VELLIUM — CLI, MCP & Inneall Uathoibrithe",
     "Date": "Dáta",
     "Delete Mode": "Scrios Mód",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Taisce Uirlisí Forbróra",
@@ -1797,7 +1816,8 @@
     "Error: 'path' parameter is required.": "Earráid: tá paraiméadar 'cosán' ag teastáil.",
     "Unknown tool: {}": "Uirlis anaithnid: {}",
     "Parse error: Invalid JSON received": "Earráid pharsála: Fuarthas JSON neamhbhailí",
-    "Method not found": "Modh gan aimsiú"
+    "Method not found": "Modh gan aimsiú",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "gl": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Move automaticamente os obxectivos seguros atopados á papeleira",
@@ -1815,7 +1835,7 @@
     "COMMANDS:": "COMANDOS:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Comprobouse 21 ferramentas en total. Para limpar: dev-cleaner cachés --clean <ferramenta|todas>",
     "Cleanup execution failed: {}": "Produciuse un erro na execución da limpeza: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER por VELLIUM — CLI, MCP e Motor de automatización (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER por VELLIUM — CLI, MCP e Motor de automatización",
     "Date": "Data",
     "Delete Mode": "Modo Eliminar",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: cachés da ferramenta de programador",
@@ -1887,7 +1907,8 @@
     "Error: 'path' parameter is required.": "Erro: é necesario o parámetro \"ruta\".",
     "Unknown tool: {}": "Ferramenta descoñecida: {}",
     "Parse error: Invalid JSON received": "Erro de análise: recibiuse JSON non válido",
-    "Method not found": "Non se atopou o método"
+    "Method not found": "Non se atopou o método",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "gu": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean મળેલા સુરક્ષિત લક્ષ્યોને આપમેળે રિસાયકલ બિનમાં ખસેડો",
@@ -1905,7 +1926,7 @@
     "COMMANDS:": "આદેશો:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "કુલ 21 સાધનો તપાસ્યા. સાફ કરવા માટે: dev-cleaner caches --clean <tool|all>",
     "Cleanup execution failed: {}": "સફાઈ અમલ નિષ્ફળ: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER બાય VELLIUM — CLI, MCP અને ઓટોમેશન એન્જિન (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER બાય VELLIUM — CLI, MCP અને ઓટોમેશન એન્જિન",
     "Date": "તારીખ",
     "Delete Mode": "ડિલીટ મોડ",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: ડેવલપર ટૂલ કેશ",
@@ -1977,7 +1998,8 @@
     "Error: 'path' parameter is required.": "ભૂલ: 'પાથ' પરિમાણ જરૂરી છે.",
     "Unknown tool: {}": "અજ્ઞાત સાધન: {}",
     "Parse error: Invalid JSON received": "પાર્સ ભૂલ: અમાન્ય JSON પ્રાપ્ત થઈ",
-    "Method not found": "પદ્ધતિ મળી નથી"
+    "Method not found": "પદ્ધતિ મળી નથી",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "ha": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Matsar da maƙasudai masu aminci ta atomatik zuwa Maimaita Bin",
@@ -1995,7 +2017,7 @@
     "COMMANDS:": "UMARNI:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "An duba kayan aikin 21 gabaɗaya. Don tsaftacewa: dev-cleaner caches --clean <kayan aiki | duk>",
     "Cleanup execution failed: {}": "An gaza aiwatar da aikin tsaftacewa: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER ta VELLIUM — CLI, MCP & Injin Automation (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER ta VELLIUM — CLI, MCP & Injin Automation",
     "Date": "Kwanan wata",
     "Delete Mode": "Yanayin Share",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Ma'ajiyar Kayan Aikin Haɓaka",
@@ -2067,7 +2089,8 @@
     "Error: 'path' parameter is required.": "Kuskure: Ana buƙatar sigar 'hanyar'.",
     "Unknown tool: {}": "Kayan aikin da ba a sani ba: {}",
     "Parse error: Invalid JSON received": "Kuskuren tantancewa: An karɓi JSON mara inganci",
-    "Method not found": "Ba a samo hanyar ba"
+    "Method not found": "Ba a samo hanyar ba",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "he": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean העבר אוטומטית מטרות בטוחות שנמצאו לסל המיחזור",
@@ -2085,7 +2108,7 @@
     "COMMANDS:": "פקודות:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "בדק 21 כלים בסך הכל. כדי לנקות: dev-cleaner מטמונים --clean <tool|all>",
     "Cleanup execution failed: {}": "ביצוע הניקוי נכשל: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER מאת VELLIUM — CLI, MCP ומנוע אוטומציה (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER מאת VELLIUM — CLI, MCP ומנוע אוטומציה",
     "Date": "תַאֲרִיך",
     "Delete Mode": "מצב מחיקה",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: מטמונים של כלי מפתחים",
@@ -2157,7 +2180,8 @@
     "Error: 'path' parameter is required.": "שגיאה: נדרש פרמטר 'נתיב'.",
     "Unknown tool: {}": "כלי לא ידוע: {}",
     "Parse error: Invalid JSON received": "שגיאת ניתוח: JSON לא חוקי התקבל",
-    "Method not found": "השיטה לא נמצאה"
+    "Method not found": "השיטה לא נמצאה",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "hi": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean पाए गए सुरक्षित लक्ष्यों को स्वचालित रूप से रीसायकल बिन में ले जाएं",
@@ -2175,7 +2199,7 @@
     "COMMANDS:": "आदेश:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "कुल 21 उपकरणों की जाँच की गई। साफ़ करने के लिए: dev-cleaner कैश --clean <टूल|सभी>",
     "Cleanup execution failed: {}": "सफ़ाई निष्पादन विफल: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER द्वारा VELLIUM — CLI, MCP और ऑटोमेशन इंजन (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER द्वारा VELLIUM — CLI, MCP और ऑटोमेशन इंजन",
     "Date": "तारीख",
     "Delete Mode": "मोड हटाएँ",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: डेवलपर टूल कैश",
@@ -2247,7 +2271,8 @@
     "Error: 'path' parameter is required.": "त्रुटि: 'पथ' पैरामीटर आवश्यक है.",
     "Unknown tool: {}": "अज्ञात उपकरण: {}",
     "Parse error: Invalid JSON received": "पार्स त्रुटि: अमान्य JSON प्राप्त हुआ",
-    "Method not found": "विधि नहीं मिली"
+    "Method not found": "विधि नहीं मिली",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "hr": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Automatski premjesti pronađene sigurne ciljeve u koš za smeće",
@@ -2265,7 +2290,7 @@
     "COMMANDS:": "NAREDBE:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Provjerio sam ukupno 21 alat. Za čišćenje: dev-cleaner predmemorije --clean <alat|sve>",
     "Cleanup execution failed: {}": "Izvršenje čišćenja nije uspjelo: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER od VELLIUM — CLI, MCP & Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER od VELLIUM — CLI, MCP & Automation Engine",
     "Date": "Datum",
     "Delete Mode": "Način brisanja",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Predmemorije alata za razvojne programere",
@@ -2337,7 +2362,8 @@
     "Error: 'path' parameter is required.": "Pogreška: potreban je parametar 'path'.",
     "Unknown tool: {}": "Nepoznati alat: {}",
     "Parse error: Invalid JSON received": "Pogreška analize: primljeno je nevažeće JSON.",
-    "Method not found": "Metoda nije pronađena"
+    "Method not found": "Metoda nije pronađena",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "hu": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean A megtalált biztonságos célpontok automatikus áthelyezése a Lomtárba",
@@ -2355,7 +2381,7 @@
     "COMMANDS:": "PARANCSOK:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Összesen 21 szerszámot ellenőriztek. A tisztításhoz: dev-cleaner gyorsítótár --clean <eszköz|összes>",
     "Cleanup execution failed: {}": "A tisztítás végrehajtása sikertelen: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER, VELLIUM — CLI, MCP & Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER, VELLIUM — CLI, MCP & Automation Engine",
     "Date": "Dátum",
     "Delete Mode": "Mód törlése",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Fejlesztői eszköz gyorsítótárai",
@@ -2427,7 +2453,8 @@
     "Error: 'path' parameter is required.": "Hiba: 'path' paraméter kötelező.",
     "Unknown tool: {}": "Ismeretlen eszköz: {}",
     "Parse error: Invalid JSON received": "Elemzési hiba: Érvénytelen JSON érkezett",
-    "Method not found": "A módszer nem található"
+    "Method not found": "A módszer nem található",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "hy": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Ավտոմատ կերպով տեղափոխեք հայտնաբերված անվտանգ թիրախները թափոնարկղ",
@@ -2445,7 +2472,7 @@
     "COMMANDS:": "ՀՐԱՄԱՆՆԵՐ.",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Ընդհանուր առմամբ ստուգվել է 21 գործիք: Մաքրելու համար՝ dev-cleaner քեշ --clean <գործիք|բոլորը>",
     "Cleanup execution failed: {}": "Չհաջողվեց մաքրել՝ {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER ըստ VELLIUM — CLI, MCP և ավտոմատացման շարժիչ (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER ըստ VELLIUM — CLI, MCP և ավտոմատացման շարժիչ",
     "Date": "Ամսաթիվ",
     "Delete Mode": "Ջնջել ռեժիմը",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner՝ մշակողների գործիքների պահոցներ",
@@ -2517,7 +2544,8 @@
     "Error: 'path' parameter is required.": "Սխալ. «ուղի» պարամետրը պահանջվում է:",
     "Unknown tool: {}": "Անհայտ գործիք՝ {}",
     "Parse error: Invalid JSON received": "Վերլուծման սխալ. ստացվել է անվավեր JSON",
-    "Method not found": "Մեթոդը չի գտնվել"
+    "Method not found": "Մեթոդը չի գտնվել",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "id": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Secara otomatis memindahkan target aman yang ditemukan ke Recycle Bin",
@@ -2535,7 +2563,7 @@
     "COMMANDS:": "PERINTAH:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Memeriksa total 21 alat. Untuk membersihkan: dev-cleaner cache --clean <alat|semua>",
     "Cleanup execution failed: {}": "Eksekusi pembersihan gagal: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER oleh VELLIUM — CLI, MCP & Mesin Otomatisasi (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER oleh VELLIUM — CLI, MCP & Mesin Otomatisasi",
     "Date": "Tanggal",
     "Delete Mode": "Hapus Modus",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Cache Alat Pengembang",
@@ -2607,7 +2635,8 @@
     "Error: 'path' parameter is required.": "Kesalahan: parameter 'jalur' diperlukan.",
     "Unknown tool: {}": "Alat tidak diketahui: {}",
     "Parse error: Invalid JSON received": "Kesalahan penguraian: JSON diterima tidak valid",
-    "Method not found": "Metode tidak ditemukan"
+    "Method not found": "Metode tidak ditemukan",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "is": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Færðu sjálfkrafa fundin örugg skotmörk í ruslafötuna",
@@ -2625,7 +2654,7 @@
     "COMMANDS:": "Skipanir:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Skoðaði 21 verkfæri alls. Til að þrífa: dev-cleaner skyndiminni --clean <tól|allt>",
     "Cleanup execution failed: {}": "Hreinsunarframkvæmd mistókst: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER eftir VELLIUM — CLI, MCP & sjálfvirknivél (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER eftir VELLIUM — CLI, MCP & sjálfvirknivél",
     "Date": "Dagsetning",
     "Delete Mode": "Eyða ham",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: skyndiminni þróunartóla",
@@ -2697,7 +2726,8 @@
     "Error: 'path' parameter is required.": "Villa: 'path' færibreyta er nauðsynleg.",
     "Unknown tool: {}": "Óþekkt tól: {}",
     "Parse error: Invalid JSON received": "Þáttunarvilla: Ógilt JSON móttekið",
-    "Method not found": "Aðferð fannst ekki"
+    "Method not found": "Aðferð fannst ekki",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "it": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Sposta automaticamente gli obiettivi sicuri trovati nel Cestino",
@@ -2715,7 +2745,7 @@
     "COMMANDS:": "COMANDI:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Controllato 21 strumenti in totale. Per pulire: dev-cleaner memorizza nella cache --clean <tool|all>",
     "Cleanup execution failed: {}": "Esecuzione della pulizia non riuscita: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER per VELLIUM — CLI, MCP e Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER per VELLIUM — CLI, MCP e Automation Engine",
     "Date": "Data",
     "Delete Mode": "Modalità Elimina",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: cache degli strumenti di sviluppo",
@@ -2787,7 +2817,8 @@
     "Error: 'path' parameter is required.": "Errore: il parametro 'percorso' è obbligatorio.",
     "Unknown tool: {}": "Strumento sconosciuto: {}",
     "Parse error: Invalid JSON received": "Errore di analisi: ricevuto JSON non valido",
-    "Method not found": "Metodo non trovato"
+    "Method not found": "Metodo non trovato",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "ja": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean 見つかった安全なターゲットを自動的にごみ箱に移動します",
@@ -2805,7 +2836,7 @@
     "COMMANDS:": "コマンド:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "合計21個のツールを確認しました。クリーンするには: dev-cleaner キャッシュ --clean <tool|all>",
     "Cleanup execution failed: {}": "クリーンアップの実行に失敗しました: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER by VELLIUM — CLI、MCP & 自動化エンジン (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER by VELLIUM — CLI、MCP & 自動化エンジン",
     "Date": "日付",
     "Delete Mode": "削除モード",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: 開発者ツールのキャッシュ",
@@ -2877,7 +2908,8 @@
     "Error: 'path' parameter is required.": "エラー: 「パス」パラメータが必要です。",
     "Unknown tool: {}": "不明なツール: {}",
     "Parse error: Invalid JSON received": "解析エラー: 無効な JSON を受け取りました",
-    "Method not found": "メソッドが見つかりません"
+    "Method not found": "メソッドが見つかりません",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "ka": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean ავტომატურად გადაიტანეთ ნაპოვნი უსაფრთხო სამიზნეები Recycle Bin-ში",
@@ -2895,7 +2927,7 @@
     "COMMANDS:": "ბრძანებები:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "შევამოწმე სულ 21 ინსტრუმენტი. გასასუფთავებლად: dev-cleaner ქეში --clean <ინსტრუმენტი|ყველა>",
     "Cleanup execution failed: {}": "გასუფთავება ვერ განხორციელდა: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER VELLIUM-ით — CLI, MCP და ავტომატიზაციის ძრავა (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER VELLIUM-ით — CLI, MCP და ავტომატიზაციის ძრავა",
     "Date": "თარიღი",
     "Delete Mode": "წაშლის რეჟიმი",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: დეველოპერის ხელსაწყოების ქეშები",
@@ -2967,7 +2999,8 @@
     "Error: 'path' parameter is required.": "შეცდომა: „გზა“ პარამეტრი საჭიროა.",
     "Unknown tool: {}": "უცნობი ინსტრუმენტი: {}",
     "Parse error: Invalid JSON received": "გაანალიზების შეცდომა: მიღებულია არასწორი JSON",
-    "Method not found": "მეთოდი ვერ მოიძებნა"
+    "Method not found": "მეთოდი ვერ მოიძებნა",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "kk": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Табылған қауіпсіз нысандарды қоқыс жәшігіне автоматты түрде жылжытыңыз",
@@ -2985,7 +3018,7 @@
     "COMMANDS:": "ПАРМАНДАР:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Барлығы 21 құрал тексерілді. Тазалау үшін: dev-cleaner кэштер --clean <құрал|барлығы>",
     "Cleanup execution failed: {}": "Тазалау орындалмады: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER авторы VELLIUM — CLI, MCP және автоматтандыру қозғалтқышы (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER авторы VELLIUM — CLI, MCP және автоматтандыру қозғалтқышы",
     "Date": "Күн",
     "Delete Mode": "Жою режимі",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: әзірлеуші ​​​​құралының кэштері",
@@ -3057,7 +3090,8 @@
     "Error: 'path' parameter is required.": "Қате: \"жол\" параметрі қажет.",
     "Unknown tool: {}": "Белгісіз құрал: {}",
     "Parse error: Invalid JSON received": "Талдау қатесі: жарамсыз JSON алынды",
-    "Method not found": "Әдіс табылмады"
+    "Method not found": "Әдіс табылмады",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "km": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean ផ្លាស់ទីគោលដៅសុវត្ថិភាពដែលបានរកឃើញដោយស្វ័យប្រវត្តិទៅកាន់ Recycle Bin",
@@ -3075,7 +3109,7 @@
     "COMMANDS:": "បញ្ជា៖",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "បានពិនិត្យឧបករណ៍សរុបចំនួន ២១ ។ ដើម្បីសម្អាត៖ dev-cleaner ឃ្លាំងសម្ងាត់ --clean <ឧបករណ៍|ទាំងអស់>",
     "Cleanup execution failed: {}": "ការ​ប្រតិបត្តិ​ការ​សម្អាត​បាន​បរាជ័យ៖ {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER ដោយ VELLIUM — CLI MCP & ម៉ាស៊ីនស្វ័យប្រវត្តិ (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER ដោយ VELLIUM — CLI MCP & ម៉ាស៊ីនស្វ័យប្រវត្តិ",
     "Date": "កាលបរិច្ឆេទ",
     "Delete Mode": "លុបរបៀប",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner៖ ឃ្លាំងសម្ងាត់ឧបករណ៍អ្នកអភិវឌ្ឍន៍",
@@ -3147,7 +3181,8 @@
     "Error: 'path' parameter is required.": "កំហុស៖ ប៉ារ៉ាម៉ែត្រ 'ផ្លូវ' ត្រូវបានទាមទារ។",
     "Unknown tool: {}": "ឧបករណ៍មិនស្គាល់៖ {}",
     "Parse error: Invalid JSON received": "កំហុសក្នុងការញែក៖ បានទទួល JSON មិនត្រឹមត្រូវ",
-    "Method not found": "វិធីសាស្រ្តរកមិនឃើញ"
+    "Method not found": "វិធីសាស្រ្តរកមិនឃើញ",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "kn": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean ಪತ್ತೆಯಾದ ಸುರಕ್ಷಿತ ಗುರಿಗಳನ್ನು ಮರುಬಳಕೆ ಬಿನ್‌ಗೆ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಸರಿಸಿ",
@@ -3165,7 +3200,7 @@
     "COMMANDS:": "ಆಜ್ಞೆಗಳು:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "ಒಟ್ಟು 21 ಉಪಕರಣಗಳನ್ನು ಪರಿಶೀಲಿಸಲಾಗಿದೆ. ಸ್ವಚ್ಛಗೊಳಿಸಲು: dev-cleaner ಕ್ಯಾಶ್‌ಗಳು --clean <tool|all>",
     "Cleanup execution failed: {}": "ನಿರ್ಮಲೀಕರಣ ಕಾರ್ಯಗತಗೊಳಿಸುವಿಕೆ ವಿಫಲವಾಗಿದೆ: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER by VELLIUM — CLI, MCP & ಆಟೋಮೇಷನ್ ಎಂಜಿನ್ (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER by VELLIUM — CLI, MCP & ಆಟೋಮೇಷನ್ ಎಂಜಿನ್",
     "Date": "ದಿನಾಂಕ",
     "Delete Mode": "ಅಳಿಸಿ ಮೋಡ್",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: ಡೆವಲಪರ್ ಟೂಲ್ ಕ್ಯಾಷ್‌ಗಳು",
@@ -3237,7 +3272,8 @@
     "Error: 'path' parameter is required.": "ದೋಷ: 'ಪಥ' ಪ್ಯಾರಾಮೀಟರ್ ಅಗತ್ಯವಿದೆ.",
     "Unknown tool: {}": "ಅಜ್ಞಾತ ಸಾಧನ: {}",
     "Parse error: Invalid JSON received": "ಪಾರ್ಸ್ ದೋಷ: ಅಮಾನ್ಯ JSON ಸ್ವೀಕರಿಸಲಾಗಿದೆ",
-    "Method not found": "ವಿಧಾನ ಕಂಡುಬಂದಿಲ್ಲ"
+    "Method not found": "ವಿಧಾನ ಕಂಡುಬಂದಿಲ್ಲ",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "ko": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean 발견된 안전한 대상을 자동으로 휴지통으로 이동",
@@ -3255,7 +3291,7 @@
     "COMMANDS:": "명령:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "총 21개의 도구를 확인했습니다. 정리하려면: dev-cleaner 캐시 --clean <tool|all>",
     "Cleanup execution failed: {}": "정리 실행 실패: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER by VELLIUM — CLI, MCP 및 자동화 엔진(v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER by VELLIUM — CLI, MCP 및 자동화 엔진",
     "Date": "날짜",
     "Delete Mode": "삭제 모드",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: 개발자 도구 캐시",
@@ -3327,7 +3363,8 @@
     "Error: 'path' parameter is required.": "오류: 'path' 매개변수가 필요합니다.",
     "Unknown tool: {}": "알 수 없는 도구: {}",
     "Parse error: Invalid JSON received": "구문 분석 오류: 잘못된 JSON이(가) 수신되었습니다.",
-    "Method not found": "메소드를 찾을 수 없습니다"
+    "Method not found": "메소드를 찾을 수 없습니다",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "ky": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Табылган коопсуз буталарды таштанды кутусуна автоматтык түрдө жылдырыңыз",
@@ -3345,7 +3382,7 @@
     "COMMANDS:": "БУЙРУКТАР:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Бардыгы болуп 21 инструмент текшерилди. Тазалоо үчүн: dev-cleaner кэштер --clean <курал|бардыгы>",
     "Cleanup execution failed: {}": "Тазалоо ишке ашкан жок: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "Dev Cleaner by vellium — cli, mcp жана автоматташтыруу кыймылдаткычы (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "Dev Cleaner by vellium — cli, mcp жана автоматташтыруу кыймылдаткычы",
     "Date": "Дата",
     "Delete Mode": "Жок кылуу режими",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Иштеп чыгуучу куралдардын кэштери",
@@ -3417,7 +3454,8 @@
     "Error: 'path' parameter is required.": "Ката: \"жол\" параметри талап кылынат.",
     "Unknown tool: {}": "Белгисиз курал: {}",
     "Parse error: Invalid JSON received": "Талдоо катасы: жараксыз JSON алынды",
-    "Method not found": "Метод табылган жок"
+    "Method not found": "Метод табылган жок",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "lt": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Automatiškai perkelkite rastus saugius taikinius į šiukšliadėžę",
@@ -3435,7 +3473,7 @@
     "COMMANDS:": "KOMANDOS:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Iš viso patikrintas 21 įrankis. Norėdami išvalyti: dev-cleaner talpyklos --clean <įrankis|visi>",
     "Cleanup execution failed: {}": "Nepavyko atlikti valymo: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER pagal VELLIUM — CLI, MCP ir automatikos variklis (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER pagal VELLIUM — CLI, MCP ir automatikos variklis",
     "Date": "Data",
     "Delete Mode": "Naikinimo režimas",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: kūrėjo įrankių talpyklos",
@@ -3507,7 +3545,8 @@
     "Error: 'path' parameter is required.": "Klaida: būtinas parametras „path“.",
     "Unknown tool: {}": "Nežinomas įrankis: {}",
     "Parse error: Invalid JSON received": "Analizavimo klaida: gautas neteisingas JSON",
-    "Method not found": "Metodas nerastas"
+    "Method not found": "Metodas nerastas",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "lv": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Automātiski pārvietot atrastos drošus mērķus uz atkritni",
@@ -3525,7 +3564,7 @@
     "COMMANDS:": "KOMANDAS:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Kopumā pārbaudīts 21 instruments. Lai notīrītu: dev-cleaner kešatmiņas --clean <rīks|viss>",
     "Cleanup execution failed: {}": "Tīrīšana neizdevās: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER no VELLIUM — CLI, MCP un automatizācijas dzinējs (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER no VELLIUM — CLI, MCP un automatizācijas dzinējs",
     "Date": "Datums",
     "Delete Mode": "Dzēšanas režīms",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: izstrādātāja rīku kešatmiņas",
@@ -3597,7 +3636,8 @@
     "Error: 'path' parameter is required.": "Kļūda: ir nepieciešams parametrs “path”.",
     "Unknown tool: {}": "Nezināms rīks: {}",
     "Parse error: Invalid JSON received": "Parsēšanas kļūda: saņemts nederīgs JSON",
-    "Method not found": "Metode nav atrasta"
+    "Method not found": "Metode nav atrasta",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "mk": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Автоматски преместете ги пронајдените безбедни цели во корпата за отпадоци",
@@ -3615,7 +3655,7 @@
     "COMMANDS:": "КОМЕНДИ:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Провери вкупно 21 алатка. За чистење: dev-cleaner кешови --clean <алатка|сите>",
     "Cleanup execution failed: {}": "Извршувањето на чистењето не успеа: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER од VELLIUM — CLI, MCP и мотор за автоматизација (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER од VELLIUM — CLI, MCP и мотор за автоматизација",
     "Date": "Датум",
     "Delete Mode": "Режим за бришење",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Кеш на алатки за програмери",
@@ -3687,7 +3727,8 @@
     "Error: 'path' parameter is required.": "Грешка: потребен е параметар „пат“.",
     "Unknown tool: {}": "Непозната алатка: {}",
     "Parse error: Invalid JSON received": "Грешка во анализата: Неважечка JSON е примена",
-    "Method not found": "Методот не е пронајден"
+    "Method not found": "Методот не е пронајден",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "ml": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean കണ്ടെത്തിയ സുരക്ഷിത ലക്ഷ്യങ്ങൾ റീസൈക്കിൾ ബിന്നിലേക്ക് സ്വയമേവ നീക്കുക",
@@ -3705,7 +3746,7 @@
     "COMMANDS:": "കമാൻഡുകൾ:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "ആകെ 21 ടൂളുകൾ പരിശോധിച്ചു. വൃത്തിയാക്കാൻ: dev-cleaner കാഷെകൾ --clean <tool|all>",
     "Cleanup execution failed: {}": "ക്ലീനപ്പ് എക്സിക്യൂഷൻ പരാജയപ്പെട്ടു: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER by VELLIUM — CLI, MCP & ഓട്ടോമേഷൻ എഞ്ചിൻ (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER by VELLIUM — CLI, MCP & ഓട്ടോമേഷൻ എഞ്ചിൻ",
     "Date": "തീയതി",
     "Delete Mode": "ഡിലീറ്റ് മോഡ്",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: ഡെവലപ്പർ ടൂൾ കാഷെകൾ",
@@ -3777,7 +3818,8 @@
     "Error: 'path' parameter is required.": "പിശക്: 'പാത്ത്' പാരാമീറ്റർ ആവശ്യമാണ്.",
     "Unknown tool: {}": "അജ്ഞാത ഉപകരണം: {}",
     "Parse error: Invalid JSON received": "പാഴ്‌സ് പിശക്: അസാധുവായ JSON ലഭിച്ചു",
-    "Method not found": "രീതി കണ്ടെത്തിയില്ല"
+    "Method not found": "രീതി കണ്ടെത്തിയില്ല",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "mn": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Олдсон аюулгүй байгуудыг хогийн сав руу автоматаар зөөнө",
@@ -3795,7 +3837,7 @@
     "COMMANDS:": "ТУШААЛ:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Нийт 21 хэрэгслийг шалгасан. Цэвэрлэхийн тулд: dev-cleaner кэш --clean <хэрэгсэл|бүгд>",
     "Cleanup execution failed: {}": "Цэвэрлэх ажиллагаа амжилтгүй боллоо: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER VELLIUM — CLI, MCP & Автоматжуулалтын хөдөлгүүр (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER VELLIUM — CLI, MCP & Автоматжуулалтын хөдөлгүүр",
     "Date": "Огноо",
     "Delete Mode": "Устгах горим",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Хөгжүүлэгчийн хэрэгслийн кэш",
@@ -3867,7 +3909,8 @@
     "Error: 'path' parameter is required.": "Алдаа: \"зам\" параметр шаардлагатай.",
     "Unknown tool: {}": "Үл мэдэгдэх хэрэгсэл: {}",
     "Parse error: Invalid JSON received": "Шинжилгээний алдаа: Хүчингүй JSON хүлээн авсан",
-    "Method not found": "Арга олдсонгүй"
+    "Method not found": "Арга олдсонгүй",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "mr": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean सापडलेले सुरक्षित लक्ष्य स्वयंचलितपणे रीसायकल बिनमध्ये हलवा",
@@ -3885,7 +3928,7 @@
     "COMMANDS:": "आज्ञा:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "एकूण 21 साधने तपासली. साफ करण्यासाठी: dev-cleaner कॅशे --clean <tool|all>",
     "Cleanup execution failed: {}": "साफसफाईची अंमलबजावणी अयशस्वी: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER बाय VELLIUM — CLI, MCP आणि ऑटोमेशन इंजिन (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER बाय VELLIUM — CLI, MCP आणि ऑटोमेशन इंजिन",
     "Date": "तारीख",
     "Delete Mode": "मोड हटवा",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: विकसक साधन कॅशे",
@@ -3957,7 +4000,8 @@
     "Error: 'path' parameter is required.": "त्रुटी: 'पथ' पॅरामीटर आवश्यक आहे.",
     "Unknown tool: {}": "अज्ञात साधन: {}",
     "Parse error: Invalid JSON received": "पार्स त्रुटी: अवैध JSON प्राप्त झाले",
-    "Method not found": "पद्धत सापडली नाही"
+    "Method not found": "पद्धत सापडली नाही",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "ms": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Alihkan sasaran selamat yang ditemui secara automatik ke Tong Kitar Semula",
@@ -3975,7 +4019,7 @@
     "COMMANDS:": "PERINTAH:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Menyemak 21 alat secara keseluruhan. Untuk membersihkan: dev-cleaner cache --clean <alat|semua>",
     "Cleanup execution failed: {}": "Pelaksanaan pembersihan gagal: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER oleh VELLIUM — CLI, MCP & Enjin Automasi (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER oleh VELLIUM — CLI, MCP & Enjin Automasi",
     "Date": "tarikh",
     "Delete Mode": "Mod Padam",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Cache Alat Pembangun",
@@ -4047,7 +4091,8 @@
     "Error: 'path' parameter is required.": "Ralat: parameter 'path' diperlukan.",
     "Unknown tool: {}": "Alat tidak diketahui: {}",
     "Parse error: Invalid JSON received": "Ralat penghuraian: JSON diterima tidak sah",
-    "Method not found": "Kaedah tidak ditemui"
+    "Method not found": "Kaedah tidak ditemui",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "my": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean တွေ့ရှိထားသော ဘေးကင်းသောပစ်မှတ်များကို Recycle Bin သို့ အလိုအလျောက်ရွှေ့ပါ။",
@@ -4065,7 +4110,7 @@
     "COMMANDS:": "ညွှန်ကြားချက်များ-",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "စုစုပေါင်း ကိရိယာ ၂၁ ခုကို စစ်ဆေးခဲ့သည်။ ရှင်းလင်းရန်- dev-cleaner ကက်ရှ် --clean <tool|all>",
     "Cleanup execution failed: {}": "ရှင်းလင်းရေး လုပ်ဆောင်မှု မအောင်မြင်ပါ- {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER အားဖြင့် VELLIUM — CLI၊ MCP နှင့် အလိုအလျောက်စနစ် (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER အားဖြင့် VELLIUM — CLI၊ MCP နှင့် အလိုအလျောက်စနစ်",
     "Date": "ရက်စွဲ",
     "Delete Mode": "မုဒ်ကိုဖျက်ပါ။",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner- ​​Developer Tool Caches",
@@ -4137,7 +4182,8 @@
     "Error: 'path' parameter is required.": "အမှား- 'လမ်းကြောင်း' ကန့်သတ်ချက် လိုအပ်သည်။",
     "Unknown tool: {}": "အမည်မသိကိရိယာ- {}",
     "Parse error: Invalid JSON received": "ခွဲခြမ်းစိတ်ဖြာမှုအမှား- မမှန်ကန်သော JSON လက်ခံရရှိခဲ့သည်။",
-    "Method not found": "နည်းလမ်းမတွေ့ပါ။"
+    "Method not found": "နည်းလမ်းမတွေ့ပါ။",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "nl": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Verplaats gevonden veilige doelen automatisch naar de Prullenbak",
@@ -4155,7 +4201,7 @@
     "COMMANDS:": "OPDRACHTEN:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "In totaal 21 gereedschappen gecontroleerd. Opschonen: dev-cleaner caches --clean <tool|all>",
     "Cleanup execution failed: {}": "Uitvoering van opschoning mislukt: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER door VELLIUM — CLI, MCP en automatiseringsengine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER door VELLIUM — CLI, MCP en automatiseringsengine",
     "Date": "Datum",
     "Delete Mode": "Modus verwijderen",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Caches voor ontwikkelaarstools",
@@ -4227,7 +4273,8 @@
     "Error: 'path' parameter is required.": "Fout: parameter 'pad' is vereist.",
     "Unknown tool: {}": "Onbekend hulpmiddel: {}",
     "Parse error: Invalid JSON received": "Parseerfout: ongeldige JSON ontvangen",
-    "Method not found": "Methode niet gevonden"
+    "Method not found": "Methode niet gevonden",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "no": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Flytt automatisk funnet sikre mål til papirkurven",
@@ -4245,7 +4292,7 @@
     "COMMANDS:": "KOMMANDOER:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Sjekket 21 verktøy totalt. For å rense: dev-cleaner cacher --clean <verktøy|alle>",
     "Cleanup execution failed: {}": "Utførelse av opprydding mislyktes: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER av VELLIUM — CLI, MCP & Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER av VELLIUM — CLI, MCP & Automation Engine",
     "Date": "Dato",
     "Delete Mode": "Slettmodus",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Cacher for utviklerverktøy",
@@ -4317,7 +4364,8 @@
     "Error: 'path' parameter is required.": "Feil: 'path'-parameter er påkrevd.",
     "Unknown tool: {}": "Ukjent verktøy: {}",
     "Parse error: Invalid JSON received": "Parsefeil: Ugyldig JSON mottatt",
-    "Method not found": "Metoden ble ikke funnet"
+    "Method not found": "Metoden ble ikke funnet",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "pa": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean ਲੱਭੇ ਗਏ ਸੁਰੱਖਿਅਤ ਟੀਚਿਆਂ ਨੂੰ ਸਵੈਚਲਿਤ ਤੌਰ 'ਤੇ ਰੀਸਾਈਕਲ ਬਿਨ ਵਿੱਚ ਭੇਜੋ",
@@ -4335,7 +4383,7 @@
     "COMMANDS:": "ਹੁਕਮ:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "ਕੁੱਲ 21 ਟੂਲਾਂ ਦੀ ਜਾਂਚ ਕੀਤੀ। ਸਾਫ਼ ਕਰਨ ਲਈ: dev-cleaner ਕੈਸ਼ --clean <ਟੂਲ|all>",
     "Cleanup execution failed: {}": "ਕਲੀਨਅਪ ਐਗਜ਼ੀਕਿਊਸ਼ਨ ਅਸਫਲ: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER by VELLIUM — CLI, MCP ਅਤੇ ਆਟੋਮੇਸ਼ਨ ਇੰਜਣ (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER by VELLIUM — CLI, MCP ਅਤੇ ਆਟੋਮੇਸ਼ਨ ਇੰਜਣ",
     "Date": "ਮਿਤੀ",
     "Delete Mode": "ਮੋਡ ਮਿਟਾਓ",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: ਵਿਕਾਸਕਾਰ ਟੂਲ ਕੈਸ਼",
@@ -4407,7 +4455,8 @@
     "Error: 'path' parameter is required.": "ਗਲਤੀ: 'ਪਾਥ' ਪੈਰਾਮੀਟਰ ਲੋੜੀਂਦਾ ਹੈ।",
     "Unknown tool: {}": "ਅਗਿਆਤ ਟੂਲ: {}",
     "Parse error: Invalid JSON received": "ਪਾਰਸ ਗਲਤੀ: ਅਵੈਧ JSON ਪ੍ਰਾਪਤ ਹੋਇਆ",
-    "Method not found": "ਢੰਗ ਨਹੀਂ ਮਿਲਿਆ"
+    "Method not found": "ਢੰਗ ਨਹੀਂ ਮਿਲਿਆ",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "pl": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Automatycznie przenoś znalezione bezpieczne cele do Kosza",
@@ -4425,7 +4474,7 @@
     "COMMANDS:": "POLECENIA:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Łącznie sprawdzono 21 narzędzi. Aby wyczyścić: dev-cleaner pamięci podręczne --clean <narzędzie|wszystko>",
     "Cleanup execution failed: {}": "Wykonanie czyszczenia nie powiodło się: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER autorstwa VELLIUM — CLI, MCP i silnik automatyzacji (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER autorstwa VELLIUM — CLI, MCP i silnik automatyzacji",
     "Date": "Data",
     "Delete Mode": "Usuń tryb",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Pamięć podręczna narzędzi programistycznych",
@@ -4497,7 +4546,8 @@
     "Error: 'path' parameter is required.": "Błąd: wymagany jest parametr „ścieżka”.",
     "Unknown tool: {}": "Nieznane narzędzie: {}",
     "Parse error: Invalid JSON received": "Błąd analizy: otrzymano nieprawidłowy JSON.",
-    "Method not found": "Nie znaleziono metody"
+    "Method not found": "Nie znaleziono metody",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "pt": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Mover automaticamente os alvos seguros encontrados para a Lixeira",
@@ -4515,7 +4565,7 @@
     "COMMANDS:": "COMANDOS:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Verificou 21 ferramentas no total. Para limpar: dev-cleaner caches --clean <ferramenta|tudo>",
     "Cleanup execution failed: {}": "Falha na execução da limpeza: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER por VELLIUM — CLI, MCP e mecanismo de automação (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER por VELLIUM — CLI, MCP e mecanismo de automação",
     "Date": "Data",
     "Delete Mode": "Excluir modo",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Caches de ferramentas do desenvolvedor",
@@ -4587,7 +4637,8 @@
     "Error: 'path' parameter is required.": "Erro: o parâmetro 'caminho' é obrigatório.",
     "Unknown tool: {}": "Ferramenta desconhecida: {}",
     "Parse error: Invalid JSON received": "Erro de análise: JSON inválido recebido",
-    "Method not found": "Método não encontrado"
+    "Method not found": "Método não encontrado",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "ro": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Mută ​​automat țintele sigure găsite în Coșul de reciclare",
@@ -4605,7 +4656,7 @@
     "COMMANDS:": "COMANDI:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "S-au verificat 21 de unelte în total. Pentru a curăța: dev-cleaner cache --clean <instrument|toate>",
     "Cleanup execution failed: {}": "Execuția curățării a eșuat: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER de VELLIUM — CLI, MCP și Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER de VELLIUM — CLI, MCP și Automation Engine",
     "Date": "Data",
     "Delete Mode": "Mod ștergere",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Cache-urile instrumentului pentru dezvoltatori",
@@ -4677,7 +4728,8 @@
     "Error: 'path' parameter is required.": "Eroare: este necesar parametrul „cale”.",
     "Unknown tool: {}": "Instrument necunoscut: {}",
     "Parse error: Invalid JSON received": "Eroare de analiză: a primit JSON nevalid",
-    "Method not found": "Metoda nu a fost găsită"
+    "Method not found": "Metoda nu a fost găsită",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "ru": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Автоматически перемещать найденные безопасные цели в корзину.",
@@ -4695,7 +4747,7 @@
     "COMMANDS:": "КОМАНДЫ:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Всего проверил 21 инструмент. Чтобы очистить: dev-cleaner кеши --clean <инструмент|все>",
     "Cleanup execution failed: {}": "Не удалось выполнить очистку: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER на VELLIUM — CLI, MCP и механизм автоматизации (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER на VELLIUM — CLI, MCP и механизм автоматизации",
     "Date": "Дата",
     "Delete Mode": "Режим удаления",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Кэши инструментов разработчика.",
@@ -4767,7 +4819,8 @@
     "Error: 'path' parameter is required.": "Ошибка: требуется параметр «путь».",
     "Unknown tool: {}": "Неизвестный инструмент: {}",
     "Parse error: Invalid JSON received": "Ошибка анализа: получено недопустимое JSON",
-    "Method not found": "Метод не найден"
+    "Method not found": "Метод не найден",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "si": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean සොයාගත් ආරක්ෂිත ඉලක්ක ස්වයංක්‍රීයව ප්‍රතිචක්‍රීකරණ බඳුනට ගෙන යන්න",
@@ -4785,7 +4838,7 @@
     "COMMANDS:": "විධාන:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "සම්පූර්ණ මෙවලම් 21 ක් පරීක්ෂා කර ඇත. පිරිසිදු කිරීමට: dev-cleaner caches --clean <tool|all>",
     "Cleanup execution failed: {}": "පිරිසිදු කිරීමේ ක්‍රියාත්මක කිරීම අසාර්ථක විය: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "Dev cleaner by vellium — cli, mcp සහ automation engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "Dev cleaner by vellium — cli, mcp සහ automation engine",
     "Date": "දිනය",
     "Delete Mode": "මකන්න මාදිලිය",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: සංවර්ධක මෙවලම් හැඹිලි",
@@ -4857,7 +4910,8 @@
     "Error: 'path' parameter is required.": "දෝෂය: 'මාර්ග' පරාමිතිය අවශ්‍ය වේ.",
     "Unknown tool: {}": "නොදන්නා මෙවලම: {}",
     "Parse error: Invalid JSON received": "විග්‍රහ කිරීමේ දෝෂය: අවලංගු JSON ලැබී ඇත",
-    "Method not found": "ක්‍රමය හමු නොවීය"
+    "Method not found": "ක්‍රමය හමු නොවීය",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "sk": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Automaticky presunúť nájdené bezpečné ciele do koša",
@@ -4875,7 +4929,7 @@
     "COMMANDS:": "PRÍKAZY:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Celkovo bolo skontrolovaných 21 nástrojov. Vyčistenie: dev-cleaner vyrovnávacej pamäte --clean <nástroj|všetko>",
     "Cleanup execution failed: {}": "Spustenie čistenia zlyhalo: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER od VELLIUM — CLI, MCP & Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER od VELLIUM — CLI, MCP & Automation Engine",
     "Date": "Dátum",
     "Delete Mode": "Režim vymazania",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Vyrovnávacia pamäť nástrojov pre vývojárov",
@@ -4947,7 +5001,8 @@
     "Error: 'path' parameter is required.": "Chyba: Vyžaduje sa parameter 'cesta'.",
     "Unknown tool: {}": "Neznámy nástroj: {}",
     "Parse error: Invalid JSON received": "Chyba analýzy: Prijaté neplatné JSON",
-    "Method not found": "Metóda sa nenašla"
+    "Method not found": "Metóda sa nenašla",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "sl": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Samodejno premakni najdene varne cilje v koš",
@@ -4965,7 +5020,7 @@
     "COMMANDS:": "UKAZI:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Skupno preveril 21 orodij. Za čiščenje: dev-cleaner predpomnilniki --clean <orodje|vse>",
     "Cleanup execution failed: {}": "Čiščenje ni uspelo: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER od VELLIUM — CLI, MCP & Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER od VELLIUM — CLI, MCP & Automation Engine",
     "Date": "Datum",
     "Delete Mode": "Način brisanja",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Predpomnilniki orodij za razvijalce",
@@ -5037,7 +5092,8 @@
     "Error: 'path' parameter is required.": "Napaka: zahtevan je parameter 'path'.",
     "Unknown tool: {}": "Neznano orodje: {}",
     "Parse error: Invalid JSON received": "Napaka pri razčlenjevanju: prejeta neveljavna JSON.",
-    "Method not found": "Metoda ni bila najdena"
+    "Method not found": "Metoda ni bila najdena",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "sq": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Zhvendos automatikisht objektivat e sigurta të gjetura në koshin e riciklimit",
@@ -5055,7 +5111,7 @@
     "COMMANDS:": "KOMANDA:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Kontrolluar 21 mjete në total. Për të pastruar: dev-cleaner cache --clean <tool|të gjitha>",
     "Cleanup execution failed: {}": "Ekzekutimi i pastrimit dështoi: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER nga VELLIUM — CLI, MCP & Motori i Automatizimit (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER nga VELLIUM — CLI, MCP & Motori i Automatizimit",
     "Date": "Data",
     "Delete Mode": "Modaliteti i fshirjes",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Memoria e veglave të zhvilluesit",
@@ -5127,7 +5183,8 @@
     "Error: 'path' parameter is required.": "Gabim: kërkohet parametri 'rruga'.",
     "Unknown tool: {}": "Mjet i panjohur: {}",
     "Parse error: Invalid JSON received": "Gabim analize: U mor i pavlefshëm JSON",
-    "Method not found": "Metoda nuk u gjet"
+    "Method not found": "Metoda nuk u gjet",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "sr": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Аутоматски премести пронађене сигурне мете у корпу за отпатке",
@@ -5145,7 +5202,7 @@
     "COMMANDS:": "КОМАНДЕ:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Укупно је проверен 21 алат. За чишћење: dev-cleaner кеш меморије --clean <алат|све>",
     "Cleanup execution failed: {}": "Извршавање чишћења није успело: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER од VELLIUM — CLI, MCP и аутоматизација (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER од VELLIUM — CLI, MCP и аутоматизација",
     "Date": "Датум",
     "Delete Mode": "Режим брисања",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Кеширање алата за програмере",
@@ -5217,7 +5274,8 @@
     "Error: 'path' parameter is required.": "Грешка: параметар 'патх' је обавезан.",
     "Unknown tool: {}": "Непозната алатка: {}",
     "Parse error: Invalid JSON received": "Грешка рашчлањивања: Примљено је неважеће JSON.",
-    "Method not found": "Метода није пронађена"
+    "Method not found": "Метода није пронађена",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "sv": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Flytta automatiskt hittade säkra mål till papperskorgen",
@@ -5235,7 +5293,7 @@
     "COMMANDS:": "KOMMANDO:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Kollade 21 verktyg totalt. För att rensa: dev-cleaner cacher --clean <verktyg|alla>",
     "Cleanup execution failed: {}": "Rensning misslyckades: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER av VELLIUM — CLI, MCP & Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER av VELLIUM — CLI, MCP & Automation Engine",
     "Date": "Datum",
     "Delete Mode": "Raderingsläge",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Cacher för utvecklarverktyg",
@@ -5307,7 +5365,8 @@
     "Error: 'path' parameter is required.": "Fel: 'path'-parameter krävs.",
     "Unknown tool: {}": "Okänt verktyg: {}",
     "Parse error: Invalid JSON received": "Analysfel: Ogiltig JSON mottogs",
-    "Method not found": "Metoden hittades inte"
+    "Method not found": "Metoden hittades inte",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "sw": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Hamisha kiotomatiki malengo salama yaliyopatikana hadi kwenye Recycle Bin",
@@ -5325,7 +5384,7 @@
     "COMMANDS:": "AMRI:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Umechagua zana 21 kwa jumla. Ili kusafisha: dev-cleaner akiba --clean <zana|zote>",
     "Cleanup execution failed: {}": "Utekelezaji wa kusafisha haukufaulu: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER kwa VELLIUM — CLI, MCP & Injini ya Uendeshaji (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER kwa VELLIUM — CLI, MCP & Injini ya Uendeshaji",
     "Date": "Tarehe",
     "Delete Mode": "Futa Modi",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Akiba za Zana ya Wasanidi Programu",
@@ -5397,7 +5456,8 @@
     "Error: 'path' parameter is required.": "Hitilafu: kigezo cha 'njia' kinahitajika.",
     "Unknown tool: {}": "Zana isiyojulikana: {}",
     "Parse error: Invalid JSON received": "Hitilafu ya kuchanganua: JSON imepokelewa batili",
-    "Method not found": "Mbinu haijapatikana"
+    "Method not found": "Mbinu haijapatikana",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "ta": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean கண்டறியப்பட்ட பாதுகாப்பான இலக்குகளை தானாகவே மறுசுழற்சி தொட்டிக்கு நகர்த்தவும்",
@@ -5415,7 +5475,7 @@
     "COMMANDS:": "கட்டளைகள்:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "மொத்தம் 21 கருவிகள் சரிபார்க்கப்பட்டன. சுத்தம் செய்ய: dev-cleaner தற்காலிக சேமிப்புகள் --clean <tool|all>",
     "Cleanup execution failed: {}": "துப்புரவு செயலாக்கம் தோல்வியடைந்தது: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "VELLIUM வழங்கும் DEV CLEANER — CLI, MCP மற்றும் தானியங்கி இயந்திரம் (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "VELLIUM வழங்கும் DEV CLEANER — CLI, MCP மற்றும் தானியங்கி இயந்திரம்",
     "Date": "தேதி",
     "Delete Mode": "நீக்குதல் பயன்முறை",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: டெவலப்பர் கருவி தற்காலிக சேமிப்புகள்",
@@ -5487,7 +5547,8 @@
     "Error: 'path' parameter is required.": "பிழை: 'பாதை' அளவுரு தேவை.",
     "Unknown tool: {}": "அறியப்படாத கருவி: {}",
     "Parse error: Invalid JSON received": "பாகுபடுத்தும் பிழை: தவறான JSON பெறப்பட்டது",
-    "Method not found": "முறை கிடைக்கவில்லை"
+    "Method not found": "முறை கிடைக்கவில்லை",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "te": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean కనుగొనబడిన సురక్షిత లక్ష్యాలను స్వయంచాలకంగా రీసైకిల్ బిన్‌కి తరలించండి",
@@ -5505,7 +5566,7 @@
     "COMMANDS:": "ఆదేశాలు:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "మొత్తం 21 సాధనాలను తనిఖీ చేశారు. శుభ్రం చేయడానికి: dev-cleaner కాష్‌లు --clean <tool|all>",
     "Cleanup execution failed: {}": "క్లీనప్ ఎగ్జిక్యూషన్ విఫలమైంది: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER by VELLIUM — CLI, MCP & ఆటోమేషన్ ఇంజిన్ (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER by VELLIUM — CLI, MCP & ఆటోమేషన్ ఇంజిన్",
     "Date": "తేదీ",
     "Delete Mode": "తొలగించు మోడ్",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: డెవలపర్ టూల్ కాష్‌లు",
@@ -5577,7 +5638,8 @@
     "Error: 'path' parameter is required.": "లోపం: 'మార్గం' పరామితి అవసరం.",
     "Unknown tool: {}": "తెలియని సాధనం: {}",
     "Parse error: Invalid JSON received": "అన్వయ లోపం: చెల్లని JSON స్వీకరించబడింది",
-    "Method not found": "పద్ధతి కనుగొనబడలేదు"
+    "Method not found": "పద్ధతి కనుగొనబడలేదు",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "th": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean ย้ายเป้าหมายที่ปลอดภัยที่พบไปยังถังรีไซเคิลโดยอัตโนมัติ",
@@ -5595,7 +5657,7 @@
     "COMMANDS:": "คำสั่ง:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "ตรวจสอบเครื่องมือทั้งหมด 21 รายการ วิธีทำความสะอาด: dev-cleaner แคช --clean <tool|all>",
     "Cleanup execution failed: {}": "การดำเนินการล้างข้อมูลล้มเหลว: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER โดย VELLIUM — CLI, MCP & เครื่องยนต์อัตโนมัติ (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER โดย VELLIUM — CLI, MCP & เครื่องยนต์อัตโนมัติ",
     "Date": "วันที่",
     "Delete Mode": "ลบโหมด",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: แคชเครื่องมือสำหรับนักพัฒนา",
@@ -5667,7 +5729,8 @@
     "Error: 'path' parameter is required.": "ข้อผิดพลาด: จำเป็นต้องมีพารามิเตอร์ 'path'",
     "Unknown tool: {}": "เครื่องมือที่ไม่รู้จัก: {}",
     "Parse error: Invalid JSON received": "ข้อผิดพลาดในการแยกวิเคราะห์: ได้รับ JSON ไม่ถูกต้อง",
-    "Method not found": "ไม่พบวิธีการ"
+    "Method not found": "ไม่พบวิธีการ",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "tk": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Awtomatiki usulda tapylan howpsuz nyşanlary gaýtadan işlemek binasyna geçirmek",
@@ -5685,7 +5748,7 @@
     "COMMANDS:": "Buýruklar:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Jemi 21 gural barlandy. Arassalamak üçin: dev-cleaner keşleri --clean <gural | hemmesi>",
     "Cleanup execution failed: {}": "Arassalamak ýerine ýetirilmedi: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER VELLIUM - CLI, MCP we awtomatlaşdyryş dwigateli (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER VELLIUM - CLI, MCP we awtomatlaşdyryş dwigateli",
     "Date": "Sene",
     "Delete Mode": "Reodeimi pozuň",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Öndüriji gural keşleri",
@@ -5757,7 +5820,8 @@
     "Error: 'path' parameter is required.": "Roralňyşlyk: 'ýol' parametri talap edilýär.",
     "Unknown tool: {}": "Näbelli gural: {}",
     "Parse error: Invalid JSON received": "Parse ýalňyşlygy: Nädogry JSON alyndy",
-    "Method not found": "Usul tapylmady"
+    "Method not found": "Usul tapylmady",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "uk": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Автоматично переміщувати знайдені безпечні цілі до кошика",
@@ -5775,7 +5839,7 @@
     "COMMANDS:": "КОМАНДИ:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Загалом перевірено 21 інструмент. Щоб очистити: dev-cleaner кеші --clean <інструмент|все>",
     "Cleanup execution failed: {}": "Помилка очищення: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER від VELLIUM — CLI, MCP & Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER від VELLIUM — CLI, MCP & Automation Engine",
     "Date": "Дата",
     "Delete Mode": "Режим видалення",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Кеші інструментів розробника",
@@ -5847,7 +5911,8 @@
     "Error: 'path' parameter is required.": "Помилка: потрібен параметр \"path\".",
     "Unknown tool: {}": "Невідомий інструмент: {}",
     "Parse error: Invalid JSON received": "Помилка аналізу: отримано недійсний JSON.",
-    "Method not found": "Метод не знайдено"
+    "Method not found": "Метод не знайдено",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "ur": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean خودکار طور پر محفوظ اہداف کو ریسائیکل بن میں منتقل کریں۔",
@@ -5865,7 +5930,7 @@
     "COMMANDS:": "کمانڈز:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "مجموعی طور پر 21 ٹولز چیک کیے گئے۔ صاف کرنے کے لیے: dev-cleaner caches --clean <tool|all>",
     "Cleanup execution failed: {}": "صفائی کا عمل ناکام ہو گیا: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER از VELLIUM — CLI، MCP اور آٹومیشن انجن (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER از VELLIUM — CLI، MCP اور آٹومیشن انجن",
     "Date": "تاریخ",
     "Delete Mode": "ڈیلیٹ موڈ",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: ڈویلپر ٹول کیچز",
@@ -5937,7 +6002,8 @@
     "Error: 'path' parameter is required.": "خرابی: 'path' پیرامیٹر درکار ہے۔",
     "Unknown tool: {}": "نامعلوم ٹول: {}",
     "Parse error: Invalid JSON received": "تجزیہ کی خرابی: غلط JSON موصول ہوا۔",
-    "Method not found": "طریقہ نہیں ملا"
+    "Method not found": "طریقہ نہیں ملا",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "uz": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Topilgan xavfsiz maqsadlarni avtomatik ravishda Chiqindi qutisiga koʻchiring",
@@ -5955,7 +6021,7 @@
     "COMMANDS:": "BUYRUQLAR:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Hammasi bo'lib 21 ta asbob tekshirildi. Tozalash uchun: dev-cleaner keshlar --clean <asbob|barchasi>",
     "Cleanup execution failed: {}": "Tozalash amalga oshmadi: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER tomonidan VELLIUM — CLI, MCP va avtomatlashtirish mexanizmi (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER tomonidan VELLIUM — CLI, MCP va avtomatlashtirish mexanizmi",
     "Date": "Sana",
     "Delete Mode": "O'chirish rejimi",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Ishlab chiquvchi asboblar keshlari",
@@ -6027,7 +6093,8 @@
     "Error: 'path' parameter is required.": "Xato: \"yo'l\" parametri talab qilinadi.",
     "Unknown tool: {}": "Noma'lum vosita: {}",
     "Parse error: Invalid JSON received": "Tahlil xatosi: noto‘g‘ri JSON qabul qilindi",
-    "Method not found": "Usul topilmadi"
+    "Method not found": "Usul topilmadi",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "vi": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Tự động di chuyển các mục tiêu an toàn được tìm thấy vào Thùng rác",
@@ -6045,7 +6112,7 @@
     "COMMANDS:": "LỆNH:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Đã kiểm tra tổng cộng 21 công cụ. Để xóa: dev-cleaner bộ nhớ đệm --clean <tool|all>",
     "Cleanup execution failed: {}": "Việc thực hiện dọn dẹp không thành công: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER bởi VELLIUM — CLI, MCP & Công cụ tự động hóa (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER bởi VELLIUM — CLI, MCP & Công cụ tự động hóa",
     "Date": "Ngày",
     "Delete Mode": "Chế độ xóa",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Bộ nhớ đệm của công cụ dành cho nhà phát triển",
@@ -6117,7 +6184,8 @@
     "Error: 'path' parameter is required.": "Lỗi: tham số 'đường dẫn' là bắt buộc.",
     "Unknown tool: {}": "Công cụ không xác định: {}",
     "Parse error: Invalid JSON received": "Lỗi phân tích cú pháp: Đã nhận được JSON không hợp lệ",
-    "Method not found": "Không tìm thấy phương pháp"
+    "Method not found": "Không tìm thấy phương pháp",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "yo": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Ni adaṣe gbe awọn ibi-afẹde ailewu ti a rii si Atunlo Bin",
@@ -6135,7 +6203,7 @@
     "COMMANDS:": "Àṣẹ:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Ti ṣayẹwo awọn irinṣẹ 21 lapapọ. Lati nu: dev-cleaner caches --clean <tool|gbogbo>",
     "Cleanup execution failed: {}": "Iṣiṣe imuduro kuna: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER nipasẹ VELLIUM — CLI, MCP & Automation Engine (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER nipasẹ VELLIUM — CLI, MCP & Automation Engine",
     "Date": "Ọjọ",
     "Delete Mode": "Paarẹ Ipo",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Awọn caches Irinṣẹ Olùgbéejáde",
@@ -6207,7 +6275,8 @@
     "Error: 'path' parameter is required.": "Aṣiṣe: paramita 'ona' nilo.",
     "Unknown tool: {}": "Ohun elo aimọ: {}",
     "Parse error: Invalid JSON received": "Aṣiṣe itọka: JSON ti ko tọ ti gba",
-    "Method not found": "Ọna ko ri"
+    "Method not found": "Ọna ko ri",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "zh-tw": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean 自動將找到的安全目標移至回收站",
@@ -6225,7 +6294,7 @@
     "COMMANDS:": "命令：",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "總共檢查了21個工具。清理： dev-cleaner 快取 --clean <工具|全部>",
     "Cleanup execution failed: {}": "清理執行失敗：{}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER by VELLIUM — CLI、MCP 與自動化引擎 (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER by VELLIUM — CLI、MCP 與自動化引擎",
     "Date": "日期",
     "Delete Mode": "刪除模式",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner：開發者工具緩存",
@@ -6297,7 +6366,8 @@
     "Error: 'path' parameter is required.": "錯誤：需要“路徑”參數。",
     "Unknown tool: {}": "未知工具：{}",
     "Parse error: Invalid JSON received": "解析錯誤：收到無效的 JSON",
-    "Method not found": "未找到方法"
+    "Method not found": "未找到方法",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "zh": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean 自动将找到的安全目标移至回收站",
@@ -6315,7 +6385,7 @@
     "COMMANDS:": "命令：",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "总共检查了21个工具。清理： dev-cleaner 缓存 --clean <工具|全部>",
     "Cleanup execution failed: {}": "清理执行失败：{}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "DEV CLEANER by VELLIUM — CLI、MCP 和自动化引擎 (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "DEV CLEANER by VELLIUM — CLI、MCP 和自动化引擎",
     "Date": "日期",
     "Delete Mode": "删除模式",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner：开发者工具缓存",
@@ -6387,7 +6457,8 @@
     "Error: 'path' parameter is required.": "错误：需要“路径”参数。",
     "Unknown tool: {}": "未知工具：{}",
     "Parse error: Invalid JSON received": "解析错误：收到无效的 JSON",
-    "Method not found": "未找到方法"
+    "Method not found": "未找到方法",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   },
   "tr": {
     "  --auto-clean             Automatically move found safe targets to Recycle Bin": "--auto-clean Bulunan güvenli hedefleri otomatik olarak Geri Dönüşüm Kutusu'na taşıyın",
@@ -6405,7 +6476,7 @@
     "COMMANDS:": "KOMUTLAR:",
     "Checked 21 tools in total. To clean: dev-cleaner caches --clean <tool|all>": "Toplamda 21 alet kontrol edildi. Temizlemek için: dev-cleaner önbellekler --clean <tool|all>",
     "Cleanup execution failed: {}": "Temizleme yürütmesi başarısız oldu: {}",
-    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine (v2.2.0)": "Vellium'dan geliştirici temizleyici — cli, mcp ve otomasyon motoru (v2.2.0)",
+    "DEV CLEANER by VELLIUM — CLI, MCP & Automation Engine": "Vellium'dan geliştirici temizleyici — cli, mcp ve otomasyon motoru",
     "Date": "Tarih",
     "Delete Mode": "Silme Modu",
     "Dev Cleaner: Developer Tool Caches": "Dev Cleaner: Geliştirici Aracı Önbellekleri",
@@ -6477,6 +6548,7 @@
     "Error: 'path' parameter is required.": "Hata: 'yol' parametresi gerekli.",
     "Unknown tool: {}": "Bilinmeyen araç: {}",
     "Parse error: Invalid JSON received": "Ayrıştırma hatası: Geçersiz JSON alındı",
-    "Method not found": "Yöntem bulunamadı"
+    "Method not found": "Yöntem bulunamadı",
+    "  --yes                    Confirm 'caches --clean all' without prompting": "--yes Confirm 'caches --clean all' without prompting"
   }
 }

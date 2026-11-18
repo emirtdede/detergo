@@ -36,7 +36,9 @@
     "on": "Weka",
     "off": "Zima",
     "items": "{n} vitu",
-    "showing": "{n} vinaonyeshwa"
+    "showing": "{n} vinaonyeshwa",
+    "scanAll": "Changanua kila kitu",
+    "scanAllDesc": "Miradi, hifadhi ya zana za AI na akiba za vifurushi"
   },
   "header": {
     "changeLocation": "Badilisha Mahali",
@@ -49,7 +51,8 @@
     "addFavorite": "Ongeza eneo la sasa kwenye vipendwa",
     "removeFavorite": "Toa eneo kwenye vipendwa",
     "favoriteAdded": "Eneo limeongezwa kwenye vipendwa.",
-    "favoriteRemoved": "Eneo limeondolewa kwenye vipendwa."
+    "favoriteRemoved": "Eneo limeondolewa kwenye vipendwa.",
+    "changeLocationConfirmDesc": "Kubadilisha eneo hufuta matokeo ya skan ya sasa na uteuzi. Historia ya skan iliyohifadhiwa na picha ya mwisho ya skan huhifadhiwa."
   },
   "window": {
     "minimize": "Punguza",
@@ -133,7 +136,17 @@
     "ecoAgent": "Wakala wa AI",
     "ecoCache": "Hifadhi za muda",
     "ecoOther": "Vile vinavyobaki vingine",
-    "distTotalBadge": "{size} vinaweza kusafishwa"
+    "distTotalBadge": "{size} vinaweza kusafishwa",
+    "noticeInfoTitle": "Taarifa",
+    "noticeInfoHint": "Maeneo yaliyolindwa na mfumo yalirukwa. Hakuna hatua inayohitajika.",
+    "noticeIssueHint": "Baadhi ya maeneo hayakuweza kusomwa, kwa hivyo matokeo yanaweza kuwa hayajakamilika.",
+    "copyDetails": "Nakili maelezo",
+    "detailsCopied": "Maelezo yamenakiliwa kwenye ubao wa kunakili",
+    "coverage": "Upeo wa uchanganuzi",
+    "sectionSkipped": "Imerukwa",
+    "sectionFailed": "Imeshindwa",
+    "sectionPartial": "Haijakamilika",
+    "sectionNoRoot": "Hakuna folda iliyochaguliwa"
   },
   "table": {
     "project": "Mradi",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Futa milele",
     "permanentAck": "Nimeelewa kwamba hili haliwezi kubadilishwa.",
     "blockedReasons": "Malengo yaliyokwama",
-    "expires": "Mpango huu unakoma baada ya dakika 15.",
+    "expires": "Mpango huu unakoma baada ya dakika 30.",
     "close": "Funga",
     "working": "Inafanya kazi…",
     "runInBackground": "Endesha chinichini",
@@ -223,7 +236,11 @@
     "cancelling": "Inaghairi…",
     "progress": "Imechakatwa {processed} / {total}",
     "currentItem": "Ya sasa: {path}",
-    "alreadyRunning": "Usafishaji tayari unaendelea."
+    "alreadyRunning": "Usafishaji tayari unaendelea.",
+    "coveredByParent": "Zimezuiliwa",
+    "noMethod": "Zimezuiliwa",
+    "officialActionRequired": "Amri rasmi",
+    "modeNotAllowed": "Milele"
   },
   "result": {
     "title": "Matokeo ya kusafisha",
@@ -238,6 +255,7 @@
     "verified": "imethibitishwa",
     "cancelled": "Usafishaji umeghairiwa",
     "cancelledNote": "Vipengee {processed} vimechakatwa, {skipped} vimerukwa.",
+    "progressIncomplete": "Haikuweza kuonyesha masasisho {count} ya maendeleo.",
     "processed": "Imechakatwa",
     "skipped": "Imerukwa",
     "viewResults": "Tazama matokeo",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Futa Skani",
     "scopeProjects": "Tegelevu za Mradi",
     "scopeAgents": "Wakala wa AI",
-    "scopeAllDrives": "Tarakilishi Zote"
+    "scopeAllDrives": "Tarakilishi Zote",
+    "statusPartial": "Sehemu",
+    "totalCleaned": "Jumla iliyorudiwa",
+    "statusDepthLimited": "Sehemu"
   },
   "settings": {
     "general": "Mwonekano",
@@ -451,6 +472,12 @@
     "protectionsHint": "Folda ambazo haziwezi kamwe kufutwa na majina ya kuepuka.",
     "agentsHint": "Sera ya usafishaji wa vyanzo vya AI.",
     "privacyHint": "Historia ya ndani na kuficha njia kwenye skrini.",
+    "resetAppDataTitle": "Weka upya data yote ya programu",
+    "resetAppDataHint": "Hufuta mipangilio yote, historia ya usafishaji, historia ya kuchanganua, kumbukumbu za vitendo, na utafutaji uliohifadhiwa mara ya mwisho, kisha huwasha programu upya. Hili haliwezi kutenduliwa.",
+    "resetAppDataConfirmBtn": "Futa data na uanze upya",
+    "resetAppDataBusy": "Inaweka upya...",
+    "resetAppDataSuccess": "Data yote ya programu imewekwa upya. Mipangilio chaguomsingi imerejeshwa.",
+    "resetAppDataBlocked": "Uchanganuzi au usafishaji unaendelea. Komesha kabla ya kuweka upya data ya programu.",
     "aboutHint": "Toleo, maelezo ya ujenzi, katalogi na Vellium.",
     "legalHint": "Masharti ya matumizi, sera ya faragha na leseni za chanzo wazi.",
     "sidebar": "Mpangilio upande",
@@ -547,7 +574,11 @@
     "standardMotion": "Uhuishaji wa Kawaida",
     "aboutTitleBy": "Dev Cleaner kwa Vellium",
     "mcpDestructiveTitle": "Ruhusu vitendo vya uharibifu vya MCP",
-    "mcpDestructiveHint": "Inahitaji bendera --allow-destructive; kila utekelezaji bado unahitaji tokeni ya onyesho la awali la matumizi ya mara moja"
+    "mcpDestructiveHint": "Inahitaji bendera --allow-destructive; kila utekelezaji bado unahitaji tokeni ya onyesho la awali la matumizi ya mara moja",
+    "pathMustBeAbsolute": "Njia lazima ziwe kamili, kwa mfano C:\\Projects.",
+    "excludedNameInvalid": "Sheria lazima iwe faili moja au jina la folda, bila vitenganishi vya njia.",
+    "shortcutNeedsModifier": "Njia ya mkato ya kimataifa inahitaji Ctrl, Alt au Meta pamoja na ufunguo, au kitufe cha kukokotoa.",
+    "shortcutsResetWarning": "{count} njia za mkato zisizo sahihi ziliwekwa upya kwa chaguomsingi."
   },
   "legal": {
     "docTabsLabel": "Nyaraka za kisheria",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Hakuna mabaki ya mradi yanayoweza kusafishwa yaliyopatikana",
     "emptyTitleIdle": "Bado hakuna skana ya mradi iliyofanywa",
     "emptyDescClean": "Saraka iliyochaguliwa ni safi. Hakuna node_modules inayoweza kusafishwa, lengo, au mabaki ya kujenga yaliyopatikana.",
-    "emptyDescIdle": "Chagua folda na uchanganue ili kuorodhesha utegemezi wa mradi na ujenge mabaki."
+    "emptyDescIdle": "Chagua folda na uchanganue ili kuorodhesha utegemezi wa mradi na ujenge mabaki.",
+    "kpiTargets": "Malengo yanayoweza kusafishwa",
+    "kpiTargetsSub": "Katika mizizi {count} ya miradi",
+    "kpiTargetsUnknown": "Changanua tena ili kuonyesha upya idadi ya miradi"
   },
   "about": {
     "kpiVersion": "Toleo",
@@ -616,7 +650,8 @@
     "contactSupport": "Usaidizi wa Wateja",
     "contactBillingDesc": "Malipo, ununuzi wa kampuni, na msaada wa usajili",
     "contactPrivacyDesc": "Usalama wa data, GDPR, na maswali ya faragha",
-    "ecoCacheScope": "npm akiba, Cargo sajili, pip akiba, yarn"
+    "ecoCacheScope": "npm akiba, Cargo sajili, pip akiba, yarn",
+    "contactBilling": "Utoaji wa bili na malipo"
   },
   "docs": {
     "catGuide": "Mwongozo & Mipangilio",

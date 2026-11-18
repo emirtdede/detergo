@@ -36,7 +36,9 @@
     "on": "በርቷል",
     "off": "ጠፍቷል",
     "items": "{n} ንጥሎች",
-    "showing": "{n} ይታያል"
+    "showing": "{n} ይታያል",
+    "scanAll": "ሁሉንም ቃኝ",
+    "scanAllDesc": "ፕሮጀክቶች፣ የAI መሣሪያ ማከማቻ እና የጥቅል መሸጎጫዎች"
   },
   "header": {
     "changeLocation": "አካባቢ ቀይር",
@@ -49,7 +51,8 @@
     "addFavorite": "የአሁኑን ቦታ ወደ ተወዳጆች ያክሉ",
     "removeFavorite": "አካባቢን ከተወዳጆች ያስወግዱ",
     "favoriteAdded": "አካባቢ ወደ ተወዳጆች ታክሏል።",
-    "favoriteRemoved": "ከተወዳጆች ተወግዷል።"
+    "favoriteRemoved": "ከተወዳጆች ተወግዷል።",
+    "changeLocationConfirmDesc": "አካባቢውን መቀየር የአሁኑን የመቃኘት ውጤቶች እና ምርጫ ያጸዳል። የተቀመጠው የመቃኘት ታሪክዎ እና የመጨረሻው የመቃኘት ቅጽበታዊ ገጽታ ይቀመጣሉ።"
   },
   "window": {
     "minimize": "አሳንስ",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI ወኪሎች",
     "ecoCache": "መሸጎጫዎች",
     "ecoOther": "ሌሎች ቅርሶች",
-    "distTotalBadge": "{size} ሊጸዳ የሚችል"
+    "distTotalBadge": "{size} ሊጸዳ የሚችል",
+    "noticeInfoTitle": "መረጃ",
+    "noticeInfoHint": "በስርዓቱ የተጠበቁ አካባቢዎች ተዘለዋል። እርምጃ አያስፈልግም።",
+    "noticeIssueHint": "አንዳንድ አካባቢዎች ሊነበቡ አልቻሉም፤ ስለዚህ ውጤቶች ያልተሟሉ ሊሆኑ ይችላሉ።",
+    "copyDetails": "ዝርዝሮችን ቅዳ",
+    "detailsCopied": "ዝርዝሮች ወደ ማስቀመጫው ተቀድተዋል",
+    "coverage": "የቃና ሽፋን",
+    "sectionSkipped": "ተዘለለ",
+    "sectionFailed": "አልተሳካም",
+    "sectionPartial": "ያልተሟላ",
+    "sectionNoRoot": "ምንም አቃፊ አልተመረጠም"
   },
   "table": {
     "project": "ፕሮጀክት",
@@ -215,7 +228,7 @@
     "confirmPermanent": "በቋሚነት ሰርዝ",
     "permanentAck": "ይህ ሊቀለበስ እንደማይችል ተረድቻለሁ።",
     "blockedReasons": "የታገዱ ኢላማዎች",
-    "expires": "ይህ እቅድ በ 15 ደቂቃዎች ውስጥ ጊዜው ያበቃል.",
+    "expires": "ይህ እቅድ በ 30 ደቂቃዎች ውስጥ ጊዜው ያበቃል.",
     "close": "ይዝጉ",
     "working": "በመስራት ላይ...",
     "runInBackground": "በጀርባ አሂድ",
@@ -223,7 +236,11 @@
     "cancelling": "በመሰረዝ ላይ…",
     "progress": "የተሰራ {processed} / {total}",
     "currentItem": "የአሁኑ፡ {path}",
-    "alreadyRunning": "ማጽዳት አስቀድሞ እየተካሄደ ነው።"
+    "alreadyRunning": "ማጽዳት አስቀድሞ እየተካሄደ ነው።",
+    "coveredByParent": "ታግዷል",
+    "noMethod": "ታግዷል",
+    "officialActionRequired": "ኦፊሴላዊ ትዕዛዝ",
+    "modeNotAllowed": "ቋሚ"
   },
   "result": {
     "title": "የጽዳት ውጤት",
@@ -238,6 +255,7 @@
     "verified": "ተረጋግጧል",
     "cancelled": "ማጽዳት ተሰርዟል",
     "cancelledNote": "{processed} ንጥሎች ተሰርተዋል፣ {skipped} ተዘለሉ።",
+    "progressIncomplete": "{count} የሂደት ማሻሻያዎች ሊታዩ አልቻሉም።",
     "processed": "የተሰራ",
     "skipped": "የተዘለለ",
     "viewResults": "ውጤቶችን ይመልከቱ",
@@ -390,7 +408,10 @@
     "clearScansBtn": "ቅኝቶችን አጽዳ",
     "scopeProjects": "የፕሮጀክት ጥገኞች",
     "scopeAgents": "AI ወኪሎች",
-    "scopeAllDrives": "ሁሉም ድራይቮች"
+    "scopeAllDrives": "ሁሉም ድራይቮች",
+    "statusPartial": "ከፊል",
+    "totalCleaned": "ጠቅላላ ተመልሷል",
+    "statusDepthLimited": "ከፊል"
   },
   "settings": {
     "general": "መልክ",
@@ -451,6 +472,12 @@
     "protectionsHint": "በፍፁም መሰረዝ የሌለባቸው አቃፊዎች እና የሚዘለሉ ስሞች።",
     "agentsHint": "ለ AI ወኪል መሸጎጫዎች የጽዳት ፖሊሲ።",
     "privacyHint": "የአካባቢ ታሪክ እና በስክሪኑ ላይ የመንገድ ጭምብል.",
+    "resetAppDataTitle": "ሁሉንም የመተግበሪያ ውሂብ አጽዳ",
+    "resetAppDataHint": "ሁሉንም ቅንብሮች፣ የማጽዳት ታሪክ፣ የፍተሻ ታሪክ፣ የድርጊት መዝገቦችን እና የተቀመጠውን የመጨረሻ ቅኝት ሰርዞ መተግበሪያውን እንደገና ይጀምራል። ይህ ሊቀለበስ አይችልም።",
+    "resetAppDataConfirmBtn": "ውሂብን ሰርዝ እና እንደገና አስጀምር",
+    "resetAppDataBusy": "በማጽዳት ላይ…",
+    "resetAppDataSuccess": "ሁሉም የመተግበሪያ ውሂብ ጸድቷል። ነባሪ ቅንብሮች ተመልሰዋል።",
+    "resetAppDataBlocked": "ቅኝት ወይም ማጽዳት እየሰራ ነው። የመተግበሪያ ውሂብን ከማጽዳትዎ በፊት ያቁሙት።",
     "aboutHint": "ስሪት፣ የግንባታ ዝርዝሮች፣ ካታሎግ እና ቬሊየም.",
     "legalHint": "የአጠቃቀም ውል፣ የግላዊነት ፖሊሲ እና የክፍት ምንጭ ፈቃዶች።",
     "sidebar": "የጎን አሞሌ",
@@ -547,7 +574,11 @@
     "standardMotion": "መደበኛ አኒሜሽን",
     "aboutTitleBy": "Dev Cleaner በVellium",
     "mcpDestructiveTitle": "የMCP አጥፊ እርምጃዎችን ፍቀድ",
-    "mcpDestructiveHint": "የ--allow-destructive ባንዲራ ያስፈልጋል፤ እያንዳንዱ አፈጻጸም አሁንም አንድ ጊዜ ብቻ የሚሠራ የቅድመ-እይታ ቶከን ይፈልጋል"
+    "mcpDestructiveHint": "የ--allow-destructive ባንዲራ ያስፈልጋል፤ እያንዳንዱ አፈጻጸም አሁንም አንድ ጊዜ ብቻ የሚሠራ የቅድመ-እይታ ቶከን ይፈልጋል",
+    "pathMustBeAbsolute": "ዱካዎች ፍጹም መሆን አለባቸው፣ ለምሳሌ C:\\Projects።",
+    "excludedNameInvalid": "ደንቡ ነጠላ ፋይል ወይም የአቃፊ ስም መሆን አለበት፣ ያለ ዱካ መለያያ።",
+    "shortcutNeedsModifier": "አለምአቀፍ አቋራጭ Ctrl፣ Alt ወይም Meta እና ቁልፍ ወይም የተግባር ቁልፍ ያስፈልገዋል።",
+    "shortcutsResetWarning": "{count} ልክ ያልሆኑ አቋራጮች ወደ ነባሪዎች ዳግም ተጀምረዋል።"
   },
   "legal": {
     "docTabsLabel": "ህጋዊ ሰነዶች",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "ምንም ሊጸዱ የሚችሉ የፕሮጀክት ቅርሶች አልተገኙም",
     "emptyTitleIdle": "እስካሁን ምንም የፕሮጀክት ቅኝት አልተሰራም",
     "emptyDescClean": "የተመረጠው ማውጫ ንጹህ ነው።. ምንም ሊጸዳ የሚችል node_modules፣ ዒላማ ወይም ግንባታ ቅርሶች አልተገኙም።",
-    "emptyDescIdle": "የፕሮጀክት ጥገኞችን ለመዘርዘር እና ቅርሶችን ለመገንባት አቃፊ ይምረጡ እና ይቃኙ።"
+    "emptyDescIdle": "የፕሮጀክት ጥገኞችን ለመዘርዘር እና ቅርሶችን ለመገንባት አቃፊ ይምረጡ እና ይቃኙ።",
+    "kpiTargets": "ሊጸዱ የሚችሉ ኢላማዎች",
+    "kpiTargetsSub": "በ{count} የፕሮጀክት ስሮች ውስጥ",
+    "kpiTargetsUnknown": "የፕሮጀክት ቁጥሩን ለማደስ እንደገና ቃኝ"
   },
   "about": {
     "kpiVersion": "ስሪት",
@@ -616,7 +650,8 @@
     "contactSupport": "የደንበኛ ድጋፍ",
     "contactBillingDesc": "የሂሳብ አከፋፈል፣ የድርጅት ግዥ እና የደንበኝነት ምዝገባ ድጋፍ",
     "contactPrivacyDesc": "የውሂብ ደህንነት፣ GDPR እና የግላዊነት ጥያቄዎች",
-    "ecoCacheScope": "npm መሸጎጫ፣ Cargo መዝገብ ቤት፣ pip መሸጎጫ፣ yarn"
+    "ecoCacheScope": "npm መሸጎጫ፣ Cargo መዝገብ ቤት፣ pip መሸጎጫ፣ yarn",
+    "contactBilling": "የሂሳብ አከፋፈል እና ክፍያዎች"
   },
   "docs": {
     "catGuide": "መመሪያዎች እና አርክቴክቸር",

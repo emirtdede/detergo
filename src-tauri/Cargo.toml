@@ -1,6 +1,6 @@
 [package]
 name = "dev-cleaner"
-version = "2.2.2"
+version = "2.2.3"
 description = "Dev Cleaner by Vellium - multi-ecosystem developer artifact and AI agent storage cleaner"
 authors = ["Vellium"]
 edition = "2021"
@@ -9,12 +9,27 @@ edition = "2021"
 name = "dev_cleaner_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[features]
+default = []
+# T-37: generated TypeScript contract. Kept opt-in because tauri-specta is a
+# release candidate; a release build never links it.
+bindings = ["dep:specta", "dep:specta-typescript", "dep:tauri-specta", "tauri/specta"]
+
+# Only built for the T-37 contract: `npm run generate:bindings` / `check:bindings`.
+# `required-features` keeps `cargo test`/`cargo build` from compiling it against
+# the specta crates that only exist in a `bindings` build.
+[[bin]]
+name = "export_bindings"
+path = "src/bin/export_bindings.rs"
+required-features = ["bindings"]
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = ["tray-icon", "image-png"] }
 tauri-plugin-dialog = "2"
+tauri-plugin-notification = "=2.3.0"
 tauri-plugin-single-instance = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -23,10 +38,19 @@ tokio = { version = "1.49.0", features = ["full"] }
 walkdir = "2"
 toml = "0.8"
 uuid = { version = "1", features = ["v4"] }
-rayon = "1.10"
 crossbeam-channel = "0.5"
 mimalloc = "0.1.52"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "blocking"] }
+# Audit history store (T-38). `default-features = false` is mandatory: the
+# crate's defaults select the WASM FFI backend, which cannot link in a desktop
+# Tauri build. `bundled` compiles the SQLite amalgamation we ship.
+rusqlite = { version = "0.43", default-features = false, features = ["bundled", "backup"] }
+# T-37 (opt-in, see [features]). `tauri-specta`'s newest release is 2.0.0-rc.29
+# and the newest stable is 1.0.2, whose API predates Tauri 2's specta support;
+# pinning the exact rc is why this stays behind a feature instead of shipping.
+specta = { version = "=2.0.0-rc.28", features = ["derive", "function"], optional = true }
+specta-typescript = { version = "=0.0.15", optional = true }
+tauri-specta = { version = "=2.0.0-rc.29", features = ["derive", "typescript"], optional = true }
 
 [profile.dev]
 codegen-units = 1
@@ -54,3 +78,4 @@ windows = { version = "0.58", features = [
 tempfile = "3"
 httpmock = "0.7"
 serde_json = "1"
+filetime = "0.2"

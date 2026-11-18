@@ -15,6 +15,7 @@ pub use plan::{
 };
 pub use recycle_bin::RecycleBinService;
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum DeleteMode {

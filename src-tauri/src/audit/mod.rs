@@ -4,5 +4,5 @@ pub mod repository;
 mod tests;
 
 pub use repository::{
-    ActionAuditRecord, AuditEntry, AuditRecord, AuditRepository, StorageSnapshot,
+    ActionAuditRecord, AuditEntry, AuditRecord, AuditRepository, CleanupTotals, StorageSnapshot,
 };

@@ -21,6 +21,8 @@ import {
   ScanEvent,
   ScanRequest,
   ScanSummary,
+  CleanupTotals,
+  DiskSpaceInfo,
 } from "@/types";
 
 export function isTauriEnvironment(): boolean {
@@ -56,18 +58,26 @@ export interface ScannerApi {
   ): Promise<CleanupReport>;
   cancelCleanup(): Promise<void>;
   getCacheProviders(): Promise<CacheProviderInfo[]>;
-  measureCacheProviders(onEvent: (event: CacheMeasureEvent) => void): Promise<void>;
+  measureCacheProviders(
+    onEvent: (event: CacheMeasureEvent) => void,
+    providerIds?: string[],
+  ): Promise<void>;
   cancelCacheMeasurement(): Promise<void>;
+  cancelCachePreview(): Promise<void>;
   previewOfficialAction(providerId: string, actionId: string): Promise<OfficialActionPreview>;
   executeOfficialAction(token: string): Promise<OfficialActionResult>;
   getCleanupHistory(limit?: number): Promise<AuditRecord[]>;
+  getCleanupTotals(): Promise<CleanupTotals>;
+  getDiskPressure(): Promise<DiskSpaceInfo[]>;
   getOfficialActionHistory(limit?: number): Promise<ActionAuditRecord[]>;
   clearCleanupHistory(): Promise<void>;
   clearCleanupsHistory(): Promise<void>;
   clearActionsHistory(): Promise<void>;
   getGrowthReport(): Promise<GrowthReport>;
   getAppSettings(): Promise<AppSettings>;
-  saveAppSettings(settings: AppSettings): Promise<void>;
+  saveAppSettings(settings: AppSettings): Promise<AppSettings>;
+  /** Deletes settings and local history; refuses while a scan/cleanup runs. */
+  resetAppData(): Promise<void>;
   getLastScan(): Promise<LastScanSnapshot | null>;
   saveLastScan(snapshot: LastScanSnapshot): Promise<void>;
   clearLastScan(): Promise<void>;
@@ -77,6 +87,10 @@ export interface ScannerApi {
   testWebhook(
     url: string,
     payload?: Record<string, unknown>,
+  ): Promise<{ ok: boolean; status: number; latencyMs: number; message: string }>;
+  dispatchWebhook(
+    event: "scan" | "clean",
+    payload: Record<string, unknown>,
   ): Promise<{ ok: boolean; status: number; latencyMs: number; message: string }>;
 }
 
@@ -173,14 +187,21 @@ const realApi: ScannerApi = {
     return await invoke<CacheProviderInfo[]>("get_cache_providers");
   },
 
-  async measureCacheProviders(onEvent: (event: CacheMeasureEvent) => void): Promise<void> {
+  async measureCacheProviders(
+    onEvent: (event: CacheMeasureEvent) => void,
+    providerIds?: string[],
+  ): Promise<void> {
     const channel = new Channel<CacheMeasureEvent>();
     channel.onmessage = (event: CacheMeasureEvent) => onEvent(event);
-    await invoke("measure_cache_providers", { onEvent: channel });
+    await invoke("measure_cache_providers", { providerIds, onEvent: channel });
   },
 
   async cancelCacheMeasurement(): Promise<void> {
     await invoke("cancel_cache_measurement");
+  },
+
+  async cancelCachePreview(): Promise<void> {
+    await invoke("cancel_cache_preview");
   },
 
   async previewOfficialAction(
@@ -196,6 +217,14 @@ const realApi: ScannerApi = {
 
   async getCleanupHistory(limit = 200): Promise<AuditRecord[]> {
     return await invoke<AuditRecord[]>("get_cleanup_history", { limit });
+  },
+
+  async getCleanupTotals(): Promise<CleanupTotals> {
+    return await invoke<CleanupTotals>("get_cleanup_totals");
+  },
+
+  async getDiskPressure(): Promise<DiskSpaceInfo[]> {
+    return await invoke<DiskSpaceInfo[]>("get_disk_pressure");
   },
 
   async getOfficialActionHistory(limit = 200): Promise<ActionAuditRecord[]> {
@@ -222,8 +251,12 @@ const realApi: ScannerApi = {
     return await invoke<AppSettings>("get_app_settings");
   },
 
-  async saveAppSettings(settings: AppSettings): Promise<void> {
-    await invoke("save_app_settings", { settings });
+  async saveAppSettings(settings: AppSettings): Promise<AppSettings> {
+    return await invoke<AppSettings>("save_app_settings", { settings });
+  },
+
+  async resetAppData(): Promise<void> {
+    await invoke("reset_app_data");
   },
 
   async saveLastScan(snapshot: LastScanSnapshot): Promise<void> {
@@ -256,6 +289,13 @@ const realApi: ScannerApi = {
   ): Promise<{ ok: boolean; status: number; latencyMs: number; message: string }> {
     return await invoke("test_webhook", { url, payload: payload ?? null });
   },
+
+  async dispatchWebhook(
+    event: "scan" | "clean",
+    payload: Record<string, unknown>,
+  ): Promise<{ ok: boolean; status: number; latencyMs: number; message: string }> {
+    return await invoke("dispatch_webhook", { event, payload });
+  },
 };
 
 async function createApi(): Promise<ScannerApi> {
@@ -271,4 +311,97 @@ async function createApi(): Promise<ScannerApi> {
   throw new Error("Backend unavailable: this build requires the desktop runtime.");
 }
 
-export const scannerApi: ScannerApi = await createApi();
+/**
+ * Resolved backend API, created on first use.
+ *
+ * This module must never block the ES module graph: `App`, the stores and the
+ * scan controller all import it at the top level, so a rejected module would
+ * prevent `createRoot().render()` from ever running and leave the user with an
+ * empty window and no error boundary.
+ */
+let apiPromise: Promise<ScannerApi> | null = null;
+
+function getApi(): Promise<ScannerApi> {
+  if (!apiPromise) {
+    apiPromise = createApi().catch((err) => {
+      // Allow a later call (for example the explicit "retry" button) to try
+      // again instead of caching the failure for the whole session.
+      apiPromise = null;
+      throw err;
+    });
+  }
+  return apiPromise;
+}
+
+/**
+ * Lazily bound `ScannerApi`.
+ *
+ * Every member is a method (see the interface above), so the proxy can return a
+ * forwarding function for any property name. Symbols and the promise protocol
+ * keys are deliberately excluded: returning a function for `then` would make
+ * `await scannerApi` (or `Promise.resolve(scannerApi)`) treat the proxy as a
+ * thenable and recurse forever.
+ *
+ * Defined properties are recorded in `overrides` instead of the (empty) target.
+ * Tests rely on `vi.spyOn(scannerApi, …)`, which needs a configurable own
+ * property descriptor and writes the spy back through `defineProperty`.
+ */
+const overrides = new Map<string, unknown>();
+
+function forward(prop: string): (...args: unknown[]) => Promise<unknown> {
+  return (...args: unknown[]) =>
+    getApi().then((api) => {
+      const member = (api as unknown as Record<string, unknown>)[prop];
+      if (typeof member !== "function") {
+        throw new Error(`ScannerApi member "${prop}" is not callable.`);
+      }
+      return (member as (...a: unknown[]) => unknown).apply(api, args);
+    });
+}
+
+function member(prop: string): unknown {
+  return overrides.has(prop) ? overrides.get(prop) : forward(prop);
+}
+
+export const scannerApi: ScannerApi = new Proxy({} as ScannerApi, {
+  get(_target, prop) {
+    if (typeof prop === "symbol" || prop === "then" || prop === "toJSON") {
+      return undefined;
+    }
+    return member(prop);
+  },
+  set(_target, prop, value) {
+    if (typeof prop === "string") overrides.set(prop, value);
+    return true;
+  },
+  defineProperty(_target, prop, descriptor) {
+    if (typeof prop === "string") overrides.set(prop, descriptor.value);
+    return true;
+  },
+  deleteProperty(_target, prop) {
+    if (typeof prop === "string") overrides.delete(prop);
+    return true;
+  },
+  getOwnPropertyDescriptor(target, prop) {
+    if (typeof prop === "symbol") {
+      return Reflect.getOwnPropertyDescriptor(target, prop);
+    }
+    if (prop === "then" || prop === "toJSON") {
+      return Reflect.getOwnPropertyDescriptor(target, prop);
+    }
+    return {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: member(prop),
+    };
+  },
+});
+
+/** Warms the backend bridge without throwing. Drives the bridge-status screen. */
+export function warmUpApi(): Promise<boolean> {
+  return getApi().then(
+    () => true,
+    () => false,
+  );
+}

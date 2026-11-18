@@ -36,7 +36,9 @@
     "on": "Päällä",
     "off": "Pois päältä",
     "items": "{n} kohdetta",
-    "showing": "Näytetään {n}"
+    "showing": "Näytetään {n}",
+    "scanAll": "Skannaa kaikki",
+    "scanAllDesc": "Projektit, AI-työkalujen tallennustila ja pakettivälimuistit"
   },
   "header": {
     "changeLocation": "Vaihda Sijaintia",
@@ -49,7 +51,8 @@
     "addFavorite": "Lisää nykyinen sijainti suosikkeihin",
     "removeFavorite": "Poista sijainti suosikeista",
     "favoriteAdded": "Sijainti lisätty suosikkeihin.",
-    "favoriteRemoved": "Sijainti poistettu suosikeista."
+    "favoriteRemoved": "Sijainti poistettu suosikeista.",
+    "changeLocationConfirmDesc": "Sijainnin vaihtaminen tyhjentää nykyiset skannaustulokset ja valinnan. Tallennettu skannaushistoria ja viimeisin skannauskuvakaappaus säilytetään."
   },
   "window": {
     "minimize": "Pienennä",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI-agentit",
     "ecoCache": "Välimuistit",
     "ecoOther": "Muut artifaktit",
-    "distTotalBadge": "{size} siivottavissa"
+    "distTotalBadge": "{size} siivottavissa",
+    "noticeInfoTitle": "Tiedot",
+    "noticeInfoHint": "Järjestelmän suojaamat sijainnit ohitettiin. Toimenpiteitä ei tarvita.",
+    "noticeIssueHint": "Joitakin sijainteja ei voitu lukea, joten tulokset voivat olla puutteellisia.",
+    "copyDetails": "Kopioi tiedot",
+    "detailsCopied": "Tiedot kopioitu leikepöydälle",
+    "coverage": "Skannauksen kattavuus",
+    "sectionSkipped": "Ohitettu",
+    "sectionFailed": "Epäonnistui",
+    "sectionPartial": "Puutteellinen",
+    "sectionNoRoot": "Kansiota ei ole valittu"
   },
   "table": {
     "project": "Projekti",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Poista pysyvästi",
     "permanentAck": "Ymmärrän, ettei tätä voi kumota.",
     "blockedReasons": "Estetyt kohteet",
-    "expires": "Tämä suunnitelma vanhenee 15 minuutissa.",
+    "expires": "Tämä suunnitelma vanhenee 30 minuutissa.",
     "close": "Sulje",
     "working": "Työstetään…",
     "runInBackground": "Suorita taustalla",
@@ -223,7 +236,11 @@
     "cancelling": "Peruutetaan…",
     "progress": "Käsitelty {processed} / {total}",
     "currentItem": "Nykyinen: {path}",
-    "alreadyRunning": "Puhdistus on jo käynnissä."
+    "alreadyRunning": "Puhdistus on jo käynnissä.",
+    "coveredByParent": "Estetty",
+    "noMethod": "Estetty",
+    "officialActionRequired": "Virallinen komento",
+    "modeNotAllowed": "Pysyvä"
   },
   "result": {
     "title": "Puhdistuksen tulos",
@@ -238,6 +255,7 @@
     "verified": "tarkistettu",
     "cancelled": "Puhdistus peruutettu",
     "cancelledNote": "{processed} kohdetta käsitelty, {skipped} ohitettu.",
+    "progressIncomplete": "{count} edistymispäivitystä ei voitu näyttää.",
     "processed": "Käsitelty",
     "skipped": "Ohitettu",
     "viewResults": "Näytä tulokset",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Tyhjennä skannaukset",
     "scopeProjects": "Projektin riippuvuudet",
     "scopeAgents": "AI-agentit",
-    "scopeAllDrives": "Kaikki asemat"
+    "scopeAllDrives": "Kaikki asemat",
+    "statusPartial": "Osittainen",
+    "totalCleaned": "Yhteensä palautettu",
+    "statusDepthLimited": "Osittainen"
   },
   "settings": {
     "general": "Ulkoasu",
@@ -451,6 +472,12 @@
     "protectionsHint": "Kansiot, joita ei saa koskaan poistaa, ja ohitettavat nimet.",
     "agentsHint": "AI-agenttien välimuistin siivouspolitiikka.",
     "privacyHint": "Paikallinen historia ja näytön polun peittäminen.",
+    "resetAppDataTitle": "Nollaa kaikki sovellustiedot",
+    "resetAppDataHint": "Poistaa kaikki asetukset, puhdistushistorian, tarkistushistorian, toimintolokit ja tallennetun viimeisen tarkistuksen ja käynnistää sitten sovelluksen uudelleen. Tätä ei voi kumota.",
+    "resetAppDataConfirmBtn": "Poista tiedot ja käynnistä uudelleen",
+    "resetAppDataBusy": "Nollataan…",
+    "resetAppDataSuccess": "Kaikki sovellustiedot on nollattu. Oletusasetukset palautettu.",
+    "resetAppDataBlocked": "Skannaus tai puhdistus on käynnissä. Pysäytä se ennen sovellustietojen nollausta.",
     "aboutHint": "Versio, rakennustiedot, luettelo ja Vellium.",
     "legalHint": "Käyttöehdot, tietosuojakäytäntö ja avoimen lähdekoodin lisenssit.",
     "sidebar": "Sivupalkki",
@@ -547,7 +574,11 @@
     "standardMotion": "Normaali animaatio",
     "aboutTitleBy": "Dev Cleaner kirjoittaja Vellium",
     "mcpDestructiveTitle": "Salli MCP:n tuhoavat toiminnot",
-    "mcpDestructiveHint": "Vaatii --allow-destructive-lipun; jokainen suoritus tarvitsee silti kertakäyttöisen esikatselutunnuksen"
+    "mcpDestructiveHint": "Vaatii --allow-destructive-lipun; jokainen suoritus tarvitsee silti kertakäyttöisen esikatselutunnuksen",
+    "pathMustBeAbsolute": "Polkujen tulee olla absoluuttisia, esimerkiksi C:\\Projects.",
+    "excludedNameInvalid": "Säännön on oltava yksittäinen tiedoston tai kansion nimi ilman polkuerottimia.",
+    "shortcutNeedsModifier": "Yleinen pikanäppäin tarvitsee Ctrl, Alt tai Meta sekä näppäimen tai toimintonäppäimen.",
+    "shortcutsResetWarning": "{count} virheellistä pikakuvaketta palautettiin oletusarvoihinsa."
   },
   "legal": {
     "docTabsLabel": "Lailliset asiakirjat",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Ei puhdistettavia projektin artefakteja löydetty",
     "emptyTitleIdle": "Projektin skannausta ei vielä suoritettu",
     "emptyDescClean": "Valittu kansio on puhdas. Ei löydetty puhdistettavia node_modules-, target- tai rakennusartefakteja.",
-    "emptyDescIdle": "Valitse kansio ja suorita skannaus listataksesi projektin riippuvuudet ja rakennusartefaktit."
+    "emptyDescIdle": "Valitse kansio ja suorita skannaus listataksesi projektin riippuvuudet ja rakennusartefaktit.",
+    "kpiTargets": "Puhdistettavat kohteet",
+    "kpiTargetsSub": "{count} projektijuuren alueella",
+    "kpiTargetsUnknown": "Skannaa uudelleen päivittääksesi projektimäärän"
   },
   "about": {
     "kpiVersion": "Versio",
@@ -616,7 +650,8 @@
     "contactSupport": "Asiakastuki",
     "contactBillingDesc": "Laskutus, yrityshankinnat ja tilauspalvelu",
     "contactPrivacyDesc": "Datan turvallisuus, GDPR ja tietosuoja",
-    "ecoCacheScope": "npm välimuisti, Cargo rekisteri, pip välimuisti, yarn"
+    "ecoCacheScope": "npm välimuisti, Cargo rekisteri, pip välimuisti, yarn",
+    "contactBilling": "Laskutus ja maksut"
   },
   "docs": {
     "catGuide": "Oppaat & arkkitehtuuri",

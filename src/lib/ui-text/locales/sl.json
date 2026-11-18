@@ -36,7 +36,9 @@
     "on": "Vklopljeno",
     "off": "Izklopljeno",
     "items": "{n} elementov",
-    "showing": "{n} prikazano"
+    "showing": "{n} prikazano",
+    "scanAll": "Preglej vse",
+    "scanAllDesc": "Projekti, shramba orodij AI in predpomnilniki paketov"
   },
   "header": {
     "changeLocation": "Spremeni Lokacijo",
@@ -49,7 +51,8 @@
     "addFavorite": "Dodaj trenutni položaj med priljubljene",
     "removeFavorite": "Odstrani položaj iz priljubljenih",
     "favoriteAdded": "Položaj dodan med priljubljene.",
-    "favoriteRemoved": "Položaj odstranjen iz priljubljenih."
+    "favoriteRemoved": "Položaj odstranjen iz priljubljenih.",
+    "changeLocationConfirmDesc": "Sprememba lokacije izbriše trenutne rezultate skeniranja in izbiro. Shranjena zgodovina skeniranja in zadnji posnetek skeniranja se ohranita."
   },
   "window": {
     "minimize": "Pomanjšaj",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI agenti",
     "ecoCache": "Predpomnilniki",
     "ecoOther": "Druge artefakte",
-    "distTotalBadge": "{size} za čiščenje"
+    "distTotalBadge": "{size} za čiščenje",
+    "noticeInfoTitle": "Informacije",
+    "noticeInfoHint": "Sistemsko zaščitene lokacije so bile preskočene. Nobeno dejanje ni potrebno.",
+    "noticeIssueHint": "Nekaterih lokacij ni bilo mogoče prebrati, zato so lahko rezultati nepopolni.",
+    "copyDetails": "Kopiraj podrobnosti",
+    "detailsCopied": "Podrobnosti so kopirane v odložišče",
+    "coverage": "Pokritost pregleda",
+    "sectionSkipped": "Preskočeno",
+    "sectionFailed": "Neuspešno",
+    "sectionPartial": "Nepopolno",
+    "sectionNoRoot": "Mapa ni izbrana"
   },
   "table": {
     "project": "Projekt",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Trajno izbriši",
     "permanentAck": "Razumem, da tega ni mogoče razveljaviti.",
     "blockedReasons": "Blokirani cilji",
-    "expires": "Ta načrt poteče čez 15 minut.",
+    "expires": "Ta načrt poteče čez 30 minut.",
     "close": "Zapri",
     "working": "Delam…",
     "runInBackground": "Zaženi v ozadju",
@@ -223,7 +236,11 @@
     "cancelling": "Preklic…",
     "progress": "Obdelanih {processed} / {total}",
     "currentItem": "Trenutno: {path}",
-    "alreadyRunning": "Čiščenje že poteka."
+    "alreadyRunning": "Čiščenje že poteka.",
+    "coveredByParent": "Blokirano",
+    "noMethod": "Blokirano",
+    "officialActionRequired": "Uradno ukaz",
+    "modeNotAllowed": "Trajno"
   },
   "result": {
     "title": "Rezultat čiščenja",
@@ -238,6 +255,7 @@
     "verified": "preverjeno",
     "cancelled": "Čiščenje preklicano",
     "cancelledNote": "Obdelanih elementov: {processed}, preskočenih: {skipped}.",
+    "progressIncomplete": "Ni bilo mogoče prikazati {count} posodobitev napredka.",
     "processed": "Obdelano",
     "skipped": "Preskočeno",
     "viewResults": "Prikaži rezultate",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Počisti skeniranja",
     "scopeProjects": "Odvisnosti projekta",
     "scopeAgents": "AI agenti",
-    "scopeAllDrives": "Vsi pogoni"
+    "scopeAllDrives": "Vsi pogoni",
+    "statusPartial": "Delno",
+    "totalCleaned": "Skupno pridobljeno",
+    "statusDepthLimited": "Delno"
   },
   "settings": {
     "general": "Videz",
@@ -451,6 +472,12 @@
     "protectionsHint": "Map, ki jih nikoli ne smejo izbrisati, in imena, ki jih je treba preskočiti.",
     "agentsHint": "Politika čiščenja predpomnilnikov AI agenta.",
     "privacyHint": "Lokalna zgodovina in prikrivanje poti na zaslonu.",
+    "resetAppDataTitle": "Ponastavi vse podatke aplikacije",
+    "resetAppDataHint": "Izbriše vse nastavitve, zgodovino čiščenja, zgodovino skeniranja, dnevnike dejanj in shranjeno zadnje skeniranje, nato znova zažene aplikacijo. Tega ni mogoče razveljaviti.",
+    "resetAppDataConfirmBtn": "Izbrišite podatke in znova zaženite",
+    "resetAppDataBusy": "Ponastavitev ...",
+    "resetAppDataSuccess": "Vsi podatki aplikacije so bili ponastavljeni. Privzete nastavitve so obnovljene.",
+    "resetAppDataBlocked": "Izvaja se skeniranje ali čiščenje. Ustavite ga, preden ponastavite podatke aplikacije.",
     "aboutHint": "Verzija, podatki o gradnji, katalog in Vellium.",
     "legalHint": "Pogoji uporabe, politika zasebnosti in odprtokodne licence.",
     "sidebar": "Stranska vrstica",
@@ -547,7 +574,11 @@
     "standardMotion": "Standardna animacija",
     "aboutTitleBy": "Dev Cleaner od Vellium",
     "mcpDestructiveTitle": "Dovoli uničujoča dejanja MCP",
-    "mcpDestructiveHint": "Zahteva zastavico --allow-destructive; vsaka izvedba še vedno potrebuje enkratni žeton za predogled"
+    "mcpDestructiveHint": "Zahteva zastavico --allow-destructive; vsaka izvedba še vedno potrebuje enkratni žeton za predogled",
+    "pathMustBeAbsolute": "Poti morajo biti absolutne, na primer C:\\Projects.",
+    "excludedNameInvalid": "Pravilo mora biti eno ime datoteke ali mape, brez ločil poti.",
+    "shortcutNeedsModifier": "Globalna bližnjica potrebuje Ctrl, Alt ali Meta in tipko ali funkcijsko tipko.",
+    "shortcutsResetWarning": "{count} neveljavnih bližnjic je bilo ponastavljenih na privzete vrednosti."
   },
   "legal": {
     "docTabsLabel": "Pravne dokumente",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Ni najdenih artefaktov projekta, ki bi jih lahko očistili",
     "emptyTitleIdle": "Pregled projekta še ni bil izveden",
     "emptyDescClean": "Izbrana mapa je čista. Ni najdenih node_modules, target ali artefaktov gradnje, ki bi jih bilo mogoče očistiti.",
-    "emptyDescIdle": "Izberite mapo in opravite pregled za seznam odvisnosti projekta in artefaktov gradnje."
+    "emptyDescIdle": "Izberite mapo in opravite pregled za seznam odvisnosti projekta in artefaktov gradnje.",
+    "kpiTargets": "Čistljivi cilji",
+    "kpiTargetsSub": "V {count} koreninah projektov",
+    "kpiTargetsUnknown": "Ponovno preglejte za osvežitev števila projektov"
   },
   "about": {
     "kpiVersion": "Različica",
@@ -616,7 +650,8 @@
     "contactSupport": "Podpora strankam",
     "contactBillingDesc": "Podpora za obračunavanje, nabavo podjetij in naročnine",
     "contactPrivacyDesc": "Varnost podatkov, GDPR in poizvedbe o zasebnosti",
-    "ecoCacheScope": "npm predpomnilnik, Cargo register, pip predpomnilnik, yarn"
+    "ecoCacheScope": "npm predpomnilnik, Cargo register, pip predpomnilnik, yarn",
+    "contactBilling": "Obračunavanje in plačila"
   },
   "docs": {
     "catGuide": "Vodniki in arhitektura",

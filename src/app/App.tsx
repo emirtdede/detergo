@@ -3,56 +3,66 @@ import { ScanHeader } from "@/features/scan/ScanHeader";
 import { NavRail } from "@/features/shell/NavRail";
 import { OverviewView } from "@/features/overview/OverviewView";
 import { ProjectsView } from "@/features/items/ProjectsView";
-import { AgentsView } from "@/features/agents/AgentsView";
-import { CachesView } from "@/features/caches/CachesView";
-import { DocsView } from "@/features/docs/DocsView";
-import { HistoryView } from "@/features/history/HistoryView";
-import { SettingsView } from "@/features/settings/SettingsView";
-import { AboutView } from "@/features/settings/AboutView";
 import { SelectionActionBar } from "@/features/results/SelectionActionBar";
 import { CleanupPlanDialog } from "@/features/cleanup/CleanupPlanDialog";
 import { CleanupResultDialog } from "@/features/cleanup/CleanupResultDialog";
 import { CleanupProgressDock } from "@/features/cleanup/CleanupProgressDock";
 import { Toast } from "@/components/primitives/Toast";
 import { CloseGuardDialog } from "@/features/shell/CloseGuardDialog";
+import {
+  BridgeUnavailableScreen,
+  useBridgeStatus,
+} from "@/components/common/BridgeUnavailableScreen";
+import { ViewSkeleton } from "@/components/common/ViewSkeleton";
 import { StaleScanBanner } from "@/features/shell/StaleScanBanner";
-import { usePreferencesStore, flushPreferences } from "@/stores/preferences-store";
-import { useScanStore, LAST_SCAN_SCHEMA_SUPPORTED } from "@/stores/scan-store";
+import { PartialScanBanner } from "@/features/shell/PartialScanBanner";
+import { ScanWarningsBanner } from "@/features/shell/ScanWarningsBanner";
+import {
+  usePreferencesStore,
+  flushPreferences,
+  hasPendingPreferencesWrite,
+} from "@/stores/preferences-store";
+import {
+  useScanStore,
+  LAST_SCAN_SCHEMA_SUPPORTED,
+  flushLastScanPersist,
+  hasScheduledScanPersist,
+} from "@/stores/scan-store";
+import { useSelectionStore } from "@/stores/selection-store";
+import { useCacheStore } from "@/stores/cache-store";
 import { AppView, useAppStore } from "@/stores/app-store";
-import { useUiStore } from "@/stores/ui-store";
-import { useUIText, getUIText, localizeAppError } from "@/lib/ui-text";
+import { isGlobalShortcutBlocked, useUiStore } from "@/stores/ui-store";
+import { useUIText, getUIText, localizeAppError, loadUIText } from "@/lib/ui-text";
 import { log } from "@/lib/logging";
 import { scannerApi } from "@/lib/tauri/scanner-api";
+import { consumeAppDataResetNotice } from "@/lib/app-data-reset";
 import { useScanController } from "@/features/scan/useScanController";
+import { isScanActiveNow } from "@/features/scan/scan-activity";
 import { DEFAULT_SHORTCUTS } from "@/types";
+import { matchesShortcut } from "@/lib/shortcuts";
 import "@/styles/index.css";
 import "@/features/shell/shell.css";
 
-function matchesShortcut(event: KeyboardEvent, combo?: string): boolean {
-  if (!combo) return false;
-  const parts = combo.split("+").map((p) => p.trim().toLowerCase());
-  const needsCtrl = parts.includes("ctrl");
-  const needsAlt = parts.includes("alt");
-  const needsShift = parts.includes("shift");
-  const needsMeta = parts.includes("meta");
-
-  const keyPart = parts.find((p) => !["ctrl", "alt", "shift", "meta"].includes(p));
-  if (!keyPart) return false;
-
-  const hasCtrl = event.ctrlKey || (needsCtrl && event.metaKey);
-  const hasAlt = event.altKey;
-  const hasShift = event.shiftKey;
-  const hasMeta = event.metaKey;
-
-  if (needsCtrl !== hasCtrl) return false;
-  if (needsAlt !== hasAlt) return false;
-  if (needsShift !== hasShift) return false;
-  if (!needsCtrl && needsMeta !== hasMeta) return false;
-
-  let eventKey = event.key.toLowerCase();
-  if (eventKey === " ") eventKey = "space";
-  return eventKey === keyPart;
-}
+// Views that are not on the first screen load on demand. Overview and Projects
+// stay eager because they are the default landing surfaces.
+const AgentsView = lazy(() =>
+  import("@/features/agents/AgentsView").then((m) => ({ default: m.AgentsView })),
+);
+const CachesView = lazy(() =>
+  import("@/features/caches/CachesView").then((m) => ({ default: m.CachesView })),
+);
+const DocsView = lazy(() =>
+  import("@/features/docs/DocsView").then((m) => ({ default: m.DocsView })),
+);
+const HistoryView = lazy(() =>
+  import("@/features/history/HistoryView").then((m) => ({ default: m.HistoryView })),
+);
+const SettingsView = lazy(() =>
+  import("@/features/settings/SettingsView").then((m) => ({ default: m.SettingsView })),
+);
+const AboutView = lazy(() =>
+  import("@/features/settings/AboutView").then((m) => ({ default: m.AboutView })),
+);
 
 const NAV_MAP: Record<string, AppView> = {
   navOverview: "overview",
@@ -64,17 +74,30 @@ const NAV_MAP: Record<string, AppView> = {
   navSettings: "settings",
 };
 
-/** True while a scan is running or winding down. */
-function isScanActive(status: string): boolean {
-  return status === "scanning" || status === "measuring" || status === "cancelling";
-}
-
 const AppShell: React.FC = () => {
   const loadPreferences = usePreferencesStore((s) => s.loadPreferences);
   const view = useAppStore((s) => s.view);
   const { startScan, cancelScan } = useScanController();
   const ui = useUIText();
   const language = usePreferencesStore((s) => s.language);
+  const preferencesLoaded = usePreferencesStore((s) => s.isLoaded);
+
+  // A factory reset leaves a one-shot sessionStorage flag before reloading.
+  // Wait for the persisted language and its dictionary so the confirmation is
+  // localized instead of flashing English on the first frame.
+  useEffect(() => {
+    if (!preferencesLoaded) return;
+    let cancelled = false;
+    void loadUIText(language).then(() => {
+      if (cancelled || !consumeAppDataResetNotice()) return;
+      useUiStore
+        .getState()
+        .showToast(getUIText(language).settings.resetAppDataSuccess, "success", 6500);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [preferencesLoaded, language]);
 
   // The keydown listener is registered once. These refs keep it pointing at the
   // current controller functions without re-registering the listener.
@@ -85,79 +108,106 @@ const AppShell: React.FC = () => {
     cancelScanRef.current = cancelScan;
   }, [startScan, cancelScan]);
 
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      document.documentElement.lang = language || "en";
-    }
-  }, [language]);
-
-  // Settings are loaded exactly once at boot. Reading the translated error text
-  // lazily inside the handler keeps this effect independent of the language, so
-  // switching language does not re-fetch settings from the backend.
+  // Boot sequence: settings first, then the last scan. They used to be two
+  // independent effects, so whichever resolved last won; a stale
+  // `lastScanPath` could survive next to a snapshot from a different scope.
+  // Running them in order makes the snapshot authoritative and the path only a
+  // fallback for an empty workspace.
   useEffect(() => {
     let cancelled = false;
-    scannerApi
-      .getAppSettings()
-      .then((prefs) => {
+
+    const loadSettings = async () => {
+      try {
+        const prefs = await scannerApi.getAppSettings();
         if (cancelled) return;
         loadPreferences(prefs);
-        const activePath = useScanStore.getState().currentRootPath;
-        if (prefs.lastScanPath && !activePath) {
-          useScanStore.setState({ currentRootPath: prefs.lastScanPath });
-        }
-      })
-      .catch((err) => {
+      } catch (err) {
         if (cancelled) return;
         const prefs = usePreferencesStore.getState();
         const text = getUIText(prefs.language);
         useUiStore
           .getState()
           .showToast(`${text.errors.title}: ${localizeAppError(err, text)}`, "error", 8000);
-      });
+      }
+    };
+
+    const restoreLastScan = async () => {
+      try {
+        // Captured before the await: if the user resets the workspace while the
+        // snapshot is being read, the restore must not repopulate the view.
+        const resetToken = useScanStore.getState().workspaceResetToken;
+        const snapshot = await scannerApi.getLastScan();
+        if (cancelled) {
+          return;
+        }
+        if (useScanStore.getState().workspaceResetToken !== resetToken) {
+          return;
+        }
+        if (!snapshot) {
+          applyLastPathFallback();
+          return;
+        }
+        if (snapshot.schemaVersion !== LAST_SCAN_SCHEMA_SUPPORTED) {
+          log.warn("Dropping incompatible last scan", snapshot.schemaVersion);
+          // Fire-and-forget: a failure here must not surface as an unhandled
+          // rejection during startup. The incompatible snapshot is simply left
+          // for the next attempt.
+          scannerApi
+            .clearLastScan()
+            .catch((err) => log.warn("Could not clear the incompatible last scan", err));
+          applyLastPathFallback();
+          return;
+        }
+        const store = useScanStore.getState();
+        if (store.status === "idle" && store.itemIds.length === 0) {
+          store.restoreScan(snapshot);
+          // Selections belong to the old session; a restored snapshot has no
+          // selected rows and stale ids would target missing items.
+          useSelectionStore.getState().clearSelection();
+          return;
+        }
+        applyLastPathFallback();
+      } catch (err) {
+        // A missing snapshot is normal; a real failure is only logged.
+        log.warn("Could not restore the last scan", err);
+        applyLastPathFallback();
+      }
+    };
+
+    const applyLastPathFallback = () => {
+      const store = useScanStore.getState();
+      const lastPath = usePreferencesStore.getState().lastScanPath;
+      if (lastPath && !store.currentRootPath) {
+        useScanStore.setState({ currentRootPath: lastPath });
+      }
+    };
+
+    void (async () => {
+      await loadSettings();
+      if (cancelled) return;
+      await restoreLastScan();
+    })();
+
     return () => {
       cancelled = true;
     };
   }, [loadPreferences]);
 
-  // Reopen with the last scan instead of an empty screen. This runs once at
-  // boot: reacting to scan status transitions would re-fetch the snapshot after
-  // every scan and could clobber a newer scan with an older one.
-  useEffect(() => {
-    let cancelled = false;
-    scannerApi
-      .getLastScan()
-      .then((snapshot) => {
-        if (cancelled || !snapshot) return;
-        if (snapshot.schemaVersion !== LAST_SCAN_SCHEMA_SUPPORTED) {
-          log.warn("Dropping incompatible last scan", snapshot.schemaVersion);
-          void scannerApi.clearLastScan();
-          return;
-        }
-        const store = useScanStore.getState();
-        if (store.status !== "idle" || store.itemIds.length > 0) return;
-        store.restoreScan(snapshot);
-      })
-      .catch((err) => {
-        // A missing snapshot is normal; a real failure is only logged.
-        log.warn("Could not restore the last scan", err);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // RTL Language handling
-  useEffect(() => {
-    const lang = language ?? "en";
-    const rtlLanguages = new Set(["ar", "he", "fa", "ur"]);
-    document.documentElement.dir = rtlLanguages.has(lang) ? "rtl" : "ltr";
-  }, [language]);
-
   // A debounced settings write must survive a fast close: flush on hide and
-  // before the window unloads.
+  // before the window unloads. The last-scan snapshot is debounced too, so a
+  // cleanup performed right before closing must reach disk as well.
   useEffect(() => {
     const flush = () => {
-      void flushPreferences();
+      // Only flush what is actually pending. `flushPreferences` writes the whole
+      // settings file, and `flushLastScanPersist` rewrites the snapshot; doing
+      // that unconditionally meant every launch (and every StrictMode mount)
+      // wrote both files back unchanged.
+      if (hasPendingPreferencesWrite()) {
+        // The store logs the failure; the rejection is swallowed here so a
+        // close-time write cannot surface as an unhandled rejection.
+        void flushPreferences().catch(() => {});
+      }
+      if (hasScheduledScanPersist()) void flushLastScanPersist();
     };
     const onVisibility = () => {
       if (document.visibilityState === "hidden") flush();
@@ -177,6 +227,11 @@ const AppShell: React.FC = () => {
       const target = event.target as HTMLElement | null;
       if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
       if (target?.isContentEditable) return;
+      // A modal owns the keyboard: navigating or starting a scan underneath a
+      // confirmation dialog changed the page the dialog was describing. The
+      // dialog-depth counter also covers Settings and other plain dialogs that
+      // never set `activeModal`.
+      if (isGlobalShortcutBlocked(useUiStore.getState())) return;
 
       const prefs = usePreferencesStore.getState();
       const shortcuts = prefs.shortcuts ?? DEFAULT_SHORTCUTS;
@@ -200,11 +255,26 @@ const AppShell: React.FC = () => {
         event.preventDefault();
         // Read live state instead of the closure: a captured `isScanning` would
         // go stale right after the first scan starts.
-        const status = useScanStore.getState().status;
-        if (isScanActive(status)) {
+        if (isScanActiveNow()) {
           void cancelScanRef.current();
         } else {
-          void startScanRef.current();
+          const appStore = useAppStore.getState();
+          // Mirror the header button: the primary action belongs to the view
+          // the user is on. Always starting a project scan here made Ctrl+Enter
+          // ignore the Caches and Agents pages.
+          if (appStore.view === "caches") {
+            const cache = useCacheStore.getState();
+            if (cache.measuring) {
+              void cache.cancelMeasure();
+            } else {
+              void cache.startMeasure();
+            }
+          } else if (appStore.view === "agents") {
+            void startScanRef.current(undefined, "agents");
+          } else {
+            const scope = useScanStore.getState().scope;
+            void startScanRef.current(undefined, scope === "allDrives" ? "allDrives" : "project");
+          }
         }
         return;
       }
@@ -235,15 +305,19 @@ const AppShell: React.FC = () => {
           tabIndex={-1}
           className={`view-container ${view === "docs" ? "view-container--docs" : ""}`}
         >
+          <PartialScanBanner />
+          <ScanWarningsBanner />
           <StaleScanBanner />
-          {view === "overview" && <OverviewView />}
-          {view === "projects" && <ProjectsView />}
-          {view === "agents" && <AgentsView />}
-          {view === "caches" && <CachesView />}
-          {view === "docs" && <DocsView />}
-          {view === "history" && <HistoryView />}
-          {view === "settings" && <SettingsView />}
-          {view === "about" && <AboutView />}
+          <Suspense fallback={<ViewSkeleton />}>
+            {view === "overview" && <OverviewView />}
+            {view === "projects" && <ProjectsView />}
+            {view === "agents" && <AgentsView />}
+            {view === "caches" && <CachesView />}
+            {view === "docs" && <DocsView />}
+            {view === "history" && <HistoryView />}
+            {view === "settings" && <SettingsView />}
+            {view === "about" && <AboutView />}
+          </Suspense>
         </main>
       </div>
 
@@ -271,6 +345,7 @@ const ConceptContainer = conceptLoader
   : null;
 
 export const App: React.FC = () => {
+  const { status, retry } = useBridgeStatus();
   const showConcept =
     import.meta.env.DEV &&
     typeof window !== "undefined" &&
@@ -282,6 +357,11 @@ export const App: React.FC = () => {
         <ConceptContainer />
       </Suspense>
     );
+  }
+  // Render optimistically while the bridge resolves: the proxy queues calls and
+  // the app only needs to be replaced when the bridge is definitively missing.
+  if (status === "unavailable") {
+    return <BridgeUnavailableScreen onRetry={retry} />;
   }
   return <AppShell />;
 };

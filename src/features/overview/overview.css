@@ -156,14 +156,18 @@
 
 @media (max-width: 600px) {
   .overview-kpi-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
 /* 3. Main Workspace Split (Analysis & Hubs) -------------------------------- */
 .overview-workspace-grid {
   display: grid;
-  grid-template-columns: 1.25fr 1fr;
+  /* `minmax(0, …)` instead of a bare `fr`: a bare `fr` resolves to
+     `minmax(auto, 1fr)`, so the column can never shrink below its content's
+     min-content width. At 320 px the "Top 5" list and the hub descriptions
+     pushed the whole panel to 466 px and overflowed `main` by 218 px. */
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
   gap: var(--space-4);
   width: 100%;
   align-items: stretch;
@@ -171,7 +175,7 @@
 
 @media (max-width: 1024px) {
   .overview-workspace-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -325,6 +329,7 @@
   flex-direction: column;
   gap: var(--space-3);
   width: 100%;
+  min-width: 0;
   height: 100%;
   justify-content: stretch;
 }
@@ -332,6 +337,7 @@
 .overview-hub-card {
   flex: 1;
   min-height: 0;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -451,17 +457,22 @@
   transform: translateX(2px);
 }
 
-/* 4. Bottom Grid (Top 5 Space Hogs & Security Center) ----------------------- */
+/* 4. Bottom Grid (Top 5 Space Hogs & 4 Hubs) -------------------------------- */
+/* Single source of truth: an earlier duplicate declared `1.25fr 1fr` and was
+   silently overridden below, which made the two columns drift apart. `minmax(0,
+   1fr)` lets the panels keep equal widths instead of being sized by the widest
+   min-content child (the hub column). */
 .overview-secondary-grid {
   display: grid;
-  grid-template-columns: 1.25fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4);
   width: 100%;
+  align-items: stretch;
 }
 
 @media (max-width: 1024px) {
   .overview-secondary-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -470,6 +481,23 @@
   flex-direction: column;
   gap: var(--space-2);
   width: 100%;
+  /* Fills the panel so the empty state is a proper drop zone instead of a small
+     box pinned to the bottom by `space-between`. */
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Empty state inside the list: keep it as large as the populated list would be,
+   so the panel does not read as a broken, half-sized card next to the hubs. */
+.overview-zero-state--fill {
+  flex: 1 1 auto;
+}
+
+.overview-top-items-empty {
+  font-size: var(--text-xs);
+  line-height: 1.55;
+  color: var(--text-muted);
+  max-width: 38ch;
 }
 
 .overview-top-item-row {
@@ -662,26 +690,15 @@
   font-feature-settings: "tnum" 1;
 }
 
-/* Secondary 2-Column Grid (1fr 1fr, Equal Heights) */
-.overview-secondary-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
-  width: 100%;
-  align-items: stretch;
-}
-
-@media (max-width: 1024px) {
-  .overview-secondary-grid {
-    grid-template-columns: 1fr;
-  }
-}
+/* Secondary 2-Column Grid is declared once, above. */
 
 .overview-panel--equal {
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  /* The panel is the drop zone, not a bottom-aligned label: `space-between`
+     shrank the empty state into a small box floating far below the header. */
+  justify-content: flex-start;
 }
 
 .overview-hubs-column--equal {
@@ -698,4 +715,67 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+/* Per-step outcome of a combined ("scan everything") run. A skipped or failed
+   step must be visible, otherwise an empty project section looks like a clean
+   scan instead of a step that never ran. */
+.overview-coverage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.overview-coverage-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.overview-coverage-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.overview-coverage-row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.overview-coverage-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.overview-coverage-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--success);
+}
+
+.overview-coverage-row.is-skipped .overview-coverage-status,
+.overview-coverage-row.is-partial .overview-coverage-status {
+  color: var(--warning);
+}
+
+.overview-coverage-row.is-failed .overview-coverage-status {
+  color: var(--danger);
+}
+
+.overview-coverage-reason,
+.overview-coverage-meta {
+  color: var(--text-muted);
 }

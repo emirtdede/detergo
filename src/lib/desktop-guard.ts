@@ -57,7 +57,12 @@ export function isBrowserShortcutToBlock(e: KeyboardEvent, isDev: boolean = fals
     return true;
   }
 
-  // 7. Browser Find in Page (Ctrl + G, F3, Shift + F3)
+  // 7. Browser Find in Page (Ctrl + F, Ctrl + G, F3, Shift + F3).
+  //    Ctrl+F is the actual WebView2 accelerator; leaving it unblocked let the
+  //    native find overlay open on top of the SPA.
+  if (ctrlOrMeta && key === "f" && !e.shiftKey && !e.altKey) {
+    return true;
+  }
   if (ctrlOrMeta && key === "g") {
     return true;
   }

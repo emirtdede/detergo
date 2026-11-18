@@ -354,7 +354,7 @@
 
 .location-menu-item-icon.action-icon {
   background: var(--accent);
-  color: #ffffff;
+  color: var(--on-accent);
 }
 
 .location-menu-item-icon.fav-icon {
@@ -443,8 +443,119 @@
   padding: 0 14px !important;
 }
 
+/* Split control: the primary action scans everything, the chevron exposes the
+   single-scope scans that used to be the only option. The two segments share one
+   surface so the control reads as a single button with a disclosure, not as two
+   unrelated pills. */
+.command-scan-group {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  /* No `overflow: hidden`: it would clip the scope menu, which is positioned
+     below the control. The segments carry the corner radii instead. */
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.command-scan-group:hover {
+  background: var(--accent-hover);
+}
+
+.command-scan-group:active {
+  background: var(--accent-active);
+}
+
+/* Both segments are transparent: the group owns the fill so a hover never
+   paints two slightly different blues across the seam. Only the outer corners
+   are rounded so the two halves still read as one control. */
+.command-scan-group .command-scan-btn,
+.command-scan-group .command-scan-btn:hover:not(:disabled),
+.command-scan-group .command-scan-btn:active:not(:disabled) {
+  height: 32px !important;
+  border: none !important;
+  border-radius: calc(var(--radius-md) - 1px) 0 0 calc(var(--radius-md) - 1px) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  /* The primitive's press-scale would shrink one half inside the shared
+     surface and expose a seam; the group handles the pressed state. */
+  transform: none !important;
+}
+
+.command-scan-group .command-scan-btn:focus-visible,
+.command-scan-menu-trigger:focus-visible {
+  outline: 2px solid var(--on-accent);
+  outline-offset: -3px;
+}
+
+.command-scan-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 32px;
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 0 calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px) 0;
+  background: transparent;
+  color: var(--on-accent);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.command-scan-menu-trigger:hover,
+.command-scan-menu-trigger.is-open {
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.command-scan-menu-trigger.is-open svg {
+  transform: rotate(180deg);
+}
+
+.command-scan-menu-trigger svg {
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.command-scan-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 260px;
+  padding: 6px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 0 1px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  animation: scanMenuEnter var(--duration-fast) var(--ease-standard);
+}
+
+@keyframes scanMenuEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .command-scan-btn.is-cancelling {
   animation: pulseStop 1.8s infinite;
+}
+
+/* Once the stop request is in flight the button is disabled; the pulse would
+   suggest it still needs pressing. */
+.command-scan-btn.is-cancelling.is-stopping {
+  animation: none;
+  opacity: 0.7;
+  cursor: progress;
 }
 
 @keyframes pulseStop {

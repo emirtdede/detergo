@@ -6,9 +6,11 @@ import { Dialog } from "@/components/primitives/Dialog";
 import { useScanStore } from "@/stores/scan-store";
 import { useSelectionStore } from "@/stores/selection-store";
 import { useUiStore } from "@/stores/ui-store";
+import { useAppStore } from "@/stores/app-store";
 import { useUIText } from "@/lib/ui-text";
 import { useScanController } from "@/features/scan/useScanController";
 import { usePreferencesStore } from "@/stores/preferences-store";
+import { effectiveSelectedIds } from "@/features/items/selection-helpers";
 import { formatBytes } from "@/lib/formatters";
 import { formatSavedAt } from "@/lib/format/date";
 import { DeleteMode } from "@/types";
@@ -25,18 +27,25 @@ export const SelectionActionBar: React.FC = () => {
   const acknowledgeStale = useScanStore((s) => s.acknowledgeStale);
   const lastSavedAt = useScanStore((s) => s.lastSavedAt);
   const scope = useScanStore((s) => s.scope);
+  const view = useAppStore((s) => s.view);
   const openModal = useUiStore((s) => s.openModal);
   const setPendingDeletion = useUiStore((s) => s.setPendingDeletion);
   const setPlan = useUiStore((s) => s.setPlan);
   const { startScan, isScanning } = useScanController();
   const [pendingMode, setPendingMode] = useState<DeleteMode | null>(null);
 
-  const selectedItems = useMemo(
-    () =>
-      Array.from(selectedIds)
-        .map((id) => itemsById[id])
-        .filter(Boolean),
+  // Only ids that still describe a cleanable row may influence the count, the
+  // total or the plan. Selections can outlive a cleanup (markDeleted) or a
+  // restored snapshot; forwarding them made the bar promise bytes for rows that
+  // no longer exist.
+  const effectiveIds = useMemo(
+    () => effectiveSelectedIds(selectedIds, itemsById),
     [selectedIds, itemsById],
+  );
+
+  const selectedItems = useMemo(
+    () => effectiveIds.map((id) => itemsById[id]),
+    [effectiveIds, itemsById],
   );
 
   const totalBytes = useMemo(
@@ -44,11 +53,11 @@ export const SelectionActionBar: React.FC = () => {
     [selectedItems],
   );
 
-  if (selectedIds.size === 0) return null;
+  if (selectedIds.size === 0 || effectiveIds.length === 0) return null;
 
   const openPlan = (mode: DeleteMode) => {
     setPlan(null);
-    setPendingDeletion(Array.from(selectedIds), mode);
+    setPendingDeletion(effectiveIds, mode);
     openModal("cleanup-plan");
   };
 
@@ -71,14 +80,16 @@ export const SelectionActionBar: React.FC = () => {
 
   const rescanNow = () => {
     setPendingMode(null);
-    void startScan(undefined, scope);
+    // Match the stale banner: the view the user is looking at decides whether
+    // the rescan targets agents or the stored project scope.
+    void startScan(undefined, view === "agents" ? "agents" : scope);
   };
 
   return (
     <>
       <div className="selection-action-bar">
         <div className="selection-info">
-          <span>{ui.table.selected(selectedIds.size)}</span>
+          <span>{ui.table.selected(effectiveIds.length)}</span>
           <span style={{ color: "var(--text-muted)" }}>•</span>
           <span className="selection-total">{formatBytes(totalBytes, language)}</span>
         </div>

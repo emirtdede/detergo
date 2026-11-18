@@ -36,7 +36,9 @@
     "on": "På",
     "off": "Av",
     "items": "{n} elementer",
-    "showing": "{n} vist"
+    "showing": "{n} vist",
+    "scanAll": "Skann alt",
+    "scanAllDesc": "Prosjekter, AI-verktøylagring og pakkebuffer"
   },
   "header": {
     "changeLocation": "Endre Plassering",
@@ -49,7 +51,8 @@
     "addFavorite": "Legg gjeldende plassering til favoritter",
     "removeFavorite": "Fjern plassering fra favoritter",
     "favoriteAdded": "Plassering lagt til favoritter.",
-    "favoriteRemoved": "Plassering fjernet fra favoritter."
+    "favoriteRemoved": "Plassering fjernet fra favoritter.",
+    "changeLocationConfirmDesc": "Endring av plassering tømmer gjeldende skanneresultater og utvalget. Lagret skannehistorikk og den siste skanneøyeblikksbildet bevares."
   },
   "window": {
     "minimize": "Minimer",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI-agenter",
     "ecoCache": "Hurtigbuffer",
     "ecoOther": "Andre artefakter",
-    "distTotalBadge": "{size} kan ryddes"
+    "distTotalBadge": "{size} kan ryddes",
+    "noticeInfoTitle": "Informasjon",
+    "noticeInfoHint": "Systembeskyttede plasseringer ble hoppet over. Ingen handling nødvendig.",
+    "noticeIssueHint": "Noen plasseringer kunne ikke leses, så resultatene kan være ufullstendige.",
+    "copyDetails": "Kopier detaljer",
+    "detailsCopied": "Detaljer kopiert til utklippstavlen",
+    "coverage": "Skanningsdekning",
+    "sectionSkipped": "Hoppet over",
+    "sectionFailed": "Mislyktes",
+    "sectionPartial": "Ufullstendig",
+    "sectionNoRoot": "Ingen mappe valgt"
   },
   "table": {
     "project": "Prosjekt",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Slett permanent",
     "permanentAck": "Jeg forstår at dette ikke kan angres.",
     "blockedReasons": "Blokkerte mål",
-    "expires": "Denne planen utløper om 15 minutter.",
+    "expires": "Denne planen utløper om 30 minutter.",
     "close": "Lukk",
     "working": "Arbeider…",
     "runInBackground": "Kjør i bakgrunnen",
@@ -223,7 +236,11 @@
     "cancelling": "Avbryter…",
     "progress": "Behandlet {processed} / {total}",
     "currentItem": "Gjeldende: {path}",
-    "alreadyRunning": "En opprydding kjører allerede."
+    "alreadyRunning": "En opprydding kjører allerede.",
+    "coveredByParent": "Blokkert",
+    "noMethod": "Blokkert",
+    "officialActionRequired": "Offisiell kommando",
+    "modeNotAllowed": "Permanent"
   },
   "result": {
     "title": "Rydderesultat",
@@ -238,6 +255,7 @@
     "verified": "verifisert",
     "cancelled": "Opprydding avbrutt",
     "cancelledNote": "{processed} elementer behandlet, {skipped} hoppet over.",
+    "progressIncomplete": "{count} fremdriftsoppdateringer kunne ikke vises.",
     "processed": "Behandlet",
     "skipped": "Hoppet over",
     "viewResults": "Vis resultater",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Tøm skanninger",
     "scopeProjects": "Prosjektavhengigheter",
     "scopeAgents": "AI-agenter",
-    "scopeAllDrives": "Alle stasjoner"
+    "scopeAllDrives": "Alle stasjoner",
+    "statusPartial": "Delvis",
+    "totalCleaned": "Totalt gjenvunnet",
+    "statusDepthLimited": "Delvis"
   },
   "settings": {
     "general": "Utseende",
@@ -451,6 +472,12 @@
     "protectionsHint": "Mapper som aldri må slettes og navn som skal hoppes over.",
     "agentsHint": "Rengjøringspolicy for AI-agentcacher.",
     "privacyHint": "Lokal historikk og skjerming av stier på skjermen.",
+    "resetAppDataTitle": "Tilbakestill alle appdata",
+    "resetAppDataHint": "Sletter alle innstillinger, oppryddingshistorikk, skannehistorikk, handlingslogger og den lagrede siste skanningen, og starter deretter appen på nytt. Dette kan ikke angres.",
+    "resetAppDataConfirmBtn": "Slett data og start på nytt",
+    "resetAppDataBusy": "Tilbakestiller …",
+    "resetAppDataSuccess": "Alle appdata er tilbakestilt. Standardinnstillinger gjenopprettet.",
+    "resetAppDataBlocked": "En skanning eller opprydding kjører. Stopp det før du tilbakestiller appdata.",
     "aboutHint": "Versjon, bygge-detaljer, katalog og Vellium.",
     "legalHint": "Bruksvilkår, personvernpolicy og åpne kildekode-lisenser.",
     "sidebar": "Sidefelt",
@@ -547,7 +574,11 @@
     "standardMotion": "Standard animasjon",
     "aboutTitleBy": "Dev Cleaner av Vellium",
     "mcpDestructiveTitle": "Tillat destruktive MCP-handlinger",
-    "mcpDestructiveHint": "Krever flagget --allow-destructive; hver kjøring trenger fortsatt et engangstoken for forhåndsvisning"
+    "mcpDestructiveHint": "Krever flagget --allow-destructive; hver kjøring trenger fortsatt et engangstoken for forhåndsvisning",
+    "pathMustBeAbsolute": "Baner må være absolutte, for eksempel C:\\Projects.",
+    "excludedNameInvalid": "En regel må være et enkelt fil- eller mappenavn, uten baneskillere.",
+    "shortcutNeedsModifier": "En global snarvei trenger Ctrl, Alt eller Meta pluss en tast, eller en funksjonstast.",
+    "shortcutsResetWarning": "{count} ugyldig(e) snarvei(er) ble tilbakestilt til standardinnstillingene."
   },
   "legal": {
     "docTabsLabel": "Juridiske dokumenter",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Ingen ryddbare prosjektartefakter funnet",
     "emptyTitleIdle": "Ingen prosjektsøk utført ennå",
     "emptyDescClean": "Valgt mappe er ren. Ingen ryddbare node_modules-, target- eller byggeartefakter funnet.",
-    "emptyDescIdle": "Velg en mappe og skann for å liste prosjektavhengigheter og byggeartefakter."
+    "emptyDescIdle": "Velg en mappe og skann for å liste prosjektavhengigheter og byggeartefakter.",
+    "kpiTargets": "Rengjøringsbare mål",
+    "kpiTargetsSub": "På tvers av {count} prosjektrot",
+    "kpiTargetsUnknown": "Skann på nytt for å oppdatere prosjektantallet"
   },
   "about": {
     "kpiVersion": "Versjon",
@@ -616,7 +650,8 @@
     "contactSupport": "Kundestøtte",
     "contactBillingDesc": "Fakturering, innkjøp for bedrifter og abonnementssupport",
     "contactPrivacyDesc": "Datasikkerhet, GDPR og personvernhenvendelser",
-    "ecoCacheScope": "npm cache, Cargo register, pip cache, yarn"
+    "ecoCacheScope": "npm cache, Cargo register, pip cache, yarn",
+    "contactBilling": "Fakturering og betalinger"
   },
   "docs": {
     "catGuide": "Veiledninger & Arkitektur",

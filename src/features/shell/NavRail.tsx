@@ -14,6 +14,7 @@ import {
 import { useAppStore, AppView } from "@/stores/app-store";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUIText, UIText } from "@/lib/ui-text";
+import { BREAKPOINTS, NARROW_RAIL_MEDIA_QUERY } from "@/lib/layout";
 import "./shell.css";
 
 const ITEMS: Array<{ view: AppView; icon: React.ReactNode; key: keyof UIText["nav"] }> = [
@@ -33,15 +34,16 @@ export const NavRail: React.FC = () => {
   const setSidebarMode = usePreferencesStore((s) => s.setSidebarMode);
   const isCollapsed = sidebarMode === "collapsed";
 
-  // Below 900px a full-width rail would eat a third of the window. The rail
-  // folds to its icon track automatically there, without overwriting the
-  // user's saved preference: widening the window restores their choice.
+  // Below the narrow-rail breakpoint a full-width rail would eat a third of the
+  // window. The rail folds to its icon track automatically there, without
+  // overwriting the user's saved preference: widening the window restores their
+  // choice.
   const [isNarrow, setIsNarrow] = useState(
-    () => typeof window !== "undefined" && window.innerWidth <= 900,
+    () => typeof window !== "undefined" && window.innerWidth <= BREAKPOINTS.narrowRail,
   );
 
   useEffect(() => {
-    const query = window.matchMedia("(max-width: 900px)");
+    const query = window.matchMedia(NARROW_RAIL_MEDIA_QUERY);
     const sync = () => setIsNarrow(query.matches);
     sync();
     query.addEventListener("change", sync);

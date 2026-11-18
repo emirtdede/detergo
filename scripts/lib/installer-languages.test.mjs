@@ -17,14 +17,17 @@ import {
 } from "./installer-languages.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const localeDir = path.join(root, "src/locales/langs");
+// English and Turkish ship as TypeScript modules; the rest are JSON dictionaries.
+const localeDir = path.join(root, "src/lib/ui-text/locales");
 const templateDir = path.join(root, PROJECT_LANGUAGE_DIR, "_template");
-
-const appLocales = fs
-  .readdirSync(localeDir)
-  .filter((file) => file.endsWith(".ts"))
-  .map((file) => path.basename(file, ".ts"))
-  .sort();
+const appLocales = [
+  ...fs
+    .readdirSync(localeDir)
+    .filter((file) => file.endsWith(".json"))
+    .map((file) => path.basename(file, ".json")),
+  "en",
+  "tr",
+].sort();
 
 function parseNlfLabels(text) {
   const map = new Map();

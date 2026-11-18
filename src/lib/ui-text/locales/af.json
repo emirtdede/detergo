@@ -36,7 +36,9 @@
     "on": "Aan",
     "off": "Af",
     "items": "{n} items",
-    "showing": "{n} vertoon"
+    "showing": "{n} vertoon",
+    "scanAll": "Skandeer alles",
+    "scanAllDesc": "Projekte, KI-instrumentberging en pakketkas"
   },
   "header": {
     "changeLocation": "Verander Ligging",
@@ -49,7 +51,8 @@
     "addFavorite": "Voeg huidige ligging by gunstelinge",
     "removeFavorite": "Verwyder ligging van gunstelinge",
     "favoriteAdded": "Ligging by gunstelinge gevoeg.",
-    "favoriteRemoved": "Ligging van gunstelinge verwyder."
+    "favoriteRemoved": "Ligging van gunstelinge verwyder.",
+    "changeLocationConfirmDesc": "Deur die ligging te verander, word die huidige skanderingsresultate en keuse uitgevee. Jou gestoorde skanderingsgeskiedenis en die laaste skandering-snapshot bly bewaar."
   },
   "window": {
     "minimize": "Minimeer",
@@ -133,7 +136,17 @@
     "ecoAgent": "KI-agente",
     "ecoCache": "Kasgeheue",
     "ecoOther": "Ander artifakte",
-    "distTotalBadge": "{size} skoonmaakbaar"
+    "distTotalBadge": "{size} skoonmaakbaar",
+    "noticeInfoTitle": "Inligting",
+    "noticeInfoHint": "Stelselbeskermde liggings is oorgeslaan. Geen aksie nodig nie.",
+    "noticeIssueHint": "Sommige liggings kon nie gelees word nie, so resultate kan onvolledig wees.",
+    "copyDetails": "Kopieer besonderhede",
+    "detailsCopied": "Besonderhede na die knipbord gekopieer",
+    "coverage": "Skandeeringsdekking",
+    "sectionSkipped": "Oorgeslaan",
+    "sectionFailed": "Misluk",
+    "sectionPartial": "Onvolledig",
+    "sectionNoRoot": "Geen gids gekies nie"
   },
   "table": {
     "project": "Projek",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Verwyder permanent",
     "permanentAck": "Ek verstaan dit kan nie ongedaan gemaak word nie.",
     "blockedReasons": "Geblokkeerde teikens",
-    "expires": "Hierdie plan verval oor 15 minute.",
+    "expires": "Hierdie plan verval oor 30 minute.",
     "close": "Maak toe",
     "working": "Besig…",
     "runInBackground": "Hardloop in die agtergrond",
@@ -223,7 +236,11 @@
     "cancelling": "Kanselleer tans…",
     "progress": "Verwerk {processed} / {total}",
     "currentItem": "Tans: {path}",
-    "alreadyRunning": "’n Opruiming is reeds aan die gang."
+    "alreadyRunning": "’n Opruiming is reeds aan die gang.",
+    "coveredByParent": "Geblokkeer",
+    "noMethod": "Geblokkeer",
+    "officialActionRequired": "Amptelike opdrag",
+    "modeNotAllowed": "Permanent"
   },
   "result": {
     "title": "Opruimingsresultaat",
@@ -238,6 +255,7 @@
     "verified": "geverifieer",
     "cancelled": "Opruiming gekanselleer",
     "cancelledNote": "{processed} items verwerk, {skipped} oorgeslaan.",
+    "progressIncomplete": "{count} vorderingsopdaterings kon nie gewys word nie.",
     "processed": "Verwerk",
     "skipped": "Oorgeslaan",
     "viewResults": "Bekyk resultate",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Verwyder Skanderings",
     "scopeProjects": "Projekafhanklikhede",
     "scopeAgents": "KI-agentte",
-    "scopeAllDrives": "Alle Skywe"
+    "scopeAllDrives": "Alle Skywe",
+    "statusPartial": "Gedeeltelik",
+    "totalCleaned": "Totaal herwin",
+    "statusDepthLimited": "Gedeeltelik"
   },
   "settings": {
     "general": "Voorkoms",
@@ -451,6 +472,12 @@
     "protectionsHint": "Lêergidse wat nooit verwyder mag word nie en name om oor te slaan.",
     "agentsHint": "Opskuisbeleid vir KI-agentkas.",
     "privacyHint": "Plaaslike geskiedenis en skermpadmaskering.",
+    "resetAppDataTitle": "Stel alle programdata terug",
+    "resetAppDataHint": "Vee alle instellings, opruimgeskiedenis, skanderingsgeskiedenis, aksielogboeke en die gestoorde laaste skandering uit, en herbegin dan die toepassing. Dit kan nie ongedaan gemaak word nie.",
+    "resetAppDataConfirmBtn": "Vee data uit en herbegin",
+    "resetAppDataBusy": "Stel tans terug …",
+    "resetAppDataSuccess": "Alle programdata is teruggestel. Verstek instellings teruggestel.",
+    "resetAppDataBlocked": "'n Skandering of opruiming is aan die gang. Stop dit voordat u programdata terugstel.",
     "aboutHint": "Weergawe, boubesonderhede, katalogus en Vellium.",
     "legalHint": "Gebruiksvoorwaardes, privaatheidsbeleid en oopbronlisensies.",
     "sidebar": "Kantbalk",
@@ -547,7 +574,11 @@
     "standardMotion": "Standaard Animasie",
     "aboutTitleBy": "Dev Cleaner deur Vellium",
     "mcpDestructiveTitle": "Laat MCP-vernietigende aksies toe",
-    "mcpDestructiveHint": "Vereis die --allow-destructive-vlag; elke uitvoering benodig steeds 'n eenmalige voorskou-token"
+    "mcpDestructiveHint": "Vereis die --allow-destructive-vlag; elke uitvoering benodig steeds 'n eenmalige voorskou-token",
+    "pathMustBeAbsolute": "Paaie moet absoluut wees, byvoorbeeld C:\\Projects.",
+    "excludedNameInvalid": "'n Reël moet 'n enkele lêer- of vouernaam wees, sonder padskeiers.",
+    "shortcutNeedsModifier": "'n Globale kortpad benodig Ctrl, Alt of Meta plus 'n sleutel, of 'n funksiesleutel.",
+    "shortcutsResetWarning": "{count} ongeldige kortpad(s) is teruggestel na hul verstekke."
   },
   "legal": {
     "docTabsLabel": "Regsdokumente",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Geen skoonmaakbare projekware gevind nie",
     "emptyTitleIdle": "Nog geen projek-skandering uitgevoer nie",
     "emptyDescClean": "Geselekteerde gids is skoon. Geen skoonmaakbare node_modules, target, of bouware gevind nie.",
-    "emptyDescIdle": "Kies 'n vouer en scan om projekafhanklikhede en bouware op te lys."
+    "emptyDescIdle": "Kies 'n vouer en scan om projekafhanklikhede en bouware op te lys.",
+    "kpiTargets": "Skoonmaakbare teikens",
+    "kpiTargetsSub": "Oor {count} projekwortels",
+    "kpiTargetsUnknown": "Skandeer weer om die projektelling te verfris"
   },
   "about": {
     "kpiVersion": "Weergawe",
@@ -616,7 +650,8 @@
     "contactSupport": "Kliëntediens",
     "contactBillingDesc": "Fakturering, ondernemingsaankope en intekeningsondersteuning",
     "contactPrivacyDesc": "Datasekuriteit, GDPR en privaatheid navrae",
-    "ecoCacheScope": "npm kas, Cargo register, pip kas, yarn"
+    "ecoCacheScope": "npm kas, Cargo register, pip kas, yarn",
+    "contactBilling": "Fakturering en betalings"
   },
   "docs": {
     "catGuide": "Gidse & Argitektuur",

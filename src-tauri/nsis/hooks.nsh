@@ -118,6 +118,19 @@ FunctionEnd
   Delete "$INSTDIR\app.ico"
   System::Call 'shell32::SHChangeNotify(i ${DC_SHCNE_ASSOCCHANGED}, i ${DC_SHCNF_FLUSH}, p 0, p 0)'
 
+  ; Tauri's template only removes data under the bundle identifier
+  ; (`$APPDATA\com.vellium.devcleaner`), but the Rust backend stores settings,
+  ; history and the last-scan snapshot in `$APPDATA\dev-cleaner`
+  ; (see platform::resolve_app_dir). Without this block the "Delete app data"
+  ; checkbox left everything behind. The legacy folder is removed too so an
+  ; old installation cannot resurface its data after a reinstall. Updates never
+  ; take this path; they must keep the user's data.
+  ${If} $DeleteAppDataCheckboxState = 1
+  ${AndIf} $UpdateMode <> 1
+    RmDir /r "$APPDATA\dev-cleaner"
+    RmDir /r "$APPDATA\node-cleaner"
+  ${EndIf}
+
   ; The uninstaller itself runs from $INSTDIR, so the template's `RMDir
   ; "$INSTDIR"` fails while uninstall.exe is still locked and leaves an empty
   ; folder behind. Queue an empty-only removal for the next logon, which is the

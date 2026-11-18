@@ -40,6 +40,7 @@ describe("Desktop Guard & Edge WebView2 Hardening", () => {
       expect(isBrowserShortcutToBlock(createKeyEvent("h", { ctrl: true }))).toBe(true); // History
       expect(isBrowserShortcutToBlock(createKeyEvent("d", { ctrl: true }))).toBe(true); // Bookmark
       expect(isBrowserShortcutToBlock(createKeyEvent("o", { ctrl: true }))).toBe(true); // Open File
+      expect(isBrowserShortcutToBlock(createKeyEvent("f", { ctrl: true }))).toBe(true); // Find in page
       expect(isBrowserShortcutToBlock(createKeyEvent("g", { ctrl: true }))).toBe(true); // Find next
       expect(isBrowserShortcutToBlock(createKeyEvent("f3"))).toBe(true); // F3 Find
     });

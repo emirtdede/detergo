@@ -4,9 +4,6 @@
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 fn main() {
-    #[cfg(windows)]
-    dev_cleaner_lib::platform::preflight_cleanup_zombies();
-
     std::panic::set_hook(Box::new(|info| {
         let msg = format!("PANIC: {}\nLocation: {:?}\n", info, info.location());
         let path = std::env::temp_dir().join("dev-cleaner-crash.log");

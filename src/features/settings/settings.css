@@ -293,7 +293,7 @@
 
 .form-row .nc-switch-toggle-btn.btn-primary {
   background: var(--accent) !important;
-  color: #ffffff !important;
+  color: var(--on-accent) !important;
   border-color: var(--accent) !important;
   font-weight: 600;
 }
@@ -465,4 +465,57 @@
   color: var(--danger, #ef4444);
   font-size: var(--text-sm);
   margin-bottom: var(--space-3);
+}
+
+/* Privacy danger zone ------------------------------------------------------ */
+.settings-danger-zone {
+  border-color: var(--danger-subtle);
+}
+
+.settings-danger-zone:hover {
+  border-color: var(--danger);
+}
+
+.settings-danger-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.settings-danger-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background: var(--danger-subtle);
+  color: var(--danger);
+}
+
+.settings-danger-title {
+  color: var(--danger);
+}
+
+.settings-danger-heading .plan-note {
+  margin: var(--space-1) 0 0;
+}
+
+.settings-danger-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.settings-danger-confirm {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+
+.dialog-title .settings-danger-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
 }

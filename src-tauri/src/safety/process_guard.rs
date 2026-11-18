@@ -3,6 +3,7 @@ use std::path::Path;
 
 use crate::platform::{is_in_use, running_process_names};
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ActiveUse {

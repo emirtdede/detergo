@@ -12,11 +12,36 @@ mod tests {
         let repo = SettingsRepository::with_path(temp.path().join("config.json"));
         let settings = repo.load();
         assert_eq!(settings.schema_version, 4);
-        assert_eq!(settings.theme, "dark-transparent");
+        assert_eq!(settings.theme, "dark-black");
         assert!(!settings.reduce_motion);
         assert_eq!(settings.scan_profile, "balanced");
         assert_eq!(settings.sidebar_mode, "expanded");
         assert_eq!(settings.cache_measure_mode, "fast");
+    }
+
+    #[test]
+    fn reset_removes_settings_and_recovery_artifacts() {
+        let temp = tempdir().unwrap();
+        let config = temp.path().join("config.json");
+        let repo = SettingsRepository::with_path(config.clone());
+
+        let mut settings = AppSettings::default();
+        settings.theme = "light-blue".to_string();
+        repo.save(&settings).unwrap();
+        std::fs::write(temp.path().join("config.bak.json"), "{}").unwrap();
+        std::fs::write(temp.path().join("config.corrupt.123.json"), "{}").unwrap();
+        std::fs::write(temp.path().join("config.tmp.1.2.json"), "{}").unwrap();
+        // A user file in the same directory must survive the reset.
+        std::fs::write(temp.path().join("notes.txt"), "keep").unwrap();
+
+        repo.reset().expect("reset succeeds");
+
+        assert_eq!(repo.load(), AppSettings::default());
+        assert!(!config.exists());
+        assert!(!temp.path().join("config.bak.json").exists());
+        assert!(!temp.path().join("config.corrupt.123.json").exists());
+        assert!(!temp.path().join("config.tmp.1.2.json").exists());
+        assert!(temp.path().join("notes.txt").exists());
     }
 
     #[test]
@@ -88,13 +113,70 @@ mod tests {
         let settings = repo.load();
 
         assert_eq!(settings.schema_version, 4);
-        assert_eq!(settings.theme, "dark-transparent");
+        assert_eq!(settings.theme, "dark-black");
         let backups: Vec<_> = std::fs::read_dir(temp.path())
             .unwrap()
             .filter_map(Result::ok)
             .filter(|e| e.file_name().to_string_lossy().contains("corrupt"))
             .collect();
         assert_eq!(backups.len(), 1, "corrupt config must be preserved");
+    }
+
+    #[test]
+    fn unreadable_settings_file_flags_recovery() {
+        // Invalid UTF-8 cannot be read into a String. The user must see the
+        // recovery warning instead of a silent reset to defaults.
+        let temp = tempdir().unwrap();
+        let config_path = temp.path().join("config.json");
+        std::fs::write(&config_path, [0xff, 0xfe, 0x00, 0x01]).unwrap();
+
+        let repo = SettingsRepository::with_path(config_path);
+        let loaded = repo.load();
+
+        assert!(loaded.recovered_from_corrupt);
+        assert_eq!(
+            serde_json::to_value(&loaded).unwrap()["recoveredFromCorrupt"],
+            serde_json::Value::Bool(true)
+        );
+    }
+
+    #[test]
+    fn malformed_field_keeps_valid_settings_and_flags_recovery() {
+        let temp = tempdir().unwrap();
+        let protected = temp.path().join("important");
+        std::fs::create_dir_all(&protected).unwrap();
+        let config_path = temp.path().join("config.json");
+        let json = format!(
+            r#"{{
+                "theme": "white",
+                "maxDepth": "not-a-number",
+                "protectedPaths": ["{}"]
+            }}"#,
+            protected.to_string_lossy().replace('\\', "\\\\")
+        );
+        {
+            let mut file = File::create(&config_path).unwrap();
+            file.write_all(json.as_bytes()).unwrap();
+        }
+
+        let repo = SettingsRepository::with_path(config_path);
+        let loaded = repo.load();
+
+        // The bad field falls back to its own default; the readable neighbours
+        // survive instead of the whole file being reset.
+        assert!(loaded.recovered_from_corrupt);
+        assert_eq!(loaded.theme, "white");
+        assert_eq!(loaded.max_depth, 32);
+        assert_eq!(loaded.protected_paths.len(), 1);
+        // The UI learns about the recovery through the serialized settings.
+        assert_eq!(
+            serde_json::to_value(&loaded).unwrap()["recoveredFromCorrupt"],
+            serde_json::Value::Bool(true)
+        );
+
+        // Saving must clear the diagnostic so the toast does not repeat.
+        repo.save(&loaded).unwrap();
+        assert!(!repo.load().recovered_from_corrupt);
     }
 
     #[test]
@@ -285,5 +367,34 @@ mod tests {
             "regenerate scripts/fixtures/default-settings.json: \
              cargo run --manifest-path src-tauri/Cargo.toml --example dump-default-settings"
         );
+    }
+
+    #[test]
+    fn normalize_clamps_min_size_and_rejects_invalid_webhooks() {
+        let mut settings = AppSettings::default();
+        settings.min_size_bytes = u64::MAX;
+        assert_eq!(settings.scan_limits().min_size_bytes, u64::MAX);
+
+        settings.webhook_url = Some("https://example.com/hooks/cleaner".to_string());
+        settings.normalize();
+        assert_eq!(settings.min_size_bytes, 1024 * 1024 * 1024);
+        assert_eq!(
+            settings.webhook_url.as_deref(),
+            Some("https://example.com/hooks/cleaner")
+        );
+
+        // A scheme the HTTP client cannot deliver must be dropped, not retried
+        // on every notification.
+        settings.webhook_url = Some("file:///C:/secrets.txt".to_string());
+        settings.normalize();
+        assert_eq!(settings.webhook_url, None);
+
+        settings.webhook_url = Some("   ".to_string());
+        settings.normalize();
+        assert_eq!(settings.webhook_url, None);
+
+        settings.min_size_bytes = 0;
+        settings.normalize();
+        assert_eq!(settings.min_size_bytes, 0);
     }
 }

@@ -258,30 +258,85 @@ pub fn root_exists(root: &AgentRoot) -> bool {
 }
 
 /// True when any file under `path` changed within the given window.
+///
+/// The walk must finish: an early `entry count > 200` break meant a recently
+/// touched file living after 200 older entries was never seen, so a recording
+/// guard silently treated an active root as idle.
 pub fn recently_modified(path: &Path, window_secs: u64) -> bool {
-    let cutoff =
-        std::time::SystemTime::now().checked_sub(std::time::Duration::from_secs(window_secs));
-    let Some(cutoff) = cutoff else {
-        return false;
-    };
-    let mut count = 0u64;
+    let window = std::time::Duration::from_secs(window_secs);
+    let now = std::time::SystemTime::now();
     for entry in walkdir::WalkDir::new(path)
         .follow_links(false)
         .max_depth(3)
+        // `follow_links(false)` does not descend through symlink targets, but a
+        // junction or other reparse point must still be pruned explicitly (every
+        // other walk in this project does the same). Without it, a reparse point
+        // inside an Electron cache tree was walked as an ordinary directory,
+        // reading an arbitrary tree outside `path`.
         .into_iter()
+        .filter_entry(|entry| {
+            entry.depth() == 0 || !crate::platform::is_reparse_point(entry.path())
+        })
         .filter_map(Result::ok)
     {
-        count += 1;
-        if count > 200 {
-            break;
-        }
-        if let Ok(meta) = entry.metadata() {
-            if let Ok(modified) = meta.modified() {
-                if modified >= cutoff {
-                    return true;
-                }
-            }
+        let Ok(meta) = entry.metadata() else {
+            continue;
+        };
+        let Ok(modified) = meta.modified() else {
+            continue;
+        };
+        if counts_as_recent(modified, now, window) {
+            return true;
         }
     }
     false
+}
+
+/// True when `modified` is at most `window` in the past.
+///
+/// Age, not `modified >= now - window`: a future mtime (zip extraction, a clock
+/// moved backwards) satisfied the old comparison forever and kept an idle root
+/// permanently "recording active", blocking a cleanup that was safe to run.
+fn counts_as_recent(
+    modified: std::time::SystemTime,
+    now: std::time::SystemTime,
+    window: std::time::Duration,
+) -> bool {
+    now.duration_since(modified)
+        .map(|age| age <= window)
+        .unwrap_or(false)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{counts_as_recent, recently_modified};
+    use std::time::{Duration, SystemTime};
+
+    #[test]
+    fn a_fresh_file_counts_as_recent_activity() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("recording.mp4"), b"x").unwrap();
+        assert!(recently_modified(dir.path(), 120));
+    }
+
+    #[test]
+    fn a_future_timestamp_is_not_recent_activity() {
+        let now = SystemTime::now();
+        let window = Duration::from_secs(120);
+
+        assert!(counts_as_recent(now, now, window));
+        assert!(counts_as_recent(now - Duration::from_secs(60), now, window));
+        assert!(!counts_as_recent(
+            now - Duration::from_secs(600),
+            now,
+            window
+        ));
+        // Zip extraction preserving source timestamps or a clock moved
+        // backwards: the file reads as "modified in the future".
+        assert!(!counts_as_recent(
+            now + Duration::from_secs(3_600),
+            now,
+            window
+        ));
+    }
 }

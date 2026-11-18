@@ -36,7 +36,9 @@
     "on": "Aan",
     "off": "Uit",
     "items": "{n} items",
-    "showing": "{n} weergegeven"
+    "showing": "{n} weergegeven",
+    "scanAll": "Alles scannen",
+    "scanAllDesc": "Projecten, opslag van AI-tools en pakketcaches"
   },
   "header": {
     "changeLocation": "Locatie Wijzigen",
@@ -49,7 +51,8 @@
     "addFavorite": "Huidige locatie toevoegen aan favorieten",
     "removeFavorite": "Locatie uit favorieten verwijderen",
     "favoriteAdded": "Locatie toegevoegd aan favorieten.",
-    "favoriteRemoved": "Locatie verwijderd uit favorieten."
+    "favoriteRemoved": "Locatie verwijderd uit favorieten.",
+    "changeLocationConfirmDesc": "Als u de locatie wijzigt, worden de huidige scanresultaten en selectie gewist. Uw opgeslagen scangeschiedenis en de laatste scanmomentopname blijven bewaard."
   },
   "window": {
     "minimize": "Minimaliseren",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI-agents",
     "ecoCache": "Caches",
     "ecoOther": "Andere artefacten",
-    "distTotalBadge": "{size} opruimbaar"
+    "distTotalBadge": "{size} opruimbaar",
+    "noticeInfoTitle": "Informatie",
+    "noticeInfoHint": "Door het systeem beveiligde locaties zijn overgeslagen. Geen actie nodig.",
+    "noticeIssueHint": "Sommige locaties konden niet worden gelezen, dus resultaten kunnen onvolledig zijn.",
+    "copyDetails": "Details kopiëren",
+    "detailsCopied": "Details naar het klembord gekopieerd",
+    "coverage": "Scandekking",
+    "sectionSkipped": "Overgeslagen",
+    "sectionFailed": "Mislukt",
+    "sectionPartial": "Onvolledig",
+    "sectionNoRoot": "Geen map geselecteerd"
   },
   "table": {
     "project": "Project",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Permanent verwijderen",
     "permanentAck": "Ik begrijp dat dit niet ongedaan kan worden gemaakt.",
     "blockedReasons": "Geblokkeerde doelen",
-    "expires": "Dit plan verloopt over 15 minuten.",
+    "expires": "Dit plan verloopt over 30 minuten.",
     "close": "Sluiten",
     "working": "Aan het werk…",
     "runInBackground": "Op de achtergrond uitvoeren",
@@ -223,7 +236,11 @@
     "cancelling": "Annuleren…",
     "progress": "Verwerkt {processed} / {total}",
     "currentItem": "Huidig: {path}",
-    "alreadyRunning": "Er wordt al opgeschoond."
+    "alreadyRunning": "Er wordt al opgeschoond.",
+    "coveredByParent": "Geblokkeerd",
+    "noMethod": "Geblokkeerd",
+    "officialActionRequired": "Officiële opdracht",
+    "modeNotAllowed": "Permanent"
   },
   "result": {
     "title": "Opruimresultaat",
@@ -238,6 +255,7 @@
     "verified": "geverifieerd",
     "cancelled": "Opschonen geannuleerd",
     "cancelledNote": "{processed} items verwerkt, {skipped} overgeslagen.",
+    "progressIncomplete": "{count} voortgangsupdates konden niet worden weergegeven.",
     "processed": "Verwerkt",
     "skipped": "Overgeslagen",
     "viewResults": "Resultaten bekijken",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Wis scans",
     "scopeProjects": "Projectafhankelijkheden",
     "scopeAgents": "AI-agents",
-    "scopeAllDrives": "Alle schijven"
+    "scopeAllDrives": "Alle schijven",
+    "statusPartial": "Gedeeltelijk",
+    "totalCleaned": "Totaal teruggewonnen",
+    "statusDepthLimited": "Gedeeltelijk"
   },
   "settings": {
     "general": "Uiterlijk",
@@ -451,6 +472,12 @@
     "protectionsHint": "Mappen die nooit mogen worden verwijderd en namen om over te slaan.",
     "agentsHint": "Opschoonbeleid voor AI-agentcaches.",
     "privacyHint": "Lokale geschiedenis en paden op het scherm maskeren.",
+    "resetAppDataTitle": "Reset alle app-gegevens",
+    "resetAppDataHint": "Verwijdert alle instellingen, opschoongeschiedenis, scangeschiedenis, actielogboeken en de opgeslagen laatste scan en start vervolgens de app opnieuw. Dit kan niet ongedaan worden gemaakt.",
+    "resetAppDataConfirmBtn": "Gegevens verwijderen en opnieuw opstarten",
+    "resetAppDataBusy": "Resetten…",
+    "resetAppDataSuccess": "Alle app-gegevens zijn gereset. Standaardinstellingen hersteld.",
+    "resetAppDataBlocked": "Er wordt een scan of opschoning uitgevoerd. Stop het voordat u app-gegevens opnieuw instelt.",
     "aboutHint": "Versie, builddetails, catalogus en Vellium.",
     "legalHint": "Gebruiksvoorwaarden, privacybeleid en open-source licenties.",
     "sidebar": "Zijbalk",
@@ -547,7 +574,11 @@
     "standardMotion": "Standaard animatie",
     "aboutTitleBy": "Dev Cleaner door Vellium",
     "mcpDestructiveTitle": "Destructieve MCP-acties toestaan",
-    "mcpDestructiveHint": "Vereist de vlag --allow-destructive; elke uitvoering heeft nog steeds een eenmalig voorbeeldtoken nodig"
+    "mcpDestructiveHint": "Vereist de vlag --allow-destructive; elke uitvoering heeft nog steeds een eenmalig voorbeeldtoken nodig",
+    "pathMustBeAbsolute": "Paden moeten absoluut zijn, bijvoorbeeld C:\\Projects.",
+    "excludedNameInvalid": "Een regel moet één bestands- of mapnaam zijn, zonder padscheidingstekens.",
+    "shortcutNeedsModifier": "Voor een globale sneltoets heb je Ctrl, Alt of Meta nodig plus een toets of een functietoets.",
+    "shortcutsResetWarning": "{count} ongeldige snelkoppeling(en) zijn teruggezet naar hun standaardwaarden."
   },
   "legal": {
     "docTabsLabel": "Juridische documenten",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Geen opruimbare projectartefacten gevonden",
     "emptyTitleIdle": "Nog geen projectsanering uitgevoerd",
     "emptyDescClean": "Geselecteerde map is schoon. Geen opruimbare node_modules, target- of bouwartefacten gevonden.",
-    "emptyDescIdle": "Kies een map en scan om projectafhankelijkheden en bouwartefacten te bekijken."
+    "emptyDescIdle": "Kies een map en scan om projectafhankelijkheden en bouwartefacten te bekijken.",
+    "kpiTargets": "Schoonmaakbare doelen",
+    "kpiTargetsSub": "Over {count} projectwortels",
+    "kpiTargetsUnknown": "Scan opnieuw om het aantal projecten te vernieuwen"
   },
   "about": {
     "kpiVersion": "Versie",
@@ -616,7 +650,8 @@
     "contactSupport": "Klantenservice",
     "contactBillingDesc": "Facturering, zakelijke inkoop en abonnementsondersteuning",
     "contactPrivacyDesc": "Gegevensbeveiliging, AVG en privacyvragen",
-    "ecoCacheScope": "npm cache, Cargo register, pip cache, yarn"
+    "ecoCacheScope": "npm cache, Cargo register, pip cache, yarn",
+    "contactBilling": "Facturering en betalingen"
   },
   "docs": {
     "catGuide": "Gidsen & Architectuur",

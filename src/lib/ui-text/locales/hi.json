@@ -36,7 +36,9 @@
     "on": "चालू",
     "off": "बंद",
     "items": "{n} आइटम",
-    "showing": "{n} दिखाए गए"
+    "showing": "{n} दिखाए गए",
+    "scanAll": "सब कुछ स्कैन करें",
+    "scanAllDesc": "प्रोजेक्ट, AI टूल संग्रहण और पैकेज कैश"
   },
   "header": {
     "changeLocation": "स्थान बदलें",
@@ -49,7 +51,8 @@
     "addFavorite": "वर्तमान स्थान को पसंदीदा में जोड़ें",
     "removeFavorite": "पसंदीदा से स्थान हटाएँ",
     "favoriteAdded": "स्थान पसंदीदा में जोड़ा गया।",
-    "favoriteRemoved": "स्थान पसंदीदा से हटाया गया।"
+    "favoriteRemoved": "स्थान पसंदीदा से हटाया गया।",
+    "changeLocationConfirmDesc": "स्थान बदलने से मौजूदा स्कैन परिणाम और चयन साफ़ हो जाता है। आपका सहेजा गया स्कैन इतिहास और अंतिम स्कैन स्नैपशॉट सुरक्षित रहता है।"
   },
   "window": {
     "minimize": "छोटा करें",
@@ -133,7 +136,17 @@
     "ecoAgent": "एआई एजेंट",
     "ecoCache": "कैशेस",
     "ecoOther": "अन्य आर्टिफैक्ट्स",
-    "distTotalBadge": "{size} साफ करने योग्य"
+    "distTotalBadge": "{size} साफ करने योग्य",
+    "noticeInfoTitle": "जानकारी",
+    "noticeInfoHint": "सिस्टम-सुरक्षित स्थानों को छोड़ दिया गया। किसी कार्रवाई की आवश्यकता नहीं है।",
+    "noticeIssueHint": "कुछ स्थान पढ़े नहीं जा सके, इसलिए परिणाम अधूरे हो सकते हैं।",
+    "copyDetails": "विवरण कॉपी करें",
+    "detailsCopied": "विवरण क्लिपबोर्ड पर कॉपी किए गए",
+    "coverage": "स्कैन कवरेज",
+    "sectionSkipped": "छोड़ा गया",
+    "sectionFailed": "विफल",
+    "sectionPartial": "अधूरा",
+    "sectionNoRoot": "कोई फ़ोल्डर चयनित नहीं"
   },
   "table": {
     "project": "प्रोजेक्ट",
@@ -215,7 +228,7 @@
     "confirmPermanent": "स्थायी रूप से हटाएं",
     "permanentAck": "मैं समझता हूँ कि इसे पूर्ववत नहीं किया जा सकता।",
     "blockedReasons": "अवरुद्ध लक्ष्य",
-    "expires": "यह योजना 15 मिनट में समाप्त हो जाएगी।",
+    "expires": "यह योजना 30 मिनट में समाप्त हो जाएगी।",
     "close": "बंद करें",
     "working": "काम कर रहा है…",
     "runInBackground": "पृष्ठभूमि में चलाएँ",
@@ -223,7 +236,11 @@
     "cancelling": "रद्द किया जा रहा है…",
     "progress": "संसाधित {processed} / {total}",
     "currentItem": "वर्तमान: {path}",
-    "alreadyRunning": "सफ़ाई पहले से चल रही है।"
+    "alreadyRunning": "सफ़ाई पहले से चल रही है।",
+    "coveredByParent": "अवरुद्ध",
+    "noMethod": "अवरुद्ध",
+    "officialActionRequired": "आधिकारिक कमांड",
+    "modeNotAllowed": "स्थायी"
   },
   "result": {
     "title": "सफाई परिणाम",
@@ -238,6 +255,7 @@
     "verified": "सत्यापित",
     "cancelled": "सफ़ाई रद्द की गई",
     "cancelledNote": "{processed} आइटम संसाधित, {skipped} छोड़े गए।",
+    "progressIncomplete": "{count} प्रगति अपडेट दिखाए नहीं जा सके।",
     "processed": "संसाधित",
     "skipped": "छोड़े गए",
     "viewResults": "परिणाम देखें",
@@ -390,7 +408,10 @@
     "clearScansBtn": "स्कैन साफ करें",
     "scopeProjects": "प्रोजेक्ट निर्भरताएँ",
     "scopeAgents": "एआई एजेंट्स",
-    "scopeAllDrives": "सभी ड्राइव्स"
+    "scopeAllDrives": "सभी ड्राइव्स",
+    "statusPartial": "आंशिक",
+    "totalCleaned": "कुल पुनर्प्राप्त",
+    "statusDepthLimited": "आंशिक"
   },
   "settings": {
     "general": "दिखावट",
@@ -451,6 +472,12 @@
     "protectionsHint": "फ़ोल्डर जो कभी हटाए नहीं जाने चाहिए और जिनके नाम छोड़ने हैं।",
     "agentsHint": "एआई एजेंट कैश के लिए सफाई नीति।",
     "privacyHint": "स्थानीय इतिहास और ऑन-स्क्रीन पाथ मास्किंग।",
+    "resetAppDataTitle": "सभी ऐप डेटा रीसेट करें",
+    "resetAppDataHint": "सभी सेटिंग्स, क्लीनअप इतिहास, स्कैन इतिहास, एक्शन लॉग और सहेजे गए अंतिम स्कैन को हटा देता है, फिर ऐप को पुनरारंभ करता है। इसे असंपादित नहीं किया जा सकता है।",
+    "resetAppDataConfirmBtn": "डेटा हटाएं और पुनरारंभ करें",
+    "resetAppDataBusy": "रीसेट किया जा रहा है...",
+    "resetAppDataSuccess": "सभी ऐप डेटा रीसेट कर दिया गया है. डिफ़ॉल्ट सेटिंग्स पुनर्स्थापित की गईं.",
+    "resetAppDataBlocked": "एक स्कैन या क्लीनअप चल रहा है. ऐप डेटा रीसेट करने से पहले इसे रोकें।",
     "aboutHint": "संस्करण, निर्माण विवरण, सूची और वेलियम।",
     "legalHint": "उपयोग की शर्तें, गोपनीयता नीति और ओपन-सोर्स लाइसेंस।",
     "sidebar": "साइडबार",
@@ -547,7 +574,11 @@
     "standardMotion": "मानक एनीमेशन",
     "aboutTitleBy": "Dev Cleaner द्वारा Vellium",
     "mcpDestructiveTitle": "MCP विनाशकारी क्रियाओं की अनुमति दें",
-    "mcpDestructiveHint": "--allow-destructive फ़्लैग आवश्यक है; प्रत्येक निष्पादन को अभी भी एकल-उपयोग पूर्वावलोकन टोकन चाहिए"
+    "mcpDestructiveHint": "--allow-destructive फ़्लैग आवश्यक है; प्रत्येक निष्पादन को अभी भी एकल-उपयोग पूर्वावलोकन टोकन चाहिए",
+    "pathMustBeAbsolute": "पथ निरपेक्ष होने चाहिए, उदाहरण के लिए C:\\Projects.",
+    "excludedNameInvalid": "किसी नियम में पथ विभाजक के बिना एक फ़ाइल या फ़ोल्डर नाम होना चाहिए।",
+    "shortcutNeedsModifier": "एक वैश्विक शॉर्टकट के लिए Ctrl, Alt या Meta प्लस एक कुंजी, या एक फ़ंक्शन कुंजी की आवश्यकता होती है।",
+    "shortcutsResetWarning": "{count} अमान्य शॉर्टकट को उनके डिफ़ॉल्ट पर रीसेट कर दिया गया।"
   },
   "legal": {
     "docTabsLabel": "कानूनी दस्तावेज़",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "कोई साफ-सुथरे प्रोजेक्ट आर्टिफैक्ट्स नहीं पाए गए",
     "emptyTitleIdle": "अभी तक कोई प्रोजेक्ट स्कैन नहीं किया गया",
     "emptyDescClean": "चयनित निर्देशिका साफ है। कोई साफ-सुथरे node_modules, target, या निर्माण आर्टिफैक्ट्स नहीं पाए गए।",
-    "emptyDescIdle": "प्रोजेक्ट निर्भरता और निर्माण आर्टिफैक्ट्स सूचीबद्ध करने के लिए एक फ़ोल्डर चुनें और स्कैन करें।"
+    "emptyDescIdle": "प्रोजेक्ट निर्भरता और निर्माण आर्टिफैक्ट्स सूचीबद्ध करने के लिए एक फ़ोल्डर चुनें और स्कैन करें।",
+    "kpiTargets": "साफ़ करने योग्य लक्ष्य",
+    "kpiTargetsSub": "{count} प्रोजेक्ट रूट में",
+    "kpiTargetsUnknown": "प्रोजेक्ट संख्या रीफ़्रेश करने के लिए फिर से स्कैन करें"
   },
   "about": {
     "kpiVersion": "संस्करण",
@@ -616,7 +650,8 @@
     "contactSupport": "ग्राहक सहायता",
     "contactBillingDesc": "बिलिंग, एंटरप्राइज खरीदारी, और सब्सक्रिप्शन समर्थन",
     "contactPrivacyDesc": "डेटा सुरक्षा, GDPR, और गोपनीयता पूछताछ",
-    "ecoCacheScope": "npm कैश, Cargo रजिस्ट्री, pip कैश, yarn"
+    "ecoCacheScope": "npm कैश, Cargo रजिस्ट्री, pip कैश, yarn",
+    "contactBilling": "बिलिंग और भुगतान"
   },
   "docs": {
     "catGuide": "मार्गदर्शिकाएं और वास्तुकला",

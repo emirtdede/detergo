@@ -15,6 +15,14 @@ pub struct ProjectInfo {
     pub root_project_name: String,
     pub workspace_kind: Option<String>,
     pub markers: Vec<String>,
+    /// True when the root was confirmed by a manifest. The UI counts project
+    /// roots from this flag, so fallback records can never inflate the KPI.
+    #[serde(default = "default_true")]
+    pub detected: bool,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 /// Resolves the nearest project root and the enclosing workspace root.
@@ -119,6 +127,7 @@ impl ProjectResolver {
                     root_project_name,
                     workspace_kind,
                     markers,
+                    detected: true,
                 });
                 break;
             }
@@ -266,7 +275,13 @@ fn is_npm_workspace(dir: &Path) -> bool {
     let Ok(json) = serde_json::from_str::<serde_json::Value>(&content) else {
         return false;
     };
-    json.get("workspaces").is_some()
+    // `"workspaces": null` and `"workspaces": []` do not make a workspace root.
+    // Accepting any present key resolved the wrong root and changed scan
+    // grouping and evidence collection.
+    json.get("workspaces")
+        .and_then(|value| value.as_array())
+        .map(|patterns| !patterns.is_empty())
+        .unwrap_or(false)
 }
 
 fn is_cargo_workspace(dir: &Path) -> bool {
@@ -274,7 +289,13 @@ fn is_cargo_workspace(dir: &Path) -> bool {
     let Ok(content) = fs::read_to_string(&manifest) else {
         return false;
     };
-    content.contains("[workspace]")
+    // Parse instead of a substring test: a package whose manifest merely
+    // mentions "[workspace]" in a comment or description is not a workspace
+    // root.
+    let Ok(value) = content.parse::<toml::Value>() else {
+        return false;
+    };
+    value.get("workspace").is_some()
 }
 
 pub fn project_name(dir: &Path) -> String {
@@ -333,5 +354,41 @@ fn read_pyproject_name(dir: &Path) -> Option<String> {
         None
     } else {
         Some(name.to_string())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{is_cargo_workspace, is_npm_workspace};
+
+    #[test]
+    fn an_empty_workspaces_key_is_not_a_workspace_root() {
+        let dir = tempfile::tempdir().unwrap();
+        let manifest = dir.path().join("package.json");
+
+        std::fs::write(&manifest, r#"{"workspaces": []}"#).unwrap();
+        assert!(!is_npm_workspace(dir.path()));
+
+        std::fs::write(&manifest, r#"{"workspaces": null}"#).unwrap();
+        assert!(!is_npm_workspace(dir.path()));
+
+        std::fs::write(&manifest, r#"{"workspaces": ["packages/*"]}"#).unwrap();
+        assert!(is_npm_workspace(dir.path()));
+    }
+
+    #[test]
+    fn a_manifest_that_merely_mentions_workspace_is_not_a_root() {
+        let dir = tempfile::tempdir().unwrap();
+        let manifest = dir.path().join("Cargo.toml");
+
+        std::fs::write(
+            &manifest,
+            "# [workspace]\n[package]\nname = \"pkg\"\nversion = \"0.1.0\"\n",
+        )
+        .unwrap();
+        assert!(!is_cargo_workspace(dir.path()));
+
+        std::fs::write(&manifest, "[workspace]\nmembers = [\"a\"]\n").unwrap();
+        assert!(is_cargo_workspace(dir.path()));
     }
 }

@@ -36,7 +36,9 @@
     "on": "آن",
     "off": "آف",
     "items": "{n} اشیاء",
-    "showing": "{n} دکھائی گئی"
+    "showing": "{n} دکھائی گئی",
+    "scanAll": "سب کچھ اسکین کریں",
+    "scanAllDesc": "پروجیکٹس، AI ٹول اسٹوریج اور پیکیج کیش"
   },
   "header": {
     "changeLocation": "مقام تبدیل کریں",
@@ -49,7 +51,8 @@
     "addFavorite": "موجودہ مقام کو پسندیدہ میں شامل کریں",
     "removeFavorite": "مقام کو پسندیدہ سے ہٹائیں",
     "favoriteAdded": "مقام پسندیدہ میں شامل کیا گیا۔",
-    "favoriteRemoved": "مقام پسندیدہ سے ہٹا دیا گیا۔"
+    "favoriteRemoved": "مقام پسندیدہ سے ہٹا دیا گیا۔",
+    "changeLocationConfirmDesc": "مقام تبدیل کرنے سے موجودہ اسکین نتائج اور انتخاب صاف ہو جاتے ہیں۔ آپ کی محفوظ اسکین تاریخ اور آخری اسکین اسنیپ شاٹ محفوظ رہتے ہیں۔"
   },
   "window": {
     "minimize": "چھوٹا کریں",
@@ -133,7 +136,17 @@
     "ecoAgent": "اے آئی ایجنٹس",
     "ecoCache": "کیشز",
     "ecoOther": "دیگر آرٹیفیکٹس",
-    "distTotalBadge": "{size} صاف کرنے کے قابل"
+    "distTotalBadge": "{size} صاف کرنے کے قابل",
+    "noticeInfoTitle": "معلومات",
+    "noticeInfoHint": "سسٹم سے محفوظ مقامات چھوڑ دیے گئے۔ کسی کارروائی کی ضرورت نہیں۔",
+    "noticeIssueHint": "کچھ مقامات پڑھے نہیں جا سکے، اس لیے نتائج نامکمل ہو سکتے ہیں۔",
+    "copyDetails": "تفصیلات کاپی کریں",
+    "detailsCopied": "تفصیلات کلپ بورڈ پر کاپی کر دی گئیں",
+    "coverage": "اسکین کی حد",
+    "sectionSkipped": "چھوڑ دیا گیا",
+    "sectionFailed": "ناکام",
+    "sectionPartial": "نامکمل",
+    "sectionNoRoot": "کوئی فولڈر منتخب نہیں"
   },
   "table": {
     "project": "پروجیکٹ",
@@ -215,7 +228,7 @@
     "confirmPermanent": "مستقل طور پر حذف کریں",
     "permanentAck": "میں سمجھتا ہوں کہ اسے واپس نہیں لیا جا سکتا۔",
     "blockedReasons": "روکے گئے ہدف",
-    "expires": "یہ منصوبہ 15 منٹ میں ختم ہو جائے گا۔",
+    "expires": "یہ منصوبہ 30 منٹ میں ختم ہو جائے گا۔",
     "close": "بند کریں",
     "working": "کام ہو رہا ہے…",
     "runInBackground": "پس منظر میں چلائیں",
@@ -223,7 +236,11 @@
     "cancelling": "منسوخ ہو رہا ہے…",
     "progress": "پروسیس شدہ {processed} / {total}",
     "currentItem": "موجودہ: {path}",
-    "alreadyRunning": "صفائی پہلے سے جاری ہے۔"
+    "alreadyRunning": "صفائی پہلے سے جاری ہے۔",
+    "coveredByParent": "روکا گیا",
+    "noMethod": "روکا گیا",
+    "officialActionRequired": "سرکاری کمانڈ",
+    "modeNotAllowed": "مستقل"
   },
   "result": {
     "title": "صفائی کا نتیجہ",
@@ -238,6 +255,7 @@
     "verified": "تصدیق شدہ",
     "cancelled": "صفائی منسوخ ہو گئی",
     "cancelledNote": "{processed} آئٹمز پروسیس ہوئے، {skipped} نظر انداز ہوئے۔",
+    "progressIncomplete": "{count} پیش رفت اپ ڈیٹس دکھائے نہیں جا سکے۔",
     "processed": "پروسیس شدہ",
     "skipped": "نظر انداز",
     "viewResults": "نتائج دیکھیں",
@@ -390,7 +408,10 @@
     "clearScansBtn": "اسکین صاف کریں",
     "scopeProjects": "پروجیکٹ کی انحصاری",
     "scopeAgents": "AI ایجنٹس",
-    "scopeAllDrives": "تمام ڈرائیوز"
+    "scopeAllDrives": "تمام ڈرائیوز",
+    "statusPartial": "جزوی",
+    "totalCleaned": "کل وصول شدہ",
+    "statusDepthLimited": "جزوی"
   },
   "settings": {
     "general": "ظاہری شکل",
@@ -451,6 +472,12 @@
     "protectionsHint": "وہ فولڈرز جو کبھی حذف نہیں ہونے چاہئیں اور وہ نام جو نظرانداز کیے جائیں۔",
     "agentsHint": "AI ایجنٹ کی کیشز کے لیے صفائی کی پالیسی۔",
     "privacyHint": "مقامی تاریخ اور اسکرین پر راستے کی ماسکنگ۔",
+    "resetAppDataTitle": "تمام ایپ ڈیٹا کو دوبارہ ترتیب دیں۔",
+    "resetAppDataHint": "تمام سیٹنگز، کلین اپ ہسٹری، اسکین ہسٹری، ایکشن لاگز، اور محفوظ کردہ آخری اسکین کو حذف کرتا ہے، پھر ایپ کو دوبارہ شروع کرتا ہے۔ اسے کالعدم نہیں کیا جا سکتا۔",
+    "resetAppDataConfirmBtn": "ڈیٹا کو حذف کریں اور دوبارہ شروع کریں۔",
+    "resetAppDataBusy": "ری سیٹ ہو رہا ہے…",
+    "resetAppDataSuccess": "تمام ایپ ڈیٹا ری سیٹ کر دیا گیا ہے۔ پہلے سے طے شدہ ترتیبات بحال ہو گئیں۔",
+    "resetAppDataBlocked": "اسکین یا صفائی چل رہی ہے۔ ایپ ڈیٹا کو دوبارہ ترتیب دینے سے پہلے اسے روک دیں۔",
     "aboutHint": "ورژن، تعمیر کی تفصیلات، کیٹلاگ اور ویلئیم۔",
     "legalHint": "استعمال کی شرائط، پرائیویسی پالیسی اور اوپن سورس لائسنسز۔",
     "sidebar": "سائیڈبار",
@@ -547,7 +574,11 @@
     "standardMotion": "معیاری حرکت",
     "aboutTitleBy": "Dev Cleaner از Vellium",
     "mcpDestructiveTitle": "MCP تباہ کن اقدامات کی اجازت دیں",
-    "mcpDestructiveHint": "--allow-destructive پرچم درکار ہے؛ ہر عملدرآمد کو اب بھی ایک بار استعمال ہونے والا پیش منظر ٹوکن چاہیے"
+    "mcpDestructiveHint": "--allow-destructive پرچم درکار ہے؛ ہر عملدرآمد کو اب بھی ایک بار استعمال ہونے والا پیش منظر ٹوکن چاہیے",
+    "pathMustBeAbsolute": "راستے مطلق ہونا چاہیے، مثال کے طور پر C:\\Projects۔",
+    "excludedNameInvalid": "ایک قاعدہ ایک فائل یا فولڈر کا نام ہونا چاہیے، بغیر راستہ الگ کرنے والے۔",
+    "shortcutNeedsModifier": "ایک عالمی شارٹ کٹ کے لیے Ctrl، Alt یا Meta کے علاوہ ایک کلید، یا فنکشن کلید کی ضرورت ہوتی ہے۔",
+    "shortcutsResetWarning": "{count} غلط شارٹ کٹ کو ان کے ڈیفالٹس پر دوبارہ ترتیب دیا گیا تھا۔"
   },
   "legal": {
     "docTabsLabel": "قانونی دستاویزات",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "کوئی صاف کی جانے والی پروجیکٹ آثار نہیں ملی",
     "emptyTitleIdle": "ابھی تک کوئی پروجیکٹ اسکین نہیں کیا گیا",
     "emptyDescClean": "منتخب شدہ ڈائریکٹری صاف ہے۔ کوئی صاف کرنے کے قابل node_modules، target، یا build آثار نہیں ملے۔",
-    "emptyDescIdle": "پروجیکٹ انحصارات اور build آثار کی فہرست کے لیے ایک فولڈر منتخب کریں اور اسکین کریں۔"
+    "emptyDescIdle": "پروجیکٹ انحصارات اور build آثار کی فہرست کے لیے ایک فولڈر منتخب کریں اور اسکین کریں۔",
+    "kpiTargets": "صاف کرنے کے قابل اہداف",
+    "kpiTargetsSub": "{count} پروجیکٹ روٹس میں",
+    "kpiTargetsUnknown": "پروجیکٹ کی تعداد تازہ کرنے کے لیے دوبارہ اسکین کریں"
   },
   "about": {
     "kpiVersion": "ورژن",
@@ -616,7 +650,8 @@
     "contactSupport": "کسٹمر سپورٹ",
     "contactBillingDesc": "بلنگ، ادارہ جاتی خریداری، اور سبسکرپشن سپورٹ",
     "contactPrivacyDesc": "ڈیٹا سیکیورٹی، جی ڈی پی آر، اور پرائیویسی استفسارات",
-    "ecoCacheScope": "npm کیشے، Cargo رجسٹری، pip کیشے، yarn"
+    "ecoCacheScope": "npm کیشے، Cargo رجسٹری، pip کیشے، yarn",
+    "contactBilling": "بلنگ اور ادائیگیاں"
   },
   "docs": {
     "catGuide": "گائیڈز اور آرکیٹیکچر",

@@ -36,7 +36,9 @@
     "on": "On",
     "off": "O'chirildi",
     "items": "{n} elementlar",
-    "showing": "{n} ko'rsatilgan"
+    "showing": "{n} ko'rsatilgan",
+    "scanAll": "Hammasini skanerlash",
+    "scanAllDesc": "Loyihalar, AI vositalari ombori va paket keshlari"
   },
   "header": {
     "changeLocation": "Joylashuvni O'zgartirish",
@@ -49,7 +51,8 @@
     "addFavorite": "Hozirgi joylashuvni sevimlilarga qo'shing",
     "removeFavorite": "Sevimlilardan joylashuvni olib tashlash",
     "favoriteAdded": "Manzil sevimlilar ro'yxatiga qo'shildi.",
-    "favoriteRemoved": "Manzil sevimlilardan olib tashlandi."
+    "favoriteRemoved": "Manzil sevimlilardan olib tashlandi.",
+    "changeLocationConfirmDesc": "Joylashuvni o‘zgartirish joriy skan natijalari va tanlovni tozalaydi. Saqlangan skan tarixi va oxirgi skan surati saqlanadi."
   },
   "window": {
     "minimize": "Kichraytirish",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI agentlar",
     "ecoCache": "Keshlar",
     "ecoOther": "Boshqa artefaktlar",
-    "distTotalBadge": "{size} tozalash mumkin"
+    "distTotalBadge": "{size} tozalash mumkin",
+    "noticeInfoTitle": "Ma'lumot",
+    "noticeInfoHint": "Tizim himoyalagan joylar o'tkazib yuborildi. Hech qanday amal kerak emas.",
+    "noticeIssueHint": "Ba'zi joylarni o'qib bo'lmadi, shuning uchun natijalar to'liq bo'lmasligi mumkin.",
+    "copyDetails": "Tafsilotlarni nusxalash",
+    "detailsCopied": "Tafsilotlar vaqtinchalik xotiraga nusxalandi",
+    "coverage": "Skanerlash qamrovi",
+    "sectionSkipped": "O'tkazib yuborildi",
+    "sectionFailed": "Muvaffaqiyatsiz",
+    "sectionPartial": "Tugallanmagan",
+    "sectionNoRoot": "Hech qanday papka tanlanmagan"
   },
   "table": {
     "project": "Loyiha",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Doimiy o'chirish",
     "permanentAck": "Men tushundim, bu qaytarib bo'lmaydi.",
     "blockedReasons": "Bloklangan maqsadlar",
-    "expires": "Ushbu reja 15 daqiqa ichida tugaydi.",
+    "expires": "Ushbu reja 30 daqiqa ichida tugaydi.",
     "close": "Yopish",
     "working": "Ishlayapti…",
     "runInBackground": "Fonda ishga tushirish",
@@ -223,7 +236,11 @@
     "cancelling": "Bekor qilinmoqda…",
     "progress": "Qayta ishlangan {processed} / {total}",
     "currentItem": "Joriy: {path}",
-    "alreadyRunning": "Tozalash allaqachon davom etmoqda."
+    "alreadyRunning": "Tozalash allaqachon davom etmoqda.",
+    "coveredByParent": "Bloklangan",
+    "noMethod": "Bloklangan",
+    "officialActionRequired": "Rasmiy buyruq",
+    "modeNotAllowed": "Doimiy"
   },
   "result": {
     "title": "Tozalash natijasi",
@@ -238,6 +255,7 @@
     "verified": "tasdiqlangan",
     "cancelled": "Tozalash bekor qilindi",
     "cancelledNote": "{processed} element qayta ishlandi, {skipped} o‘tkazib yuborildi.",
+    "progressIncomplete": "{count} ta jarayon yangilanishini ko‘rsatib bo‘lmadi.",
     "processed": "Qayta ishlangan",
     "skipped": "O‘tkazib yuborilgan",
     "viewResults": "Natijalarni ko‘rish",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Skanerlashlarni Tozalash",
     "scopeProjects": "Loyihalar bog‘liqligi",
     "scopeAgents": "Sun'iy intellekt agentlari",
-    "scopeAllDrives": "Barcha disklar"
+    "scopeAllDrives": "Barcha disklar",
+    "statusPartial": "Qisman",
+    "totalCleaned": "Umumiy qaytarilgan",
+    "statusDepthLimited": "Qisman"
   },
   "settings": {
     "general": "Tashqi Ko'rinish",
@@ -451,6 +472,12 @@
     "protectionsHint": "Hech qachon o‘chirib bo‘lmaydigan papkalar va o‘tkazib yuboriladigan nomlar.",
     "agentsHint": "AI agenti keshlarini tozalash siyosati.",
     "privacyHint": "Mahalliy tarix va ekrandagi yo‘lni yashirish.",
+    "resetAppDataTitle": "Barcha ilova maʼlumotlarini asl holatiga qaytarish",
+    "resetAppDataHint": "Barcha sozlamalar, tozalash tarixi, skanerlash tarixi, amallar jurnallari va saqlangan oxirgi skanerlashni oʻchirib, ilovani qayta ishga tushiradi. Buni bekor qilib boʻlmaydi.",
+    "resetAppDataConfirmBtn": "Maʼlumotlarni oʻchirish va qayta ishga tushirish",
+    "resetAppDataBusy": "Asl holatiga qaytarilmoqda…",
+    "resetAppDataSuccess": "Barcha ilova maʼlumotlari asl holatiga qaytarildi. Standart sozlamalar tiklandi.",
+    "resetAppDataBlocked": "Skanerlash yoki tozalash davom etmoqda. Ilova maʼlumotlarini asl holatiga qaytarishdan oldin uni toʻxtating.",
     "aboutHint": "Versiya, qurilish tafsilotlari, katalog va Vellium.",
     "legalHint": "Foydalanish shartlari, maxfiylik siyosati va ochiq manbali litsenziyalar.",
     "sidebar": "Yon panel",
@@ -547,7 +574,11 @@
     "standardMotion": "Standart animatsiya",
     "aboutTitleBy": "Dev Cleaner tomonidan Vellium",
     "mcpDestructiveTitle": "MCP buzg'unchi amallariga ruxsat berish",
-    "mcpDestructiveHint": "--allow-destructive bayrog'i talab qilinadi; har bir bajarish hali ham bir martalik ko'rib chiqish tokenini talab qiladi"
+    "mcpDestructiveHint": "--allow-destructive bayrog'i talab qilinadi; har bir bajarish hali ham bir martalik ko'rib chiqish tokenini talab qiladi",
+    "pathMustBeAbsolute": "Yo'llar mutlaq bo'lishi kerak, masalan, C:\\Projects.",
+    "excludedNameInvalid": "Qoida bitta fayl yoki papka nomi boʻlishi kerak, yoʻl ajratuvchisi boʻlmasligi kerak.",
+    "shortcutNeedsModifier": "Global yorliq uchun Ctrl, Alt yoki Meta, shuningdek, kalit yoki funktsiya tugmachasi kerak.",
+    "shortcutsResetWarning": "{count} noto‘g‘ri yorliq(lar) asl holatiga qaytarildi."
   },
   "legal": {
     "docTabsLabel": "Huquqiy hujjatlar",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Tozalash mumkin bo‘lgan loyiha artefaktlari topilmadi",
     "emptyTitleIdle": "Hali loyiha skaneri o‘tkazilmadi",
     "emptyDescClean": "Tanlangan papka toza. Tozalash mumkin bo‘lgan node_modules, target yoki qurilish artefaktlari topilmadi.",
-    "emptyDescIdle": "Papkani tanlang va loyihaning bog‘liqliklarini va qurilish artefaktlarini ro‘yxatlash uchun skanerlashni amalga oshiring."
+    "emptyDescIdle": "Papkani tanlang va loyihaning bog‘liqliklarini va qurilish artefaktlarini ro‘yxatlash uchun skanerlashni amalga oshiring.",
+    "kpiTargets": "Tozalash mumkin bo'lgan nishonlar",
+    "kpiTargetsSub": "{count} loyiha ildizida",
+    "kpiTargetsUnknown": "Loyihalar sonini yangilash uchun qayta skanerlang"
   },
   "about": {
     "kpiVersion": "Versiya",
@@ -616,7 +650,8 @@
     "contactSupport": "Mijozlarni qo‘llab-quvvatlash",
     "contactBillingDesc": "Hisob-kitob, korporativ xarid va obuna qo‘llab-quvvatlash",
     "contactPrivacyDesc": "Ma’lumotlar xavfsizligi, GDPR va maxfiylik so‘rovlari",
-    "ecoCacheScope": "npm kesh, Cargo registr, pip kesh, yarn"
+    "ecoCacheScope": "npm kesh, Cargo registr, pip kesh, yarn",
+    "contactBilling": "Hisob-kitob va to‘lovlar"
   },
   "docs": {
     "catGuide": "Qo‘llanmalar va arxitektura",

@@ -1,3 +1,5 @@
+import { APP_VERSION } from "@/lib/app-version";
+
 export type McpIdeKey =
   | "cursor"
   | "windsurf"
@@ -21,6 +23,11 @@ export interface McpConfigItem {
   tag: string;
   file: string;
   json: string;
+  /**
+   * Config syntax of `json`. Codex and a few CLIs read TOML, so the docs must
+   * not hand them a JSON body for a `.toml` file.
+   */
+  syntax?: "json" | "toml";
 }
 
 export const mcpConfigList: McpConfigItem[] = [
@@ -126,18 +133,9 @@ export const mcpConfigList: McpConfigItem[] = [
     category: "agents-tab",
     tag: "AI CLI",
     file: "%USERPROFILE%\\.codex\\config.toml",
-    json: JSON.stringify(
-      {
-        mcpServers: {
-          "dev-cleaner": {
-            command: "dev-cleaner",
-            args: ["mcp"],
-          },
-        },
-      },
-      null,
-      2
-    ),
+    // Codex reads TOML, not JSON: a JSON body in config.toml is ignored.
+    syntax: "toml",
+    json: ['[mcp_servers.dev-cleaner]', 'command = "dev-cleaner"', 'args = ["mcp"]'].join("\n"),
   },
   {
     id: "t3code",
@@ -299,20 +297,34 @@ export const mcpConfigList: McpConfigItem[] = [
   },
 ];
 
-export const mcpConfigs: Record<McpIdeKey, { file: string; json: string }> = mcpConfigList.reduce(
+export const mcpConfigs: Record<
+  McpIdeKey,
+  { file: string; json: string; syntax: "json" | "toml" }
+> = mcpConfigList.reduce(
   (acc, item) => {
-    acc[item.id] = { file: item.file, json: item.json };
+    acc[item.id] = { file: item.file, json: item.json, syntax: item.syntax ?? "json" };
     return acc;
   },
-  {} as Record<McpIdeKey, { file: string; json: string }>
+  {} as Record<McpIdeKey, { file: string; json: string; syntax: "json" | "toml" }>
 );
 
+/**
+ * The documented webhook body.
+ *
+ * It mirrors `WebhookPayload` in `src-tauri/src/cli/mod.rs` — the struct the
+ * backend actually serialises — plus the envelope the GUI events are
+ * canonicalised into. Fields that only exist in one of the two producers
+ * (`scan_id`, `duration_ms`, `stop_reason`, `plan_id`, `success_count`,
+ * `reclaim_bytes`) are documented in the surrounding text rather than invented
+ * here: a sample that shows a field the backend never sends is worse than no
+ * sample at all.
+ */
 export const webhookSampleJson = JSON.stringify(
   {
-    event: "cleanup_completed",
-    timestamp: "2026-11-06T02:30:00Z",
+    event: "clean",
+    timestamp: "2026-11-17T02:30:00Z",
     product: "Dev Cleaner by Vellium",
-    version: "2.2.2",
+    version: APP_VERSION,
     scope: "projects",
     target_count: 24,
     total_bytes: 45678901234,
@@ -320,7 +332,6 @@ export const webhookSampleJson = JSON.stringify(
     status: "success",
     cleaned_count: 24,
     cleaned_bytes: 45678901234,
-    cleaned_human: "42.54 GB",
     dry_run: false,
   },
   null,

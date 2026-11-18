@@ -36,7 +36,9 @@
     "on": "Ein",
     "off": "Aus",
     "items": "{n} Elemente",
-    "showing": "{n} angezeigt"
+    "showing": "{n} angezeigt",
+    "scanAll": "Alles scannen",
+    "scanAllDesc": "Projekte, KI-Tool-Speicher und Paket-Caches"
   },
   "header": {
     "changeLocation": "Speicherort ändern",
@@ -49,7 +51,8 @@
     "addFavorite": "Aktuellen Ort zu Favoriten hinzufügen",
     "removeFavorite": "Ort aus Favoriten entfernen",
     "favoriteAdded": "Ort zu Favoriten hinzugefügt.",
-    "favoriteRemoved": "Ort aus Favoriten entfernt."
+    "favoriteRemoved": "Ort aus Favoriten entfernt.",
+    "changeLocationConfirmDesc": "Das Ändern des Speicherorts löscht die aktuellen Scanergebnisse und die Auswahl. Ihr gespeicherter Scanverlauf und der letzte Scan-Snapshot bleiben erhalten."
   },
   "window": {
     "minimize": "Minimieren",
@@ -133,7 +136,17 @@
     "ecoAgent": "KI-Agenten",
     "ecoCache": "Caches",
     "ecoOther": "Sonstige Artefakte",
-    "distTotalBadge": "{size} bereinigbar"
+    "distTotalBadge": "{size} bereinigbar",
+    "noticeInfoTitle": "Information",
+    "noticeInfoHint": "Vom System geschützte Orte wurden übersprungen. Keine Aktion nötig.",
+    "noticeIssueHint": "Einige Orte konnten nicht gelesen werden, daher können die Ergebnisse unvollständig sein.",
+    "copyDetails": "Details kopieren",
+    "detailsCopied": "Details in die Zwischenablage kopiert",
+    "coverage": "Scan-Abdeckung",
+    "sectionSkipped": "Übersprungen",
+    "sectionFailed": "Fehlgeschlagen",
+    "sectionPartial": "Unvollständig",
+    "sectionNoRoot": "Kein Ordner ausgewählt"
   },
   "table": {
     "label": "Bereinigungsziele",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Endgültig löschen",
     "permanentAck": "Ich verstehe, dass dies nicht rückgängig gemacht werden kann.",
     "blockedReasons": "Blockierte Ziele",
-    "expires": "Dieser Bereinigungsplan läuft in 15 Minuten ab.",
+    "expires": "Dieser Bereinigungsplan läuft in 30 Minuten ab.",
     "close": "Schließen",
     "working": "Wird ausgeführt…",
     "runInBackground": "Im Hintergrund ausführen",
@@ -223,7 +236,11 @@
     "cancelling": "Wird abgebrochen…",
     "progress": "Verarbeitet {processed} / {total}",
     "currentItem": "Aktuell: {path}",
-    "alreadyRunning": "Es läuft bereits eine Bereinigung."
+    "alreadyRunning": "Es läuft bereits eine Bereinigung.",
+    "coveredByParent": "Blockiert",
+    "noMethod": "Blockiert",
+    "officialActionRequired": "Offizieller Befehl",
+    "modeNotAllowed": "Endgültig"
   },
   "result": {
     "title": "Bereinigungsergebnis",
@@ -238,6 +255,7 @@
     "verified": "verifiziert",
     "cancelled": "Bereinigung abgebrochen",
     "cancelledNote": "{processed} Elemente verarbeitet, {skipped} übersprungen.",
+    "progressIncomplete": "{count} Fortschrittsaktualisierungen konnten nicht angezeigt werden.",
     "processed": "Verarbeitet",
     "skipped": "Übersprungen",
     "viewResults": "Ergebnisse anzeigen",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Scans leeren",
     "scopeProjects": "Projektabhängigkeiten",
     "scopeAgents": "KI-Agenten",
-    "scopeAllDrives": "Alle Laufwerke"
+    "scopeAllDrives": "Alle Laufwerke",
+    "statusPartial": "Teilweise",
+    "totalCleaned": "Insgesamt freigegeben",
+    "statusDepthLimited": "Teilweise"
   },
   "settings": {
     "general": "Allgemein",
@@ -451,6 +472,12 @@
     "protectionsHint": "Ordner, die niemals gelöscht werden dürfen, und zu überspringende Namen.",
     "agentsHint": "Bereinigungsrichtlinie für KI-Agenten-Caches.",
     "privacyHint": "Lokaler Verlauf und Pfadmaskierung auf dem Bildschirm.",
+    "resetAppDataTitle": "Alle App-Daten zurücksetzen",
+    "resetAppDataHint": "Löscht alle Einstellungen, den Bereinigungsverlauf, den Scanverlauf, die Aktionsprotokolle und den gespeicherten letzten Scan und startet die App dann neu. Dies kann nicht rückgängig gemacht werden.",
+    "resetAppDataConfirmBtn": "Daten löschen und neu starten",
+    "resetAppDataBusy": "Zurücksetzen…",
+    "resetAppDataSuccess": "Alle App-Daten wurden zurückgesetzt. Standardeinstellungen wiederhergestellt.",
+    "resetAppDataBlocked": "Ein Scan oder eine Bereinigung wird ausgeführt. Stoppen Sie es, bevor Sie die App-Daten zurücksetzen.",
     "aboutHint": "Version, Build-Details, Regelkatalog und Vellium.",
     "legalHint": "Nutzungsbedingungen, Datenschutzerklärung und Open-Source-Lizenzen.",
     "sidebar": "Seitenleiste",
@@ -547,7 +574,11 @@
     "standardMotion": "Standardanimation",
     "aboutTitleBy": "Dev Cleaner von Vellium",
     "mcpDestructiveTitle": "Destruktive MCP-Aktionen zulassen",
-    "mcpDestructiveHint": "Erfordert das Flag --allow-destructive; jede Ausführung benötigt weiterhin ein einmaliges Vorschau-Token"
+    "mcpDestructiveHint": "Erfordert das Flag --allow-destructive; jede Ausführung benötigt weiterhin ein einmaliges Vorschau-Token",
+    "pathMustBeAbsolute": "Pfade müssen absolut sein, zum Beispiel C:\\Projekte.",
+    "excludedNameInvalid": "Eine Regel muss ein einzelner Datei- oder Ordnername ohne Pfadtrennzeichen sein.",
+    "shortcutNeedsModifier": "Eine globale Tastenkombination benötigt Strg, Alt oder Meta sowie eine Taste oder eine Funktionstaste.",
+    "shortcutsResetWarning": "{count} ungültige Verknüpfung(en) wurden auf ihre Standardeinstellungen zurückgesetzt."
   },
   "legal": {
     "docTabsLabel": "Rechtliche Dokumente",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Keine bereinigbaren Projekt-Artefakte gefunden",
     "emptyTitleIdle": "Noch kein Projekt-Scan durchgeführt",
     "emptyDescClean": "Das ausgewählte Verzeichnis ist sauber. Keine bereinigbaren node_modules-, target- oder Build-Artefakte gefunden.",
-    "emptyDescIdle": "Wählen Sie einen Ordner aus und scannen Sie, um Projektabhängigkeiten und Build-Artefakte aufzulisten."
+    "emptyDescIdle": "Wählen Sie einen Ordner aus und scannen Sie, um Projektabhängigkeiten und Build-Artefakte aufzulisten.",
+    "kpiTargets": "Bereinigbare Ziele",
+    "kpiTargetsSub": "In {count} Projektstämmen",
+    "kpiTargetsUnknown": "Erneut scannen, um die Projektanzahl zu aktualisieren"
   },
   "about": {
     "kpiVersion": "Version",
@@ -616,7 +650,8 @@
     "contactSupport": "Kundensupport",
     "contactBillingDesc": "Abrechnung, Unternehmenseinkauf und Abonnement-Support",
     "contactPrivacyDesc": "Datensicherheit, DSGVO und Datenschutzanfragen",
-    "ecoCacheScope": "npm Cache, Cargo Registry, pip Cache, yarn"
+    "ecoCacheScope": "npm Cache, Cargo Registry, pip Cache, yarn",
+    "contactBilling": "Abrechnung und Zahlungen"
   },
   "docs": {
     "catGuide": "Anleitungen & Architektur",

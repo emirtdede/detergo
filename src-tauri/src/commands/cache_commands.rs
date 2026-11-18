@@ -22,6 +22,7 @@ pub async fn get_cache_providers() -> Result<Vec<CacheProviderInfo>, AppError> {
 /// let the user cancel. The scan runs on a blocking worker thread.
 #[tauri::command]
 pub async fn measure_cache_providers(
+    provider_ids: Option<Vec<String>>,
     on_event: Channel<CacheMeasureEvent>,
     state: State<'_, AppState>,
 ) -> Result<(), AppError> {
@@ -39,7 +40,7 @@ pub async fn measure_cache_providers(
 
     let worker_token = token.clone();
     let result = tokio::task::spawn_blocking(move || {
-        measure_providers_blocking(&worker_token, move |event| {
+        measure_providers_blocking(&worker_token, provider_ids.as_deref(), move |event| {
             let _ = on_event.send(event);
         });
     })
@@ -68,12 +69,55 @@ pub fn cancel_cache_measurement(state: State<'_, AppState>) -> Result<(), AppErr
 }
 
 #[tauri::command]
-pub fn preview_official_action(
+pub async fn preview_official_action(
     provider_id: String,
     action_id: String,
     state: State<'_, AppState>,
 ) -> Result<OfficialActionPreview, AppError> {
-    preview_action(&state.official, &provider_id, &action_id)
+    // Previewing walks every cache path to report a real "before" size. A
+    // synchronous command would run that walk on the webview thread and freeze
+    // the window for large caches (NuGet, pnpm), so it is offloaded here.
+    let registry = state.official.clone();
+    let token = CancellationToken::new();
+    {
+        let mut current = state
+            .preview_token
+            .lock()
+            .map_err(|_| AppError::Unknown("Cache preview lock failure.".to_string()))?;
+        if let Some(old) = current.take() {
+            old.cancel();
+        }
+        *current = Some(token.clone());
+    }
+
+    let worker_token = token.clone();
+    let result = tokio::task::spawn_blocking(move || {
+        preview_action(&registry, &provider_id, &action_id, &worker_token)
+    })
+    .await
+    .map_err(|e| AppError::Unknown(format!("Cache preview failed: {}", e)));
+
+    if let Ok(mut current) = state.preview_token.lock() {
+        if current.as_ref().map(|t| t.same(&token)).unwrap_or(false) {
+            *current = None;
+        }
+    }
+
+    result?
+}
+
+/// Stops an in-flight preview measurement. Without this, dismissing the
+/// spinner left the directory walk running to completion on a large cache.
+#[tauri::command]
+pub fn cancel_cache_preview(state: State<'_, AppState>) -> Result<(), AppError> {
+    let mut current = state
+        .preview_token
+        .lock()
+        .map_err(|_| AppError::Unknown("Cache preview lock failure.".to_string()))?;
+    if let Some(token) = current.take() {
+        token.cancel();
+    }
+    Ok(())
 }
 
 #[tauri::command]

@@ -36,7 +36,9 @@
     "on": "Lori",
     "off": "Pa",
     "items": "{n} awọn ohun kan",
-    "showing": "{n} han"
+    "showing": "{n} han",
+    "scanAll": "Ṣayẹwo gbogbo rẹ̀",
+    "scanAllDesc": "Àwọn iṣẹ́, ìpamọ́ irinṣẹ́ AI àti àwọn káàdì ìkópamọ́"
   },
   "header": {
     "changeLocation": "Yí Ibùdó Padà",
@@ -49,7 +51,8 @@
     "addFavorite": "Ṣafikun ipo lọwọlọwọ si awọn ayanfẹ",
     "removeFavorite": "Yọ agbègbè kúrò nínú àwọn ààyò",
     "favoriteAdded": "Ipo ti a fi kun si awọn ayanfẹ.",
-    "favoriteRemoved": "Ipo ti a yọ kuro ninu awọn ayanfẹ."
+    "favoriteRemoved": "Ipo ti a yọ kuro ninu awọn ayanfẹ.",
+    "changeLocationConfirmDesc": "Yíyípo ibi yóò pa àwọn àbájáde ìwádìí lọ́wọ́lọ́wọ́ àti ìṣàyàn rẹ́. Ìtàn ìwádìí tí ó ti wà ní ìpamọ́ àti àwòrán ìwádìí tó kẹ́yìn yóò wà."
   },
   "window": {
     "minimize": "Dín kù",
@@ -133,7 +136,17 @@
     "ecoAgent": "Awọn aṣoju AI",
     "ecoCache": "Awọn ibi ipamọ",
     "ecoOther": "Awọn ohun elo miiran",
-    "distTotalBadge": "{size} cleanable"
+    "distTotalBadge": "{size} cleanable",
+    "noticeInfoTitle": "Ìsọfúnni",
+    "noticeInfoHint": "A fò àwọn ibi tí ẹ̀rọ ń dáàbò bò. Kò sí ìgbésẹ̀ tí ó nílò.",
+    "noticeIssueHint": "A kò lè kà àwọn ibi kan, nítorí náà àwọn èsì lè máà pé.",
+    "copyDetails": "Ṣàdàkọ àwọn àlàyé",
+    "detailsCopied": "A ti ṣàdàkọ àwọn àlàyé sínú pátákó ìdákọ́sí",
+    "coverage": "Ìwọ̀n ìṣàyẹ̀wò",
+    "sectionSkipped": "A fò ó",
+    "sectionFailed": "Kùnà",
+    "sectionPartial": "Kò pé",
+    "sectionNoRoot": "Kò sí fódà tí a yàn"
   },
   "table": {
     "project": "Iṣẹ́ Àkànṣe",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Paarẹ patapata",
     "permanentAck": "Mo loye pe eyi ko le ṣe atunṣe.",
     "blockedReasons": "Awọn ibi-afẹde ti a dina",
-    "expires": "Eto yii yoo pari ni iṣẹju 15.",
+    "expires": "Eto yii yoo pari ni iṣẹju 30.",
     "close": "Sunmọ",
     "working": "Ṣiṣẹ...",
     "runInBackground": "Ṣiṣẹ́ ní ẹ̀yìn",
@@ -223,7 +236,11 @@
     "cancelling": "Ń fagilé…",
     "progress": "Ti ṣiṣẹ́ {processed} / {total}",
     "currentItem": "Lọ́wọ́lọ́wọ́: {path}",
-    "alreadyRunning": "Ìmọ́tótó ti ń lọ tẹ́lẹ̀."
+    "alreadyRunning": "Ìmọ́tótó ti ń lọ tẹ́lẹ̀.",
+    "coveredByParent": "Ti dina",
+    "noMethod": "Ti dina",
+    "officialActionRequired": "Aṣẹ osise",
+    "modeNotAllowed": "Titilai"
   },
   "result": {
     "title": "Abajade mimọ",
@@ -238,6 +255,7 @@
     "verified": "jẹrisi",
     "cancelled": "Ìmọ́tótó ti fagilé",
     "cancelledNote": "Àwọn ohun {processed} ti ṣiṣẹ́, {skipped} ti fò.",
+    "progressIncomplete": "A ko le fi {count} àtúnṣe ìtẹ̀síwájú hàn.",
     "processed": "Ti ṣiṣẹ́",
     "skipped": "Ti fò",
     "viewResults": "Wo àwọn èsì",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Awọn ọlọjẹ ti o han gbangba",
     "scopeProjects": "Awọn igbẹkẹle ise agbese",
     "scopeAgents": "Awọn aṣoju AI",
-    "scopeAllDrives": "Gbogbo awọn awakọ"
+    "scopeAllDrives": "Gbogbo awọn awakọ",
+    "statusPartial": "Apakan",
+    "totalCleaned": "Lapapọ ti a gba pada",
+    "statusDepthLimited": "Apakan"
   },
   "settings": {
     "general": "Ìrísí",
@@ -451,6 +472,12 @@
     "protectionsHint": "Awọn folda ti ko gbọdọ paarẹ ati awọn orukọ lati fo.",
     "agentsHint": "Eto imulo mimọ fun awọn kaṣe aṣoju AI.",
     "privacyHint": "Itan-akọọlẹ agbegbe ati iboju iboju.",
+    "resetAppDataTitle": "Tun gbogbo app data",
+    "resetAppDataHint": "Pa gbogbo awọn eto rẹ kuro, itan-isọ-fọọmu, itan-iṣayẹwo, awọn igbasilẹ iṣẹ, ati ọlọjẹ ti o fipamọ, lẹhinna tun bẹrẹ app naa. Eyi ko le ṣe atunṣe.",
+    "resetAppDataConfirmBtn": "Pa data rẹ ki o tun bẹrẹ",
+    "resetAppDataBusy": "Ntunto…",
+    "resetAppDataSuccess": "Gbogbo data app ti jẹ atunto. Awọn eto aiyipada pada.",
+    "resetAppDataBlocked": "Ayẹwo tabi afọmọ n ṣiṣẹ. Duro ṣaaju ki o to tunto app data.",
     "aboutHint": "Ẹya, kọ awọn alaye, katalogi, ati Vellium.",
     "legalHint": "Awọn ofin lilo, eto imulo ipamọ ati awọn iwe-aṣẹ orisun ṣiṣi.",
     "sidebar": "Ẹ̀gbẹ́",
@@ -547,7 +574,11 @@
     "standardMotion": "Ìgbé Ìṣe Deede",
     "aboutTitleBy": "Dev Cleaner nipasẹ Vellium",
     "mcpDestructiveTitle": "Gba awọn iṣe iparun MCP laaye",
-    "mcpDestructiveHint": "Nilo asia --allow-destructive; ipaniyan kọọkan tun nilo token awotẹlẹ lilo ẹẹkan"
+    "mcpDestructiveHint": "Nilo asia --allow-destructive; ipaniyan kọọkan tun nilo token awotẹlẹ lilo ẹẹkan",
+    "pathMustBeAbsolute": "Awọn ọna gbọdọ jẹ pipe, fun apẹẹrẹ C: \\ Awọn iṣẹ akanṣe.",
+    "excludedNameInvalid": "Ofin gbọdọ jẹ faili kan tabi orukọ folda, laisi awọn iyapa ọna.",
+    "shortcutNeedsModifier": "Ọna abuja agbaye nilo Ctrl, Alt tabi Meta pẹlu bọtini kan, tabi bọtini iṣẹ kan.",
+    "shortcutsResetWarning": "{count} ọna abuja ti ko tọ ni a tunto si awọn aiṣiṣe wọn."
   },
   "legal": {
     "docTabsLabel": "Awọn iwe aṣẹ ofin",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Ko si awọn ohun elo ti o ni irọrun ti a rii",
     "emptyTitleIdle": "Ko si ise agbese scan ti a ṣe sibẹsibẹ",
     "emptyDescClean": "Itọsọna ti a yan jẹ mimọ. Ko si node_modules mimọ, ibi-afẹde, tabi awọn ohun elo ti a rii.",
-    "emptyDescIdle": "Yan folda kan ki o ṣe ọlọjẹ lati ṣe atokọ awọn igbẹkẹle iṣẹ akanṣe ati kọ awọn ohun elo."
+    "emptyDescIdle": "Yan folda kan ki o ṣe ọlọjẹ lati ṣe atokọ awọn igbẹkẹle iṣẹ akanṣe ati kọ awọn ohun elo.",
+    "kpiTargets": "Àwọn àfojúsùn tí ó ṣeé ṣe láti pa mọ́",
+    "kpiTargetsSub": "Nínú gbòǹgbò iṣẹ́ {count}",
+    "kpiTargetsUnknown": "Ṣàyẹ̀wò lẹ́ẹ̀kan sí i láti sọ iye iṣẹ́ di tuntun"
   },
   "about": {
     "kpiVersion": "Ẹya",
@@ -616,7 +650,8 @@
     "contactSupport": "Atilẹyin Onibara",
     "contactBillingDesc": "Ìdíyelé, rira ile-iṣẹ, ati atilẹyin ṣiṣe alabapin",
     "contactPrivacyDesc": "Aabo data, GDPR, ati awọn ibeere aṣiri",
-    "ecoCacheScope": "kásì npm, ìforúkọsílẹ̀ Cargo, kásì pip, yarn"
+    "ecoCacheScope": "kásì npm, ìforúkọsílẹ̀ Cargo, kásì pip, yarn",
+    "contactBilling": "Ìdíyelé àti ìsanwó"
   },
   "docs": {
     "catGuide": "Awọn itọsọna ati faaji",

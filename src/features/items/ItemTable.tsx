@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { AlertTriangle, ChevronDown, ChevronUp, FolderOpen, Search } from "lucide-react";
 import { Checkbox } from "@/components/primitives/Checkbox";
@@ -7,9 +7,11 @@ import { IconButton } from "@/components/primitives/IconButton";
 import { SearchField } from "@/components/primitives/SearchField";
 import { SafetyBadge } from "./SafetyBadge";
 import { useSelectionStore } from "@/stores/selection-store";
+import { useScanStore } from "@/stores/scan-store";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import {
   useUIText,
+  useBackendLocaleRevision,
   localizeWarningCode,
   localizeCategory,
   localizeBackendNote,
@@ -17,22 +19,18 @@ import {
 import { useUiStore } from "@/stores/ui-store";
 import { formatBytes } from "@/lib/formatters";
 import { maskPath, truncatePath } from "@/lib/format/path";
+import { useThrottledValue, SCAN_AGGREGATE_THROTTLE_MS } from "@/lib/hooks/use-throttled-value";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { CleanupItem, SafetyClass, SortOption } from "@/types";
-import { bulkSelectableIds } from "./selection-helpers";
+import { bulkSelectableIds, effectiveSelectedIds, isEffectiveTarget } from "./selection-helpers";
+import {
+  categoryOptionsOf,
+  createItemComparator,
+  normalizedItemSearchHaystack,
+  projectOptionsOf,
+} from "./table-utils";
+import { createTextCollator, normalizeSearchText } from "@/lib/search";
 import "./items.css";
-
-const SEARCH_FIELDS = (item: CleanupItem): string[] => [
-  item.displayPath,
-  item.displayName,
-  item.projectName ?? "",
-  item.category,
-  item.ruleId,
-];
-
-function searchHaystackFor(item: CleanupItem): string {
-  return SEARCH_FIELDS(item).join(" ").toLowerCase();
-}
 
 interface ItemTableProps {
   items: CleanupItem[];
@@ -40,38 +38,53 @@ interface ItemTableProps {
   emptyText?: string;
 }
 
-const SAFETY_RANK: Record<SafetyClass, number> = {
-  safe: 0,
-  regenerate: 1,
-  review: 2,
-  keep: 3,
-};
-
-function compareItems(a: CleanupItem, b: CleanupItem, sort: SortOption): number {
-  switch (sort.field) {
-    case "size":
-      return (a.logicalBytes ?? -1) - (b.logicalBytes ?? -1);
-    case "modified":
-      const aTime =
-        a.lastModifiedMs ?? (a.lastModifiedAt ? new Date(a.lastModifiedAt).getTime() : 0);
-      const bTime =
-        b.lastModifiedMs ?? (b.lastModifiedAt ? new Date(b.lastModifiedAt).getTime() : 0);
-      return aTime - bTime;
-    case "safety":
-      return SAFETY_RANK[a.safetyClass] - SAFETY_RANK[b.safetyClass];
-    case "project":
-      return (a.projectName ?? "") < (b.projectName ?? "")
-        ? -1
-        : (a.projectName ?? "") > (b.projectName ?? "")
-          ? 1
-          : 0;
-    case "category":
-      return a.category < b.category ? -1 : a.category > b.category ? 1 : 0;
-    case "name":
-    default:
-      return a.displayName < b.displayName ? -1 : a.displayName > b.displayName ? 1 : 0;
-  }
+interface SortHeaderProps {
+  field: SortOption["field"];
+  label: string;
+  hint?: string;
+  numeric?: boolean;
+  sort: SortOption;
+  sortHint: string;
+  onToggle: (field: SortOption["field"]) => void;
 }
+
+/**
+ * Module-level header cell.
+ *
+ * Declaring it inside `ItemTable` created a new component type on every render,
+ * so React unmounted and remounted all header buttons (losing focus) whenever a
+ * row was selected or the sort changed (D-8).
+ */
+const SortHeader: React.FC<SortHeaderProps> = ({
+  field,
+  label,
+  hint,
+  numeric,
+  sort,
+  sortHint,
+  onToggle,
+}) => {
+  const active = sort.field === field;
+  const sortState = active ? (sort.direction === "asc" ? "ascending" : "descending") : "none";
+  return (
+    <div
+      role="columnheader"
+      aria-sort={sortState}
+      className={numeric ? "items-col-num" : undefined}
+    >
+      <button
+        type="button"
+        className={`items-sort ${active ? "active" : ""}`}
+        onClick={() => onToggle(field)}
+        aria-label={`${label} — ${sortHint}`}
+        title={hint ? `${hint} — ${sortHint}` : sortHint}
+      >
+        <span>{label}</span>
+        {active && (sort.direction === "asc" ? <ChevronUp size={11} /> : <ChevronDown size={11} />)}
+      </button>
+    </div>
+  );
+};
 
 export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true, emptyText }) => {
   const ui = useUIText();
@@ -81,71 +94,101 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
   const [projectFilter, setProjectFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const selectedIds = useSelectionStore((s) => s.selectedIds);
+  const itemsById = useScanStore((s) => s.itemsById);
   const toggleSelection = useSelectionStore((s) => s.toggleSelection);
   const deselectMany = useSelectionStore((s) => s.deselectMany);
   const selectMany = useSelectionStore((s) => s.selectMany);
   const maskPaths = usePreferencesStore((s) => s.maskPaths);
-  const minSizeBytes = usePreferencesStore((s) => s.minSizeBytes);
   const sort = usePreferencesStore((s) => s.sort);
   const setSort = usePreferencesStore((s) => s.setSort);
   const language = usePreferencesStore((s) => s.language);
+  const backendRevision = useBackendLocaleRevision();
   const showToast = useUiStore((s) => s.showToast);
   const parentRef = useRef<HTMLDivElement>(null);
 
   const warningLabel = (code: string): string => localizeWarningCode(code, ui);
 
-  const projectOptions = useMemo(() => {
-    const values = new Set<string>();
-    for (const item of items) {
-      if (item.projectName) values.add(item.projectName);
-    }
-    return Array.from(values).sort((a, b) => a.localeCompare(b));
-  }, [items]);
+  // Measurement batches change the row map up to 20 times per second. Filtering
+  // and sorting 50,000 rows is O(n log n) and only the *displayed* order needs
+  // to be that fresh: throttling the sortable snapshot to a cadence a person can
+  // follow removes most of the work from the main thread during a scan.
+  const sortableItems = useThrottledValue(items, SCAN_AGGREGATE_THROTTLE_MS);
 
-  const categoryOptions = useMemo(() => {
-    const values = new Set<string>();
-    for (const item of items) values.add(item.category);
-    return Array.from(values).sort((a, b) => a.localeCompare(b));
-  }, [items]);
+  // Deliberate dependency list: both option lists depend on the sortable rows
+  // only. `projectOptions` holds user data and `categoryOptions` holds slugs; the
+  // visible category labels are resolved during render, so `backendRevision`
+  // (subscribed above) refreshes them without rebuilding these lists. Moving
+  // the localization into these memos would require adding `backendRevision`
+  // and `language` to both dependency arrays — see
+  // `src/test/table-options.test.ts` for the contract this relies on.
+  const projectOptions = useMemo(() => projectOptionsOf(sortableItems), [sortableItems]);
+  const categoryOptions = useMemo(() => categoryOptionsOf(sortableItems), [sortableItems]);
+
+  // A filter that no longer exists in the new result set silently produced an
+  // empty table ("no matches") right after a rescan. Normalize back to "all".
+  useEffect(() => {
+    setProjectFilter((current) =>
+      current === "all" || projectOptions.includes(current) ? current : "all",
+    );
+  }, [projectOptions]);
+
+  useEffect(() => {
+    setCategoryFilter((current) =>
+      current === "all" || categoryOptions.includes(current) ? current : "all",
+    );
+  }, [categoryOptions]);
 
   // Search text is derived, never written back into the store objects: mutating
   // an item during render breaks StrictMode and silently pollutes the store.
+  // The index is locale-aware so the label the user sees (for example
+  // "Önbellek") is searchable and Turkish İ/I casing matches.
+  const collator = useMemo(() => createTextCollator(language), [language]);
+  const normalizedQuery = useMemo(
+    () => normalizeSearchText(searchQuery.trim(), language),
+    [searchQuery, language],
+  );
+  const hasQuery = normalizedQuery.length > 0;
+
+  // Building this index costs one normalized string per row. With 50,000 rows
+  // that was pure waste whenever the search box was empty, so it is built on
+  // the first non-empty query only.
   const searchIndex = useMemo(() => {
+    if (!hasQuery) return null;
     const index = new Map<string, string>();
-    for (const item of items) {
-      index.set(item.id, searchHaystackFor(item));
+    for (const item of sortableItems) {
+      index.set(item.id, normalizedItemSearchHaystack(item, language));
     }
     return index;
-  }, [items]);
+  }, [sortableItems, language, hasQuery, backendRevision]);
+
+  const comparator = useMemo(
+    () => createItemComparator(sort, collator, language),
+    // `createItemComparator` localizes category labels, so the backend
+    // dictionary revision belongs here too.
+    [sort, collator, language, backendRevision],
+  );
 
   const filtered = useMemo(() => {
-    const query = searchQuery.toLowerCase().trim();
-    const matches = items.filter((item) => {
+    const matches = sortableItems.filter((item) => {
       if (safetyFilter !== "all" && item.safetyClass !== safetyFilter) return false;
       if (projectFilter !== "all" && (item.projectName ?? "") !== projectFilter) return false;
       if (categoryFilter !== "all" && item.category !== categoryFilter) return false;
-      if (
-        minSizeBytes > 0 &&
-        item.estimatedReclaimBytes !== null &&
-        item.estimatedReclaimBytes < minSizeBytes
-      ) {
-        return false;
-      }
-      if (!query) return true;
-      return searchIndex.get(item.id)?.includes(query) ?? false;
+      if (!hasQuery) return true;
+      return searchIndex?.get(item.id)?.includes(normalizedQuery) ?? false;
     });
 
     const direction = sort.direction === "asc" ? 1 : -1;
-    return matches.sort((a, b) => compareItems(a, b, sort) * direction);
+    return matches.sort((a, b) => comparator(a, b) * direction);
   }, [
-    items,
+    sortableItems,
     searchIndex,
-    searchQuery,
+    hasQuery,
+    normalizedQuery,
     safetyFilter,
     projectFilter,
     categoryFilter,
-    minSizeBytes,
     sort,
+    comparator,
   ]);
 
   // Selecting rows is always an explicit user action. `autoSelectable` stays
@@ -153,8 +196,25 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
   // leave the bulk-select button disabled: every row the backend marked as
   // selectable can be picked deliberately.
   const selectableIds = useMemo(() => bulkSelectableIds(filtered), [filtered]);
-  const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
-  const someSelected = selectableIds.some((id) => selectedIds.has(id));
+  // Same predicate as the action bar: the counter must describe the rows the
+  // action bar would actually clean, not every remembered id. The header
+  // checkbox state is derived in one pass; calling `every` + `some` inline ran
+  // two full scans on every render, i.e. twice per row click at 50k rows.
+  const effectiveSelectedCount = useMemo(
+    () => effectiveSelectedIds(selectedIds, itemsById).length,
+    [selectedIds, itemsById],
+  );
+  const selectionState = useMemo(() => {
+    if (selectableIds.length === 0) return { all: false, some: false };
+    let selected = 0;
+    for (const id of selectableIds) if (selectedIds.has(id)) selected += 1;
+    return {
+      all: selected === selectableIds.length,
+      some: selected > 0 && selected < selectableIds.length,
+    };
+  }, [selectableIds, selectedIds]);
+  const allSelected = selectionState.all;
+  const someSelected = selectionState.some;
 
   const rowVirtualizer = useVirtualizer({
     count: filtered.length,
@@ -172,40 +232,32 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
     });
   };
 
-  const SortHeader: React.FC<{
-    field: SortOption["field"];
-    label: string;
-    numeric?: boolean;
-    hint?: string;
-  }> = ({ field, label, numeric, hint }) => {
-    const active = sort.field === field;
-    const sortState = active ? (sort.direction === "asc" ? "ascending" : "descending") : "none";
-    return (
-      <div
-        role="columnheader"
-        aria-sort={sortState}
-        className={numeric ? "items-col-num" : undefined}
-      >
-        <button
-          type="button"
-          className={`items-sort ${active ? "active" : ""}`}
-          onClick={() => toggleSort(field)}
-          aria-label={`${label} — ${ui.table.sortHint}`}
-          title={hint ? `${hint} — ${ui.table.sortHint}` : ui.table.sortHint}
-        >
-          <span>{label}</span>
-          {active &&
-            (sort.direction === "asc" ? <ChevronUp size={11} /> : <ChevronDown size={11} />)}
-        </button>
-      </div>
-    );
-  };
+  const sortHeader = (
+    field: SortOption["field"],
+    label: string,
+    hint?: string,
+    numeric?: boolean,
+  ) => (
+    <SortHeader
+      field={field}
+      label={label}
+      hint={hint}
+      numeric={numeric}
+      sort={sort}
+      sortHint={ui.table.sortHint}
+      onToggle={toggleSort}
+    />
+  );
 
   const clearFilters = () => {
     setSearchQuery("");
     setSafetyFilter("all");
     setProjectFilter("all");
     setCategoryFilter("all");
+    // `minSizeBytes` is a persisted scan preference, not a table-local filter.
+    // Clearing the visible filters must not silently rewrite that setting.
+    // The table no longer hides below-minimum rows: the backend marks them
+    // BLOCKED/BELOW_MIN_SIZE so they stay visible as disabled rows.
   };
 
   return (
@@ -260,7 +312,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
 
       <div className="items-meta">
         <span>{ui.common.showing(filtered.length)}</span>
-        <span>{ui.table.selected(selectedIds.size)}</span>
+        <span>{ui.table.selected(effectiveSelectedCount)}</span>
       </div>
 
       {filtered.length === 0 ? (
@@ -269,16 +321,6 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
           live
           icon={<Search size={20} />}
           title={emptyText ?? (items.length === 0 ? ui.table.noItems : ui.table.noResults)}
-          description={
-            items.length === 0
-              ? undefined
-              : searchQuery.trim() ||
-                  safetyFilter !== "all" ||
-                  projectFilter !== "all" ||
-                  categoryFilter !== "all"
-                ? ui.table.noResults
-                : undefined
-          }
           actions={
             items.length > 0 &&
             (searchQuery.trim() ||
@@ -312,14 +354,12 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
                   disabled={selectableIds.length === 0}
                 />
               </div>
-              <SortHeader field="name" label={ui.table.name} />
-              {showProject ? (
-                <SortHeader field="project" label={ui.table.project} />
-              ) : (
-                <SortHeader field="category" label={ui.table.category} />
-              )}
-              <SortHeader field="safety" label={ui.table.safety} />
-              <SortHeader field="size" label={ui.table.size} numeric hint={ui.table.sizeHint} />
+              {sortHeader("name", ui.table.name)}
+              {showProject
+                ? sortHeader("project", ui.table.project)
+                : sortHeader("category", ui.table.category)}
+              {sortHeader("safety", ui.table.safety)}
+              {sortHeader("size", ui.table.reclaim, ui.table.reclaimHint, true)}{" "}
               <div role="columnheader" aria-label={ui.table.actions} />
             </div>
           </div>
@@ -332,13 +372,19 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
               {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                 const item = filtered[virtualRow.index];
                 const isSelected = selectedIds.has(item.id);
+                // A size that was never measured cannot be cleaned: the plan
+                // rejects it with NOT_MEASURED. Keeping it selectable only led
+                // to a failed preview after the user picked rows.
+                const isSelectable = isEffectiveTarget(item);
                 const warningTexts = item.warningCodes.slice(0, 2).map(warningLabel);
                 const warnings = warningTexts.join(", ");
                 return (
                   <div
                     key={item.id}
+                    data-index={virtualRow.index}
+                    ref={rowVirtualizer.measureElement}
                     className={`items-row ${isSelected ? "is-selected" : ""} ${
-                      item.selectable ? "" : "is-blocked"
+                      isSelectable ? "" : "is-blocked"
                     }`}
                     style={{
                       position: "absolute",
@@ -361,16 +407,16 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
                       <Checkbox
                         checked={isSelected}
                         onChange={() => {
-                          if (!item.selectable) return;
+                          if (!isSelectable) return;
                           toggleSelection(item.id);
                         }}
-                        disabled={!item.selectable}
+                        disabled={!isSelectable}
                         aria-label={`${ui.table.selectRow}: ${item.displayName}`}
                       />
                     </div>
                     <div className="items-name" role="cell">
                       <strong>{item.displayName}</strong>
-                      <span className="items-path" title={item.displayPath}>
+                      <span className="items-path" title={displayPath(item.displayPath)}>
                         {truncatePath(displayPath(item.displayPath), 52)}
                       </span>
                       {warnings && (
@@ -393,9 +439,9 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
                       <SafetyBadge safety={item.safetyClass} />
                     </div>
                     <div className="items-cell items-size" role="cell">
-                      {item.logicalBytes === null
+                      {item.estimatedReclaimBytes === null
                         ? ui.table.unmeasured
-                        : formatBytes(item.logicalBytes, language)}
+                        : formatBytes(item.estimatedReclaimBytes, language)}
                     </div>
                     <div className="items-actions" role="cell">
                       <IconButton

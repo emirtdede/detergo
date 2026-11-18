@@ -19,7 +19,7 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
 
   it("adds candidate items and applies measurements in batch", () => {
     const scanStore = useScanStore.getState();
-    scanStore.startScanState("scan-123", "C:\\Users\\developer\\Projects");
+    scanStore.startScanState("C:\\Users\\developer\\Projects");
 
     scanStore.addItems([
       makeItem({ id: "nm-1", displayName: "node_modules" }),
@@ -43,7 +43,7 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
 
   it("buffers measurements that arrive before their item", () => {
     const scanStore = useScanStore.getState();
-    scanStore.startScanState("scan-ooo", "C:\\Projects");
+    scanStore.startScanState("C:\\Projects");
 
     scanStore.applyMeasurements([makeUpdate("late", 734003200)]);
     expect(useScanStore.getState().pendingMeasurements["late"].estimatedReclaimBytes).toBe(
@@ -64,6 +64,8 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
         autoSelectable: false,
         selectable: true,
         protected: false,
+        logicalBytes: 100,
+        estimatedReclaimBytes: 100,
       }),
       makeItem({
         id: "keep",
@@ -71,7 +73,13 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
         selectable: false,
         protected: true,
       }),
-      makeItem({ id: "safe", autoSelectable: true, selectable: true }),
+      makeItem({
+        id: "safe",
+        autoSelectable: true,
+        selectable: true,
+        logicalBytes: 100,
+        estimatedReclaimBytes: 100,
+      }),
     ];
 
     // Filtering to provider targets leaves autoSelectable empty; the bulk
@@ -106,7 +114,7 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
 
   it("handles deletion transitions and store cleanup", () => {
     const scanStore = useScanStore.getState();
-    scanStore.startScanState("scan-del", "C:\\Projects");
+    scanStore.startScanState("C:\\Projects");
     scanStore.addItems([makeItem({ id: "del-1" })]);
 
     scanStore.markDeleted(["del-1"]);
@@ -283,7 +291,7 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
     const selStore = useSelectionStore.getState();
 
     // Populate data
-    scanStore.startScanState("scan-test", "C:\\Projects");
+    scanStore.startScanState("C:\\Projects");
     scanStore.addItems([makeItem({ id: "item-1" })]);
     selStore.toggleSelection("item-1");
     expect(useScanStore.getState().itemIds).toHaveLength(1);
@@ -309,6 +317,7 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
         totalBytes: 1000,
         totalAllocatedBytes: 1000,
         protectedBytes: 0,
+        cleanableBytes: 1000,
         durationMs: 50,
         errorsCount: 0,
         warningsCount: 0,
@@ -347,8 +356,16 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
       expect(found?.category).toBe("agents-tab");
       expect(found?.file).toBeTruthy();
       expect(found?.json).toBeTruthy();
-      // Must be parseable JSON
-      expect(() => JSON.parse(found!.json)).not.toThrow();
+      // Must be parseable in the syntax its target file actually uses. Codex
+      // reads TOML; handing it JSON is silently ignored.
+      if (found!.syntax === "toml") {
+        expect(found!.file.endsWith(".toml")).toBe(true);
+        expect(found!.json).toContain("[mcp_servers.dev-cleaner]");
+        expect(found!.json).toContain('command = "dev-cleaner"');
+        expect(found!.json).toContain('args = ["mcp"]');
+      } else {
+        expect(() => JSON.parse(found!.json)).not.toThrow();
+      }
 
       // Must also be keyed in mcpConfigs
       expect(mcpConfigs[toolId as keyof typeof mcpConfigs]).toBeDefined();

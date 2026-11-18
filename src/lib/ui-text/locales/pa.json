@@ -36,7 +36,9 @@
     "on": "ਚਾਲੂ",
     "off": "ਬੰਦ",
     "items": "{n} ਆਈਟਮਾਂ",
-    "showing": "{n} ਦਿਖਾਇਆ ਗਿਆ ਹੈ"
+    "showing": "{n} ਦਿਖਾਇਆ ਗਿਆ ਹੈ",
+    "scanAll": "ਸਭ ਕੁਝ ਸਕੈਨ ਕਰੋ",
+    "scanAllDesc": "ਪ੍ਰੋਜੈਕਟ, AI ਟੂਲ ਸਟੋਰੇਜ ਅਤੇ ਪੈਕੇਜ ਕੈਸ਼"
   },
   "header": {
     "changeLocation": "ਸਥਾਨ ਬਦਲੋ",
@@ -49,7 +51,8 @@
     "addFavorite": "ਵਰਤਮਾਨ ਸਥਾਨ ਨੂੰ ਮਨਪਸੰਦਾਂ ਵਿੱਚ ਜੋੜੋ",
     "removeFavorite": "ਮਨਪਸੰਦਾਂ ਤੋਂ ਸਥਾਨ ਹਟਾਓ",
     "favoriteAdded": "ਸਥਾਨ ਨੂੰ ਮਨਪਸੰਦਾਂ ਵਿੱਚ ਜੋੜਿਆ ਗਿਆ ਹੈ।",
-    "favoriteRemoved": "ਸਥਾਨ ਮਨਪਸੰਦਾਂ ਤੋਂ ਹਟਾ ਦਿੱਤਾ ਗਿਆ ਹੈ।"
+    "favoriteRemoved": "ਸਥਾਨ ਮਨਪਸੰਦਾਂ ਤੋਂ ਹਟਾ ਦਿੱਤਾ ਗਿਆ ਹੈ।",
+    "changeLocationConfirmDesc": "ਟਿਕਾਣਾ ਬਦਲਣ ਨਾਲ ਮੌਜੂਦਾ ਸਕੈਨ ਨਤੀਜੇ ਅਤੇ ਚੋਣ ਸਾਫ਼ ਹੋ ਜਾਂਦੀ ਹੈ। ਤੁਹਾਡਾ ਸੰਭਾਲਿਆ ਸਕੈਨ ਇਤਿਹਾਸ ਅਤੇ ਆਖਰੀ ਸਕੈਨ ਸਨੈਪਸ਼ਾਟ ਸੁਰੱਖਿਅਤ ਰਹਿੰਦਾ ਹੈ।"
   },
   "window": {
     "minimize": "ਛੋਟਾ ਕਰੋ",
@@ -133,7 +136,17 @@
     "ecoAgent": "ਏ.ਆਈ. ਏਜੰਟ",
     "ecoCache": "ਕੈਸ਼ੇ",
     "ecoOther": "ਹੋਰ ਆਟਿਫੈਕਟ",
-    "distTotalBadge": "{size} ਸਾਫ਼ ਕਰਨ ਯੋਗ"
+    "distTotalBadge": "{size} ਸਾਫ਼ ਕਰਨ ਯੋਗ",
+    "noticeInfoTitle": "ਜਾਣਕਾਰੀ",
+    "noticeInfoHint": "ਸਿਸਟਮ-ਸੁਰੱਖਿਅਤ ਸਥਾਨ ਛੱਡ ਦਿੱਤੇ ਗਏ। ਕੋਈ ਕਾਰਵਾਈ ਲੋੜੀਂਦੀ ਨਹੀਂ।",
+    "noticeIssueHint": "ਕੁਝ ਸਥਾਨ ਪੜ੍ਹੇ ਨਹੀਂ ਜਾ ਸਕੇ, ਇਸ ਲਈ ਨਤੀਜੇ ਅਧੂਰੇ ਹੋ ਸਕਦੇ ਹਨ।",
+    "copyDetails": "ਵੇਰਵੇ ਕਾਪੀ ਕਰੋ",
+    "detailsCopied": "ਵੇਰਵੇ ਕਲਿੱਪਬੋਰਡ 'ਤੇ ਕਾਪੀ ਕੀਤੇ ਗਏ",
+    "coverage": "ਸਕੈਨ ਕਵਰੇਜ",
+    "sectionSkipped": "ਛੱਡਿਆ ਗਿਆ",
+    "sectionFailed": "ਅਸਫਲ",
+    "sectionPartial": "ਅਧੂਰਾ",
+    "sectionNoRoot": "ਕੋਈ ਫੋਲਡਰ ਨਹੀਂ ਚੁਣਿਆ"
   },
   "table": {
     "project": "ਪ੍ਰੋਜੈਕਟ",
@@ -215,7 +228,7 @@
     "confirmPermanent": "ਸਥਾਈ ਤੌਰ 'ਤੇ ਮਿਟਾਓ",
     "permanentAck": "ਮੈਂ ਸਮਝਦਾ ਹਾਂ ਕਿ ਇਸ ਨੂੰ ਪੁਰਵਾਵਪ ਕਰਨਾ ਸੰਭਵ ਨਹੀਂ ਹੈ।",
     "blockedReasons": "ਰੋਕੇ ਹੋਏ ਲਕੜੀਆਂ",
-    "expires": "ਇਹ ਯੋਜਨਾ 15 ਮਿੰਟ ਵਿੱਚ ਮਿਆਦ ਖਤਮ ਕਰੇਗੀ।",
+    "expires": "ਇਹ ਯੋਜਨਾ 30 ਮਿੰਟ ਵਿੱਚ ਮਿਆਦ ਖਤਮ ਕਰੇਗੀ।",
     "close": "ਬੰਦ ਕਰੋ",
     "working": "ਕੰਮ ਕਰ ਰਿਹਾ ਹੈ…",
     "runInBackground": "ਪਿਛੋਕੜ ਵਿੱਚ ਚਲਾਓ",
@@ -223,7 +236,11 @@
     "cancelling": "ਰੱਦ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ…",
     "progress": "ਪ੍ਰੋਸੈਸ ਕੀਤੇ {processed} / {total}",
     "currentItem": "ਮੌਜੂਦਾ: {path}",
-    "alreadyRunning": "ਸਫ਼ਾਈ ਪਹਿਲਾਂ ਹੀ ਚੱਲ ਰਹੀ ਹੈ।"
+    "alreadyRunning": "ਸਫ਼ਾਈ ਪਹਿਲਾਂ ਹੀ ਚੱਲ ਰਹੀ ਹੈ।",
+    "coveredByParent": "ਰੋਕਿਆ ਗਿਆ",
+    "noMethod": "ਰੋਕਿਆ ਗਿਆ",
+    "officialActionRequired": "ਅਧਿਕਾਰਿਕ ਕਮਾਂਡ",
+    "modeNotAllowed": "ਸਥਾਈ"
   },
   "result": {
     "title": "ਸਫਾਈ ਦਾ ਨਤੀਜਾ",
@@ -238,6 +255,7 @@
     "verified": "ਤਸਦੀਕ ਕੀਤਾ ਗਿਆ",
     "cancelled": "ਸਫ਼ਾਈ ਰੱਦ ਕੀਤੀ ਗਈ",
     "cancelledNote": "{processed} ਆਈਟਮਾਂ ਪ੍ਰੋਸੈਸ ਕੀਤੀਆਂ, {skipped} ਛੱਡੀਆਂ।",
+    "progressIncomplete": "{count} ਤਰੱਕੀ ਅੱਪਡੇਟ ਦਿਖਾਏ ਨਹੀਂ ਜਾ ਸਕੇ।",
     "processed": "ਪ੍ਰੋਸੈਸ ਕੀਤੇ",
     "skipped": "ਛੱਡੇ",
     "viewResults": "ਨਤੀਜੇ ਵੇਖੋ",
@@ -390,7 +408,10 @@
     "clearScansBtn": "ਸਕੈਨ ਸਾਫ਼ ਕਰੋ",
     "scopeProjects": "ਪ੍ਰੋਜੈਕਟ ਨਿਰਭਰਤਾ",
     "scopeAgents": "ਏ.ਆਈ. ਏਜੰਟ",
-    "scopeAllDrives": "ਸਾਰੀਆਂ ਡਰਾਈਵ"
+    "scopeAllDrives": "ਸਾਰੀਆਂ ਡਰਾਈਵ",
+    "statusPartial": "ਅੰਸ਼ਕ",
+    "totalCleaned": "ਕੁੱਲ ਦੁਬਾਰਾ ਪ੍ਰਾਪਤ ਕੀਤਾ",
+    "statusDepthLimited": "ਅੰਸ਼ਕ"
   },
   "settings": {
     "general": "ਦਿੱਖ",
@@ -451,6 +472,12 @@
     "protectionsHint": "ਫੋਲਡਰ ਜੋ ਕਦੇ ਵੀ ਹਟਾਏ ਨਹੀਂ ਜਾਣੇ ਅਤੇ ਨਾਂ ਜੋ ਛੱਡਣੇ ਹਨ।",
     "agentsHint": "AI ਏਜੰਟ ਕੈਸ਼ ਲਈ ਸਫਾਈ ਨੀਤੀ।",
     "privacyHint": "ਸਥਾਨਕ ਇਤਿਹਾਸ ਅਤੇ ਸਕ੍ਰੀਨ ਰਾਹ ਮਾਸਕਿੰਗ।",
+    "resetAppDataTitle": "ਸਾਰਾ ਐਪ ਡਾਟਾ ਰੀਸੈਟ ਕਰੋ",
+    "resetAppDataHint": "ਸਾਰੀਆਂ ਸੈਟਿੰਗਾਂ, ਕਲੀਨਅੱਪ ਇਤਿਹਾਸ, ਸਕੈਨ ਇਤਿਹਾਸ, ਐਕਸ਼ਨ ਲੌਗਸ, ਅਤੇ ਸੁਰੱਖਿਅਤ ਕੀਤੇ ਆਖਰੀ ਸਕੈਨ ਨੂੰ ਮਿਟਾਉਂਦਾ ਹੈ, ਫਿਰ ਐਪ ਨੂੰ ਰੀਸਟਾਰਟ ਕਰਦਾ ਹੈ। ਇਸਨੂੰ ਅਣਕੀਤਾ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਦਾ।",
+    "resetAppDataConfirmBtn": "ਡਾਟਾ ਮਿਟਾਓ ਅਤੇ ਰੀਸਟਾਰਟ ਕਰੋ",
+    "resetAppDataBusy": "ਰੀਸੈੱਟ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
+    "resetAppDataSuccess": "ਸਾਰਾ ਐਪ ਡਾਟਾ ਰੀਸੈਟ ਕੀਤਾ ਗਿਆ ਹੈ। ਪੂਰਵ-ਨਿਰਧਾਰਤ ਸੈਟਿੰਗਾਂ ਰੀਸਟੋਰ ਕੀਤੀਆਂ ਗਈਆਂ।",
+    "resetAppDataBlocked": "ਇੱਕ ਸਕੈਨ ਜਾਂ ਸਫਾਈ ਚੱਲ ਰਹੀ ਹੈ। ਐਪ ਡਾਟਾ ਰੀਸੈੱਟ ਕਰਨ ਤੋਂ ਪਹਿਲਾਂ ਇਸਨੂੰ ਰੋਕੋ।",
     "aboutHint": "ਵਰਜਨ, ਬਿਲਡ ਵਿਵਰਣ, ਕੈਟਲੌਗ ਅਤੇ ਵੈਲਿਯਮ।",
     "legalHint": "ਉਪਯੋਗ ਸ਼ਰਤਾਂ, ਪਰਦੇਦਾਰੀ ਨੀਤੀ ਅਤੇ ਖੁੱਲ੍ਹੇ-ਸਰੋਤ ਲਾਇਸੰਸ।",
     "sidebar": "ਸਾਈਡਬਾਰ",
@@ -547,7 +574,11 @@
     "standardMotion": "ਮਿਆਰੀ ਐਨੀਮੇਸ਼ਨ",
     "aboutTitleBy": "Dev Cleaner ਗੁਣਾ Vellium",
     "mcpDestructiveTitle": "MCP ਵਿਨਾਸ਼ਕਾਰੀ ਕਾਰਵਾਈਆਂ ਦੀ ਆਗਿਆ ਦਿਓ",
-    "mcpDestructiveHint": "--allow-destructive ਫਲੈਗ ਲੋੜੀਂਦਾ ਹੈ; ਹਰ ਐਗਜ਼ੀਕਿਊਸ਼ਨ ਨੂੰ ਅਜੇ ਵੀ ਇੱਕ-ਵਾਰ ਵਰਤੋਂ ਵਾਲਾ ਪੂਰਵਦਰਸ਼ਨ ਟੋਕਨ ਚਾਹੀਦਾ ਹੈ"
+    "mcpDestructiveHint": "--allow-destructive ਫਲੈਗ ਲੋੜੀਂਦਾ ਹੈ; ਹਰ ਐਗਜ਼ੀਕਿਊਸ਼ਨ ਨੂੰ ਅਜੇ ਵੀ ਇੱਕ-ਵਾਰ ਵਰਤੋਂ ਵਾਲਾ ਪੂਰਵਦਰਸ਼ਨ ਟੋਕਨ ਚਾਹੀਦਾ ਹੈ",
+    "pathMustBeAbsolute": "ਪਾਥ ਲਾਜ਼ਮੀ ਹੋਣੇ ਚਾਹੀਦੇ ਹਨ, ਉਦਾਹਰਨ ਲਈ C:\\Projects।",
+    "excludedNameInvalid": "ਇੱਕ ਨਿਯਮ ਇੱਕ ਸਿੰਗਲ ਫਾਈਲ ਜਾਂ ਫੋਲਡਰ ਨਾਮ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ, ਬਿਨਾਂ ਪਾਥ ਵਿਭਾਜਕਾਂ ਦੇ।",
+    "shortcutNeedsModifier": "ਇੱਕ ਗਲੋਬਲ ਸ਼ਾਰਟਕੱਟ ਲਈ Ctrl, Alt ਜਾਂ Meta ਪਲੱਸ ਇੱਕ ਕੁੰਜੀ, ਜਾਂ ਇੱਕ ਫੰਕਸ਼ਨ ਕੁੰਜੀ ਦੀ ਲੋੜ ਹੁੰਦੀ ਹੈ।",
+    "shortcutsResetWarning": "{count} ਅਵੈਧ ਸ਼ਾਰਟਕੱਟ ਉਹਨਾਂ ਦੇ ਡਿਫੌਲਟ ਤੇ ਰੀਸੈਟ ਕੀਤੇ ਗਏ ਸਨ।"
   },
   "legal": {
     "docTabsLabel": "ਕਾਨੂੰਨੀ ਦਸਤਾਵੇਜ਼",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "ਕੋਈ ਸਾਫ ਕਰਨਯੋਗ ਪ੍ਰੋਜੈਕਟ ਕਲਾਕਾਰ ਨਹੀਂ ਮਿਲੇ",
     "emptyTitleIdle": "ਹਾਲੇ ਤੱਕ ਕੋਈ ਪ੍ਰੋਜੈਕਟ ਸਕੈਨ ਨਹੀਂ ਕੀਤਾ ਗਿਆ",
     "emptyDescClean": "ਚੁਣਿਆ ਗਿਆ ਡਾਇਰੈਕਟਰੀ ਸਾਫ ਹੈ। ਕੋਈ ਸਾਫ ਕਰਨਯੋਗ node_modules, ਟਾਰਗੇਟ, ਜਾਂ ਬਿਲਡ ਕਲਾਕਾਰ ਨਹੀਂ ਮਿਲੇ",
-    "emptyDescIdle": "ਕਿਸੇ ਫੋਲਡਰ ਚੁਣੋ ਅਤੇ ਪ੍ਰੋਜੈਕਟ ਨਿਰਭਰਤਾਵਾਂ ਅਤੇ ਬਿਲਡ ਕਲਾਕਾਰ ਲਿਸਟ ਕਰਨ ਲਈ ਸਕੈਨ ਕਰੋ"
+    "emptyDescIdle": "ਕਿਸੇ ਫੋਲਡਰ ਚੁਣੋ ਅਤੇ ਪ੍ਰੋਜੈਕਟ ਨਿਰਭਰਤਾਵਾਂ ਅਤੇ ਬਿਲਡ ਕਲਾਕਾਰ ਲਿਸਟ ਕਰਨ ਲਈ ਸਕੈਨ ਕਰੋ",
+    "kpiTargets": "ਸਾਫ਼ ਕਰਨ ਯੋਗ ਟਾਰਗੇਟ",
+    "kpiTargetsSub": "{count} ਪ੍ਰੋਜੈਕਟ ਰੂਟਾਂ ਵਿੱਚ",
+    "kpiTargetsUnknown": "ਪ੍ਰੋਜੈਕਟ ਗਿਣਤੀ ਤਾਜ਼ਾ ਕਰਨ ਲਈ ਦੁਬਾਰਾ ਸਕੈਨ ਕਰੋ"
   },
   "about": {
     "kpiVersion": "ਵਰਜ਼ਨ",
@@ -616,7 +650,8 @@
     "contactSupport": "ਗ੍ਰਾਹਕ ਸਹਾਇਤਾ",
     "contactBillingDesc": "ਬਿਲਿੰਗ, ਉਦਯੋਗ ਖਰੀਦਦਾਰੀ, ਅਤੇ ਸਬਸਕ੍ਰਿਪਸ਼ਨ ਸਹਾਇਤਾ",
     "contactPrivacyDesc": "ਡਾਟਾ ਸੁਰੱਖਿਆ, GDPR, ਅਤੇ ਗੋਪਨੀਆਂ ਪੁੱਛਗਿੱਛ",
-    "ecoCacheScope": "npm ਕੈਸ਼, Cargo ਰਜਿਸਟਰੀ, pip ਕੈਸ਼, yarn"
+    "ecoCacheScope": "npm ਕੈਸ਼, Cargo ਰਜਿਸਟਰੀ, pip ਕੈਸ਼, yarn",
+    "contactBilling": "ਬਿਲਿੰਗ ਅਤੇ ਭੁਗਤਾਨ"
   },
   "docs": {
     "catGuide": "ਮਾਰਗਦਰਸ਼ਨ ਅਤੇ ਆਰਕੀਟੈਕਚਰ",

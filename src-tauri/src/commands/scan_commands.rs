@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
 
 use serde::Serialize;
 use tauri::ipc::Channel;
@@ -39,14 +41,6 @@ pub async fn start_scan(
     request.timeout_minutes = Some(settings.timeout_minutes);
     request.min_size_bytes = Some(settings.min_size_bytes);
     let policy = crate::cleanup::CleanupPolicy::from(&settings);
-    let token = CancellationToken::new();
-    {
-        let mut current = state.scan_token.lock().unwrap();
-        if let Some(old) = current.take() {
-            old.cancel();
-        }
-        *current = Some(token.clone());
-    }
 
     let mut allowed_roots: Vec<PathBuf> = Vec::new();
     if !request.root_path.trim().is_empty() {
@@ -57,7 +51,9 @@ pub async fn start_scan(
             allowed_roots.push(PathBuf::from(root));
         }
     }
-    if request.scope == crate::scanner::models::ScanScope::Agents {
+    if request.scope == crate::scanner::models::ScanScope::Agents
+        || request.scope == crate::scanner::models::ScanScope::Combined
+    {
         for root in crate::providers::root_locator::locate_agent_roots() {
             if root.path.is_dir() && !allowed_roots.iter().any(|p| p == &root.path) {
                 allowed_roots.push(root.path);
@@ -80,20 +76,43 @@ pub async fn start_scan(
         .registry
         .create_session(request.scope, session_root, allowed_roots);
 
-    let result = run_scan(
+    // Installed only after the request passed validation: the early error
+    // above used to leave a dead token in the slot, which made
+    // `active_operation()` report a scan forever and blocked "reset app data"
+    // until another scan or an explicit cancel.
+    let token = CancellationToken::new();
+    {
+        let mut current = crate::lock!(state.scan_token);
+        if let Some(old) = current.take() {
+            old.cancel();
+        }
+        *current = Some(token.clone());
+    }
+
+    // A closed frontend channel must not abort the scan, but the lost progress
+    // events must be reported instead of silently vanishing (Y-3).
+    let dropped_events = Arc::new(AtomicU64::new(0));
+    let dropped_for_task = Arc::clone(&dropped_events);
+    let mut result = run_scan(
         request,
         session,
         token.clone(),
         catalog,
         &policy,
         move |event| {
-            let _ = on_event.send(event);
+            if on_event.send(event).is_err() {
+                dropped_for_task.fetch_add(1, Ordering::Relaxed);
+            }
         },
     )
     .await;
 
     if let Ok(mut current) = state.scan_token.lock() {
         release_scan_token(&mut current, &token);
+    }
+
+    if let Ok(summary) = result.as_mut() {
+        summary.dropped_events = dropped_events.load(Ordering::Relaxed);
     }
 
     result
@@ -110,7 +129,7 @@ fn release_scan_token(slot: &mut Option<CancellationToken>, token: &Cancellation
 
 #[tauri::command]
 pub fn cancel_scan(state: State<'_, AppState>) -> Result<(), AppError> {
-    let mut current = state.scan_token.lock().unwrap();
+    let mut current = crate::lock!(state.scan_token);
     if let Some(token) = current.take() {
         token.cancel();
     }
@@ -142,10 +161,10 @@ pub fn get_scan_summary(
 ) -> Result<Option<ScanSummary>, AppError> {
     if let Some(id) = scan_session_id {
         let handle = state.registry.get_session(&id)?;
-        return Ok(handle.lock().unwrap().summary.clone());
+        return Ok(crate::lock!(handle).summary.clone());
     }
     if let Some(handle) = state.registry.latest_session() {
-        return Ok(handle.lock().unwrap().summary.clone());
+        return Ok(crate::lock!(handle).summary.clone());
     }
     Ok(None)
 }
@@ -192,21 +211,95 @@ pub fn open_path_in_explorer(path: String) -> Result<(), AppError> {
             .spawn()
             .map_err(|e| AppError::Unknown(e.to_string()))?;
     } else {
-        Command::new("explorer")
-            .arg(format!("/select,{}", safe.to_string_lossy()))
+        // `explorer /select,<path>` is single-token syntax: a path containing
+        // a comma or space must be passed as one explicitly quoted raw
+        // argument, otherwise Explorer splits it and opens the wrong folder.
+        let mut command = Command::new("explorer");
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            let path = safe.to_string_lossy();
+            command.raw_arg(format!("/select,\"{}\"", path.replace('"', "\"\"")));
+        }
+        #[cfg(not(windows))]
+        {
+            command.arg(format!("/select,\"{}\"", safe.to_string_lossy()));
+        }
+        command
             .spawn()
             .map_err(|e| AppError::Unknown(e.to_string()))?;
     }
     Ok(())
 }
 
+/// Validates a URL before handing it to the OS protocol handler.
+///
+/// A prefix check alone accepted `https://` (empty host), `https:\\evil` and
+/// `mailto:` with no address. The host rules mirror what a browser needs, while
+/// still allowing IDN hosts and bracketed IPv6 literals.
+fn validate_open_url(url: &str) -> Result<(), AppError> {
+    let invalid = |reason: &str| Err(AppError::Unknown(format!("Invalid URL: {reason}")));
+    let lower = url.to_ascii_lowercase();
+
+    if lower.starts_with("http://") || lower.starts_with("https://") {
+        let scheme_len = if lower.starts_with("https://") { 8 } else { 7 };
+        let rest = &url[scheme_len..];
+        if rest.contains('\\') {
+            return invalid("backslashes are not allowed");
+        }
+        let authority = rest.split(['/', '?', '#']).next().unwrap_or("");
+        // Drop any userinfo; the host is whatever follows the last '@'.
+        let host_port = authority.rsplit('@').next().unwrap_or("");
+        let host = if host_port.starts_with('[') {
+            // `[::1]:8080` must not be truncated at the first colon.
+            match host_port.find(']') {
+                Some(end) => &host_port[..=end],
+                None => return invalid("malformed IPv6 host"),
+            }
+        } else {
+            host_port.split(':').next().unwrap_or("")
+        };
+        if host.is_empty() || host == "[]" {
+            return invalid("host is missing");
+        }
+        if host
+            .chars()
+            .any(|c| c.is_whitespace() || c.is_control() || matches!(c, '<' | '>' | '"'))
+        {
+            return invalid("host contains invalid characters");
+        }
+        return Ok(());
+    }
+
+    if let Some(rest) = lower.strip_prefix("mailto:") {
+        let address = &url[url.len() - rest.len()..];
+        let address = address.split(['?', '#']).next().unwrap_or("");
+        if address.trim().is_empty() {
+            return invalid("mail address is missing");
+        }
+        if address
+            .chars()
+            .any(|c| c.is_whitespace() || c.is_control() || matches!(c, '\\' | '<' | '>' | '"'))
+        {
+            return invalid("mail address contains invalid characters");
+        }
+        let mut parts = address.split('@');
+        let local = parts.next().unwrap_or("");
+        let domain = parts.next().unwrap_or("");
+        if local.is_empty() || domain.is_empty() || parts.next().is_some() || !domain.contains('.')
+        {
+            return invalid("mail address is malformed");
+        }
+        return Ok(());
+    }
+
+    invalid("unsupported protocol")
+}
+
 #[tauri::command]
 pub fn open_url(url: String) -> Result<(), AppError> {
     validate_shell_argument(&url, "URL")?;
-    let allowed = ["http://", "https://", "mailto:"];
-    if !allowed.iter().any(|p| url.starts_with(p)) {
-        return Err(AppError::Unknown("Invalid URL protocol".to_string()));
-    }
+    validate_open_url(&url)?;
     #[cfg(target_os = "windows")]
     {
         Command::new("rundll32")
@@ -233,7 +326,7 @@ pub fn open_url(url: String) -> Result<(), AppError> {
 
 #[cfg(test)]
 mod tests {
-    use super::{release_scan_token, validate_shell_argument};
+    use super::{release_scan_token, validate_open_url, validate_shell_argument};
     use crate::scanner::cancellation::CancellationToken;
 
     #[test]
@@ -256,5 +349,30 @@ mod tests {
         assert!(validate_shell_argument("C:\\Work\\a\"b", "Path").is_err());
         assert!(validate_shell_argument("C:\\Work\\a\nb", "Path").is_err());
         assert!(validate_shell_argument("  ", "Path").is_err());
+    }
+
+    #[test]
+    fn open_url_accepts_normal_web_and_mail_urls() {
+        assert!(validate_open_url("https://example.com/docs").is_ok());
+        assert!(validate_open_url("http://localhost:1420/path?q=1").is_ok());
+        assert!(validate_open_url("https://[::1]:8443/").is_ok());
+        assert!(validate_open_url("mailto:support@example.com").is_ok());
+        assert!(validate_open_url("mailto:support@example.com?subject=Hi").is_ok());
+    }
+
+    #[test]
+    fn open_url_rejects_empty_hosts_and_unsafe_forms() {
+        assert!(validate_open_url("https://").is_err());
+        assert!(validate_open_url("https:///path").is_err());
+        assert!(validate_open_url("https://?query").is_err());
+        // A backslash lets the OS resolve a local/UNC path instead of a URL.
+        assert!(validate_open_url("https://example.com\\@evil.test").is_err());
+        assert!(validate_open_url("https://exa mple.com").is_err());
+        assert!(validate_open_url("file:///C:/Windows").is_err());
+        assert!(validate_open_url("javascript:alert(1)").is_err());
+        assert!(validate_open_url("mailto:").is_err());
+        assert!(validate_open_url("mailto:not-an-address").is_err());
+        assert!(validate_open_url("mailto:a@b@c.test").is_err());
+        assert!(validate_open_url("mailto:a@b.test\\c").is_err());
     }
 }

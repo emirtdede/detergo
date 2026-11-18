@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   FolderOpen,
@@ -18,46 +18,37 @@ import { Button } from "@/components/primitives/Button";
 import { Switch } from "@/components/primitives/Switch";
 import { NumberField } from "@/components/primitives/NumberField";
 import { PageHeader } from "@/components/primitives/PageHeader";
-import { usePreferencesStore } from "@/stores/preferences-store";
+import { usePreferencesStore, SETTING_LIMITS } from "@/stores/preferences-store";
+import { useScanStore } from "@/stores/scan-store";
+import { useShallow } from "zustand/react/shallow";
 import { useUiStore } from "@/stores/ui-store";
-import { useUIText, resolveUiLocale, UIText, localizeAppError } from "@/lib/ui-text";
+import { useUIText, resolveUiLocale, UIText, localizeAppError, getUIText } from "@/lib/ui-text";
+import { translateBackendText } from "@/lib/ui-text/backend-i18n";
 import { LANGUAGES_LIST } from "@/locales/languages";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { countCatalogStats } from "@/lib/catalog-stats";
+import { normalizeWebhookUrl } from "@/lib/validation/webhook-url";
+import { classifyWebhookFailure, describeWebhookFailure } from "@/lib/errors/webhook-failure";
 import {
   CatalogDto,
   BuildInfo,
   SupportedLanguage,
   ThemeMode,
+  THEME_MODES,
   DEFAULT_SHORTCUTS,
-  RESERVED_SHORTCUTS,
 } from "@/types";
+import { comboFromEvent, validateShortcut } from "@/lib/shortcuts";
+import { log } from "@/lib/logging";
 import { useSettingsSections } from "./settings-sections";
 import { AboutView } from "./AboutView";
+import { PrivacySection } from "./PrivacySection";
 import "../items/items.css";
 import "../shell/shell.css";
 import "./settings.css";
 
 // Shortcuts are dynamically localized inside SettingsView via shortcutDefs
 
-const THEMES: ThemeMode[] = [
-  "dark-black",
-  "dark-gray",
-  "dark-blue",
-  "dark-purple",
-  "dark-green",
-  "dark-red",
-  "dark-orange",
-  "dark-yellow",
-  "light-white",
-  "light-gray",
-  "light-blue",
-  "light-purple",
-  "light-green",
-  "light-red",
-  "light-orange",
-  "light-yellow",
-];
+const THEMES: readonly ThemeMode[] = THEME_MODES;
 
 function themeLabel(theme: ThemeMode | string, ui: UIText): string {
   const t = ui.settings;
@@ -91,29 +82,126 @@ const PROFILE_DEFAULTS: Record<
   deep: { maxDepth: 64, maxCandidates: 200000, timeoutMinutes: 30 },
 };
 
+/**
+ * Validates a typed webhook draft and writes it through the store.
+ *
+ * Shared by the draft-flush effect, the explicit save and the test button so
+ * all three accept exactly the same values. The write is fire-and-forget (the
+ * user may already be leaving the page), but a failure is logged and, when the
+ * user is still looking at the form, surfaced as a toast: a URL that silently
+ * did not persist made every later webhook look broken.
+ */
+function persistWebhookDraft(draft: string, reportFailure = false): boolean {
+  const result = normalizeWebhookUrl(draft);
+  if (!result.ok) return false;
+  const store = usePreferencesStore.getState();
+  store.updateSettings({ webhookUrl: result.value });
+  void store.persistSettings().catch((err) => {
+    log.error("Could not persist the webhook draft", err);
+    if (!reportFailure) return;
+    const activeUi = getUIText();
+    useUiStore
+      .getState()
+      .showToast(
+        `${activeUi.settings.saveError}: ${localizeAppError(err, activeUi)}`,
+        "error",
+        6000,
+      );
+  });
+  return true;
+}
+
 export const SettingsView: React.FC = () => {
   const ui = useUIText();
-  const prefs = usePreferencesStore();
+  // A no-selector subscription re-rendered the whole Settings page on every
+  // unrelated preference write (the item table's sort, a new recent location,
+  // favorites). Subscribe only to the fields this page reads.
+  const prefs = usePreferencesStore(
+    useShallow((s) => ({
+      theme: s.theme,
+      language: s.language,
+      reduceMotion: s.reduceMotion,
+      sidebarMode: s.sidebarMode,
+      closeAction: s.closeAction,
+      cacheMeasureMode: s.cacheMeasureMode,
+      scanProfile: s.scanProfile,
+      maxDepth: s.maxDepth,
+      maxCandidates: s.maxCandidates,
+      timeoutMinutes: s.timeoutMinutes,
+      minSizeBytes: s.minSizeBytes,
+      notifications: s.notifications,
+      shortcuts: s.shortcuts,
+      maskPaths: s.maskPaths,
+      protectedPaths: s.protectedPaths,
+      excludedNames: s.excludedNames,
+      historyEnabled: s.historyEnabled,
+      mcpAllowDestructive: s.mcpAllowDestructive,
+      webhookUrl: s.webhookUrl,
+      webhookOnScan: s.webhookOnScan,
+      webhookOnClean: s.webhookOnClean,
+      agentPolicy: s.agentPolicy,
+      updateSettings: s.updateSettings,
+      setTheme: s.setTheme,
+      setLanguage: s.setLanguage,
+      setReduceMotion: s.setReduceMotion,
+      setSidebarMode: s.setSidebarMode,
+      setCloseAction: s.setCloseAction,
+      setCacheMeasureMode: s.setCacheMeasureMode,
+      setShortcut: s.setShortcut,
+      resetShortcuts: s.resetShortcuts,
+    })),
+  );
   const showToast = useUiStore((s) => s.showToast);
   const section = useUiStore((s) => s.settingsSection);
   const setSettingsSection = useUiStore((s) => s.setSettingsSection);
+  const scanStatus = useScanStore((s) => s.status);
+  const scanBusy =
+    scanStatus === "scanning" || scanStatus === "measuring" || scanStatus === "cancelling";
   const [protectedInput, setProtectedInput] = useState("");
   const [excludedInput, setExcludedInput] = useState("");
   const [catalog, setCatalog] = useState<CatalogDto | null>(null);
   const [buildInfo, setBuildInfo] = useState<BuildInfo | null>(null);
 
   useEffect(() => {
+    // The catalogue is a large payload; leaving Settings before it lands must
+    // not write state into a component that is already gone (and must not
+    // overwrite a newer load after a fast remount).
+    let cancelled = false;
     scannerApi
       .getCatalog()
-      .then(setCatalog)
-      .catch(() => showToast(ui.errors.title, "error"));
-  }, [showToast, ui.errors.title]);
+      .then((catalog) => {
+        if (!cancelled) setCatalog(catalog);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        // Keep the raw error out of the UI: it may contain filesystem paths.
+        // The About card already renders a localized backend note, so a toast
+        // with the localized message is the only place the user needs it.
+        log.warn("Catalog could not be loaded", err);
+        showToast(
+          `${getUIText().errors.title}: ${localizeAppError(err, getUIText())}`,
+          "error",
+          7000,
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [showToast]);
 
   useEffect(() => {
+    let cancelled = false;
     scannerApi
       .getBuildInfo()
-      .then(setBuildInfo)
-      .catch(() => setBuildInfo(null));
+      .then((info) => {
+        if (!cancelled) setBuildInfo(info);
+      })
+      .catch(() => {
+        if (!cancelled) setBuildInfo(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const catalogStats = useMemo(() => countCatalogStats(catalog?.rules ?? []), [catalog]);
@@ -123,6 +211,46 @@ export const SettingsView: React.FC = () => {
     success: boolean;
     text: string;
   } | null>(null);
+  // The URL is typed, not saved on every keystroke: a half-finished value like
+  // `https://` was written to the settings file and then retried by every
+  // notification. `null` means "follow the persisted value".
+  const [webhookDraft, setWebhookDraft] = useState<string | null>(null);
+  // A draft must survive leaving the settings page; otherwise a typed URL is
+  // silently lost unless the user remembers to press Save.
+  const webhookDraftRef = useRef(webhookDraft);
+  useEffect(() => {
+    // Written in an effect, not during render: a render-phase ref mutation is
+    // unsafe under StrictMode/concurrent rendering.
+    webhookDraftRef.current = webhookDraft;
+  }, [webhookDraft]);
+  useEffect(() => {
+    // A draft must survive leaving the settings page. Committing it on unmount
+    // alone was not enough: the webview can be torn down before an async IPC
+    // round-trip completes, and a rejected write became an unhandled rejection
+    // that lost the URL without telling anyone. Flush on `pagehide` as well and
+    // report failures where the user can still see them.
+    const flushDraft = (reportIfInvalid: boolean) => {
+      const draft = webhookDraftRef.current;
+      if (draft === null) return;
+      if (persistWebhookDraft(draft)) return;
+      if (!reportIfInvalid) return;
+      const activeUi = getUIText();
+      useUiStore
+        .getState()
+        .showToast(
+          `${activeUi.settings.webhookTitle}: ${activeUi.settings.webhookUrlEmpty}`,
+          "warning",
+          5000,
+        );
+    };
+
+    const onHide = () => flushDraft(false);
+    window.addEventListener("pagehide", onHide);
+    return () => {
+      window.removeEventListener("pagehide", onHide);
+      flushDraft(true);
+    };
+  }, []);
   const [recordingId, setRecordingId] = useState<string | null>(null);
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
 
@@ -170,8 +298,24 @@ export const SettingsView: React.FC = () => {
     });
   };
 
+  /**
+   * Persists the typed webhook only when it is a usable absolute http(s) URL.
+   * Returns false when the draft is invalid so callers (test button) stop.
+   */
+  const commitWebhook = (): boolean => {
+    if (webhookDraft === null) return true;
+    // The user is still on the form here, so a failed write is worth a toast.
+    if (!persistWebhookDraft(webhookDraft, true)) {
+      showToast(ui.settings.webhookUrlEmpty, "warning");
+      return false;
+    }
+    setWebhookDraft(null);
+    return true;
+  };
+
   const handleTestWebhook = async () => {
-    const url = prefs.webhookUrl?.trim();
+    if (!commitWebhook()) return;
+    const url = usePreferencesStore.getState().webhookUrl?.trim();
     if (!url) {
       showToast(ui.settings.webhookUrlEmpty, "warning");
       return;
@@ -189,9 +333,13 @@ export const SettingsView: React.FC = () => {
         setWebhookTestStatus({ success: true, text: ui.settings.webhookSent });
         showToast(ui.settings.webhookSent, "success");
       } else {
-        const text = `${result.message} (HTTP ${result.status})`;
+        // `result.message` comes from `reqwest` and can embed the full webhook
+        // URL (whose path is the bearer token) plus DNS/TLS detail. Only a
+        // classified, token-free reason is allowed into the UI.
+        const text = describeWebhookFailure(classifyWebhookFailure(result.status), ui);
         setWebhookTestStatus({ success: false, text });
         showToast(`${ui.settings.webhookTitle}: ${text}`, "error");
+        log.debug("Webhook test rejected", { status: result.status });
       }
     } catch (err) {
       setWebhookTestStatus({ success: false, text: localizeAppError(err, ui) });
@@ -219,25 +367,17 @@ export const SettingsView: React.FC = () => {
         return;
       }
 
-      if (["Control", "Alt", "Shift", "Meta"].includes(e.key)) {
-        return;
-      }
+      const combo = comboFromEvent(e);
+      // A bare modifier (`Control`, `Shift`, …) is not a chord yet.
+      if (!combo) return;
 
-      const parts: string[] = [];
-      if (e.ctrlKey) parts.push("Ctrl");
-      if (e.altKey) parts.push("Alt");
-      if (e.shiftKey) parts.push("Shift");
-      if (e.metaKey) parts.push("Meta");
-
-      let keyName = e.key;
-      if (keyName === " ") keyName = "Space";
-      else if (keyName.length === 1) keyName = keyName.toUpperCase();
-
-      parts.push(keyName);
-      const combo = parts.join("+");
-
-      if (RESERVED_SHORTCUTS.has(combo)) {
-        setConflictWarning(ui.settings.reservedWarning(combo));
+      const validity = validateShortcut(combo);
+      if (!validity.ok) {
+        setConflictWarning(
+          validity.reason === "reserved"
+            ? ui.settings.reservedWarning(combo)
+            : ui.settings.shortcutNeedsModifier,
+        );
         return;
       }
 
@@ -255,12 +395,21 @@ export const SettingsView: React.FC = () => {
       setConflictWarning(null);
       prefs.setShortcut(recordingId, combo);
       setRecordingId(null);
-      showToast(ui.settings.toastShortcutUpdated(combo), "success", 2000);
+      // Report success only after the write is durable; a failed save used to
+      // show "updated" followed by no persisted shortcut after a restart.
+      void (async () => {
+        try {
+          await usePreferencesStore.getState().persistSettings();
+          showToast(ui.settings.toastShortcutUpdated(combo), "success", 2000);
+        } catch (err) {
+          showToast(`${ui.settings.saveError}: ${localizeAppError(err, ui)}`, "error", 6000);
+        }
+      })();
     };
 
     window.addEventListener("keydown", handleKeyDown, true);
     return () => window.removeEventListener("keydown", handleKeyDown, true);
-  }, [recordingId, prefs.shortcuts]);
+  }, [recordingId, prefs.shortcuts, shortcutDefs, ui]);
 
   const moveTab = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
     let next = index;
@@ -280,12 +429,12 @@ export const SettingsView: React.FC = () => {
     prefs.updateSettings(patch);
     try {
       await usePreferencesStore.getState().persistSettings();
-      showToast(ui.settings.saved, "success", 1500);
     } catch (err) {
       showToast(`${ui.settings.saveError}: ${localizeAppError(err, ui)}`, "error", 6000);
     }
   };
 
+  /** Applies one of the scan-profile presets (depth/candidates/timeout). */
   const setProfile = (profile: string) => {
     const defaults = PROFILE_DEFAULTS[profile] ?? PROFILE_DEFAULTS.balanced;
     save({ scanProfile: profile, ...defaults });
@@ -296,9 +445,16 @@ export const SettingsView: React.FC = () => {
       <PageHeader title={ui.nav.settings} description={ui.settings.subtitle} />
 
       {catalog && !catalog.valid && (
-        <p className="items-warning" style={{ marginBottom: 12 }}>
-          <AlertTriangle size={13} /> {catalog.error}
-        </p>
+        <details className="items-warning catalog-warning" style={{ marginBottom: 12 }}>
+          <summary>
+            <AlertTriangle size={13} /> {ui.about.kpiCatalog} · {ui.errors.title}
+          </summary>
+          {/* The raw error comes from the backend, so it is translated through
+              the shared backend dictionary before being shown. */}
+          <p style={{ margin: "var(--space-2) 0 0" }}>
+            {translateBackendText(catalog.error ?? "", prefs.language)}
+          </p>
+        </details>
       )}
 
       {/* Shared Bento KPI Strip for Settings */}
@@ -509,8 +665,8 @@ export const SettingsView: React.FC = () => {
               <span>{ui.settings.maxDepth}</span>
               <NumberField
                 value={prefs.maxDepth}
-                min={1}
-                max={128}
+                min={SETTING_LIMITS.maxDepth.min}
+                max={SETTING_LIMITS.maxDepth.max}
                 ariaLabel={ui.settings.maxDepth}
                 increaseLabel={ui.common.increase}
                 decreaseLabel={ui.common.decrease}
@@ -521,8 +677,8 @@ export const SettingsView: React.FC = () => {
               <span>{ui.settings.maxCandidates}</span>
               <NumberField
                 value={prefs.maxCandidates}
-                min={1000}
-                max={500000}
+                min={SETTING_LIMITS.maxCandidates.min}
+                max={SETTING_LIMITS.maxCandidates.max}
                 step={1000}
                 ariaLabel={ui.settings.maxCandidates}
                 increaseLabel={ui.common.increase}
@@ -534,8 +690,8 @@ export const SettingsView: React.FC = () => {
               <span>{ui.settings.timeout}</span>
               <NumberField
                 value={prefs.timeoutMinutes}
-                min={1}
-                max={120}
+                min={SETTING_LIMITS.timeoutMinutes.min}
+                max={SETTING_LIMITS.timeoutMinutes.max}
                 ariaLabel={ui.settings.timeout}
                 increaseLabel={ui.common.increase}
                 decreaseLabel={ui.common.decrease}
@@ -546,8 +702,8 @@ export const SettingsView: React.FC = () => {
               <span>{ui.settings.minSize}</span>
               <NumberField
                 value={Math.round(prefs.minSizeBytes / (1024 * 1024))}
-                min={0}
-                max={1024 * 1024}
+                min={SETTING_LIMITS.minSizeBytes.min}
+                max={SETTING_LIMITS.minSizeBytes.max / (1024 * 1024)}
                 ariaLabel={ui.settings.minSize}
                 increaseLabel={ui.common.increase}
                 decreaseLabel={ui.common.decrease}
@@ -715,7 +871,18 @@ export const SettingsView: React.FC = () => {
                   prefs.resetShortcuts();
                   setConflictWarning(null);
                   setRecordingId(null);
-                  showToast(ui.settings.toastShortcutsReset, "info", 2000);
+                  void (async () => {
+                    try {
+                      await usePreferencesStore.getState().persistSettings();
+                      showToast(ui.settings.toastShortcutsReset, "info", 2000);
+                    } catch (err) {
+                      showToast(
+                        `${ui.settings.saveError}: ${localizeAppError(err, ui)}`,
+                        "error",
+                        6000,
+                      );
+                    }
+                  })();
                 }}
               >
                 <RotateCcw size={13} style={{ marginRight: 6 }} />
@@ -796,8 +963,15 @@ export const SettingsView: React.FC = () => {
               <input
                 type="url"
                 placeholder={ui.settings.webhookPlaceholder}
-                value={prefs.webhookUrl ?? ""}
-                onChange={(e) => save({ webhookUrl: e.target.value || null })}
+                value={webhookDraft ?? prefs.webhookUrl ?? ""}
+                onChange={(e) => setWebhookDraft(e.target.value)}
+                onBlur={commitWebhook}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    commitWebhook();
+                  }
+                }}
                 aria-label={ui.settings.webhookUrl}
               />
               <Button
@@ -805,7 +979,7 @@ export const SettingsView: React.FC = () => {
                 size="sm"
                 icon={<Send size={13} />}
                 onClick={handleTestWebhook}
-                disabled={testingWebhook || !prefs.webhookUrl}
+                disabled={testingWebhook || (!prefs.webhookUrl && !webhookDraft?.trim())}
               >
                 {testingWebhook ? ui.settings.webhookSending : ui.settings.webhookTestBtn}
               </Button>
@@ -897,10 +1071,22 @@ export const SettingsView: React.FC = () => {
                   onClick={() => {
                     const value = protectedInput.trim();
                     if (!value) return;
+                    // A relative path never matches a scanned absolute path, so
+                    // the user would believe a folder was protected while it
+                    // was not. Reject it with an explanation instead of storing
+                    // a rule that can never fire.
+                    const isAbsolute = /^[A-Za-z]:\\/.test(value) || value.startsWith("\\\\");
+                    if (!isAbsolute) {
+                      showToast(ui.settings.pathMustBeAbsolute, "warning");
+                      return;
+                    }
+                    const normalized = value.replace(/[\\/]+$/, "");
                     if (
-                      !prefs.protectedPaths.some((p) => p.toLowerCase() === value.toLowerCase())
+                      !prefs.protectedPaths.some(
+                        (p) => p.toLowerCase() === normalized.toLowerCase(),
+                      )
                     ) {
-                      save({ protectedPaths: [...prefs.protectedPaths, value] });
+                      save({ protectedPaths: [...prefs.protectedPaths, normalized] });
                     }
                     setProtectedInput("");
                   }}
@@ -947,7 +1133,16 @@ export const SettingsView: React.FC = () => {
                   onClick={() => {
                     const value = excludedInput.trim();
                     if (!value) return;
-                    save({ excludedNames: [...prefs.excludedNames, value] });
+                    // Rules are matched against a single path segment; a value
+                    // containing a separator silently never matched.
+                    if (/[\\/]/.test(value)) {
+                      showToast(ui.settings.excludedNameInvalid, "warning");
+                      return;
+                    }
+                    const normalized = value.toLowerCase();
+                    if (!prefs.excludedNames.some((n) => n.toLowerCase() === normalized)) {
+                      save({ excludedNames: [...prefs.excludedNames, value] });
+                    }
                     setExcludedInput("");
                   }}
                 >
@@ -1014,29 +1209,12 @@ export const SettingsView: React.FC = () => {
         )}
 
         {activeSection.id === "privacy" && (
-          <section className="settings-card">
-            <div className="form-row">
-              <span>{ui.settings.maskPaths}</span>
-              <Switch
-                checked={prefs.maskPaths}
-                onLabel={ui.common.on}
-                offLabel={ui.common.off}
-                aria-label={ui.settings.maskPaths}
-                onChange={(v) => save({ maskPaths: v })}
-              />
-            </div>
-            <div className="form-row">
-              <span>{ui.settings.historyEnabled}</span>
-              <Switch
-                checked={prefs.historyEnabled}
-                onLabel={ui.common.on}
-                offLabel={ui.common.off}
-                aria-label={ui.settings.historyEnabled}
-                onChange={(v) => save({ historyEnabled: v })}
-              />
-            </div>
-            <p className="plan-note">{ui.history.clearHint}</p>
-          </section>
+          <PrivacySection
+            maskPaths={prefs.maskPaths}
+            historyEnabled={prefs.historyEnabled}
+            scanBusy={scanBusy}
+            onSave={(patch) => void save(patch)}
+          />
         )}
 
         {activeSection.id === "about" && (

@@ -245,15 +245,21 @@ for (const file of fs.readdirSync(installerArtDir)) {
     fail(`installer art ${file} scopes the product to a single ecosystem`);
   }
 }
-const schema = readText("src/locales/types.ts");
-if (schema && /\btagline\s*:/.test(schema)) {
-  fail("TranslationSchema reintroduces `tagline`; the product scope is not a tagline");
-}
-for (const file of fs.readdirSync(path.join(root, "src", "locales", "langs"))) {
-  if (!file.endsWith(".ts")) continue;
-  const text = fs.readFileSync(path.join(root, "src", "locales", "langs", file), "utf8");
-  if (/^\s*tagline\s*:/m.test(text)) {
-    fail(`src/locales/langs/${file} reintroduces a single-ecosystem tagline`);
+// The retired claim was "NODE_MODULES CLEANER" on the installer art and in the
+// legacy `tagline` dictionary key; both are gone, and this rule keeps them gone
+// from every UI dictionary (JSON locales plus the English/Turkish modules).
+const uiTextDir = path.join(root, "src", "lib", "ui-text");
+for (const file of [
+  ...fs
+    .readdirSync(path.join(uiTextDir, "locales"))
+    .filter((name) => name.endsWith(".json"))
+    .map((name) => path.join(uiTextDir, "locales", name)),
+  path.join(uiTextDir, "en.ts"),
+  path.join(uiTextDir, "tr.ts"),
+]) {
+  const text = fs.readFileSync(file, "utf8");
+  if (/^\s*tagline\s*:/m.test(text) || /"tagline"\s*:/.test(text)) {
+    fail(`${path.relative(root, file)} reintroduces a single-ecosystem tagline`);
   }
 }
 

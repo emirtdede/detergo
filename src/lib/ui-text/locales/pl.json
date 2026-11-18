@@ -36,7 +36,9 @@
     "on": "Włączony",
     "off": "Wyłączony",
     "items": "{n} elementów",
-    "showing": "{n} wyświetlonych"
+    "showing": "{n} wyświetlonych",
+    "scanAll": "Skanuj wszystko",
+    "scanAllDesc": "Projekty, pamięć narzędzi AI i pamięci podręczne pakietów"
   },
   "header": {
     "changeLocation": "Zmień lokalizację",
@@ -49,7 +51,8 @@
     "addFavorite": "Dodaj bieżącą lokalizację do ulubionych",
     "removeFavorite": "Usuń lokalizację z ulubionych",
     "favoriteAdded": "Lokalizacja dodana do ulubionych.",
-    "favoriteRemoved": "Lokalizacja usunięta z ulubionych."
+    "favoriteRemoved": "Lokalizacja usunięta z ulubionych.",
+    "changeLocationConfirmDesc": "Zmiana lokalizacji czyści bieżące wyniki skanowania i zaznaczenie. Zapisana historia skanowania i ostatnia migawka skanowania zostaną zachowane."
   },
   "window": {
     "minimize": "Minimalizuj",
@@ -133,7 +136,17 @@
     "ecoAgent": "Agenci AI",
     "ecoCache": "Pamięci podręczne",
     "ecoOther": "Inne artefakty",
-    "distTotalBadge": "{size} do oczyszczenia"
+    "distTotalBadge": "{size} do oczyszczenia",
+    "noticeInfoTitle": "Informacje",
+    "noticeInfoHint": "Lokalizacje chronione przez system zostały pominięte. Żadne działanie nie jest potrzebne.",
+    "noticeIssueHint": "Nie udało się odczytać niektórych lokalizacji, więc wyniki mogą być niekompletne.",
+    "copyDetails": "Kopiuj szczegóły",
+    "detailsCopied": "Szczegóły skopiowano do schowka",
+    "coverage": "Zakres skanowania",
+    "sectionSkipped": "Pominięto",
+    "sectionFailed": "Niepowodzenie",
+    "sectionPartial": "Niekompletne",
+    "sectionNoRoot": "Nie wybrano folderu"
   },
   "table": {
     "project": "Projekt",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Usuń na stałe",
     "permanentAck": "Rozumiem, że nie można tego cofnąć.",
     "blockedReasons": "Zablokowane cele",
-    "expires": "Ten plan wygasa za 15 minut.",
+    "expires": "Ten plan wygasa za 30 minut.",
     "close": "Zamknij",
     "working": "Pracuję…",
     "runInBackground": "Uruchom w tle",
@@ -223,7 +236,11 @@
     "cancelling": "Anulowanie…",
     "progress": "Przetworzono {processed} / {total}",
     "currentItem": "Bieżący: {path}",
-    "alreadyRunning": "Czyszczenie jest już uruchomione."
+    "alreadyRunning": "Czyszczenie jest już uruchomione.",
+    "coveredByParent": "Zablokowane",
+    "noMethod": "Zablokowane",
+    "officialActionRequired": "Oficjalne polecenie",
+    "modeNotAllowed": "Trwałe"
   },
   "result": {
     "title": "Wynik czyszczenia",
@@ -238,6 +255,7 @@
     "verified": "zweryfikowano",
     "cancelled": "Czyszczenie anulowane",
     "cancelledNote": "Przetworzono elementy: {processed}, pominięto: {skipped}.",
+    "progressIncomplete": "Nie udało się wyświetlić {count} aktualizacji postępu.",
     "processed": "Przetworzono",
     "skipped": "Pominięto",
     "viewResults": "Pokaż wyniki",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Wyczyść skany",
     "scopeProjects": "Zależności projektu",
     "scopeAgents": "Agenci AI",
-    "scopeAllDrives": "Wszystkie dyski"
+    "scopeAllDrives": "Wszystkie dyski",
+    "statusPartial": "Częściowe",
+    "totalCleaned": "Łącznie odzyskano",
+    "statusDepthLimited": "Częściowe"
   },
   "settings": {
     "general": "Wygląd",
@@ -451,6 +472,12 @@
     "protectionsHint": "Foldery, które nigdy nie mogą zostać usunięte, oraz nazwy do pominięcia.",
     "agentsHint": "Polityka czyszczenia pamięci podręcznej agenta AI.",
     "privacyHint": "Historia lokalna i maskowanie ścieżek na ekranie.",
+    "resetAppDataTitle": "Zresetuj wszystkie dane aplikacji",
+    "resetAppDataHint": "Usuwa wszystkie ustawienia, historię czyszczenia, historię skanowania, dzienniki działań i zapisane ostatnie skanowanie, a następnie ponownie uruchamia aplikację. Tego nie można cofnąć.",
+    "resetAppDataConfirmBtn": "Usuń dane i uruchom ponownie",
+    "resetAppDataBusy": "Resetuję…",
+    "resetAppDataSuccess": "Wszystkie dane aplikacji zostały zresetowane. Przywrócono ustawienia domyślne.",
+    "resetAppDataBlocked": "Trwa skanowanie lub czyszczenie. Zatrzymaj go przed zresetowaniem danych aplikacji.",
     "aboutHint": "Wersja, szczegóły kompilacji, katalog i Vellium.",
     "legalHint": "Warunki użytkowania, polityka prywatności i licencje open-source.",
     "sidebar": "Pasek boczny",
@@ -547,7 +574,11 @@
     "standardMotion": "Standardowa animacja",
     "aboutTitleBy": "Dev Cleaner przez Vellium",
     "mcpDestructiveTitle": "Zezwalaj na destrukcyjne działania MCP",
-    "mcpDestructiveHint": "Wymaga flagi --allow-destructive; każde wykonanie nadal wymaga jednorazowego tokena podglądu"
+    "mcpDestructiveHint": "Wymaga flagi --allow-destructive; każde wykonanie nadal wymaga jednorazowego tokena podglądu",
+    "pathMustBeAbsolute": "Ścieżki muszą być bezwzględne, na przykład C:\\Projects.",
+    "excludedNameInvalid": "Reguła musi być pojedynczą nazwą pliku lub folderu, bez separatorów ścieżek.",
+    "shortcutNeedsModifier": "Skrót globalny wymaga klawisza Ctrl, Alt lub Meta oraz klawisza lub klawisza funkcyjnego.",
+    "shortcutsResetWarning": "{count} nieprawidłowe skróty zostały zresetowane do wartości domyślnych."
   },
   "legal": {
     "docTabsLabel": "Dokumenty prawne",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Nie znaleziono artefaktów projektu do oczyszczenia",
     "emptyTitleIdle": "Skanowanie projektu jeszcze nie wykonane",
     "emptyDescClean": "Wybrany katalog jest czysty. Nie znaleziono plików node_modules, target ani artefaktów kompilacji do oczyszczenia.",
-    "emptyDescIdle": "Wybierz folder i przeskanuj, aby wyświetlić zależności projektu i artefakty kompilacji."
+    "emptyDescIdle": "Wybierz folder i przeskanuj, aby wyświetlić zależności projektu i artefakty kompilacji.",
+    "kpiTargets": "Cele do wyczyszczenia",
+    "kpiTargetsSub": "W {count} katalogach głównych projektów",
+    "kpiTargetsUnknown": "Skanuj ponownie, aby odświeżyć liczbę projektów"
   },
   "about": {
     "kpiVersion": "Wersja",
@@ -616,7 +650,8 @@
     "contactSupport": "Obsługa klienta",
     "contactBillingDesc": "Faktury, zakup enterprise i wsparcie subskrypcji",
     "contactPrivacyDesc": "Bezpieczeństwo danych, RODO i zapytania o prywatność",
-    "ecoCacheScope": "npm pamięć podręczna, Cargo rejestr, pip pamięć podręczna, yarn"
+    "ecoCacheScope": "npm pamięć podręczna, Cargo rejestr, pip pamięć podręczna, yarn",
+    "contactBilling": "Faktury i płatności"
   },
   "docs": {
     "catGuide": "Przewodniki i architektura",

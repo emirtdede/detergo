@@ -48,6 +48,48 @@ fn target(id: &str, path: PathBuf, rule_id: &str, safety: SafetyClass) -> Stored
     }
 }
 
+/// File-kind target used by the content-change tests. `target()` always models a
+/// directory, and a directory deliberately ignores size/mtime (growth between
+/// preview and execution is normal), so the file path is the only one that can
+/// exercise `ContentChanged`.
+fn file_target(id: &str, path: PathBuf, rule_id: &str, safety: SafetyClass) -> StoredTarget {
+    let project_root = path.parent().map(|p| p.to_string_lossy().to_string());
+    let target_name = path
+        .file_name()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or_default();
+    let measured = crate::scanner::measurement::measure_path(
+        &path,
+        TargetKind::File,
+        &crate::scanner::cancellation::CancellationToken::new(),
+    );
+    StoredTarget {
+        id: id.to_string(),
+        path,
+        rule_id: rule_id.to_string(),
+        provider: "project".to_string(),
+        category: "cache".to_string(),
+        kind: TargetKind::File,
+        safety_class: safety,
+        cleanup_method: CleanupMethod::Trash,
+        project_root: project_root.clone(),
+        evidence: EvidenceSnapshot {
+            rule_id: rule_id.to_string(),
+            target_name,
+            project_root,
+            workspace_root: None,
+            marker_hits: Vec::new(),
+            content_hits: Vec::new(),
+        },
+        logical_bytes: measured.as_ref().map(|s| s.logical_bytes),
+        allocated_bytes: measured.as_ref().and_then(|s| s.allocated_bytes),
+        modified_at: None,
+        active_use: ActiveUse::No,
+        parent_id: None,
+        protected: safety == SafetyClass::Keep,
+    }
+}
+
 fn make_session(root: &Path, targets: Vec<StoredTarget>) -> ScanSession {
     let mut map = std::collections::HashMap::new();
     let mut items = Vec::new();
@@ -63,6 +105,7 @@ fn make_session(root: &Path, targets: Vec<StoredTarget>) -> ScanSession {
             project_id: None,
             project_name: Some("app".to_string()),
             project_root: t.project_root.clone(),
+            project_detected: false,
             display_name: t.path.file_name().unwrap().to_string_lossy().to_string(),
             display_path: t.path.to_string_lossy().to_string(),
             logical_bytes: t.logical_bytes,
@@ -169,6 +212,54 @@ fn parent_and_child_targets_are_not_double_counted() {
         .unwrap();
     assert!(!child.eligible);
     assert_eq!(child.blocked_code.as_deref(), Some("COVERED_BY_PARENT"));
+}
+
+#[test]
+fn blocked_parent_does_not_cover_an_eligible_child() {
+    let temp = tempfile::tempdir().unwrap();
+    let next = temp.path().join("app/.next");
+    let cache = next.join("cache");
+    fs::create_dir_all(&cache).unwrap();
+    fs::write(cache.join("data.bin"), vec![b'x'; 512]).unwrap();
+
+    let session = make_session(
+        temp.path(),
+        vec![
+            // The parent is protected, so it will never be deleted. Its child
+            // must still be planned independently instead of being reported as
+            // covered by a parent that stays on disk.
+            target("t-parent", next.clone(), "js.next", SafetyClass::Keep),
+            target("t-child", cache.clone(), "js.next_cache", SafetyClass::Safe),
+        ],
+    );
+
+    let plan = build_plan(
+        &session,
+        &["t-parent".into(), "t-child".into()],
+        DeleteMode::RecycleBin,
+        &catalog(),
+        &policy(),
+    )
+    .unwrap();
+
+    let parent = plan
+        .items
+        .iter()
+        .find(|i| i.target_id == "t-parent")
+        .unwrap();
+    assert!(!parent.eligible);
+    assert_eq!(parent.blocked_code.as_deref(), Some("PROTECTED"));
+
+    let child = plan
+        .items
+        .iter()
+        .find(|i| i.target_id == "t-child")
+        .unwrap();
+    assert!(
+        child.eligible,
+        "the child must not be covered by a blocked parent"
+    );
+    assert_eq!(plan.eligible_count, 1);
 }
 
 #[test]
@@ -419,9 +510,70 @@ fn missing_target_invalidates_the_plan() {
 }
 
 #[test]
-fn verify_snapshot_separates_identity_from_content_changes() {
-    use crate::cleanup::plan::{verify_snapshot, TargetSnapshot, VerificationOutcome};
+fn file_content_change_blocks_execution_and_keeps_the_target() {
+    // End-to-end fault injection: the plan is built from a real file, the file
+    // is mutated between preview and execution, and the coordinator must refuse
+    // to delete it. `verify_snapshot` is unit-tested above; this covers the
+    // wiring (snapshot capture in `build_plan` → fresh measure → block code) and
+    // the most important property of all: the user's data survives.
+    let temp = tempfile::tempdir().unwrap();
+    let app = temp.path().join("app");
+    fs::create_dir_all(&app).unwrap();
+    let cache = app.join(".eslintcache");
+    fs::write(&cache, vec![b'x'; 256]).unwrap();
 
+    let session = make_session(
+        temp.path(),
+        vec![file_target(
+            "t-file",
+            cache.clone(),
+            "js.eslintcache",
+            SafetyClass::Safe,
+        )],
+    );
+    let plan = build_plan(
+        &session,
+        &["t-file".into()],
+        DeleteMode::Permanent,
+        &catalog(),
+        &policy(),
+    )
+    .unwrap();
+    assert_eq!(
+        plan.eligible_count, 1,
+        "the previewed file must be eligible"
+    );
+
+    // The file is rewritten while the confirmation dialog is open. Size *and*
+    // mtime change, which is exactly what a regenerated cache looks like.
+    fs::write(&cache, vec![b'y'; 8192]).unwrap();
+
+    let report = execute_plan_deterministic(
+        &plan,
+        &session,
+        &catalog(),
+        &[],
+        &plan.confirmation_token,
+        true,
+    )
+    .expect("execution reports results, not a hard error");
+    assert_eq!(report.success_count, 0);
+    assert_eq!(report.error_count, 1);
+    assert_eq!(
+        report.results[0].error_code.as_deref(),
+        Some("CONTENT_CHANGED"),
+        "a changed file is a content change, not a missing plan"
+    );
+    assert!(cache.exists(), "the mutated file must survive the attempt");
+    assert_eq!(
+        fs::metadata(&cache).unwrap().len(),
+        8192,
+        "the surviving file must still hold the new content"
+    );
+}
+
+#[test]
+fn verify_snapshot_separates_identity_from_content_changes() {
     let file = TargetSnapshot {
         exists: true,
         logical_bytes: 100,
@@ -1002,8 +1154,9 @@ fn official_actions_reject_unknown_and_read_only_requests() {
     };
 
     let registry = OfficialActionRegistry::new();
-    assert!(preview_action(&registry, "not-a-tool", "x").is_err());
-    assert!(preview_action(&registry, "docker", "docker.prune").is_err());
+    let token = crate::scanner::cancellation::CancellationToken::new();
+    assert!(preview_action(&registry, "not-a-tool", "x", &token).is_err());
+    assert!(preview_action(&registry, "docker", "docker.prune", &token).is_err());
     assert!(execute_action(&registry, "forged-token").is_err());
 }
 

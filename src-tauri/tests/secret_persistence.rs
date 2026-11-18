@@ -24,6 +24,13 @@ fn canary() -> String {
     format!("SK-FAKE-LEAK-CANARY-{}", uuid::Uuid::new_v4().simple())
 }
 
+fn contains_bytes(haystack: &[u8], needle: &[u8]) -> bool {
+    !needle.is_empty()
+        && haystack
+            .windows(needle.len())
+            .any(|window| window == needle)
+}
+
 fn write_project(root: &Path, secret: &str) {
     let project = root.join("webapp");
     let modules = project.join("node_modules").join("dummy-dep");
@@ -148,30 +155,38 @@ fn scan_and_audit_never_persist_file_contents_or_secrets() {
     .expect("snapshot write");
 
     // Every file the app persisted must be free of the canary, and must not hold
-    // a copy of a project file.
+    // a copy of a project file. The audit store is SQLite (binary), so the check
+    // runs on raw bytes: SQLite stores text as UTF-8 or UTF-16LE, and the ASCII
+    // canary is still findable in either encoding.
+    let needle = secret.as_bytes();
+    let utf16_needle: Vec<u8> = secret
+        .encode_utf16()
+        .flat_map(|unit| unit.to_le_bytes())
+        .collect();
     let mut checked = 0usize;
     for entry in fs::read_dir(&audit_dir).expect("read audit dir") {
         let path = entry.expect("dir entry").path();
         if !path.is_file() {
             continue;
         }
-        let text = fs::read_to_string(&path).expect("read audit file");
+        let text = fs::read(&path).expect("read audit file");
         assert!(
-            !text.contains(&secret),
+            !contains_bytes(&text, needle) && !contains_bytes(&text, &utf16_needle),
             "secret leaked into {}",
             path.display()
         );
         assert!(
-            !text.contains("export const key"),
+            !contains_bytes(&text, b"export const key"),
             "project file contents copied into {}",
             path.display()
         );
         checked += 1;
     }
     assert!(
-        checked >= 2,
-        "expected history and snapshots files to exist"
+        audit_dir.join("audit.sqlite3").is_file(),
+        "expected the SQLite audit store to exist"
     );
+    assert!(checked >= 1, "expected at least one audit file to inspect");
 
     // The record itself must still be usable: the secret-free path is stored.
     let records = repo.list_records(10);

@@ -36,7 +36,9 @@
     "on": "Encendido",
     "off": "Apagado",
     "items": "{n} elementos",
-    "showing": "{n} mostrados"
+    "showing": "{n} mostrados",
+    "scanAll": "Escanear todo",
+    "scanAllDesc": "Proyectos, almacenamiento de herramientas de IA y cachés de paquetes"
   },
   "header": {
     "changeLocation": "Cambiar Ubicación",
@@ -49,7 +51,8 @@
     "addFavorite": "Agregar ubicación actual a favoritos",
     "removeFavorite": "Quitar ubicación de favoritos",
     "favoriteAdded": "Ubicación agregada a favoritos.",
-    "favoriteRemoved": "Ubicación eliminada de favoritos."
+    "favoriteRemoved": "Ubicación eliminada de favoritos.",
+    "changeLocationConfirmDesc": "Cambiar la ubicación borra los resultados del escaneo actual y la selección. El historial de escaneos guardado y la última instantánea del escaneo se conservan."
   },
   "window": {
     "minimize": "Minimizar",
@@ -133,7 +136,17 @@
     "ecoAgent": "Agentes AI",
     "ecoCache": "Cachés",
     "ecoOther": "Otros Artefactos",
-    "distTotalBadge": "{size} se puede limpiar"
+    "distTotalBadge": "{size} se puede limpiar",
+    "noticeInfoTitle": "Información",
+    "noticeInfoHint": "Se omitieron las ubicaciones protegidas por el sistema. No se requiere acción.",
+    "noticeIssueHint": "No se pudieron leer algunas ubicaciones, por lo que los resultados pueden estar incompletos.",
+    "copyDetails": "Copiar detalles",
+    "detailsCopied": "Detalles copiados al portapapeles",
+    "coverage": "Cobertura del escaneo",
+    "sectionSkipped": "Omitido",
+    "sectionFailed": "Falló",
+    "sectionPartial": "Incompleto",
+    "sectionNoRoot": "No se seleccionó ninguna carpeta"
   },
   "table": {
     "project": "Proyecto",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Eliminar permanentemente",
     "permanentAck": "Entiendo que esto no se puede deshacer.",
     "blockedReasons": "Objetivos bloqueados",
-    "expires": "Este plan caduca en 15 minutos.",
+    "expires": "Este plan caduca en 30 minutos.",
     "close": "Cerrar",
     "working": "Trabajando…",
     "runInBackground": "Ejecutar en segundo plano",
@@ -223,7 +236,11 @@
     "cancelling": "Cancelando…",
     "progress": "Procesados {processed} / {total}",
     "currentItem": "Actual: {path}",
-    "alreadyRunning": "Ya hay una limpieza en curso."
+    "alreadyRunning": "Ya hay una limpieza en curso.",
+    "coveredByParent": "Bloqueado",
+    "noMethod": "Bloqueado",
+    "officialActionRequired": "Comando oficial",
+    "modeNotAllowed": "Permanente"
   },
   "result": {
     "title": "Resultado de limpieza",
@@ -238,6 +255,7 @@
     "verified": "verificado",
     "cancelled": "Limpieza cancelada",
     "cancelledNote": "{processed} elementos procesados, {skipped} omitidos.",
+    "progressIncomplete": "No se pudieron mostrar {count} actualizaciones de progreso.",
     "processed": "Procesados",
     "skipped": "Omitidos",
     "viewResults": "Ver resultados",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Escaneos claros",
     "scopeProjects": "Dependencias del proyecto",
     "scopeAgents": "Agentes de IA",
-    "scopeAllDrives": "Todas las unidades"
+    "scopeAllDrives": "Todas las unidades",
+    "statusPartial": "Parcial",
+    "totalCleaned": "Total recuperado",
+    "statusDepthLimited": "Parcial"
   },
   "settings": {
     "general": "Apariencia",
@@ -451,6 +472,12 @@
     "protectionsHint": "Carpetas que nunca deben eliminarse y nombres que se deben omitir.",
     "agentsHint": "Política de limpieza para cachés de agentes de IA.",
     "privacyHint": "Historial local y enmascaramiento de rutas en pantalla.",
+    "resetAppDataTitle": "Restablecer todos los datos de la aplicación",
+    "resetAppDataHint": "Elimina todas las configuraciones, el historial de limpieza, el historial de escaneo, los registros de acciones y el último escaneo guardado, luego reinicia la aplicación. Esto no se puede deshacer.",
+    "resetAppDataConfirmBtn": "Eliminar datos y reiniciar",
+    "resetAppDataBusy": "Restableciendo…",
+    "resetAppDataSuccess": "Todos los datos de la aplicación se han restablecido. Se restableció la configuración predeterminada.",
+    "resetAppDataBlocked": "Se está ejecutando un análisis o una limpieza. Deténgalo antes de restablecer los datos de la aplicación.",
     "aboutHint": "Versión, detalles de compilación, catálogo y Vellium.",
     "legalHint": "Términos de uso, política de privacidad y licencias de código abierto.",
     "sidebar": "Barra lateral",
@@ -547,7 +574,11 @@
     "standardMotion": "Animación estándar",
     "aboutTitleBy": "Dev Cleaner por Vellium",
     "mcpDestructiveTitle": "Permitir acciones destructivas de MCP",
-    "mcpDestructiveHint": "Requiere la marca --allow-destructive; cada ejecución sigue necesitando un token de vista previa de un solo uso"
+    "mcpDestructiveHint": "Requiere la marca --allow-destructive; cada ejecución sigue necesitando un token de vista previa de un solo uso",
+    "pathMustBeAbsolute": "Las rutas deben ser absolutas, por ejemplo C:\\Projects.",
+    "excludedNameInvalid": "Una regla debe ser un único nombre de archivo o carpeta, sin separadores de ruta.",
+    "shortcutNeedsModifier": "Un atajo global necesita Ctrl, Alt o Meta más una tecla o una tecla de función.",
+    "shortcutsResetWarning": "{count} atajos no válidos se restablecieron a sus valores predeterminados."
   },
   "legal": {
     "docTabsLabel": "Documentos legales",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "No se encontraron artefactos del proyecto que limpiar",
     "emptyTitleIdle": "Aún no se ha realizado ningún escaneo del proyecto",
     "emptyDescClean": "El directorio seleccionado está limpio. No se encontraron node_modules, target ni artefactos de construcción que limpiar.",
-    "emptyDescIdle": "Elija una carpeta y escanee para listar las dependencias del proyecto y los artefactos de compilación."
+    "emptyDescIdle": "Elija una carpeta y escanee para listar las dependencias del proyecto y los artefactos de compilación.",
+    "kpiTargets": "Objetivos limpiables",
+    "kpiTargetsSub": "En {count} raíces de proyecto",
+    "kpiTargetsUnknown": "Vuelve a escanear para actualizar el recuento de proyectos"
   },
   "about": {
     "kpiVersion": "Versión",
@@ -616,7 +650,8 @@
     "contactSupport": "Atención al cliente",
     "contactBillingDesc": "Facturación, compras empresariales y soporte de suscripción",
     "contactPrivacyDesc": "Seguridad de datos, GDPR y consultas de privacidad",
-    "ecoCacheScope": "npm caché, Cargo registro, pip caché, yarn"
+    "ecoCacheScope": "npm caché, Cargo registro, pip caché, yarn",
+    "contactBilling": "Facturación y pagos"
   },
   "docs": {
     "catGuide": "Guías y Arquitectura",

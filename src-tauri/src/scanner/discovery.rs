@@ -24,6 +24,15 @@ const DEFAULT_EXCLUSIONS: &[&str] = &[
     ".hg",
 ];
 
+/// Upper bound on retained walk notices.
+///
+/// `max_candidates` bounds matched items, not errors: a full-drive scan over a
+/// tree with hundreds of thousands of unreadable directories accumulated one
+/// owned notice per failure for the whole run. Past the cap the list is closed
+/// with a single synthetic notice so the user still learns that something was
+/// skipped without the buffer growing with the filesystem.
+const MAX_SCAN_NOTICES: usize = 1_000;
+
 /// Excluded only at the first level below the scan root, so a legitimate
 /// project folder named e.g. "windows" is still scanned.
 const SYSTEM_EXCLUSIONS: &[&str] = &[
@@ -58,7 +67,7 @@ pub struct DiscoveryOutcome {
     pub targets: Vec<StoredTarget>,
     pub directories_visited: u64,
     pub stop_reason: Option<StopReason>,
-    pub warnings: Vec<(String, Option<String>)>,
+    pub warnings: Vec<crate::scanner::notices::ScanNotice>,
 }
 
 pub struct DiscoveryEngine<'a> {
@@ -135,7 +144,7 @@ impl<'a> DiscoveryEngine<'a> {
 
         let mut items: Vec<CleanupItem> = Vec::new();
         let mut targets: Vec<StoredTarget> = Vec::new();
-        let mut warnings = Vec::new();
+        let mut warnings: Vec<crate::scanner::notices::ScanNotice> = Vec::new();
         let mut directories_visited = 0u64;
         let mut batch: Vec<CleanupItem> = Vec::new();
         let mut last_progress = Instant::now();
@@ -162,34 +171,61 @@ impl<'a> DiscoveryEngine<'a> {
                 Ok(e) => e,
                 Err(err) => {
                     let path = err.path().map(|p| p.to_string_lossy().to_string());
-                    warnings.push((
-                        if err
-                            .io_error()
-                            .map(|e| e.kind() == std::io::ErrorKind::PermissionDenied)
-                            .unwrap_or(false)
-                        {
-                            "ACCESS_DENIED".to_string()
-                        } else {
-                            "WALK_ERROR".to_string()
-                        },
-                        path,
-                    ));
+                    let code = if err
+                        .io_error()
+                        .map(|e| e.kind() == std::io::ErrorKind::PermissionDenied)
+                        .unwrap_or(false)
+                    {
+                        "ACCESS_DENIED"
+                    } else {
+                        "WALK_ERROR"
+                    };
+                    let root_label = config.root.to_string_lossy().to_string();
+                    if warnings.len() < MAX_SCAN_NOTICES {
+                        warnings.push(crate::scanner::notices::ScanNotice {
+                            code: code.to_string(),
+                            severity: crate::scanner::notices::classify(
+                                code,
+                                path.as_deref(),
+                                Some(&root_label),
+                            ),
+                            path,
+                            root: Some(root_label),
+                        });
+                    } else if warnings.len() == MAX_SCAN_NOTICES {
+                        warnings.push(crate::scanner::notices::ScanNotice {
+                            code: "WARNINGS_TRUNCATED".to_string(),
+                            severity: crate::scanner::notices::ScanNoticeSeverity::Info,
+                            path: None,
+                            root: Some(root_label),
+                        });
+                    }
                     continue;
                 }
             };
 
             let depth = entry.depth();
+            // A directory at the boundary is still evaluated (it may itself be
+            // a target, e.g. `<root>/node_modules` with maxDepth 1) but must
+            // never be descended into. Pruning before the rule match made that
+            // directory invisible and reported a depth-limit partial result.
+            let depth_limited =
+                entry.file_type().is_dir() && depth >= self.budget.limits().max_depth;
             if entry.file_type().is_dir() {
                 directories_visited += 1;
-                if depth >= self.budget.limits().max_depth {
+                if depth_limited {
                     self.budget.note_depth_exceeded();
-                    it.skip_current_dir();
-                    continue;
                 }
             }
 
             let name = entry.file_name().to_string_lossy().to_string();
             let path = entry.path().to_path_buf();
+
+            // The walk is depth-first: once we move to a sibling or back up, the
+            // directories recorded before can no longer be ancestors of the
+            // current entry. Without pruning the map kept every matched ancestor
+            // for the whole scan and grew with the tree, not with its depth.
+            self.active.retain(|dir, _| path.starts_with(dir));
 
             let ancestor = self.nearest_active(&path);
             let candidates = self.catalog.rules_for_name(&name);
@@ -202,7 +238,15 @@ impl<'a> DiscoveryEngine<'a> {
             let mut best_key = (0usize, 0usize, 0usize, usize::MAX);
 
             for rule in candidates {
-                if let Some((parent_rule_id, _)) = &ancestor {
+                // A rule that declares `nested_in` is only valid inside one of
+                // those parent rules. The previous guard skipped the check when
+                // no active ancestor existed, so a plain `cache` folder in a
+                // Next.js/Nx project matched the nested `safe` rule and became
+                // auto-selectable outside `.next`/`.nx`.
+                if !rule.nested_in.is_empty() {
+                    let Some((parent_rule_id, _)) = &ancestor else {
+                        continue;
+                    };
                     if !rule.nested_in.iter().any(|p| p == parent_rule_id) {
                         continue;
                     }
@@ -271,8 +315,14 @@ impl<'a> DiscoveryEngine<'a> {
             let classification = classify(&rule, &evidence);
 
             let path_key = crate::safety::path_guard::normalize_key(&path);
+            // Both directions: the delete guard rejects a target that *contains*
+            // a protected folder as well, so checking only "target inside
+            // protected" let `<root>/node_modules` be planned around a protected
+            // `<root>/node_modules/keep` and fail every row at execution.
             let user_protected = protected_keys.iter().any(|key| {
-                path_key == *key || crate::safety::path_guard::is_within(&path_key, key)
+                path_key == *key
+                    || crate::safety::path_guard::is_within(&path_key, key)
+                    || crate::safety::path_guard::is_within(key, &path_key)
             });
 
             let mut warnings_for_item = classification.warnings.clone();
@@ -282,8 +332,21 @@ impl<'a> DiscoveryEngine<'a> {
             let active_use = crate::safety::is_target_in_use(&path);
             let mut selectable = classification.selectable;
 
+            // The cleanup guard rejects a system component (recovery, boot,
+            // programdata, ...) at *any* depth, while discovery only filtered
+            // those names directly below the scan root. Such an item was
+            // offered as cleanable and then failed every preview/execute with
+            // PATH_GUARD. Keep the row visible but block it up front so the
+            // scanner and the guard agree.
+            let system_blocked =
+                crate::safety::path_guard::validate_system_path(&path_key).is_err();
+
             if user_protected {
                 warnings_for_item.push("USER_PROTECTED".to_string());
+                selectable = false;
+            }
+            if system_blocked {
+                warnings_for_item.push("PATH_GUARD".to_string());
                 selectable = false;
             }
             if active_use.blocks_deletion() {
@@ -329,6 +392,7 @@ impl<'a> DiscoveryEngine<'a> {
                 project_id: Some(project.project_id.clone()),
                 project_name: Some(project.project_name.clone()),
                 project_root: Some(project.project_root.clone()),
+                project_detected: project.detected,
                 display_name: name.clone(),
                 display_path: path.to_string_lossy().to_string(),
                 logical_bytes: None,
@@ -380,7 +444,11 @@ impl<'a> DiscoveryEngine<'a> {
             });
 
             if entry.file_type().is_dir() {
-                if self.catalog.has_child_rules(&rule.id) {
+                if depth_limited {
+                    // The rule match above still ran, so the boundary directory
+                    // itself could be reported; its contents were not scanned.
+                    it.skip_current_dir();
+                } else if self.catalog.has_child_rules(&rule.id) {
                     self.active
                         .insert(path.clone(), (rule.id.clone(), item_id.clone()));
                 } else {
@@ -411,6 +479,12 @@ impl<'a> DiscoveryEngine<'a> {
 
         if !batch.is_empty() {
             on_batch(&batch);
+        }
+
+        // A depth cut prunes only the affected branch: the walk completed, but
+        // the result is still incomplete, so report it as a partial scan.
+        if stop_reason.is_none() && self.budget.depth_limited() {
+            stop_reason = Some(StopReason::DepthLimit);
         }
 
         on_progress(ScanProgress {
@@ -491,6 +565,7 @@ fn fallback_project(parent: &Path) -> ProjectInfo {
         root_project_name: name,
         workspace_kind: None,
         markers: Vec::new(),
+        detected: false,
     }
 }
 

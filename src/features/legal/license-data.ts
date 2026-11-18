@@ -29,13 +29,19 @@ export const DIRECT_DEPENDENCIES: DirectDependency[] = [
   },
   {
     name: "@tauri-apps/api",
-    version: "2.11.1",
+    version: "2.12.5",
     license: "Apache-2.0 OR MIT",
     ecosystem: "npm",
   },
   {
     name: "@tauri-apps/plugin-dialog",
     version: "2.7.2",
+    license: "MIT OR Apache-2.0",
+    ecosystem: "npm",
+  },
+  {
+    name: "@tauri-apps/plugin-notification",
+    version: "2.3.0",
     license: "MIT OR Apache-2.0",
     ecosystem: "npm",
   },
@@ -88,9 +94,15 @@ export const DIRECT_DEPENDENCIES: DirectDependency[] = [
     ecosystem: "rust",
   },
   {
-    name: "rayon",
-    version: "1.12.0",
+    name: "reqwest",
+    version: "0.12.28",
     license: "MIT OR Apache-2.0",
+    ecosystem: "rust",
+  },
+  {
+    name: "rusqlite",
+    version: "0.43.0",
+    license: "MIT",
     ecosystem: "rust",
   },
   {
@@ -107,19 +119,25 @@ export const DIRECT_DEPENDENCIES: DirectDependency[] = [
   },
   {
     name: "tauri",
-    version: "2.11.5",
+    version: "2.12.5",
     license: "Apache-2.0 OR MIT",
     ecosystem: "rust",
   },
   {
     name: "tauri-build",
-    version: "2.6.3",
+    version: "2.7.4",
     license: "Apache-2.0 OR MIT",
     ecosystem: "rust",
   },
   {
     name: "tauri-plugin-dialog",
     version: "2.7.2",
+    license: "Apache-2.0 OR MIT",
+    ecosystem: "rust",
+  },
+  {
+    name: "tauri-plugin-notification",
+    version: "2.3.0",
     license: "Apache-2.0 OR MIT",
     ecosystem: "rust",
   },
@@ -139,12 +157,6 @@ export const DIRECT_DEPENDENCIES: DirectDependency[] = [
     name: "toml",
     version: "0.8.2",
     license: "MIT OR Apache-2.0",
-    ecosystem: "rust",
-  },
-  {
-    name: "trash",
-    version: "5.2.6",
-    license: "MIT",
     ecosystem: "rust",
   },
   {
@@ -181,8 +193,12 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         version: "0.22.1",
       },
       {
+        name: "base64",
+        version: "0.23.1",
+      },
+      {
         name: "bitflags",
-        version: "2.13.1",
+        version: "2.13.2",
       },
       {
         name: "block-buffer",
@@ -205,12 +221,20 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         version: "1.0.4",
       },
       {
+        name: "chacha20",
+        version: "0.10.2",
+      },
+      {
         name: "chrono",
         version: "0.4.45",
       },
       {
         name: "cookie",
         version: "0.18.2",
+      },
+      {
+        name: "cpufeatures",
+        version: "0.3.1",
       },
       {
         name: "cpufeatures",
@@ -223,14 +247,6 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       {
         name: "crossbeam-channel",
         version: "0.5.16",
-      },
-      {
-        name: "crossbeam-deque",
-        version: "0.8.8",
-      },
-      {
-        name: "crossbeam-epoch",
-        version: "0.9.21",
       },
       {
         name: "crossbeam-utils",
@@ -262,7 +278,7 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       },
       {
         name: "dirs",
-        version: "6.0.0",
+        version: "7.0.0",
       },
       {
         name: "dirs-sys",
@@ -279,10 +295,6 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       {
         name: "dyn-clone",
         version: "1.0.20",
-      },
-      {
-        name: "either",
-        version: "1.19.0",
       },
       {
         name: "erased-serde",
@@ -305,12 +317,44 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         version: "1.2.2",
       },
       {
+        name: "futures-channel",
+        version: "0.3.34",
+      },
+      {
+        name: "futures-core",
+        version: "0.3.34",
+      },
+      {
+        name: "futures-io",
+        version: "0.3.34",
+      },
+      {
+        name: "futures-macro",
+        version: "0.3.34",
+      },
+      {
+        name: "futures-sink",
+        version: "0.3.34",
+      },
+      {
+        name: "futures-task",
+        version: "0.3.34",
+      },
+      {
+        name: "futures-util",
+        version: "0.3.34",
+      },
+      {
         name: "getrandom",
-        version: "0.3.4",
+        version: "0.2.17",
       },
       {
         name: "getrandom",
         version: "0.4.3",
+      },
+      {
+        name: "getrandom",
+        version: "0.3.4",
       },
       {
         name: "glob",
@@ -334,15 +378,27 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       },
       {
         name: "html5ever",
-        version: "0.38.0",
+        version: "0.39.0",
       },
       {
         name: "http",
         version: "1.5.0",
       },
       {
+        name: "httparse",
+        version: "1.10.1",
+      },
+      {
         name: "idna",
         version: "1.1.0",
+      },
+      {
+        name: "image",
+        version: "0.25.10",
+      },
+      {
+        name: "ipnet",
+        version: "2.12.1",
       },
       {
         name: "itoa",
@@ -350,11 +406,11 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       },
       {
         name: "jsonptr",
-        version: "0.6.3",
+        version: "0.7.1",
       },
       {
         name: "keyboard-types",
-        version: "0.7.0",
+        version: "0.8.3",
       },
       {
         name: "libc",
@@ -370,11 +426,15 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       },
       {
         name: "markup5ever",
-        version: "0.38.0",
+        version: "0.39.0",
       },
       {
         name: "mime",
         version: "0.3.17",
+      },
+      {
+        name: "notify-rust",
+        version: "4.19.0",
       },
       {
         name: "num-conv",
@@ -401,28 +461,64 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         version: "2.3.2",
       },
       {
+        name: "pkg-config",
+        version: "0.3.34",
+      },
+      {
         name: "png",
-        version: "0.17.16",
+        version: "0.18.1",
       },
       {
         name: "powerfmt",
         version: "0.2.0",
       },
       {
+        name: "ppv-lite86",
+        version: "0.2.21",
+      },
+      {
         name: "proc-macro2",
         version: "1.0.107",
+      },
+      {
+        name: "quinn",
+        version: "0.11.12",
+      },
+      {
+        name: "quinn-proto",
+        version: "0.11.19",
+      },
+      {
+        name: "quinn-udp",
+        version: "0.5.16",
       },
       {
         name: "quote",
         version: "1.0.47",
       },
       {
-        name: "rayon",
-        version: "1.12.0",
+        name: "rand",
+        version: "0.10.3",
       },
       {
-        name: "rayon-core",
-        version: "1.13.0",
+        name: "rand",
+        version: "0.8.8",
+      },
+      {
+        name: "rand_chacha",
+        version: "0.3.1",
+      },
+      {
+        name: "rand_core",
+        version: "0.10.1",
+      },
+      {
+        name: "rand_core",
+        version: "0.6.4",
+      },
+      {
+        name: "rand_pcg",
+        version: "0.10.2",
       },
       {
         name: "ref-cast",
@@ -445,8 +541,16 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         version: "0.8.11",
       },
       {
+        name: "reqwest",
+        version: "0.12.28",
+      },
+      {
         name: "rustc_version",
         version: "0.4.1",
+      },
+      {
+        name: "rustls-pki-types",
+        version: "1.15.1",
       },
       {
         name: "scopeguard",
@@ -553,6 +657,10 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         version: "2.0.119",
       },
       {
+        name: "tauri-winrt-notification",
+        version: "0.8.1",
+      },
+      {
         name: "tendril",
         version: "0.5.1",
       },
@@ -561,16 +669,8 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         version: "2.0.20",
       },
       {
-        name: "thiserror",
-        version: "1.0.69",
-      },
-      {
         name: "thiserror-impl",
         version: "2.0.20",
-      },
-      {
-        name: "thiserror-impl",
-        version: "1.0.69",
       },
       {
         name: "time",
@@ -585,8 +685,8 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         version: "0.2.32",
       },
       {
-        name: "toml",
-        version: "0.9.12+spec-1.1.0",
+        name: "tokio-rustls",
+        version: "0.26.6",
       },
       {
         name: "toml",
@@ -595,10 +695,6 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       {
         name: "toml",
         version: "0.8.2",
-      },
-      {
-        name: "toml_datetime",
-        version: "0.7.5+spec-1.1.0",
       },
       {
         name: "toml_datetime",
@@ -622,7 +718,7 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       },
       {
         name: "tray-icon",
-        version: "0.24.2",
+        version: "0.25.1",
       },
       {
         name: "typeid",
@@ -645,12 +741,12 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         version: "0.2.6",
       },
       {
-        name: "windows",
-        version: "0.61.3",
+        name: "web-time",
+        version: "1.1.0",
       },
       {
         name: "windows",
-        version: "0.56.0",
+        version: "0.62.2",
       },
       {
         name: "windows",
@@ -666,15 +762,11 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       },
       {
         name: "windows-collections",
-        version: "0.2.0",
+        version: "0.3.2",
       },
       {
         name: "windows-core",
-        version: "0.61.2",
-      },
-      {
-        name: "windows-core",
-        version: "0.56.0",
+        version: "0.62.2",
       },
       {
         name: "windows-core",
@@ -682,15 +774,11 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       },
       {
         name: "windows-future",
-        version: "0.2.1",
+        version: "0.3.2",
       },
       {
         name: "windows-implement",
         version: "0.60.2",
-      },
-      {
-        name: "windows-implement",
-        version: "0.56.0",
       },
       {
         name: "windows-implement",
@@ -702,10 +790,6 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       },
       {
         name: "windows-interface",
-        version: "0.56.0",
-      },
-      {
-        name: "windows-interface",
         version: "0.58.0",
       },
       {
@@ -713,20 +797,12 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         version: "0.2.1",
       },
       {
-        name: "windows-link",
-        version: "0.1.3",
-      },
-      {
         name: "windows-numerics",
-        version: "0.2.0",
+        version: "0.3.1",
       },
       {
         name: "windows-result",
-        version: "0.3.4",
-      },
-      {
-        name: "windows-result",
-        version: "0.1.2",
+        version: "0.4.1",
       },
       {
         name: "windows-result",
@@ -734,7 +810,7 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       },
       {
         name: "windows-strings",
-        version: "0.4.2",
+        version: "0.5.1",
       },
       {
         name: "windows-strings",
@@ -762,7 +838,7 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       },
       {
         name: "windows-threading",
-        version: "0.1.0",
+        version: "0.2.1",
       },
       {
         name: "windows-version",
@@ -783,7 +859,11 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       },
       {
         name: "cfb",
-        version: "0.7.3",
+        version: "0.14.0",
+      },
+      {
+        name: "cfg_aliases",
+        version: "0.2.2",
       },
       {
         name: "darling",
@@ -807,7 +887,7 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       },
       {
         name: "dom_query",
-        version: "0.27.0",
+        version: "0.28.0",
       },
       {
         name: "embed-resource",
@@ -818,16 +898,36 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         version: "0.14.7",
       },
       {
+        name: "http-body",
+        version: "1.1.0",
+      },
+      {
+        name: "http-body-util",
+        version: "0.1.5",
+      },
+      {
+        name: "hyper",
+        version: "1.11.1",
+      },
+      {
+        name: "hyper-util",
+        version: "0.1.20",
+      },
+      {
         name: "ico",
-        version: "0.5.0",
+        version: "0.6.0",
       },
       {
         name: "infer",
-        version: "0.19.0",
+        version: "0.22.0",
       },
       {
         name: "libmimalloc-sys",
         version: "0.1.49",
+      },
+      {
+        name: "libsqlite3-sys",
+        version: "0.40.0",
       },
       {
         name: "mimalloc",
@@ -878,6 +978,10 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         version: "0.16.0",
       },
       {
+        name: "rusqlite",
+        version: "0.43.0",
+      },
+      {
         name: "schemars",
         version: "0.8.22",
       },
@@ -896,6 +1000,10 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       {
         name: "simd-adler32",
         version: "0.3.10",
+      },
+      {
+        name: "slab",
+        version: "0.4.12",
       },
       {
         name: "strsim",
@@ -918,6 +1026,22 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         version: "2.7.2",
       },
       {
+        name: "tower",
+        version: "0.5.3",
+      },
+      {
+        name: "tower-http",
+        version: "0.6.11",
+      },
+      {
+        name: "tower-layer",
+        version: "0.3.3",
+      },
+      {
+        name: "tower-service",
+        version: "0.3.3",
+      },
+      {
         name: "tracing",
         version: "0.1.44",
       },
@@ -930,12 +1054,12 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         version: "0.1.36",
       },
       {
-        name: "trash",
-        version: "5.2.6",
+        name: "try-lock",
+        version: "0.2.5",
       },
       {
         name: "urlpattern",
-        version: "0.3.0",
+        version: "0.6.0",
       },
       {
         name: "vswhom",
@@ -946,8 +1070,12 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         version: "0.1.3",
       },
       {
+        name: "want",
+        version: "0.3.1",
+      },
+      {
         name: "webview2-com",
-        version: "0.38.2",
+        version: "0.39.1",
       },
       {
         name: "webview2-com-macros",
@@ -955,15 +1083,11 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       },
       {
         name: "webview2-com-sys",
-        version: "0.38.2",
+        version: "0.39.1",
       },
       {
         name: "winnow",
         version: "1.0.4",
-      },
-      {
-        name: "winnow",
-        version: "0.7.15",
       },
       {
         name: "winnow",
@@ -983,6 +1107,10 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
     license: "Apache-2.0 OR MIT",
     components: [
       {
+        name: "atomic-waker",
+        version: "1.1.2",
+      },
+      {
         name: "autocfg",
         version: "1.5.1",
       },
@@ -996,23 +1124,11 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       },
       {
         name: "cargo_toml",
-        version: "0.22.3",
+        version: "1.0.1",
       },
       {
         name: "ctor",
-        version: "0.8.0",
-      },
-      {
-        name: "ctor-proc-macro",
-        version: "0.0.7",
-      },
-      {
-        name: "dtor",
-        version: "0.3.0",
-      },
-      {
-        name: "dtor-proc-macro",
-        version: "0.0.6",
+        version: "1.0.13",
       },
       {
         name: "equivalent",
@@ -1036,7 +1152,7 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       },
       {
         name: "muda",
-        version: "0.19.3",
+        version: "0.20.0",
       },
       {
         name: "pin-project-lite",
@@ -1048,23 +1164,23 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       },
       {
         name: "tauri",
-        version: "2.11.5",
+        version: "2.12.5",
       },
       {
         name: "tauri-build",
-        version: "2.6.3",
+        version: "2.7.4",
       },
       {
         name: "tauri-codegen",
-        version: "2.6.3",
+        version: "2.7.4",
       },
       {
         name: "tauri-macros",
-        version: "2.6.3",
+        version: "2.7.4",
       },
       {
         name: "tauri-plugin",
-        version: "2.6.3",
+        version: "2.7.2",
       },
       {
         name: "tauri-plugin-dialog",
@@ -1075,20 +1191,24 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         version: "2.5.1",
       },
       {
+        name: "tauri-plugin-notification",
+        version: "2.3.0",
+      },
+      {
         name: "tauri-plugin-single-instance",
         version: "2.4.3",
       },
       {
         name: "tauri-runtime",
-        version: "2.11.3",
+        version: "2.12.2",
       },
       {
         name: "tauri-runtime-wry",
-        version: "2.11.4",
+        version: "2.12.3",
       },
       {
         name: "tauri-utils",
-        version: "2.9.3",
+        version: "2.10.2",
       },
       {
         name: "utf8_iter",
@@ -1099,12 +1219,20 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         version: "1.26.0",
       },
       {
+        name: "value-bag",
+        version: "1.14.1",
+      },
+      {
         name: "window-vibrancy",
-        version: "0.6.0",
+        version: "0.8.1",
       },
       {
         name: "wry",
-        version: "0.55.1",
+        version: "0.57.2",
+      },
+      {
+        name: "zeroize",
+        version: "1.9.1",
       },
     ],
   },
@@ -1197,36 +1325,32 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
         version: "0.5.1",
       },
       {
+        name: "fallible-iterator",
+        version: "0.3.0",
+      },
+      {
+        name: "fallible-streaming-iterator",
+        version: "0.1.9",
+      },
+      {
         name: "ident_case",
         version: "1.0.1",
       },
       {
         name: "json-patch",
-        version: "3.0.1",
+        version: "4.2.0",
+      },
+      {
+        name: "serde_urlencoded",
+        version: "0.7.1",
       },
       {
         name: "siphasher",
         version: "1.0.3",
       },
       {
-        name: "unic-char-property",
-        version: "0.9.0",
-      },
-      {
-        name: "unic-char-range",
-        version: "0.9.0",
-      },
-      {
-        name: "unic-common",
-        version: "0.9.0",
-      },
-      {
-        name: "unic-ucd-ident",
-        version: "0.9.0",
-      },
-      {
-        name: "unic-ucd-version",
-        version: "0.9.0",
+        name: "vcpkg",
+        version: "0.2.15",
       },
       {
         name: "version_check",
@@ -1244,6 +1368,10 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       {
         name: "byteorder",
         version: "1.5.0",
+      },
+      {
+        name: "byteorder-lite",
+        version: "0.1.0",
       },
       {
         name: "jiff",
@@ -1276,11 +1404,11 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
     components: [
       {
         name: "cssparser",
-        version: "0.36.0",
+        version: "0.37.0",
       },
       {
         name: "cssparser-macros",
-        version: "0.6.1",
+        version: "0.7.1",
       },
       {
         name: "dtoa-short",
@@ -1292,7 +1420,28 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
       },
       {
         name: "selectors",
-        version: "0.36.1",
+        version: "0.38.0",
+      },
+    ],
+  },
+  {
+    license: "MIT OR Apache-2.0 OR Zlib",
+    components: [
+      {
+        name: "lru-slab",
+        version: "0.1.3",
+      },
+      {
+        name: "raw-window-handle",
+        version: "0.6.2",
+      },
+      {
+        name: "static_vcruntime",
+        version: "3.0.0",
+      },
+      {
+        name: "tinyvec_macros",
+        version: "0.1.1",
       },
     ],
   },
@@ -1301,24 +1450,67 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
     components: [
       {
         name: "alloc-no-stdlib",
-        version: "2.0.4",
+        version: "3.0.0",
       },
       {
         name: "alloc-stdlib",
-        version: "0.2.4",
+        version: "0.3.0",
+      },
+      {
+        name: "subtle",
+        version: "2.6.1",
       },
     ],
   },
   {
-    license: "MIT OR Apache-2.0 OR Zlib",
+    license: "Apache-2.0",
     components: [
       {
-        name: "raw-window-handle",
-        version: "0.6.2",
+        name: "sync_wrapper",
+        version: "1.0.2",
       },
       {
-        name: "tinyvec_macros",
-        version: "0.1.1",
+        name: "tao",
+        version: "0.37.2",
+      },
+    ],
+  },
+  {
+    license: "Apache-2.0 OR ISC OR MIT",
+    components: [
+      {
+        name: "hyper-rustls",
+        version: "0.27.10",
+      },
+      {
+        name: "rustls",
+        version: "0.23.46",
+      },
+    ],
+  },
+  {
+    license: "BSD-3-Clause OR Apache-2.0",
+    components: [
+      {
+        name: "moxcms",
+        version: "0.8.1",
+      },
+      {
+        name: "pxfm",
+        version: "0.1.30",
+      },
+    ],
+  },
+  {
+    license: "ISC",
+    components: [
+      {
+        name: "rustls-webpki",
+        version: "0.103.16",
+      },
+      {
+        name: "untrusted",
+        version: "0.9.0",
       },
     ],
   },
@@ -1362,20 +1554,24 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
     ],
   },
   {
+    license: "Zlib OR Apache-2.0 OR MIT",
+    components: [
+      {
+        name: "bytemuck",
+        version: "1.25.2",
+      },
+      {
+        name: "tinyvec",
+        version: "1.12.0",
+      },
+    ],
+  },
+  {
     license: "0BSD OR MIT OR Apache-2.0",
     components: [
       {
         name: "adler2",
         version: "2.0.1",
-      },
-    ],
-  },
-  {
-    license: "Apache-2.0",
-    components: [
-      {
-        name: "tao",
-        version: "0.35.3",
       },
     ],
   },
@@ -1389,6 +1585,15 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
     ],
   },
   {
+    license: "Apache-2.0 AND ISC",
+    components: [
+      {
+        name: "ring",
+        version: "0.17.14",
+      },
+    ],
+  },
+  {
     license: "Apache-2.0 AND MIT",
     components: [
       {
@@ -1398,11 +1603,29 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
     ],
   },
   {
+    license: "Apache-2.0 OR BSL-1.0",
+    components: [
+      {
+        name: "ryu",
+        version: "1.0.23",
+      },
+    ],
+  },
+  {
+    license: "BSD-2-Clause OR Apache-2.0 OR MIT",
+    components: [
+      {
+        name: "zerocopy",
+        version: "0.8.63",
+      },
+    ],
+  },
+  {
     license: "BSD-3-Clause AND MIT",
     components: [
       {
         name: "brotli",
-        version: "8.0.4",
+        version: "9.1.1",
       },
     ],
   },
@@ -1411,7 +1634,7 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
     components: [
       {
         name: "brotli-decompressor",
-        version: "5.0.3",
+        version: "6.3.1",
       },
     ],
   },
@@ -1425,20 +1648,20 @@ export const RUST_LICENSE_GROUPS: LicenseGroup[] = [
     ],
   },
   {
+    license: "CDLA-Permissive-2.0",
+    components: [
+      {
+        name: "webpki-roots",
+        version: "1.0.11",
+      },
+    ],
+  },
+  {
     license: "MIT OR Apache-2.0 AND Unicode-3.0",
     components: [
       {
         name: "unicode-ident",
         version: "1.0.24",
-      },
-    ],
-  },
-  {
-    license: "Zlib OR Apache-2.0 OR MIT",
-    components: [
-      {
-        name: "tinyvec",
-        version: "1.12.0",
       },
     ],
   },
@@ -1480,11 +1703,24 @@ export const NPM_LICENSE_GROUPS: LicenseGroup[] = [
     ],
   },
   {
+    license: "MIT OR Apache-2.0",
+    components: [
+      {
+        name: "@tauri-apps/plugin-dialog",
+        version: "2.7.2",
+      },
+      {
+        name: "@tauri-apps/plugin-notification",
+        version: "2.3.0",
+      },
+    ],
+  },
+  {
     license: "Apache-2.0 OR MIT",
     components: [
       {
         name: "@tauri-apps/api",
-        version: "2.11.1",
+        version: "2.12.5",
       },
     ],
   },
@@ -1497,16 +1733,7 @@ export const NPM_LICENSE_GROUPS: LicenseGroup[] = [
       },
     ],
   },
-  {
-    license: "MIT OR Apache-2.0",
-    components: [
-      {
-        name: "@tauri-apps/plugin-dialog",
-        version: "2.7.2",
-      },
-    ],
-  },
 ];
 
-export const RUST_COMPONENT_COUNT = 292;
-export const NPM_COMPONENT_COUNT = 10;
+export const RUST_COMPONENT_COUNT = 336;
+export const NPM_COMPONENT_COUNT = 11;

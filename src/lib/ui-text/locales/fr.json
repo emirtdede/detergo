@@ -36,7 +36,9 @@
     "on": "Activé",
     "off": "Désactivé",
     "items": "{n} éléments",
-    "showing": "{n} affichés"
+    "showing": "{n} affichés",
+    "scanAll": "Tout analyser",
+    "scanAllDesc": "Projets, stockage des outils d'IA et caches de paquets"
   },
   "header": {
     "changeLocation": "Changer d'emplacement",
@@ -49,7 +51,8 @@
     "addFavorite": "Ajouter l'emplacement actuel aux favoris",
     "removeFavorite": "Retirer l'emplacement des favoris",
     "favoriteAdded": "Emplacement ajouté aux favoris.",
-    "favoriteRemoved": "Emplacement retiré des favoris."
+    "favoriteRemoved": "Emplacement retiré des favoris.",
+    "changeLocationConfirmDesc": "Changer d'emplacement efface les résultats d'analyse actuels et la sélection. Votre historique d'analyses enregistré et le dernier instantané d'analyse sont conservés."
   },
   "window": {
     "minimize": "Réduire",
@@ -133,7 +136,17 @@
     "ecoAgent": "Agents IA",
     "ecoCache": "Caches",
     "ecoOther": "Autres artéfacts",
-    "distTotalBadge": "{size} nettoyables"
+    "distTotalBadge": "{size} nettoyables",
+    "noticeInfoTitle": "Information",
+    "noticeInfoHint": "Les emplacements protégés par le système ont été ignorés. Aucune action nécessaire.",
+    "noticeIssueHint": "Certains emplacements n'ont pas pu être lus, les résultats peuvent donc être incomplets.",
+    "copyDetails": "Copier les détails",
+    "detailsCopied": "Détails copiés dans le presse-papiers",
+    "coverage": "Couverture de l'analyse",
+    "sectionSkipped": "Ignoré",
+    "sectionFailed": "Échec",
+    "sectionPartial": "Incomplet",
+    "sectionNoRoot": "Aucun dossier sélectionné"
   },
   "table": {
     "label": "Cibles de nettoyage",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Supprimer définitivement",
     "permanentAck": "Je comprends que cette action est irréversible.",
     "blockedReasons": "Cibles bloquées",
-    "expires": "Ce plan expire dans 15 minutes.",
+    "expires": "Ce plan expire dans 30 minutes.",
     "close": "Fermer",
     "working": "Traitement en cours…",
     "runInBackground": "Exécuter en arrière-plan",
@@ -223,7 +236,11 @@
     "cancelling": "Annulation…",
     "progress": "Traités {processed} / {total}",
     "currentItem": "En cours : {path}",
-    "alreadyRunning": "Un nettoyage est déjà en cours."
+    "alreadyRunning": "Un nettoyage est déjà en cours.",
+    "coveredByParent": "Bloqué",
+    "noMethod": "Bloqué",
+    "officialActionRequired": "Commande officielle",
+    "modeNotAllowed": "Définitif"
   },
   "result": {
     "title": "Résultat du nettoyage",
@@ -238,6 +255,7 @@
     "verified": "vérifié",
     "cancelled": "Nettoyage annulé",
     "cancelledNote": "{processed} éléments traités, {skipped} ignorés.",
+    "progressIncomplete": "Impossible d'afficher {count} mises à jour de progression.",
     "processed": "Traités",
     "skipped": "Ignorés",
     "viewResults": "Voir les résultats",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Effacer les analyses",
     "scopeProjects": "Dépendances de projets",
     "scopeAgents": "Agents IA",
-    "scopeAllDrives": "Tous les disques"
+    "scopeAllDrives": "Tous les disques",
+    "statusPartial": "Partiel",
+    "totalCleaned": "Total récupéré",
+    "statusDepthLimited": "Partiel"
   },
   "settings": {
     "general": "Général",
@@ -451,6 +472,12 @@
     "protectionsHint": "Dossiers qui ne doivent jamais être supprimés et noms à ignorer.",
     "agentsHint": "Politique de nettoyage des caches d'agents IA.",
     "privacyHint": "Historique local et masquage des chemins à l'écran.",
+    "resetAppDataTitle": "Réinitialiser toutes les données de l'application",
+    "resetAppDataHint": "Supprime tous les paramètres, l'historique de nettoyage, l'historique d'analyse, les journaux d'action et la dernière analyse enregistrée, puis redémarre l'application. Cela ne peut pas être annulé.",
+    "resetAppDataConfirmBtn": "Supprimer les données et redémarrer",
+    "resetAppDataBusy": "Réinitialisation…",
+    "resetAppDataSuccess": "Toutes les données de l'application ont été réinitialisées. Paramètres par défaut restaurés.",
+    "resetAppDataBlocked": "Une analyse ou un nettoyage est en cours. Arrêtez-le avant de réinitialiser les données de l'application.",
     "aboutHint": "Version, détails de build, catalogue et Vellium.",
     "legalHint": "Conditions d'utilisation, politique de confidentialité et licences open-source.",
     "sidebar": "Barre latérale",
@@ -547,7 +574,11 @@
     "standardMotion": "Animations standard",
     "aboutTitleBy": "Dev Cleaner par Vellium",
     "mcpDestructiveTitle": "Autoriser les actions destructrices MCP",
-    "mcpDestructiveHint": "Nécessite l'option --allow-destructive ; chaque exécution requiert toujours un jeton d'aperçu à usage unique"
+    "mcpDestructiveHint": "Nécessite l'option --allow-destructive ; chaque exécution requiert toujours un jeton d'aperçu à usage unique",
+    "pathMustBeAbsolute": "Les chemins doivent être absolus, par exemple C:\\Projects.",
+    "excludedNameInvalid": "Une règle doit être un nom de fichier ou de dossier unique, sans séparateurs de chemin.",
+    "shortcutNeedsModifier": "Un raccourci global nécessite Ctrl, Alt ou Meta plus une touche ou une touche de fonction.",
+    "shortcutsResetWarning": "{count} raccourci(s) non valide(s) ont été réinitialisés à leurs valeurs par défaut."
   },
   "legal": {
     "docTabsLabel": "Documents juridiques",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Aucun artéfact de projet nettoyable trouvé",
     "emptyTitleIdle": "Aucune analyse de projet effectuée pour le moment",
     "emptyDescClean": "Le répertoire sélectionné est propre. Aucun dossier node_modules, target ou artéfact de build nettoyable trouvé.",
-    "emptyDescIdle": "Choisissez un dossier et lancez une analyse pour lister les dépendances de projets et les artéfacts de build."
+    "emptyDescIdle": "Choisissez un dossier et lancez une analyse pour lister les dépendances de projets et les artéfacts de build.",
+    "kpiTargets": "Cibles nettoyables",
+    "kpiTargetsSub": "Sur {count} racines de projet",
+    "kpiTargetsUnknown": "Relancez l'analyse pour actualiser le nombre de projets"
   },
   "about": {
     "kpiVersion": "Version",
@@ -616,7 +650,8 @@
     "contactSupport": "Support client",
     "contactBillingDesc": "Facturation, achats professionnels et abonnements",
     "contactPrivacyDesc": "Sécurité des données, RGPD et demandes de confidentialité",
-    "ecoCacheScope": "npm cache, Cargo registre, pip cache, yarn"
+    "ecoCacheScope": "npm cache, Cargo registre, pip cache, yarn",
+    "contactBilling": "Facturation et paiements"
   },
   "docs": {
     "catGuide": "Guides et architecture",

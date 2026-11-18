@@ -33,6 +33,9 @@ export const useCleanupRunStore = create<CleanupRunState>((set) => ({
 
   start: (planId, total, background) =>
     set({
+      // A report from the previous run must not stay visible behind a new
+      // progress card (the dock preferred the stale report over live progress).
+      lastReport: null,
       progress: {
         status: "running",
         planId,

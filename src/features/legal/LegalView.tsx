@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { CalendarClock, ExternalLink, Globe, ScrollText } from "lucide-react";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
 import { useUIText } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
+import { log } from "@/lib/logging";
 import {
   DIRECT_DEPENDENCIES,
   NPM_COMPONENT_COUNT,
@@ -19,6 +20,7 @@ import {
   isLegalTranslation,
   localizeLegalString,
 } from "./legal-content";
+import { useLegalLocale } from "./use-legal-locale";
 import "./legal.css";
 
 const VELLIUM_URL = "https://vellium.dev";
@@ -125,11 +127,25 @@ export const LegalView: React.FC = () => {
   const language = usePreferencesStore((s) => s.language);
   const legalDoc = useUiStore((s) => s.legalDoc);
   const setLegalDoc = useUiStore((s) => s.setLegalDoc);
-  const legalDocument = getLegalDocument(language, legalDoc);
-  const docs = getLegalDocMeta(language);
+  // The convenience dictionary loads per language; this revision re-renders the
+  // document once it arrives (the accessors below are synchronous by design).
+  const legalLocaleRevision = useLegalLocale(language);
+  // Merging the localized clauses and the tab metadata is not free, and any
+  // unrelated re-render (a notification count, an overlay update) used to redo
+  // it. Both derivations depend only on the locale/revision and active tab.
+  const docs = useMemo(() => getLegalDocMeta(language), [language, legalLocaleRevision]);
+  const legalDocument = useMemo(
+    () => getLegalDocument(language, legalDoc),
+    [language, legalDoc, legalLocaleRevision],
+  );
 
   const openUrl = (url: string) => {
-    void scannerApi.openUrl(url);
+    // A failed external-link command used to become an unhandled rejection with
+    // no feedback; the user only saw a button that did nothing.
+    scannerApi.openUrl(url).catch((err) => {
+      log.warn("Could not open the external link", err);
+      useUiStore.getState().showToast(ui.errors.title, "error");
+    });
   };
 
   const moveDoc = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {

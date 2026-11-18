@@ -1,3 +1,6 @@
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
+
 use tauri::ipc::{Channel, JavaScriptChannelId};
 use tauri::State;
 
@@ -9,7 +12,6 @@ use crate::cleanup::{
 use crate::commands::AppState;
 use crate::error::AppError;
 use crate::scanner::cancellation::CancellationToken;
-use crate::scanner::models::ItemStatus;
 
 #[tauri::command]
 pub fn preview_cleanup(
@@ -22,7 +24,7 @@ pub fn preview_cleanup(
     let settings = state.settings.load();
     let policy = crate::cleanup::CleanupPolicy::from(&settings);
     let handle = state.registry.get_session(&scan_session_id)?;
-    let session = handle.lock().unwrap();
+    let session = crate::lock!(handle);
     let plan = build_plan(&session, &target_ids, mode, &catalog, &policy)?;
     drop(session);
     state.registry.insert_plan(plan.clone());
@@ -45,7 +47,7 @@ pub async fn execute_cleanup(
     // Acquire the slot before consuming the plan: a second concurrent request
     // must be rejected instead of invalidating the plan the first one is using.
     let token = {
-        let mut slot = state.cleanup_token.lock().unwrap();
+        let mut slot = crate::lock!(state.cleanup_token);
         if slot.is_some() {
             return Err(AppError::Blocked(
                 "A cleanup is already running.".to_string(),
@@ -70,7 +72,7 @@ pub async fn execute_cleanup(
     // only after the run above has fully finished. `cancel_cleanup` therefore
     // keeps seeing the token until cancellation has taken effect.
     {
-        let mut slot = state.cleanup_token.lock().unwrap();
+        let mut slot = crate::lock!(state.cleanup_token);
         *slot = None;
     }
 
@@ -79,7 +81,7 @@ pub async fn execute_cleanup(
 
 #[tauri::command]
 pub fn cancel_cleanup(state: State<'_, AppState>) -> Result<(), AppError> {
-    let current = state.cleanup_token.lock().unwrap();
+    let current = crate::lock!(state.cleanup_token);
     if let Some(token) = current.as_ref() {
         token.cancel();
     }
@@ -94,27 +96,47 @@ async fn run_cleanup(
     state: &AppState,
     token: CancellationToken,
 ) -> Result<CleanupReport, AppError> {
-    let plan = state.registry.consume_plan(&plan_id)?;
-    let handle = state.registry.get_session(&plan.session_id)?;
+    // Validate the session before consuming the plan: a restored/expired
+    // session must not burn the single-use plan, otherwise the user has to
+    // redo the preview after an unrelated session error.
+    let preview = state.registry.peek_plan(&plan_id)?;
+    let handle = state.registry.get_session(&preview.session_id)?;
+    // Load everything the run depends on *before* the plan is consumed. A
+    // catalog/settings failure at this point must leave the preview reusable
+    // instead of forcing the user to build a new one.
     let catalog = state.catalog()?;
     let settings = state.settings.load();
     let policy = crate::cleanup::CleanupPolicy::from(&settings);
+    let plan = state.registry.consume_plan(&plan_id)?;
 
     let plan_for_task = plan.clone();
     let handle_for_task = handle.clone();
     let token_for_task = token.clone();
+    // Clone the session under the lock and release it immediately. Holding the
+    // mutex for the whole run blocked read-only commands (`get_scan_summary`,
+    // `preview_cleanup`) until every target was processed.
+    let session_for_task = {
+        let session = crate::lock!(handle_for_task);
+        session.clone()
+    };
+    // A closed frontend channel must not abort the cleanup, but the lost events
+    // must be reported instead of silently vanishing (Y-3).
+    let dropped_events = Arc::new(AtomicU64::new(0));
+    let dropped_for_task = Arc::clone(&dropped_events);
     let report = tokio::task::spawn_blocking(move || {
-        let session = handle_for_task.lock().unwrap();
         let observer = |event: CleanupEvent| {
             if let Some(channel) = on_event.as_ref() {
                 // A dropped frontend channel must never abort a cleanup; the
-                // run continues and the final report is still returned.
-                let _ = channel.send(event);
+                // run continues and the final report still says how many
+                // progress events were lost.
+                if channel.send(event).is_err() {
+                    dropped_for_task.fetch_add(1, Ordering::Relaxed);
+                }
             }
         };
         execute_plan_with_hooks(
             &plan_for_task,
-            &session,
+            &session_for_task,
             &catalog,
             &policy,
             &confirmation_token,
@@ -125,18 +147,28 @@ async fn run_cleanup(
         )
     })
     .await
-    .map_err(|e| AppError::Unknown(format!("Delete task failed: {}", e)))??;
+    .map_err(|e| {
+        // A JoinError means the worker panicked or was aborted: that is a bug,
+        // not something the user can act on. Keep the details in the log and
+        // return a stable message instead of embedding the panic payload.
+        crate::logging::error("delete task failed to join", e);
+        AppError::Unknown("Cleanup worker stopped unexpectedly.".to_string())
+    })??;
+
+    let mut report = report;
+    report.dropped_events = dropped_events.load(Ordering::Relaxed);
 
     {
-        let mut session = handle.lock().unwrap();
-        for result in &report.results {
-            if result.success {
-                if let Some(item) = session.items.iter_mut().find(|i| i.id == result.target_id) {
-                    item.status = ItemStatus::Deleted;
-                }
-                session.targets.remove(&result.target_id);
-            }
-        }
+        let mut session = crate::lock!(handle);
+        let success_ids: Vec<String> = report
+            .results
+            .iter()
+            .filter(|result| result.success)
+            .map(|result| result.target_id.clone())
+            .collect();
+        // A successful parent also removed every nested row from disk; keeping
+        // them in the session produced ghost targets in the UI.
+        session.apply_successful_deletions(&success_ids);
     }
 
     if settings.history_enabled {

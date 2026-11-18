@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { LANGUAGES_LIST, detectSystemLanguage, isRtlLanguage, getTranslation } from "../lib/i18n";
+import { LANGUAGES_LIST, detectSystemLanguage, isRtlLanguage } from "../locales/languages";
 import {
   getUIText,
+  loadUIText,
   localizeCategory,
   localizeBackendNote,
   localizeActionDescription,
@@ -9,13 +10,29 @@ import {
   localizeWarningCode,
   localizeAppError,
 } from "../lib/ui-text";
-import { DICTIONARIES } from "../locales/dictionaries";
 import { usePreferencesStore } from "../stores/preferences-store";
 
 describe("73-Language i18n Engine & Localization Tests", () => {
-  it("contains exactly 73 supported languages", () => {
+  it("ships exactly one UI dictionary module for each of the 73 languages", () => {
+    const modules = import.meta.glob("../lib/ui-text/locales/*.json", {
+      eager: true,
+      import: "default",
+    }) as Record<string, Record<string, unknown>>;
+    const ids = new Set([
+      ...Object.keys(modules).map((path) =>
+        path
+          .split("/")
+          .pop()!
+          .replace(/\.json$/, ""),
+      ),
+      "en",
+      "tr",
+    ]);
     expect(LANGUAGES_LIST).toHaveLength(73);
-    expect(Object.keys(DICTIONARIES)).toHaveLength(73);
+    expect(ids.size).toBe(73);
+    for (const meta of LANGUAGES_LIST) {
+      expect(ids.has(meta.id), `${meta.id} dictionary`).toBe(true);
+    }
   });
 
   it("detects system language or defaults gracefully", () => {
@@ -36,31 +53,31 @@ describe("73-Language i18n Engine & Localization Tests", () => {
     expect(isRtlLanguage("ja")).toBe(false);
   });
 
-  it("provides complete and valid translation dictionaries for all 73 languages", () => {
+  it("provides complete and valid UI dictionaries for all 73 languages", async () => {
     for (const meta of LANGUAGES_LIST) {
-      const dict = DICTIONARIES[meta.id];
-      expect(dict).toBeDefined();
-      expect(dict.app.title).toBe("Dev Cleaner");
-      expect(dict.header.scan).toBeTruthy();
-      expect(dict.header.settings).toBeTruthy();
-      expect(dict.scan.idleTitle).toBeTruthy();
-      expect(dict.table.project).toBeTruthy();
-      expect(dict.dialog.cancel).toBeTruthy();
-      expect(dict.dialog.confirm).toBeTruthy();
-      expect(dict.settings.title).toBeTruthy();
+      await loadUIText(meta.id);
+      const dict = getUIText(meta.id);
+      expect(dict, `${meta.id}`).toBeDefined();
+      expect(dict.nav.overview, `${meta.id} nav.overview`).toBeTruthy();
+      expect(dict.common.scan, `${meta.id} common.scan`).toBeTruthy();
+      expect(dict.table.project, `${meta.id} table.project`).toBeTruthy();
+      expect(dict.settings.shortcutsTitle, `${meta.id} settings.shortcutsTitle`).toBeTruthy();
+      expect(dict.legal.docTabsLabel, `${meta.id} legal.docTabsLabel`).toBeTruthy();
     }
   });
 
-  it("supports all 73 UI languages and clamps completely invalid locales to English", () => {
+  it("supports all 73 UI languages and clamps completely invalid locales to English", async () => {
     const store = usePreferencesStore.getState();
 
     // Valid 73 languages are fully recognized and supported
     store.setLanguage("de");
     expect(usePreferencesStore.getState().language).toBe("de");
+    await loadUIText("de");
     expect(getUIText("de").common.scan).toBe("Scannen");
 
     store.setLanguage("ja");
     expect(usePreferencesStore.getState().language).toBe("ja");
+    await loadUIText("ja");
     expect(getUIText("ja").common.scan).toBeTruthy();
 
     store.setLanguage("tr");
@@ -76,30 +93,27 @@ describe("73-Language i18n Engine & Localization Tests", () => {
     expect(usePreferencesStore.getState().language).toBe("en");
   });
 
-  it("provides comprehensive legal and Vellium company translations without leaking English", () => {
-    const tTr = getTranslation("tr");
-    expect(tTr.legal).toBeDefined();
-    expect(tTr.legal!.sectionTitle).toBe("Yasal Bilgiler & Kurumsal");
-    expect(tTr.legal!.velliumItemTitle).toBe("Vellium Hakkında");
-    expect(tTr.legal!.velliumManifesto).toHaveLength(5);
-    expect(tTr.legal!.privacySections).toHaveLength(4);
-    expect(tTr.legal!.termsSections).toHaveLength(4);
-    expect(tTr.legal!.securitySections).toHaveLength(4);
-    expect(tTr.legal!.licensesList.length).toBeGreaterThan(5);
+  it("provides localized legal UI copy and legal documents without leaking English", async () => {
+    const uiTr = getUIText("tr");
+    expect(uiTr.legal.docTabsLabel).toBe("Yasal belgeler");
+    expect(uiTr.legal.rights).toBe("Tüm hakları saklıdır.");
 
-    const tEn = getTranslation("en");
-    expect(tEn.legal).toBeDefined();
-    expect(tEn.legal!.sectionTitle).toBe("Legal Information & Corporate");
-    expect(tEn.legal!.velliumItemTitle).toBe("About Vellium");
-    expect(tEn.legal!.velliumManifesto[0]).toContain("Vellium builds enduring software systems");
+    const uiEn = getUIText("en");
+    expect(uiEn.legal.docTabsLabel).toBe("Legal documents");
+    expect(uiEn.legal.rights).toBe("All rights reserved.");
 
-    // Localizations without a translated in-memory legal block must not serve
-    // the English legal text; the Legal view reads from legal-locales instead.
-    const tDe = getTranslation("de");
-    expect(tDe.legal).toBeUndefined();
+    // Localizations without an in-memory English fallback must serve real
+    // translated documents from legal-locales; the UI's `legal` block above is
+    // only chrome (tabs, column headers, counters).
+    const { getLegalDocument, loadLegalLocale } = await import("@/features/legal/legal-content");
+    await loadLegalLocale("de");
+    expect(getLegalDocument("de", "eula").title).not.toBe("End User License Agreement");
   });
-  it("guarantees 100% complete UIText coverage across all 73 languages with zero missing keys", () => {
+  it("guarantees 100% complete UIText coverage across all 73 languages with zero missing keys", async () => {
     for (const meta of LANGUAGES_LIST) {
+      // Locale files load lazily now; the test must wait for the chunk before
+      // asserting, exactly like `useUIText` does.
+      await loadUIText(meta.id);
       const ui = getUIText(meta.id);
       expect(ui).toBeDefined();
       expect(ui.nav.primary).toBeTruthy();
@@ -127,6 +141,54 @@ describe("73-Language i18n Engine & Localization Tests", () => {
       expect(ui.notifications.cleanDoneBody(3, "test_dest", "100 MB")).toContain("3");
       expect(ui.errors.blocked).toBeTruthy();
       expect(ui.warnings.userProtected).toBeTruthy();
+    }
+  });
+
+  it("keeps placeholder tokens and their order identical to English in every locale", async () => {
+    const modules = import.meta.glob("../lib/ui-text/locales/*.json", {
+      eager: true,
+      import: "default",
+    }) as Record<string, Record<string, unknown>>;
+
+    const tokensOf = (value: string) =>
+      Array.from(value.matchAll(/\{(\w+)\}/g), (match) => match[1]);
+    const english = getUIText("en") as unknown as Record<string, Record<string, unknown>>;
+
+    for (const [path, dict] of Object.entries(modules)) {
+      const locale = path
+        .split("/")
+        .pop()!
+        .replace(/\.json$/, "");
+      for (const [category, keys] of Object.entries(dict)) {
+        for (const [key, value] of Object.entries(keys as Record<string, unknown>)) {
+          if (typeof value !== "string") continue;
+          const englishValue = english[category]?.[key];
+          if (typeof englishValue !== "string") continue;
+          // `hydrateLocale` derives its parameter list from the template, so a
+          // reordered or renamed token would silently swap the interpolated
+          // arguments at runtime.
+          expect(tokensOf(value), `${locale}.${category}.${key}`).toEqual(tokensOf(englishValue));
+        }
+      }
+    }
+  });
+
+  it("masks the home directory when path masking is enabled", () => {
+    const previous = usePreferencesStore.getState().maskPaths;
+    usePreferencesStore.setState({ maskPaths: true });
+    try {
+      const uiEn = getUIText("en");
+      const localized = localizeAppError(
+        {
+          code: "RecycleBinFailed",
+          message: "C:\\Users\\emir\\AppData\\Local\\Temp\\node_modules",
+        },
+        uiEn,
+      );
+      expect(localized).not.toContain("emir");
+      expect(localized).toContain("•••");
+    } finally {
+      usePreferencesStore.setState({ maskPaths: previous });
     }
   });
 
@@ -236,10 +298,11 @@ describe("73-Language i18n Engine & Localization Tests", () => {
       },
       uiTr,
     );
-    expect(localized).toBe(
-      `${uiTr.errors.recycleBinComFailed} (C:\\Temp\\node_modules (HRESULT 0x80070005))`,
-    );
+    expect(localized).toBe(`${uiTr.errors.recycleBinComFailed} (HRESULT 0x80070005)`);
     expect(localized).not.toContain("Could not");
+    // The full path must never be echoed verbatim; only opaque machine tokens
+    // survive, so a home directory cannot leak through an error toast.
+    expect(localized).not.toContain("C:\\Temp");
     // A legacy English payload must never be appended to the localized text.
     expect(
       localizeAppError(
@@ -251,8 +314,9 @@ describe("73-Language i18n Engine & Localization Tests", () => {
     expect(localizeAppError("RECYCLE_FAILED", uiTr)).toBe(uiTr.errors.recycleBinFailed);
   });
 
-  it("keeps navigation labels in sync with page titles in every locale", () => {
+  it("keeps navigation labels in sync with page titles in every locale", async () => {
     for (const meta of LANGUAGES_LIST) {
+      await loadUIText(meta.id);
       const ui = getUIText(meta.id);
       expect(ui.nav.overview, `${meta.id} nav.overview`).toBe(ui.overview.pageTitle);
       // Nav labels stay short while the page heading is descriptive, so only
@@ -264,8 +328,9 @@ describe("73-Language i18n Engine & Localization Tests", () => {
     }
   });
 
-  it("never leaks translation artifacts into any locale", () => {
+  it("never leaks translation artifacts into any locale", async () => {
     for (const meta of LANGUAGES_LIST) {
+      await loadUIText(meta.id);
       const ui = getUIText(meta.id);
       const stack: unknown[] = [ui.nav, ui.common, ui.overview, ui.table, ui.history, ui.settings];
       const seen = new Set<unknown>();
@@ -282,16 +347,24 @@ describe("73-Language i18n Engine & Localization Tests", () => {
   });
 
   it("ships localized documentation, legal and backend dictionaries for every locale", async () => {
-    const { translateDocs, hasDocsLocale } = await import("@/features/docs/docs-i18n");
-    const { getLegalDocument, getLegalDocMeta, isLegalTranslation } = await import(
+    const { translateDocs, hasDocsLocale, loadDocsLocale } = await import(
+      "@/features/docs/docs-i18n"
+    );
+    const { getLegalDocument, getLegalDocMeta, isLegalTranslation, loadLegalLocale } = await import(
       "@/features/legal/legal-content"
     );
-    const { translateBackendText } = await import("@/lib/ui-text/backend-i18n");
+    const { translateBackendText, loadBackendLocale } = await import("@/lib/ui-text/backend-i18n");
 
     const sample = "Welcome to Dev Cleaner";
 
     for (const meta of LANGUAGES_LIST) {
       if (meta.id === "en" || meta.id === "tr") continue;
+
+      await loadDocsLocale(meta.id);
+      await loadLegalLocale(meta.id);
+      // Backend dictionaries are per-language chunks now; the production
+      // consumer joins this load with `useUIText`.
+      await loadBackendLocale(meta.id);
 
       expect(hasDocsLocale(meta.id), `${meta.id} docs locale`).toBe(true);
       const docsText = translateDocs(meta.id, sample);

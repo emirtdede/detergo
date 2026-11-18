@@ -57,6 +57,8 @@ const ALLOWED_IDENTICAL_VALUES = new Set([
   "Error",
   "Errors",
   "Impact",
+  // "Information" is the native spelling in de/fr/da/sv (cognate, not a leak).
+  "Information",
   "Legal",
   "Mode",
   "Notes",
@@ -199,33 +201,24 @@ for (const relativeDir of ["src/features/docs/docs-locales", "src/features/legal
   }
 }
 
-/*
- * Legacy dictionaries (`src/locales/langs`). They back the deprecated `tr`
- * proxy and some older views, so an English value there is just as visible as
- * one in `ui-text`. They were previously unaudited, which is how the literal
- * `settings.platform: "Tauri v2 + React 18 + Rust"` survived in 72 languages.
- */
-const LEGACY_TECHNICAL_LEAF = /^legal\.licensesList\[\d+\]\.(name|version|license|url)$/;
-
-const legacyDir = join(root, "src/locales/langs");
-const legacyEn = flatten(
-  Object.values(await loadTypeScriptDictionary(join(legacyDir, "en.ts")))[0],
-);
-
-for (const name of readdirSync(legacyDir)) {
-  if (!name.endsWith(".ts") || name === "en.ts") continue;
-  checkedFiles++;
-  const locale = basename(name, ".ts");
-  const dict = flatten(Object.values(await loadTypeScriptDictionary(join(legacyDir, name)))[0]);
-
-  for (const [key, source] of Object.entries(legacyEn)) {
-    if (dict[key] !== source) continue;
-    // Dependency names, versions, licence ids and URLs are product data, not UI
-    // copy: translating them would be wrong, not a coverage gap.
-    if (LEGACY_TECHNICAL_LEAF.test(key)) continue;
-    checkedLeaves++;
-    if (ALLOWED_IDENTICAL_VALUES.has(source)) continue;
-    findings.push({ locale, key, value: source });
+// The error-boundary copy is keyed by locale id; its English values are the
+// reference. These three strings per language must be translated too, because
+// the fallback screen is exactly where a half-translated UI is most obvious.
+{
+  const bundle = JSON.parse(
+    readFileSync(join(root, "src/lib/ui-text/error-boundary.json"), "utf8"),
+  );
+  const reference = flatten(bundle.en);
+  for (const [locale, dict] of Object.entries(bundle)) {
+    if (locale === "en") continue;
+    const flat = flatten(dict);
+    for (const [key, source] of Object.entries(reference)) {
+      if (flat[key] !== source) continue;
+      checkedFiles++;
+      checkedLeaves++;
+      if (ALLOWED_IDENTICAL_VALUES.has(source)) continue;
+      findings.push({ locale, key, value: source });
+    }
   }
 }
 

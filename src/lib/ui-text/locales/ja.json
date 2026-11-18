@@ -36,7 +36,9 @@
     "on": "オン",
     "off": "オフ",
     "items": "{n} アイテム",
-    "showing": "{n} 表示"
+    "showing": "{n} 表示",
+    "scanAll": "すべてスキャン",
+    "scanAllDesc": "プロジェクト、AIツールのストレージ、パッケージキャッシュ"
   },
   "header": {
     "changeLocation": "場所を変更",
@@ -49,7 +51,8 @@
     "addFavorite": "現在の場所をお気に入りに追加",
     "removeFavorite": "お気に入りから場所を削除",
     "favoriteAdded": "場所がお気に入りに追加されました。",
-    "favoriteRemoved": "場所がお気に入りから削除されました。"
+    "favoriteRemoved": "場所がお気に入りから削除されました。",
+    "changeLocationConfirmDesc": "場所を変更すると、現在のスキャン結果と選択がクリアされます。保存されたスキャン履歴と最後のスキャンスナップショットは保持されます。"
   },
   "window": {
     "minimize": "最小化",
@@ -133,7 +136,17 @@
     "ecoAgent": "AIエージェント",
     "ecoCache": "キャッシュ",
     "ecoOther": "その他のアーティファクト",
-    "distTotalBadge": "{size} クリーン可能"
+    "distTotalBadge": "{size} クリーン可能",
+    "noticeInfoTitle": "情報",
+    "noticeInfoHint": "システムで保護された場所はスキップされました。操作は不要です。",
+    "noticeIssueHint": "一部の場所を読み取れなかったため、結果が不完全な可能性があります。",
+    "copyDetails": "詳細をコピー",
+    "detailsCopied": "詳細をクリップボードにコピーしました",
+    "coverage": "スキャン範囲",
+    "sectionSkipped": "スキップ",
+    "sectionFailed": "失敗",
+    "sectionPartial": "不完全",
+    "sectionNoRoot": "フォルダが選択されていません"
   },
   "table": {
     "project": "プロジェクト",
@@ -215,7 +228,7 @@
     "confirmPermanent": "完全に削除",
     "permanentAck": "取り消せないことを理解しています。",
     "blockedReasons": "ブロックされた対象",
-    "expires": "このプランは15分で期限切れになります。",
+    "expires": "このプランは30分で期限切れになります。",
     "close": "閉じる",
     "working": "作業中…",
     "runInBackground": "バックグラウンドで実行",
@@ -223,7 +236,11 @@
     "cancelling": "キャンセル中…",
     "progress": "処理済み {processed} / {total}",
     "currentItem": "現在: {path}",
-    "alreadyRunning": "クリーンアップはすでに実行中です。"
+    "alreadyRunning": "クリーンアップはすでに実行中です。",
+    "coveredByParent": "ブロック済み",
+    "noMethod": "ブロック済み",
+    "officialActionRequired": "公式コマンド",
+    "modeNotAllowed": "永久"
   },
   "result": {
     "title": "クリーンアップ結果",
@@ -238,6 +255,7 @@
     "verified": "確認済み",
     "cancelled": "クリーンアップをキャンセルしました",
     "cancelledNote": "{processed} 件を処理、{skipped} 件をスキップしました。",
+    "progressIncomplete": "{count} 件の進捗更新を表示できませんでした。",
     "processed": "処理済み",
     "skipped": "スキップ済み",
     "viewResults": "結果を表示",
@@ -390,7 +408,10 @@
     "clearScansBtn": "スキャンをクリア",
     "scopeProjects": "プロジェクトの依存関係",
     "scopeAgents": "AIエージェント",
-    "scopeAllDrives": "すべてのドライブ"
+    "scopeAllDrives": "すべてのドライブ",
+    "statusPartial": "一部",
+    "totalCleaned": "回収合計",
+    "statusDepthLimited": "一部"
   },
   "settings": {
     "general": "外観",
@@ -451,6 +472,12 @@
     "protectionsHint": "削除してはいけないフォルダーおよびスキップする名前。",
     "agentsHint": "AIエージェントキャッシュのクリーンアップ方針。",
     "privacyHint": "ローカル履歴および画面上のパスのマスキング。",
+    "resetAppDataTitle": "すべてのアプリデータをリセット",
+    "resetAppDataHint": "すべての設定、クリーンアップ履歴、スキャン履歴、アクション ログ、保存されている最後のスキャンを削除し、アプリを再起動します。これを元に戻すことはできません。",
+    "resetAppDataConfirmBtn": "データを削除して再起動する",
+    "resetAppDataBusy": "リセット中…",
+    "resetAppDataSuccess": "すべてのアプリデータがリセットされました。デフォルト設定が復元されました。",
+    "resetAppDataBlocked": "スキャンまたはクリーンアップが実行中です。アプリデータをリセットする前に停止してください。",
     "aboutHint": "バージョン、ビルド詳細、カタログおよびVellium。",
     "legalHint": "利用規約、プライバシーポリシーおよびオープンソースライセンス。",
     "sidebar": "サイドバー",
@@ -547,7 +574,11 @@
     "standardMotion": "標準アニメーション",
     "aboutTitleBy": "Dev Cleaner · Vellium",
     "mcpDestructiveTitle": "MCP の破壊的操作を許可する",
-    "mcpDestructiveHint": "--allow-destructive フラグが必要です。実行のたびに単回使用のプレビュートークンも必要です"
+    "mcpDestructiveHint": "--allow-destructive フラグが必要です。実行のたびに単回使用のプレビュートークンも必要です",
+    "pathMustBeAbsolute": "パスは絶対パスである必要があります (C:\\Projects など)。",
+    "excludedNameInvalid": "ルールは、パス区切り文字を含まない単一のファイル名またはフォルダー名である必要があります。",
+    "shortcutNeedsModifier": "グローバル ショートカットには、Ctrl、Alt、または Meta とキー、またはファンクション キーが必要です。",
+    "shortcutsResetWarning": "{count} 個の無効なショートカットがデフォルトにリセットされました。"
   },
   "legal": {
     "docTabsLabel": "法的文書",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "クリーン可能なプロジェクト成果物は見つかりませんでした",
     "emptyTitleIdle": "まだプロジェクトスキャンは実行されていません",
     "emptyDescClean": "選択したディレクトリはクリーンです。クリーン可能な node_modules、target、またはビルド成果物は見つかりませんでした。",
-    "emptyDescIdle": "フォルダーを選択してスキャンすると、プロジェクトの依存関係とビルド成果物の一覧が表示されます。"
+    "emptyDescIdle": "フォルダーを選択してスキャンすると、プロジェクトの依存関係とビルド成果物の一覧が表示されます。",
+    "kpiTargets": "クリーン可能なターゲット",
+    "kpiTargetsSub": "{count} 件のプロジェクトルート",
+    "kpiTargetsUnknown": "プロジェクト数を更新するには再スキャンしてください"
   },
   "about": {
     "kpiVersion": "バージョン",
@@ -616,7 +650,8 @@
     "contactSupport": "カスタマーサポート",
     "contactBillingDesc": "請求、企業向け調達、およびサブスクリプションサポート",
     "contactPrivacyDesc": "データセキュリティ、GDPR、およびプライバシーに関するお問い合わせ",
-    "ecoCacheScope": "npm キャッシュ、Cargo レジストリ、pip キャッシュ、yarn"
+    "ecoCacheScope": "npm キャッシュ、Cargo レジストリ、pip キャッシュ、yarn",
+    "contactBilling": "請求と支払い"
   },
   "docs": {
     "catGuide": "ガイドとアーキテクチャ",

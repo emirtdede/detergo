@@ -36,7 +36,9 @@
     "on": "تشغيل",
     "off": "إيقاف",
     "items": "{n} عناصر",
-    "showing": "عرض {n}"
+    "showing": "عرض {n}",
+    "scanAll": "فحص الكل",
+    "scanAllDesc": "المشاريع وتخزين أدوات الذكاء الاصطناعي وذاكرة الحزم المؤقتة"
   },
   "header": {
     "changeLocation": "تغيير المسار",
@@ -49,7 +51,8 @@
     "addFavorite": "إضافة الموقع الحالي إلى المفضلة",
     "removeFavorite": "إزالة الموقع من المفضلة",
     "favoriteAdded": "تم إضافة الموقع إلى المفضلة.",
-    "favoriteRemoved": "تم إزالة الموقع من المفضلة."
+    "favoriteRemoved": "تم إزالة الموقع من المفضلة.",
+    "changeLocationConfirmDesc": "تغيير الموقع يمسح نتائج الفحص الحالية والتحديد. يبقى سجل الفحص المحفوظ ولقطة آخر فحص محفوظين."
   },
   "window": {
     "minimize": "تصغير",
@@ -133,7 +136,17 @@
     "ecoAgent": "وكلاء الذكاء الاصطناعي",
     "ecoCache": "التخزين المؤقت",
     "ecoOther": "المخلفات الأخرى",
-    "distTotalBadge": "{size} قابل للتنظيف"
+    "distTotalBadge": "{size} قابل للتنظيف",
+    "noticeInfoTitle": "معلومات",
+    "noticeInfoHint": "تم تخطي المواقع المحمية من النظام. لا يلزم اتخاذ إجراء.",
+    "noticeIssueHint": "تعذّرت قراءة بعض المواقع، لذا قد تكون النتائج غير مكتملة.",
+    "copyDetails": "نسخ التفاصيل",
+    "detailsCopied": "تم نسخ التفاصيل إلى الحافظة",
+    "coverage": "تغطية الفحص",
+    "sectionSkipped": "تم التخطي",
+    "sectionFailed": "فشل",
+    "sectionPartial": "غير مكتمل",
+    "sectionNoRoot": "لم يتم اختيار مجلد"
   },
   "table": {
     "project": "المشروع",
@@ -215,7 +228,7 @@
     "confirmPermanent": "الحذف الدائم",
     "permanentAck": "أفهم أن هذا لا يمكن التراجع عنه.",
     "blockedReasons": "الأهداف المحظورة",
-    "expires": "تنتهي صلاحية هذه الخطة خلال 15 دقيقة.",
+    "expires": "تنتهي صلاحية هذه الخطة خلال 30 دقيقة.",
     "close": "إغلاق",
     "working": "جاري العمل…",
     "runInBackground": "تشغيل في الخلفية",
@@ -223,7 +236,11 @@
     "cancelling": "جارٍ الإلغاء…",
     "progress": "تمت المعالجة {processed} / {total}",
     "currentItem": "الحالي: {path}",
-    "alreadyRunning": "هناك عملية تنظيف قيد التشغيل بالفعل."
+    "alreadyRunning": "هناك عملية تنظيف قيد التشغيل بالفعل.",
+    "coveredByParent": "محظور",
+    "noMethod": "محظور",
+    "officialActionRequired": "الأمر الرسمي",
+    "modeNotAllowed": "دائم"
   },
   "result": {
     "title": "نتيجة التنظيف",
@@ -238,6 +255,7 @@
     "verified": "تم التحقق",
     "cancelled": "تم إلغاء التنظيف",
     "cancelledNote": "تمت معالجة {processed} عنصرًا، وتم تخطي {skipped}.",
+    "progressIncomplete": "تعذر عرض {count} من تحديثات التقدم.",
     "processed": "تمت المعالجة",
     "skipped": "تم التخطي",
     "viewResults": "عرض النتائج",
@@ -390,7 +408,10 @@
     "clearScansBtn": "مسح الفحوصات",
     "scopeProjects": "تبعيات المشروع",
     "scopeAgents": "وكلاء الذكاء الاصطناعي",
-    "scopeAllDrives": "كل الأقراص"
+    "scopeAllDrives": "كل الأقراص",
+    "statusPartial": "جزئي",
+    "totalCleaned": "الإجمالي المسترد",
+    "statusDepthLimited": "جزئي"
   },
   "settings": {
     "general": "المظهر",
@@ -451,6 +472,12 @@
     "protectionsHint": "المجلدات التي يجب ألا تُحذف أبدًا والأسماء التي يجب تجاهلها.",
     "agentsHint": "سياسة التنظيف لذاكرة التخزين المؤقت للوكيل الذكي.",
     "privacyHint": "السجل المحلي وإخفاء المسار على الشاشة.",
+    "resetAppDataTitle": "إعادة ضبط كافة بيانات التطبيق",
+    "resetAppDataHint": "يحذف جميع الإعدادات، وسجل التنظيف، وسجل الفحص، وسجلات الإجراءات، وآخر فحص محفوظ، ثم يعيد تشغيل التطبيق. لا يمكن التراجع عن هذا.",
+    "resetAppDataConfirmBtn": "احذف البيانات وأعد التشغيل",
+    "resetAppDataBusy": "إعادة الضبط…",
+    "resetAppDataSuccess": "تمت إعادة ضبط جميع بيانات التطبيق. تمت استعادة الإعدادات الافتراضية.",
+    "resetAppDataBlocked": "جارٍ إجراء عملية فحص أو تنظيف. أوقفه قبل إعادة ضبط بيانات التطبيق.",
     "aboutHint": "الإصدار، تفاصيل البناء، الكتالوج وفليوم.",
     "legalHint": "شروط الاستخدام، سياسة الخصوصية ورخص المصادر المفتوحة.",
     "sidebar": "الشريط الجانبي",
@@ -547,7 +574,11 @@
     "standardMotion": "الرسوم المتحركة القياسية",
     "aboutTitleBy": "Dev Cleaner بواسطة Vellium",
     "mcpDestructiveTitle": "السماح بإجراءات MCP المدمّرة",
-    "mcpDestructiveHint": "يتطلب علامة --allow-destructive؛ ولا يزال كل تنفيذ يحتاج إلى رمز معاينة يُستخدم مرة واحدة"
+    "mcpDestructiveHint": "يتطلب علامة --allow-destructive؛ ولا يزال كل تنفيذ يحتاج إلى رمز معاينة يُستخدم مرة واحدة",
+    "pathMustBeAbsolute": "يجب أن تكون المسارات مطلقة، على سبيل المثال C:\\Projects.",
+    "excludedNameInvalid": "يجب أن تكون القاعدة عبارة عن اسم ملف أو مجلد واحد، بدون فواصل المسارات.",
+    "shortcutNeedsModifier": "يحتاج الاختصار العام إلى Ctrl أو Alt أو Meta بالإضافة إلى مفتاح أو مفتاح وظيفي.",
+    "shortcutsResetWarning": "تمت إعادة تعيين {count} من الاختصارات غير الصالحة إلى إعداداتها الافتراضية."
   },
   "legal": {
     "docTabsLabel": "المستندات القانونية",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "لم يتم العثور على تحف مشروع قابلة للتنظيف",
     "emptyTitleIdle": "لم يتم إجراء مسح المشروع بعد",
     "emptyDescClean": "الدليل المحدد نظيف. لم يتم العثور على node_modules، أو target، أو تحف بناء قابلة للتنظيف.",
-    "emptyDescIdle": "اختر مجلداً وامسحه لعرض تبعيات المشروع وتحف البناء."
+    "emptyDescIdle": "اختر مجلداً وامسحه لعرض تبعيات المشروع وتحف البناء.",
+    "kpiTargets": "الأهداف القابلة للتنظيف",
+    "kpiTargetsSub": "عبر {count} من جذور المشاريع",
+    "kpiTargetsUnknown": "أعد الفحص لتحديث عدد المشاريع"
   },
   "about": {
     "kpiVersion": "الإصدار",
@@ -616,7 +650,8 @@
     "contactSupport": "دعم العملاء",
     "contactBillingDesc": "الفواتير، الشراء المؤسسي، ودعم الاشتراكات",
     "contactPrivacyDesc": "أمان البيانات، النظام العام لحماية البيانات (GDPR)، واستفسارات الخصوصية",
-    "ecoCacheScope": "npm ذاكرة التخزين المؤقت، Cargo التسجيل، pip ذاكرة التخزين المؤقت، yarn"
+    "ecoCacheScope": "npm ذاكرة التخزين المؤقت، Cargo التسجيل، pip ذاكرة التخزين المؤقت، yarn",
+    "contactBilling": "الفواتير والمدفوعات"
   },
   "docs": {
     "catGuide": "الأدلة والهندسة المعمارية",

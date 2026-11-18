@@ -88,13 +88,17 @@ for (const [file, parser] of [
   }
 }
 
-// 1. App locales on disk must match the catalogue one-to-one.
-const localeDir = path.join(root, "src/locales/langs");
-const appLocales = fs
-  .readdirSync(localeDir)
-  .filter((file) => file.endsWith(".ts"))
-  .map((file) => path.basename(file, ".ts"))
-  .sort();
+// 1. App locales on disk must match the catalogue one-to-one. English and
+// Turkish ship as TypeScript modules; every other locale is a JSON dictionary.
+const localeDir = path.join(root, "src/lib/ui-text/locales");
+const appLocales = [
+  ...fs
+    .readdirSync(localeDir)
+    .filter((file) => file.endsWith(".json"))
+    .map((file) => path.basename(file, ".json")),
+  "en",
+  "tr",
+].sort();
 
 const catalogue = INSTALLER_LANGUAGES.map((entry) => entry.locale).sort();
 if (JSON.stringify(appLocales) !== JSON.stringify(catalogue)) {

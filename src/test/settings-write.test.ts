@@ -2,6 +2,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { flushPreferences, usePreferencesStore } from "@/stores/preferences-store";
+import type { AppSettings } from "@/types";
+
+const SAVED = {} as AppSettings;
 
 describe("settings persistence", () => {
   afterEach(() => {
@@ -11,7 +14,7 @@ describe("settings persistence", () => {
 
   it("coalesces a burst of setters into a single backend write", async () => {
     vi.useFakeTimers();
-    const save = vi.spyOn(scannerApi, "saveAppSettings").mockResolvedValue(undefined);
+    const save = vi.spyOn(scannerApi, "saveAppSettings").mockResolvedValue(SAVED);
 
     // The store skips persistence until settings have been loaded.
     usePreferencesStore.setState({ isLoaded: true });
@@ -44,7 +47,7 @@ describe("settings persistence", () => {
     const save = vi
       .spyOn(scannerApi, "saveAppSettings")
       .mockRejectedValueOnce(new Error("disk full"))
-      .mockResolvedValue(undefined);
+      .mockResolvedValue(SAVED);
 
     usePreferencesStore.setState({ isLoaded: true });
     usePreferencesStore.getState().setTheme("dark-gray");

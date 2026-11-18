@@ -36,7 +36,9 @@
     "on": "Attivo",
     "off": "Disattivo",
     "items": "{n} elementi",
-    "showing": "{n} mostrati"
+    "showing": "{n} mostrati",
+    "scanAll": "Scansiona tutto",
+    "scanAllDesc": "Progetti, archiviazione degli strumenti AI e cache dei pacchetti"
   },
   "header": {
     "changeLocation": "Cambia Posizione",
@@ -49,7 +51,8 @@
     "addFavorite": "Aggiungi posizione corrente ai preferiti",
     "removeFavorite": "Rimuovi posizione dai preferiti",
     "favoriteAdded": "Posizione aggiunta ai preferiti.",
-    "favoriteRemoved": "Posizione rimossa dai preferiti."
+    "favoriteRemoved": "Posizione rimossa dai preferiti.",
+    "changeLocationConfirmDesc": "Cambiare posizione cancella i risultati della scansione corrente e la selezione. La cronologia delle scansioni salvata e l'ultima istantanea della scansione vengono conservate."
   },
   "window": {
     "minimize": "Riduci a icona",
@@ -133,7 +136,17 @@
     "ecoAgent": "Agenti AI",
     "ecoCache": "Cache",
     "ecoOther": "Altri Articoli",
-    "distTotalBadge": "{size} pulibile"
+    "distTotalBadge": "{size} pulibile",
+    "noticeInfoTitle": "Informazioni",
+    "noticeInfoHint": "Le posizioni protette dal sistema sono state saltate. Nessuna azione necessaria.",
+    "noticeIssueHint": "Alcune posizioni non sono state lette, quindi i risultati potrebbero essere incompleti.",
+    "copyDetails": "Copia dettagli",
+    "detailsCopied": "Dettagli copiati negli appunti",
+    "coverage": "Copertura della scansione",
+    "sectionSkipped": "Saltato",
+    "sectionFailed": "Non riuscito",
+    "sectionPartial": "Incompleto",
+    "sectionNoRoot": "Nessuna cartella selezionata"
   },
   "table": {
     "project": "Progetto",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Elimina definitivamente",
     "permanentAck": "Capisco che questo non può essere annullato.",
     "blockedReasons": "Obiettivi bloccati",
-    "expires": "Questo piano scade in 15 minuti.",
+    "expires": "Questo piano scade in 30 minuti.",
     "close": "Chiudi",
     "working": "Lavorando…",
     "runInBackground": "Esegui in background",
@@ -223,7 +236,11 @@
     "cancelling": "Annullamento…",
     "progress": "Elaborati {processed} / {total}",
     "currentItem": "Corrente: {path}",
-    "alreadyRunning": "È già in corso una pulizia."
+    "alreadyRunning": "È già in corso una pulizia.",
+    "coveredByParent": "Bloccato",
+    "noMethod": "Bloccato",
+    "officialActionRequired": "Comando ufficiale",
+    "modeNotAllowed": "Permanente"
   },
   "result": {
     "title": "Risultato della pulizia",
@@ -238,6 +255,7 @@
     "verified": "verificato",
     "cancelled": "Pulizia annullata",
     "cancelledNote": "{processed} elementi elaborati, {skipped} ignorati.",
+    "progressIncomplete": "Impossibile mostrare {count} aggiornamenti di avanzamento.",
     "processed": "Elaborati",
     "skipped": "Ignorati",
     "viewResults": "Visualizza risultati",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Cancella scansioni",
     "scopeProjects": "Dipendenze del progetto",
     "scopeAgents": "Agenti AI",
-    "scopeAllDrives": "Tutti i dischi"
+    "scopeAllDrives": "Tutti i dischi",
+    "statusPartial": "Parziale",
+    "totalCleaned": "Totale recuperato",
+    "statusDepthLimited": "Parziale"
   },
   "settings": {
     "general": "Aspetto",
@@ -451,6 +472,12 @@
     "protectionsHint": "Cartelle che non devono mai essere eliminate e nomi da ignorare.",
     "agentsHint": "Politica di pulizia delle cache degli agenti AI.",
     "privacyHint": "Cronologia locale e mascheramento del percorso a schermo.",
+    "resetAppDataTitle": "Reimposta tutti i dati dell'app",
+    "resetAppDataHint": "Elimina tutte le impostazioni, la cronologia delle pulizie, la cronologia delle scansioni, i registri delle azioni e l'ultima scansione salvata, quindi riavvia l'app. Questa operazione non può essere annullata.",
+    "resetAppDataConfirmBtn": "Elimina i dati e riavvia",
+    "resetAppDataBusy": "Reimpostazione…",
+    "resetAppDataSuccess": "Tutti i dati dell'app sono stati ripristinati. Impostazioni predefinite ripristinate.",
+    "resetAppDataBlocked": "È in corso una scansione o una pulizia. Interrompilo prima di ripristinare i dati dell'app.",
     "aboutHint": "Versione, dettagli della build, catalogo e Vellium.",
     "legalHint": "Termini di utilizzo, politica sulla privacy e licenze open-source.",
     "sidebar": "Barra laterale",
@@ -547,7 +574,11 @@
     "standardMotion": "Animazione standard",
     "aboutTitleBy": "Dev Cleaner di Vellium",
     "mcpDestructiveTitle": "Consenti azioni distruttive MCP",
-    "mcpDestructiveHint": "Richiede il flag --allow-destructive; ogni esecuzione necessita comunque di un token di anteprima monouso"
+    "mcpDestructiveHint": "Richiede il flag --allow-destructive; ogni esecuzione necessita comunque di un token di anteprima monouso",
+    "pathMustBeAbsolute": "I percorsi devono essere assoluti, ad esempio C:\\Projects.",
+    "excludedNameInvalid": "Una regola deve essere un singolo nome di file o cartella, senza separatori di percorso.",
+    "shortcutNeedsModifier": "Una scorciatoia globale richiede Ctrl, Alt o Meta più un tasto o un tasto funzione.",
+    "shortcutsResetWarning": "{count} scorciatoie non valide sono state ripristinate ai valori predefiniti."
   },
   "legal": {
     "docTabsLabel": "Documenti legali",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Nessun artefatto di progetto ripulibile trovato",
     "emptyTitleIdle": "Nessuna scansione del progetto ancora eseguita",
     "emptyDescClean": "La directory selezionata è pulita. Nessun node_modules, target o artefatto di build ripulibile trovato.",
-    "emptyDescIdle": "Scegli una cartella e scansiona per elencare le dipendenze del progetto e gli artefatti di build."
+    "emptyDescIdle": "Scegli una cartella e scansiona per elencare le dipendenze del progetto e gli artefatti di build.",
+    "kpiTargets": "Obiettivi pulibili",
+    "kpiTargetsSub": "In {count} radici di progetto",
+    "kpiTargetsUnknown": "Scansiona di nuovo per aggiornare il conteggio dei progetti"
   },
   "about": {
     "kpiVersion": "Versione",
@@ -616,7 +650,8 @@
     "contactSupport": "Assistenza clienti",
     "contactBillingDesc": "Fatturazione, acquisti aziendali e supporto alle sottoscrizioni",
     "contactPrivacyDesc": "Sicurezza dei dati, GDPR e richieste sulla privacy",
-    "ecoCacheScope": "npm cache, Cargo registro, pip cache, yarn"
+    "ecoCacheScope": "npm cache, Cargo registro, pip cache, yarn",
+    "contactBilling": "Fatturazione e pagamenti"
   },
   "docs": {
     "catGuide": "Guide & Architettura",

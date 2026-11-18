@@ -24,10 +24,13 @@ import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
 import { useUIText, resolveUiLocale } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
+import { log } from "@/lib/logging";
 import { countCatalogStats, type CatalogStats } from "@/lib/catalog-stats";
 import type { BuildInfo, CatalogDto } from "@/types";
 import { getLegalDocMeta, LEGAL_REVISION } from "@/features/legal/legal-content";
+import { useLegalLocale } from "@/features/legal/use-legal-locale";
 import { LegalView } from "@/features/legal/LegalView";
+import { SystemHealthPanel } from "./SystemHealthPanel";
 import "./about.css";
 
 const VELLIUM_URL = "https://vellium.dev";
@@ -62,23 +65,36 @@ export const AboutView: React.FC<AboutViewProps> = ({
   const openLegalDoc = useUiStore((s) => s.openLegalDoc);
   const closeLegalDoc = useUiStore((s) => s.closeLegalDoc);
   const locale = resolveUiLocale(language);
+  // Legal metadata comes from the lazily loaded convenience dictionary.
+  useLegalLocale(language);
   const legalDocs = getLegalDocMeta(locale);
 
   const [internalBuild, setInternalBuild] = useState<BuildInfo | null>(null);
   const [internalCatalog, setInternalCatalog] = useState<CatalogDto | null>(null);
   useEffect(() => {
+    // Both reads can settle after the pane switched to Legal or the view
+    // unmounted; writing state then is at best wasted work and at worst a
+    // warning under StrictMode's double mount.
+    let cancelled = false;
     if (!propBuildInfo) {
       scannerApi
         .getBuildInfo()
-        .then(setInternalBuild)
-        .catch(() => {});
+        .then((info) => {
+          if (!cancelled) setInternalBuild(info);
+        })
+        .catch((err) => log.warn("Could not read the build info", err));
     }
     if (!propCatalog) {
       scannerApi
         .getCatalog()
-        .then(setInternalCatalog)
-        .catch(() => {});
+        .then((next) => {
+          if (!cancelled) setInternalCatalog(next);
+        })
+        .catch((err) => log.warn("Could not read the rules catalog", err));
     }
+    return () => {
+      cancelled = true;
+    };
   }, [propBuildInfo, propCatalog]);
 
   const buildInfo = propBuildInfo ?? internalBuild;
@@ -110,7 +126,12 @@ export const AboutView: React.FC<AboutViewProps> = ({
   }, [aboutPane]);
 
   const openUrl = (url: string) => {
-    void scannerApi.openUrl(url);
+    // The external-link command can fail (no browser association, blocked
+    // handler). Reported instead of leaving an unhandled rejection.
+    scannerApi.openUrl(url).catch((err) => {
+      log.warn("Could not open the external link", err);
+      useUiStore.getState().showToast(ui.errors.title, "error");
+    });
   };
 
   const profileLabel = buildInfo
@@ -287,7 +308,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
 
             <div className="about-rule-card">
               <div className="about-rule-head">
-                <span className="about-rule-dot" style={{ backgroundColor: "#F97316" }} />
+                <span className="about-rule-dot" style={{ backgroundColor: "var(--eco-rust)" }} />
                 <span className="about-rule-name">{ui.overview.ecoRust}</span>
                 <span className="about-rule-badge">{ui.common.on}</span>
               </div>
@@ -305,7 +326,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
 
             <div className="about-rule-card">
               <div className="about-rule-head">
-                <span className="about-rule-dot" style={{ backgroundColor: "#8B5CF6" }} />
+                <span className="about-rule-dot" style={{ backgroundColor: "var(--eco-agent)" }} />
                 <span className="about-rule-name">{ui.about.ruleAgents}</span>
                 <span className="about-rule-badge">{ui.common.on}</span>
               </div>
@@ -314,7 +335,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
 
             <div className="about-rule-card">
               <div className="about-rule-head">
-                <span className="about-rule-dot" style={{ backgroundColor: "#EC4899" }} />
+                <span className="about-rule-dot" style={{ backgroundColor: "var(--eco-cache)" }} />
                 <span className="about-rule-name">{ui.about.ruleCaches}</span>
                 <span className="about-rule-badge">{ui.common.on}</span>
               </div>
@@ -323,7 +344,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
 
             <div className="about-rule-card">
               <div className="about-rule-head">
-                <span className="about-rule-dot" style={{ backgroundColor: "#06B6D4" }} />
+                <span className="about-rule-dot" style={{ backgroundColor: "var(--eco-build)" }} />
                 <span className="about-rule-name">{ui.about.ruleBuild}</span>
                 <span className="about-rule-badge">{ui.common.on}</span>
               </div>
@@ -344,6 +365,11 @@ export const AboutView: React.FC<AboutViewProps> = ({
             </div>
           </div>
         </div>
+      </section>
+
+      {/* System health: existing diagnostics surfaced without a new IPC command. */}
+      <section className="about-workspace-grid">
+        <SystemHealthPanel />
       </section>
 
       {/* Middle: Vellium Official Communication Channels — 100% Full Width */}
@@ -383,7 +409,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
               <CreditCard size={16} />
             </div>
             <div className="about-contact-info">
-              <span className="about-contact-label">{ui.about.contactSupport}</span>
+              <span className="about-contact-label">{ui.about.contactBilling}</span>
               <strong className="about-contact-email">billing@vellium.dev</strong>
               <span className="about-contact-desc">{ui.about.contactBillingDesc}</span>
             </div>

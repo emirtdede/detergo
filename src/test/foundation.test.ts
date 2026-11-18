@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { formatBytes, formatDate, truncatePath } from "../lib/formatters";
+import { formatBytes, formatDate } from "../lib/formatters";
+import { truncatePath, maskPath } from "../lib/format/path";
 import { useScanStore } from "../stores/scan-store";
 import { useSelectionStore } from "../stores/selection-store";
 import { usePreferencesStore } from "../stores/preferences-store";
@@ -29,6 +30,23 @@ describe("WP-1: Foundation & Formatting Utilities", () => {
       "C:\\Users\\developer\\Desktop\\workspaces\\deep\\nested\\projects\\frontend-web-application\\packages\\app";
     expect(truncatePath(longPath, 40)).toContain("...");
   });
+
+  it("keeps the server and share of a UNC path when truncating", () => {
+    const unc = "\\\\fileserver\\projects\\deep\\nested\\packages\\app\\node_modules";
+    const truncated = truncatePath(unc, 40);
+    // The old split produced `\...\node_modules`: the server is the only part
+    // that identifies which machine the target lives on.
+    expect(truncated.startsWith("\\\\fileserver\\projects")).toBe(true);
+    expect(truncated.endsWith("node_modules")).toBe(true);
+    expect(truncated).toContain("...");
+  });
+
+  it("masks the account name in a UNC home path", () => {
+    expect(maskPath("\\\\fileserver\\Users\\alice\\AppData\\dev-cleaner")).toBe(
+      "\\\\fileserver\\Users\\•••\\AppData\\dev-cleaner",
+    );
+    expect(maskPath("C:\\Users\\alice\\AppData")).toBe("C:\\Users\\•••\\AppData");
+  });
 });
 
 describe("WP-1: Domain Stores Isolation", () => {
@@ -39,7 +57,7 @@ describe("WP-1: Domain Stores Isolation", () => {
 
   it("scan store manages candidates and measurements correctly", () => {
     const store = useScanStore.getState();
-    store.startScanState("scan-1", "C:\\Projects");
+    store.startScanState("C:\\Projects");
     expect(useScanStore.getState().status).toBe("scanning");
 
     store.addItems([makeItem({ id: "entry-1" })]);

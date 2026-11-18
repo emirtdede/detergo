@@ -36,7 +36,9 @@
     "on": "Naka-on",
     "off": "Naka-off",
     "items": "{n} na item",
-    "showing": "{n} na ipinapakita"
+    "showing": "{n} na ipinapakita",
+    "scanAll": "I-scan ang lahat",
+    "scanAllDesc": "Mga proyekto, imbakan ng AI tool at mga cache ng package"
   },
   "header": {
     "changeLocation": "Palitan ang Lokasyon",
@@ -49,7 +51,8 @@
     "addFavorite": "Idagdag ang kasalukuyang lokasyon sa mga paborito",
     "removeFavorite": "Alisin ang lokasyon mula sa mga paborito",
     "favoriteAdded": "Lokasyon naidagdag sa mga paborito.",
-    "favoriteRemoved": "Lokasyon naaalis sa mga paborito."
+    "favoriteRemoved": "Lokasyon naaalis sa mga paborito.",
+    "changeLocationConfirmDesc": "Ang pagpapalit ng lokasyon ay maglilinis ng kasalukuyang mga resulta ng scan at seleksyon. Ang iyong naka-save na kasaysayan ng scan at ang huling snapshot ng scan ay mananatili."
   },
   "window": {
     "minimize": "I-minimize",
@@ -133,7 +136,17 @@
     "ecoAgent": "Mga AI Agents",
     "ecoCache": "Mga Cache",
     "ecoOther": "Iba pang mga Artifact",
-    "distTotalBadge": "{size} malilinis"
+    "distTotalBadge": "{size} malilinis",
+    "noticeInfoTitle": "Impormasyon",
+    "noticeInfoHint": "Nilaktawan ang mga lokasyong protektado ng system. Walang kailangang gawin.",
+    "noticeIssueHint": "Hindi mabasa ang ilang lokasyon, kaya maaaring hindi kumpleto ang mga resulta.",
+    "copyDetails": "Kopyahin ang mga detalye",
+    "detailsCopied": "Nakopya ang mga detalye sa clipboard",
+    "coverage": "Saklaw ng scan",
+    "sectionSkipped": "Nilaktawan",
+    "sectionFailed": "Nabigo",
+    "sectionPartial": "Hindi kumpleto",
+    "sectionNoRoot": "Walang napiling folder"
   },
   "table": {
     "project": "Proyekto",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Tanggalin nang permanente",
     "permanentAck": "Naiintindihan ko na hindi ito mababawi.",
     "blockedReasons": "Hinarang na mga target",
-    "expires": "Magwawakas ang planong ito sa loob ng 15 minuto.",
+    "expires": "Magwawakas ang planong ito sa loob ng 30 minuto.",
     "close": "Isara",
     "working": "Nagta-trabaho…",
     "runInBackground": "Patakbuhin sa background",
@@ -223,7 +236,11 @@
     "cancelling": "Kinakansela…",
     "progress": "Naproseso {processed} / {total}",
     "currentItem": "Kasalukuyan: {path}",
-    "alreadyRunning": "May paglilinis nang tumatakbo."
+    "alreadyRunning": "May paglilinis nang tumatakbo.",
+    "coveredByParent": "Hinarang",
+    "noMethod": "Hinarang",
+    "officialActionRequired": "Opisyal na utos",
+    "modeNotAllowed": "Permanenteng"
   },
   "result": {
     "title": "Resulta ng paglilinis",
@@ -238,6 +255,7 @@
     "verified": "beripikado",
     "cancelled": "Kinansela ang paglilinis",
     "cancelledNote": "{processed} item ang naproseso, {skipped} ang nilaktawan.",
+    "progressIncomplete": "Hindi naipakita ang {count} update sa pag-usad.",
     "processed": "Naproseso",
     "skipped": "Nilaktawan",
     "viewResults": "Tingnan ang mga resulta",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Burahin ang mga Pagsusuri",
     "scopeProjects": "Mga Depensensya ng Proyekto",
     "scopeAgents": "Mga AI Agent",
-    "scopeAllDrives": "Lahat ng Drive"
+    "scopeAllDrives": "Lahat ng Drive",
+    "statusPartial": "Bahagyang",
+    "totalCleaned": "Kabuuang naibalik",
+    "statusDepthLimited": "Bahagyang"
   },
   "settings": {
     "general": "Hitsura",
@@ -451,6 +472,12 @@
     "protectionsHint": "Mga folder na hindi dapat burahin at mga pangalan na dapat laktawan.",
     "agentsHint": "Patakaran sa paglilinis para sa mga cache ng AI agent.",
     "privacyHint": "Lokal na kasaysayan at pagtatakip ng path sa screen.",
+    "resetAppDataTitle": "I-reset ang lahat ng data ng app",
+    "resetAppDataHint": "Dine-delete ang lahat ng setting, history ng paglilinis, history ng pag-scan, mga log ng pagkilos, at ang na-save na huling pag-scan, pagkatapos ay i-restart ang app. Hindi na ito maaaring bawiin.",
+    "resetAppDataConfirmBtn": "Tanggalin ang data at i-restart",
+    "resetAppDataBusy": "Nire-reset…",
+    "resetAppDataSuccess": "Na-reset ang lahat ng data ng app. Naibalik ang mga default na setting.",
+    "resetAppDataBlocked": "Ang isang pag-scan o paglilinis ay tumatakbo. Itigil ito bago i-reset ang data ng app.",
     "aboutHint": "Bersyon, detalye ng build, katalogo at Vellium.",
     "legalHint": "Mga tuntunin ng paggamit, patakaran sa privacy at mga lisensiya ng open-source.",
     "sidebar": "Gilid na bar",
@@ -547,7 +574,11 @@
     "standardMotion": "Karaniwang Animasyon",
     "aboutTitleBy": "Dev Cleaner ni Vellium",
     "mcpDestructiveTitle": "Payagan ang mga mapanirang aksyon ng MCP",
-    "mcpDestructiveHint": "Nangangailangan ng --allow-destructive na flag; ang bawat pagpapatupad ay kailangan pa rin ng single-use na preview token"
+    "mcpDestructiveHint": "Nangangailangan ng --allow-destructive na flag; ang bawat pagpapatupad ay kailangan pa rin ng single-use na preview token",
+    "pathMustBeAbsolute": "Ang mga landas ay dapat na ganap, halimbawa C:\\Projects.",
+    "excludedNameInvalid": "Ang isang panuntunan ay dapat na isang file o pangalan ng folder, na walang mga separator ng path.",
+    "shortcutNeedsModifier": "Ang isang pandaigdigang shortcut ay nangangailangan ng Ctrl, Alt o Meta kasama ang isang key, o isang function key.",
+    "shortcutsResetWarning": "{count} (mga) di-wastong shortcut ang na-reset sa kanilang mga default."
   },
   "legal": {
     "docTabsLabel": "Mga Dokumentong Legal",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Walang Nahanap na Malilinis na Artifacts ng Proyekto",
     "emptyTitleIdle": "Hindi Pa Nagsagawa ng Pag-scan ng Proyekto",
     "emptyDescClean": "Malinis ang napiling direktoryo. Walang malilinis na node_modules, target, o build artifacts na nahanap.",
-    "emptyDescIdle": "Pumili ng folder at mag-scan upang ilista ang mga depende ng proyekto at build artifacts."
+    "emptyDescIdle": "Pumili ng folder at mag-scan upang ilista ang mga depende ng proyekto at build artifacts.",
+    "kpiTargets": "Mga target na malilinis",
+    "kpiTargetsSub": "Sa {count} ugat ng proyekto",
+    "kpiTargetsUnknown": "I-scan muli para i-refresh ang bilang ng proyekto"
   },
   "about": {
     "kpiVersion": "Bersyon",
@@ -616,7 +650,8 @@
     "contactSupport": "Suporta sa Customer",
     "contactBillingDesc": "Billing, pagbili ng enterprise, at suporta sa subscription",
     "contactPrivacyDesc": "Seguridad ng datos, GDPR, at mga katanungan sa privacy",
-    "ecoCacheScope": "cache ng npm, registry ng Cargo, cache ng pip, at yarn"
+    "ecoCacheScope": "cache ng npm, registry ng Cargo, cache ng pip, at yarn",
+    "contactBilling": "Billing at mga pagbabayad"
   },
   "docs": {
     "catGuide": "Mga Gabay at Arkitektura",

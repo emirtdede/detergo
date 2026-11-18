@@ -10,6 +10,32 @@
   box-shadow: var(--shadow-sm);
 }
 
+.stale-scan-banner--warning {
+  border-color: color-mix(in srgb, var(--warning) 40%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--warning) 12%, transparent),
+    var(--surface) 70%
+  );
+}
+
+/* A blocked root is a different claim than "one folder could not be read". */
+.stale-scan-banner--error {
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--danger) 12%, transparent),
+    var(--surface) 70%
+  );
+}
+
+/* Expected skips stay visually quiet: no warning colour, no alarm icon. */
+.stale-scan-banner--info {
+  border-color: var(--border);
+  background: var(--surface);
+  box-shadow: none;
+}
+
 .stale-scan-icon {
   display: inline-flex;
   align-items: center;
@@ -21,6 +47,18 @@
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--accent);
+}
+
+.stale-scan-icon--warning {
+  color: var(--warning);
+}
+
+.stale-scan-icon--error {
+  color: var(--danger);
+}
+
+.stale-scan-icon--info {
+  color: var(--text-muted);
 }
 
 .stale-scan-text {
@@ -46,4 +84,63 @@
   align-items: center;
   gap: var(--space-2);
   flex: 0 0 auto;
+}
+
+.scan-notices-details {
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.scan-notices-details summary {
+  cursor: pointer;
+  color: var(--accent);
+  width: fit-content;
+}
+
+.scan-notices-details ul {
+  margin: var(--space-2) 0 0;
+  padding-inline-start: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* The counter reports every warning, so the list must be able to show every
+     warning too. A bounded scroll area keeps the banner compact without
+     dropping entries. */
+  max-height: 180px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.scan-notices-details li {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+
+.scan-notices-path {
+  color: var(--text-muted);
+}
+
+.scan-notice-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 6px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.scan-notice-tag--warning {
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 14%, transparent);
+}
+
+.scan-notice-tag--error {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
 }

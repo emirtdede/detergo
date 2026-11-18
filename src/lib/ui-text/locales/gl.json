@@ -36,7 +36,9 @@
     "on": "Activado",
     "off": "Desactivado",
     "items": "{n} elementos",
-    "showing": "{n} mostrados"
+    "showing": "{n} mostrados",
+    "scanAll": "Analizar todo",
+    "scanAllDesc": "Proxectos, almacenamento de ferramentas de IA e cachés de paquetes"
   },
   "header": {
     "changeLocation": "Cambiar Localización",
@@ -49,7 +51,8 @@
     "addFavorite": "Engadir a localización actual aos favoritos",
     "removeFavorite": "Eliminar a localización dos favoritos",
     "favoriteAdded": "Localización engadida aos favoritos.",
-    "favoriteRemoved": "Localización eliminada dos favoritos."
+    "favoriteRemoved": "Localización eliminada dos favoritos.",
+    "changeLocationConfirmDesc": "Cambiar a localización borra os resultados do escaneo actual e a selección. O historial de escaneos gardado e a última instantánea do escaneo consérvanse."
   },
   "window": {
     "minimize": "Minimizar",
@@ -133,7 +136,17 @@
     "ecoAgent": "Axentes de IA",
     "ecoCache": "Cachés",
     "ecoOther": "Outros artefactos",
-    "distTotalBadge": "{size} que se pode limpar"
+    "distTotalBadge": "{size} que se pode limpar",
+    "noticeInfoTitle": "Información",
+    "noticeInfoHint": "Omitíronse as localizacións protexidas polo sistema. Non se require acción.",
+    "noticeIssueHint": "Non se puideron ler algunhas localizacións, polo que os resultados poden estar incompletos.",
+    "copyDetails": "Copiar detalles",
+    "detailsCopied": "Detalles copiados ao portapapeis",
+    "coverage": "Cobertura da análise",
+    "sectionSkipped": "Omitido",
+    "sectionFailed": "Fallou",
+    "sectionPartial": "Incompleto",
+    "sectionNoRoot": "Non se seleccionou ningunha carpeta"
   },
   "table": {
     "project": "Proxecto",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Eliminar permanentemente",
     "permanentAck": "Entendo que isto non se pode desfacerse.",
     "blockedReasons": "Obxectivos bloqueados",
-    "expires": "Este plan caduca en 15 minutos.",
+    "expires": "Este plan caduca en 30 minutos.",
     "close": "Pechar",
     "working": "Traballando…",
     "runInBackground": "Executar en segundo plano",
@@ -223,7 +236,11 @@
     "cancelling": "Cancelando…",
     "progress": "Procesados {processed} / {total}",
     "currentItem": "Actual: {path}",
-    "alreadyRunning": "Xa hai unha limpeza en curso."
+    "alreadyRunning": "Xa hai unha limpeza en curso.",
+    "coveredByParent": "Bloqueado",
+    "noMethod": "Bloqueado",
+    "officialActionRequired": "Comando oficial",
+    "modeNotAllowed": "Permanente"
   },
   "result": {
     "title": "Resultado da limpeza",
@@ -238,6 +255,7 @@
     "verified": "verificado",
     "cancelled": "Limpeza cancelada",
     "cancelledNote": "{processed} elementos procesados, {skipped} omitidos.",
+    "progressIncomplete": "Non se puideron mostrar {count} actualizacións de progreso.",
     "processed": "Procesados",
     "skipped": "Omitidos",
     "viewResults": "Ver resultados",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Borrar exploracións",
     "scopeProjects": "Dependencias do proxecto",
     "scopeAgents": "Axentes AI",
-    "scopeAllDrives": "Todas as unidades"
+    "scopeAllDrives": "Todas as unidades",
+    "statusPartial": "Parcial",
+    "totalCleaned": "Total recuperado",
+    "statusDepthLimited": "Parcial"
   },
   "settings": {
     "general": "Aparencia",
@@ -451,6 +472,12 @@
     "protectionsHint": "Cartafoles que nunca deben eliminarse e nomes a omitir.",
     "agentsHint": "Política de limpeza para cachés do axente de IA.",
     "privacyHint": "Historial local e ocultación de ruta na pantalla.",
+    "resetAppDataTitle": "Restablece todos os datos da aplicación",
+    "resetAppDataHint": "Elimina todas as configuracións, o historial de limpeza, o historial de exploracións, os rexistros de accións e a última exploración gardada e, a continuación, reinicia a aplicación. Isto non se pode desfacer.",
+    "resetAppDataConfirmBtn": "Elimina os datos e reinicia",
+    "resetAppDataBusy": "Restablecendo…",
+    "resetAppDataSuccess": "Restablecéronse todos os datos da aplicación. Restableceuse a configuración predeterminada.",
+    "resetAppDataBlocked": "Estase executando unha exploración ou unha limpeza. Deténgalo antes de restablecer os datos da aplicación.",
     "aboutHint": "Versión, detalles de compilación, catálogo e Vellium.",
     "legalHint": "Termos de uso, política de privacidade e licenzas de código aberto.",
     "sidebar": "Barra lateral",
@@ -547,7 +574,11 @@
     "standardMotion": "Animación estándar",
     "aboutTitleBy": "Dev Cleaner por Vellium",
     "mcpDestructiveTitle": "Permitir accións destrutivas de MCP",
-    "mcpDestructiveHint": "Require a opción --allow-destructive; cada execución aínda necesita un token de vista previa dun só uso"
+    "mcpDestructiveHint": "Require a opción --allow-destructive; cada execución aínda necesita un token de vista previa dun só uso",
+    "pathMustBeAbsolute": "As rutas deben ser absolutas, por exemplo C:\\Projects.",
+    "excludedNameInvalid": "Unha regra debe ser un único nome de ficheiro ou cartafol, sen separadores de ruta.",
+    "shortcutNeedsModifier": "Un atallo global precisa Ctrl, Alt ou Meta máis unha tecla ou unha tecla de función.",
+    "shortcutsResetWarning": "Restablecéronse {count} atallos non válidos aos seus valores predeterminados."
   },
   "legal": {
     "docTabsLabel": "Documentos legais",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Non se acharon artefactos de proxecto eliminables",
     "emptyTitleIdle": "Aún non se realizou un escaneo do proxecto",
     "emptyDescClean": "O directorio seleccionado está limpo. Non se atoparon node_modules, target ou artefactos de compilación eliminables.",
-    "emptyDescIdle": "Escolla unha carpeta e escanea para listar as dependencias do proxecto e os artefactos de compilación."
+    "emptyDescIdle": "Escolla unha carpeta e escanea para listar as dependencias do proxecto e os artefactos de compilación.",
+    "kpiTargets": "Obxectivos limpables",
+    "kpiTargetsSub": "En {count} raíces de proxecto",
+    "kpiTargetsUnknown": "Volva analizar para actualizar o reconto de proxectos"
   },
   "about": {
     "kpiVersion": "Versión",
@@ -616,7 +650,8 @@
     "contactSupport": "Soporte ao Cliente",
     "contactBillingDesc": "Facturación, adquisicións empresariais e soporte de subscricións",
     "contactPrivacyDesc": "Seguridade de datos, GDPR e consultas de privacidade",
-    "ecoCacheScope": "npm caché, Cargo rexistro, pip caché, yarn"
+    "ecoCacheScope": "npm caché, Cargo rexistro, pip caché, yarn",
+    "contactBilling": "Facturación e pagamentos"
   },
   "docs": {
     "catGuide": "Guias e Arquitectura",

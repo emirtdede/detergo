@@ -36,7 +36,9 @@
     "on": "开",
     "off": "关",
     "items": "{n} 项",
-    "showing": "显示 {n} 项"
+    "showing": "显示 {n} 项",
+    "scanAll": "扫描全部",
+    "scanAllDesc": "项目、AI 工具存储和包缓存"
   },
   "header": {
     "changeLocation": "更改位置",
@@ -49,7 +51,8 @@
     "addFavorite": "将当前位置添加到收藏夹",
     "removeFavorite": "从收藏夹中移除位置",
     "favoriteAdded": "位置已添加至收藏夹。",
-    "favoriteRemoved": "位置已从收藏夹中移除。"
+    "favoriteRemoved": "位置已从收藏夹中移除。",
+    "changeLocationConfirmDesc": "更改位置将清除当前扫描结果和选择。已保存的扫描历史和上次扫描快照将保留。"
   },
   "window": {
     "minimize": "最小化",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI 代理",
     "ecoCache": "缓存",
     "ecoOther": "其他工件",
-    "distTotalBadge": "{size} 可清理"
+    "distTotalBadge": "{size} 可清理",
+    "noticeInfoTitle": "信息",
+    "noticeInfoHint": "已跳过系统保护的位置，无需采取任何操作。",
+    "noticeIssueHint": "部分位置无法读取，因此结果可能不完整。",
+    "copyDetails": "复制详情",
+    "detailsCopied": "详情已复制到剪贴板",
+    "coverage": "扫描覆盖范围",
+    "sectionSkipped": "已跳过",
+    "sectionFailed": "失败",
+    "sectionPartial": "不完整",
+    "sectionNoRoot": "未选择文件夹"
   },
   "table": {
     "project": "项目",
@@ -215,7 +228,7 @@
     "confirmPermanent": "永久删除",
     "permanentAck": "我明白此操作无法撤销。",
     "blockedReasons": "被阻止的目标",
-    "expires": "此计划将在15分钟后过期。",
+    "expires": "此计划将在30分钟后过期。",
     "close": "关闭",
     "working": "正在工作…",
     "runInBackground": "在后台运行",
@@ -223,7 +236,11 @@
     "cancelling": "正在取消…",
     "progress": "已处理 {processed} / {total}",
     "currentItem": "当前：{path}",
-    "alreadyRunning": "清理已在运行中。"
+    "alreadyRunning": "清理已在运行中。",
+    "coveredByParent": "被阻止",
+    "noMethod": "被阻止",
+    "officialActionRequired": "官方命令",
+    "modeNotAllowed": "永久"
   },
   "result": {
     "title": "清理结果",
@@ -238,6 +255,7 @@
     "verified": "已验证",
     "cancelled": "清理已取消",
     "cancelledNote": "已处理 {processed} 个项目，跳过 {skipped} 个。",
+    "progressIncomplete": "无法显示 {count} 条进度更新。",
     "processed": "已处理",
     "skipped": "已跳过",
     "viewResults": "查看结果",
@@ -390,7 +408,10 @@
     "clearScansBtn": "清除扫描",
     "scopeProjects": "项目依赖",
     "scopeAgents": "AI 代理",
-    "scopeAllDrives": "所有驱动器"
+    "scopeAllDrives": "所有驱动器",
+    "statusPartial": "部分",
+    "totalCleaned": "回收总量",
+    "statusDepthLimited": "部分"
   },
   "settings": {
     "general": "外观",
@@ -451,6 +472,12 @@
     "protectionsHint": "永远不能删除的文件夹和需跳过的名称。",
     "agentsHint": "AI 代理缓存的清理策略。",
     "privacyHint": "本地历史记录和屏幕路径掩码。",
+    "resetAppDataTitle": "重置所有应用程序数据",
+    "resetAppDataHint": "删除所有设置、清理历史记录、扫描历史记录、操作日志和保存的上次扫描，然后重新启动应用程序。此操作无法撤消。",
+    "resetAppDataConfirmBtn": "删除数据并重启",
+    "resetAppDataBusy": "正在重置...",
+    "resetAppDataSuccess": "所有应用程序数据均已重置。恢复默认设置。",
+    "resetAppDataBlocked": "扫描或清理正在运行。在重置应用程序数据之前停止它。",
     "aboutHint": "版本、构建详情、目录和 Vellium。",
     "legalHint": "使用条款、隐私政策和开源许可。",
     "sidebar": "侧边栏",
@@ -547,7 +574,11 @@
     "standardMotion": "标准动画",
     "aboutTitleBy": "Dev Cleaner · Vellium",
     "mcpDestructiveTitle": "允许 MCP 破坏性操作",
-    "mcpDestructiveHint": "需要 --allow-destructive 标志；每次执行仍需要一次性预览令牌"
+    "mcpDestructiveHint": "需要 --allow-destructive 标志；每次执行仍需要一次性预览令牌",
+    "pathMustBeAbsolute": "路径必须是绝对路径，例如 C:\\Projects。",
+    "excludedNameInvalid": "规则必须是单个文件或文件夹名称，不带路径分隔符。",
+    "shortcutNeedsModifier": "全局快捷键需要 Ctrl、Alt 或 Meta 加一个键或一个功能键。",
+    "shortcutsResetWarning": "{count} 个无效快捷方式已重置为其默认值。"
   },
   "legal": {
     "docTabsLabel": "法律文件",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "找不到可清理的项目产物",
     "emptyTitleIdle": "尚未执行项目扫描",
     "emptyDescClean": "所选目录干净。未发现可清理的 node_modules、target 或构建产物。",
-    "emptyDescIdle": "选择一个文件夹并扫描以列出项目依赖和构建产物。"
+    "emptyDescIdle": "选择一个文件夹并扫描以列出项目依赖和构建产物。",
+    "kpiTargets": "可清理的目标",
+    "kpiTargetsSub": "涵盖 {count} 个项目根目录",
+    "kpiTargetsUnknown": "重新扫描以刷新项目数量"
   },
   "about": {
     "kpiVersion": "版本",
@@ -616,7 +650,8 @@
     "contactSupport": "客户支持",
     "contactBillingDesc": "账单、企业采购和订阅支持",
     "contactPrivacyDesc": "数据安全、GDPR 和隐私咨询",
-    "ecoCacheScope": "npm缓存、Cargo注册表、pip缓存、yarn"
+    "ecoCacheScope": "npm缓存、Cargo注册表、pip缓存、yarn",
+    "contactBilling": "账单与付款"
   },
   "docs": {
     "catGuide": "指南与架构",

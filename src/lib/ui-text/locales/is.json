@@ -36,7 +36,9 @@
     "on": "Á",
     "off": "Af",
     "items": "{n} hlutir",
-    "showing": "{n} sýnd"
+    "showing": "{n} sýnd",
+    "scanAll": "Skanna allt",
+    "scanAllDesc": "Verkefni, geymsla AI-verkfæra og skyndiminni pakka"
   },
   "header": {
     "changeLocation": "Breyta Staðsetningu",
@@ -49,7 +51,8 @@
     "addFavorite": "Bæta núverandi staðsetningu við uppáhalds",
     "removeFavorite": "Fjarlægja staðsetningu úr uppáhalds",
     "favoriteAdded": "Staðsetningu bætt við uppáhalds.",
-    "favoriteRemoved": "Staðsetningu fjarlægð úr uppáhalds."
+    "favoriteRemoved": "Staðsetningu fjarlægð úr uppáhalds.",
+    "changeLocationConfirmDesc": "Að breyta staðsetningu hreinsar núverandi skönnunararniðurstöður og val. Vistað skönnunarferill þinn og síðasta skönnunarmynd eru varðveitt."
   },
   "window": {
     "minimize": "Lágmarka",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI umboðsmenn",
     "ecoCache": "Vistunarsvæði",
     "ecoOther": "Aðrir hlutir",
-    "distTotalBadge": "{size} hægt að hreinsa"
+    "distTotalBadge": "{size} hægt að hreinsa",
+    "noticeInfoTitle": "Upplýsingar",
+    "noticeInfoHint": "Staðsetningar sem kerfið verndar voru sleppt. Engin aðgerð nauðsynleg.",
+    "noticeIssueHint": "Ekki tókst að lesa sumar staðsetningar, svo niðurstöður gætu verið ófullnægjandi.",
+    "copyDetails": "Afrita upplýsingar",
+    "detailsCopied": "Upplýsingar afritaðar á klippiborð",
+    "coverage": "Umfang skönnunar",
+    "sectionSkipped": "Sleppt",
+    "sectionFailed": "Mistókst",
+    "sectionPartial": "Ófullnægjandi",
+    "sectionNoRoot": "Engin mappa valin"
   },
   "table": {
     "project": "Verkefni",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Eyða varanlega",
     "permanentAck": "Ég skil að þessu er ekki hægt að afturkalla.",
     "blockedReasons": "Bannaðir markhópar",
-    "expires": "Þessi áætlun rennur út eftir 15 mínútur.",
+    "expires": "Þessi áætlun rennur út eftir 30 mínútur.",
     "close": "Loka",
     "working": "Unnið…",
     "runInBackground": "Keyra í bakgrunni",
@@ -223,7 +236,11 @@
     "cancelling": "Hætti við…",
     "progress": "Unnið {processed} / {total}",
     "currentItem": "Núverandi: {path}",
-    "alreadyRunning": "Hreinsun er þegar í gangi."
+    "alreadyRunning": "Hreinsun er þegar í gangi.",
+    "coveredByParent": "Bannað",
+    "noMethod": "Bannað",
+    "officialActionRequired": "Opinber skipun",
+    "modeNotAllowed": "Varanlegt"
   },
   "result": {
     "title": "Hreinsunarniðurstaða",
@@ -238,6 +255,7 @@
     "verified": "staðfest",
     "cancelled": "Hreinsun hætt við",
     "cancelledNote": "{processed} atriði unnin, {skipped} sleppt.",
+    "progressIncomplete": "Ekki tókst að sýna {count} framvindustuppfærslur.",
     "processed": "Unnið",
     "skipped": "Sleppt",
     "viewResults": "Skoða niðurstöður",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Hreinsa skimunir",
     "scopeProjects": "Verkefnisháð tengsl",
     "scopeAgents": "AI fulltrúar",
-    "scopeAllDrives": "Öll drif"
+    "scopeAllDrives": "Öll drif",
+    "statusPartial": "Hluta",
+    "totalCleaned": "Heildarendursköpun",
+    "statusDepthLimited": "Hluta"
   },
   "settings": {
     "general": "Útlit",
@@ -451,6 +472,12 @@
     "protectionsHint": "Möppur sem má aldrei eyða og nöfn sem þarf að sleppa.",
     "agentsHint": "Hreinsunaráætlun fyrir skyndiminni gervigreindarfulltrúa.",
     "privacyHint": "Staðbundin saga og slæða stíga á skjánum.",
+    "resetAppDataTitle": "Endurstilla öll forritsgögn",
+    "resetAppDataHint": "Eyðir öllum stillingum, hreinsunarferli, skannasögu, aðgerðaskrám og vistaðri síðustu skönnun og endurræsir síðan appið. Þetta er ekki hægt að afturkalla.",
+    "resetAppDataConfirmBtn": "Eyða gögnum og endurræsa",
+    "resetAppDataBusy": "Núllstillir…",
+    "resetAppDataSuccess": "Öll forritsgögn hafa verið endurstillt. Sjálfgefnar stillingar endurheimtar.",
+    "resetAppDataBlocked": "Skönnun eða hreinsun er í gangi. Stöðvaðu það áður en þú endurstillir forritsgögn.",
     "aboutHint": "Útgáfa, smíði upplýsingar, skráarsafn og Vellium.",
     "legalHint": "Notkunarskilmálar, persónuverndarstefna og opinn hugbúnaðarleyfi.",
     "sidebar": "Hliðarstika",
@@ -547,7 +574,11 @@
     "standardMotion": "Venjuleg hreyfimynda",
     "aboutTitleBy": "Dev Cleaner eftir Vellium",
     "mcpDestructiveTitle": "Leyfa eyðileggjandi MCP-aðgerðir",
-    "mcpDestructiveHint": "Krefst fánans --allow-destructive; hver keyrsla þarf samt einnota forskoðunartóken"
+    "mcpDestructiveHint": "Krefst fánans --allow-destructive; hver keyrsla þarf samt einnota forskoðunartóken",
+    "pathMustBeAbsolute": "Slóðir verða að vera algjörar, til dæmis C:\\Projects.",
+    "excludedNameInvalid": "Regla verður að vera eitt skráar- eða möppuheiti, án slóðaskilgreina.",
+    "shortcutNeedsModifier": "Alþjóðleg flýtileið þarf Ctrl, Alt eða Meta plús takka eða aðgerðarlykil.",
+    "shortcutsResetWarning": "{count} ógild(ar) flýtileiðir voru endurstillt á sjálfgefnar stillingar."
   },
   "legal": {
     "docTabsLabel": "Lögleg skjöl",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Engir hreinsanlegir verkefnishlutar fundust",
     "emptyTitleIdle": "Engin verkefnaskönnun framkvæmd enn",
     "emptyDescClean": "Valda skráarskjalasafn er hreint. Engir hreinsanlegir node_modules, target, eða smíðargögn fundust.",
-    "emptyDescIdle": "Veldu möppu og framkvæmdu skönnun til að birta tengsl verkefnis og smíðargögn."
+    "emptyDescIdle": "Veldu möppu og framkvæmdu skönnun til að birta tengsl verkefnis og smíðargögn.",
+    "kpiTargets": "Hreinsanleg markmið",
+    "kpiTargetsSub": "Yfir {count} verkefnarótum",
+    "kpiTargetsUnknown": "Skannaðu aftur til að uppfæra fjölda verkefna"
   },
   "about": {
     "kpiVersion": "Útgáfa",
@@ -616,7 +650,8 @@
     "contactSupport": "Viðskiptavinastuðningur",
     "contactBillingDesc": "Reikningur, innkaup fyrirtækja og áskriftarstuðningur",
     "contactPrivacyDesc": "Gagnaöryggi, GDPR, og persónuverndarspurningar",
-    "ecoCacheScope": "npm skyndiminni, Cargo skrásetning, pip skyndiminni, yarn"
+    "ecoCacheScope": "npm skyndiminni, Cargo skrásetning, pip skyndiminni, yarn",
+    "contactBilling": "Reikningur og greiðslur"
   },
   "docs": {
     "catGuide": "Leiðbeiningar & Arkitektúr",

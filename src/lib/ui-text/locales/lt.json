@@ -36,7 +36,9 @@
     "on": "Įjungta",
     "off": "Išjungta",
     "items": "{n} elementai",
-    "showing": "Rodyti {n}"
+    "showing": "Rodyti {n}",
+    "scanAll": "Nuskaityti viską",
+    "scanAllDesc": "Projektai, AI įrankių saugykla ir paketų podėliai"
   },
   "header": {
     "changeLocation": "Keisti Vietą",
@@ -49,7 +51,8 @@
     "addFavorite": "Pridėti dabartinę vietą prie žymių",
     "removeFavorite": "Pašalinti vietą iš žymių",
     "favoriteAdded": "Vietovė pridėta prie žymių.",
-    "favoriteRemoved": "Vietovė pašalinta iš žymių."
+    "favoriteRemoved": "Vietovė pašalinta iš žymių.",
+    "changeLocationConfirmDesc": "Pakeitus vietą, išvalomi dabartiniai nuskaitymo rezultatai ir pasirinkimas. Išsaugota nuskaitymų istorija ir paskutinė nuskaitymo kopija išlieka."
   },
   "window": {
     "minimize": "Sumažinti",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI agentai",
     "ecoCache": "Talpyklos",
     "ecoOther": "Kiti artefaktai",
-    "distTotalBadge": "{size} galima išvalyti"
+    "distTotalBadge": "{size} galima išvalyti",
+    "noticeInfoTitle": "Informacija",
+    "noticeInfoHint": "Sistemos saugomos vietos praleistos. Jokių veiksmų nereikia.",
+    "noticeIssueHint": "Kai kurių vietų perskaityti nepavyko, todėl rezultatai gali būti neišsamūs.",
+    "copyDetails": "Kopijuoti informaciją",
+    "detailsCopied": "Informacija nukopijuota į iškarpinę",
+    "coverage": "Nuskaitymo aprėptis",
+    "sectionSkipped": "Praleista",
+    "sectionFailed": "Nepavyko",
+    "sectionPartial": "Neišsamu",
+    "sectionNoRoot": "Aplankas nepasirinktas"
   },
   "table": {
     "project": "Projektas",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Ištrinti nuolat",
     "permanentAck": "Suprantu, kad tai negalima atšaukti.",
     "blockedReasons": "Blokuoti tikslai",
-    "expires": "Ši plano galiojimo laikas baigiasi po 15 minučių.",
+    "expires": "Ši plano galiojimo laikas baigiasi po 30 minučių.",
     "close": "Uždaryti",
     "working": "Veikia…",
     "runInBackground": "Vykdyti fone",
@@ -223,7 +236,11 @@
     "cancelling": "Atšaukiama…",
     "progress": "Apdorota {processed} / {total}",
     "currentItem": "Dabartinis: {path}",
-    "alreadyRunning": "Valymas jau vykdomas."
+    "alreadyRunning": "Valymas jau vykdomas.",
+    "coveredByParent": "Blokuoti",
+    "noMethod": "Blokuoti",
+    "officialActionRequired": "Oficialus komanda",
+    "modeNotAllowed": "Nuolatinis"
   },
   "result": {
     "title": "Išvalymo rezultatas",
@@ -238,6 +255,7 @@
     "verified": "patikrinta",
     "cancelled": "Valymas atšauktas",
     "cancelledNote": "Apdorota elementų: {processed}, praleista: {skipped}.",
+    "progressIncomplete": "Nepavyko parodyti {count} eigos naujinimų.",
     "processed": "Apdorota",
     "skipped": "Praleista",
     "viewResults": "Rodyti rezultatus",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Išvalyti skenavimus",
     "scopeProjects": "Projekto priklausomybės",
     "scopeAgents": "DI agentai",
-    "scopeAllDrives": "Visi diskai"
+    "scopeAllDrives": "Visi diskai",
+    "statusPartial": "Iš dalies",
+    "totalCleaned": "Iš viso atgauta",
+    "statusDepthLimited": "Iš dalies"
   },
   "settings": {
     "general": "Išvaizda",
@@ -451,6 +472,12 @@
     "protectionsHint": "Aplankai, kurie niekada neturi būti ištrinti, ir vardai, kurių reikia vengti.",
     "agentsHint": "AI agentei skirtos laikinos atminties valymo politika.",
     "privacyHint": "Vietinė istorija ir ekrane matomų kelių slėpimas.",
+    "resetAppDataTitle": "Iš naujo nustatykite visus programos duomenis",
+    "resetAppDataHint": "Ištrina visus nustatymus, valymo istoriją, nuskaitymo istoriją, veiksmų žurnalus ir išsaugotą paskutinį nuskaitymą, tada iš naujo paleidžia programą. To negalima anuliuoti.",
+    "resetAppDataConfirmBtn": "Ištrinkite duomenis ir paleiskite iš naujo",
+    "resetAppDataBusy": "Nustatoma iš naujo…",
+    "resetAppDataSuccess": "Visi programos duomenys buvo nustatyti iš naujo. Atkurti numatytieji nustatymai.",
+    "resetAppDataBlocked": "Vykdomas nuskaitymas arba išvalymas. Sustabdykite tai prieš iš naujo nustatydami programos duomenis.",
     "aboutHint": "Versija, kompiuterio kūrimo detalės, katalogas ir Vellium.",
     "legalHint": "Naudojimo sąlygos, privatumo politika ir atviro kodo licencijos.",
     "sidebar": "Šoninė juosta",
@@ -547,7 +574,11 @@
     "standardMotion": "Standartinė animacija",
     "aboutTitleBy": "Dev Cleaner pateikė Vellium",
     "mcpDestructiveTitle": "Leisti MCP naikinimo veiksmus",
-    "mcpDestructiveHint": "Reikia vėliavėlės --allow-destructive; kiekvienas vykdymas vis tiek reikalauja vienkartinio peržiūros prieigos rakto"
+    "mcpDestructiveHint": "Reikia vėliavėlės --allow-destructive; kiekvienas vykdymas vis tiek reikalauja vienkartinio peržiūros prieigos rakto",
+    "pathMustBeAbsolute": "Keliai turi būti absoliutūs, pavyzdžiui, C:\\Projects.",
+    "excludedNameInvalid": "Taisyklė turi būti vieno failo arba aplanko pavadinimas be kelio skyriklių.",
+    "shortcutNeedsModifier": "Visuotiniam sparčiajam klavišui reikia Ctrl, Alt arba Meta ir klavišo arba funkcijos klavišo.",
+    "shortcutsResetWarning": "{count} netinkamų sparčiųjų klavišų (-ių) buvo iš naujo nustatyti į numatytuosius nustatymus."
   },
   "legal": {
     "docTabsLabel": "Teisiniai dokumentai",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Nerasta projektui valytinų artefaktų",
     "emptyTitleIdle": "Projektų nuskaitymas dar neatliktas",
     "emptyDescClean": "Parinkta aplankas yra švarus. Nerasta valytinų node_modules, target ar kūrimo artefaktų.",
-    "emptyDescIdle": "Pasirinkite aplanką ir nuskaitykite, kad būtų galima išvardyti projekto priklausomybes ir kūrimo artefaktus."
+    "emptyDescIdle": "Pasirinkite aplanką ir nuskaitykite, kad būtų galima išvardyti projekto priklausomybes ir kūrimo artefaktus.",
+    "kpiTargets": "Valomi tikslai",
+    "kpiTargetsSub": "{count} projektų šaknyse",
+    "kpiTargetsUnknown": "Nuskaitykite iš naujo, kad atnaujintumėte projektų skaičių"
   },
   "about": {
     "kpiVersion": "Versija",
@@ -616,7 +650,8 @@
     "contactSupport": "Klientų aptarnavimas",
     "contactBillingDesc": "Atsiskaitymai, įmonių pirkimai ir prenumeratų palaikymas",
     "contactPrivacyDesc": "Duomenų saugumas, GDPR ir privatumo užklausos",
-    "ecoCacheScope": "npm talpykla, Cargo registras, pip talpykla, yarn"
+    "ecoCacheScope": "npm talpykla, Cargo registras, pip talpykla, yarn",
+    "contactBilling": "Atsiskaitymai ir mokėjimai"
   },
   "docs": {
     "catGuide": "Vadovai ir architektūra",

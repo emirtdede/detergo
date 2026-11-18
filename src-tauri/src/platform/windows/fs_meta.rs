@@ -40,7 +40,9 @@ mod win {
     }
 
     fn open_for_query(path: &Path) -> Option<HANDLE> {
-        let w = wide(path);
+        // Long paths need the verbatim prefix; measured targets can exceed
+        // MAX_PATH even though the drive-root probe above must not use one.
+        let w = super::super::wide_verbatim(path);
         unsafe {
             CreateFileW(
                 PCWSTR(w.as_ptr()),
@@ -56,7 +58,7 @@ mod win {
     }
 
     fn compressed_size(path: &Path) -> Option<u64> {
-        let w = wide(path);
+        let w = super::super::wide_verbatim(path);
         let mut high: u32 = 0;
         unsafe {
             let low = GetCompressedFileSizeW(PCWSTR(w.as_ptr()), Some(&mut high));
@@ -131,7 +133,7 @@ mod win {
     /// sharing mode, `Some(false)` means it is not locked, and `None` means the
     /// state could not be determined (access denied, unsupported volume, …).
     pub fn is_in_use(path: &Path) -> Option<bool> {
-        let w = wide(path);
+        let w = super::super::wide_verbatim(path);
         unsafe {
             match CreateFileW(
                 PCWSTR(w.as_ptr()),
@@ -173,6 +175,22 @@ mod win {
             None
         }
     }
+
+    /// Free and total bytes for the volume that hosts `path`.
+    pub fn volume_space(path: &Path) -> Option<(u64, u64)> {
+        use windows::Win32::Storage::FileSystem::GetDiskFreeSpaceExW;
+        let mut free: u64 = 0;
+        let mut total: u64 = 0;
+        let w = wide(path);
+        let ok = unsafe {
+            GetDiskFreeSpaceExW(PCWSTR(w.as_ptr()), Some(&mut free), Some(&mut total), None)
+        };
+        if ok.is_ok() && total > 0 {
+            Some((free, total))
+        } else {
+            None
+        }
+    }
 }
 
 #[cfg(not(windows))]
@@ -198,9 +216,14 @@ mod win {
     pub fn volume_free_bytes(_path: &Path) -> Option<u64> {
         None
     }
+    pub fn volume_space(_path: &Path) -> Option<(u64, u64)> {
+        None
+    }
 }
 
-pub use win::{facts, identity, is_in_use, is_remote_path, is_reparse_point, volume_free_bytes};
+pub use win::{
+    facts, identity, is_in_use, is_remote_path, is_reparse_point, volume_free_bytes, volume_space,
+};
 
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
@@ -338,29 +361,4 @@ pub fn running_process_names(names: &[&str]) -> Vec<(String, Option<PathBuf>)> {
         let _ = names;
         Vec::new()
     }
-}
-
-/// Best-effort check whether any process image lives inside `root`.
-pub fn process_running_under(root: &Path) -> bool {
-    let names = [
-        "codex",
-        "claude",
-        "antigravity",
-        "opencode",
-        "t3code",
-        "bionic",
-        "cursor",
-        "windsurf",
-        "codeium",
-        "ollama",
-        "electron",
-        "code",
-        "node",
-        "git",
-        "docker",
-    ];
-    running_process_names(&names)
-        .into_iter()
-        .filter_map(|(_, path)| path)
-        .any(|p| p.starts_with(root))
 }

@@ -36,7 +36,9 @@
     "on": "Aktiv",
     "off": "Joaktiv",
     "items": "{n} artikuj",
-    "showing": "{n} të shfaqura"
+    "showing": "{n} të shfaqura",
+    "scanAll": "Skano gjithçka",
+    "scanAllDesc": "Projekte, ruajtja e mjeteve të AI dhe memorjet e paketave"
   },
   "header": {
     "changeLocation": "Ndrysho Vendndodhjen",
@@ -49,7 +51,8 @@
     "addFavorite": "Shto vendndodhjen aktuale në të preferuarat",
     "removeFavorite": "Hiq vendndodhjen nga të preferuarat",
     "favoriteAdded": "Vendndodhja u shtua në të preferuarat.",
-    "favoriteRemoved": "Vendndodhja u hoq nga të preferuarat."
+    "favoriteRemoved": "Vendndodhja u hoq nga të preferuarat.",
+    "changeLocationConfirmDesc": "Ndryshimi i vendndodhjes pastron rezultatet aktuale të skanimit dhe përzgjedhjen. Historiku i ruajtur i skanimeve dhe pamja e fundit e skanimit ruhen."
   },
   "window": {
     "minimize": "Minimizo",
@@ -133,7 +136,17 @@
     "ecoAgent": "Agjentët e AI",
     "ecoCache": "Cache-t",
     "ecoOther": "Artefakte të tjera",
-    "distTotalBadge": "{size} të pastrueshëm"
+    "distTotalBadge": "{size} të pastrueshëm",
+    "noticeInfoTitle": "Informacion",
+    "noticeInfoHint": "Vendndodhjet e mbrojtura nga sistemi u anashkaluan. Nuk kërkohet asnjë veprim.",
+    "noticeIssueHint": "Disa vendndodhje nuk mund të lexoheshin, kështu që rezultatet mund të jenë jo të plota.",
+    "copyDetails": "Kopjo detajet",
+    "detailsCopied": "Detajet u kopjuan në kujtesën e fragmenteve",
+    "coverage": "Mbulimi i skanimit",
+    "sectionSkipped": "Anashkaluar",
+    "sectionFailed": "Dështoi",
+    "sectionPartial": "Jo i plotë",
+    "sectionNoRoot": "Nuk është zgjedhur asnjë dosje"
   },
   "table": {
     "project": "Projekti",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Fshij përfundimisht",
     "permanentAck": "E kuptoj që kjo nuk mund të anulohet.",
     "blockedReasons": "Objektivat e bllokuara",
-    "expires": "Ky plan skadon në 15 minuta.",
+    "expires": "Ky plan skadon në 30 minuta.",
     "close": "Mbyll",
     "working": "Duke punuar…",
     "runInBackground": "Ekzekuto në sfond",
@@ -223,7 +236,11 @@
     "cancelling": "Po anulohet…",
     "progress": "Të përpunuara {processed} / {total}",
     "currentItem": "Aktual: {path}",
-    "alreadyRunning": "Një pastrim është tashmë duke u ekzekutuar."
+    "alreadyRunning": "Një pastrim është tashmë duke u ekzekutuar.",
+    "coveredByParent": "Bllokuar",
+    "noMethod": "Bllokuar",
+    "officialActionRequired": "Komanda zyrtare",
+    "modeNotAllowed": "Përherë"
   },
   "result": {
     "title": "Rezultati i pastrimit",
@@ -238,6 +255,7 @@
     "verified": "e verifikuar",
     "cancelled": "Pastrimi u anulua",
     "cancelledNote": "{processed} artikuj të përpunuar, {skipped} të anashkaluar.",
+    "progressIncomplete": "Nuk mund të shfaqeshin {count} përditësime të ecurisë.",
     "processed": "Të përpunuara",
     "skipped": "Të anashkaluara",
     "viewResults": "Shiko rezultatet",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Fshi skanime",
     "scopeProjects": "Varësitë e projektit",
     "scopeAgents": "Agjentët AI",
-    "scopeAllDrives": "Të gjitha njësitë"
+    "scopeAllDrives": "Të gjitha njësitë",
+    "statusPartial": "I pjesshëm",
+    "totalCleaned": "Totali i rikuperuar",
+    "statusDepthLimited": "I pjesshëm"
   },
   "settings": {
     "general": "Pamja",
@@ -451,6 +472,12 @@
     "protectionsHint": "Dosjet që nuk duhet të fshihen kurrë dhe emrat që duhet të anashkalohen.",
     "agentsHint": "Politika e pastrimit për memorien e agentit AI.",
     "privacyHint": "Historia lokale dhe maskimi i shtigjeve në ekran.",
+    "resetAppDataTitle": "Rivendos të gjitha të dhënat e aplikacionit",
+    "resetAppDataHint": "Fshin të gjitha cilësimet, historikun e pastrimit, historinë e skanimit, regjistrat e veprimeve dhe skanimin e fundit të ruajtur, më pas rinis aplikacionin. Kjo nuk mund të zhbëhet.",
+    "resetAppDataConfirmBtn": "Fshini të dhënat dhe rinisni",
+    "resetAppDataBusy": "Po rivendoset…",
+    "resetAppDataSuccess": "Të gjitha të dhënat e aplikacionit janë rivendosur. Cilësimet e parazgjedhura u rivendosën.",
+    "resetAppDataBlocked": "Një skanim ose pastrim po funksionon. Ndalojeni përpara se të rivendosni të dhënat e aplikacionit.",
     "aboutHint": "Versioni, detajet e ndërtimit, katalogu dhe Vellium.",
     "legalHint": "Kushtet e përdorimit, politika e privatësisë dhe licencat e burimit të hapur.",
     "sidebar": "Shirit anësor",
@@ -547,7 +574,11 @@
     "standardMotion": "Animacion standard",
     "aboutTitleBy": "Dev Cleaner nga Vellium",
     "mcpDestructiveTitle": "Lejo veprimet shkatërruese të MCP",
-    "mcpDestructiveHint": "Kërkon flamurin --allow-destructive; çdo ekzekutim kërkon ende një token parapamjeje me përdorim të vetëm"
+    "mcpDestructiveHint": "Kërkon flamurin --allow-destructive; çdo ekzekutim kërkon ende një token parapamjeje me përdorim të vetëm",
+    "pathMustBeAbsolute": "Shtigjet duhet të jenë absolute, për shembull C:\\Projects.",
+    "excludedNameInvalid": "Një rregull duhet të jetë një emër skedari ose dosjeje i vetëm, pa ndarës rrugësh.",
+    "shortcutNeedsModifier": "Një shkurtore globale ka nevojë për Ctrl, Alt ose Meta plus një buton ose një buton funksioni.",
+    "shortcutsResetWarning": "{count} shkurtore(a) e pavlefshme u rivendosën në standardet e tyre."
   },
   "legal": {
     "docTabsLabel": "Dokumente ligjore",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Nuk u gjetën artefakte të pastrueshme të projektit",
     "emptyTitleIdle": "Ende nuk është kryer asnjë skanim projekti",
     "emptyDescClean": "Direktoria e zgjedhur është e pastër. Nuk u gjetën artefakte të pastrueshme në node_modules, objektiv apo ndërtim.",
-    "emptyDescIdle": "Zgjidhni një dosje dhe skanoni për të listuar varësitë e projekteve dhe artefaktet e ndërtimit."
+    "emptyDescIdle": "Zgjidhni një dosje dhe skanoni për të listuar varësitë e projekteve dhe artefaktet e ndërtimit.",
+    "kpiTargets": "Objektiva të pastrueshme",
+    "kpiTargetsSub": "Në {count} rrënjë projektesh",
+    "kpiTargetsUnknown": "Skano përsëri për të rifreskuar numrin e projekteve"
   },
   "about": {
     "kpiVersion": "Versioni",
@@ -616,7 +650,8 @@
     "contactSupport": "Mbështetje për Klientët",
     "contactBillingDesc": "Mbështetje për faturim, prokurim korporativ dhe abonime",
     "contactPrivacyDesc": "Siguria e të dhënave, GDPR dhe pyetje për privatësinë",
-    "ecoCacheScope": "npm cache, Cargo regjistër, pip cache, yarn"
+    "ecoCacheScope": "npm cache, Cargo regjistër, pip cache, yarn",
+    "contactBilling": "Faturimi dhe pagesat"
   },
   "docs": {
     "catGuide": "Udhëzues & Arkitekturë",

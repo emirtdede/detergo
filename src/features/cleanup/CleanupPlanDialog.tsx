@@ -1,19 +1,30 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Dialog } from "@/components/primitives/Dialog";
 import { Button } from "@/components/primitives/Button";
 import { Checkbox } from "@/components/primitives/Checkbox";
-import { useScanStore } from "@/stores/scan-store";
+import { useScanStore, flushLastScanPersist } from "@/stores/scan-store";
 import { useSelectionStore } from "@/stores/selection-store";
 import { useUiStore } from "@/stores/ui-store";
 import { useCleanupRunStore } from "@/stores/cleanup-run-store";
-import { useUIText, localizeAppError, localizeWarningCode } from "@/lib/ui-text";
+import {
+  useUIText,
+  localizeAppError,
+  localizeWarningCode,
+  isScanSessionError,
+} from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { formatBytes } from "@/lib/formatters";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { maskPath } from "@/lib/format/path";
 import { DeleteMode } from "@/types";
+import { useScanController } from "@/features/scan/useScanController";
 import { notificationService } from "@/lib/notifications/notification-service";
+import {
+  checkDiskPressure,
+  dispatchLifecycleWebhook,
+  notifyLockedTargets,
+} from "@/lib/notifications/lifecycle";
 
 import "../items/items.css";
 
@@ -31,18 +42,37 @@ export const CleanupPlanDialog: React.FC = () => {
   const showToast = useUiStore((s) => s.showToast);
 
   const scanId = useScanStore((s) => s.scanId);
+  const scope = useScanStore((s) => s.scope);
   const markDeleted = useScanStore((s) => s.markDeleted);
   const deselectMany = useSelectionStore((s) => s.deselectMany);
   const maskPaths = usePreferencesStore((s) => s.maskPaths);
   const language = usePreferencesStore((s) => s.language);
+  const { startScan, isScanning } = useScanController();
 
-  const run = useCleanupRunStore();
+  const runProgress = useCleanupRunStore((s) => s.progress);
+  // Actions are stable references; subscribing to the whole store re-rendered
+  // this dialog for every `itemStarted`/`itemFinished` event.
+  const runStart = useCleanupRunStore((s) => s.start);
+  const runApplyEvent = useCleanupRunStore((s) => s.applyEvent);
+  const runFinish = useCleanupRunStore((s) => s.finish);
+  const runDismiss = useCleanupRunStore((s) => s.dismiss);
+  const runMarkCancelling = useCleanupRunStore((s) => s.markCancelling);
 
   const [mode, setMode] = useState<DeleteMode>(pendingMode);
   const [ack, setAck] = useState(false);
+  // `busy` means a cleanup command is actually running. Preview preparation has
+  // its own flag: reusing `busy` made the "cancel run" button call
+  // `cancelCleanup()` while no cleanup existed, and locked the dialog shut.
   const [busy, setBusy] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+  // A restored snapshot has no live backend session after a restart. Keep the
+  // dialog open and offer a rescan instead of closing on a generic toast.
+  const [sessionProblem, setSessionProblem] = useState(false);
 
-  const progress = busy ? run.progress : null;
+  const progress = busy ? runProgress : null;
+  // Drops a late preview response after the dialog was closed or the user
+  // switched mode/selection while the request was still running.
+  const loadGenerationRef = useRef(0);
 
   const load = useCallback(
     async (nextMode: DeleteMode, ids: string[]) => {
@@ -51,59 +81,112 @@ export const CleanupPlanDialog: React.FC = () => {
         closeModal();
         return;
       }
-      setBusy(true);
+      const generation = loadGenerationRef.current + 1;
+      loadGenerationRef.current = generation;
+      setPreviewing(true);
       setPlan(null);
+      setSessionProblem(false);
       try {
         const next = await scannerApi.previewCleanup(scanId, ids, nextMode);
+        if (generation !== loadGenerationRef.current) return;
         setPlan(next);
       } catch (err) {
+        if (generation !== loadGenerationRef.current) return;
+        if (isScanSessionError(err)) {
+          setSessionProblem(true);
+          return;
+        }
         showToast(localizeAppError(err, ui), "error", 7000);
         closeModal();
       } finally {
-        setBusy(false);
+        if (generation === loadGenerationRef.current) setPreviewing(false);
       }
     },
     [scanId, setPlan, closeModal, showToast, ui],
   );
 
+  // The load effect must react to the selected targets, not to the identity of
+  // the `load` callback. `load` depends on the UI dictionary, so a language
+  // switch used to reset the acknowledgement checkbox and re-fetch the plan
+  // while the user was reviewing it.
+  const loadRef = useRef(load);
   useEffect(() => {
-    if (activeModal !== "cleanup-plan") return;
+    loadRef.current = load;
+  }, [load]);
+
+  const pendingIdsRef = useRef(pendingIds);
+  useEffect(() => {
+    pendingIdsRef.current = pendingIds;
+  }, [pendingIds]);
+
+  // A stable key: the order of ids must not force a reload.
+  const pendingKey = useMemo(() => [...pendingIds].sort().join("\u0000"), [pendingIds]);
+
+  useEffect(() => {
+    if (activeModal !== "cleanup-plan") {
+      // Invalidate any in-flight preview when the dialog closes.
+      loadGenerationRef.current += 1;
+      setPreviewing(false);
+      return;
+    }
     setAck(false);
     setMode(pendingMode);
     setPlan(null);
-    if (pendingIds.length > 0) {
-      void load(pendingMode, pendingIds);
+    setSessionProblem(false);
+    const ids = pendingIdsRef.current;
+    if (ids.length > 0) {
+      void loadRef.current(pendingMode, ids);
     }
-  }, [activeModal, pendingIds, pendingMode, load]);
+    return () => {
+      // A mode/selection change must not let the previous plan land late.
+      loadGenerationRef.current += 1;
+    };
+  }, [activeModal, pendingKey, pendingMode]);
 
   if (activeModal !== "cleanup-plan") return null;
 
   const switchMode = (nextMode: DeleteMode) => {
-    if (nextMode === mode || busy) return;
+    if (nextMode === mode || busy || previewing) return;
     setMode(nextMode);
     setAck(false);
     void load(nextMode, pendingIds);
   };
 
   const execute = async (runInBackground: boolean) => {
-    if (!plan || busy) return;
+    if (!plan || busy || previewing) return;
     if (mode === "permanent" && !ack) return;
 
     const activePlan = plan;
     setBusy(true);
-    run.start(activePlan.id, activePlan.eligibleCount, runInBackground);
+    runStart(activePlan.id, activePlan.eligibleCount, runInBackground);
+
+    // A cleanup can fail mid-run (backend error, cancelled session, IO error).
+    // `executeCleanup` then rejects without a report, so the rows already
+    // deleted stayed selected and cleanable in the table. Track successes by
+    // their 1-based eligible index and reconcile the scan snapshot on failure.
+    const eligibleItems = activePlan.items.filter((item) => item.eligible);
+    const succeededIds = new Set<string>();
 
     try {
       const report = await scannerApi.executeCleanup(
         activePlan.id,
         activePlan.confirmationToken,
         ack,
-        (event) => run.applyEvent(event),
+        (event) => {
+          if (event.type === "itemFinished" && event.success) {
+            const item = eligibleItems[event.index - 1];
+            if (item) succeededIds.add(item.targetId);
+          }
+          runApplyEvent(event);
+        },
       );
 
       const successIds = report.results.filter((r) => r.success).map((r) => r.targetId);
       if (successIds.length > 0) {
         markDeleted(successIds);
+        // Persist immediately: if the app is closed right after a cleanup the
+        // deleted rows must not reappear as cleanable on the next launch.
+        void flushLastScanPersist();
         // Keep failed targets selected so the user can review and retry them.
         deselectMany(successIds);
       }
@@ -113,25 +196,62 @@ export const CleanupPlanDialog: React.FC = () => {
 
       notificationService.notifyCleanComplete({
         count: report.successCount,
-        bytes: report.reclaimBytes,
+        // Moving a file to the Recycle Bin does not free disk space, so a
+        // recycle-mode notice must report the moved bytes (reclaimBytes stays
+        // zero until the user empties the bin).
+        bytes: report.mode === "permanent" ? report.reclaimBytes : report.movedBytes,
         destination:
-          mode === "permanent" ? ui.notifications.destPermanent : ui.notifications.destTrash,
+          report.mode === "permanent" ? ui.notifications.destPermanent : ui.notifications.destTrash,
       });
+
+      // Files held by a running process cannot be cleaned; tell the user which
+      // ones instead of leaving them as anonymous failures.
+      notifyLockedTargets(report.results);
+
+      void dispatchLifecycleWebhook("clean", {
+        event: "clean",
+        planId: report.planId,
+        mode: report.mode,
+        successCount: report.successCount,
+        errorCount: report.errorCount,
+        reclaimBytes: report.reclaimBytes,
+        movedBytes: report.movedBytes,
+        durationMs: report.durationMs,
+        cancelled: report.cancelled,
+      });
+      void checkDiskPressure();
 
       if (runInBackground) {
         // Keep the completed report in the run store so the dock can offer
         // "View results" after the dialog is gone.
-        run.finish(report);
+        runFinish(report);
         hideModal();
       } else {
-        run.finish(report);
-        run.dismiss();
+        runFinish(report);
+        runDismiss();
         openModal("cleanup-result");
       }
 
       if (report.auditError) showToast(localizeAppError(report.auditError, ui), "error", 8000);
     } catch (err) {
-      run.dismiss();
+      runDismiss();
+      // Whatever the backend managed to delete before failing is already gone
+      // from disk. Mark those rows deleted so the table and the remaining
+      // selection do not promise a cleanup that would fail again.
+      if (succeededIds.size > 0) {
+        const ids = Array.from(succeededIds);
+        markDeleted(ids);
+        deselectMany(ids);
+        void flushLastScanPersist();
+      }
+      setPlan(null);
+      if (isScanSessionError(err)) {
+        // The plan outlived its session. Keep the dialog open so the user can
+        // rescan without losing the workflow to a transient toast.
+        setSessionProblem(true);
+        setPlan(null);
+        return;
+      }
       showToast(localizeAppError(err, ui), "error", 7000);
       closeModal();
     } finally {
@@ -139,8 +259,13 @@ export const CleanupPlanDialog: React.FC = () => {
     }
   };
 
+  const rescanNow = () => {
+    closeModal();
+    void startScan(undefined, scope);
+  };
+
   const cancelRun = async () => {
-    run.markCancelling();
+    runMarkCancelling();
     try {
       await scannerApi.cancelCleanup();
     } catch (err) {
@@ -148,10 +273,19 @@ export const CleanupPlanDialog: React.FC = () => {
     }
   };
 
-  const cancelling = run.progress?.status === "cancelling";
+  const cancelling = runProgress?.status === "cancelling";
   const processed = progress?.processed ?? 0;
   const total = progress?.total ?? 0;
   const percent = total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : 0;
+
+  // Closing while a preview is still being prepared is allowed: the generation
+  // counter makes the late answer harmless.
+  const cancelPreview = () => {
+    loadGenerationRef.current += 1;
+    setPreviewing(false);
+    setPlan(null);
+    closeModal();
+  };
 
   const footer = busy ? (
     <>
@@ -160,6 +294,24 @@ export const CleanupPlanDialog: React.FC = () => {
       </Button>
       <Button variant="primary" size="sm" disabled>
         {ui.plan.working}
+      </Button>
+    </>
+  ) : previewing ? (
+    <>
+      <Button variant="secondary" size="sm" onClick={cancelPreview}>
+        {ui.common.cancel}
+      </Button>
+      <Button variant="primary" size="sm" disabled>
+        {ui.common.loading}
+      </Button>
+    </>
+  ) : sessionProblem ? (
+    <>
+      <Button variant="secondary" size="sm" onClick={closeModal}>
+        {ui.plan.close}
+      </Button>
+      <Button variant="primary" size="sm" onClick={rescanNow} disabled={isScanning}>
+        {ui.stale.rescan}
       </Button>
     </>
   ) : (
@@ -189,7 +341,7 @@ export const CleanupPlanDialog: React.FC = () => {
   return (
     <Dialog
       isOpen
-      onClose={busy ? () => undefined : closeModal}
+      onClose={busy ? () => undefined : previewing ? cancelPreview : closeModal}
       title={ui.plan.title}
       footer={footer}
       maxWidth="760px"
@@ -197,6 +349,12 @@ export const CleanupPlanDialog: React.FC = () => {
       <p className="items-path" style={{ marginTop: 0 }}>
         {ui.plan.subtitle}
       </p>
+
+      {sessionProblem && (
+        <p className="items-warning" role="alert" style={{ marginBottom: 12 }}>
+          {ui.errors.sessionExpired}
+        </p>
+      )}
 
       {progress ? (
         <div className="cleanup-progress" role="status" aria-live="polite">
@@ -230,6 +388,7 @@ export const CleanupPlanDialog: React.FC = () => {
                 type="radio"
                 name="cleanup-mode"
                 checked={mode === "recycleBin"}
+                disabled={previewing || busy}
                 onChange={() => switchMode("recycleBin")}
               />
               <span>{ui.plan.trash}</span>
@@ -239,6 +398,7 @@ export const CleanupPlanDialog: React.FC = () => {
                 type="radio"
                 name="cleanup-mode"
                 checked={mode === "permanent"}
+                disabled={previewing || busy}
                 onChange={() => switchMode("permanent")}
               />
               <span>{ui.plan.permanent}</span>
@@ -301,15 +461,14 @@ export const CleanupPlanDialog: React.FC = () => {
                   <Checkbox
                     checked={ack}
                     onChange={() => setAck((v) => !v)}
-                    aria-label={ui.plan.permanentAck}
+                    label={ui.plan.permanentAck}
                   />
-                  <span>{ui.plan.permanentAck}</span>
                 </div>
               )}
             </>
           )}
 
-          {!plan && <p className="items-empty">{ui.common.loading}</p>}
+          {!plan && previewing && <p className="items-empty">{ui.common.loading}</p>}
         </>
       )}
     </Dialog>

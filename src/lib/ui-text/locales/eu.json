@@ -36,7 +36,9 @@
     "on": "Piztuta",
     "off": "Itzalita",
     "items": "{n} elementu",
-    "showing": "{n} erakutsi"
+    "showing": "{n} erakutsi",
+    "scanAll": "Eskaneatu dena",
+    "scanAllDesc": "Proiektuak, AI tresnen biltegiratzea eta paketearen cachea"
   },
   "header": {
     "changeLocation": "Aldatu Kokapena",
@@ -49,7 +51,8 @@
     "addFavorite": "Uneko kokapena gogokoenetara gehitu",
     "removeFavorite": "Kokaleku bat gogokoenetatik kendu",
     "favoriteAdded": "Kokalekua gogokoenetara gehitu da.",
-    "favoriteRemoved": "Kokalekua gogokoenetatik kendu da."
+    "favoriteRemoved": "Kokalekua gogokoenetatik kendu da.",
+    "changeLocationConfirmDesc": "Kokalekua aldatzeak uneko eskaneatze-emaitzak eta hautapena garbituko ditu. Gordetako eskaneatze-historia eta azken eskaneatze-argazkia mantendu egingo dira."
   },
   "window": {
     "minimize": "Minimizatu",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI Agentziak",
     "ecoCache": "Cache-ak",
     "ecoOther": "Beste Artxiboak",
-    "distTotalBadge": "{size} garbi daitezkeenak"
+    "distTotalBadge": "{size} garbi daitezkeenak",
+    "noticeInfoTitle": "Informazioa",
+    "noticeInfoHint": "Sistemak babestutako kokapenak saltatu dira. Ez da ekintzarik behar.",
+    "noticeIssueHint": "Ezin izan dira kokapen batzuk irakurri, beraz emaitzak osatugabeak izan daitezke.",
+    "copyDetails": "Kopiatu xehetasunak",
+    "detailsCopied": "Xehetasunak arbelean kopiatu dira",
+    "coverage": "Eskaneatze-estaldura",
+    "sectionSkipped": "Saltatuta",
+    "sectionFailed": "Huts egin du",
+    "sectionPartial": "Osatugabea",
+    "sectionNoRoot": "Ez da karpeta hautatu"
   },
   "table": {
     "project": "Proiektua",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Ezabatu betiko",
     "permanentAck": "Ulertzen dut hau ezin dela atzera bota.",
     "blockedReasons": "Helburu blokeatuak",
-    "expires": "Plan hau 15 minututan iraungiko da.",
+    "expires": "Plan hau 30 minututan iraungiko da.",
     "close": "Itxi",
     "working": "Lana…",
     "runInBackground": "Exekutatu bigarren planoan",
@@ -223,7 +236,11 @@
     "cancelling": "Uzten…",
     "progress": "Prozesatuta {processed} / {total}",
     "currentItem": "Unekoa: {path}",
-    "alreadyRunning": "Garbiketa bat martxan dago jada."
+    "alreadyRunning": "Garbiketa bat martxan dago jada.",
+    "coveredByParent": "Blokeatua",
+    "noMethod": "Blokeatua",
+    "officialActionRequired": "Agindu ofiziala",
+    "modeNotAllowed": "Iraunkorra"
   },
   "result": {
     "title": "Garbiketa emaitza",
@@ -238,6 +255,7 @@
     "verified": "egiaztatu da",
     "cancelled": "Garbiketa utzita",
     "cancelledNote": "{processed} elementu prozesatu dira, {skipped} saltatu dira.",
+    "progressIncomplete": "Ezin izan dira {count} aurrerapen-eguneratze erakutsi.",
     "processed": "Prozesatuta",
     "skipped": "Saltatuta",
     "viewResults": "Ikusi emaitzak",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Garbitu Eskaneatzeak",
     "scopeProjects": "Proiektuaren menpekotasunak",
     "scopeAgents": "AI Agentziak",
-    "scopeAllDrives": "Disko guztiak"
+    "scopeAllDrives": "Disko guztiak",
+    "statusPartial": "Partziala",
+    "totalCleaned": "Berreskuratu osoa",
+    "statusDepthLimited": "Partziala"
   },
   "settings": {
     "general": "Itxura",
@@ -451,6 +472,12 @@
     "protectionsHint": "Inoiz ezabatu beharko ez diren karpetak eta saltatu beharreko izenak.",
     "agentsHint": "AI agentziaren cacheak garbitzeko politika.",
     "privacyHint": "Tokiko historia eta pantailako bideen maskaratzea.",
+    "resetAppDataTitle": "Berrezarri aplikazioaren datu guztiak",
+    "resetAppDataHint": "Ezarpen guztiak, garbiketa-historia, eskaneatu-historia, ekintza-erregistroak eta gordetako azken eskaneamendua ezabatzen ditu, eta aplikazioa berrabiarazi egiten du. Hau ezin da desegin.",
+    "resetAppDataConfirmBtn": "Ezabatu datuak eta berrabiarazi",
+    "resetAppDataBusy": "Berrezartzen…",
+    "resetAppDataSuccess": "Aplikazioaren datu guztiak berrezarri dira. Lehenetsitako ezarpenak berrezarri dira.",
+    "resetAppDataBlocked": "Eskaneatu edo garbiketa bat abian da. Gelditu aplikazioaren datuak berrezarri aurretik.",
     "aboutHint": "Bertsioa, eraikuntza xehetasunak, katalogoa eta Vellium.",
     "legalHint": "Erabilera-baldintzak, pribatutasun-politika eta software librearen lizentziak.",
     "sidebar": "Alboko barra",
@@ -547,7 +574,11 @@
     "standardMotion": "Animazio Estandarra",
     "aboutTitleBy": "Dev Cleaner Vellium",
     "mcpDestructiveTitle": "Baimendu MCP ekintza suntsitzaileak",
-    "mcpDestructiveHint": "--allow-destructive bandera behar da; exekuzio bakoitzak oraindik erabilera bakarreko aurrebista-tokena behar du"
+    "mcpDestructiveHint": "--allow-destructive bandera behar da; exekuzio bakoitzak oraindik erabilera bakarreko aurrebista-tokena behar du",
+    "pathMustBeAbsolute": "Bideek absolutuak izan behar dute, adibidez C:\\Projects.",
+    "excludedNameInvalid": "Arau batek fitxategi- edo karpeta-izen bakarra izan behar du, bide-banatzailerik gabe.",
+    "shortcutNeedsModifier": "Lasterbide orokorrak Ctrl, Alt edo Meta gehi tekla bat edo funtzio-tekla behar ditu.",
+    "shortcutsResetWarning": "{count} lasterbide baliogabeak lehenespenetara berrezarri dira."
   },
   "legal": {
     "docTabsLabel": "Dokumentu legalak",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Ez da garbitu daitekeen proiektuko artikulurik aurkitu",
     "emptyTitleIdle": "Oraindik ez da proiektua eskaneatu",
     "emptyDescClean": "Hautatutako direktorioa garbia da. Ez da garbitu daitekeen node_modules, target edo eraikuntza-artikula aurkitu.",
-    "emptyDescIdle": "Aukeratu karpeta bat eta eskaneatu proiektuaren menpekoak eta eraikuntza-artikuluak zerrendatzeko."
+    "emptyDescIdle": "Aukeratu karpeta bat eta eskaneatu proiektuaren menpekoak eta eraikuntza-artikuluak zerrendatzeko.",
+    "kpiTargets": "Garbigarri diren helburuak",
+    "kpiTargetsSub": "{count} proiektu-erroren artean",
+    "kpiTargetsUnknown": "Eskaneatu berriro proiektu kopurua freskatzeko"
   },
   "about": {
     "kpiVersion": "Bertsioa",
@@ -616,7 +650,8 @@
     "contactSupport": "BeZero Lagin",
     "contactBillingDesc": "Fakturazioa, enpresa erosketak eta harpidetza laguntza",
     "contactPrivacyDesc": "Datuen segurtasuna, GDPR eta pribatutasun galderak",
-    "ecoCacheScope": "npm cachea, Cargo erregistroa, pip cachea, yarn"
+    "ecoCacheScope": "npm cachea, Cargo erregistroa, pip cachea, yarn",
+    "contactBilling": "Fakturazioa eta ordainketak"
   },
   "docs": {
     "catGuide": "Gidak & Arkitektura",

@@ -36,7 +36,9 @@
     "on": "Bật",
     "off": "Tắt",
     "items": "{n} mục",
-    "showing": "{n} hiển thị"
+    "showing": "{n} hiển thị",
+    "scanAll": "Quét tất cả",
+    "scanAllDesc": "Dự án, lưu trữ công cụ AI và bộ nhớ đệm gói"
   },
   "header": {
     "changeLocation": "Đổi vị trí",
@@ -49,7 +51,8 @@
     "addFavorite": "Thêm vị trí hiện tại vào mục ưa thích",
     "removeFavorite": "Xóa vị trí khỏi mục ưa thích",
     "favoriteAdded": "Vị trí đã được thêm vào mục ưa thích.",
-    "favoriteRemoved": "Vị trí đã được xóa khỏi mục ưa thích."
+    "favoriteRemoved": "Vị trí đã được xóa khỏi mục ưa thích.",
+    "changeLocationConfirmDesc": "Thay đổi vị trí sẽ xóa kết quả quét hiện tại và lựa chọn. Lịch sử quét đã lưu và ảnh chụp lần quét cuối được giữ lại."
   },
   "window": {
     "minimize": "Thu nhỏ",
@@ -133,7 +136,17 @@
     "ecoAgent": "Tác nhân AI",
     "ecoCache": "Bộ nhớ đệm",
     "ecoOther": "Các tác phẩm khác",
-    "distTotalBadge": "{size} có thể dọn dẹp"
+    "distTotalBadge": "{size} có thể dọn dẹp",
+    "noticeInfoTitle": "Thông tin",
+    "noticeInfoHint": "Các vị trí được hệ thống bảo vệ đã bị bỏ qua. Không cần thao tác.",
+    "noticeIssueHint": "Không thể đọc một số vị trí, vì vậy kết quả có thể không đầy đủ.",
+    "copyDetails": "Sao chép chi tiết",
+    "detailsCopied": "Đã sao chép chi tiết vào clipboard",
+    "coverage": "Phạm vi quét",
+    "sectionSkipped": "Đã bỏ qua",
+    "sectionFailed": "Thất bại",
+    "sectionPartial": "Chưa đầy đủ",
+    "sectionNoRoot": "Chưa chọn thư mục"
   },
   "table": {
     "project": "Dự án",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Xóa vĩnh viễn",
     "permanentAck": "Tôi hiểu rằng điều này không thể hoàn tác.",
     "blockedReasons": "Mục bị chặn",
-    "expires": "Kế hoạch này hết hạn trong 15 phút.",
+    "expires": "Kế hoạch này hết hạn trong 30 phút.",
     "close": "Đóng",
     "working": "Đang xử lý…",
     "runInBackground": "Chạy trong nền",
@@ -223,7 +236,11 @@
     "cancelling": "Đang hủy…",
     "progress": "Đã xử lý {processed} / {total}",
     "currentItem": "Hiện tại: {path}",
-    "alreadyRunning": "Một quá trình dọn dẹp đang chạy."
+    "alreadyRunning": "Một quá trình dọn dẹp đang chạy.",
+    "coveredByParent": "Bị chặn",
+    "noMethod": "Bị chặn",
+    "officialActionRequired": "Lệnh chính thức",
+    "modeNotAllowed": "Vĩnh viễn"
   },
   "result": {
     "title": "Kết quả dọn dẹp",
@@ -238,6 +255,7 @@
     "verified": "đã được xác minh",
     "cancelled": "Đã hủy dọn dẹp",
     "cancelledNote": "Đã xử lý {processed} mục, bỏ qua {skipped}.",
+    "progressIncomplete": "Không thể hiển thị {count} cập nhật tiến độ.",
     "processed": "Đã xử lý",
     "skipped": "Đã bỏ qua",
     "viewResults": "Xem kết quả",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Xóa Quét",
     "scopeProjects": "Phụ thuộc dự án",
     "scopeAgents": "Tác nhân AI",
-    "scopeAllDrives": "Tất cả Ổ đĩa"
+    "scopeAllDrives": "Tất cả Ổ đĩa",
+    "statusPartial": "Một phần",
+    "totalCleaned": "Tổng số đã thu hồi",
+    "statusDepthLimited": "Một phần"
   },
   "settings": {
     "general": "Giao diện",
@@ -451,6 +472,12 @@
     "protectionsHint": "Thư mục tuyệt đối không được xóa và tên cần bỏ qua.",
     "agentsHint": "Chính sách dọn dẹp bộ nhớ đệm của tác nhân AI.",
     "privacyHint": "Lịch sử cục bộ và che đường dẫn trên màn hình.",
+    "resetAppDataTitle": "Đặt lại tất cả dữ liệu ứng dụng",
+    "resetAppDataHint": "Xóa tất cả cài đặt, lịch sử dọn dẹp, lịch sử quét, nhật ký hành động và lần quét cuối cùng đã lưu, sau đó khởi động lại ứng dụng. Điều này không thể hoàn tác được.",
+    "resetAppDataConfirmBtn": "Xóa dữ liệu và khởi động lại",
+    "resetAppDataBusy": "Đang đặt lại…",
+    "resetAppDataSuccess": "Tất cả dữ liệu ứng dụng đã được đặt lại. Đã khôi phục cài đặt mặc định.",
+    "resetAppDataBlocked": "Quá trình quét hoặc dọn dẹp đang chạy. Dừng nó trước khi đặt lại dữ liệu ứng dụng.",
     "aboutHint": "Phiên bản, chi tiết bản dựng, danh mục và Vellium.",
     "legalHint": "Điều khoản sử dụng, chính sách quyền riêng tư và giấy phép mã nguồn mở.",
     "sidebar": "Thanh bên",
@@ -547,7 +574,11 @@
     "standardMotion": "Hoạt ảnh tiêu chuẩn",
     "aboutTitleBy": "Dev Cleaner bởi Vellium",
     "mcpDestructiveTitle": "Cho phép các hành động phá hủy của MCP",
-    "mcpDestructiveHint": "Yêu cầu cờ --allow-destructive; mỗi lần thực thi vẫn cần một token xem trước dùng một lần"
+    "mcpDestructiveHint": "Yêu cầu cờ --allow-destructive; mỗi lần thực thi vẫn cần một token xem trước dùng một lần",
+    "pathMustBeAbsolute": "Đường dẫn phải tuyệt đối, ví dụ C:\\Projects.",
+    "excludedNameInvalid": "Quy tắc phải là một tên tệp hoặc thư mục duy nhất, không có dấu phân cách đường dẫn.",
+    "shortcutNeedsModifier": "Phím tắt chung cần Ctrl, Alt hoặc Meta cộng với một phím hoặc phím chức năng.",
+    "shortcutsResetWarning": "{count} phím tắt không hợp lệ đã được đặt lại về mặc định."
   },
   "legal": {
     "docTabsLabel": "Tài liệu pháp lý",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Không tìm thấy tệp dự án có thể dọn dẹp",
     "emptyTitleIdle": "Chưa thực hiện quét dự án",
     "emptyDescClean": "Thư mục đã chọn sạch. Không tìm thấy node_modules, target, hoặc tệp build nào có thể dọn dẹp.",
-    "emptyDescIdle": "Chọn một thư mục và quét để liệt kê các phụ thuộc dự án và tệp build."
+    "emptyDescIdle": "Chọn một thư mục và quét để liệt kê các phụ thuộc dự án và tệp build.",
+    "kpiTargets": "Mục tiêu có thể dọn dẹp",
+    "kpiTargetsSub": "Trong {count} thư mục gốc dự án",
+    "kpiTargetsUnknown": "Quét lại để làm mới số lượng dự án"
   },
   "about": {
     "kpiVersion": "Phiên bản",
@@ -616,7 +650,8 @@
     "contactSupport": "Hỗ trợ khách hàng",
     "contactBillingDesc": "Hỗ trợ thanh toán, mua hàng doanh nghiệp và đăng ký",
     "contactPrivacyDesc": "Thắc mắc về bảo mật dữ liệu, GDPR và quyền riêng tư",
-    "ecoCacheScope": "npm bộ đệm, Cargo sổ đăng ký, pip bộ đệm, yarn"
+    "ecoCacheScope": "npm bộ đệm, Cargo sổ đăng ký, pip bộ đệm, yarn",
+    "contactBilling": "Thanh toán và hóa đơn"
   },
   "docs": {
     "catGuide": "Hướng dẫn & Kiến trúc",

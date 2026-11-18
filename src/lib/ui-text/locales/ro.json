@@ -36,7 +36,9 @@
     "on": "Pornit",
     "off": "Oprit",
     "items": "{n} elemente",
-    "showing": "{n} afișate"
+    "showing": "{n} afișate",
+    "scanAll": "Scanează tot",
+    "scanAllDesc": "Proiecte, stocarea instrumentelor AI și cache-urile pachetelor"
   },
   "header": {
     "changeLocation": "Schimbă Locația",
@@ -49,7 +51,8 @@
     "addFavorite": "Adaugă locația curentă la favorite",
     "removeFavorite": "Elimină locația din favorite",
     "favoriteAdded": "Locația a fost adăugată la favorite.",
-    "favoriteRemoved": "Locația a fost eliminată din favorite."
+    "favoriteRemoved": "Locația a fost eliminată din favorite.",
+    "changeLocationConfirmDesc": "Schimbarea locației șterge rezultatele scanării curente și selecția. Istoricul scanărilor salvat și ultima imagine a scanării sunt păstrate."
   },
   "window": {
     "minimize": "Minimizare",
@@ -133,7 +136,17 @@
     "ecoAgent": "Agenți AI",
     "ecoCache": "Cache-uri",
     "ecoOther": "Alte Artefacts",
-    "distTotalBadge": "{size} de curățat"
+    "distTotalBadge": "{size} de curățat",
+    "noticeInfoTitle": "Informații",
+    "noticeInfoHint": "Locațiile protejate de sistem au fost omise. Nu este necesară nicio acțiune.",
+    "noticeIssueHint": "Unele locații nu au putut fi citite, așa că rezultatele pot fi incomplete.",
+    "copyDetails": "Copiază detaliile",
+    "detailsCopied": "Detaliile au fost copiate în clipboard",
+    "coverage": "Acoperirea scanării",
+    "sectionSkipped": "Omis",
+    "sectionFailed": "Eșuat",
+    "sectionPartial": "Incomplet",
+    "sectionNoRoot": "Nicio mapă selectată"
   },
   "table": {
     "project": "Proiect",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Șterge permanent",
     "permanentAck": "Înțeleg că acest lucru nu poate fi anulat.",
     "blockedReasons": "Ținte blocate",
-    "expires": "Acest plan expiră în 15 minute.",
+    "expires": "Acest plan expiră în 30 minute.",
     "close": "Închide",
     "working": "Lucrează…",
     "runInBackground": "Rulează în fundal",
@@ -223,7 +236,11 @@
     "cancelling": "Se anulează…",
     "progress": "Procesate {processed} / {total}",
     "currentItem": "Curent: {path}",
-    "alreadyRunning": "O curățare este deja în curs."
+    "alreadyRunning": "O curățare este deja în curs.",
+    "coveredByParent": "Blocată",
+    "noMethod": "Blocată",
+    "officialActionRequired": "Comandă oficială",
+    "modeNotAllowed": "Permanent"
   },
   "result": {
     "title": "Rezultatul curățeniei",
@@ -238,6 +255,7 @@
     "verified": "verificat",
     "cancelled": "Curățare anulată",
     "cancelledNote": "{processed} elemente procesate, {skipped} omise.",
+    "progressIncomplete": "Nu s-au putut afișa {count} actualizări de progres.",
     "processed": "Procesate",
     "skipped": "Omise",
     "viewResults": "Vezi rezultatele",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Ștergeți scanările",
     "scopeProjects": "Dependențele proiectului",
     "scopeAgents": "Agenți AI",
-    "scopeAllDrives": "Toate unitățile"
+    "scopeAllDrives": "Toate unitățile",
+    "statusPartial": "Parțial",
+    "totalCleaned": "Total recuperat",
+    "statusDepthLimited": "Parțial"
   },
   "settings": {
     "general": "Aspect",
@@ -451,6 +472,12 @@
     "protectionsHint": "Foldere care nu trebuie șterse niciodată și nume de ignorat.",
     "agentsHint": "Politică de curățare pentru cache-urile agentului AI.",
     "privacyHint": "Istoric local și mascarea căii pe ecran.",
+    "resetAppDataTitle": "Resetați toate datele aplicației",
+    "resetAppDataHint": "Șterge toate setările, istoricul de curățare, istoricul scanărilor, jurnalele de acțiuni și ultima scanare salvată, apoi repornește aplicația. Acest lucru nu poate fi anulat.",
+    "resetAppDataConfirmBtn": "Ștergeți datele și reporniți",
+    "resetAppDataBusy": "Se resetează…",
+    "resetAppDataSuccess": "Toate datele aplicației au fost resetate. Setările implicite au fost restaurate.",
+    "resetAppDataBlocked": "Se execută o scanare sau o curățare. Opriți-l înainte de a reseta datele aplicației.",
     "aboutHint": "Versiune, detalii construcție, catalog și Vellium.",
     "legalHint": "Termeni de utilizare, politică de confidențialitate și licențe open-source.",
     "sidebar": "Bara laterală",
@@ -547,7 +574,11 @@
     "standardMotion": "Animație standard",
     "aboutTitleBy": "Dev Cleaner de Vellium",
     "mcpDestructiveTitle": "Permite acțiunile distructive MCP",
-    "mcpDestructiveHint": "Necesită flagul --allow-destructive; fiecare execuție are în continuare nevoie de un token de previzualizare de unică folosință"
+    "mcpDestructiveHint": "Necesită flagul --allow-destructive; fiecare execuție are în continuare nevoie de un token de previzualizare de unică folosință",
+    "pathMustBeAbsolute": "Căile trebuie să fie absolute, de exemplu C:\\Projects.",
+    "excludedNameInvalid": "O regulă trebuie să fie un singur nume de fișier sau folder, fără separatori de cale.",
+    "shortcutNeedsModifier": "O comandă rapidă globală necesită Ctrl, Alt sau Meta plus o tastă sau o tastă funcțională.",
+    "shortcutsResetWarning": "{count} comenzi rapide nevalide au fost resetate la valorile implicite."
   },
   "legal": {
     "docTabsLabel": "Documente legale",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Nu s-au găsit artefacte de proiect care pot fi curățate",
     "emptyTitleIdle": "Scanarea proiectului nu a fost efectuată încă",
     "emptyDescClean": "Directorul selectat este curat. Nu s-au găsit node_modules, target sau artefacte de build care pot fi curățate.",
-    "emptyDescIdle": "Alege un folder și scanează pentru a lista dependențele proiectului și artefactele de build."
+    "emptyDescIdle": "Alege un folder și scanează pentru a lista dependențele proiectului și artefactele de build.",
+    "kpiTargets": "Ținte curățabile",
+    "kpiTargetsSub": "În {count} rădăcini de proiect",
+    "kpiTargetsUnknown": "Rescanați pentru a actualiza numărul de proiecte"
   },
   "about": {
     "kpiVersion": "Versiune",
@@ -616,7 +650,8 @@
     "contactSupport": "Suport pentru clienți",
     "contactBillingDesc": "Facturare, achiziții enterprise și suport pentru abonamente",
     "contactPrivacyDesc": "Securitatea datelor, GDPR și întrebări privind confidențialitatea",
-    "ecoCacheScope": "cache npm, registru Cargo, cache pip, yarn"
+    "ecoCacheScope": "cache npm, registru Cargo, cache pip, yarn",
+    "contactBilling": "Facturare și plăți"
   },
   "docs": {
     "catGuide": "Ghiduri & Arhitectură",

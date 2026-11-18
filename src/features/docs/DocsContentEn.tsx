@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { NumberField } from "@/components/primitives/NumberField";
 import { McpIdeKey, mcpConfigs, webhookSampleJson } from "./docs-data";
+import { APP_VERSION } from "@/lib/app-version";
 import { McpIdeSelector } from "./McpIdeSelector";
 import { useDocsT } from "./docs-i18n";
 import { useUIText } from "@/lib/ui-text";
@@ -172,7 +173,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
           <article className="docs-article">
             <div className="docs-badge-row">
               <span className="docs-category-pill">{t("Overview")}</span>
-              <span className="docs-version-pill">{t("v2.2.2")}</span>
+              <span className="docs-version-pill">v{APP_VERSION}</span>
             </div>
             <h1 className="docs-title">{t("Welcome to Dev Cleaner")}</h1>
             <p className="docs-lead">
@@ -184,6 +185,17 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
               <ShieldCheck className="docs-callout-icon" size={18} />
               <div>
               <strong>{t("Zero Data Loss Principle:")}</strong>  {t("All project and AI artifacts cleaned by Dev Cleaner are moved directly to the")} <strong>{t("Windows Recycle Bin")}</strong>{t(". Nothing is permanently destroyed by accident.")}
+              </div>
+            </div>
+
+            <div className="docs-callout">
+              <Cpu className="docs-callout-icon" size={18} />
+              <div>
+                <strong>{ui.common.scanAll}</strong> — {ui.common.scanAllDesc}. This is
+                the command bar action, and it is the same as{" "}
+                <code>--scope combined</code>: projects, AI tool storage and the
+                package-cache measurement run in one session. The buttons inside a
+                page scan only that page&apos;s scope.
               </div>
             </div>
 
@@ -545,9 +557,9 @@ dev-cleaner scan "D:\\projects" --json`
                   </tr>
                   <tr>
                     <td><code>{t("--scope <scope>")}</code></td>
-                    <td>{t("projects | agents | caches | all")}</td>
+                    <td><code>projects | agents | combined | all</code></td>
                     <td><code>{t("projects")}</code></td>
-                    <td>{t("Target group to scan (project dependencies, AI agent caches, package caches).")}</td>
+                    <td>{t("Target group to scan (project dependencies or AI agent storage).")}</td>
                   </tr>
                   <tr>
                     <td><code>{t("--auto-clean")}</code></td>
@@ -597,7 +609,7 @@ dev-cleaner scan "D:\\projects" --json`
                 <button
                   type="button"
                   className="docs-copy-action"
-                  onClick={() => copyToClipboard("dev-cleaner caches --clean all", "cli-cache")}
+                  onClick={() => copyToClipboard("dev-cleaner caches --clean all --yes", "cli-cache")}
                 >
                   {copiedKey === "cli-cache" ? <Check size={13} /> : <Copy size={13} />}
                   {copiedKey === "cli-cache" ? ui.docs.copied : ui.docs.copy}
@@ -611,8 +623,11 @@ dev-cleaner caches
 # ${t("Purge a specific tool cache (e.g., npm, pip, cargo, docker)")}
 dev-cleaner caches --clean npm
 
+# ${t("Preview a full purge without deleting anything")}
+dev-cleaner caches --clean all --dry-run
+
 # ${t("Purge caches for all detected installed tools")}
-dev-cleaner caches --clean all`
+dev-cleaner caches --clean all --yes`
                 )}
               </pre>
             </div>
@@ -659,7 +674,7 @@ dev-cleaner caches --clean all`
                   >
                     <option value="projects">{t("Projects (Dependencies, build, cache)")}</option>
                     <option value="agents">{t("AI Coding Agents (Claude, Cursor, Codex)")}</option>
-                    <option value="caches">{t("Developer Tool Caches")}</option>
+                    <option value="combined">{ui.common.scanAll}</option>
                     <option value="all">{t("Full System Scan (All)")}</option>
                   </select>
                 </div>
@@ -798,7 +813,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
           <article className="docs-article">
             <div className="docs-badge-row">
               <span className="docs-category-pill">{t("AI Protocol")}</span>
-              <span className="docs-version-pill">{t("MCP v2.2.2")}</span>
+              <span className="docs-version-pill">MCP v{APP_VERSION}</span>
             </div>
             <h1 className="docs-title">{t("Model Context Protocol (MCP) Server")}</h1>
             <p className="docs-lead">
@@ -847,10 +862,18 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
                   onClick={() => copyToClipboard(mcpConfigs[activeIde].json, `mcp-${activeIde}`)}
                 >
                   {copiedKey === `mcp-${activeIde}` ? <Check size={13} /> : <Copy size={13} />}
-                  {copiedKey === `mcp-${activeIde}` ? ui.docs.copied : `${ui.docs.copy} JSON`}
+                  {copiedKey === `mcp-${activeIde}`
+                    ? ui.docs.copied
+                    : mcpConfigs[activeIde].syntax === "toml"
+                      ? ui.docs.copy
+                      : `${ui.docs.copy} JSON`}
                 </button>
               </div>
-              <pre className="docs-code-pre">{highlightJson(mcpConfigs[activeIde].json)}</pre>
+              <pre className="docs-code-pre">
+                {mcpConfigs[activeIde].syntax === "toml"
+                  ? highlightBash(mcpConfigs[activeIde].json)
+                  : highlightJson(mcpConfigs[activeIde].json)}
+              </pre>
             </div>
           </article>
         )}
@@ -942,26 +965,32 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             <h1 className="docs-title">{t("Dev Cleaner MCP Tools Reference")}</h1>
             <p className="docs-lead">
               
-              {t("The Dev Cleaner MCP server exposes 6 autonomous tools to AI models:")}
+              {t("The Dev Cleaner MCP server exposes 8 tools: 6 standard tools plus 2 destructive tools that are hidden unless the server runs with --allow-destructive.")}
             </p>
 
             <h2 className="docs-h2">{t("1. `devcleaner_scan_workspace`")}</h2>
             <p className="docs-p">{t("Scans the workspace and yields cleanable candidates as structured JSON.")}</p>
 
-            <h2 className="docs-h2">{t("2. `devcleaner_clean_safe`")}</h2>
-            <p className="docs-p">{t("Safely dispatches confirmed target IDs to the Windows Recycle Bin.")}</p>
+            <h2 className="docs-h2">{t("2. `devcleaner_preview_cleanup`")}</h2>
+            <p className="docs-p">{t("Builds a cleanup plan, returns a single-use token and never deletes anything.")}</p>
 
-            <h2 className="docs-h2">{t("3. `devcleaner_list_caches`")}</h2>
+            <h2 className="docs-h2">{t("3. `devcleaner_clean_safe` (deprecated alias)")}</h2>
+            <p className="docs-p">{t("Deprecated alias of devcleaner_preview_cleanup. It only previews a plan and never deletes anything; use preview_cleanup plus execute_cleanup.")}</p>
+
+            <h2 className="docs-h2">{t("4. `devcleaner_list_caches`")}</h2>
             <p className="docs-p">{t("Reports cache metrics for 21 developer tools and package managers.")}</p>
-
-            <h2 className="docs-h2">{t("4. `devcleaner_clean_cache`")}</h2>
-            <p className="docs-p">{t("Invokes official package manager CLI commands to purge cache.")}</p>
 
             <h2 className="docs-h2">{t("5. `devcleaner_get_history`")}</h2>
             <p className="docs-p">{t("Returns historical records of previous cleanup operations.")}</p>
 
             <h2 className="docs-h2">{t("6. `devcleaner_inspect_target`")}</h2>
             <p className="docs-p">{t("Inspects safety rules and classifications for a specific path.")}</p>
+
+            <h2 className="docs-h2">{t("7. `devcleaner_execute_cleanup` (destructive)")}</h2>
+            <p className="docs-p">{t("Executes a previously previewed plan. Requires confirm:true, a single-use token, --allow-destructive and the MCP destructive setting.")}</p>
+
+            <h2 className="docs-h2">{t("8. `devcleaner_clean_cache` (destructive)")}</h2>
+            <p className="docs-p">{t("Invokes official package manager CLI commands to purge cache. Requires confirm:true, --allow-destructive and the MCP destructive setting.")}</p>
           </article>
         )}
 
@@ -1012,6 +1041,41 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
               </div>
               <pre className="docs-code-pre">{highlightJson(webhookSampleJson)}</pre>
             </div>
+
+            <h2 className="docs-h2">Field reference</h2>
+            <p className="docs-p">
+              <code>event</code> is always <code>scan</code> or <code>clean</code>.
+              The legacy names <code>scan_completed</code> and{" "}
+              <code>cleanup_completed</code> are accepted as aliases and are
+              rewritten to the canonical names before delivery.
+            </p>
+            <p className="docs-p">
+              <code>timestamp</code>, <code>product</code> and{" "}
+              <code>version</code> identify the installation that raised the
+              event; the payload is never signed.
+            </p>
+            <p className="docs-p">
+              <code>status</code> is <code>success</code>, <code>partial</code>{" "}
+              (the scan stopped early) or <code>cancelled</code> (the user pressed
+              Stop).
+            </p>
+            <p className="docs-p">
+              <code>total_bytes</code> is the reclaimable space that was measured;{" "}
+              <code>total_human</code> is its formatted form.{" "}
+              <code>cleaned_count</code> and <code>cleaned_bytes</code> only appear
+              on cleanup events.
+            </p>
+            <p className="docs-p">
+              Scan events also carry <code>scan_id</code>, <code>root_path</code>,{" "}
+              <code>duration_ms</code> and, when the result is partial,{" "}
+              <code>stop_reason</code>.
+            </p>
+            <p className="docs-p">
+              Cleanup events from the desktop app also carry <code>plan_id</code>,{" "}
+              <code>mode</code>, <code>success_count</code>,{" "}
+              <code>error_count</code>, <code>moved_bytes</code> and{" "}
+              <code>reclaim_bytes</code>.
+            </p>
           </article>
         )}
 
@@ -1055,6 +1119,27 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
               
               {t("Warning codes and resolution steps encountered when Dev Cleaner defense mechanisms trigger:")}
             </p>
+
+            <h2 className="docs-h2">{ui.overview.coverage}</h2>
+            <div className="docs-callout docs-callout--warning">
+              <Info className="docs-callout-icon" size={18} />
+              <div>
+                <p>
+                  <strong>{ui.overview.sectionSkipped}</strong> — {ui.overview.noticeInfoHint}
+                </p>
+                <p>
+                  <strong>{ui.overview.warnings}</strong> — {ui.overview.noticeIssueHint}
+                </p>
+                <p>
+                  <strong>{ui.overview.errors}</strong> — {ui.overview.sectionNoRoot} /{" "}
+                  {ui.overview.sectionFailed}
+                </p>
+                <p>
+                  <strong>{ui.overview.sectionPartial}</strong> — {ui.overview.partial}{" "}
+                  {ui.overview.stopReason}: <code>stop_reason</code>
+                </p>
+              </div>
+            </div>
 
             <div className="docs-trouble-card">
               <div className="docs-faq-q">

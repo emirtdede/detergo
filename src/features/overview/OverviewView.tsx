@@ -12,14 +12,20 @@ import {
   Sparkles,
   History,
   RotateCcw,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
 import { Dialog } from "@/components/primitives/Dialog";
-import { useScanStore } from "@/stores/scan-store";
+import { useScanStore, viewForScanScope } from "@/stores/scan-store";
 import { useUIText, localizeAppError } from "@/lib/ui-text";
 import { useScanController } from "@/features/scan/useScanController";
-import { formatBytes, formatSignedBytes, truncatePath } from "@/lib/formatters";
-import { maskPath } from "@/lib/format/path";
+import { formatBytes, formatSignedBytes } from "@/lib/formatters";
+import { itemBucket } from "@/lib/classify";
+import { ownBytesById } from "@/lib/item-totals";
+import { lifetimeCleanedBytes, normalizeDistributionWidths } from "@/lib/cleanup-totals";
+import { maskPath, truncatePath } from "@/lib/format/path";
+import { useThrottledValue, SCAN_AGGREGATE_THROTTLE_MS } from "@/lib/hooks/use-throttled-value";
 import { SafetyBadge } from "@/features/items/SafetyBadge";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
@@ -37,6 +43,7 @@ export const OverviewView: React.FC = () => {
   const itemsById = useScanStore((s) => s.itemsById);
   const itemIds = useScanStore((s) => s.itemIds);
   const progress = useScanStore((s) => s.progress);
+  const summary = useScanStore((s) => s.summary);
   const previousSummary = useScanStore((s) => s.previousSummary);
   const previousCleanableBytes = useScanStore((s) => s.previousCleanableBytes);
   const maskPaths = usePreferencesStore((s) => s.maskPaths);
@@ -46,13 +53,32 @@ export const OverviewView: React.FC = () => {
   const loadCacheProviders = useCacheStore((s) => s.loadProviders);
   const showToast = useUiStore((s) => s.showToast);
   const restored = useScanStore((s) => s.restored);
+  const lastSavedAt = useScanStore((s) => s.lastSavedAt);
+  const persistedRevision = useScanStore((s) => s.persistedRevision);
 
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+  const [hasLastSnapshot, setHasLastSnapshot] = useState(false);
+
+  // The header button must not offer a restore that cannot succeed.
+  useEffect(() => {
+    let cancelled = false;
+    scannerApi
+      .getLastScan()
+      .then((snapshot) => {
+        if (!cancelled) setHasLastSnapshot(Boolean(snapshot && snapshot.summary));
+      })
+      .catch(() => {
+        if (!cancelled) setHasLastSnapshot(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [lastSavedAt, persistedRevision]);
 
   const confirmReset = () => {
     setResetDialogOpen(false);
-    useScanStore.getState().resetScan();
+    useScanStore.getState().resetScan({ clearPersisted: true });
     useSelectionStore.getState().clearSelection();
     showToast(ui.overview.resetToast, "info");
   };
@@ -61,10 +87,11 @@ export const OverviewView: React.FC = () => {
     setRestoreDialogOpen(false);
     try {
       const snapshot = await scannerApi.getLastScan();
-      if (snapshot && snapshot.summary) {
-        useScanStore.getState().restoreScan(snapshot);
+      if (snapshot && useScanStore.getState().restoreScan(snapshot)) {
         showToast(ui.overview.restoreSuccessToast, "success");
+        setView(viewForScanScope(snapshot.summary.scope));
       } else {
+        setHasLastSnapshot(false);
         showToast(ui.overview.noLastScanToast, "error");
       }
     } catch (err) {
@@ -74,31 +101,79 @@ export const OverviewView: React.FC = () => {
 
   const [lifetimeReclaimed, setLifetimeReclaimed] = useState<number>(0);
   const [lifetimeRuns, setLifetimeRuns] = useState<number>(0);
-  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState<unknown>(null);
 
   useEffect(() => {
+    let cancelled = false;
+    // Lifetime numbers must cover the whole history, not the newest page:
+    // summing the capped list silently understated long-term totals.
     scannerApi
-      .getCleanupHistory(100)
-      .then((records) => {
-        const total = records.reduce((acc, r) => acc + (r.reclaimBytes || 0), 0);
-        setLifetimeReclaimed(total);
-        setLifetimeRuns(records.length);
+      .getCleanupTotals()
+      .then((totals) => {
+        if (cancelled) return;
+        // `reclaimedBytes` only counts permanent deletes; Recycle Bin cleanups
+        // report zero there. The lifetime figure is therefore the moved total
+        // (which already includes permanent deletions), not a reclaimed total:
+        // recycled bytes are not free until the bin is emptied. Old records
+        // that predate `movedBytes` fall back to `reclaimedBytes`.
+        setLifetimeReclaimed(lifetimeCleanedBytes(totals.movedBytes, totals.reclaimedBytes));
+        // This card counts cleanup runs. Official tool actions have their own
+        // history and controller; adding them here inflated "cleanups" with
+        // operations that never moved a file.
+        setLifetimeRuns(totals.runs);
         setHistoryError(null);
       })
       .catch((err) => {
+        if (cancelled) return;
         // The lifetime counters are a bonus; surface the failure inline instead
-        // of silently showing zero reclaimed bytes.
+        // of silently showing zero reclaimed bytes. Only the raw error is kept:
+        // the localized text is produced at render time so changing the
+        // language does not leave a stale message.
         log.warn("Could not load lifetime cleanup history", err);
-        setHistoryError(localizeAppError(err, ui));
+        setHistoryError(err);
       });
+    return () => {
+      cancelled = true;
+    };
+    // `lastSavedAt` is bumped by `flushLastScanPersist()` after a cleanup, so
+    // this overview (mounted while the global action bar runs a plan) refreshes
+    // the lifetime card instead of keeping pre-cleanup totals.
+  }, [lastSavedAt]);
 
+  useEffect(() => {
     void loadCacheProviders();
-  }, [loadCacheProviders, ui]);
+  }, [loadCacheProviders]);
 
-  const items = useMemo(
-    () => itemIds.map((id) => itemsById[id]).filter(Boolean),
+  const allItems = useMemo(
+    () =>
+      itemIds
+        .map((id) => itemsById[id])
+        .filter((item): item is NonNullable<typeof item> => Boolean(item)),
     [itemIds, itemsById],
   );
+
+  const items = useMemo(
+    () =>
+      // Deleted rows stay in the session so undo/history can reference them,
+      // but they must not keep inflating KPIs, charts or top items.
+      allItems.filter((item) => item.status !== "deleted"),
+    [allItems],
+  );
+
+  // Measurement batches change the row map up to 20 times per second. The heavy
+  // aggregates below are throttled to a cadence a person can actually read;
+  // counts and progress keep using the live store values.
+  const aggregateAll = useThrottledValue(allItems, SCAN_AGGREGATE_THROTTLE_MS);
+
+  const aggregateItems = useMemo(
+    () => aggregateAll.filter((item) => item.status !== "deleted"),
+    [aggregateAll],
+  );
+
+  // Nested targets are measured recursively. Passing every row (including
+  // deleted ones) lets a surviving parent shed the bytes of a child that is
+  // already gone while the totals below only count live rows.
+  const own = useMemo(() => ownBytesById(aggregateAll), [aggregateAll]);
 
   const totals = useMemo(() => {
     let cleanable = 0;
@@ -108,8 +183,8 @@ export const OverviewView: React.FC = () => {
     let protectedBytes = 0;
     const projects = new Set<string>();
 
-    for (const item of items) {
-      const bytes = item.estimatedReclaimBytes ?? 0;
+    for (const item of aggregateItems) {
+      const bytes = own.get(item.id)?.estimatedReclaimBytes ?? 0;
       const blocked = item.protected || item.safetyClass === "keep" || !item.selectable;
       if (blocked) {
         protectedBytes += bytes;
@@ -119,7 +194,7 @@ export const OverviewView: React.FC = () => {
         else if (item.safetyClass === "regenerate") regenerateReclaim += bytes;
         else reviewReclaim += bytes;
       }
-      if (item.projectId) projects.add(item.projectId);
+      if (item.projectId && item.projectDetected !== false) projects.add(item.projectId);
     }
     return {
       cleanable,
@@ -129,39 +204,71 @@ export const OverviewView: React.FC = () => {
       protectedBytes,
       projects: projects.size,
     };
-  }, [items]);
+  }, [aggregateItems, own]);
+
+  // Only manifest-confirmed roots are projects. The backend counts them, and
+  // its number is authoritative because the store may already have pruned rows.
+  //
+  // The flag scan runs on the throttled snapshot: it is a full pass over every
+  // row, and doing it on the live map meant one more O(n) walk per measurement
+  // batch for a value that only changes when the result set changes.
+  const hasProjectFlags = useMemo(
+    () => aggregateAll.some((item) => typeof item.projectDetected === "boolean"),
+    [aggregateAll],
+  );
+
+  const detectedProjects = useMemo(() => {
+    const fromSummary = summary?.detectedProjectCount;
+    if (typeof fromSummary === "number") return fromSummary;
+    // A restored snapshot from an older build has no flag and no count: showing
+    // a number here is exactly how "1059 projects" happened.
+    return hasProjectFlags ? totals.projects : null;
+  }, [summary?.detectedProjectCount, hasProjectFlags, totals.projects]);
+
+  const numberFormat = useMemo(() => new Intl.NumberFormat(language ?? undefined), [language]);
+
+  // Per-step outcome of a combined scan: projects, agents, and anything the
+  // backend had to skip. Without this a silent NO_ROOT step looked like
+  // "the project scan found nothing".
+  const coverageSections = summary?.sections ?? [];
+  const sectionScopeLabel = (scope: string) => {
+    switch (scope) {
+      case "combined":
+        return ui.common.scanAll;
+      case "agents":
+        return ui.nav.agents;
+      case "allDrives":
+        return ui.common.allDrives;
+      case "globalCaches":
+        return ui.nav.caches;
+      default:
+        return ui.nav.projects;
+    }
+  };
+  const sectionStatusLabel = (status: string) => {
+    if (status === "skipped") return ui.overview.sectionSkipped;
+    if (status === "failed") return ui.overview.sectionFailed;
+    if (status === "partial") return ui.overview.sectionPartial;
+    return "";
+  };
 
   const distributionSegments = useMemo(() => {
     if (totals.cleanable <= 0) return [];
     const ecoMap: Record<string, { label: string; bytes: number; color: string }> = {
       node: { label: ui.overview.ecoNode, bytes: 0, color: "var(--accent)" },
-      rust: { label: ui.overview.ecoRust, bytes: 0, color: "#F97316" },
+      rust: { label: ui.overview.ecoRust, bytes: 0, color: "var(--eco-rust)" },
       python: { label: ui.overview.ecoPython, bytes: 0, color: "var(--success)" },
-      agent: { label: ui.overview.ecoAgent, bytes: 0, color: "#8B5CF6" },
-      cache: { label: ui.overview.ecoCache, bytes: 0, color: "#EC4899" },
+      agent: { label: ui.overview.ecoAgent, bytes: 0, color: "var(--eco-agent)" },
+      cache: { label: ui.overview.ecoCache, bytes: 0, color: "var(--eco-cache)" },
       other: { label: ui.overview.ecoOther, bytes: 0, color: "var(--text-muted)" },
     };
 
-    for (const item of items) {
+    for (const item of aggregateItems) {
       if (item.protected || item.safetyClass === "keep" || !item.selectable) continue;
-      const bytes = item.estimatedReclaimBytes ?? 0;
-      const eco = (item.ecosystem || "").toLowerCase();
-      const name = (item.displayName || "").toLowerCase();
-      const cat = (item.category || "").toLowerCase();
-
-      if (eco.includes("node") || eco.includes("npm") || name.includes("node_modules")) {
-        ecoMap.node.bytes += bytes;
-      } else if (eco.includes("rust") || eco.includes("cargo") || name.includes("target")) {
-        ecoMap.rust.bytes += bytes;
-      } else if (eco.includes("python") || eco.includes("pip") || name.includes("venv")) {
-        ecoMap.python.bytes += bytes;
-      } else if (cat.includes("agent") || name.includes("claude") || name.includes("cursor")) {
-        ecoMap.agent.bytes += bytes;
-      } else if (cat.includes("cache") || eco.includes("cache")) {
-        ecoMap.cache.bytes += bytes;
-      } else {
-        ecoMap.other.bytes += bytes;
-      }
+      const bytes = own.get(item.id)?.estimatedReclaimBytes ?? 0;
+      // Use the backend-provided `ecosystem`/`category` instead of guessing
+      // from folder names: a Python directory named `target` is not Rust.
+      ecoMap[itemBucket(item)].bytes += bytes;
     }
 
     return Object.entries(ecoMap)
@@ -173,15 +280,23 @@ export const OverviewView: React.FC = () => {
         color: v.color,
         percent: (v.bytes / totals.cleanable) * 100,
       }));
-  }, [items, totals.cleanable]);
+  }, [aggregateItems, own, totals.cleanable]);
+
+  // Widths are normalized once so the bar never overflows: a 2% floor per
+  // segment can push the raw percentages above 100.
+  const distributionWidths = useMemo(
+    () => normalizeDistributionWidths(distributionSegments.map((seg) => seg.percent)),
+    [distributionSegments],
+  );
 
   const topItems = useMemo(
     () =>
-      [...items]
+      aggregateItems
         .filter((item) => item.selectable && !item.protected)
-        .sort((a, b) => (b.estimatedReclaimBytes ?? 0) - (a.estimatedReclaimBytes ?? 0))
+        .map((item) => ({ item, bytes: own.get(item.id)?.estimatedReclaimBytes ?? 0 }))
+        .sort((a, b) => b.bytes - a.bytes)
         .slice(0, 5),
-    [items],
+    [aggregateItems, own],
   );
 
   const cleanableDelta = totals.cleanable - previousCleanableBytes;
@@ -190,25 +305,17 @@ export const OverviewView: React.FC = () => {
   // Counts for 3 category cards
   const projectItemsCount = useMemo(
     () =>
-      items.filter(
-        (i) =>
-          (i.ecosystem || "").toLowerCase().includes("node") ||
-          (i.ecosystem || "").toLowerCase().includes("rust") ||
-          i.displayName.includes("node_modules") ||
-          i.displayName.includes("target"),
-      ).length,
+      items.filter((i) => {
+        const bucket = itemBucket(i);
+        // Project hubs are the ecosystem targets; AI storage and generic
+        // caches have their own cards and must not be double counted here.
+        return bucket !== "agent" && bucket !== "cache";
+      }).length,
     [items],
   );
 
   const agentItemsCount = useMemo(
-    () =>
-      items.filter(
-        (i) =>
-          (i.category || "").toLowerCase().includes("agent") ||
-          (i.displayName || "").toLowerCase().includes("claude") ||
-          (i.displayName || "").toLowerCase().includes("cursor") ||
-          (i.displayName || "").toLowerCase().includes("codex"),
-      ).length,
+    () => items.filter((i) => itemBucket(i) === "agent").length,
     [items],
   );
 
@@ -256,7 +363,7 @@ export const OverviewView: React.FC = () => {
               type="button"
               className="overview-header-btn"
               onClick={() => setRestoreDialogOpen(true)}
-              disabled={isScanning}
+              disabled={isScanning || !hasLastSnapshot}
               title={ui.overview.restoreLastScan}
               aria-label={ui.overview.restoreLastScan}
             >
@@ -325,8 +432,8 @@ export const OverviewView: React.FC = () => {
             </span>
             <div className="nc-kpi-card-sub">
               <span>
-                {totals.projects > 0
-                  ? ui.overview.kpiTargetsSubActive(totals.projects)
+                {detectedProjects !== null && detectedProjects > 0
+                  ? ui.overview.kpiTargetsSubActive(numberFormat.format(detectedProjects))
                   : ui.overview.kpiTargetsSubIdle}
               </span>
             </div>
@@ -356,6 +463,40 @@ export const OverviewView: React.FC = () => {
         </div>
       </section>
 
+      {coverageSections.length > 0 && (
+        <section className="overview-coverage" aria-label={ui.overview.coverage}>
+          <h2 className="overview-coverage-title">{ui.overview.coverage}</h2>
+          <ul className="overview-coverage-list">
+            {coverageSections.map((section) => {
+              const statusLabel = sectionStatusLabel(section.status);
+              const skipped = section.status === "skipped" || section.status === "failed";
+              return (
+                <li key={section.scope} className={`overview-coverage-row is-${section.status}`}>
+                  <span className="overview-coverage-name">{sectionScopeLabel(section.scope)}</span>
+                  <span className="overview-coverage-status">
+                    {statusLabel ||
+                      (section.status === "completed" ? (
+                        <CheckCircle2 size={13} aria-hidden="true" />
+                      ) : (
+                        <AlertCircle size={13} aria-hidden="true" />
+                      ))}
+                    {skipped && section.errorCode === "NO_ROOT" && (
+                      <span className="overview-coverage-reason">{ui.overview.sectionNoRoot}</span>
+                    )}
+                  </span>
+                  {!skipped && (
+                    <span className="overview-coverage-meta">
+                      {ui.common.items(section.itemCount)} ·{" "}
+                      {formatBytes(section.cleanableBytes, language)}
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       {/* 3. FULL-WIDTH STORAGE DISTRIBUTION & INTERACTIVE ACTION CENTER */}
       <section className="overview-dist-panel" aria-label={ui.overview.distTitle}>
         <div className="overview-panel-header">
@@ -378,16 +519,21 @@ export const OverviewView: React.FC = () => {
             <div
               className="overview-dist-bar"
               role="progressbar"
+              // A progressbar without an accessible name is a serious WCAG
+              // violation (axe `aria-progressbar-name`). The bar is a
+              // composition of the per-ecosystem shares, not a task progress
+              // indicator, so it is named after the panel it visualises.
+              aria-label={ui.overview.distTitle}
               aria-valuenow={100}
               aria-valuemin={0}
               aria-valuemax={100}
             >
-              {distributionSegments.map((seg) => (
+              {distributionSegments.map((seg, index) => (
                 <div
                   key={seg.id}
                   className="overview-dist-segment"
                   style={{
-                    width: `${Math.max(2, seg.percent)}%`,
+                    width: `${distributionWidths[index]}%`,
                     backgroundColor: seg.color,
                   }}
                   title={`${seg.label}: ${formatBytes(seg.bytes, language)} (${seg.percent.toFixed(1)}%)`}
@@ -455,7 +601,7 @@ export const OverviewView: React.FC = () => {
 
           <div className="overview-top-items-list">
             {topItems.length > 0 ? (
-              topItems.map((item, index) => (
+              topItems.map(({ item, bytes }, index) => (
                 <div key={item.id} className="overview-top-item-row">
                   <span className="overview-top-item-rank">{index + 1}</span>
                   <div className="overview-top-item-info">
@@ -463,20 +609,19 @@ export const OverviewView: React.FC = () => {
                       <span className="overview-top-item-name">{item.displayName}</span>
                       <SafetyBadge safety={item.safetyClass} />
                     </div>
-                    <span className="overview-top-item-path" title={item.displayPath}>
+                    <span
+                      className="overview-top-item-path"
+                      title={maskPaths ? maskPath(item.displayPath) : item.displayPath}
+                    >
                       {truncatePath(maskPaths ? maskPath(item.displayPath) : item.displayPath, 50)}
                     </span>
                   </div>
-                  <span className="overview-top-item-size">
-                    {formatBytes(item.estimatedReclaimBytes ?? 0, language)}
-                  </span>
+                  <span className="overview-top-item-size">{formatBytes(bytes, language)}</span>
                 </div>
               ))
             ) : (
-              <div className="overview-zero-state" style={{ padding: "20px" }}>
-                <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>
-                  {ui.overview.topItemsEmpty}
-                </span>
+              <div className="overview-zero-state overview-zero-state--fill">
+                <span className="overview-top-items-empty">{ui.overview.topItemsEmpty}</span>
               </div>
             )}
           </div>
@@ -580,7 +725,7 @@ export const OverviewView: React.FC = () => {
                 <h3 className="overview-hub-title">{ui.overview.hubHistoryTitle}</h3>
                 <span className="overview-hub-desc">
                   {historyError
-                    ? ui.history.loadError
+                    ? localizeAppError(historyError, ui)
                     : lifetimeReclaimed > 0
                       ? ui.overview.hubHistoryDescActive(formatBytes(lifetimeReclaimed, language))
                       : ui.overview.hubHistoryDescIdle}

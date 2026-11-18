@@ -36,7 +36,9 @@
     "on": "On",
     "off": "Izslēgts",
     "items": "{n} priekšmeti",
-    "showing": "{n} parādīts"
+    "showing": "{n} parādīts",
+    "scanAll": "Skenēt visu",
+    "scanAllDesc": "Projekti, AI rīku krātuve un pakotņu kešatmiņas"
   },
   "header": {
     "changeLocation": "Mainīt Atrašanās Vietu",
@@ -49,7 +51,8 @@
     "addFavorite": "Pievienot pašreizējo atrašanās vietu favorītiem",
     "removeFavorite": "Noņemt atrašanās vietu no favorītiem",
     "favoriteAdded": "Atrašanās vieta pievienota favorītiem.",
-    "favoriteRemoved": "Atrašanās vieta izņemta no favorītiem."
+    "favoriteRemoved": "Atrašanās vieta izņemta no favorītiem.",
+    "changeLocationConfirmDesc": "Vietas maiņa notīra pašreizējos skenēšanas rezultātus un atlasi. Saglabātā skenēšanas vēsture un pēdējais skenēšanas momentuzņēmums tiek saglabāti."
   },
   "window": {
     "minimize": "Minimizēt",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI aģenti",
     "ecoCache": "Kešatmiņas",
     "ecoOther": "Citi artefakti",
-    "distTotalBadge": "{size} tīrāms"
+    "distTotalBadge": "{size} tīrāms",
+    "noticeInfoTitle": "Informācija",
+    "noticeInfoHint": "Sistēmas aizsargātās atrašanās vietas tika izlaistas. Darbība nav nepieciešama.",
+    "noticeIssueHint": "Dažas atrašanās vietas nevarēja nolasīt, tāpēc rezultāti var būt nepilnīgi.",
+    "copyDetails": "Kopēt informāciju",
+    "detailsCopied": "Informācija nokopēta starpliktuvē",
+    "coverage": "Skenēšanas pārklājums",
+    "sectionSkipped": "Izlaists",
+    "sectionFailed": "Neizdevās",
+    "sectionPartial": "Nepilnīgs",
+    "sectionNoRoot": "Nav atlasīta neviena mape"
   },
   "table": {
     "project": "Projekts",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Dzēst pastāvīgi",
     "permanentAck": "Es saprotu, ka to nevar atsaukt.",
     "blockedReasons": "Bloķētie mērķi",
-    "expires": "Šī plāna derīguma termiņš ir 15 minūtes.",
+    "expires": "Šī plāna derīguma termiņš ir 30 minūtes.",
     "close": "Aizvērt",
     "working": "Notiek darbs…",
     "runInBackground": "Palaist fonā",
@@ -223,7 +236,11 @@
     "cancelling": "Tiek atcelta…",
     "progress": "Apstrādāti {processed} / {total}",
     "currentItem": "Pašreizējais: {path}",
-    "alreadyRunning": "Tīrīšana jau notiek."
+    "alreadyRunning": "Tīrīšana jau notiek.",
+    "coveredByParent": "Bloķēts",
+    "noMethod": "Bloķēts",
+    "officialActionRequired": "Oficiālā komanda",
+    "modeNotAllowed": "Pastāvīgi"
   },
   "result": {
     "title": "Tīrīšanas rezultāts",
@@ -238,6 +255,7 @@
     "verified": "verificēts",
     "cancelled": "Tīrīšana atcelta",
     "cancelledNote": "Apstrādāti {processed} vienumi, izlaisti {skipped}.",
+    "progressIncomplete": "Neizdevās parādīt {count} gaitas atjauninājumus.",
     "processed": "Apstrādāti",
     "skipped": "Izlaisti",
     "viewResults": "Skatīt rezultātus",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Notīrīt skenēšanas ierakstus",
     "scopeProjects": "Projekta atkarības",
     "scopeAgents": "AI aģenti",
-    "scopeAllDrives": "Visi diski"
+    "scopeAllDrives": "Visi diski",
+    "statusPartial": "Daļēji",
+    "totalCleaned": "Kopējais atgūtais",
+    "statusDepthLimited": "Daļēji"
   },
   "settings": {
     "general": "Izskats",
@@ -451,6 +472,12 @@
     "protectionsHint": "Mapes, kuras nekad nedrīkst dzēst, un nosaukumi, ko izlaist.",
     "agentsHint": "Tīrīšanas politika AI aģentu kešatmiņai.",
     "privacyHint": "Vietējā vēsture un uz ekrāna redzamā ceļa maskēšana.",
+    "resetAppDataTitle": "Atiestatīt visus lietotnes datus",
+    "resetAppDataHint": "Dzēš visus iestatījumus, tīrīšanas vēsturi, skenēšanas vēsturi, darbību žurnālus un saglabāto pēdējo skenēšanu, pēc tam restartē lietotni. Šo darbību nevar atsaukt.",
+    "resetAppDataConfirmBtn": "Dzēsiet datus un restartējiet",
+    "resetAppDataBusy": "Notiek atiestatīšana…",
+    "resetAppDataSuccess": "Visi lietotnes dati ir atiestatīti. Atjaunoti noklusējuma iestatījumi.",
+    "resetAppDataBlocked": "Notiek skenēšana vai tīrīšana. Apturiet to pirms lietotnes datu atiestatīšanas.",
     "aboutHint": "Versija, būves detaļas, katalogs un Vellium.",
     "legalHint": "Lietošanas noteikumi, konfidencialitātes politika un atvērtā koda licences.",
     "sidebar": "Sānu josla",
@@ -547,7 +574,11 @@
     "standardMotion": "Standarta animācija",
     "aboutTitleBy": "Dev Cleaner no Vellium",
     "mcpDestructiveTitle": "Atļaut MCP destruktīvās darbības",
-    "mcpDestructiveHint": "Nepieciešams karodziņš --allow-destructive; katrai izpildei joprojām nepieciešams vienreizējs priekšskatījuma tokens"
+    "mcpDestructiveHint": "Nepieciešams karodziņš --allow-destructive; katrai izpildei joprojām nepieciešams vienreizējs priekšskatījuma tokens",
+    "pathMustBeAbsolute": "Ceļiem jābūt absolūtiem, piemēram, C:\\Projects.",
+    "excludedNameInvalid": "Noteikumam ir jābūt vienam faila vai mapes nosaukumam bez ceļu atdalītājiem.",
+    "shortcutNeedsModifier": "Globālai saīsnei ir nepieciešams Ctrl, Alt vai Meta, kā arī taustiņš vai funkcijas taustiņš.",
+    "shortcutsResetWarning": "{count} nederīga(-i) saīsne(-i) tika atiestatīta uz noklusējuma iestatījumiem."
   },
   "legal": {
     "docTabsLabel": "Juridiskie dokumenti",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Nav atrasti tīrāmi projekta artefakti",
     "emptyTitleIdle": "Vēl nav veikta projekta skenēšana",
     "emptyDescClean": "Izvēlētā mape ir tīra. Nav atrasti tīrāmi node_modules, target vai būves artefakti.",
-    "emptyDescIdle": "Izvēlieties mapi un skenējiet, lai uzskaitītu projekta atkarības un būves artefaktus."
+    "emptyDescIdle": "Izvēlieties mapi un skenējiet, lai uzskaitītu projekta atkarības un būves artefaktus.",
+    "kpiTargets": "Tīrāmie mērķi",
+    "kpiTargetsSub": "{count} projektu saknēs",
+    "kpiTargetsUnknown": "Skenējiet vēlreiz, lai atjauninātu projektu skaitu"
   },
   "about": {
     "kpiVersion": "Versija",
@@ -616,7 +650,8 @@
     "contactSupport": "Klientu atbalsts",
     "contactBillingDesc": "Rēķinu, uzņēmuma iepirkumu un abonementa atbalsts",
     "contactPrivacyDesc": "Datu drošība, GDPR un privātuma jautājumi",
-    "ecoCacheScope": "npm kešatmiņa, Cargo reģistrs, pip kešatmiņa, yarn"
+    "ecoCacheScope": "npm kešatmiņa, Cargo reģistrs, pip kešatmiņa, yarn",
+    "contactBilling": "Rēķini un maksājumi"
   },
   "docs": {
     "catGuide": "Rokasgrāmatas un arhitektūra",

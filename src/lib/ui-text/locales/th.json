@@ -36,7 +36,9 @@
     "on": "บน",
     "off": "ปิด",
     "items": "{n} รายการ",
-    "showing": "{n} แสดง"
+    "showing": "{n} แสดง",
+    "scanAll": "สแกนทั้งหมด",
+    "scanAllDesc": "โปรเจกต์ พื้นที่เก็บข้อมูลเครื่องมือ AI และแคชแพ็กเกจ"
   },
   "header": {
     "changeLocation": "เปลี่ยนตำแหน่ง",
@@ -49,7 +51,8 @@
     "addFavorite": "เพิ่มตําแหน่งปัจจุบันไปยังรายการโปรด",
     "removeFavorite": "ลบตําแหน่งออกจากรายการโปรด",
     "favoriteAdded": "ตําแหน่งถูกเพิ่มในรายการโปรดแล้ว",
-    "favoriteRemoved": "ตําแหน่งถูกลบออกจากรายการโปรด"
+    "favoriteRemoved": "ตําแหน่งถูกลบออกจากรายการโปรด",
+    "changeLocationConfirmDesc": "การเปลี่ยนตำแหน่งจะล้างผลการสแกนปัจจุบันและการเลือกของคุณ ประวัติการสแกนที่บันทึกไว้และสแนปช็อตการสแกนล่าสุดจะยังคงอยู่"
   },
   "window": {
     "minimize": "ย่อเล็กสุด",
@@ -133,7 +136,17 @@
     "ecoAgent": "ตัวแทน AI",
     "ecoCache": "แคช",
     "ecoOther": "อื่น ๆ",
-    "distTotalBadge": "{size} สามารถล้างได้"
+    "distTotalBadge": "{size} สามารถล้างได้",
+    "noticeInfoTitle": "ข้อมูล",
+    "noticeInfoHint": "ตำแหน่งที่ระบบป้องกันไว้ถูกข้ามไป ไม่จำเป็นต้องดำเนินการใด ๆ",
+    "noticeIssueHint": "ไม่สามารถอ่านบางตำแหน่งได้ ผลลัพธ์จึงอาจไม่สมบูรณ์",
+    "copyDetails": "คัดลอกรายละเอียด",
+    "detailsCopied": "คัดลอกรายละเอียดไปยังคลิปบอร์ดแล้ว",
+    "coverage": "ขอบเขตการสแกน",
+    "sectionSkipped": "ข้ามแล้ว",
+    "sectionFailed": "ล้มเหลว",
+    "sectionPartial": "ไม่สมบูรณ์",
+    "sectionNoRoot": "ยังไม่ได้เลือกโฟลเดอร์"
   },
   "table": {
     "project": "โปรเจกต์",
@@ -215,7 +228,7 @@
     "confirmPermanent": "ลบถาวร",
     "permanentAck": "ฉันเข้าใจว่านี่ไม่สามารถย้อนกลับได้",
     "blockedReasons": "เป้าหมายที่ถูกบล็อก",
-    "expires": "แผนนี้จะหมดอายุใน 15 นาที",
+    "expires": "แผนนี้จะหมดอายุใน 30 นาที",
     "close": "ปิด",
     "working": "กำลังทำงาน…",
     "runInBackground": "เรียกใช้ในเบื้องหลัง",
@@ -223,7 +236,11 @@
     "cancelling": "กำลังยกเลิก…",
     "progress": "ประมวลผลแล้ว {processed} / {total}",
     "currentItem": "ปัจจุบัน: {path}",
-    "alreadyRunning": "กำลังดำเนินการล้างอยู่แล้ว"
+    "alreadyRunning": "กำลังดำเนินการล้างอยู่แล้ว",
+    "coveredByParent": "ถูกบล็อก",
+    "noMethod": "ถูกบล็อก",
+    "officialActionRequired": "คำสั่งอย่างเป็นทางการ",
+    "modeNotAllowed": "ถาวร"
   },
   "result": {
     "title": "ผลลัพธ์การทำความสะอาด",
@@ -238,6 +255,7 @@
     "verified": "ยืนยันแล้ว",
     "cancelled": "ยกเลิกการล้างแล้ว",
     "cancelledNote": "ประมวลผล {processed} รายการ, ข้าม {skipped} รายการ",
+    "progressIncomplete": "ไม่สามารถแสดงการอัปเดตความคืบหน้า {count} รายการได้",
     "processed": "ประมวลผลแล้ว",
     "skipped": "ข้ามแล้ว",
     "viewResults": "ดูผลลัพธ์",
@@ -390,7 +408,10 @@
     "clearScansBtn": "ล้างการสแกน",
     "scopeProjects": "การพึ่งพาโครงการ",
     "scopeAgents": "ตัวแทน AI",
-    "scopeAllDrives": "ไดรฟ์ทั้งหมด"
+    "scopeAllDrives": "ไดรฟ์ทั้งหมด",
+    "statusPartial": "บางส่วน",
+    "totalCleaned": "รวมที่ได้คืน",
+    "statusDepthLimited": "บางส่วน"
   },
   "settings": {
     "general": "รูปลักษณ์",
@@ -451,6 +472,12 @@
     "protectionsHint": "โฟลเดอร์ที่ห้ามลบและชื่อที่ต้องข้าม",
     "agentsHint": "นโยบายทำความสะอาดแคชของเอเจนต์ AI",
     "privacyHint": "ประวัติท้องถิ่นและการปกปิดเส้นทางบนหน้าจอ",
+    "resetAppDataTitle": "รีเซ็ตข้อมูลแอปทั้งหมด",
+    "resetAppDataHint": "ลบการตั้งค่าทั้งหมด ประวัติการล้างข้อมูล ประวัติการสแกน บันทึกการดำเนินการ และการสแกนครั้งล่าสุดที่บันทึกไว้ จากนั้นรีสตาร์ทแอป สิ่งนี้ไม่สามารถยกเลิกได้",
+    "resetAppDataConfirmBtn": "ลบข้อมูลและรีสตาร์ท",
+    "resetAppDataBusy": "กำลังรีเซ็ต...",
+    "resetAppDataSuccess": "ข้อมูลแอปทั้งหมดถูกรีเซ็ตแล้ว คืนค่าการตั้งค่าเริ่มต้นแล้ว",
+    "resetAppDataBlocked": "การสแกนหรือการล้างข้อมูลกำลังทำงานอยู่ หยุดก่อนรีเซ็ตข้อมูลแอป",
     "aboutHint": "เวอร์ชัน, รายละเอียดบิลด์, แคตตาล็อกและ Vellium",
     "legalHint": "เงื่อนไขการใช้งาน, นโยบายความเป็นส่วนตัวและใบอนุญาตโอเพ่นซอร์ส",
     "sidebar": "แถบด้านข้าง",
@@ -547,7 +574,11 @@
     "standardMotion": "แอนิเมชันมาตรฐาน",
     "aboutTitleBy": "Dev Cleaner โดย Vellium",
     "mcpDestructiveTitle": "อนุญาตการดำเนินการทำลายของ MCP",
-    "mcpDestructiveHint": "ต้องใช้แฟล็ก --allow-destructive; การเรียกใช้แต่ละครั้งยังต้องใช้โทเค็นตัวอย่างแบบใช้ครั้งเดียว"
+    "mcpDestructiveHint": "ต้องใช้แฟล็ก --allow-destructive; การเรียกใช้แต่ละครั้งยังต้องใช้โทเค็นตัวอย่างแบบใช้ครั้งเดียว",
+    "pathMustBeAbsolute": "เส้นทางจะต้องเป็นแบบสัมบูรณ์ เช่น C:\\Projects",
+    "excludedNameInvalid": "กฎต้องเป็นชื่อไฟล์หรือโฟลเดอร์เดียว โดยไม่มีตัวคั่นพาธ",
+    "shortcutNeedsModifier": "ทางลัดส่วนกลางต้องใช้ Ctrl, Alt หรือ Meta บวกแป้นหรือแป้นฟังก์ชัน",
+    "shortcutsResetWarning": "{count} ทางลัดที่ไม่ถูกต้องถูกรีเซ็ตเป็นค่าเริ่มต้น"
   },
   "legal": {
     "docTabsLabel": "เอกสารทางกฎหมาย",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "ไม่พบอาร์ติแฟกต์โปรเจกต์ที่ทําความสะอาดได้",
     "emptyTitleIdle": "ยังไม่ได้ทําการสแกนโครงการ",
     "emptyDescClean": "ไดเรกทอรีที่เลือกสะอาดไม่พบอาร์ติแฟกต์ node_modules เป้าหมาย หรือการสร้างที่ทําความสะอาดได้",
-    "emptyDescIdle": "เลือกโฟลเดอร์และสแกนเพื่อดูรายการการพึ่งพาโครงการและสร้างอาร์ติแฟกต์"
+    "emptyDescIdle": "เลือกโฟลเดอร์และสแกนเพื่อดูรายการการพึ่งพาโครงการและสร้างอาร์ติแฟกต์",
+    "kpiTargets": "เป้าหมายที่ทำความสะอาดได้",
+    "kpiTargetsSub": "ในรากโปรเจกต์ {count} แห่ง",
+    "kpiTargetsUnknown": "สแกนอีกครั้งเพื่อรีเฟรชจำนวนโปรเจกต์"
   },
   "about": {
     "kpiVersion": "เวอร์ชัน",
@@ -616,7 +650,8 @@
     "contactSupport": "ฝ่ายสนับสนุนลูกค้า",
     "contactBillingDesc": "การเรียกเก็บเงิน, การจัดซื้อขององค์กร, และการสนับสนุนการสมัครสมาชิก",
     "contactPrivacyDesc": "ความปลอดภัยของข้อมูล, GDPR, และคำถามเกี่ยวกับความเป็นส่วนตัว",
-    "ecoCacheScope": "npm แคช, Cargo รีจิสทรี, pip แคช, yarn"
+    "ecoCacheScope": "npm แคช, Cargo รีจิสทรี, pip แคช, yarn",
+    "contactBilling": "การเรียกเก็บเงินและการชำระเงิน"
   },
   "docs": {
     "catGuide": "คู่มือและสถาปัตยกรรม",

@@ -5,6 +5,9 @@ import { Button } from "@/components/primitives/Button";
 import { Checkbox } from "@/components/primitives/Checkbox";
 import { useUIText } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
+import { log } from "@/lib/logging";
+import { useUiStore } from "@/stores/ui-store";
+import { requestQuit } from "@/lib/quit-guard";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import type { CloseAction } from "@/types";
 import "./shell.css";
@@ -36,11 +39,18 @@ export const CloseGuardDialog: React.FC = () => {
           // so a change made in Settings takes effect immediately.
           const action = usePreferencesStore.getState().closeAction;
           if (action === "tray") {
-            void scannerApi.hideToTray();
+            // The close request is already answered; a rejected tray command
+            // must not surface as an unhandled rejection with the window still
+            // closing. Logged so the failure is diagnosable.
+            scannerApi
+              .hideToTray()
+              .catch((err) => log.warn("Could not hide the window to the tray", err));
             return;
           }
           if (action === "quit") {
-            void scannerApi.quitApp();
+            // Same guarded path as the dialog: cancel an active cleanup and let
+            // the backend wait for it to stop before exiting.
+            requestQuit().catch((err) => log.warn("Could not quit the app", err));
             return;
           }
           setRemember(false);
@@ -77,8 +87,13 @@ export const CloseGuardDialog: React.FC = () => {
         await scannerApi.hideToTray();
         setOpen(false);
       } else {
-        await scannerApi.quitApp();
+        await requestQuit();
       }
+    } catch (err) {
+      // The native command failed (no window handle, quit refused). Keep the
+      // dialog open and report it instead of leaving an unhandled rejection.
+      log.error("Close guard action failed", err);
+      useUiStore.getState().showToast(ui.errors.title, "error", 6000);
     } finally {
       setBusy(false);
     }

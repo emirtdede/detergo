@@ -1,40 +1,64 @@
 use serde::{Deserialize, Serialize};
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct FavoriteItem {
+    #[serde(default)]
     pub id: String,
+    #[serde(default)]
     pub label: String,
+    #[serde(default)]
     pub path: String,
+    #[serde(default)]
     pub created_at: String,
+    #[serde(default)]
     pub last_used_at: Option<String>,
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct SortConfig {
+    #[serde(default = "default_sort_field")]
     pub field: String,
+    #[serde(default = "default_sort_direction")]
     pub direction: String,
+}
+
+fn default_sort_field() -> String {
+    "size".to_string()
+}
+
+fn default_sort_direction() -> String {
+    "desc".to_string()
 }
 
 /// A user-defined AI tool. Dev Cleaner never invents cleanup rules for these
 /// roots: every discovered target is reported as `KEEP`.
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct CustomAgentProvider {
+    #[serde(default)]
     pub id: String,
+    #[serde(default)]
     pub name: String,
+    #[serde(default)]
     pub root_paths: Vec<String>,
     #[serde(default)]
     pub created_at: String,
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentPolicy {
     /// Provider cache directories may be cleaned manually (never automatically).
+    #[serde(default = "default_true")]
     pub allow_cache_cleanup: bool,
     /// Browser recordings are only offered when the producer is idle.
+    #[serde(default = "default_true")]
     pub protect_browser_recordings: bool,
 }
 
@@ -44,6 +68,17 @@ impl Default for AgentPolicy {
             allow_cache_cleanup: true,
             protect_browser_recordings: true,
         }
+    }
+}
+
+fn default_theme() -> String {
+    "dark-black".to_string()
+}
+
+fn default_sort() -> SortConfig {
+    SortConfig {
+        field: "size".to_string(),
+        direction: "desc".to_string(),
     }
 }
 
@@ -81,6 +116,7 @@ fn default_timeout_minutes() -> u64 {
     15
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum NotificationChannel {
@@ -91,6 +127,7 @@ pub enum NotificationChannel {
     None,
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct NotificationPreferences {
@@ -121,16 +158,23 @@ impl Default for NotificationPreferences {
     }
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct AppSettings {
     #[serde(default = "default_schema_version")]
     pub schema_version: u32,
+    #[serde(default = "default_theme")]
     pub theme: String,
+    #[serde(default)]
     pub reduce_motion: bool,
+    #[serde(default)]
     pub favorites: Vec<FavoriteItem>,
+    #[serde(default)]
     pub recent_locations: Vec<String>,
+    #[serde(default)]
     pub last_scan_path: Option<String>,
+    #[serde(default = "default_sort")]
     pub sort: SortConfig,
     #[serde(default)]
     pub language: Option<String>,
@@ -141,12 +185,16 @@ pub struct AppSettings {
     #[serde(default = "default_scan_profile")]
     pub scan_profile: String,
     #[serde(default = "default_max_depth")]
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<usize>))]
     pub max_depth: usize,
     #[serde(default = "default_max_candidates")]
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub max_candidates: u64,
     #[serde(default = "default_timeout_minutes")]
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub timeout_minutes: u64,
     #[serde(default)]
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub min_size_bytes: u64,
     #[serde(default)]
     pub mask_paths: bool,
@@ -178,6 +226,11 @@ pub struct AppSettings {
     /// must never be able to delete without an explicit opt-in.
     #[serde(default)]
     pub mcp_allow_destructive: bool,
+    /// True when the loaded config was malformed and fields were recovered
+    /// individually. Serialized to the UI (for a one-time warning) but reset
+    /// before persisting, so the warning fires once.
+    #[serde(default)]
+    pub recovered_from_corrupt: bool,
 }
 
 fn default_true() -> bool {
@@ -188,7 +241,7 @@ impl Default for AppSettings {
     fn default() -> Self {
         Self {
             schema_version: 4,
-            theme: "dark-transparent".to_string(),
+            theme: "dark-black".to_string(),
             reduce_motion: false,
             favorites: Vec::new(),
             recent_locations: Vec::new(),
@@ -219,6 +272,7 @@ impl Default for AppSettings {
             webhook_on_clean: true,
             shortcuts: None,
             mcp_allow_destructive: false,
+            recovered_from_corrupt: false,
         }
     }
 }
@@ -240,9 +294,27 @@ impl AppSettings {
         self.max_depth = self.max_depth.clamp(1, 128);
         self.max_candidates = self.max_candidates.clamp(1_000, 500_000);
         self.timeout_minutes = self.timeout_minutes.clamp(1, 120);
+        // A corrupt or hand-edited file could otherwise hide every target with
+        // an absurd minimum (or make the scanner skip everything). One GiB is a
+        // generous upper bound for a "minimum size" filter.
+        self.min_size_bytes = self.min_size_bytes.clamp(0, 1024 * 1024 * 1024);
         if self.scan_profile.is_empty() {
             self.scan_profile = default_scan_profile();
         }
+
+        // Validate at the persistence boundary as well: the UI validates before
+        // saving, but the settings file is user-editable and older builds wrote
+        // every keystroke. A URL that parses here is the only one that may be
+        // retried by notification delivery.
+        self.webhook_url = self.webhook_url.as_deref().and_then(|raw| {
+            let trimmed = raw.trim();
+            if trimmed.is_empty() {
+                return None;
+            }
+            crate::commands::webhook_commands::validate_webhook_url(trimmed)
+                .ok()
+                .map(|parsed| parsed.to_string())
+        });
 
         // Protected paths are stored in a canonical, absolute form. Otherwise
         // a relative path or a `..` segment would silently fail to protect the

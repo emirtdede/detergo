@@ -166,7 +166,12 @@ impl MeasurementEngine {
         self
     }
 
-    pub async fn measure_entries<M, P>(
+    /// Both callbacks are `async` on purpose: they forward into the scan event
+    /// queue, which is bounded. A synchronous `try_send` would silently drop a
+    /// batch when the WebView stalls (rows would never get their measured
+    /// size); awaiting the send applies backpressure to the measurement loop
+    /// instead, so the queue — not memory — absorbs a slow consumer.
+    pub async fn measure_entries<M, MF, P, PF>(
         &self,
         entries: Vec<(String, PathBuf, TargetKind)>,
         total_discovered: u64,
@@ -175,8 +180,10 @@ impl MeasurementEngine {
         mut on_progress: P,
     ) -> MeasurementStop
     where
-        M: FnMut(Vec<MeasurementUpdate>),
-        P: FnMut(ScanProgress),
+        M: FnMut(Vec<MeasurementUpdate>) -> MF,
+        MF: std::future::Future<Output = ()>,
+        P: FnMut(ScanProgress) -> PF,
+        PF: std::future::Future<Output = ()>,
     {
         let (tx, mut rx) = mpsc::channel::<MeasurementUpdate>(200);
         let semaphore = Arc::new(Semaphore::new(self.concurrency_limit));
@@ -248,7 +255,7 @@ impl MeasurementEngine {
             buffer.push(update);
 
             if buffer.len() >= 100 {
-                on_measured(std::mem::take(&mut buffer));
+                on_measured(std::mem::take(&mut buffer)).await;
             }
             if last_progress.elapsed().as_millis() >= 100 || measured == total {
                 on_progress(ScanProgress {
@@ -259,13 +266,14 @@ impl MeasurementEngine {
                     bytes_measured: bytes,
                     current_path: None,
                     stop_reason: stop.code().map(|s| s.to_string()),
-                });
+                })
+                .await;
                 last_progress = Instant::now();
             }
         }
 
         if !buffer.is_empty() {
-            on_measured(buffer);
+            on_measured(buffer).await;
         }
         if stop == MeasurementStop::Completed {
             if token.is_cancelled() {
@@ -282,7 +290,8 @@ impl MeasurementEngine {
             bytes_measured: bytes,
             current_path: None,
             stop_reason: stop.code().map(|s| s.to_string()),
-        });
+        })
+        .await;
         stop
     }
 }

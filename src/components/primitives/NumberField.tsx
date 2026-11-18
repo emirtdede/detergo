@@ -15,6 +15,15 @@ export interface NumberFieldProps {
 }
 
 /**
+ * `Number(draft) || value` treated a real 0 as falsy and announced the stale
+ * committed value to assistive technology while the field visibly showed 0.
+ */
+function ariaValueNow(draft: string, committed: number): number {
+  const parsed = Number(draft.replace(",", "."));
+  return draft.trim() !== "" && Number.isFinite(parsed) ? parsed : committed;
+}
+
+/**
  * Numeric input with a custom stepper. The native spinner is a white square in
  * dark themes and its size differs per platform, which made settings rows look
  * ragged; this keeps a single 32px control with theme-aware chevrons.
@@ -71,7 +80,7 @@ export const NumberField: React.FC<NumberFieldProps> = ({
         inputMode="numeric"
         pattern="[0-9]*"
         role="spinbutton"
-        aria-valuenow={Number(draft) || value}
+        aria-valuenow={ariaValueNow(draft, value)}
         aria-valuemin={min}
         aria-valuemax={max}
         value={draft}

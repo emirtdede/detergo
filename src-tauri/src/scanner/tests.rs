@@ -1,5 +1,6 @@
 use super::*;
-use crate::catalog::{CatalogIndex, SafetyClass};
+use crate::catalog::{CatalogIndex, CleanupMethod, Confidence, SafetyClass, TargetKind};
+use crate::safety::ActiveUse;
 use std::fs;
 
 fn catalog() -> CatalogIndex {
@@ -44,6 +45,55 @@ fn discover_with_protected(
 }
 
 #[test]
+fn agent_measurement_updates_skip_unmeasured_targets() {
+    fn agent_item(id: &str, logical: Option<u64>) -> CleanupItem {
+        CleanupItem {
+            id: id.to_string(),
+            scan_session_id: "s-test".to_string(),
+            rule_id: "agents.test".to_string(),
+            provider: "agents".to_string(),
+            ecosystem: "node".to_string(),
+            category: "cache".to_string(),
+            kind: TargetKind::Directory,
+            project_id: None,
+            project_name: None,
+            project_root: None,
+            project_detected: false,
+            display_name: id.to_string(),
+            display_path: format!("C:\\{}", id),
+            logical_bytes: logical,
+            allocated_bytes: None,
+            estimated_reclaim_bytes: None,
+            safety_class: SafetyClass::Safe,
+            confidence: Confidence::High,
+            active_use: ActiveUse::No,
+            evidence_codes: vec![],
+            warning_codes: vec![],
+            cleanup_method: CleanupMethod::Trash,
+            regenerate_hint: None,
+            protected: false,
+            selectable: true,
+            auto_selectable: false,
+            last_modified_at: None,
+            last_modified_ms: None,
+            status: ItemStatus::Ready,
+            parent_item_id: None,
+            note: None,
+        }
+    }
+
+    let updates = agent_measurement_updates(&[
+        agent_item("unmeasured", None),
+        agent_item("measured", Some(4096)),
+    ]);
+    assert_eq!(updates.len(), 1, "unmeasured targets must not become 0 B");
+    assert_eq!(updates[0].id, "measured");
+    assert_eq!(updates[0].logical_bytes, 4096);
+    assert_eq!(updates[0].estimated_reclaim_bytes, 4096);
+    assert!(agent_measurement_updates(&[agent_item("only-unmeasured", None)]).is_empty());
+}
+
+#[test]
 fn discovery_finds_node_modules_but_skips_nested() {
     let temp = tempfile::tempdir().unwrap();
     let root = temp.path();
@@ -83,6 +133,71 @@ fn user_protected_paths_are_blocked_during_discovery() {
 }
 
 #[test]
+fn a_directory_at_the_depth_limit_is_still_discovered() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    fs::create_dir_all(root.join("app/node_modules/pkg")).unwrap();
+    fs::write(root.join("app/package.json"), "{}").unwrap();
+    write(&root.join("app/node_modules/pkg/index.js"), 32);
+
+    // `app` is depth 1, `app/node_modules` is exactly depth 2. Pruning the
+    // boundary directory before the rule match made it invisible and reported a
+    // depth-limit partial result for a folder that was fully in scope.
+    let catalog = catalog();
+    let token = CancellationToken::new();
+    let limits = ScanLimits {
+        max_depth: 2,
+        ..ScanLimits::default()
+    };
+    let mut engine = DiscoveryEngine::new(&catalog, token, limits);
+    let outcome = engine
+        .discover(
+            DiscoveryConfig {
+                root,
+                exclusions: &[],
+                protected_paths: &[],
+                scan_session_id: "s-test",
+                limits,
+            },
+            |_| {},
+            |_| {},
+        )
+        .expect("discovery should succeed");
+
+    assert!(outcome
+        .items
+        .iter()
+        .any(|item| item.rule_id == "js.node_modules"));
+}
+
+#[test]
+fn a_protected_folder_below_a_target_protects_the_target() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    fs::create_dir_all(root.join("app/node_modules/keep")).unwrap();
+    fs::write(root.join("app/package.json"), "{}").unwrap();
+    write(&root.join("app/node_modules/keep/pinned.js"), 8);
+
+    // The delete guard rejects a target that *contains* a protected folder. The
+    // scanner only checked the opposite direction, so it offered the parent
+    // `node_modules` as cleanable and every row failed at execution.
+    let protected = vec![root
+        .join("app/node_modules/keep")
+        .to_string_lossy()
+        .to_string()];
+    let (items, targets, _) = discover_with_protected(root, &protected);
+
+    let parent = items
+        .iter()
+        .find(|item| item.rule_id == "js.node_modules")
+        .expect("node_modules must still be listed");
+    assert!(parent.protected);
+    assert!(!parent.selectable);
+    assert!(parent.warning_codes.contains(&"USER_PROTECTED".to_string()));
+    assert!(targets.iter().any(|target| target.protected));
+}
+
+#[test]
 fn generic_build_requires_project_proof() {
     let temp = tempfile::tempdir().unwrap();
     let root = temp.path();
@@ -112,6 +227,24 @@ fn generic_build_requires_project_proof() {
     assert!(without
         .warning_codes
         .contains(&"NO_PROJECT_MARKER".to_string()));
+}
+
+#[test]
+fn nested_rule_is_ignored_outside_its_parent() {
+    // A `cache` folder must only match the nested Next.js rule inside `.next`.
+    // Without an ancestor check it was discovered as a standalone SAFE target
+    // anywhere in a Next.js project and auto-selected for deletion.
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    fs::create_dir_all(root.join("app").join("cache")).unwrap();
+    fs::write(root.join("app/next.config.js"), "module.exports = {}").unwrap();
+    write(&root.join("app/cache/blob.bin"), 64);
+
+    let (items, _, _) = discover_all(root);
+    assert!(
+        items.iter().all(|i| i.rule_id != "js.next_cache"),
+        "nested rule matched without a js.next ancestor"
+    );
 }
 
 #[test]
@@ -159,6 +292,36 @@ fn cancelled_discovery_returns_partial_outcome_without_error() {
         .expect("cancellation is not an error");
     assert_eq!(outcome.stop_reason, Some(StopReason::Cancelled));
     assert!(outcome.items.is_empty());
+}
+
+#[test]
+fn depth_limit_is_treated_as_a_completed_scan() {
+    let request = crate::scanner::models::ScanRequest {
+        root_path: "C:\\tmp".to_string(),
+        exclusions: vec![],
+        scope: crate::scanner::models::ScanScope::Project,
+        profile: None,
+        max_depth: Some(2),
+        max_candidates: None,
+        timeout_minutes: None,
+        min_size_bytes: None,
+        protected_paths: vec![],
+    };
+
+    let summary = super::build_summary(
+        &request,
+        "s-depth",
+        &[],
+        0,
+        12,
+        Some(StopReason::DepthLimit),
+        Vec::new(),
+    );
+    assert!(!summary.partial, "a depth cut is a completed scan");
+    assert_eq!(
+        summary.stop_reason.as_deref(),
+        Some(StopReason::DepthLimit.code())
+    );
 }
 
 #[test]
@@ -211,6 +374,78 @@ fn measurement_reports_logical_and_allocated_bytes() {
 }
 
 #[test]
+fn summary_and_provider_totals_do_not_double_count_nested_targets() {
+    fn item(id: &str, parent: Option<&str>, logical: u64, allocated: u64) -> CleanupItem {
+        CleanupItem {
+            id: id.to_string(),
+            scan_session_id: "s-test".to_string(),
+            rule_id: "js.test".to_string(),
+            provider: "node".to_string(),
+            ecosystem: "node".to_string(),
+            category: "cache".to_string(),
+            kind: TargetKind::Directory,
+            project_id: None,
+            project_name: None,
+            project_root: None,
+            project_detected: false,
+            display_name: id.to_string(),
+            display_path: format!("C:\\{}", id),
+            logical_bytes: Some(logical),
+            allocated_bytes: Some(allocated),
+            estimated_reclaim_bytes: Some(allocated),
+            safety_class: SafetyClass::Safe,
+            confidence: Confidence::High,
+            active_use: ActiveUse::No,
+            evidence_codes: vec![],
+            warning_codes: vec![],
+            cleanup_method: CleanupMethod::Trash,
+            regenerate_hint: None,
+            protected: false,
+            selectable: true,
+            auto_selectable: false,
+            last_modified_at: None,
+            last_modified_ms: None,
+            status: ItemStatus::Ready,
+            parent_item_id: parent.map(str::to_string),
+            note: None,
+        }
+    }
+
+    let request = ScanRequest {
+        root_path: "C:\\tmp".to_string(),
+        exclusions: vec![],
+        scope: ScanScope::Project,
+        profile: None,
+        max_depth: None,
+        max_candidates: None,
+        timeout_minutes: None,
+        min_size_bytes: None,
+        protected_paths: vec![],
+    };
+    // `.next` measures 900 allocated and contains `.next/cache` (300 of them).
+    // The child's bytes are already inside the parent, so the summary must
+    // report 900, not 1200.
+    let parent = item("parent", None, 1000, 900);
+    let child = item("child", Some("parent"), 400, 300);
+    let summary = build_summary(
+        &request,
+        "s-nested",
+        &[parent, child],
+        0,
+        1,
+        None,
+        Vec::new(),
+    );
+
+    assert_eq!(summary.total_bytes, 1000);
+    assert_eq!(summary.total_allocated_bytes, 900);
+    assert_eq!(summary.cleanable_bytes, 900);
+    assert_eq!(summary.provider_totals.len(), 1);
+    assert_eq!(summary.provider_totals[0].allocated_bytes, 900);
+    assert_eq!(summary.provider_totals[0].item_count, 2);
+}
+
+#[test]
 fn session_registry_rejects_unknown_and_dedupes_ids() {
     let registry = ScanRegistry::new();
     let root = std::path::PathBuf::from("C:\\");
@@ -242,6 +477,38 @@ fn plans_are_consumed_exactly_once() {
     assert!(
         registry.consume_plan("plan-test").is_err(),
         "a consumed plan must not be executable twice"
+    );
+}
+
+#[test]
+fn expired_plans_are_rejected_without_leaving_a_usable_entry() {
+    let registry = ScanRegistry::new();
+    let now = crate::cleanup::plan::now_ms();
+    let plan = crate::cleanup::CleanupPlan {
+        id: "plan-expired".to_string(),
+        session_id: "s-test".to_string(),
+        mode: crate::cleanup::DeleteMode::RecycleBin,
+        created_ms: now.saturating_sub(60_000),
+        expires_ms: now.saturating_sub(1),
+        items: vec![],
+        total_logical_bytes: 0,
+        total_estimated_bytes: 0,
+        eligible_count: 0,
+        blocked_count: 0,
+        confirmation_token: "token".to_string(),
+    };
+    registry.insert_plan(plan);
+
+    assert!(matches!(
+        registry.consume_plan("plan-expired"),
+        Err(crate::error::AppError::PlanExpired(_))
+    ));
+    assert!(
+        matches!(
+            registry.consume_plan("plan-expired"),
+            Err(crate::error::AppError::PlanInvalid(_))
+        ),
+        "an expired plan must be discarded, not left to be executed later"
     );
 }
 
@@ -328,6 +595,89 @@ async fn end_to_end_scan_plan_and_permanent_delete() {
     assert!(report.reclaim_bytes >= 8192);
     assert!(!nm.exists());
     assert!(proj.join("package.json").exists());
+}
+
+#[test]
+fn terminal_event_distinguishes_partial_from_cancelled_and_completed() {
+    fn summary(stop_reason: Option<StopReason>) -> ScanSummary {
+        ScanSummary {
+            scan_id: "s".to_string(),
+            root_path: "C:\\Projects".to_string(),
+            scope: crate::scanner::models::ScanScope::Project,
+            total_entries: 0,
+            total_bytes: 0,
+            total_allocated_bytes: 0,
+            protected_bytes: 0,
+            cleanable_bytes: 0,
+            duration_ms: 1,
+            errors_count: 0,
+            warnings_count: 0,
+            directories_visited: 0,
+            partial: stop_reason
+                .map(|reason| reason != StopReason::DepthLimit)
+                .unwrap_or(false),
+            stop_reason: stop_reason.map(|reason| reason.code().to_string()),
+            provider_totals: vec![],
+            detected_project_count: None,
+            sections: Vec::new(),
+            dropped_events: 0,
+        }
+    }
+
+    assert!(matches!(
+        terminal_event(&summary(Some(StopReason::Timeout))),
+        ScanEvent::Partial { .. }
+    ));
+    assert!(matches!(
+        terminal_event(&summary(Some(StopReason::CandidateLimit))),
+        ScanEvent::Partial { .. }
+    ));
+    assert!(matches!(
+        terminal_event(&summary(Some(StopReason::Cancelled))),
+        ScanEvent::Cancelled { .. }
+    ));
+    assert!(matches!(
+        terminal_event(&summary(Some(StopReason::DepthLimit))),
+        ScanEvent::Completed { .. }
+    ));
+    assert!(matches!(
+        terminal_event(&summary(None)),
+        ScanEvent::Completed { .. }
+    ));
+}
+
+#[test]
+fn a_stop_reason_is_never_downgraded_to_a_depth_cut() {
+    // A depth cut is configured, not an interruption: it must not replace a
+    // timeout, and it must not hide one coming from another scan step either.
+    assert_eq!(
+        merge_stop_reason(Some(StopReason::DepthLimit), Some(StopReason::Timeout)),
+        Some(StopReason::Timeout)
+    );
+    assert_eq!(
+        merge_stop_reason(Some(StopReason::Timeout), Some(StopReason::DepthLimit)),
+        Some(StopReason::Timeout)
+    );
+    assert_eq!(
+        merge_stop_reason(
+            Some(StopReason::CandidateLimit),
+            Some(StopReason::DepthLimit)
+        ),
+        Some(StopReason::CandidateLimit)
+    );
+    // A real interruption always wins, even over another one.
+    assert_eq!(
+        merge_stop_reason(Some(StopReason::Timeout), Some(StopReason::Cancelled)),
+        Some(StopReason::Cancelled)
+    );
+    assert_eq!(
+        merge_stop_reason(None, Some(StopReason::DepthLimit)),
+        Some(StopReason::DepthLimit)
+    );
+    assert_eq!(
+        merge_stop_reason(Some(StopReason::Timeout), None),
+        Some(StopReason::Timeout)
+    );
 }
 
 #[test]

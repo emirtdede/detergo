@@ -36,7 +36,9 @@
     "on": "Til",
     "off": "Fra",
     "items": "{n} elementer",
-    "showing": "{n} vist"
+    "showing": "{n} vist",
+    "scanAll": "Scan alt",
+    "scanAllDesc": "Projekter, AI-værktøjsstorage og pakkecache"
   },
   "header": {
     "changeLocation": "Skift Placering",
@@ -49,7 +51,8 @@
     "addFavorite": "Tilføj nuværende placering til favoritter",
     "removeFavorite": "Fjern placering fra favoritter",
     "favoriteAdded": "Placering tilføjet til favoritter.",
-    "favoriteRemoved": "Placering fjernet fra favoritter."
+    "favoriteRemoved": "Placering fjernet fra favoritter.",
+    "changeLocationConfirmDesc": "Ændring af placeringen rydder de aktuelle scanningsresultater og markeringen. Din gemte scanningshistorik og den seneste scanningssnapshot bevares."
   },
   "window": {
     "minimize": "Minimer",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI-agenter",
     "ecoCache": "Cache",
     "ecoOther": "Andre artefakter",
-    "distTotalBadge": "{size} kan ryddes"
+    "distTotalBadge": "{size} kan ryddes",
+    "noticeInfoTitle": "Information",
+    "noticeInfoHint": "Systembeskyttede placeringer blev sprunget over. Ingen handling nødvendig.",
+    "noticeIssueHint": "Nogle placeringer kunne ikke læses, så resultaterne kan være ufuldstændige.",
+    "copyDetails": "Kopiér detaljer",
+    "detailsCopied": "Detaljer kopieret til udklipsholderen",
+    "coverage": "Scanningsdækning",
+    "sectionSkipped": "Sprunget over",
+    "sectionFailed": "Mislykkedes",
+    "sectionPartial": "Ufuldstændig",
+    "sectionNoRoot": "Ingen mappe valgt"
   },
   "table": {
     "project": "Projekt",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Slet permanent",
     "permanentAck": "Jeg forstår, at dette ikke kan fortrydes.",
     "blockedReasons": "Blokerede mål",
-    "expires": "Denne plan udløber om 15 minutter.",
+    "expires": "Denne plan udløber om 30 minutter.",
     "close": "Luk",
     "working": "Arbejder…",
     "runInBackground": "Kør i baggrunden",
@@ -223,7 +236,11 @@
     "cancelling": "Annullerer…",
     "progress": "Behandlet {processed} / {total}",
     "currentItem": "Aktuelt: {path}",
-    "alreadyRunning": "Der kører allerede en oprydning."
+    "alreadyRunning": "Der kører allerede en oprydning.",
+    "coveredByParent": "Blokeret",
+    "noMethod": "Blokeret",
+    "officialActionRequired": "Officiel kommando",
+    "modeNotAllowed": "Permanent"
   },
   "result": {
     "title": "Oprydningsresultat",
@@ -238,6 +255,7 @@
     "verified": "verificeret",
     "cancelled": "Oprydning annulleret",
     "cancelledNote": "{processed} elementer behandlet, {skipped} sprunget over.",
+    "progressIncomplete": "{count} statusopdateringer kunne ikke vises.",
     "processed": "Behandlet",
     "skipped": "Sprunget over",
     "viewResults": "Se resultater",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Slet scanninger",
     "scopeProjects": "Projektafhængigheder",
     "scopeAgents": "AI-agenter",
-    "scopeAllDrives": "Alle drev"
+    "scopeAllDrives": "Alle drev",
+    "statusPartial": "Delvist",
+    "totalCleaned": "Total genvundet",
+    "statusDepthLimited": "Delvist"
   },
   "settings": {
     "general": "Udseende",
@@ -451,6 +472,12 @@
     "protectionsHint": "Mapper, der aldrig må slettes, og navne, der skal sprænges.",
     "agentsHint": "Rydningspolitik for AI-agentcacher.",
     "privacyHint": "Lokal historik og stivejsskjul på skærmen.",
+    "resetAppDataTitle": "Nulstil alle appdata",
+    "resetAppDataHint": "Sletter alle indstillinger, oprydningshistorik, scanningshistorik, handlingslogfiler og den gemte sidste scanning, og genstarter derefter appen. Dette kan ikke fortrydes.",
+    "resetAppDataConfirmBtn": "Slet data og genstart",
+    "resetAppDataBusy": "Nulstiller...",
+    "resetAppDataSuccess": "Alle appdata er blevet nulstillet. Standardindstillingerne blev gendannet.",
+    "resetAppDataBlocked": "En scanning eller oprydning kører. Stop det, før du nulstiller appdata.",
     "aboutHint": "Version, byggeoplysninger, katalog og Vellium.",
     "legalHint": "Brugsbetingelser, privatlivspolitik og open source-licenser.",
     "sidebar": "Sidepanel",
@@ -547,7 +574,11 @@
     "standardMotion": "Standardanimation",
     "aboutTitleBy": "Dev Cleaner af Vellium",
     "mcpDestructiveTitle": "Tillad destruktive MCP-handlinger",
-    "mcpDestructiveHint": "Kræver flaget --allow-destructive; hver udførelse kræver stadig et engangstoken til forhåndsvisning"
+    "mcpDestructiveHint": "Kræver flaget --allow-destructive; hver udførelse kræver stadig et engangstoken til forhåndsvisning",
+    "pathMustBeAbsolute": "Stier skal være absolutte, for eksempel C:\\Projects.",
+    "excludedNameInvalid": "En regel skal være et enkelt fil- eller mappenavn uden stiseparatorer.",
+    "shortcutNeedsModifier": "En global genvej kræver Ctrl, Alt eller Meta plus en tast eller en funktionstast.",
+    "shortcutsResetWarning": "{count} ugyldig(e) genvej(er) blev nulstillet til deres standardindstillinger."
   },
   "legal": {
     "docTabsLabel": "Juridiske dokumenter",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Ingen rengørbare projektartefakter fundet",
     "emptyTitleIdle": "Ingen projektscanning udført endnu",
     "emptyDescClean": "Valgt mappe er ren. Ingen rengørbare node_modules, target eller byggeartefakter fundet.",
-    "emptyDescIdle": "Vælg en mappe og scan for at liste projektets afhængigheder og byggeartefakter."
+    "emptyDescIdle": "Vælg en mappe og scan for at liste projektets afhængigheder og byggeartefakter.",
+    "kpiTargets": "Rengøringsklare mål",
+    "kpiTargetsSub": "På tværs af {count} projektrodder",
+    "kpiTargetsUnknown": "Scan igen for at opdatere projektantallet"
   },
   "about": {
     "kpiVersion": "Version",
@@ -616,7 +650,8 @@
     "contactSupport": "Kundesupport",
     "contactBillingDesc": "Fakturering, erhvervsindkøb og abonnementsstøtte",
     "contactPrivacyDesc": "Datasikkerhed, GDPR og privatlivsforespørgsler",
-    "ecoCacheScope": "npm cache, Cargo registreringsdatabasen, pip cache, yarn"
+    "ecoCacheScope": "npm cache, Cargo registreringsdatabasen, pip cache, yarn",
+    "contactBilling": "Fakturering og betalinger"
   },
   "docs": {
     "catGuide": "Guides & Arkitektur",

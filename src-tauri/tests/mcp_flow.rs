@@ -157,15 +157,22 @@ fn clean_safe_is_preview_only_and_needs_targets() {
 }
 
 #[test]
-fn clean_cache_rejects_unknown_provider() {
+fn clean_cache_requires_destructive_flag_before_provider_lookup() {
+    // H2: the destructive tool is gated before it looks at the provider list,
+    // so an agent cannot probe or clean caches without the flag.
     let text = context().call_tool(
         "devcleaner_clean_cache",
         &json!({ "provider_id": "definitely-not-a-provider" }),
     );
-    assert!(
-        text.contains("definitely-not-a-provider"),
-        "unexpected: {text}"
+    assert!(text.contains("confirm"), "unexpected: {text}");
+
+    // Without the flag the destructive path is refused even earlier.
+    let gated = McpContext::new(McpOptions::default());
+    let text = gated.call_tool(
+        "devcleaner_clean_cache",
+        &json!({ "provider_id": "definitely-not-a-provider", "confirm": true }),
     );
+    assert!(text.contains("allow-destructive"), "unexpected: {text}");
 }
 
 #[test]
@@ -184,6 +191,25 @@ fn execute_requires_confirm_even_with_flag() {
         &json!({ "token": "anything", "confirm": false }),
     );
     assert!(text.contains("confirm"), "unexpected: {text}");
+}
+
+#[test]
+fn tool_errors_are_structured() {
+    // MCP 2025-06-18: blocked or unknown tools must set `isError`, not return
+    // a plain text result that a client can mistake for success.
+    let ctx = context();
+    let unknown = ctx.call_tool_output("devcleaner_does_not_exist", &json!({}));
+    assert!(unknown.is_error);
+    assert!(unknown.text.contains("devcleaner_does_not_exist"));
+
+    let blocked = ctx.call_tool_output(
+        "devcleaner_execute_cleanup",
+        &json!({ "token": "anything", "confirm": false }),
+    );
+    assert!(blocked.is_error);
+
+    let listing = ctx.call_tool_output("devcleaner_list_caches", &json!({}));
+    assert!(!listing.is_error);
 }
 
 #[test]

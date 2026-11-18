@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::io::{BufRead, Write};
-use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::path::PathBuf;
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
@@ -10,13 +10,39 @@ use serde_json::{json, Value};
 use crate::cleanup::{CleanupPlan, DeleteMode};
 use crate::cli::i18n::{t, tf};
 use crate::commands::AppState;
-use crate::error::AppError;
 use crate::scanner::cancellation::CancellationToken;
-use crate::scanner::models::{CleanupItem, ScanScope, StoredTarget};
+use crate::scanner::models::ScanScope;
+
+/// Shared process-wide backend state.
+///
+/// The MCP server is long-lived, yet every tool call constructed a fresh
+/// `AppState`, re-reading the catalog and settings repositories. A single
+/// `OnceLock` keeps the same settings/audit handles the GUI uses and avoids
+/// repeating that work on each request.
+fn mcp_state() -> &'static AppState {
+    static STATE: OnceLock<AppState> = OnceLock::new();
+    STATE.get_or_init(AppState::new)
+}
 
 /// Preview grants are intentionally shorter-lived than cleanup plans: an agent
 /// must execute within five minutes of the preview it showed the user.
 const PREVIEW_TTL: Duration = Duration::from_secs(5 * 60);
+
+/// Pending previews kept per server.
+///
+/// Each grant owns a whole `CleanupPlan` and an `Arc<ScanSession>` (which holds
+/// every scanned item), so an agent that previews in a loop without executing
+/// grew the map for the lifetime of the process. Expired grants are dropped and
+/// the oldest survivor is evicted before a new one is stored.
+const MAX_PENDING_GRANTS: usize = 16;
+
+/// Scan sessions remembered for a later `devcleaner_preview_cleanup`.
+///
+/// A `StoredScan` owns a whole `ScanSession` (every discovered item and target),
+/// so the TTL alone was not enough: an agent that rescans a large workspace in a
+/// loop kept every intermediate result for the full 30 minute window. The newest
+/// scan is the one a preview resolves, so dropping the oldest is safe.
+const MAX_STORED_SCANS: usize = 8;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct McpOptions {
@@ -30,6 +56,30 @@ struct JsonRpcRequest {
     id: Option<Value>,
     method: String,
     params: Option<Value>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ToolCallOutput {
+    pub text: String,
+    /// Mirrors MCP `CallToolResult.isError`. A blocked or failed call must set
+    /// this so a client never mistakes a refusal for a successful operation.
+    pub is_error: bool,
+}
+
+impl ToolCallOutput {
+    fn ok(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            is_error: false,
+        }
+    }
+
+    fn error(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            is_error: true,
+        }
+    }
 }
 
 struct PreviewGrant {
@@ -52,6 +102,46 @@ pub struct McpContext {
     options: McpOptions,
     grants: Mutex<HashMap<String, PreviewGrant>>,
     scans: Mutex<HashMap<String, StoredScan>>,
+}
+
+/// Keeps the pending-preview map bounded.
+///
+/// Runs with the map already locked, immediately before a new grant is stored:
+/// expired grants can never be redeemed, and a burst of previews without an
+/// execute would otherwise retain every plan and its scan session for the whole
+/// lifetime of the server process.
+fn make_room_for_grant(grants: &mut HashMap<String, PreviewGrant>) {
+    grants.retain(|_, grant| grant.created.elapsed() <= PREVIEW_TTL);
+    if grants.len() < MAX_PENDING_GRANTS {
+        return;
+    }
+    let oldest = grants
+        .iter()
+        .min_by_key(|(_, grant)| grant.created)
+        .map(|(token, _)| token.clone());
+    if let Some(token) = oldest {
+        grants.remove(&token);
+    }
+}
+
+/// Keeps the remembered scan list bounded.
+///
+/// Same contract as [`make_room_for_grant`]: expired sessions are unusable and
+/// are dropped first; when the list is still full the oldest survivor is
+/// evicted. A preview can only resolve the scan id it was just given, so the
+/// oldest entry is the least likely to be redeemed.
+fn make_room_for_scan(scans: &mut HashMap<String, StoredScan>) {
+    scans.retain(|_, scan| scan.created.elapsed() <= crate::scanner::session::SESSION_TTL);
+    if scans.len() < MAX_STORED_SCANS {
+        return;
+    }
+    let oldest = scans
+        .iter()
+        .min_by_key(|(_, scan)| scan.created)
+        .map(|(id, _)| id.clone());
+    if let Some(id) = oldest {
+        scans.remove(&id);
+    }
 }
 
 impl McpContext {
@@ -95,8 +185,8 @@ pub fn run_mcp_server_with<R: BufRead, W: Write>(reader: R, mut writer: W, optio
             continue;
         }
 
-        let request: JsonRpcRequest = match serde_json::from_str(&line) {
-            Ok(req) => req,
+        let raw: serde_json::Value = match serde_json::from_str(&line) {
+            Ok(value) => value,
             Err(_) => {
                 let err_res = json!({
                     "jsonrpc": "2.0",
@@ -115,8 +205,32 @@ pub fn run_mcp_server_with<R: BufRead, W: Write>(reader: R, mut writer: W, optio
                 continue;
             }
         };
+        // JSON-RPC only treats a request as a notification when the `id`
+        // member is absent. `"id": null` is an invalid request and must still
+        // receive a response, otherwise a client waits until it times out.
+        let id_present = raw.get("id").is_some();
+        let request: JsonRpcRequest = match serde_json::from_value(raw) {
+            Ok(req) => req,
+            Err(_) => {
+                let err_res = json!({
+                    "jsonrpc": "2.0",
+                    "id": Value::Null,
+                    "error": {
+                        "code": -32600,
+                        "message": t("Invalid Request: malformed JSON-RPC message")
+                    }
+                });
+                let _ = writeln!(
+                    writer,
+                    "{}",
+                    serde_json::to_string(&err_res).unwrap_or_default()
+                );
+                let _ = writer.flush();
+                continue;
+            }
+        };
 
-        if let Some(res) = handle_mcp_message(&request, &context) {
+        if let Some(res) = handle_mcp_message(&request, id_present, &context) {
             let res_str = serde_json::to_string(&res).unwrap_or_default();
             let _ = writeln!(writer, "{}", res_str);
             let _ = writer.flush();
@@ -133,7 +247,7 @@ fn tool_definitions(allow_destructive: bool) -> Vec<Value> {
                 "type": "object",
                 "properties": {
                     "path": { "type": "string", "description": t("Folder path to scan (default: current directory .)") },
-                    "scope": { "type": "string", "enum": ["projects", "agents", "caches", "all"], "default": "projects" },
+                    "scope": { "type": "string", "enum": ["projects", "agents", "combined", "all"], "default": "projects" },
                     "min_size_mb": { "type": "number", "description": t("Minimum size threshold (MB)") }
                 }
             }
@@ -168,17 +282,6 @@ fn tool_definitions(allow_destructive: bool) -> Vec<Value> {
             "inputSchema": { "type": "object", "properties": {} }
         }),
         json!({
-            "name": "devcleaner_clean_cache",
-            "description": t("Cleans the cache of a specific tool (npm, pip, cargo, docker, etc.) via official CLI command."),
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "provider_id": { "type": "string", "description": t("Provider ID to clean (e.g. npm, cargo, pip, docker)") }
-                },
-                "required": ["provider_id"]
-            }
-        }),
-        json!({
             "name": "devcleaner_get_history",
             "description": t("Lists past cleanup and audit records performed by Dev Cleaner."),
             "inputSchema": {
@@ -203,6 +306,19 @@ fn tool_definitions(allow_destructive: bool) -> Vec<Value> {
 
     if allow_destructive {
         tools.push(json!({
+            "name": "devcleaner_clean_cache",
+            "description": t("Cleans the cache of a specific tool (npm, pip, cargo, docker, etc.) via official CLI command. Destructive: requires confirm:true, the --allow-destructive flag and the MCP destructive setting."),
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "provider_id": { "type": "string", "description": t("Provider ID to clean (e.g. npm, cargo, pip, docker)") },
+                    "action_id": { "type": "string", "description": t("Optional action ID from devcleaner_list_caches; defaults to the first action") },
+                    "confirm": { "type": "boolean", "description": t("Must be true; proves the caller intentionally requests cache deletion") }
+                },
+                "required": ["provider_id", "confirm"]
+            }
+        }));
+        tools.push(json!({
             "name": "devcleaner_execute_cleanup",
             "description": t("Executes a previously previewed cleanup plan. Requires confirm:true, a single-use token, the --allow-destructive flag and the MCP destructive setting."),
             "inputSchema": {
@@ -219,8 +335,22 @@ fn tool_definitions(allow_destructive: bool) -> Vec<Value> {
     tools
 }
 
-fn handle_mcp_message(req: &JsonRpcRequest, ctx: &McpContext) -> Option<Value> {
-    let id = req.id.clone()?;
+fn handle_mcp_message(req: &JsonRpcRequest, id_present: bool, ctx: &McpContext) -> Option<Value> {
+    // Notifications have no `id` member at all. A present-but-null id is an
+    // invalid request, not a notification.
+    if !id_present {
+        return None;
+    }
+    let Some(id) = req.id.clone() else {
+        return Some(json!({
+            "jsonrpc": "2.0",
+            "id": Value::Null,
+            "error": {
+                "code": -32600,
+                "message": t("Invalid Request: id must be a string or number")
+            }
+        }));
+    };
 
     match req.method.as_str() {
         "initialize" => Some(json!({
@@ -256,12 +386,16 @@ fn handle_mcp_message(req: &JsonRpcRequest, ctx: &McpContext) -> Option<Value> {
                 .and_then(|p| p.get("arguments"))
                 .cloned()
                 .unwrap_or(json!({}));
-            let output_text = ctx.execute_tool(tool_name, &args);
+            let output = ctx.execute_tool(tool_name, &args);
             Some(json!({
                 "jsonrpc": "2.0",
                 "id": id,
                 "result": {
-                    "content": [ { "type": "text", "text": output_text } ]
+                    "content": [ { "type": "text", "text": output.text } ],
+                    // MCP 2025-06-18: tool execution failures are reported
+                    // inside the result with `isError: true`, not as a
+                    // JSON-RPC error.
+                    "isError": output.is_error
                 }
             }))
         }
@@ -276,28 +410,35 @@ fn handle_mcp_message(req: &JsonRpcRequest, ctx: &McpContext) -> Option<Value> {
     }
 }
 
-fn format_size(bytes: u64) -> String {
-    const KB: f64 = 1024.0;
-    const MB: f64 = KB * 1024.0;
-    const GB: f64 = MB * 1024.0;
-    let b = bytes as f64;
-    if b >= GB {
-        format!("{:.2} GB", b / GB)
-    } else if b >= MB {
-        format!("{:.1} MB", b / MB)
-    } else if b >= KB {
-        format!("{:.0} KB", b / KB)
+/// Terminal state of a cleanup report.
+///
+/// `success` used to be hard-coded even when every target failed, which made
+/// agents report a partially failed deletion as a win.
+fn cleanup_status(cancelled: bool, error_count: u64, success_count: u64) -> &'static str {
+    if cancelled {
+        "cancelled"
+    } else if error_count == 0 {
+        "success"
+    } else if success_count > 0 {
+        "partial"
     } else {
-        format!("{} B", bytes)
+        "failed"
     }
+}
+
+fn format_size(bytes: u64) -> String {
+    crate::format::human_bytes(bytes)
 }
 
 fn parse_scope(scope: &str) -> Option<ScanScope> {
     match scope {
         "projects" | "project" => Some(ScanScope::Project),
         "agents" => Some(ScanScope::Agents),
-        "caches" => Some(ScanScope::GlobalCaches),
         "all" => Some(ScanScope::AllDrives),
+        // Projects and agent storage in one session, matching the GUI action.
+        "combined" => Some(ScanScope::Combined),
+        // Package caches are not a scan scope: `devcleaner_list_caches` and
+        // `devcleaner_clean_cache` own that flow.
         _ => None,
     }
 }
@@ -311,51 +452,6 @@ fn parse_target_ids(args: &Value) -> Vec<String> {
         vec![id.to_string()]
     } else {
         Vec::new()
-    }
-}
-
-/// Scans `root` and returns the discovered items plus the backend-owned target
-/// map. Shared by preview and scan so both use identical discovery settings.
-fn discover(
-    root: &Path,
-    scope: ScanScope,
-    session_id: &str,
-) -> Result<(Vec<CleanupItem>, Vec<StoredTarget>), AppError> {
-    let state = AppState::new();
-    let catalog = state.catalog()?;
-    let token = CancellationToken::new();
-    let limits = crate::scanner::limits::ScanLimits::default();
-    let mut engine = crate::scanner::discovery::DiscoveryEngine::new(&catalog, token, limits);
-
-    let config = crate::scanner::discovery::DiscoveryConfig {
-        root,
-        exclusions: &[],
-        protected_paths: &[],
-        scan_session_id: session_id,
-        limits,
-    };
-
-    let outcome = engine.discover(config, |_| {}, |_| {})?;
-    let _ = scope;
-    Ok((outcome.items, outcome.targets))
-}
-
-fn build_session(
-    id: &str,
-    root: &Path,
-    scope: ScanScope,
-    items: Vec<CleanupItem>,
-    targets: Vec<StoredTarget>,
-) -> crate::scanner::session::ScanSession {
-    crate::scanner::session::ScanSession {
-        id: id.to_string(),
-        scope,
-        root: root.to_path_buf(),
-        allowed_roots: vec![root.to_path_buf()],
-        created: Instant::now(),
-        items,
-        targets: targets.into_iter().map(|t| (t.id.clone(), t)).collect(),
-        summary: None,
     }
 }
 
@@ -399,6 +495,12 @@ impl McpContext {
     /// one grant store (preview, execute, replay).
     #[doc(hidden)]
     pub fn call_tool(&self, name: &str, args: &Value) -> String {
+        self.execute_tool(name, args).text
+    }
+
+    /// Structured variant used by tests that assert the `isError` signal.
+    #[doc(hidden)]
+    pub fn call_tool_output(&self, name: &str, args: &Value) -> ToolCallOutput {
         self.execute_tool(name, args)
     }
 
@@ -413,7 +515,7 @@ impl McpContext {
         }
     }
 
-    fn execute_tool(&self, name: &str, args: &Value) -> String {
+    fn execute_tool(&self, name: &str, args: &Value) -> ToolCallOutput {
         match name {
             "devcleaner_list_caches" => {
                 let providers = crate::cleanup::official_actions::list_cache_providers();
@@ -431,7 +533,7 @@ impl McpContext {
                     let ver = p.version.unwrap_or_else(|| "-".to_string());
                     summary.push_str(&format!("• {} ({}) -> {}\n", p.name, ver, status));
                 }
-                summary
+                ToolCallOutput::ok(summary)
             }
             "devcleaner_clean_cache" => self.clean_cache(args),
             "devcleaner_scan_workspace" => self.scan_workspace(args),
@@ -439,22 +541,49 @@ impl McpContext {
             "devcleaner_execute_cleanup" => self.execute_cleanup(args),
             "devcleaner_get_history" => {
                 let limit = args.get("limit").and_then(|l| l.as_u64()).unwrap_or(10) as usize;
-                let state = AppState::new();
+                let state = mcp_state();
                 let records = state.audit.list_records(limit);
-                serde_json::to_string_pretty(&records).unwrap_or_default()
+                ToolCallOutput::ok(serde_json::to_string_pretty(&records).unwrap_or_default())
             }
             "devcleaner_inspect_target" => self.inspect_target(args),
-            _ => tf("Unknown tool: {}", &[&name]),
+            _ => ToolCallOutput::error(tf("Unknown tool: {}", &[&name])),
         }
     }
 
-    fn clean_cache(&self, args: &Value) -> String {
+    fn clean_cache(&self, args: &Value) -> ToolCallOutput {
+        // Destructive path: the same gates as `devcleaner_execute_cleanup`.
+        // Previously this tool skipped all of them, so an agent could delete
+        // npm/pip/cargo caches even when the user had disabled destructive MCP
+        // actions in Settings.
+        if !self.options.allow_destructive {
+            return ToolCallOutput::error(t(
+                "Blocked: the MCP server was not started with --allow-destructive.",
+            ));
+        }
+        let confirm = args
+            .get("confirm")
+            .and_then(|c| c.as_bool())
+            .unwrap_or(false);
+        if !confirm {
+            return ToolCallOutput::error(t(
+                "Blocked: 'confirm' must be true. Run devcleaner_list_caches and ask the user first.",
+            ));
+        }
+        let state = mcp_state();
+        if !state.settings.load().mcp_allow_destructive {
+            return ToolCallOutput::error(t(
+                "Blocked: MCP destructive actions are disabled in Settings → Automation.",
+            ));
+        }
+
         let provider_id = args
             .get("provider_id")
             .and_then(|p| p.as_str())
             .unwrap_or("");
         if provider_id.is_empty() {
-            return t("Error: 'provider_id' parameter is required (e.g. 'npm', 'pip', 'cargo').");
+            return ToolCallOutput::error(t(
+                "Error: 'provider_id' parameter is required (e.g. 'npm', 'pip', 'cargo').",
+            ));
         }
 
         let registry = crate::cleanup::official_actions::OfficialActionRegistry::new();
@@ -466,49 +595,113 @@ impl McpContext {
         match found {
             Some(p) => {
                 if !p.detected {
-                    return tf("Tool cache could not be cleaned: '{}' is not installed.", &[&p.name]);
+                    return ToolCallOutput::error(tf(
+                        "Tool cache could not be cleaned: '{}' is not installed.",
+                        &[&p.name],
+                    ));
                 }
                 if p.actions.is_empty() {
-                    return tf("No official CLI cleanup command is defined for '{}'.", &[&p.name]);
+                    return ToolCallOutput::error(tf(
+                        "No official CLI cleanup command is defined for '{}'.",
+                        &[&p.name],
+                    ));
                 }
 
-                let action = &p.actions[0];
+                let action_id = args
+                    .get("action_id")
+                    .and_then(|a| a.as_str())
+                    .unwrap_or("");
+                let action = if action_id.is_empty() {
+                    &p.actions[0]
+                } else {
+                    match p
+                        .actions
+                        .iter()
+                        .find(|a| a.id.eq_ignore_ascii_case(action_id))
+                    {
+                        Some(action) => action,
+                        None => {
+                            let available = p
+                                .actions
+                                .iter()
+                                .map(|a| a.id.as_str())
+                                .collect::<Vec<_>>()
+                                .join(", ");
+                            return ToolCallOutput::error(tf(
+                                "Unknown action '{}' for '{}'. Available actions: {}",
+                                &[&action_id, &p.name, &available],
+                            ));
+                        }
+                    }
+                };
+                let preview_token = CancellationToken::new();
                 match crate::cleanup::official_actions::preview_action(
                     &registry,
                     &p.id,
                     &action.id,
+                    &preview_token,
                 ) {
                     Ok(preview) => match crate::cleanup::official_actions::execute_action(
                         &registry,
                         &preview.token,
                     ) {
                         Ok(res) => {
+                            // The GUI records every official action in the audit
+                            // database; the MCP path skipped it, so an agent
+                            // cleanup left no trace in History.
+                            if state.settings.load().history_enabled {
+                                let record = crate::audit::ActionAuditRecord {
+                                    id: format!("a-{}", uuid::Uuid::new_v4().simple()),
+                                    timestamp: chrono::Local::now().to_rfc3339(),
+                                    provider_id: res.provider_id.clone(),
+                                    action_id: res.action_id.clone(),
+                                    label: res.label.clone(),
+                                    success: res.success,
+                                    exit_code: res.exit_code,
+                                    before_bytes: res.before_bytes,
+                                    after_bytes: res.after_bytes,
+                                    delta_bytes: res.delta_bytes,
+                                    duration_ms: res.duration_ms,
+                                };
+                                if let Err(err) = state.audit.append_action(&record) {
+                                    crate::logging::warn(
+                                        "could not record the MCP cache action audit",
+                                        err,
+                                    );
+                                }
+                            }
                             let reclaimed = res.before_bytes.saturating_sub(res.after_bytes);
                             if res.success {
-                                tf(
+                                ToolCallOutput::ok(tf(
                                     "[OK] Success: {} cache cleaned. Reclaimed: {}",
                                     &[&p.name, &format_size(reclaimed)],
-                                )
+                                ))
                             } else {
-                                tf(
+                                ToolCallOutput::error(tf(
                                     "[WARN] {} cleanup failed (Exit code: {})",
-                                    &[&p.name, &format!("{:?}", res.exit_code)],
-                                )
+                                    &[&p.name, &res.exit_code.map_or_else(|| "terminated".to_string(), |code| code.to_string())],
+                                ))
                             }
                         }
-                        Err(e) => tf("Error executing cleanup command: {}", &[&format!("{:?}", e)]),
+                        Err(e) => ToolCallOutput::error(tf(
+                            "Error executing cleanup command: {}",
+                            &[&e.to_string()],
+                        )),
                     },
-                    Err(e) => tf("Failed to create action preview: {}", &[&format!("{:?}", e)]),
+                    Err(e) => ToolCallOutput::error(tf(
+                        "Failed to create action preview: {}",
+                        &[&e.to_string()],
+                    )),
                 }
             }
-            None => tf(
+            None => ToolCallOutput::error(tf(
                 "Unknown provider ID: '{}'. Use 'devcleaner_list_caches' to list available providers.",
                 &[&provider_id],
-            ),
+            )),
         }
     }
 
-    fn scan_workspace(&self, args: &Value) -> String {
+    fn scan_workspace(&self, args: &Value) -> ToolCallOutput {
         let path_str = args.get("path").and_then(|p| p.as_str()).unwrap_or(".");
         let min_size_mb = args
             .get("min_size_mb")
@@ -520,82 +713,137 @@ impl McpContext {
             .unwrap_or("projects");
         let scope = match parse_scope(scope_str) {
             Some(scope) => scope,
-            None => return tf("Error: unknown scope '{}'.", &[&scope_str]),
-        };
-        let path = PathBuf::from(path_str);
-
-        match discover(&path, scope, "mcp_scan") {
-            Ok((items, targets)) => {
-                let min_bytes = min_size_mb * 1024 * 1024;
-                let filtered_items: Vec<_> = items
-                    .iter()
-                    .filter(|it| it.estimated_reclaim_bytes.unwrap_or(0) >= min_bytes)
-                    .collect();
-
-                let mut total_bytes = 0u64;
-                for item in &filtered_items {
-                    total_bytes += item.estimated_reclaim_bytes.unwrap_or(0);
-                }
-
-                // Token bloat protection: detail the top 25, summarize the rest.
-                let mut sorted = filtered_items.clone();
-                sorted.sort_by_key(|it| std::cmp::Reverse(it.estimated_reclaim_bytes.unwrap_or(0)));
-                let top_items: Vec<_> = sorted.into_iter().take(25).collect();
-
-                let formatted_targets: Vec<_> = top_items
-                    .iter()
-                    .map(|it| {
-                        json!({
-                            "id": it.id,
-                            "target_id": it.id,
-                            "name": it.display_name,
-                            "path": it.display_path,
-                            "category": it.category,
-                            "safety": it.safety_class,
-                            "bytes": it.estimated_reclaim_bytes.unwrap_or(0),
-                            "human": format_size(it.estimated_reclaim_bytes.unwrap_or(0))
-                        })
-                    })
-                    .collect();
-
-                let scan_id = format!("mcp-{}", uuid::Uuid::new_v4().simple());
-                let session = Arc::new(build_session(
-                    &scan_id,
-                    &path,
-                    scope,
-                    items.clone(),
-                    targets,
-                ));
-                self.scans().insert(
-                    scan_id.clone(),
-                    StoredScan {
-                        session,
-                        created: Instant::now(),
-                    },
-                );
-
-                let payload = json!({
-                    "scan_id": scan_id,
-                    "path": path.to_string_lossy(),
-                    "scope": scope_str,
-                    "total_targets_found": filtered_items.len(),
-                    "total_reclaimable_bytes": total_bytes,
-                    "total_reclaimable_human": format_size(total_bytes),
-                    "items_truncated": filtered_items.len() > 25,
-                    "top_targets": formatted_targets,
-                    "items": formatted_targets
-                });
-                serde_json::to_string_pretty(&payload).unwrap_or_default()
+            None => {
+                return ToolCallOutput::error(tf(
+                    "Error: unknown scope '{}'. Use 'projects', 'agents', 'combined' or 'all'.",
+                    &[&scope_str],
+                ))
             }
-            Err(e) => format!("Scan error: {:?}", e),
+        };
+        // Saturating: `min_size_mb` is untrusted JSON-RPC input, and a value
+        // near `u64::MAX` wrapped around to a tiny threshold (in release) or
+        // panicked (in debug) instead of meaning "no small rows".
+        let min_bytes = min_size_mb.saturating_mul(1024 * 1024);
+
+        let state = mcp_state();
+        let catalog = match state.catalog() {
+            Ok(idx) => idx,
+            Err(err) => return ToolCallOutput::error(format!("Failed to load catalog: {err}")),
+        };
+        let settings = state.settings.load();
+        let policy = crate::cleanup::CleanupPolicy::from(&settings);
+        let request = crate::scanner::models::ScanRequest {
+            root_path: path_str.to_string(),
+            exclusions: Vec::new(),
+            scope,
+            profile: None,
+            max_depth: None,
+            max_candidates: None,
+            timeout_minutes: None,
+            // `None` lets the backend apply the user's saved threshold; an
+            // explicit agent value wins only when it is non-zero.
+            min_size_bytes: if min_bytes > 0 { Some(min_bytes) } else { None },
+            protected_paths: Vec::new(),
+        };
+
+        // H3: discovery alone never measured anything, so every row in the MCP
+        // response was "0 B" and `min_size_mb` could never match. Use the same
+        // full scan (discovery + measurement) as the desktop app.
+        let (summary, scanned) =
+            match crate::scanner::run_scan_blocking(request, catalog, &settings, &policy) {
+                Ok(found) => found,
+                Err(err) => return ToolCallOutput::error(format!("Scan error: {err}")),
+            };
+
+        let items = scanned.items.clone();
+        let cleanable = |it: &crate::scanner::models::CleanupItem| {
+            it.selectable && !it.protected && it.safety_class != crate::catalog::SafetyClass::Keep
+        };
+        let filtered_items: Vec<_> = items
+            .iter()
+            .filter(|it| {
+                cleanable(it)
+                    && (min_bytes == 0
+                        || it.estimated_reclaim_bytes.is_some_and(|b| b >= min_bytes))
+            })
+            .collect();
+
+        let mut total_bytes = 0u64;
+        for item in &filtered_items {
+            total_bytes += item.estimated_reclaim_bytes.unwrap_or(0);
         }
+
+        // Token bloat protection: detail the top 25, summarize the rest.
+        let mut sorted = filtered_items.clone();
+        sorted.sort_by_key(|it| std::cmp::Reverse(it.estimated_reclaim_bytes.unwrap_or(0)));
+        let top_items: Vec<_> = sorted.into_iter().take(25).collect();
+
+        let formatted_targets: Vec<_> = top_items
+            .iter()
+            .map(|it| {
+                json!({
+                    "id": it.id,
+                    "target_id": it.id,
+                    "name": it.display_name,
+                    "path": it.display_path,
+                    "category": it.category,
+                    "safety": it.safety_class,
+                    "measured": it.logical_bytes.is_some(),
+                    // Never claim an unreadable target is 0 B: null lets the
+                    // agent distinguish "empty" from "could not read".
+                    "bytes": it.estimated_reclaim_bytes,
+                    "human": it.estimated_reclaim_bytes.map(format_size),
+                    "status": it.status,
+                    "warnings": it.warning_codes,
+                })
+            })
+            .collect();
+
+        let scan_id = scanned.id.clone();
+        let session = Arc::new(scanned);
+        {
+            // L10: the MCP server is long-lived; expire and cap the remembered
+            // scans instead of growing the map for the life of the process.
+            let mut scans = self.scans();
+            make_room_for_scan(&mut scans);
+            scans.insert(
+                scan_id.clone(),
+                StoredScan {
+                    session,
+                    created: Instant::now(),
+                },
+            );
+        }
+
+        let payload = json!({
+            "scan_id": scan_id,
+            "path": path_str,
+            "scope": scope_str,
+            "total_targets_found": items.len(),
+            "measured_targets": filtered_items.iter().filter(|it| it.logical_bytes.is_some()).count(),
+            "total_reclaimable_bytes": total_bytes,
+            "total_reclaimable_human": format_size(total_bytes),
+            "cleanable_bytes": summary.cleanable_bytes,
+            "items_truncated": filtered_items.len() > 25,
+            "top_targets": formatted_targets,
+            "items": formatted_targets
+        });
+        ToolCallOutput::ok(serde_json::to_string_pretty(&payload).unwrap_or_default())
     }
 
-    fn preview_cleanup(&self, args: &Value) -> String {
+    fn preview_cleanup(&self, args: &Value) -> ToolCallOutput {
         let target_ids = parse_target_ids(args);
         if target_ids.is_empty() {
-            return t("Error: At least one 'target_id' must be provided.");
+            return ToolCallOutput::error(t("Error: At least one 'target_id' must be provided."));
         }
+
+        let state = mcp_state();
+        let catalog = match state.catalog() {
+            Ok(idx) => idx,
+            Err(e) => return ToolCallOutput::error(format!("Failed to load catalog: {e}")),
+        };
+        let settings = state.settings.load();
+        let policy = crate::cleanup::CleanupPolicy::from(&settings);
 
         // Prefer the session created by `devcleaner_scan_workspace`: discovery
         // generates fresh IDs on every run, so re-scanning here could never
@@ -604,9 +852,22 @@ impl McpContext {
         let stored = {
             let scans = self.scans();
             match requested_scan {
-                Some(id) => scans.get(id).map(|s| (s.session.clone(), s.created)),
+                // L10: an unknown/expired explicit scan id must not silently
+                // fall back to scanning some other path with the wrong scope.
+                Some(id) => match scans.get(id) {
+                    Some(scan) if scan.created.elapsed() <= crate::scanner::session::SESSION_TTL => {
+                        Some((scan.session.clone(), scan.created))
+                    }
+                    _ => {
+                        return ToolCallOutput::error(format!(
+                            "PlanInvalid: unknown or expired scan_id '{}'. Run devcleaner_scan_workspace again.",
+                            id
+                        ))
+                    }
+                },
                 None => scans
                     .values()
+                    .filter(|s| s.created.elapsed() <= crate::scanner::session::SESSION_TTL)
                     .find(|s| {
                         target_ids
                             .iter()
@@ -617,32 +878,38 @@ impl McpContext {
         };
 
         let session = match stored {
-            Some((session, created))
-                if created.elapsed() <= crate::scanner::session::SESSION_TTL =>
-            {
-                session
-            }
-            _ => {
+            Some((session, _)) => session,
+            None => {
                 let path_str = args.get("path").and_then(|p| p.as_str()).unwrap_or(".");
-                let root_path = PathBuf::from(path_str);
-                let (items, targets) = match discover(&root_path, ScanScope::Project, "mcp_preview")
-                {
-                    Ok(found) => found,
-                    Err(e) => return format!("Verification scan error: {:?}", e),
+                let request = crate::scanner::models::ScanRequest {
+                    root_path: path_str.to_string(),
+                    exclusions: Vec::new(),
+                    scope: ScanScope::Project,
+                    profile: None,
+                    max_depth: None,
+                    max_candidates: None,
+                    timeout_minutes: None,
+                    min_size_bytes: None,
+                    protected_paths: Vec::new(),
                 };
-                Arc::new(build_session(
-                    "mcp_preview",
-                    &root_path,
-                    ScanScope::Project,
-                    items,
-                    targets,
-                ))
+                match crate::scanner::run_scan_blocking(
+                    request,
+                    catalog.clone(),
+                    &settings,
+                    &policy,
+                ) {
+                    Ok((_, scanned)) => Arc::new(scanned),
+                    Err(e) => {
+                        return ToolCallOutput::error(format!("Verification scan error: {e}"))
+                    }
+                }
             }
         };
 
-        // Discovery records paths but does not measure them, and `build_plan`
-        // refuses unmeasured targets. Measure only the selected IDs here so a
-        // preview stays cheap even for a large workspace.
+        // `run_scan_blocking` already measured every target. Keep this cheap
+        // fallback for targets that were unreadable during the scan (for
+        // example when the scan deadline expired) so a preview is still
+        // possible without ever inventing a 0 B size.
         let mut session = (*session).clone();
         let measure_token = CancellationToken::new();
         for id in &target_ids {
@@ -660,14 +927,6 @@ impl McpContext {
             }
         }
         let session = Arc::new(session);
-
-        let state = AppState::new();
-        let catalog = match state.catalog() {
-            Ok(idx) => idx,
-            Err(e) => return format!("Failed to load catalog: {:?}", e),
-        };
-        let settings = state.settings.load();
-        let policy = crate::cleanup::CleanupPolicy::from(&settings);
 
         match crate::cleanup::build_plan(
             &session,
@@ -708,57 +967,68 @@ impl McpContext {
                     "next_step": "Call devcleaner_execute_cleanup with this token and confirm:true (requires --allow-destructive and the MCP setting)."
                 });
 
-                self.grants().insert(
-                    token,
-                    PreviewGrant {
-                        plan,
-                        session,
-                        created: Instant::now(),
-                    },
-                );
-                serde_json::to_string_pretty(&payload).unwrap_or_default()
+                {
+                    let mut grants = self.grants();
+                    make_room_for_grant(&mut grants);
+                    grants.insert(
+                        token,
+                        PreviewGrant {
+                            plan,
+                            session,
+                            created: Instant::now(),
+                        },
+                    );
+                }
+                ToolCallOutput::ok(serde_json::to_string_pretty(&payload).unwrap_or_default())
             }
-            Err(e) => format!(
-                "Failed to build cleanup plan (targets not found or unsafe): {:?}",
-                e
-            ),
+            Err(e) => ToolCallOutput::error(format!(
+                "Failed to build cleanup plan (targets not found or unsafe): {e}"
+            )),
         }
     }
 
-    fn execute_cleanup(&self, args: &Value) -> String {
+    fn execute_cleanup(&self, args: &Value) -> ToolCallOutput {
         let confirm = args
             .get("confirm")
             .and_then(|c| c.as_bool())
             .unwrap_or(false);
         if !confirm {
-            return t("Blocked: 'confirm' must be true. Preview the plan first.");
+            return ToolCallOutput::error(t(
+                "Blocked: 'confirm' must be true. Preview the plan first.",
+            ));
         }
         if !self.options.allow_destructive {
-            return t("Blocked: the MCP server was not started with --allow-destructive.");
+            return ToolCallOutput::error(t(
+                "Blocked: the MCP server was not started with --allow-destructive.",
+            ));
         }
 
         let token = match args.get("token").and_then(|t| t.as_str()) {
             Some(token) if !token.is_empty() => token.to_string(),
-            _ => return t("Error: 'token' is required."),
+            _ => return ToolCallOutput::error(t("Error: 'token' is required.")),
         };
 
-        let state = AppState::new();
+        let state = mcp_state();
         let settings = state.settings.load();
         if !settings.mcp_allow_destructive {
-            return t("Blocked: MCP destructive actions are disabled in Settings → Automation.");
+            return ToolCallOutput::error(t(
+                "Blocked: MCP destructive actions are disabled in Settings → Automation.",
+            ));
         }
 
         // Remove first: a token is single-use even if execution later fails.
         let Some(grant) = self.grants().remove(&token) else {
-            return t("PlanInvalid: unknown or already used preview token.");
+            return ToolCallOutput::error(t("PlanInvalid: unknown or already used preview token."));
         };
         if grant.created.elapsed() > PREVIEW_TTL || grant.plan.is_expired() {
-            return t("PlanExpired: the preview token has expired. Run preview again.");
+            return ToolCallOutput::error(t(
+                "PlanExpired: the preview token has expired. Run preview again.",
+            ));
         }
 
         let catalog = match state.catalog() {
             Ok(idx) => idx,
-            Err(e) => return format!("Failed to load catalog: {:?}", e),
+            Err(e) => return ToolCallOutput::error(format!("Failed to load catalog: {e}")),
         };
         let policy = crate::cleanup::CleanupPolicy::from(&settings);
         let confirmation = grant.plan.confirmation_token.clone();
@@ -775,35 +1045,64 @@ impl McpContext {
         ) {
             Ok(report) => {
                 let audit_entry = audit_record(&grant.plan, &report);
-                let _ = state.audit.append_record(&audit_entry);
+                // Losing the audit trail must be visible to the caller; the
+                // GUI reports the same condition as `auditError`.
+                let audit_error = state
+                    .audit
+                    .append_record(&audit_entry)
+                    .err()
+                    .map(|err| err.to_string());
+
+                // A run with per-target failures is not a success. Cancellation
+                // is its own terminal state: the user asked for it, and calling
+                // it "failed" would hide the fact that a stop was requested.
+                let status =
+                    cleanup_status(report.cancelled, report.error_count, report.success_count);
 
                 let payload = json!({
-                    "status": "success",
+                    "status": status,
+                    "cancelled": report.cancelled,
+                    "success_count": report.success_count,
+                    "error_count": report.error_count,
+                    "processed_count": report.processed_count,
+                    "skipped_count": report.skipped_count,
                     "cleaned_targets_count": report.success_count,
+                    // Recycle Bin moves do not free disk space; the honest
+                    // number is `moved_bytes`. `reclaim_bytes` stays the
+                    // permanent-delete figure (M6).
+                    "moved_bytes": report.moved_bytes,
+                    "moved_human": format_size(report.moved_bytes),
                     "reclaimed_bytes": report.reclaim_bytes,
                     "reclaimed_human": format_size(report.reclaim_bytes),
+                    "mode": report.mode,
                     "destination": "Windows Recycle Bin (Zero data loss)",
                     "errors": report.results.iter().filter(|r| !r.success).map(|r| json!({
                         "path": r.display_path,
                         "error": r.error
-                    })).collect::<Vec<_>>()
+                    })).collect::<Vec<_>>(),
+                    "audit_error": audit_error
                 });
-                serde_json::to_string_pretty(&payload).unwrap_or_default()
+                let text = serde_json::to_string_pretty(&payload).unwrap_or_default();
+                if status == "success" {
+                    ToolCallOutput::ok(text)
+                } else {
+                    ToolCallOutput::error(text)
+                }
             }
-            Err(e) => format!("Cleanup execution failed: {:?}", e),
+            Err(e) => ToolCallOutput::error(format!("Cleanup execution failed: {e}")),
         }
     }
 
-    fn inspect_target(&self, args: &Value) -> String {
+    fn inspect_target(&self, args: &Value) -> ToolCallOutput {
         let path_str = args.get("path").and_then(|p| p.as_str()).unwrap_or("");
         if path_str.is_empty() {
-            return t("Error: 'path' parameter is required.");
+            return ToolCallOutput::error(t("Error: 'path' parameter is required."));
         }
         let target_path = PathBuf::from(path_str);
-        let state = AppState::new();
+        let state = mcp_state();
         let catalog = match state.catalog() {
             Ok(idx) => idx,
-            Err(e) => return format!("Failed to load catalog: {:?}", e),
+            Err(e) => return ToolCallOutput::error(format!("Failed to load catalog: {e}")),
         };
 
         let exists = target_path.exists();
@@ -835,7 +1134,7 @@ impl McpContext {
                 "regenerate": r.regenerate
             }))
         });
-        serde_json::to_string_pretty(&payload).unwrap_or_default()
+        ToolCallOutput::ok(serde_json::to_string_pretty(&payload).unwrap_or_default())
     }
 }
 
@@ -844,10 +1143,156 @@ mod tests {
     use super::*;
     use std::io::Cursor;
 
+    fn preview_grant(created: Instant, token: &str) -> PreviewGrant {
+        // A grant only needs an identity and an age: the retention rule never
+        // inspects the plan or the session, and building a real scan for it
+        // would test the scanner instead of the bookkeeping.
+        PreviewGrant {
+            plan: CleanupPlan {
+                id: format!("p-{token}"),
+                session_id: "s-test".to_string(),
+                mode: DeleteMode::RecycleBin,
+                created_ms: 0,
+                expires_ms: 0,
+                items: Vec::new(),
+                total_logical_bytes: 0,
+                total_estimated_bytes: 0,
+                eligible_count: 0,
+                blocked_count: 0,
+                confirmation_token: token.to_string(),
+            },
+            session: Arc::new(crate::scanner::session::ScanSession {
+                id: "s-test".to_string(),
+                scope: ScanScope::Project,
+                root: PathBuf::new(),
+                allowed_roots: Vec::new(),
+                created: Instant::now(),
+                items: Vec::new(),
+                targets: HashMap::new(),
+                summary: None,
+            }),
+            created,
+        }
+    }
+
+    #[test]
+    fn pending_previews_stay_bounded_and_drop_the_oldest() {
+        let now = Instant::now();
+        let mut grants = HashMap::new();
+        let total = MAX_PENDING_GRANTS + 5;
+        for index in 0..total {
+            // Later indices are newer, so the first five are the oldest.
+            let age = u64::try_from(total - index).unwrap_or(0);
+            let created = now.checked_sub(Duration::from_secs(age)).unwrap_or(now);
+            make_room_for_grant(&mut grants);
+            grants.insert(
+                format!("t-{index}"),
+                preview_grant(created, &format!("t-{index}")),
+            );
+        }
+        assert_eq!(grants.len(), MAX_PENDING_GRANTS);
+        assert!(
+            !grants.contains_key("t-0"),
+            "the oldest grant must be evicted"
+        );
+        assert!(grants.contains_key(&format!("t-{}", total - 1)));
+    }
+
+    #[test]
+    fn an_expired_preview_is_dropped_before_the_map_fills() {
+        let now = Instant::now();
+        let mut grants = HashMap::new();
+        let expired = now
+            .checked_sub(PREVIEW_TTL + Duration::from_secs(1))
+            .unwrap_or(now);
+        grants.insert("stale".to_string(), preview_grant(expired, "stale"));
+        make_room_for_grant(&mut grants);
+        assert!(grants.is_empty());
+    }
+
+    fn stored_scan(created: Instant, id: &str) -> StoredScan {
+        StoredScan {
+            session: Arc::new(crate::scanner::session::ScanSession {
+                id: id.to_string(),
+                scope: ScanScope::Project,
+                root: PathBuf::new(),
+                allowed_roots: Vec::new(),
+                created: Instant::now(),
+                items: Vec::new(),
+                targets: HashMap::new(),
+                summary: None,
+            }),
+            created,
+        }
+    }
+
+    #[test]
+    fn remembered_scans_stay_bounded_and_drop_the_oldest() {
+        let now = Instant::now();
+        let mut scans = HashMap::new();
+        let total = MAX_STORED_SCANS + 4;
+        for index in 0..total {
+            // Later indices are newer, so the first four are the oldest.
+            let age = u64::try_from(total - index).unwrap_or(0);
+            let created = now.checked_sub(Duration::from_secs(age)).unwrap_or(now);
+            make_room_for_scan(&mut scans);
+            scans.insert(
+                format!("s-{index}"),
+                stored_scan(created, &format!("s-{index}")),
+            );
+        }
+        assert_eq!(scans.len(), MAX_STORED_SCANS);
+        assert!(
+            !scans.contains_key("s-0"),
+            "the oldest scan must be evicted"
+        );
+        assert!(scans.contains_key(&format!("s-{}", total - 1)));
+    }
+
+    #[test]
+    fn an_expired_scan_is_dropped_before_the_cap_is_reached() {
+        let now = Instant::now();
+        let mut scans = HashMap::new();
+        let expired = now
+            .checked_sub(crate::scanner::session::SESSION_TTL + Duration::from_secs(1))
+            .unwrap_or(now);
+        scans.insert("stale".to_string(), stored_scan(expired, "stale"));
+        make_room_for_scan(&mut scans);
+        assert!(scans.is_empty());
+    }
+
     fn call(options: McpOptions, request: &str) -> Value {
         let mut out = Vec::new();
         run_mcp_server_with(Cursor::new(format!("{request}\n")), &mut out, options);
         serde_json::from_slice(&out).expect("response json")
+    }
+
+    fn raw(options: McpOptions, request: &str) -> String {
+        let mut out = Vec::new();
+        run_mcp_server_with(Cursor::new(format!("{request}\n")), &mut out, options);
+        String::from_utf8(out).expect("utf8")
+    }
+
+    #[test]
+    fn notification_without_id_gets_no_response() {
+        let output = raw(
+            McpOptions::default(),
+            r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#,
+        );
+        assert!(output.trim().is_empty());
+    }
+
+    #[test]
+    fn null_id_is_an_invalid_request_not_a_notification() {
+        // The old `Option<Value>` parse treated `"id": null` as a notification
+        // and silently sent nothing; JSON-RPC requires a response for a
+        // present-but-null id.
+        let response = call(
+            McpOptions::default(),
+            r#"{"jsonrpc":"2.0","id":null,"method":"initialize"}"#,
+        );
+        assert_eq!(response["error"]["code"], -32600);
+        assert!(response["id"].is_null());
     }
 
     #[test]
@@ -875,6 +1320,7 @@ mod tests {
             .map(|t| t["name"].as_str().unwrap())
             .collect();
         assert!(!names.contains(&"devcleaner_execute_cleanup"));
+        assert!(!names.contains(&"devcleaner_clean_cache"));
         assert!(names.contains(&"devcleaner_preview_cleanup"));
     }
 
@@ -893,6 +1339,29 @@ mod tests {
             .map(|t| t["name"].as_str().unwrap())
             .collect();
         assert!(names.contains(&"devcleaner_execute_cleanup"));
+        assert!(names.contains(&"devcleaner_clean_cache"));
+    }
+
+    #[test]
+    fn clean_cache_requires_confirm_and_flag() {
+        // Without the flag the destructive path is refused before it can even
+        // look at the provider list.
+        let response = call(
+            McpOptions::default(),
+            r#"{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"devcleaner_clean_cache","arguments":{"provider_id":"npm","confirm":true}}}"#,
+        );
+        let text = response["result"]["content"][0]["text"].as_str().unwrap();
+        assert!(text.contains("allow-destructive"));
+
+        // With the flag but without explicit confirmation, it must refuse too.
+        let response = call(
+            McpOptions {
+                allow_destructive: true,
+            },
+            r#"{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"devcleaner_clean_cache","arguments":{"provider_id":"npm"}}}"#,
+        );
+        let text = response["result"]["content"][0]["text"].as_str().unwrap();
+        assert!(text.contains("confirm"));
     }
 
     #[test]
@@ -918,5 +1387,49 @@ mod tests {
             r#"{"jsonrpc":"2.0","id":5,"method":"nope"}"#,
         );
         assert_eq!(response["error"]["code"], -32601);
+    }
+
+    #[test]
+    fn cleanup_status_never_calls_a_failed_run_success() {
+        assert_eq!(cleanup_status(false, 0, 3), "success");
+        assert_eq!(cleanup_status(false, 1, 2), "partial");
+        assert_eq!(cleanup_status(false, 2, 0), "failed");
+        // Cancellation wins over per-target failures; the user asked to stop.
+        assert_eq!(cleanup_status(true, 0, 1), "cancelled");
+        assert_eq!(cleanup_status(true, 1, 0), "cancelled");
+    }
+
+    #[test]
+    fn blocked_tools_call_reports_is_error() {
+        let response = call(
+            McpOptions::default(),
+            r#"{"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"devcleaner_execute_cleanup","arguments":{"token":"x","confirm":true}}}"#,
+        );
+        assert_eq!(
+            response["result"]["isError"],
+            serde_json::Value::Bool(true),
+            "a blocked cleanup must be marked as an error: {response}"
+        );
+    }
+
+    #[test]
+    fn unknown_tool_reports_is_error() {
+        let response = call(
+            McpOptions::default(),
+            r#"{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"devcleaner_missing","arguments":{}}}"#,
+        );
+        assert_eq!(response["result"]["isError"], serde_json::Value::Bool(true));
+    }
+
+    #[test]
+    fn successful_listing_is_not_an_error() {
+        let response = call(
+            McpOptions::default(),
+            r#"{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"devcleaner_list_caches","arguments":{}}}"#,
+        );
+        assert_eq!(
+            response["result"]["isError"],
+            serde_json::Value::Bool(false)
+        );
     }
 }

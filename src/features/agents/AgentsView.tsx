@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   Bot,
@@ -24,7 +24,7 @@ import { useScanStore } from "@/stores/scan-store";
 
 import { useScanController } from "@/features/scan/useScanController";
 
-import { useUIText, localizeAppError, localizeBackendNote } from "@/lib/ui-text";
+import { useUIText, getUIText, localizeAppError, localizeBackendNote } from "@/lib/ui-text";
 
 import { scannerApi } from "@/lib/tauri/scanner-api";
 
@@ -75,11 +75,15 @@ export const AgentsView: React.FC = () => {
 
   const status = useScanStore((s) => s.status);
 
+  const scope = useScanStore((s) => s.scope);
+
   const error = useScanStore((s) => s.error);
 
   const progress = useScanStore((s) => s.progress);
 
   const restored = useScanStore((s) => s.restored);
+
+  const pruneItems = useScanStore((s) => s.pruneItems);
 
   const [providers, setProviders] = useState<AgentProviderInfo[]>([]);
 
@@ -91,7 +95,7 @@ export const AgentsView: React.FC = () => {
 
   const hiddenProviders = usePreferencesStore((s) => s.hiddenBuiltinProviders);
 
-  const loadPreferences = usePreferencesStore((s) => s.loadPreferences);
+  const applyProviderSettings = usePreferencesStore((s) => s.applyProviderSettings);
 
   const showToast = useUiStore((s) => s.showToast);
 
@@ -107,39 +111,101 @@ export const AgentsView: React.FC = () => {
   const [pendingRemove, setPendingRemove] = useState<AgentProviderInfo | null>(null);
   const [tab, setTab] = useState<"items" | "providers">("items");
 
-  const loadProviders = (silent = false) => {
-    if (loading) return;
+  // `loading` in a closure only reflects the render that created the callback,
+  // so two quick refreshes could both pass the guard. The ref is synchronous and
+  // the generation drops responses that arrive after unmount or after a newer
+  // request, preventing an old list from overwriting fresh data.
+  const loadingRef = useRef(false);
 
-    setLoading(true);
+  const loadGenerationRef = useRef(0);
 
-    setLoadError(null);
+  // A mutation-triggered reload that arrives while a fetch is in flight must
+  // not be dropped (the old `if (loadingRef.current) return` silently showed
+  // the pre-mutation provider list). It is queued and re-run on completion.
+  const pendingReloadRef = useRef(false);
 
-    scannerApi
-      .getAgentProviders()
+  const unmountedRef = useRef(false);
 
-      .then((list) => {
+  const loadProviders = useCallback(
+    async (silent = false) => {
+      if (unmountedRef.current) return;
+      if (loadingRef.current) {
+        pendingReloadRef.current = true;
+        return;
+      }
+
+      loadingRef.current = true;
+
+      const generation = loadGenerationRef.current + 1;
+
+      loadGenerationRef.current = generation;
+
+      if (!unmountedRef.current) {
+        setLoading(true);
+        setLoadError(null);
+      }
+
+      try {
+        const list = await scannerApi.getAgentProviders();
+
+        if (generation !== loadGenerationRef.current || unmountedRef.current) return;
+
         setProviders(list);
 
-        if (!silent) showToast(ui.agents.toastRefreshed, "info");
-      })
+        if (!silent) useUiStore.getState().showToast(getUIText().agents.toastRefreshed, "info");
+      } catch (err) {
+        if (generation !== loadGenerationRef.current || unmountedRef.current) return;
 
-      .catch((err) => {
-        setLoadError(describeError(err));
+        const message = describeError(err);
 
-        showToast(ui.agents.toastError(describeError(err)), "error");
-      })
+        setLoadError(message);
 
-      .finally(() => setLoading(false));
-  };
+        useUiStore.getState().showToast(getUIText().agents.toastError(message), "error");
+      } finally {
+        loadingRef.current = false;
+
+        if (generation === loadGenerationRef.current && !unmountedRef.current) setLoading(false);
+
+        // Run the queued refresh outside this call so it starts with the guard
+        // released.
+        if (pendingReloadRef.current && !unmountedRef.current) {
+          pendingReloadRef.current = false;
+          void loadProviders(true);
+        }
+      }
+    },
+    [showToast],
+  );
 
   useEffect(() => {
-    loadProviders(true);
-  }, []);
+    unmountedRef.current = false;
+    void loadProviders(true);
+
+    return () => {
+      // Late responses must not touch state after the view unmounts.
+      unmountedRef.current = true;
+      loadGenerationRef.current += 1;
+    };
+  }, [loadProviders]);
 
   const applySettings = (settings: AppSettings) => {
-    loadPreferences(settings);
+    applyProviderSettings(settings);
 
-    loadProviders();
+    // Hiding a built-in provider or deleting a custom one only changed the
+    // policy and the provider cards: rows from the previous scan stayed in the
+    // table, the selection and the summary, and could still be cleaned. Drop
+    // them as soon as the new policy is known.
+    const hidden = new Set(settings.hiddenBuiltinProviders ?? []);
+    const customIds = new Set(
+      (settings.customAgentProviders ?? []).map((provider) => `custom:${provider.id}`),
+    );
+    pruneItems((item) => {
+      if (item.provider === "project") return false;
+      if (hidden.has(item.provider)) return true;
+      return item.provider.startsWith("custom:") && !customIds.has(item.provider);
+    });
+
+    void loadProviders();
   };
 
   const items = useMemo(
@@ -162,8 +228,15 @@ export const AgentsView: React.FC = () => {
 
       const bytes = item.estimatedReclaimBytes ?? 0;
 
-      if (item.protected) entry.protectedBytes += bytes;
-      else entry.cleanableBytes += bytes;
+      // Same rule as the page total and the backend summary: a target is only
+      // cleanable when it is not protected, not a "keep" safety class and
+      // selectable. The card used to count only `protected`, so cards summed
+      // to more than the header total (M2).
+      if (item.protected || item.safetyClass === "keep" || !item.selectable) {
+        entry.protectedBytes += bytes;
+      } else {
+        entry.cleanableBytes += bytes;
+      }
 
       if (item.activeUse === "yes") entry.active = true;
 
@@ -242,7 +315,14 @@ export const AgentsView: React.FC = () => {
 
   // so "nothing scanned yet" is not shown after a failed or empty scan.
 
-  const isLoadedOrScanned = status === "completed" || itemIds.length > 0 || restored;
+  // A project or global-cache scan produces no agent rows. Treating any
+  // `itemIds` as "agents scanned" told the user their agent scan found nothing
+  // right after a project scan. Only an agents/all-drives scan (or a restored
+  // one) counts here.
+  const scopeCoversAgents = scope === "agents" || scope === "allDrives";
+  const isLoadedOrScanned =
+    scopeCoversAgents &&
+    (status === "completed" || status === "partial" || itemIds.length > 0 || restored);
 
   const emptyTitle = isScanning
     ? ui.common.scanning
@@ -306,7 +386,7 @@ export const AgentsView: React.FC = () => {
               variant="secondary"
               size="sm"
               icon={<RefreshCw size={13} className={loading ? "spin" : ""} />}
-              onClick={() => loadProviders(false)}
+              onClick={() => void loadProviders(false)}
               disabled={loading}
             >
               {ui.common.refresh}

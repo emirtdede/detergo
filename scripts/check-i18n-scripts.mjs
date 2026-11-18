@@ -238,47 +238,17 @@ function auditDirectory(relativeDir) {
   }
 }
 
-// The legacy `src/locales/langs/*.ts` dictionaries are still consumed by
-// ErrorBoundary and the test suite, so they are gated too. String literals are
-// extracted with a quote-aware matcher that tolerates escapes and apostrophes
-// inside double-quoted values.
-const STRING_LITERAL = /"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|`((?:[^`\\]|\\.)*)`/g;
-
-function auditTypeScriptDirectory(relativeDir) {
-  const dir = resolve(root, relativeDir);
-  if (!existsSync(dir)) return;
-  for (const name of readdirSync(dir)) {
-    if (!name.endsWith(".ts")) continue;
-    const locale = basename(name, ".ts");
-    if (locale === "en") continue;
-    const source = readFileSync(resolve(dir, name), "utf8");
-    scannedFiles++;
-    for (const match of source.matchAll(STRING_LITERAL)) {
-      const value = match[1] ?? match[2] ?? match[3];
-      if (value == null) continue;
-      scannedStrings++;
-      const problems = findViolations(locale, value);
-      if (problems.length > 0) {
-        findings.push({
-          file: `${relativeDir}/${name}`,
-          locale,
-          key: "(string literal)",
-          value,
-          problems,
-        });
-      }
-    }
-  }
-}
-
 auditDirectory("src/lib/ui-text/locales");
 auditDirectory("src/lib/ui-text/backend-locales");
 auditDirectory("src/features/docs/docs-locales");
 auditDirectory("src/features/legal/legal-locales");
-auditTypeScriptDirectory("src/locales/langs");
 
-// The Rust asset bundles are keyed by locale instead of by directory.
-for (const asset of ["src-tauri/assets/cli-locales.json", "src-tauri/assets/tray-locales.json"]) {
+// These files are keyed by locale instead of by directory.
+for (const asset of [
+  "src/lib/ui-text/error-boundary.json",
+  "src-tauri/assets/cli-locales.json",
+  "src-tauri/assets/tray-locales.json",
+]) {
   const file = resolve(root, asset);
   if (!existsSync(file)) continue;
   const bundle = JSON.parse(readFileSync(file, "utf8"));

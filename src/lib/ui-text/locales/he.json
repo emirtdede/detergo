@@ -36,7 +36,9 @@
     "on": "פעיל",
     "off": "כבוי",
     "items": "{n} פריטים",
-    "showing": "{n} מוצגים"
+    "showing": "{n} מוצגים",
+    "scanAll": "סרוק הכול",
+    "scanAllDesc": "פרויקטים, אחסון כלי AI ומטמוני חבילות"
   },
   "header": {
     "changeLocation": "שנה מיקום",
@@ -49,7 +51,8 @@
     "addFavorite": "הוסף מיקום נוכחי למועדפים",
     "removeFavorite": "הסר מיקום מהמועדפים",
     "favoriteAdded": "המיקום נוסף למועדפים.",
-    "favoriteRemoved": "המיקום הוסר מהמועדפים."
+    "favoriteRemoved": "המיקום הוסר מהמועדפים.",
+    "changeLocationConfirmDesc": "שינוי המיקום מנקה את תוצאות הסריקה הנוכחיות ואת הבחירה. היסטוריית הסריקה השמורה ותמונת המצב של הסריקה האחרונה נשמרות."
   },
   "window": {
     "minimize": "מזער",
@@ -133,7 +136,17 @@
     "ecoAgent": "סוכני AI",
     "ecoCache": "מטמונים",
     "ecoOther": "פריטי ביניים אחרים",
-    "distTotalBadge": "{size} ניתן לניקוי"
+    "distTotalBadge": "{size} ניתן לניקוי",
+    "noticeInfoTitle": "מידע",
+    "noticeInfoHint": "דילגנו על מיקומים המוגנים על ידי המערכת. אין צורך בפעולה.",
+    "noticeIssueHint": "לא ניתן היה לקרוא חלק מהמיקומים, לכן התוצאות עשויות להיות חלקיות.",
+    "copyDetails": "העתק פרטים",
+    "detailsCopied": "הפרטים הועתקו ללוח",
+    "coverage": "כיסוי הסריקה",
+    "sectionSkipped": "דולג",
+    "sectionFailed": "נכשל",
+    "sectionPartial": "חלקי",
+    "sectionNoRoot": "לא נבחרה תיקייה"
   },
   "table": {
     "project": "פרויקט",
@@ -215,7 +228,7 @@
     "confirmPermanent": "מחק לצמיתות",
     "permanentAck": "אני מבין שלא ניתן לבטל זאת.",
     "blockedReasons": "יעדים חסומים",
-    "expires": "תכנית זו פוקעת בעוד 15 דקות.",
+    "expires": "תכנית זו פוקעת בעוד 30 דקות.",
     "close": "סגור",
     "working": "פועל…",
     "runInBackground": "הפעלה ברקע",
@@ -223,7 +236,11 @@
     "cancelling": "מבטל…",
     "progress": "עובדו {processed} / {total}",
     "currentItem": "נוכחי: {path}",
-    "alreadyRunning": "ניקוי כבר פועל."
+    "alreadyRunning": "ניקוי כבר פועל.",
+    "coveredByParent": "חסום",
+    "noMethod": "חסום",
+    "officialActionRequired": "פקודה רשמית",
+    "modeNotAllowed": "קבוע"
   },
   "result": {
     "title": "תוצאת ניקוי",
@@ -238,6 +255,7 @@
     "verified": "אומת",
     "cancelled": "הניקוי בוטל",
     "cancelledNote": "עובדו {processed} פריטים, דולגו {skipped}.",
+    "progressIncomplete": "לא ניתן היה להציג {count} עדכוני התקדמות.",
     "processed": "עובד",
     "skipped": "דולג",
     "viewResults": "הצגת התוצאות",
@@ -390,7 +408,10 @@
     "clearScansBtn": "נקה סריקות",
     "scopeProjects": "תלות בפרויקטים",
     "scopeAgents": "סוכני AI",
-    "scopeAllDrives": "כל הכוננים"
+    "scopeAllDrives": "כל הכוננים",
+    "statusPartial": "חלקי",
+    "totalCleaned": "סך הכל שחזור",
+    "statusDepthLimited": "חלקי"
   },
   "settings": {
     "general": "מראה",
@@ -451,6 +472,12 @@
     "protectionsHint": "תיקיות שלעולם לא ניתן למחוק ושמות לדילוג.",
     "agentsHint": "מדיניות ניקוי עבור מטמוני סוכן ה-AI.",
     "privacyHint": "היסטוריה מקומית והסתרת נתיבים על המסך.",
+    "resetAppDataTitle": "אפס את כל נתוני האפליקציה",
+    "resetAppDataHint": "מוחק את כל ההגדרות, היסטוריית הניקוי, היסטוריית הסריקה, יומני הפעולות והסריקה האחרונה שנשמרה, ולאחר מכן מפעיל מחדש את האפליקציה. לא ניתן לבטל זאת.",
+    "resetAppDataConfirmBtn": "מחק נתונים והפעל מחדש",
+    "resetAppDataBusy": "מאפס...",
+    "resetAppDataSuccess": "כל נתוני האפליקציה אופסו. הגדרות ברירת המחדל שוחזרו.",
+    "resetAppDataBlocked": "סריקה או ניקוי פועלים. עצור אותו לפני איפוס נתוני האפליקציה.",
     "aboutHint": "גרסה, פרטי בנייה, קטלוג ו-Vellium.",
     "legalHint": "תנאי שימוש, מדיניות פרטיות ורישיונות קוד פתוח.",
     "sidebar": "סרגל צד",
@@ -547,7 +574,11 @@
     "standardMotion": "אנימציה סטנדרטית",
     "aboutTitleBy": "Dev Cleaner מאת Vellium",
     "mcpDestructiveTitle": "אפשר פעולות הרסניות של MCP",
-    "mcpDestructiveHint": "דורש את הדגל --allow-destructive; כל הרצה עדיין זקוקה לאסימון תצוגה מקדימה חד-פעמי"
+    "mcpDestructiveHint": "דורש את הדגל --allow-destructive; כל הרצה עדיין זקוקה לאסימון תצוגה מקדימה חד-פעמי",
+    "pathMustBeAbsolute": "נתיבים חייבים להיות מוחלטים, למשל C:\\Projects.",
+    "excludedNameInvalid": "כלל חייב להיות שם קובץ או תיקיה בודדים, ללא מפרידי נתיב.",
+    "shortcutNeedsModifier": "קיצור דרך גלובלי צריך Ctrl, Alt או Meta בתוספת מקש, או מקש פונקציה.",
+    "shortcutsResetWarning": "{count} קיצורי דרך לא חוקיים אופסו לברירות המחדל שלהם."
   },
   "legal": {
     "docTabsLabel": "מסמכים משפטיים",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "לא נמצאו ארטיפקטי פרויקט שניתן לנקות",
     "emptyTitleIdle": "סריקת פרויקט לא בוצעה עדיין",
     "emptyDescClean": "התיקיה שנבחרה נקיה. לא נמצאו node_modules, target או ארטיפקטי בנייה שניתן לנקות.",
-    "emptyDescIdle": "בחר תיקיה וסרוק כדי לרשום תלותי פרויקט וארטיפקטי בנייה."
+    "emptyDescIdle": "בחר תיקיה וסרוק כדי לרשום תלותי פרויקט וארטיפקטי בנייה.",
+    "kpiTargets": "יעדים ניתנים לניקוי",
+    "kpiTargetsSub": "ב-{count} שורשי פרויקטים",
+    "kpiTargetsUnknown": "סרוק שוב כדי לרענן את מספר הפרויקטים"
   },
   "about": {
     "kpiVersion": "גרסה",
@@ -616,7 +650,8 @@
     "contactSupport": "תמיכת לקוחות",
     "contactBillingDesc": "חיוב, רכש ארגוני ותמיכה במנויים",
     "contactPrivacyDesc": "אבטחת נתונים, GDPR, ופניות פרטיות",
-    "ecoCacheScope": "npm מטמון, Cargo רישום, pip מטמון, yarn"
+    "ecoCacheScope": "npm מטמון, Cargo רישום, pip מטמון, yarn",
+    "contactBilling": "חיוב ותשלומים"
   },
   "docs": {
     "catGuide": "מדריכים ואדריכלות",

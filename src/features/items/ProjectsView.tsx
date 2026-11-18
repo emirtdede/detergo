@@ -7,8 +7,9 @@ import { useScanStore } from "@/stores/scan-store";
 import { useScanController } from "@/features/scan/useScanController";
 import { useUIText, localizeAppError } from "@/lib/ui-text";
 import { ItemTable } from "./ItemTable";
-import { maskPath } from "@/lib/format/path";
-import { formatBytes, truncatePath } from "@/lib/formatters";
+import { maskPath, truncatePath } from "@/lib/format/path";
+import { formatBytes } from "@/lib/formatters";
+import { ownBytesById } from "@/lib/item-totals";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import "./items.css";
 
@@ -23,29 +24,53 @@ export const ProjectsView: React.FC = () => {
   const status = useScanStore((s) => s.status);
   const error = useScanStore((s) => s.error);
   const progress = useScanStore((s) => s.progress);
+  const summary = useScanStore((s) => s.summary);
   const maskPaths = usePreferencesStore((s) => s.maskPaths);
 
-  const items = useMemo(
-    () =>
-      itemIds
-        .map((id) => itemsById[id])
-        .filter((item) => item && item.provider === "project" && item.status !== "deleted"),
+  const projectItems = useMemo(
+    () => itemIds.map((id) => itemsById[id]).filter((item) => item && item.provider === "project"),
     [itemIds, itemsById],
   );
 
+  const items = useMemo(
+    () => projectItems.filter((item) => item.status !== "deleted"),
+    [projectItems],
+  );
+
   const projectTotals = useMemo(() => {
+    // Nested project targets (for example `.next` and `.next/cache`) are
+    // measured recursively; summing the raw rows promised the same bytes twice.
+    const own = ownBytesById(projectItems);
     let cleanable = 0;
     let safe = 0;
-    const projects = new Set<string>();
+    let cleanableTargets = 0;
+    const projectRoots = new Set<string>();
     for (const item of items) {
+      // Fallback rows (a stray `node_modules` outside any manifest) carry a
+      // synthetic project id. Counting those was what turned 12 projects into
+      // "1059 projects"; they are cleanable but not projects.
+      if (item.projectDetected !== false && item.projectRoot) {
+        projectRoots.add(item.projectRoot.toLowerCase());
+      }
       if (item.protected || item.safetyClass === "keep" || !item.selectable) continue;
-      const b = item.estimatedReclaimBytes ?? 0;
+      const b = own.get(item.id)?.estimatedReclaimBytes ?? 0;
       cleanable += b;
+      cleanableTargets += 1;
       if (item.safetyClass === "safe") safe += b;
-      if (item.projectId) projects.add(item.projectId);
     }
-    return { cleanable, safe, projectCount: projects.size };
-  }, [items]);
+    return { cleanable, safe, cleanableTargets, projectRoots: projectRoots.size };
+  }, [items, projectItems]);
+
+  // A snapshot written before `detectedProjectCount` existed cannot distinguish
+  // real roots from fallback rows, so it must not show a number at all.
+  const detectedProjects = useMemo(() => {
+    const fromSummary = summary?.detectedProjectCount;
+    if (typeof fromSummary === "number") return fromSummary;
+    const hasFlags = projectItems.some((item) => typeof item.projectDetected === "boolean");
+    return hasFlags ? projectTotals.projectRoots : null;
+  }, [summary?.detectedProjectCount, projectItems, projectTotals.projectRoots]);
+
+  const numberFormat = useMemo(() => new Intl.NumberFormat(language ?? undefined), [language]);
 
   const emptyTitle = isScanning
     ? ui.common.scanning
@@ -127,16 +152,22 @@ export const ProjectsView: React.FC = () => {
 
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">{ui.projects.kpiDetected}</span>
+            <span className="nc-kpi-card-label">{ui.projects.kpiTargets}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--purple">
               <Boxes size={14} />
             </span>
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">
-              {projectTotals.projectCount} {ui.overview.projects}
+              {items.length > 0
+                ? numberFormat.format(projectTotals.cleanableTargets)
+                : numberFormat.format(0)}
             </span>
-            <span className="nc-kpi-card-sub">{ui.projects.kpiDetectedSub}</span>
+            <span className="nc-kpi-card-sub">
+              {detectedProjects !== null
+                ? ui.projects.kpiTargetsSub(numberFormat.format(detectedProjects))
+                : ui.projects.kpiTargetsUnknown}
+            </span>
           </div>
         </div>
       </div>

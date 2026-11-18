@@ -9,18 +9,22 @@ use crate::platform::identity;
 use crate::safety::ActiveUse;
 use crate::scanner::session::ScanSession;
 
-pub const PLAN_TTL_SECS: u64 = 15 * 60;
+pub const PLAN_TTL_SECS: u64 = 30 * 60;
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TargetSnapshot {
     pub exists: bool,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub logical_bytes: u64,
+    #[cfg_attr(feature = "bindings", specta(type = Option<specta_typescript::Number<u64>>))]
     pub modified_secs: Option<u64>,
     pub file_id: Option<String>,
     /// Nanosecond modification time used only for in-memory verification.
     /// Kept out of the serialized plan so the wire format stays stable.
     #[serde(skip)]
+    #[cfg_attr(feature = "bindings", specta(type = Option<specta_typescript::Number<u64>>))]
     pub modified_nanos: Option<u64>,
 }
 
@@ -128,6 +132,7 @@ pub fn verify_snapshot(
     VerificationOutcome::Verified
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PlanItem {
@@ -139,7 +144,9 @@ pub struct PlanItem {
     pub project_name: Option<String>,
     pub safety_class: SafetyClass,
     pub cleanup_method: CleanupMethod,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub logical_bytes: u64,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub estimated_reclaim_bytes: u64,
     pub active_use: ActiveUse,
     pub eligible: bool,
@@ -149,18 +156,25 @@ pub struct PlanItem {
     pub snapshot: TargetSnapshot,
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CleanupPlan {
     pub id: String,
     pub session_id: String,
     pub mode: DeleteMode,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub created_ms: u64,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub expires_ms: u64,
     pub items: Vec<PlanItem>,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub total_logical_bytes: u64,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub total_estimated_bytes: u64,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub eligible_count: u64,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub blocked_count: u64,
     pub confirmation_token: String,
 }
@@ -180,6 +194,68 @@ pub fn now_ms() -> u64 {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_millis() as u64)
         .unwrap_or(0)
+}
+
+/// Why a target cannot be deleted, independent of parent/child coverage.
+///
+/// Coverage is decided separately so that a blocked parent (protected, active,
+/// too small, unmeasured) never hides an eligible child. The old single pass
+/// added every selected parent to `kept` before checking its eligibility, so a
+/// blocked parent marked its children `COVERED_BY_PARENT` even though it would
+/// never be deleted.
+fn eligibility_block(
+    target: &crate::scanner::models::StoredTarget,
+    mode: DeleteMode,
+    policy: &crate::cleanup::CleanupPolicy,
+) -> Option<(String, String)> {
+    if target.protected || target.safety_class == SafetyClass::Keep {
+        return Some((
+            "PROTECTED".to_string(),
+            "Protected data; cannot be deleted from interface.".to_string(),
+        ));
+    }
+    if target.active_use.blocks_deletion() {
+        return Some((
+            "ACTIVE_USE".to_string(),
+            "Target is currently in use or active status is unknown.".to_string(),
+        ));
+    }
+    if let Some((code, reason)) = policy.agent_policy_block(target) {
+        return Some((code.to_string(), reason));
+    }
+    if target.logical_bytes.is_none() {
+        return Some((
+            "NOT_MEASURED".to_string(),
+            "Size not measured; rescan required.".to_string(),
+        ));
+    }
+    if policy.min_size_bytes > 0
+        && target
+            .allocated_bytes
+            .unwrap_or_else(|| target.logical_bytes.unwrap_or(0))
+            < policy.min_size_bytes
+    {
+        return Some((
+            "BELOW_MIN_SIZE".to_string(),
+            "Target is smaller than minimum item size in settings.".to_string(),
+        ));
+    }
+    match target.cleanup_method {
+        CleanupMethod::None => Some((
+            "NO_METHOD".to_string(),
+            "No cleanup method defined for this target.".to_string(),
+        )),
+        CleanupMethod::OfficialTool => Some((
+            "OFFICIAL_ACTION_REQUIRED".to_string(),
+            "This target can only be cleaned via official tool command.".to_string(),
+        )),
+        CleanupMethod::Permanent if mode == DeleteMode::RecycleBin => Some((
+            "MODE_NOT_ALLOWED".to_string(),
+            "This target can only be cleaned with explicit permanent deletion confirmation."
+                .to_string(),
+        )),
+        _ => None,
+    }
 }
 
 /// Builds a plan from backend-owned target IDs. Paths are never accepted from
@@ -213,10 +289,14 @@ pub fn build_plan(
 
     ordered.sort_by_key(|t| t.path.components().count());
 
+    // Only targets that will actually be deleted may cover their descendants.
     let mut kept: Vec<&crate::scanner::models::StoredTarget> = Vec::new();
     let mut covered: std::collections::HashMap<String, String> = std::collections::HashMap::new();
 
     for target in &ordered {
+        if eligibility_block(target, mode, policy).is_some() {
+            continue;
+        }
         let parent = kept
             .iter()
             .find(|k| k.path != target.path && target.path.starts_with(&k.path));
@@ -241,65 +321,19 @@ pub fn build_plan(
             .map(|n| n.to_string_lossy().to_string())
             .unwrap_or_else(|| display_path.clone());
 
-        let mut eligible = true;
-        let mut blocked_code: Option<String> = None;
-        let mut blocked_reason: Option<String> = None;
-
-        if let Some(parent_id) = covered.get(&target.id) {
-            eligible = false;
-            blocked_code = Some("COVERED_BY_PARENT".to_string());
-            blocked_reason = Some(format!("Parent target already selected ({})", parent_id));
-        } else if target.protected || target.safety_class == SafetyClass::Keep {
-            eligible = false;
-            blocked_code = Some("PROTECTED".to_string());
-            blocked_reason = Some("Protected data; cannot be deleted from interface.".to_string());
-        } else if target.active_use.blocks_deletion() {
-            eligible = false;
-            blocked_code = Some("ACTIVE_USE".to_string());
-            blocked_reason =
-                Some("Target is currently in use or active status is unknown.".to_string());
-        } else if let Some((code, reason)) = policy.agent_policy_block(target) {
-            eligible = false;
-            blocked_code = Some(code.to_string());
-            blocked_reason = Some(reason);
-        } else if target.logical_bytes.is_none() {
-            eligible = false;
-            blocked_code = Some("NOT_MEASURED".to_string());
-            blocked_reason = Some("Size not measured; rescan required.".to_string());
-        } else if policy.min_size_bytes > 0
-            && target
-                .allocated_bytes
-                .unwrap_or_else(|| target.logical_bytes.unwrap_or(0))
-                < policy.min_size_bytes
-        {
-            eligible = false;
-            blocked_code = Some("BELOW_MIN_SIZE".to_string());
-            blocked_reason =
-                Some("Target is smaller than minimum item size in settings.".to_string());
-        } else {
-            match target.cleanup_method {
-                CleanupMethod::None => {
-                    eligible = false;
-                    blocked_code = Some("NO_METHOD".to_string());
-                    blocked_reason = Some("No cleanup method defined for this target.".to_string());
+        let (eligible, blocked_code, blocked_reason) =
+            if let Some(parent_id) = covered.get(&target.id) {
+                (
+                    false,
+                    Some("COVERED_BY_PARENT".to_string()),
+                    Some(format!("Parent target already selected ({})", parent_id)),
+                )
+            } else {
+                match eligibility_block(target, mode, policy) {
+                    Some((code, reason)) => (false, Some(code), Some(reason)),
+                    None => (true, None, None),
                 }
-                CleanupMethod::OfficialTool => {
-                    eligible = false;
-                    blocked_code = Some("OFFICIAL_ACTION_REQUIRED".to_string());
-                    blocked_reason = Some(
-                        "This target can only be cleaned via official tool command.".to_string(),
-                    );
-                }
-                CleanupMethod::Permanent if mode == DeleteMode::RecycleBin => {
-                    eligible = false;
-                    blocked_code = Some("MODE_NOT_ALLOWED".to_string());
-                    blocked_reason = Some(
-                        "This target can only be cleaned with explicit permanent deletion confirmation.".to_string(),
-                    );
-                }
-                _ => {}
-            }
-        }
+            };
 
         let logical = target.logical_bytes.unwrap_or(0);
         let estimated = target.allocated_bytes.unwrap_or(logical);

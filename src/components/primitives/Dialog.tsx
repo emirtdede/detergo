@@ -1,6 +1,7 @@
 import React, { useEffect, useId, useRef } from "react";
 import { X } from "lucide-react";
 import { useUIText } from "@/lib/ui-text";
+import { useUiStore } from "@/stores/ui-store";
 import { IconButton } from "./IconButton";
 import "./primitives.css";
 
@@ -22,6 +23,14 @@ const FOCUSABLE_SELECTOR = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(",");
 
+/**
+ * Open dialogs, in mount order. `keydown` reaches every listener on the same
+ * target, so without this stack one Escape ran *every* open dialog's
+ * `onClose`: dismissing the close guard also cleared the pending cleanup plan
+ * (or the finished cleanup report) underneath it.
+ */
+const dialogStack: HTMLElement[] = [];
+
 export const Dialog: React.FC<DialogProps> = ({
   isOpen,
   onClose,
@@ -34,13 +43,28 @@ export const Dialog: React.FC<DialogProps> = ({
   const titleId = useId();
   const modalRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  // Whether the current press started on the overlay itself. A drag that ends
+  // over the overlay (text selection starting inside the dialog) also fires a
+  // `click` whose target is the overlay; without tracking the press origin that
+  // dismissed a dialog the user was actively interacting with.
+  const overlayPressRef = useRef(false);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+
+  // Every dialog counts, not only the ones tracked by `activeModal`. The
+  // counter is incremented on mount and decremented on unmount, so nested
+  // dialogs keep the background shortcuts disabled until the last one closes.
+  useEffect(() => {
+    if (!isOpen) return;
+    useUiStore.getState().pushDialog();
+    return () => useUiStore.getState().popDialog();
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
 
     const modal = modalRef.current;
+    if (modal) dialogStack.push(modal);
     previousFocusRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
@@ -58,6 +82,11 @@ export const Dialog: React.FC<DialogProps> = ({
     });
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Only the top-most dialog owns the keyboard. Every open Dialog
+      // registered its own window listener, and `preventDefault()` does not
+      // stop the other listeners.
+      if (dialogStack[dialogStack.length - 1] !== modal) return;
+
       if (event.key === "Escape") {
         event.preventDefault();
         onCloseRef.current();
@@ -89,6 +118,8 @@ export const Dialog: React.FC<DialogProps> = ({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => {
+      const index = modal ? dialogStack.lastIndexOf(modal) : -1;
+      if (index !== -1) dialogStack.splice(index, 1);
       cancelAnimationFrame(frame);
       window.removeEventListener("keydown", handleKeyDown);
       previousFocusRef.current?.focus();
@@ -100,8 +131,18 @@ export const Dialog: React.FC<DialogProps> = ({
   return (
     <div
       className="dialog-overlay"
+      onPointerDown={(event) => {
+        // Only a press that starts outside the modal counts as a dismissal
+        // gesture; a drag that merely ends there must not close the dialog.
+        overlayPressRef.current = event.target === event.currentTarget;
+      }}
+      onPointerCancel={() => {
+        overlayPressRef.current = false;
+      }}
       onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        const pressedOnOverlay = overlayPressRef.current;
+        overlayPressRef.current = false;
+        if (pressedOnOverlay && event.target === event.currentTarget) onClose();
       }}
       role="presentation"
     >

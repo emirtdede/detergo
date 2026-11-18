@@ -12,6 +12,7 @@ pub const COMMIT_SHORT: &str = env!("NC_BUILD_COMMIT_SHORT");
 pub const DIRTY: &str = env!("NC_BUILD_DIRTY");
 pub const BUILT_AT_EPOCH_SECS: &str = env!("NC_BUILD_TIME");
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BuildInfo {

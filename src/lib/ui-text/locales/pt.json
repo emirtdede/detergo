@@ -36,7 +36,9 @@
     "on": "Ligado",
     "off": "Desligado",
     "items": "{n} itens",
-    "showing": "{n} exibidos"
+    "showing": "{n} exibidos",
+    "scanAll": "Analisar tudo",
+    "scanAllDesc": "Projetos, armazenamento de ferramentas de IA e caches de pacotes"
   },
   "header": {
     "changeLocation": "Alterar Local",
@@ -49,7 +51,8 @@
     "addFavorite": "Adicionar localização atual aos favoritos",
     "removeFavorite": "Remover localização dos favoritos",
     "favoriteAdded": "Localização adicionada aos favoritos.",
-    "favoriteRemoved": "Localização removida dos favoritos."
+    "favoriteRemoved": "Localização removida dos favoritos.",
+    "changeLocationConfirmDesc": "Alterar o local limpa os resultados da verificação atual e a seleção. O histórico de verificações guardado e a última captura da verificação são preservados."
   },
   "window": {
     "minimize": "Minimizar",
@@ -133,7 +136,17 @@
     "ecoAgent": "Agentes de IA",
     "ecoCache": "Caches",
     "ecoOther": "Outros artefatos",
-    "distTotalBadge": "{size} passível de limpeza"
+    "distTotalBadge": "{size} passível de limpeza",
+    "noticeInfoTitle": "Informações",
+    "noticeInfoHint": "Os locais protegidos pelo sistema foram ignorados. Nenhuma ação necessária.",
+    "noticeIssueHint": "Não foi possível ler alguns locais, por isso os resultados podem estar incompletos.",
+    "copyDetails": "Copiar detalhes",
+    "detailsCopied": "Detalhes copiados para a área de transferência",
+    "coverage": "Cobertura da análise",
+    "sectionSkipped": "Ignorado",
+    "sectionFailed": "Falhou",
+    "sectionPartial": "Incompleto",
+    "sectionNoRoot": "Nenhuma pasta selecionada"
   },
   "table": {
     "project": "Projeto",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Excluir permanentemente",
     "permanentAck": "Entendo que isso não pode ser desfeito.",
     "blockedReasons": "Alvos bloqueados",
-    "expires": "Este plano expira em 15 minutos.",
+    "expires": "Este plano expira em 30 minutos.",
     "close": "Fechar",
     "working": "Trabalhando…",
     "runInBackground": "Executar em segundo plano",
@@ -223,7 +236,11 @@
     "cancelling": "A cancelar…",
     "progress": "Processados {processed} / {total}",
     "currentItem": "Atual: {path}",
-    "alreadyRunning": "Já está a decorrer uma limpeza."
+    "alreadyRunning": "Já está a decorrer uma limpeza.",
+    "coveredByParent": "Bloqueado",
+    "noMethod": "Bloqueado",
+    "officialActionRequired": "Comando oficial",
+    "modeNotAllowed": "Permanente"
   },
   "result": {
     "title": "Resultado da limpeza",
@@ -238,6 +255,7 @@
     "verified": "verificado",
     "cancelled": "Limpeza cancelada",
     "cancelledNote": "{processed} itens processados, {skipped} ignorados.",
+    "progressIncomplete": "Não foi possível mostrar {count} atualizações de progresso.",
     "processed": "Processados",
     "skipped": "Ignorados",
     "viewResults": "Ver resultados",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Limpar Varreduras",
     "scopeProjects": "Dependências do Projeto",
     "scopeAgents": "Agentes de IA",
-    "scopeAllDrives": "Todos os Discos"
+    "scopeAllDrives": "Todos os Discos",
+    "statusPartial": "Parcial",
+    "totalCleaned": "Total recuperado",
+    "statusDepthLimited": "Parcial"
   },
   "settings": {
     "general": "Aparência",
@@ -451,6 +472,12 @@
     "protectionsHint": "Pastas que nunca devem ser excluídas e nomes a serem ignorados.",
     "agentsHint": "Política de limpeza de caches do agente de IA.",
     "privacyHint": "Histórico local e mascaramento de caminho na tela.",
+    "resetAppDataTitle": "Redefinir todos os dados do aplicativo",
+    "resetAppDataHint": "Exclui todas as configurações, histórico de limpeza, histórico de verificação, registros de ações e a última verificação salva e, em seguida, reinicia o aplicativo. Isto não pode ser desfeito.",
+    "resetAppDataConfirmBtn": "Exclua os dados e reinicie",
+    "resetAppDataBusy": "Redefinindo…",
+    "resetAppDataSuccess": "Todos os dados do aplicativo foram redefinidos. Configurações padrão restauradas.",
+    "resetAppDataBlocked": "Uma verificação ou limpeza está em execução. Pare antes de redefinir os dados do aplicativo.",
     "aboutHint": "Versão, detalhes da compilação, catálogo e Vellium.",
     "legalHint": "Termos de uso, política de privacidade e licenças de código aberto.",
     "sidebar": "Barra lateral",
@@ -547,7 +574,11 @@
     "standardMotion": "Animação Padrão",
     "aboutTitleBy": "Dev Cleaner por Vellium",
     "mcpDestructiveTitle": "Permitir ações destrutivas do MCP",
-    "mcpDestructiveHint": "Requer a flag --allow-destructive; cada execução ainda precisa de um token de pré-visualização de uso único"
+    "mcpDestructiveHint": "Requer a flag --allow-destructive; cada execução ainda precisa de um token de pré-visualização de uso único",
+    "pathMustBeAbsolute": "Os caminhos devem ser absolutos, por exemplo C:\\Projects.",
+    "excludedNameInvalid": "Uma regra deve ser um único nome de arquivo ou pasta, sem separadores de caminho.",
+    "shortcutNeedsModifier": "Um atalho global precisa de Ctrl, Alt ou Meta mais uma tecla ou tecla de função.",
+    "shortcutsResetWarning": "{count} atalhos inválidos foram redefinidos para seus padrões."
   },
   "legal": {
     "docTabsLabel": "Documentos legais",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Nenhum Artefato de Projeto Limpeza Encontrado",
     "emptyTitleIdle": "Nenhuma Varredura de Projeto Realizada Ainda",
     "emptyDescClean": "Diretório selecionado está limpo. Nenhum node_modules, target ou artefatos de compilação encontráveis para limpeza.",
-    "emptyDescIdle": "Escolha uma pasta e escaneie para listar dependências do projeto e artefatos de compilação."
+    "emptyDescIdle": "Escolha uma pasta e escaneie para listar dependências do projeto e artefatos de compilação.",
+    "kpiTargets": "Alvos limpáveis",
+    "kpiTargetsSub": "Em {count} raízes de projeto",
+    "kpiTargetsUnknown": "Analise novamente para atualizar a contagem de projetos"
   },
   "about": {
     "kpiVersion": "Versão",
@@ -616,7 +650,8 @@
     "contactSupport": "Suporte ao Cliente",
     "contactBillingDesc": "Faturamento, compras corporativas e suporte a assinaturas",
     "contactPrivacyDesc": "Segurança de dados, GDPR e consultas sobre privacidade",
-    "ecoCacheScope": "npm cache, Cargo registro, pip cache, yarn"
+    "ecoCacheScope": "npm cache, Cargo registro, pip cache, yarn",
+    "contactBilling": "Faturamento e pagamentos"
   },
   "docs": {
     "catGuide": "Guias & Arquitetura",

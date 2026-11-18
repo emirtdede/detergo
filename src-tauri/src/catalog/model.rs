@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
 /// Safety classification, ordered from least to most dangerous to remove.
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum SafetyClass {
@@ -25,6 +26,7 @@ impl SafetyClass {
     }
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum CleanupMethod {
@@ -34,6 +36,7 @@ pub enum CleanupMethod {
     None,
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum TargetKind {
@@ -42,6 +45,7 @@ pub enum TargetKind {
     FileGroup,
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum MarkerMode {
@@ -49,6 +53,7 @@ pub enum MarkerMode {
     All,
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum GitPolicy {
@@ -59,6 +64,7 @@ pub enum GitPolicy {
     DenyTracked,
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Confidence {
@@ -67,6 +73,7 @@ pub enum Confidence {
     Low,
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "camelCase", deserialize = "snake_case"))]
 pub struct Rule {
@@ -112,6 +119,7 @@ pub struct Rule {
     pub requires_idle: bool,
     /// Maximum directory depth at which this rule matches.
     #[serde(default)]
+    #[cfg_attr(feature = "bindings", specta(type = Option<specta_typescript::Number<usize>>))]
     pub max_depth: Option<usize>,
     #[serde(default)]
     pub note: Option<String>,

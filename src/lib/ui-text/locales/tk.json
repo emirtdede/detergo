@@ -36,7 +36,9 @@
     "on": "Açyk",
     "off": "Öçük",
     "items": "{n} sany zatlar",
-    "showing": "{n} sany görkezildi"
+    "showing": "{n} sany görkezildi",
+    "scanAll": "Hemmesini skan et",
+    "scanAllDesc": "Taslamalar, AI gurallarynyň saklanyşy we paket keşleri"
   },
   "header": {
     "changeLocation": "Ýerleşişi Üýtget",
@@ -49,7 +51,8 @@
     "addFavorite": "Häzirki ýerleşiş ýerini halaýanlaryňa goş",
     "removeFavorite": "Ýerleşiş ýerini halaýanlardan aýyr",
     "favoriteAdded": "Ýerleşiş ýeri halaýanlara goşuldy.",
-    "favoriteRemoved": "Ýerleşiş ýeri halaýanlardan aýryldy."
+    "favoriteRemoved": "Ýerleşiş ýeri halaýanlardan aýryldy.",
+    "changeLocationConfirmDesc": "Ýeri üýtgetmek häzirki skan netijelerini we saýlawy arassalaýar. Saklanan skan taryhyňyz we soňky skan suraty saklanýar."
   },
   "window": {
     "minimize": "Kiçelt",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI agentleri",
     "ecoCache": "Keshler",
     "ecoOther": "Beýleki artefaktlar",
-    "distTotalBadge": "{size} arassalanyp bilinýän"
+    "distTotalBadge": "{size} arassalanyp bilinýän",
+    "noticeInfoTitle": "Maglumat",
+    "noticeInfoHint": "Ulgam tarapyndan goralýan ýerler geçirildi. Hiç hili hereket gerek däl.",
+    "noticeIssueHint": "Käbir ýerleri okap bolmady, şonuň üçin netijeler doly bolmazlygy mümkin.",
+    "copyDetails": "Jikme-jiklikleri göçüriň",
+    "detailsCopied": "Jikme-jiklikler alyş-çalyş buferine göçürildi",
+    "coverage": "Skan örtüşi",
+    "sectionSkipped": "Geçirildi",
+    "sectionFailed": "Şowsuz",
+    "sectionPartial": "Doly däl",
+    "sectionNoRoot": "Hiç hili papka saýlanmady"
   },
   "table": {
     "project": "Taslama",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Hemişelik sil",
     "permanentAck": "Men muny yzyna alyp bolmajakdygyna düşünýärin.",
     "blockedReasons": "Bloklanan nyşanlar",
-    "expires": "Bu meýilnama 15 minutdan soň möhleti dolýar.",
+    "expires": "Bu meýilnama 30 minutdan soň möhleti dolýar.",
     "close": "Ýapmak",
     "working": "Iş...",
     "runInBackground": "Arka planda işlet",
@@ -223,7 +236,11 @@
     "cancelling": "Ýatyrylýar…",
     "progress": "Işlenen {processed} / {total}",
     "currentItem": "Häzirki: {path}",
-    "alreadyRunning": "Arassalama eýýäm dowam edýär."
+    "alreadyRunning": "Arassalama eýýäm dowam edýär.",
+    "coveredByParent": "Bloklandy",
+    "noMethod": "Bloklandy",
+    "officialActionRequired": "Resmi buýruk",
+    "modeNotAllowed": "hemişelik"
   },
   "result": {
     "title": "Arassalaýyş netijesi",
@@ -238,6 +255,7 @@
     "verified": "tassyklanyldy",
     "cancelled": "Arassalama ýatyryldy",
     "cancelledNote": "{processed} element işlendi, {skipped} geçildi.",
+    "progressIncomplete": "{count} öňe gidiş täzelenmesini görkezip bolmady.",
     "processed": "Işlendi",
     "skipped": "Geçildi",
     "viewResults": "Netijeleri gör",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Skanlary arassala",
     "scopeProjects": "Taslama Garaşlyklary",
     "scopeAgents": "AI Agentler",
-    "scopeAllDrives": "Ähli Diski"
+    "scopeAllDrives": "Ähli Diski",
+    "statusPartial": "Bölekleýin",
+    "totalCleaned": "Jemi gaýtadan alnan",
+    "statusDepthLimited": "Bölekleýin"
   },
   "settings": {
     "general": "Görnüş",
@@ -451,6 +472,12 @@
     "protectionsHint": "Heç haçan pozulmaly bolmadyk bukjalar we üýtgeýän atlar.",
     "agentsHint": "AI agent keshleri üçün arassalaýyş syýasaty.",
     "privacyHint": "Ýerli taryh we ekran ýoluny maskirläp görkezmek.",
+    "resetAppDataTitle": "Apphli programma maglumatlaryny täzeden düzüň",
+    "resetAppDataHint": "Settingshli sazlamalary, arassalama taryhyny, skaner taryhyny, hereket ýazgylaryny we ýatda saklanan soňky skaneri pozýar, soňra programmany täzeden açýar. Muny yzyna gaýtaryp bolmaz.",
+    "resetAppDataConfirmBtn": "Maglumatlary pozuň we täzeden açyň",
+    "resetAppDataBusy": "Täzeden düzmek…",
+    "resetAppDataSuccess": "Programhli programma maglumatlary täzeden düzüldi. Bellenen sazlamalar dikeldildi.",
+    "resetAppDataBlocked": "Skaner ýa-da arassalamak işleýär. Programma maglumatlaryny täzeden düzmezden ozal saklaň.",
     "aboutHint": "Wersiýa, gurnama maglumatlary, katalog we Vellium.",
     "legalHint": "Ulanyş şertleri, gizlinlik syýasaty we açyk çeşme lisenziýalar.",
     "sidebar": "Çep panel",
@@ -547,7 +574,11 @@
     "standardMotion": "Standart animasiýa",
     "aboutTitleBy": "Dev Cleaner Vellium",
     "mcpDestructiveTitle": "MCP weýranyjy hereketlerine rugsat ber",
-    "mcpDestructiveHint": "--allow-destructive belgisi talap edilýär; her ýerine ýetiriş henizem bir gezeklik deslapky görnüş tokenini talap edýär"
+    "mcpDestructiveHint": "--allow-destructive belgisi talap edilýär; her ýerine ýetiriş henizem bir gezeklik deslapky görnüş tokenini talap edýär",
+    "pathMustBeAbsolute": "Sollar mutlak bolmaly, mysal üçin C: \\ Taslamalar.",
+    "excludedNameInvalid": "Düzgün, ýol bölüjisiz bir faýl ýa-da bukjanyň ady bolmaly.",
+    "shortcutNeedsModifier": "Global salgylanma Ctrl, Alt ýa-da Meta goşmaça açar ýa-da funksiýa açary gerek.",
+    "shortcutsResetWarning": "{count} nädogry gysga ýollar (lar) asyl ýerine üýtgedildi."
   },
   "legal": {
     "docTabsLabel": "Hukuk resminamalary",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Arassalanyp bilinjek taslama parçasy tapylmady",
     "emptyTitleIdle": "Taslamany skanirlemek häzire çenli ýerine ýetirilmedi",
     "emptyDescClean": "Saýlanan bukja arassa. Arassalanyp bilinjek node_modules, target ýa-da gurluş parçalary tapylmady.",
-    "emptyDescIdle": "Bukjany saýlaň we taslamanyň garaşlylyklaryny hem-de gurluş parçalaryny görkezmek üçin skanirleň."
+    "emptyDescIdle": "Bukjany saýlaň we taslamanyň garaşlylyklaryny hem-de gurluş parçalaryny görkezmek üçin skanirleň.",
+    "kpiTargets": "Arassalap bolýan nyşanlar",
+    "kpiTargetsSub": "{count} taslama kökünde",
+    "kpiTargetsUnknown": "Taslamalaryň sanyny täzelemek üçin täzeden skan ediň"
   },
   "about": {
     "kpiVersion": "Wersiýa",
@@ -616,7 +650,8 @@
     "contactSupport": "Müşderi goldawy",
     "contactBillingDesc": "Hasaplaşyk, kärhana satyn alşy we abonnement goldawy",
     "contactPrivacyDesc": "Maglumat howpsuzlygy, GDPR we özbaşdaklyk soraglary",
-    "ecoCacheScope": "npm keş, Cargo registr, pip keş, yarn"
+    "ecoCacheScope": "npm keş, Cargo registr, pip keş, yarn",
+    "contactBilling": "Hasaplaşyk we tölegler"
   },
   "docs": {
     "catGuide": "Gollanmalar & Arhitekturasy",

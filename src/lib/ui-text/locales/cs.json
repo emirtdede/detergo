@@ -36,7 +36,9 @@
     "on": "Zapnuto",
     "off": "Vypnuto",
     "items": "{n} položek",
-    "showing": "{n} zobrazeno"
+    "showing": "{n} zobrazeno",
+    "scanAll": "Prohledat vše",
+    "scanAllDesc": "Projekty, úložiště nástrojů AI a mezipaměti balíčků"
   },
   "header": {
     "changeLocation": "Změnit Umístění",
@@ -49,7 +51,8 @@
     "addFavorite": "Přidat aktuální umístění do oblíbených",
     "removeFavorite": "Odebrat umístění z oblíbených",
     "favoriteAdded": "Umístění přidáno do oblíbených.",
-    "favoriteRemoved": "Umístění odstraněno z oblíbených."
+    "favoriteRemoved": "Umístění odstraněno z oblíbených.",
+    "changeLocationConfirmDesc": "Změna umístění vymaže aktuální výsledky skenování a výběr. Uložená historie skenování a poslední snímek skenování zůstanou zachovány."
   },
   "window": {
     "minimize": "Minimalizovat",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI agenti",
     "ecoCache": "Cache",
     "ecoOther": "Ostatní artefakty",
-    "distTotalBadge": "{size} k vyčištění"
+    "distTotalBadge": "{size} k vyčištění",
+    "noticeInfoTitle": "Informace",
+    "noticeInfoHint": "Umístění chráněná systémem byla přeskočena. Není potřeba žádná akce.",
+    "noticeIssueHint": "Některá umístění nebylo možné přečíst, takže výsledky mohou být neúplné.",
+    "copyDetails": "Kopírovat podrobnosti",
+    "detailsCopied": "Podrobnosti zkopírovány do schránky",
+    "coverage": "Pokrytí prohledávání",
+    "sectionSkipped": "Přeskočeno",
+    "sectionFailed": "Selhalo",
+    "sectionPartial": "Neúplné",
+    "sectionNoRoot": "Není vybrána žádná složka"
   },
   "table": {
     "project": "Projekt",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Odstranit natrvalo",
     "permanentAck": "Rozumím tomu, že toto nelze vrátit zpět.",
     "blockedReasons": "Zablokované cíle",
-    "expires": "Tento plán vyprší za 15 minut.",
+    "expires": "Tento plán vyprší za 30 minut.",
     "close": "Zavřít",
     "working": "Probíhá…",
     "runInBackground": "Spustit na pozadí",
@@ -223,7 +236,11 @@
     "cancelling": "Ruší se…",
     "progress": "Zpracováno {processed} / {total}",
     "currentItem": "Aktuální: {path}",
-    "alreadyRunning": "Čištění již probíhá."
+    "alreadyRunning": "Čištění již probíhá.",
+    "coveredByParent": "Zablokováno",
+    "noMethod": "Zablokováno",
+    "officialActionRequired": "Oficiální příkaz",
+    "modeNotAllowed": "Trvalé"
   },
   "result": {
     "title": "Výsledek úklidu",
@@ -238,6 +255,7 @@
     "verified": "ověřeno",
     "cancelled": "Čištění zrušeno",
     "cancelledNote": "Zpracováno {processed} položek, přeskočeno {skipped}.",
+    "progressIncomplete": "Nepodařilo se zobrazit {count} aktualizací průběhu.",
     "processed": "Zpracováno",
     "skipped": "Přeskočeno",
     "viewResults": "Zobrazit výsledky",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Vymazat skeny",
     "scopeProjects": "Závislosti projektu",
     "scopeAgents": "AI agenti",
-    "scopeAllDrives": "Všechny disky"
+    "scopeAllDrives": "Všechny disky",
+    "statusPartial": "Částečné",
+    "totalCleaned": "Celkem uvolněno",
+    "statusDepthLimited": "Částečné"
   },
   "settings": {
     "general": "Vzhled",
@@ -451,6 +472,12 @@
     "protectionsHint": "Složky, které nesmí být nikdy smazány, a názvy, které přeskočit.",
     "agentsHint": "Politika čištění pro cache AI agenta.",
     "privacyHint": "Lokální historie a maskování cesty na obrazovce.",
+    "resetAppDataTitle": "Resetujte všechna data aplikace",
+    "resetAppDataHint": "Smaže všechna nastavení, historii čištění, historii skenování, protokoly akcí a uloženou poslední kontrolu a poté restartuje aplikaci. Toto nelze vrátit zpět.",
+    "resetAppDataConfirmBtn": "Smažte data a restartujte",
+    "resetAppDataBusy": "Resetování…",
+    "resetAppDataSuccess": "Všechna data aplikace byla resetována. Výchozí nastavení obnoveno.",
+    "resetAppDataBlocked": "Probíhá skenování nebo čištění. Před resetováním dat aplikace jej zastavte.",
     "aboutHint": "Verze, podrobnosti sestavení, katalog a Vellium.",
     "legalHint": "Podmínky použití, zásady ochrany osobních údajů a licence open-source.",
     "sidebar": "Postranní panel",
@@ -547,7 +574,11 @@
     "standardMotion": "Standardní animace",
     "aboutTitleBy": "Dev Cleaner od Vellium",
     "mcpDestructiveTitle": "Povolit destruktivní akce MCP",
-    "mcpDestructiveHint": "Vyžaduje příznak --allow-destructive; každé spuštění stále potřebuje jednorázový token náhledu"
+    "mcpDestructiveHint": "Vyžaduje příznak --allow-destructive; každé spuštění stále potřebuje jednorázový token náhledu",
+    "pathMustBeAbsolute": "Cesty musí být absolutní, například C:\\Projects.",
+    "excludedNameInvalid": "Pravidlo musí být jeden název souboru nebo složky bez oddělovačů cest.",
+    "shortcutNeedsModifier": "Globální zkratka vyžaduje Ctrl, Alt nebo Meta plus klávesu nebo funkční klávesu.",
+    "shortcutsResetWarning": "{count} neplatných zástupců bylo resetováno na výchozí hodnoty."
   },
   "legal": {
     "docTabsLabel": "Právní dokumenty",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Nebyly nalezeny žádné čistitelné projektové artefakty",
     "emptyTitleIdle": "Ještě nebylo provedeno žádné skenování projektu",
     "emptyDescClean": "Vybraný adresář je čistý. Nebyly nalezeny žádné čistitelné node_modules, target nebo build artefakty.",
-    "emptyDescIdle": "Vyberte složku a skenujte pro seznam závislostí projektu a build artefaktů."
+    "emptyDescIdle": "Vyberte složku a skenujte pro seznam závislostí projektu a build artefaktů.",
+    "kpiTargets": "Cíle k vyčištění",
+    "kpiTargetsSub": "V {count} kořenech projektů",
+    "kpiTargetsUnknown": "Pro obnovení počtu projektů prohledejte znovu"
   },
   "about": {
     "kpiVersion": "Verze",
@@ -616,7 +650,8 @@
     "contactSupport": "Zákaznická podpora",
     "contactBillingDesc": "Fakturace, podnikové nákupy a podpora předplatného",
     "contactPrivacyDesc": "Bezpečnost dat, GDPR a dotazy na ochranu soukromí",
-    "ecoCacheScope": "npm mezipaměť, Cargo registr, pip mezipaměť, yarn"
+    "ecoCacheScope": "npm mezipaměť, Cargo registr, pip mezipaměť, yarn",
+    "contactBilling": "Fakturace a platby"
   },
   "docs": {
     "catGuide": "Průvodce a architektura",

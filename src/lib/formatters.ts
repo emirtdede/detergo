@@ -1,13 +1,5 @@
 function resolveEffectiveLocale(locale?: string | null): string {
   if (locale && typeof locale === "string" && locale.trim()) return locale;
-  try {
-    if (typeof window !== "undefined") {
-      const stored =
-        localStorage.getItem("dev_cleaner_language") ||
-        localStorage.getItem("node_cleaner_language");
-      if (stored) return stored;
-    }
-  } catch {}
   return "en";
 }
 
@@ -15,7 +7,7 @@ function resolveEffectiveLocale(locale?: string | null): string {
  * Format bytes into human-readable representation (MB, GB, TB) formatted according to the locale.
  */
 export function formatBytes(bytes: number | null | undefined, locale?: string | null): string {
-  if (bytes === null || bytes === undefined || isNaN(bytes)) {
+  if (bytes === null || bytes === undefined || !Number.isFinite(bytes)) {
     return "-";
   }
   if (bytes === 0) {
@@ -25,23 +17,40 @@ export function formatBytes(bytes: number | null | undefined, locale?: string | 
   const effectiveLocale = resolveEffectiveLocale(locale);
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB", "TB", "PB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  const safeIndex = Math.min(i, sizes.length - 1);
+  // Negative sizes never occur in the backend, but `Math.log` of a negative
+  // number is NaN and produced "NaN PB"; keep the magnitude and prefix a sign.
+  const abs = Math.abs(bytes);
+  const sign = bytes < 0 ? "−" : "";
+  const i = Math.floor(Math.log(abs) / Math.log(k));
+  let safeIndex = Math.max(0, Math.min(Number.isFinite(i) ? i : 0, sizes.length - 1));
 
   if (safeIndex === 0) {
-    return `${bytes} B`;
+    // Bytes are integers, but a computed average can be fractional. Printing
+    // `0.5 B` (or an unrounded long fraction) was the only place the value was
+    // not rounded to the displayed unit's precision.
+    return `${sign}${Math.round(abs)} B`;
   }
 
-  const value = bytes / Math.pow(k, safeIndex);
+  let value = abs / Math.pow(k, safeIndex);
+  // Rounding can move a value onto the next unit (1048575 B formats as
+  // "1,024.0 KB" without this), so promote whenever the formatted value would
+  // reach 1024. The largest unit stops here rather than inventing "1024 PB".
+  const roundForDisplay = (v: number) =>
+    Math.round(v * (v >= 10 ? 10 : 100)) / (v >= 10 ? 10 : 100);
+  while (roundForDisplay(value) >= k && safeIndex < sizes.length - 1) {
+    safeIndex += 1;
+    value = abs / Math.pow(k, safeIndex);
+  }
+
   try {
     const formattedValue = new Intl.NumberFormat(effectiveLocale, {
       minimumFractionDigits: value >= 10 ? 1 : 2,
       maximumFractionDigits: value >= 10 ? 1 : 2,
     }).format(value);
-    return `${formattedValue} ${sizes[safeIndex]}`;
+    return `${sign}${formattedValue} ${sizes[safeIndex]}`;
   } catch {
     const formattedValue = value >= 10 ? value.toFixed(1) : value.toFixed(2);
-    return `${formattedValue} ${sizes[safeIndex]}`;
+    return `${sign}${formattedValue} ${sizes[safeIndex]}`;
   }
 }
 
@@ -141,10 +150,3 @@ export function formatDate(
     return { relative: "-", exact: "-" };
   }
 }
-
-/**
- * Path helpers live in `@/lib/format/path` so views do not have to import
- * formatting utilities from a feature component. Re-exported here for the
- * existing call sites.
- */
-export { maskPath, truncatePath } from "@/lib/format/path";

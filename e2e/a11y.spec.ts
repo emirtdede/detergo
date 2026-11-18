@@ -87,11 +87,13 @@ test("every top-level view passes axe", async ({ page }) => {
 });
 
 test("About and the embedded legal documents pass axe", async ({ page }) => {
-  await goToView(page, "Settings");
-  await page.getByRole("tab", { name: "About", exact: true }).click();
+  // About is a top-level navigation destination (the settings tab named
+  // "About" was removed when the informational and legal content moved to its
+  // own view), so the scan must enter through the primary navigation.
+  await goToView(page, "About");
   await expectNoViolations(page, "about");
 
-  const firstDoc = page.locator(".about-legal-item").first();
+  const firstDoc = page.locator("[data-legal-doc]").first();
   await firstDoc.click();
   const back = page.getByRole("button", { name: "Back", exact: true });
   await expect(back).toBeVisible();
@@ -99,11 +101,7 @@ test("About and the embedded legal documents pass axe", async ({ page }) => {
   await expectNoViolations(page, "legal");
 
   await back.click();
-  await expect(page.getByRole("tab", { name: "About", exact: true })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
-  await expect(firstDoc).toBeFocused();
+  await expect(page.locator("[data-legal-doc]").first()).toBeFocused();
 });
 
 test("settings and history tabs follow the APG keyboard pattern", async ({ page }) => {
@@ -116,11 +114,14 @@ test("settings and history tabs follow the APG keyboard pattern", async ({ page 
   await expect(scan).toHaveAttribute("aria-selected", "true");
   await expect(scan).toBeFocused();
 
+  // End must land on the *last* settings tab. The About tab used to be last
+  // here; About is now a primary-navigation view, so Privacy is the tail.
+  const lastTab = page.getByRole("tab").last();
+  const lastLabel = await lastTab.innerText();
   await page.keyboard.press("End");
-  await expect(page.getByRole("tab", { name: "About", exact: true })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
+  await expect(lastTab).toHaveAttribute("aria-selected", "true");
+  await expect(lastTab).toBeFocused();
+  expect(lastLabel.trim().length).toBeGreaterThan(0);
   await page.keyboard.press("Home");
   await expect(general).toHaveAttribute("aria-selected", "true");
 
@@ -171,6 +172,10 @@ test("the results table exposes table semantics and clears filters", async ({ pa
   // would fill. This is the only way axe can audit the virtualised table.
   await page.evaluate(async () => {
     const { useScanStore } = await import("/src/stores/scan-store.ts");
+    // The harness restores a demo "last scan" from the mock backend, so the
+    // store is not empty here. Reset first, otherwise the demo rows (10) are
+    // unioned with the four seeded rows and the row count is not deterministic.
+    useScanStore.getState().resetScan();
     const item = (
       id: string,
       name: string,

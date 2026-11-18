@@ -36,7 +36,9 @@
     "on": "Activat",
     "off": "Desactivat",
     "items": "{n} elements",
-    "showing": "{n} mostrats"
+    "showing": "{n} mostrats",
+    "scanAll": "Escaneja-ho tot",
+    "scanAllDesc": "Projectes, emmagatzematge d'eines d'IA i memòria cau de paquets"
   },
   "header": {
     "changeLocation": "Canviar Ubicació",
@@ -49,7 +51,8 @@
     "addFavorite": "Afegir l'ubicació actual als favorits",
     "removeFavorite": "Treure l'ubicació dels favorits",
     "favoriteAdded": "Ubicació afegida als favorits.",
-    "favoriteRemoved": "Ubicació eliminada dels favorits."
+    "favoriteRemoved": "Ubicació eliminada dels favorits.",
+    "changeLocationConfirmDesc": "Canviar la ubicació esborra els resultats de l'escaneig actuals i la selecció. L'historial d'escanejos desat i la darrera instantània de l'escaneig es conserven."
   },
   "window": {
     "minimize": "Minimitzar",
@@ -133,7 +136,17 @@
     "ecoAgent": "Agents AI",
     "ecoCache": "Memòries cau",
     "ecoOther": "Altres Artifacts",
-    "distTotalBadge": "{size} es pot netejar"
+    "distTotalBadge": "{size} es pot netejar",
+    "noticeInfoTitle": "Informació",
+    "noticeInfoHint": "S'han omès les ubicacions protegides pel sistema. No cal cap acció.",
+    "noticeIssueHint": "No s'han pogut llegir algunes ubicacions, així que els resultats poden estar incomplets.",
+    "copyDetails": "Copia els detalls",
+    "detailsCopied": "Detalls copiats al porta-retalls",
+    "coverage": "Cobertura de l'escaneig",
+    "sectionSkipped": "Omès",
+    "sectionFailed": "Ha fallat",
+    "sectionPartial": "Incomplet",
+    "sectionNoRoot": "No s'ha seleccionat cap carpeta"
   },
   "table": {
     "project": "Projecte",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Eliminar permanentment",
     "permanentAck": "Entenc que això no es pot desfer.",
     "blockedReasons": "Destinacions bloquejades",
-    "expires": "Aquest pla caduca en 15 minuts.",
+    "expires": "Aquest pla caduca en 30 minuts.",
     "close": "Tanca",
     "working": "Treballant…",
     "runInBackground": "Executa en segon pla",
@@ -223,7 +236,11 @@
     "cancelling": "S'està cancel·lant…",
     "progress": "Processats {processed} / {total}",
     "currentItem": "Actual: {path}",
-    "alreadyRunning": "Ja s'està executant una neteja."
+    "alreadyRunning": "Ja s'està executant una neteja.",
+    "coveredByParent": "Bloquejat",
+    "noMethod": "Bloquejat",
+    "officialActionRequired": "Comanda oficial",
+    "modeNotAllowed": "Permanent"
   },
   "result": {
     "title": "Resultat de la neteja",
@@ -238,6 +255,7 @@
     "verified": "verificat",
     "cancelled": "Neteja cancel·lada",
     "cancelledNote": "{processed} elements processats, {skipped} omesos.",
+    "progressIncomplete": "No s'han pogut mostrar {count} actualitzacions de progrés.",
     "processed": "Processats",
     "skipped": "Omesos",
     "viewResults": "Mostra els resultats",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Esborrar Escanejats",
     "scopeProjects": "Dependències del projecte",
     "scopeAgents": "Agents d'IA",
-    "scopeAllDrives": "Tots els discs"
+    "scopeAllDrives": "Tots els discs",
+    "statusPartial": "Parcial",
+    "totalCleaned": "Total recuperat",
+    "statusDepthLimited": "Parcial"
   },
   "settings": {
     "general": "Aparença",
@@ -451,6 +472,12 @@
     "protectionsHint": "Carpetes que mai no s'han d'eliminar i noms a saltar.",
     "agentsHint": "Política de neteja per a les memòries cau de l'agent d'IA.",
     "privacyHint": "Historial local i emmascarament de ruta a la pantalla.",
+    "resetAppDataTitle": "Restableix totes les dades de l'aplicació",
+    "resetAppDataHint": "Suprimeix tota la configuració, l'historial de neteja, l'historial d'exploració, els registres d'acció i l'última exploració desada i, a continuació, reinicia l'aplicació. Això no es pot desfer.",
+    "resetAppDataConfirmBtn": "Suprimeix les dades i reinicia",
+    "resetAppDataBusy": "S'està restablint...",
+    "resetAppDataSuccess": "Totes les dades de l'aplicació s'han restablert. S'ha restaurat la configuració predeterminada.",
+    "resetAppDataBlocked": "S'està executant una exploració o neteja. Atureu-lo abans de restablir les dades de l'aplicació.",
     "aboutHint": "Versió, detalls de la compilació, catàleg i Vellium.",
     "legalHint": "Termes d'ús, política de privacitat i llicències de codi obert.",
     "sidebar": "Barra lateral",
@@ -547,7 +574,11 @@
     "standardMotion": "Animació estàndard",
     "aboutTitleBy": "Dev Cleaner per Vellium",
     "mcpDestructiveTitle": "Permet accions destructives de MCP",
-    "mcpDestructiveHint": "Requereix el flag --allow-destructive; cada execució encara necessita un testimoni de previsualització d'un sol ús"
+    "mcpDestructiveHint": "Requereix el flag --allow-destructive; cada execució encara necessita un testimoni de previsualització d'un sol ús",
+    "pathMustBeAbsolute": "Els camins han de ser absoluts, per exemple C:\\Projects.",
+    "excludedNameInvalid": "Una regla ha de ser un sol nom de fitxer o carpeta, sense separadors de camí.",
+    "shortcutNeedsModifier": "Una drecera global necessita Ctrl, Alt o Meta més una tecla o una tecla de funció.",
+    "shortcutsResetWarning": "S'han restablit {count} dreceres no vàlides als valors predeterminats."
   },
   "legal": {
     "docTabsLabel": "Documents legals",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "No s’han trobat artefactes de projecte netejables",
     "emptyTitleIdle": "Encara no s’ha realitzat cap escaneig del projecte",
     "emptyDescClean": "El directori seleccionat està net. No s’han trobat node_modules, target o artefactes de compilació netejables.",
-    "emptyDescIdle": "Tria una carpeta i escaneja per llistar les dependències del projecte i els artefactes de compilació."
+    "emptyDescIdle": "Tria una carpeta i escaneja per llistar les dependències del projecte i els artefactes de compilació.",
+    "kpiTargets": "Objectius netejables",
+    "kpiTargetsSub": "En {count} arrels de projecte",
+    "kpiTargetsUnknown": "Torna a escanejar per actualitzar el recompte de projectes"
   },
   "about": {
     "kpiVersion": "Versió",
@@ -616,7 +650,8 @@
     "contactSupport": "Suport al client",
     "contactBillingDesc": "Facturació, adquisició empresarial i suport de subscripcions",
     "contactPrivacyDesc": "Seguretat de dades, GDPR i consultes de privacitat",
-    "ecoCacheScope": "npm memòria cau, Cargo registre, pip memòria cau, yarn"
+    "ecoCacheScope": "npm memòria cau, Cargo registre, pip memòria cau, yarn",
+    "contactBilling": "Facturació i pagaments"
   },
   "docs": {
     "catGuide": "Guies i arquitectura",

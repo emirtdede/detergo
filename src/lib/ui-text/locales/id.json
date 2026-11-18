@@ -36,7 +36,9 @@
     "on": "Hidup",
     "off": "Mati",
     "items": "{n} item",
-    "showing": "{n} ditampilkan"
+    "showing": "{n} ditampilkan",
+    "scanAll": "Pindai semua",
+    "scanAllDesc": "Proyek, penyimpanan alat AI, dan cache paket"
   },
   "header": {
     "changeLocation": "Ubah Lokasi",
@@ -49,7 +51,8 @@
     "addFavorite": "Tambahkan lokasi saat ini ke favorit",
     "removeFavorite": "Hapus lokasi dari favorit",
     "favoriteAdded": "Lokasi ditambahkan ke favorit.",
-    "favoriteRemoved": "Lokasi dihapus dari favorit."
+    "favoriteRemoved": "Lokasi dihapus dari favorit.",
+    "changeLocationConfirmDesc": "Mengubah lokasi akan menghapus hasil pemindaian saat ini dan pilihan. Riwayat pemindaian tersimpan dan snapshot pemindaian terakhir tetap dipertahankan."
   },
   "window": {
     "minimize": "Minimalkan",
@@ -133,7 +136,17 @@
     "ecoAgent": "Agen AI",
     "ecoCache": "Cache",
     "ecoOther": "Artefak Lainnya",
-    "distTotalBadge": "{size} dapat dibersihkan"
+    "distTotalBadge": "{size} dapat dibersihkan",
+    "noticeInfoTitle": "Informasi",
+    "noticeInfoHint": "Lokasi yang dilindungi sistem dilewati. Tidak perlu tindakan.",
+    "noticeIssueHint": "Beberapa lokasi tidak dapat dibaca, sehingga hasilnya mungkin tidak lengkap.",
+    "copyDetails": "Salin detail",
+    "detailsCopied": "Detail disalin ke papan klip",
+    "coverage": "Cakupan pemindaian",
+    "sectionSkipped": "Dilewati",
+    "sectionFailed": "Gagal",
+    "sectionPartial": "Tidak lengkap",
+    "sectionNoRoot": "Tidak ada folder yang dipilih"
   },
   "table": {
     "project": "Proyek",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Hapus permanen",
     "permanentAck": "Saya mengerti ini tidak dapat dibatalkan.",
     "blockedReasons": "Target yang diblokir",
-    "expires": "Rencana ini kedaluwarsa dalam 15 menit.",
+    "expires": "Rencana ini kedaluwarsa dalam 30 menit.",
     "close": "Tutup",
     "working": "Sedang bekerja…",
     "runInBackground": "Jalankan di latar belakang",
@@ -223,7 +236,11 @@
     "cancelling": "Membatalkan…",
     "progress": "Diproses {processed} / {total}",
     "currentItem": "Saat ini: {path}",
-    "alreadyRunning": "Pembersihan sudah berjalan."
+    "alreadyRunning": "Pembersihan sudah berjalan.",
+    "coveredByParent": "Diblokir",
+    "noMethod": "Diblokir",
+    "officialActionRequired": "Perintah resmi",
+    "modeNotAllowed": "Permanen"
   },
   "result": {
     "title": "Hasil pembersihan",
@@ -238,6 +255,7 @@
     "verified": "diverifikasi",
     "cancelled": "Pembersihan dibatalkan",
     "cancelledNote": "{processed} item diproses, {skipped} dilewati.",
+    "progressIncomplete": "{count} pembaruan kemajuan tidak dapat ditampilkan.",
     "processed": "Diproses",
     "skipped": "Dilewati",
     "viewResults": "Lihat hasil",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Hapus Pemindaian",
     "scopeProjects": "Ketergantungan Proyek",
     "scopeAgents": "Agen AI",
-    "scopeAllDrives": "Semua Drive"
+    "scopeAllDrives": "Semua Drive",
+    "statusPartial": "Sebagian",
+    "totalCleaned": "Total yang dikembalikan",
+    "statusDepthLimited": "Sebagian"
   },
   "settings": {
     "general": "Tampilan",
@@ -451,6 +472,12 @@
     "protectionsHint": "Folder yang tidak boleh dihapus dan nama yang harus dilewati.",
     "agentsHint": "Kebijakan pembersihan untuk cache agen AI.",
     "privacyHint": "Riwayat lokal dan penyamaran jalur di layar.",
+    "resetAppDataTitle": "Setel ulang semua data aplikasi",
+    "resetAppDataHint": "Menghapus semua pengaturan, riwayat pembersihan, riwayat pemindaian, log tindakan, dan pemindaian terakhir yang disimpan, lalu memulai ulang aplikasi. Hal ini tidak dapat dibatalkan.",
+    "resetAppDataConfirmBtn": "Hapus data dan mulai ulang",
+    "resetAppDataBusy": "Menyetel ulang…",
+    "resetAppDataSuccess": "Semua data aplikasi telah disetel ulang. Pengaturan default dipulihkan.",
+    "resetAppDataBlocked": "Pemindaian atau pembersihan sedang berjalan. Hentikan sebelum mengatur ulang data aplikasi.",
     "aboutHint": "Versi, detail build, katalog, dan Vellium.",
     "legalHint": "Ketentuan penggunaan, kebijakan privasi, dan lisensi sumber terbuka.",
     "sidebar": "Bilah samping",
@@ -547,7 +574,11 @@
     "standardMotion": "Animasi Standar",
     "aboutTitleBy": "Dev Cleaner oleh Vellium",
     "mcpDestructiveTitle": "Izinkan tindakan destruktif MCP",
-    "mcpDestructiveHint": "Memerlukan flag --allow-destructive; setiap eksekusi tetap membutuhkan token pratinjau sekali pakai"
+    "mcpDestructiveHint": "Memerlukan flag --allow-destructive; setiap eksekusi tetap membutuhkan token pratinjau sekali pakai",
+    "pathMustBeAbsolute": "Jalur harus mutlak, misalnya C:\\Projects.",
+    "excludedNameInvalid": "Aturan harus berupa nama file atau folder tunggal, tanpa pemisah jalur.",
+    "shortcutNeedsModifier": "Pintasan global memerlukan Ctrl, Alt, atau Meta ditambah tombol, atau tombol fungsi.",
+    "shortcutsResetWarning": "{count} pintasan yang tidak valid telah disetel ulang ke defaultnya."
   },
   "legal": {
     "docTabsLabel": "Dokumen hukum",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Tidak Ada Artefak Proyek yang Bisa Diclean",
     "emptyTitleIdle": "Belum Dilakukan Pemindaian Proyek",
     "emptyDescClean": "Direktori yang dipilih bersih. Tidak ditemukan node_modules, target, atau artefak build yang bisa diclean.",
-    "emptyDescIdle": "Pilih folder dan pindai untuk menampilkan dependensi proyek dan artefak build."
+    "emptyDescIdle": "Pilih folder dan pindai untuk menampilkan dependensi proyek dan artefak build.",
+    "kpiTargets": "Target yang dapat dibersihkan",
+    "kpiTargetsSub": "Di {count} akar proyek",
+    "kpiTargetsUnknown": "Pindai ulang untuk menyegarkan jumlah proyek"
   },
   "about": {
     "kpiVersion": "Versi",
@@ -616,7 +650,8 @@
     "contactSupport": "Dukungan Pelanggan",
     "contactBillingDesc": "Dukungan penagihan, pengadaan perusahaan, dan langganan",
     "contactPrivacyDesc": "Keamanan data, GDPR, dan pertanyaan privasi",
-    "ecoCacheScope": "npm cache, Cargo registri, pip cache, yarn"
+    "ecoCacheScope": "npm cache, Cargo registri, pip cache, yarn",
+    "contactBilling": "Penagihan dan Pembayaran"
   },
   "docs": {
     "catGuide": "Panduan & Arsitektur",

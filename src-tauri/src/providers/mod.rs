@@ -23,6 +23,7 @@ use crate::settings::AppSettings;
 use agent_spec::{provider_display_name, specs_for};
 use root_locator::{locate_agent_roots, root_exists};
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentRootInfo {
@@ -32,6 +33,7 @@ pub struct AgentRootInfo {
     pub exists: bool,
 }
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentProviderInfo {
@@ -153,8 +155,14 @@ pub fn scan_agents(
     token: &CancellationToken,
     policy: &crate::cleanup::CleanupPolicy,
     limits: ScanLimits,
+    exclusions: &[String],
 ) -> AgentScanOutcome {
     let roots = locate_agent_roots();
+    let excluded: std::collections::HashSet<String> = exclusions
+        .iter()
+        .map(|name| name.trim().to_lowercase())
+        .filter(|name| !name.is_empty())
+        .collect();
     let mut items = Vec::new();
     let mut targets = Vec::new();
     let mut snapshots = Vec::new();
@@ -163,10 +171,16 @@ pub fn scan_agents(
     let mut stop_reason: Option<StopReason> = None;
     let deadline = Some(Instant::now() + limits.timeout);
 
-    let mut provider_active: std::collections::HashMap<&str, ActiveUse> =
+    let mut provider_active: std::collections::HashMap<(String, PathBuf), ActiveUse> =
         std::collections::HashMap::new();
 
     for root in &roots {
+        // A candidate-limit stop is global, not per root: without this check
+        // every remaining root still entered the loop only to break inside the
+        // first spec, wasting filesystem checks and deadline bookkeeping.
+        if stop_reason.is_some() {
+            break;
+        }
         if token.is_cancelled() {
             stop_reason = Some(StopReason::Cancelled);
             break;
@@ -178,8 +192,11 @@ pub fn scan_agents(
         if !root_exists(root) {
             continue;
         }
+        // A provider can expose several roots. Caching "in use" per provider
+        // meant the verdict of the first root was reused for every other root,
+        // so a busy Codex home could block an idle one (or vice versa).
         let active = *provider_active
-            .entry(root.provider)
+            .entry((root.provider.to_string(), root.path.clone()))
             .or_insert_with(|| active_use_for_provider(root.provider, &root.path));
 
         for spec in specs_for(root.kind) {
@@ -199,6 +216,12 @@ pub fn scan_agents(
             if !path.exists() {
                 continue;
             }
+            // Apply the same exclusion names the project walk honours. Agent
+            // targets used to ignore `excludedNames`, so a folder the user
+            // excluded was still scanned and offered for cleanup.
+            if path_is_excluded(&path, &root.path, &excluded) {
+                continue;
+            }
             entries_scanned += 1;
             let kind = if path.is_dir() {
                 TargetKind::Directory
@@ -206,14 +229,30 @@ pub fn scan_agents(
                 TargetKind::File
             };
             let size = measure_path_with_deadline(&path, kind, token, deadline);
-            let logical = size.as_ref().map(|s| s.logical_bytes).unwrap_or(0);
+            // An unmeasured target must not masquerade as an empty one: `Some(0)`
+            // made it look like a cleanable 0 B directory and let it enter the
+            // cleanup plan. Keep it visible, but blocked and size-less.
+            let measured = size.is_some();
+            let logical = size.as_ref().map(|s| s.logical_bytes);
             let allocated = size.as_ref().and_then(|s| s.allocated_bytes);
+            let measured_bytes = allocated.or(logical);
+            // `minSizeBytes` is backend-owned and must apply to every scope.
+            // Agent targets used to ignore it, so a 100 MB minimum still
+            // listed (and allowed cleaning) 2 KB cache folders.
+            let below_min_size = limits.min_size_bytes > 0
+                && measured_bytes
+                    .map(|bytes| bytes < limits.min_size_bytes)
+                    .unwrap_or(false);
 
             let path_key = crate::safety::path_guard::normalize_key(&path);
             let user_protected = policy.protected_paths.iter().any(|raw| {
                 let key = crate::safety::path_guard::normalize_key(std::path::Path::new(raw));
                 !key.is_empty()
-                    && (path_key == key || crate::safety::path_guard::is_within(&path_key, &key))
+                    && (path_key == key
+                        || crate::safety::path_guard::is_within(&path_key, &key)
+                        // A protected folder below the target must protect the
+                        // whole subtree as well (H4).
+                        || crate::safety::path_guard::is_within(&key, &path_key))
             });
             let cache_disabled = spec.category == "cache" && !policy.allow_agent_cache_cleanup;
             let recording_active = spec.requires_idle
@@ -236,6 +275,9 @@ pub fn scan_agents(
             if cache_disabled {
                 item_warnings.push("AGENT_CACHE_DISABLED".to_string());
             }
+            if below_min_size {
+                item_warnings.push("BELOW_MIN_SIZE".to_string());
+            }
             if user_protected {
                 item_warnings.push("USER_PROTECTED".to_string());
             }
@@ -243,11 +285,13 @@ pub fn scan_agents(
                 item_warnings.push("PROTECTED_TARGET".to_string());
             }
 
-            let selectable = !spec.protected
+            let selectable = measured
+                && !spec.protected
                 && !user_protected
                 && active == ActiveUse::No
                 && !recording_active
                 && !cache_disabled
+                && !below_min_size
                 && spec.cleanup != CleanupMethod::None;
 
             let id = format!("t{}", &uuid::Uuid::new_v4().simple().to_string()[..24]);
@@ -283,11 +327,12 @@ pub fn scan_agents(
                 project_id: Some(stable_path_id(&root.path)),
                 project_name: Some(provider_display_name(root.provider).to_string()),
                 project_root: Some(root.path.to_string_lossy().to_string()),
+                project_detected: false,
                 display_name,
                 display_path: path.to_string_lossy().to_string(),
-                logical_bytes: Some(logical),
+                logical_bytes: logical,
                 allocated_bytes: allocated,
-                estimated_reclaim_bytes: Some(allocated.unwrap_or(logical)),
+                estimated_reclaim_bytes: allocated.or(logical),
                 safety_class: if spec.protected || user_protected {
                     SafetyClass::Keep
                 } else {
@@ -328,7 +373,7 @@ pub fn scan_agents(
                 cleanup_method: spec.cleanup,
                 project_root: Some(root.path.to_string_lossy().to_string()),
                 evidence,
-                logical_bytes: Some(logical),
+                logical_bytes: logical,
                 allocated_bytes: allocated,
                 modified_at: None,
                 active_use: active,
@@ -340,7 +385,7 @@ pub fn scan_agents(
                 timestamp: chrono::Local::now().to_rfc3339(),
                 provider: root.provider.to_string(),
                 category: spec.category.to_string(),
-                bytes: allocated.unwrap_or(logical),
+                bytes: allocated.or(logical).unwrap_or(0),
                 item_count: 1,
             });
         }
@@ -348,6 +393,12 @@ pub fn scan_agents(
 
     // User-defined providers: metadata only, always KEEP.
     for custom in &policy.custom_agent_providers {
+        // A global stop reason (candidate limit, timeout, cancel) ends the whole
+        // pass. This loop used to run unconditionally after a candidate-limit
+        // stop, measuring every custom root and pushing items past the cap.
+        if stop_reason.is_some() {
+            break;
+        }
         let provider_id = format!("custom:{}", custom.id);
         for raw in &custom.root_paths {
             if token.is_cancelled() {
@@ -358,13 +409,23 @@ pub fn scan_agents(
                 stop_reason = Some(StopReason::Timeout);
                 break;
             }
+            if entries_scanned >= limits.max_candidates {
+                stop_reason = Some(StopReason::CandidateLimit);
+                break;
+            }
             let path = PathBuf::from(raw);
             if !path.is_dir() {
                 continue;
             }
+            // User-defined roots must respect exclusions too. The whole path is
+            // inspected (minus the drive prefix) because the provider root may
+            // itself live inside an excluded folder.
+            if components_are_excluded(&path, &excluded) {
+                continue;
+            }
             entries_scanned += 1;
             let size = measure_path_with_deadline(&path, TargetKind::Directory, token, deadline);
-            let logical = size.as_ref().map(|s| s.logical_bytes).unwrap_or(0);
+            let logical = size.as_ref().map(|s| s.logical_bytes);
             let allocated = size.as_ref().and_then(|s| s.allocated_bytes);
             let id = format!("t{}", &uuid::Uuid::new_v4().simple().to_string()[..24]);
             let rule_id = format!("custom.{}.keep", custom.id);
@@ -380,11 +441,12 @@ pub fn scan_agents(
                 project_id: Some(stable_path_id(&path)),
                 project_name: Some(custom.name.clone()),
                 project_root: Some(path.to_string_lossy().to_string()),
+                project_detected: false,
                 display_name: custom.name.clone(),
                 display_path: path.to_string_lossy().to_string(),
-                logical_bytes: Some(logical),
+                logical_bytes: logical,
                 allocated_bytes: allocated,
-                estimated_reclaim_bytes: Some(allocated.unwrap_or(logical)),
+                estimated_reclaim_bytes: allocated.or(logical),
                 safety_class: SafetyClass::Keep,
                 confidence: Confidence::High,
                 active_use: ActiveUse::Unknown,
@@ -420,7 +482,7 @@ pub fn scan_agents(
                     marker_hits: Vec::new(),
                     content_hits: Vec::new(),
                 },
-                logical_bytes: Some(logical),
+                logical_bytes: logical,
                 allocated_bytes: allocated,
                 modified_at: None,
                 active_use: ActiveUse::Unknown,
@@ -432,7 +494,7 @@ pub fn scan_agents(
                 timestamp: chrono::Local::now().to_rfc3339(),
                 provider: provider_id.clone(),
                 category: "custom".to_string(),
-                bytes: allocated.unwrap_or(logical),
+                bytes: allocated.or(logical).unwrap_or(0),
                 item_count: 1,
             });
         }
@@ -450,4 +512,40 @@ pub fn scan_agents(
         entries_scanned,
         stop_reason,
     }
+}
+
+/// True when a path below `root` contains a component named in `exclusions`.
+///
+/// The project walk skips excluded folder names at any depth. Agent targets are
+/// resolved directly instead of walked, so the same rule is applied to the
+/// relative components here.
+fn path_is_excluded(
+    path: &std::path::Path,
+    root: &std::path::Path,
+    exclusions: &std::collections::HashSet<String>,
+) -> bool {
+    if exclusions.is_empty() {
+        return false;
+    }
+    match path.strip_prefix(root) {
+        Ok(relative) => relative.components().any(|component| {
+            exclusions.contains(&component.as_os_str().to_string_lossy().to_lowercase())
+        }),
+        Err(_) => false,
+    }
+}
+
+/// Same rule for absolute user-provided roots: every component except the drive
+/// prefix is compared, so `D:\\node_modules\\tool-cache` is excluded by name.
+fn components_are_excluded(
+    path: &std::path::Path,
+    exclusions: &std::collections::HashSet<String>,
+) -> bool {
+    if exclusions.is_empty() {
+        return false;
+    }
+    path.components().any(|component| match component {
+        std::path::Component::Prefix(_) | std::path::Component::RootDir => false,
+        other => exclusions.contains(&other.as_os_str().to_string_lossy().to_lowercase()),
+    })
 }

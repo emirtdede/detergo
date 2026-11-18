@@ -36,7 +36,9 @@
     "on": "A kan",
     "off": "Kashe",
     "items": "{n} abubuwa",
-    "showing": "{n} aka nuna"
+    "showing": "{n} aka nuna",
+    "scanAll": "Bincika komai",
+    "scanAllDesc": "Ayyuka, ajiyar kayan aikin AI da ajiyar fakiti"
   },
   "header": {
     "changeLocation": "Canza Wuri",
@@ -49,7 +51,8 @@
     "addFavorite": "Ƙara wuri na yanzu zuwa abubuwan da aka fi so",
     "removeFavorite": "Cire wuri daga abubuwan da aka fi so",
     "favoriteAdded": "An ƙara wurin zuwa abubuwan da aka fi so.",
-    "favoriteRemoved": "An cire wurin daga abubuwan da aka fi so."
+    "favoriteRemoved": "An cire wurin daga abubuwan da aka fi so.",
+    "changeLocationConfirmDesc": "Canza wuri yana share sakamakon binciken na yanzu da zaɓi. Ana adana tarihin binciken da aka ajiye da hoton binciken ƙarshe."
   },
   "window": {
     "minimize": "Ƙanƙanta",
@@ -133,7 +136,17 @@
     "ecoAgent": "Wakilan AI",
     "ecoCache": "Ajiya",
     "ecoOther": "Sauran Kayan Aiki",
-    "distTotalBadge": "{size} mai tsaftacewa"
+    "distTotalBadge": "{size} mai tsaftacewa",
+    "noticeInfoTitle": "Bayani",
+    "noticeInfoHint": "An tsallake wuraren da tsarin ke kariya. Babu wani mataki da ake buƙata.",
+    "noticeIssueHint": "Ba a iya karanta wasu wurare ba, don haka sakamakon na iya zama bai cika ba.",
+    "copyDetails": "Kwafi bayanai",
+    "detailsCopied": "An kwafa bayanan zuwa allon kwafi",
+    "coverage": "Iyalin bincike",
+    "sectionSkipped": "An tsallake",
+    "sectionFailed": "Ya kasa",
+    "sectionPartial": "Bai cika ba",
+    "sectionNoRoot": "Ba a zaɓi babban fayil ba"
   },
   "table": {
     "project": "Aiki",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Goge dindindin",
     "permanentAck": "Na fahimci cewa ba za a iya janye wannan ba.",
     "blockedReasons": "Abubuwan da aka toƙe",
-    "expires": "Wannan shirin zai ƙare cikin mintuna 15.",
+    "expires": "Wannan shirin zai ƙare cikin mintuna 30.",
     "close": "Rufe",
     "working": "Aiki…",
     "runInBackground": "Gudana a baya",
@@ -223,7 +236,11 @@
     "cancelling": "Ana sokewa…",
     "progress": "An sarrafa {processed} / {total}",
     "currentItem": "Na yanzu: {path}",
-    "alreadyRunning": "Ana tsaftacewa tuni."
+    "alreadyRunning": "Ana tsaftacewa tuni.",
+    "coveredByParent": "An Toƙe",
+    "noMethod": "An Toƙe",
+    "officialActionRequired": "Umurnin hukuma",
+    "modeNotAllowed": "Dindindin"
   },
   "result": {
     "title": "Sakamakon tsaftacewa",
@@ -238,6 +255,7 @@
     "verified": "an tabbatar",
     "cancelled": "An soke tsaftacewa",
     "cancelledNote": "An sarrafa abubuwa {processed}, an tsallake {skipped}.",
+    "progressIncomplete": "Ba a iya nuna sabbin bayanai na ci gaba guda {count} ba.",
     "processed": "An sarrafa",
     "skipped": "An tsallake",
     "viewResults": "Duba sakamako",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Goge Bincike",
     "scopeProjects": "Dogaro da Ayyuka",
     "scopeAgents": "Wakilan AI",
-    "scopeAllDrives": "Duk Faifai"
+    "scopeAllDrives": "Duk Faifai",
+    "statusPartial": "Bangare",
+    "totalCleaned": "Jimlar abin da aka dawo",
+    "statusDepthLimited": "Bangare"
   },
   "settings": {
     "general": "Bayyanar",
@@ -451,6 +472,12 @@
     "protectionsHint": "Fayiloli da ba za a taɓa sharewa ba da sunayen da za a wuce su.",
     "agentsHint": "Manufofin tsaftacewa don ƙwaƙwalwar ajiyar wakilin AI.",
     "privacyHint": "Tarihin gida da ɓoyewar hanyar allon.",
+    "resetAppDataTitle": "Sake saita duk bayanan app",
+    "resetAppDataHint": "Yana share duk saituna, tarihin tsaftacewa, tarihin bincika, rajistan ayyukan, da sikanin da aka ajiye na ƙarshe, sannan ta sake kunna app ɗin. Ba za a iya soke wannan ba.",
+    "resetAppDataConfirmBtn": "Share bayanai kuma sake farawa",
+    "resetAppDataBusy": "Ana sake saitawa…",
+    "resetAppDataSuccess": "An sake saita duk bayanan app. An dawo da saitunan tsoho.",
+    "resetAppDataBlocked": "Ana dubawa ko tsaftacewa yana gudana. Dakatar da shi kafin sake saita bayanan app.",
     "aboutHint": "Sigar, bayanan gini, kundin adireshi da Vellium.",
     "legalHint": "Sharuɗɗan amfani, manufofin sirri da lasisin buɗe tushe.",
     "sidebar": "Gefe",
@@ -547,7 +574,11 @@
     "standardMotion": "Motsa jiki na Al'ada",
     "aboutTitleBy": "Dev Cleaner ta Vellium",
     "mcpDestructiveTitle": "Ba da izinin ayyukan lalata na MCP",
-    "mcpDestructiveHint": "Ana buƙatar alamar --allow-destructive; kowane kunnawa har yanzu yana buƙatar alamar samfoti na amfani ɗaya"
+    "mcpDestructiveHint": "Ana buƙatar alamar --allow-destructive; kowane kunnawa har yanzu yana buƙatar alamar samfoti na amfani ɗaya",
+    "pathMustBeAbsolute": "Dole ne hanyoyi su zama cikakke, misali C:\\Projects.",
+    "excludedNameInvalid": "Dole ne doka ta zama fayil ɗaya ko sunan babban fayil, ba tare da masu raba hanya ba.",
+    "shortcutNeedsModifier": "Gajerar hanya ta duniya tana buƙatar Ctrl, Alt ko Meta da maɓalli, ko maɓallin aiki.",
+    "shortcutsResetWarning": "{count} gajerar hanya (s) mara inganci an sake saita su zuwa abubuwan da suka dace."
   },
   "legal": {
     "docTabsLabel": "Takardun shari'a",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Ba a Samu Abubuwan Aikin da Za a Tsabtace ba",
     "emptyTitleIdle": "Ba a Yi Tantancewar Aiki ba tukuna",
     "emptyDescClean": "Kundin da aka zaɓa tsabace. Babu node_modules, target, ko abubuwan gini da za a tsabtace da aka samu.",
-    "emptyDescIdle": "Zaɓi babban fayil ka yi scanning don jera dogaro da abubuwan gini na aikin."
+    "emptyDescIdle": "Zaɓi babban fayil ka yi scanning don jera dogaro da abubuwan gini na aikin.",
+    "kpiTargets": "Manufofin da za a iya tsaftacewa",
+    "kpiTargetsSub": "A cikin tushen ayyuka {count}",
+    "kpiTargetsUnknown": "Sake bincike don sabunta adadin ayyuka"
   },
   "about": {
     "kpiVersion": "Sigar",
@@ -616,7 +650,8 @@
     "contactSupport": "Taimakon Abokin Ciniki",
     "contactBillingDesc": "Biyan kuɗi, siyan kasuwanci, da tallafin biyan kuɗi",
     "contactPrivacyDesc": "Tsaron bayanai, GDPR, da tambayoyi kan sirri",
-    "ecoCacheScope": "npm cache, Cargo rajista, pip cache, yarn"
+    "ecoCacheScope": "npm cache, Cargo rajista, pip cache, yarn",
+    "contactBilling": "Lissafin kuɗi da biyan kuɗi"
   },
   "docs": {
     "catGuide": "Jagorori & Tsarin Gine-gine",

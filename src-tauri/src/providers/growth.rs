@@ -3,14 +3,19 @@ use std::collections::HashMap;
 
 use crate::audit::StorageSnapshot;
 
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GrowthEntry {
     pub provider: String,
     pub category: String,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub current_bytes: u64,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub previous_bytes: u64,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<i64>))]
     pub delta_bytes: i64,
+    #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub window_seconds: u64,
     pub rate_per_hour: f64,
     pub level: String,

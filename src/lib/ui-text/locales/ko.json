@@ -36,7 +36,9 @@
     "on": "계속",
     "off": "꺼져",
     "items": "{n} 항목",
-    "showing": "{n} 표시됨"
+    "showing": "{n} 표시됨",
+    "scanAll": "모두 스캔",
+    "scanAllDesc": "프로젝트, AI 도구 저장소 및 패키지 캐시"
   },
   "header": {
     "changeLocation": "위치 변경",
@@ -49,7 +51,8 @@
     "addFavorite": "현재 위치 추가하기",
     "removeFavorite": "즐겨찾기에서 위치 삭제",
     "favoriteAdded": "위치가 즐겨찾기에 추가되었습니다.",
-    "favoriteRemoved": "위치가 즐겨찾기에서 삭제되었습니다."
+    "favoriteRemoved": "위치가 즐겨찾기에서 삭제되었습니다.",
+    "changeLocationConfirmDesc": "위치를 변경하면 현재 스캔 결과와 선택 항목이 지워집니다. 저장된 스캔 기록과 마지막 스캔 스냅샷은 유지됩니다."
   },
   "window": {
     "minimize": "최소화",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI 에이전트",
     "ecoCache": "캐시",
     "ecoOther": "기타 아티팩트",
-    "distTotalBadge": "{size} 정리 가능"
+    "distTotalBadge": "{size} 정리 가능",
+    "noticeInfoTitle": "정보",
+    "noticeInfoHint": "시스템 보호 위치는 건너뛰었습니다. 조치가 필요하지 않습니다.",
+    "noticeIssueHint": "일부 위치를 읽을 수 없어 결과가 불완전할 수 있습니다.",
+    "copyDetails": "세부 정보 복사",
+    "detailsCopied": "세부 정보가 클립보드에 복사되었습니다",
+    "coverage": "스캔 범위",
+    "sectionSkipped": "건너뜀",
+    "sectionFailed": "실패",
+    "sectionPartial": "불완전",
+    "sectionNoRoot": "선택된 폴더 없음"
   },
   "table": {
     "project": "프로젝트",
@@ -215,7 +228,7 @@
     "confirmPermanent": "영구 삭제",
     "permanentAck": "이 작업은 되돌릴 수 없음을 이해합니다.",
     "blockedReasons": "차단된 대상",
-    "expires": "이 계획은 15분 후 만료됩니다.",
+    "expires": "이 계획은 30분 후 만료됩니다.",
     "close": "닫기",
     "working": "작업 중…",
     "runInBackground": "백그라운드에서 실행",
@@ -223,7 +236,11 @@
     "cancelling": "취소하는 중…",
     "progress": "처리됨 {processed} / {total}",
     "currentItem": "현재: {path}",
-    "alreadyRunning": "정리가 이미 실행 중입니다."
+    "alreadyRunning": "정리가 이미 실행 중입니다.",
+    "coveredByParent": "차단됨",
+    "noMethod": "차단됨",
+    "officialActionRequired": "공식 명령",
+    "modeNotAllowed": "영구"
   },
   "result": {
     "title": "정리 결과",
@@ -238,6 +255,7 @@
     "verified": "확인됨",
     "cancelled": "정리 취소됨",
     "cancelledNote": "{processed}개 항목 처리됨, {skipped}개 건너뜀.",
+    "progressIncomplete": "진행률 업데이트 {count}개를 표시할 수 없습니다.",
     "processed": "처리됨",
     "skipped": "건너뜀",
     "viewResults": "결과 보기",
@@ -390,7 +408,10 @@
     "clearScansBtn": "스캔 삭제",
     "scopeProjects": "프로젝트 종속성",
     "scopeAgents": "AI 에이전트",
-    "scopeAllDrives": "모든 드라이브"
+    "scopeAllDrives": "모든 드라이브",
+    "statusPartial": "부분적",
+    "totalCleaned": "총 회수량",
+    "statusDepthLimited": "부분적"
   },
   "settings": {
     "general": "화면 구성",
@@ -451,6 +472,12 @@
     "protectionsHint": "절대 삭제해서는 안 되는 폴더와 건너뛸 이름.",
     "agentsHint": "AI 에이전트 캐시 정리 정책.",
     "privacyHint": "로컬 기록 및 화면 경로 숨기기.",
+    "resetAppDataTitle": "모든 앱 데이터 재설정",
+    "resetAppDataHint": "모든 설정, 정리 기록, 검사 기록, 작업 로그 및 저장된 마지막 검사를 삭제한 후 앱을 다시 시작합니다. 이 작업은 취소할 수 없습니다.",
+    "resetAppDataConfirmBtn": "데이터 삭제하고 다시 시작하세요",
+    "resetAppDataBusy": "재설정 중…",
+    "resetAppDataSuccess": "모든 앱 데이터가 재설정되었습니다. 기본 설정이 복원되었습니다.",
+    "resetAppDataBlocked": "검사 또는 정리가 실행 중입니다. 앱 데이터를 재설정하기 전에 중지하세요.",
     "aboutHint": "버전, 빌드 정보, 카탈로그 및 Vellium.",
     "legalHint": "이용 약관, 개인정보 보호정책 및 오픈소스 라이선스.",
     "sidebar": "사이드바",
@@ -547,7 +574,11 @@
     "standardMotion": "표준 애니메이션",
     "aboutTitleBy": "Dev Cleaner Vellium 제작",
     "mcpDestructiveTitle": "MCP 파괴적 작업 허용",
-    "mcpDestructiveHint": "--allow-destructive 플래그가 필요합니다. 각 실행에는 여전히 일회용 미리보기 토큰이 필요합니다"
+    "mcpDestructiveHint": "--allow-destructive 플래그가 필요합니다. 각 실행에는 여전히 일회용 미리보기 토큰이 필요합니다",
+    "pathMustBeAbsolute": "경로는 절대 경로여야 합니다(예: C:\\Projects).",
+    "excludedNameInvalid": "규칙은 경로 구분 기호가 없는 단일 파일 또는 폴더 이름이어야 합니다.",
+    "shortcutNeedsModifier": "전역 단축키에는 Ctrl, Alt 또는 Meta와 키 또는 기능 키가 필요합니다.",
+    "shortcutsResetWarning": "{count}개의 잘못된 단축키가 기본값으로 재설정되었습니다."
   },
   "legal": {
     "docTabsLabel": "법률 문서",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "정리 가능한 프로젝트 아티팩트 없음",
     "emptyTitleIdle": "아직 프로젝트 스캔이 수행되지 않음",
     "emptyDescClean": "선택한 디렉토리가 깨끗합니다. 정리 가능한 node_modules, target 또는 빌드 아티팩트가 없습니다.",
-    "emptyDescIdle": "폴더를 선택하고 스캔하여 프로젝트 종속 항목 및 빌드 아티팩트를 나열하세요."
+    "emptyDescIdle": "폴더를 선택하고 스캔하여 프로젝트 종속 항목 및 빌드 아티팩트를 나열하세요.",
+    "kpiTargets": "정리 가능한 대상",
+    "kpiTargetsSub": "프로젝트 루트 {count}개",
+    "kpiTargetsUnknown": "프로젝트 수를 새로 고치려면 다시 스캔하세요"
   },
   "about": {
     "kpiVersion": "버전",
@@ -616,7 +650,8 @@
     "contactSupport": "고객 지원",
     "contactBillingDesc": "청구, 기업 구매, 구독 지원",
     "contactPrivacyDesc": "데이터 보안, GDPR 및 개인정보 보호 문의",
-    "ecoCacheScope": "npm 캐시, Cargo 레지스트리, pip 캐시, yarn"
+    "ecoCacheScope": "npm 캐시, Cargo 레지스트리, pip 캐시, yarn",
+    "contactBilling": "청구 및 결제"
   },
   "docs": {
     "catGuide": "가이드 및 아키텍처",

@@ -36,7 +36,9 @@
     "on": "ऑन",
     "off": "ऑफ",
     "items": "{n} आयटम",
-    "showing": "{n} दाखवले"
+    "showing": "{n} दाखवले",
+    "scanAll": "सर्व स्कॅन करा",
+    "scanAllDesc": "प्रकल्प, AI साधन साठवण आणि पॅकेज कॅश"
   },
   "header": {
     "changeLocation": "स्थान बदला",
@@ -49,7 +51,8 @@
     "addFavorite": "सध्याचे स्थान आवडीत जोडा",
     "removeFavorite": "आवडीतून स्थान काढा",
     "favoriteAdded": "स्थान आवडीत जोडले.",
-    "favoriteRemoved": "स्थान आवडीतून काढले."
+    "favoriteRemoved": "स्थान आवडीतून काढले.",
+    "changeLocationConfirmDesc": "स्थान बदलल्यास सध्याचे स्कॅन परिणाम आणि निवड साफ होते. तुमचा जतन केलेला स्कॅन इतिहास आणि शेवटचा स्कॅन स्नॅपशॉट जतन केला जातो."
   },
   "window": {
     "minimize": "लहान करा",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI एजंट्स",
     "ecoCache": "कॅशेस",
     "ecoOther": "इतर अवशेष",
-    "distTotalBadge": "{size} साफ करण्यायोग्य"
+    "distTotalBadge": "{size} साफ करण्यायोग्य",
+    "noticeInfoTitle": "माहिती",
+    "noticeInfoHint": "सिस्टम-संरक्षित स्थाने वगळली गेली. कोणतीही कृती आवश्यक नाही.",
+    "noticeIssueHint": "काही स्थाने वाचता आली नाहीत, त्यामुळे निकाल अपूर्ण असू शकतात.",
+    "copyDetails": "तपशील कॉपी करा",
+    "detailsCopied": "तपशील क्लिपबोर्डवर कॉपी केले",
+    "coverage": "स्कॅन व्याप्ती",
+    "sectionSkipped": "वगळले",
+    "sectionFailed": "अयशस्वी",
+    "sectionPartial": "अपूर्ण",
+    "sectionNoRoot": "कोणतेही फोल्डर निवडलेले नाही"
   },
   "table": {
     "project": "प्रकल्प",
@@ -223,7 +236,11 @@
     "cancelling": "रद्द करत आहे…",
     "progress": "प्रक्रिया केली {processed} / {total}",
     "currentItem": "सध्याचे: {path}",
-    "alreadyRunning": "साफसफाई आधीच सुरू आहे."
+    "alreadyRunning": "साफसफाई आधीच सुरू आहे.",
+    "coveredByParent": "अवरुद्ध",
+    "noMethod": "अवरुद्ध",
+    "officialActionRequired": "अधिकृत आदेश",
+    "modeNotAllowed": "कायमचे"
   },
   "result": {
     "title": "साफसफाईचा निकाल",
@@ -238,6 +255,7 @@
     "verified": "पडताळलेले",
     "cancelled": "साफसफाई रद्द केली",
     "cancelledNote": "{processed} आयटम प्रक्रिया केले, {skipped} वगळले.",
+    "progressIncomplete": "{count} प्रगती अद्यतने दाखवता आली नाहीत.",
     "processed": "प्रक्रिया केली",
     "skipped": "वगळले",
     "viewResults": "निकाल पहा",
@@ -390,7 +408,10 @@
     "clearScansBtn": "स्कॅन साफ करा",
     "scopeProjects": "प्रकल्प अवलंबित्व",
     "scopeAgents": "AI एजंट",
-    "scopeAllDrives": "सर्व ड्राईव्ह"
+    "scopeAllDrives": "सर्व ड्राईव्ह",
+    "statusPartial": "अर्धवट",
+    "totalCleaned": "एकूण पुनर्प्राप्त केलेले",
+    "statusDepthLimited": "अर्धवट"
   },
   "settings": {
     "general": "दिसणे",
@@ -451,6 +472,12 @@
     "protectionsHint": "जे फोल्डर्स कधीही हटवू नयेत आणि टाळावयाची नावे.",
     "agentsHint": "AI एजंट कॅशेससाठी क्लिनअप धोरण.",
     "privacyHint": "स्थानिक इतिहास आणि स्क्रीनवरील पथ लपवणे.",
+    "resetAppDataTitle": "सर्व ॲप डेटा रीसेट करा",
+    "resetAppDataHint": "सर्व सेटिंग्ज, क्लीनअप इतिहास, स्कॅन इतिहास, ॲक्शन लॉग आणि सेव्ह केलेले शेवटचे स्कॅन हटवते, त्यानंतर ॲप रीस्टार्ट करते. हे पूर्ववत केले जाऊ शकत नाही.",
+    "resetAppDataConfirmBtn": "डेटा हटवा आणि रीस्टार्ट करा",
+    "resetAppDataBusy": "रीसेट करत आहे...",
+    "resetAppDataSuccess": "सर्व ॲप डेटा रीसेट केला गेला आहे. डीफॉल्ट सेटिंग्ज पुनर्संचयित.",
+    "resetAppDataBlocked": "स्कॅन किंवा क्लीनअप चालू आहे. ॲप डेटा रीसेट करण्यापूर्वी ते थांबवा.",
     "aboutHint": "आवृत्ती, बिल्ड तपशील, कॅटलॉग आणि वेलियम.",
     "legalHint": "वापरण्याच्या अटी, गोपनीयता धोरण आणि ओपन-सोर्स परवाने.",
     "sidebar": "साइडबार",
@@ -547,7 +574,11 @@
     "standardMotion": "स्टँडर्ड अ‍ॅनिमेशन",
     "aboutTitleBy": "Dev Cleaner बाय Vellium",
     "mcpDestructiveTitle": "MCP विनाशकारी क्रियांना परवानगी द्या",
-    "mcpDestructiveHint": "--allow-destructive फ्लॅग आवश्यक आहे; प्रत्येक अंमलबजावणीसाठी अद्याप एक-वेळ वापरला जाणारा पूर्वावलोकन टोकन आवश्यक आहे"
+    "mcpDestructiveHint": "--allow-destructive फ्लॅग आवश्यक आहे; प्रत्येक अंमलबजावणीसाठी अद्याप एक-वेळ वापरला जाणारा पूर्वावलोकन टोकन आवश्यक आहे",
+    "pathMustBeAbsolute": "पथ निरपेक्ष असले पाहिजेत, उदाहरणार्थ C:\\Projects.",
+    "excludedNameInvalid": "पथ विभाजकांशिवाय नियम एकल फाइल किंवा फोल्डरचे नाव असणे आवश्यक आहे.",
+    "shortcutNeedsModifier": "जागतिक शॉर्टकटसाठी Ctrl, Alt किंवा Meta प्लस की किंवा फंक्शन की आवश्यक आहे.",
+    "shortcutsResetWarning": "{count} अवैध शॉर्टकट त्यांच्या डीफॉल्टवर रीसेट केले गेले."
   },
   "legal": {
     "docTabsLabel": "कायदेशीर दस्तऐवज",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "साफ करण्यायोग्य प्रकल्प आर्टिफॅक्ट्स सापडले नाहीत",
     "emptyTitleIdle": "अद्याप प्रकल्प स्कॅन केलेले नाही",
     "emptyDescClean": "निवडलेली फोल्डर स्वच्छ आहे. कोणतेही साफ करण्यायोग्य node_modules, target, किंवा बिल्ड आर्टिफॅक्ट्स सापडले नाहीत.",
-    "emptyDescIdle": "प्रकल्प अवलंबित्वे आणि बिल्ड आर्टिफॅक्ट्स यादीसाठी फोल्डर निवडा आणि स्कॅन करा."
+    "emptyDescIdle": "प्रकल्प अवलंबित्वे आणि बिल्ड आर्टिफॅक्ट्स यादीसाठी फोल्डर निवडा आणि स्कॅन करा.",
+    "kpiTargets": "साफ करण्यायोग्य लक्ष्ये",
+    "kpiTargetsSub": "{count} प्रकल्प रूट्समध्ये",
+    "kpiTargetsUnknown": "प्रकल्प संख्या रिफ्रेश करण्यासाठी पुन्हा स्कॅन करा"
   },
   "about": {
     "kpiVersion": "आवृत्ती",
@@ -616,7 +650,8 @@
     "contactSupport": "ग्राहक समर्थन",
     "contactBillingDesc": "बिलिंग, एंटरप्राइझ खरेदी, आणि सदस्यता समर्थन",
     "contactPrivacyDesc": "डेटा सुरक्षा, GDPR, आणि गोपनीयता चौकशी",
-    "ecoCacheScope": "npm कॅशे, Cargo नोंदणी, pip कॅशे, yarn"
+    "ecoCacheScope": "npm कॅशे, Cargo नोंदणी, pip कॅशे, yarn",
+    "contactBilling": "बिलिंग आणि देयके"
   },
   "docs": {
     "catGuide": "मार्गदर्शक आणि आर्किटेक्चर",

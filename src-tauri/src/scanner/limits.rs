@@ -76,16 +76,49 @@ impl ScanBudget {
         self.depth_hit = true;
     }
 
+    /// True when at least one branch was pruned by `max_depth`. A depth cut
+    /// prunes that branch only: the rest of the tree must still be walked, so
+    /// it is reported as "partial" after the walk instead of aborting it.
+    pub fn depth_limited(&self) -> bool {
+        self.depth_hit
+    }
+
     pub fn exceeded(&self) -> Option<StopReason> {
         if self.candidates >= self.limits.max_candidates {
             return Some(StopReason::CandidateLimit);
-        }
-        if self.depth_hit {
-            return Some(StopReason::DepthLimit);
         }
         if self.started.elapsed() >= self.limits.timeout {
             return Some(StopReason::Timeout);
         }
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn depth_pruning_is_reported_but_does_not_abort_the_walk() {
+        let mut budget = ScanBudget::new(ScanLimits::default());
+        budget.note_depth_exceeded();
+
+        assert!(budget.depth_limited());
+        assert_eq!(
+            budget.exceeded(),
+            None,
+            "a per-branch depth cut must not abort the remaining roots"
+        );
+    }
+
+    #[test]
+    fn candidate_limit_still_aborts() {
+        let mut budget = ScanBudget::new(ScanLimits {
+            max_candidates: 1,
+            ..ScanLimits::default()
+        });
+        budget.note_candidate();
+
+        assert_eq!(budget.exceeded(), Some(StopReason::CandidateLimit));
     }
 }

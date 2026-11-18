@@ -162,10 +162,22 @@ pub fn is_within(child: &str, root: &str) -> bool {
 
 pub(crate) fn validate_system_path(key: &str) -> Result<(), AppError> {
     let parts = path_components(key);
+    // A drive root (`C:\`) has no components beyond the prefix and is never a
+    // valid cleanup target. Direct children of a drive root are allowed when
+    // they are ordinary folders: `D:\node_modules` is a legitimate scan root
+    // child. Sensitive first-level folders are still rejected below.
     if parts.len() < 2 {
         return Err(AppError::UnsafeDeleteTarget(
             "Drive root cannot be deleted.".to_string(),
         ));
+    }
+
+    let first_level_system_roots = ["users", "documents and settings", "config.msi"];
+    if parts.len() == 2 && first_level_system_roots.contains(&parts[1].as_str()) {
+        return Err(AppError::UnsafeDeleteTarget(format!(
+            "System directory is protected: {}",
+            key
+        )));
     }
 
     let system_roots = [
@@ -192,12 +204,6 @@ pub(crate) fn validate_system_path(key: &str) -> Result<(), AppError> {
             )));
         }
     }
-    if parts.len() < 3 {
-        return Err(AppError::UnsafeDeleteTarget(format!(
-            "Path depth is insufficient for safe deletion: {}",
-            key
-        )));
-    }
 
     if let Ok(profile) = std::env::var("USERPROFILE") {
         let profile_key = normalize_key(Path::new(&profile));
@@ -223,7 +229,12 @@ fn validate_protected_paths(key: &str, protected: &[String]) -> Result<(), AppEr
         if protected_key.is_empty() {
             continue;
         }
-        if key == protected_key || is_within(key, &protected_key) {
+        // Both directions matter. A target inside a protected folder must be
+        // rejected, and so must a parent folder that *contains* a protected
+        // folder: deleting `.venv` would otherwise take a user-protected
+        // `.venv\keep` with it.
+        if key == protected_key || is_within(key, &protected_key) || is_within(&protected_key, key)
+        {
             return Err(AppError::UnsafeDeleteTarget(format!(
                 "Target is in user protected paths: {}",
                 raw
@@ -233,7 +244,7 @@ fn validate_protected_paths(key: &str, protected: &[String]) -> Result<(), AppEr
     Ok(())
 }
 
-fn validate_ancestors(target: &Path, scan_root: &Path) -> Result<(), AppError> {
+pub(crate) fn validate_ancestors(target: &Path, scan_root: &Path) -> Result<(), AppError> {
     let mut current = target.parent();
     while let Some(dir) = current {
         if let Ok(meta) = fs::symlink_metadata(dir) {
@@ -314,13 +325,52 @@ mod tests {
     }
 
     #[test]
-    fn shallow_path_is_blocked() {
-        assert!(is_blocked("C:\\Temp"));
+    fn shallow_ordinary_path_is_allowed() {
+        // Depth alone is not a safety signal. A single folder below a drive
+        // root can be a legitimate cleanup target; only roots and system
+        // directories are rejected.
+        assert!(is_allowed("C:\\Temp"));
+    }
+
+    #[test]
+    fn drive_root_child_node_modules_is_allowed() {
+        assert!(is_allowed("D:\\node_modules"));
+    }
+
+    #[test]
+    fn users_root_child_is_blocked() {
+        // `C:\Users` and `D:\Users` are first-level sensitive roots.
+        assert!(is_blocked("C:\\Users"));
+        assert!(is_blocked("D:\\Users"));
+    }
+
+    #[test]
+    fn drive_root_recycle_bin_child_is_blocked() {
+        assert!(is_blocked("D:\\$Recycle.Bin"));
     }
 
     #[test]
     fn ordinary_project_node_modules_is_allowed() {
         assert!(is_allowed("C:\\Code\\my-app\\node_modules"));
+    }
+
+    #[test]
+    fn protected_descendant_blocks_parent_deletion() {
+        // Regression for H4: a protected folder *inside* the cleanup target
+        // must block the whole subtree delete.
+        let target = normalize_key(Path::new("D:\\proj\\.venv"));
+        let protected = vec!["D:\\proj\\.venv\\keep".to_string()];
+        assert!(matches!(
+            validate_protected_paths(&target, &protected),
+            Err(AppError::UnsafeDeleteTarget(_))
+        ));
+    }
+
+    #[test]
+    fn sibling_protected_path_does_not_block() {
+        let target = normalize_key(Path::new("D:\\proj\\.venv"));
+        let protected = vec!["D:\\proj\\keep".to_string()];
+        assert!(validate_protected_paths(&target, &protected).is_ok());
     }
 
     #[test]

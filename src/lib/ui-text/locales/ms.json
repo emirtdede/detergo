@@ -36,7 +36,9 @@
     "on": "Hidup",
     "off": "Mati",
     "items": "{n} item",
-    "showing": "{n} dipaparkan"
+    "showing": "{n} dipaparkan",
+    "scanAll": "Imbas semua",
+    "scanAllDesc": "Projek, storan alat AI dan cache pakej"
   },
   "header": {
     "changeLocation": "Tukar Lokasi",
@@ -49,7 +51,8 @@
     "addFavorite": "Tambah lokasi semasa ke kegemaran",
     "removeFavorite": "Alih lokasi dari kegemaran",
     "favoriteAdded": "Lokasi ditambah ke kegemaran.",
-    "favoriteRemoved": "Lokasi dialih dari kegemaran."
+    "favoriteRemoved": "Lokasi dialih dari kegemaran.",
+    "changeLocationConfirmDesc": "Menukar lokasi akan mengosongkan hasil imbasan semasa dan pilihan. Sejarah imbasan tersimpan dan syot kilat imbasan terakhir dikekalkan."
   },
   "window": {
     "minimize": "Minimumkan",
@@ -133,7 +136,17 @@
     "ecoAgent": "Ejen AI",
     "ecoCache": "Cache",
     "ecoOther": "Artifak Lain",
-    "distTotalBadge": "{size} boleh dibersihkan"
+    "distTotalBadge": "{size} boleh dibersihkan",
+    "noticeInfoTitle": "Maklumat",
+    "noticeInfoHint": "Lokasi yang dilindungi sistem telah dilangkau. Tiada tindakan diperlukan.",
+    "noticeIssueHint": "Sesetengah lokasi tidak dapat dibaca, jadi hasil mungkin tidak lengkap.",
+    "copyDetails": "Salin butiran",
+    "detailsCopied": "Butiran disalin ke papan keratan",
+    "coverage": "Liputan imbasan",
+    "sectionSkipped": "Dilangkau",
+    "sectionFailed": "Gagal",
+    "sectionPartial": "Tidak lengkap",
+    "sectionNoRoot": "Tiada folder dipilih"
   },
   "table": {
     "project": "Projek",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Padam secara kekal",
     "permanentAck": "Saya faham ini tidak boleh dibatalkan.",
     "blockedReasons": "Sasaran disekat",
-    "expires": "Pelan ini tamat dalam 15 minit.",
+    "expires": "Pelan ini tamat dalam 30 minit.",
     "close": "Tutup",
     "working": "Sedang diproses…",
     "runInBackground": "Jalankan di latar belakang",
@@ -223,7 +236,11 @@
     "cancelling": "Membatalkan…",
     "progress": "Diproses {processed} / {total}",
     "currentItem": "Semasa: {path}",
-    "alreadyRunning": "Pembersihan sudah sedang berjalan."
+    "alreadyRunning": "Pembersihan sudah sedang berjalan.",
+    "coveredByParent": "Disekat",
+    "noMethod": "Disekat",
+    "officialActionRequired": "Arahan rasmi",
+    "modeNotAllowed": "Kekal"
   },
   "result": {
     "title": "Hasil pembersihan",
@@ -238,6 +255,7 @@
     "verified": "disahkan",
     "cancelled": "Pembersihan dibatalkan",
     "cancelledNote": "{processed} item diproses, {skipped} dilangkau.",
+    "progressIncomplete": "{count} kemas kini kemajuan tidak dapat dipaparkan.",
     "processed": "Diproses",
     "skipped": "Dilangkau",
     "viewResults": "Lihat hasil",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Kosongkan Imbasan",
     "scopeProjects": "Kebergantungan Projek",
     "scopeAgents": "Ejen AI",
-    "scopeAllDrives": "Semua Pemacu"
+    "scopeAllDrives": "Semua Pemacu",
+    "statusPartial": "Separa",
+    "totalCleaned": "Jumlah yang diperoleh kembali",
+    "statusDepthLimited": "Separa"
   },
   "settings": {
     "general": "Rupa",
@@ -451,6 +472,12 @@
     "protectionsHint": "Folder yang tidak boleh dipadamkan dan nama yang harus dielakkan.",
     "agentsHint": "Polisi pembersihan untuk cache ejen AI.",
     "privacyHint": "Sejarah tempatan dan penutupan laluan di skrin.",
+    "resetAppDataTitle": "Tetapkan semula semua data apl",
+    "resetAppDataHint": "Memadamkan semua tetapan, sejarah pembersihan, sejarah imbasan, log tindakan dan imbasan terakhir yang disimpan, kemudian mulakan semula apl. Ini tidak boleh dibuat asal.",
+    "resetAppDataConfirmBtn": "Padam data dan mulakan semula",
+    "resetAppDataBusy": "Menetapkan semula…",
+    "resetAppDataSuccess": "Semua data apl telah ditetapkan semula. Tetapan lalai dipulihkan.",
+    "resetAppDataBlocked": "Imbasan atau pembersihan sedang dijalankan. Hentikannya sebelum menetapkan semula data apl.",
     "aboutHint": "Versi, butiran bina, katalog dan Vellium.",
     "legalHint": "Terma penggunaan, polisi privasi dan lesen sumber terbuka.",
     "sidebar": "Bar sisi",
@@ -547,7 +574,11 @@
     "standardMotion": "Animasi Standard",
     "aboutTitleBy": "Dev Cleaner oleh Vellium",
     "mcpDestructiveTitle": "Benarkan tindakan pemusnah MCP",
-    "mcpDestructiveHint": "Memerlukan bendera --allow-destructive; setiap pelaksanaan masih memerlukan token pratonton sekali guna"
+    "mcpDestructiveHint": "Memerlukan bendera --allow-destructive; setiap pelaksanaan masih memerlukan token pratonton sekali guna",
+    "pathMustBeAbsolute": "Laluan mestilah mutlak, contohnya C:\\Projects.",
+    "excludedNameInvalid": "Peraturan mestilah satu fail atau nama folder, tanpa pemisah laluan.",
+    "shortcutNeedsModifier": "Pintasan global memerlukan Ctrl, Alt atau Meta tambah kekunci atau kekunci fungsi.",
+    "shortcutsResetWarning": "{count} pintasan tidak sah telah ditetapkan semula kepada lalainya."
   },
   "legal": {
     "docTabsLabel": "Dokumen undang-undang",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Tiada Artifak Projek yang Boleh Dibersihkan Ditemui",
     "emptyTitleIdle": "Imbasan Projek Belum Dilakukan",
     "emptyDescClean": "Direktori yang dipilih bersih. Tiada node_modules, sasaran, atau artifak binaan yang boleh dibersihkan ditemui.",
-    "emptyDescIdle": "Pilih folder dan imbas untuk menyenaraikan kebergantungan projek dan artifak binaan."
+    "emptyDescIdle": "Pilih folder dan imbas untuk menyenaraikan kebergantungan projek dan artifak binaan.",
+    "kpiTargets": "Sasaran boleh dibersihkan",
+    "kpiTargetsSub": "Dalam {count} akar projek",
+    "kpiTargetsUnknown": "Imbas semula untuk menyegarkan bilangan projek"
   },
   "about": {
     "kpiVersion": "Versi",
@@ -616,7 +650,8 @@
     "contactSupport": "Sokongan Pelanggan",
     "contactBillingDesc": "Bil, perolehan perusahaan, dan sokongan langganan",
     "contactPrivacyDesc": "Keselamatan data, GDPR, dan pertanyaan privasi",
-    "ecoCacheScope": "npm cache, Cargo pendaftaran, pip cache, yarn"
+    "ecoCacheScope": "npm cache, Cargo pendaftaran, pip cache, yarn",
+    "contactBilling": "Bil dan Pembayaran"
   },
   "docs": {
     "catGuide": "Panduan & Seni Bina",

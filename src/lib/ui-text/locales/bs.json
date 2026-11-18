@@ -36,7 +36,9 @@
     "on": "Uključeno",
     "off": "Isključeno",
     "items": "{n} stavki",
-    "showing": "{n} prikazano"
+    "showing": "{n} prikazano",
+    "scanAll": "Skeniraj sve",
+    "scanAllDesc": "Projekti, pohrana AI alata i keševi paketa"
   },
   "header": {
     "changeLocation": "Promijeni Lokaciju",
@@ -49,7 +51,8 @@
     "addFavorite": "Dodaj trenutnu lokaciju u omiljene",
     "removeFavorite": "Ukloni lokaciju iz omiljenih",
     "favoriteAdded": "Lokacija dodana u omiljene.",
-    "favoriteRemoved": "Lokacija uklonjena iz omiljenih."
+    "favoriteRemoved": "Lokacija uklonjena iz omiljenih.",
+    "changeLocationConfirmDesc": "Promjena lokacije briše trenutne rezultate skeniranja i odabir. Sačuvana historija skeniranja i posljednja snimka skeniranja ostaju sačuvani."
   },
   "window": {
     "minimize": "Minimiziraj",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI agenti",
     "ecoCache": "Keševi",
     "ecoOther": "Ostali artefakti",
-    "distTotalBadge": "{size} za čišćenje"
+    "distTotalBadge": "{size} za čišćenje",
+    "noticeInfoTitle": "Informacija",
+    "noticeInfoHint": "Lokacije zaštićene od strane sistema su preskočene. Nije potrebna radnja.",
+    "noticeIssueHint": "Neke lokacije nisu mogle biti pročitane, pa rezultati mogu biti nepotpuni.",
+    "copyDetails": "Kopiraj detalje",
+    "detailsCopied": "Detalji su kopirani u međuspremnik",
+    "coverage": "Obuhvat skeniranja",
+    "sectionSkipped": "Preskočeno",
+    "sectionFailed": "Neuspjelo",
+    "sectionPartial": "Nepotpuno",
+    "sectionNoRoot": "Nije odabrana mapa"
   },
   "table": {
     "project": "Projekt",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Obriši trajno",
     "permanentAck": "Razumijem da ovo ne može biti poništeno.",
     "blockedReasons": "Blokirani ciljevi",
-    "expires": "Ovaj plan ističe za 15 minuta.",
+    "expires": "Ovaj plan ističe za 30 minuta.",
     "close": "Zatvori",
     "working": "Radim…",
     "runInBackground": "Pokreni u pozadini",
@@ -223,7 +236,11 @@
     "cancelling": "Otkazivanje…",
     "progress": "Obrađeno {processed} / {total}",
     "currentItem": "Trenutno: {path}",
-    "alreadyRunning": "Čišćenje je već u toku."
+    "alreadyRunning": "Čišćenje je već u toku.",
+    "coveredByParent": "Blokirano",
+    "noMethod": "Blokirano",
+    "officialActionRequired": "Zvanična komanda",
+    "modeNotAllowed": "Trajno"
   },
   "result": {
     "title": "Rezultat čišćenja",
@@ -238,6 +255,7 @@
     "verified": "provjereno",
     "cancelled": "Čišćenje otkazano",
     "cancelledNote": "{processed} stavki obrađeno, {skipped} preskočeno.",
+    "progressIncomplete": "{count} ažuriranja napretka nije moguće prikazati.",
     "processed": "Obrađeno",
     "skipped": "Preskočeno",
     "viewResults": "Prikaži rezultate",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Obriši skeniranja",
     "scopeProjects": "Zavisnosti projekta",
     "scopeAgents": "AI agenti",
-    "scopeAllDrives": "Svi diskovi"
+    "scopeAllDrives": "Svi diskovi",
+    "statusPartial": "Djelimično",
+    "totalCleaned": "Ukupno vraćeno",
+    "statusDepthLimited": "Djelimično"
   },
   "settings": {
     "general": "Izgled",
@@ -451,6 +472,12 @@
     "protectionsHint": "Fascikle koje nikada ne smiju biti izbrisane i imena koja treba preskočiti.",
     "agentsHint": "Politika čišćenja keševa AI agenta.",
     "privacyHint": "Lokalna historija i maskiranje puta na ekranu.",
+    "resetAppDataTitle": "Poništite sve podatke aplikacije",
+    "resetAppDataHint": "Briše sve postavke, historiju čišćenja, historiju skeniranja, zapisnike radnji i sačuvano posljednje skeniranje, a zatim ponovo pokreće aplikaciju. Ovo se ne može poništiti.",
+    "resetAppDataConfirmBtn": "Izbrišite podatke i ponovo pokrenite",
+    "resetAppDataBusy": "Resetiranje…",
+    "resetAppDataSuccess": "Svi podaci aplikacije su poništeni. Zadane postavke su vraćene.",
+    "resetAppDataBlocked": "Skeniranje ili čišćenje je u toku. Zaustavite ga prije resetiranja podataka aplikacije.",
     "aboutHint": "Verzija, detalji izrade, katalog i Vellium.",
     "legalHint": "Uvjeti korištenja, politika privatnosti i licence otvorenog koda.",
     "sidebar": "Bočna traka",
@@ -547,7 +574,11 @@
     "standardMotion": "Standardna animacija",
     "aboutTitleBy": "Dev Cleaner do Vellium",
     "mcpDestructiveTitle": "Dozvoli destruktivne MCP radnje",
-    "mcpDestructiveHint": "Zahtijeva zastavicu --allow-destructive; svako izvršavanje i dalje zahtijeva jednokratni token za pregled"
+    "mcpDestructiveHint": "Zahtijeva zastavicu --allow-destructive; svako izvršavanje i dalje zahtijeva jednokratni token za pregled",
+    "pathMustBeAbsolute": "Putanja moraju biti apsolutna, na primjer C:\\Projects.",
+    "excludedNameInvalid": "Pravilo mora biti jedno ime datoteke ili mape, bez razdjelnika putanja.",
+    "shortcutNeedsModifier": "Globalna prečica treba Ctrl, Alt ili Meta plus tipku ili funkcijsku tipku.",
+    "shortcutsResetWarning": "{count} nevažećih prečica je vraćeno na zadane vrijednosti."
   },
   "legal": {
     "docTabsLabel": "Pravni dokumenti",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Nema Pronađenih Artefakata Projekta za Čišćenje",
     "emptyTitleIdle": "Skener Projekta Još Nije Pokrenut",
     "emptyDescClean": "Odabrani direktorij je čist. Nema pronađenih čistivih node_modules, target ili build artefakata.",
-    "emptyDescIdle": "Odaberite folder i skenirajte kako biste prikazali zavisnosti projekta i build artefakte."
+    "emptyDescIdle": "Odaberite folder i skenirajte kako biste prikazali zavisnosti projekta i build artefakte.",
+    "kpiTargets": "Ciljevi koji se mogu očistiti",
+    "kpiTargetsSub": "Kroz {count} korijena projekata",
+    "kpiTargetsUnknown": "Ponovo skenirajte da osvježite broj projekata"
   },
   "about": {
     "kpiVersion": "Verzija",
@@ -616,7 +650,8 @@
     "contactSupport": "Korisnička podrška",
     "contactBillingDesc": "Fakturisanje, enterprise nabavka i podrška za pretplate",
     "contactPrivacyDesc": "Sigurnost podataka, GDPR i upiti o privatnosti",
-    "ecoCacheScope": "npm keš, Cargo registar, pip keš, yarn"
+    "ecoCacheScope": "npm keš, Cargo registar, pip keš, yarn",
+    "contactBilling": "Fakturisanje i plaćanja"
   },
   "docs": {
     "catGuide": "Vodiči i arhitektura",

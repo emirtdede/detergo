@@ -18,9 +18,9 @@
  *   - src/features/docs/docs-locales/*.json   -> same key set as af.json, with
  *     `tr` exempt: Turkish docs ship as a JSX component (DocsContentTr.tsx),
  *     not as a dictionary.
- *   - src/locales/langs/*.ts                  -> same key set as en.ts except
- *     `legal.*`, which types.ts documents as optional and LegalView now reads
- *     from legal-locales instead.
+ *   - src/locales/langs/*.ts                  -> retired; the same dictionaries
+ *     now live as JSON under src/lib/ui-text/locales.
+ *   - src/lib/ui-text/error-boundary.json     -> same three keys per locale.
  *   - src-tauri/assets/cli-locales.json       -> same key set as the reference
  *     locale (locales are keyed by English source string).
  *   - src-tauri/assets/tray-locales.json      -> same key set as the reference
@@ -161,24 +161,15 @@ auditJsonDirectory("src/features/legal/legal-locales");
 auditLocaleBundle("src-tauri/assets/cli-locales.json");
 auditLocaleBundle("src-tauri/assets/tray-locales.json");
 
-// 6. Legacy dictionaries. `legal.*` is optional by design (see src/locales/types.ts).
+// 6. Error-boundary copy: three strings per locale, keyed by locale id.
 {
-  const enModule = await loadTypeScriptDictionary(join(root, "src/locales/langs/en.ts"));
-  const reference = flatten(enModule.en);
-  const dir = join(root, "src/locales/langs");
-  for (const name of readdirSync(dir)) {
-    if (!name.endsWith(".ts")) continue;
-    const locale = basename(name, ".ts");
+  const bundle = JSON.parse(
+    readFileSync(join(root, "src/lib/ui-text/error-boundary.json"), "utf8"),
+  );
+  const required = flatten(bundle.en);
+  for (const [locale, dict] of Object.entries(bundle)) {
     if (locale === "en") continue;
-    const module = await loadTypeScriptDictionary(join(dir, name));
-    const dict = module[locale] ?? module.default;
-    if (!dict) {
-      addFinding(`src/locales/langs/${name}`, locale, "(module)", "no dictionary export");
-      continue;
-    }
-    compareDictionary(`src/locales/langs/${name}`, locale, dict, reference, {
-      ignorePrefixes: ["legal."],
-    });
+    compareDictionary("src/lib/ui-text/error-boundary.json", locale, dict, required);
   }
 }
 

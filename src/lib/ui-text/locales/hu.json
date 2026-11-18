@@ -36,7 +36,9 @@
     "on": "Folytat",
     "off": "Le",
     "items": "{n} tárgy",
-    "showing": "{n} látható"
+    "showing": "{n} látható",
+    "scanAll": "Mindent vizsgál",
+    "scanAllDesc": "Projektek, AI-eszközök tárhelye és csomag-gyorsítótárak"
   },
   "header": {
     "changeLocation": "Hely Módosítása",
@@ -49,7 +51,8 @@
     "addFavorite": "A jelenlegi hely hozzáadása a kedvencek közé",
     "removeFavorite": "A hely eltávolítása a kedvencekből",
     "favoriteAdded": "Helyszín hozzáadva a kedvencekhez.",
-    "favoriteRemoved": "Helyszín eltávolítva a kedvencekből."
+    "favoriteRemoved": "Helyszín eltávolítva a kedvencekből.",
+    "changeLocationConfirmDesc": "A helyszín módosítása törli az aktuális vizsgálati eredményeket és a kijelölést. A mentett vizsgálati előzmények és az utolsó vizsgálati pillanatkép megmarad."
   },
   "window": {
     "minimize": "Kicsinyítés",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI ügynökök",
     "ecoCache": "Gyorsítótárak",
     "ecoOther": "Egyéb artefaktumok",
-    "distTotalBadge": "{size} tisztítható"
+    "distTotalBadge": "{size} tisztítható",
+    "noticeInfoTitle": "Információ",
+    "noticeInfoHint": "A rendszer által védett helyek kimaradtak. Nincs szükség műveletre.",
+    "noticeIssueHint": "Néhány helyet nem lehetett beolvasni, ezért az eredmények hiányosak lehetnek.",
+    "copyDetails": "Részletek másolása",
+    "detailsCopied": "A részletek a vágólapra másolva",
+    "coverage": "Vizsgálat lefedettsége",
+    "sectionSkipped": "Kihagyva",
+    "sectionFailed": "Sikertelen",
+    "sectionPartial": "Hiányos",
+    "sectionNoRoot": "Nincs kiválasztott mappa"
   },
   "table": {
     "project": "Projekt",
@@ -215,7 +228,7 @@
     "confirmPermanent": "Véglegesen töröld",
     "permanentAck": "Értem, hogy ezt nem lehet visszafordítani.",
     "blockedReasons": "Blokkolt célpontok",
-    "expires": "Ez a terv 15 perc múlva lejár.",
+    "expires": "Ez a terv 30 perc múlva lejár.",
     "close": "Zárt",
     "working": "Dolgozom...",
     "runInBackground": "Futtatás a háttérben",
@@ -223,7 +236,11 @@
     "cancelling": "Megszakítás…",
     "progress": "Feldolgozva {processed} / {total}",
     "currentItem": "Jelenlegi: {path}",
-    "alreadyRunning": "Már fut egy tisztítás."
+    "alreadyRunning": "Már fut egy tisztítás.",
+    "coveredByParent": "Blokkolva",
+    "noMethod": "Blokkolva",
+    "officialActionRequired": "Hivatalos parancs",
+    "modeNotAllowed": "Állandó"
   },
   "result": {
     "title": "Takarítási eredmény",
@@ -238,6 +255,7 @@
     "verified": "Megerősítve",
     "cancelled": "Tisztítás megszakítva",
     "cancelledNote": "{processed} elem feldolgozva, {skipped} kihagyva.",
+    "progressIncomplete": "{count} folyamatfrissítést nem sikerült megjeleníteni.",
     "processed": "Feldolgozva",
     "skipped": "Kihagyva",
     "viewResults": "Eredmények megtekintése",
@@ -390,7 +408,10 @@
     "clearScansBtn": "Keresések törlése",
     "scopeProjects": "Projekt függőségek",
     "scopeAgents": "Mesterséges intelligencia ügynökök",
-    "scopeAllDrives": "Összes meghajtó"
+    "scopeAllDrives": "Összes meghajtó",
+    "statusPartial": "Részleges",
+    "totalCleaned": "Összes visszanyert",
+    "statusDepthLimited": "Részleges"
   },
   "settings": {
     "general": "Megjelenés",
@@ -451,6 +472,12 @@
     "protectionsHint": "Mappák, amelyeket soha nem szabad törölni, és kihagyandó nevek.",
     "agentsHint": "Takarítási szabályzat az AI ügynök gyorsítótáraihoz.",
     "privacyHint": "Helyi előzmények és képernyőn megjelenő útvonal maszkolás.",
+    "resetAppDataTitle": "Állítsa vissza az összes alkalmazásadatot",
+    "resetAppDataHint": "Törli az összes beállítást, a tisztítási előzményeket, a vizsgálati előzményeket, a műveletnaplókat és a mentett utolsó vizsgálatot, majd újraindítja az alkalmazást. Ezt nem lehet visszavonni.",
+    "resetAppDataConfirmBtn": "Törölje az adatokat és indítsa újra",
+    "resetAppDataBusy": "Visszaállítás…",
+    "resetAppDataSuccess": "Az összes alkalmazásadat visszaállításra került. Az alapértelmezett beállítások visszaállítva.",
+    "resetAppDataBlocked": "Vizsgálat vagy tisztítás fut. Állítsa le, mielőtt visszaállítja az alkalmazás adatait.",
     "aboutHint": "Verzió, build részletek, katalógus és Vellium.",
     "legalHint": "Felhasználási feltételek, adatvédelmi irányelvek és nyílt forráskódú licencek.",
     "sidebar": "Oldalsáv",
@@ -547,7 +574,11 @@
     "standardMotion": "Standard animáció",
     "aboutTitleBy": "Dev Cleaner szerző: Vellium",
     "mcpDestructiveTitle": "MCP destruktív műveletek engedélyezése",
-    "mcpDestructiveHint": "A --allow-destructive kapcsoló szükséges; minden végrehajtáshoz továbbra is egyszer használatos előnézeti token kell"
+    "mcpDestructiveHint": "A --allow-destructive kapcsoló szükséges; minden végrehajtáshoz továbbra is egyszer használatos előnézeti token kell",
+    "pathMustBeAbsolute": "Az útvonalaknak abszolútnak kell lenniük, például C:\\Projects.",
+    "excludedNameInvalid": "A szabálynak egyetlen fájl- vagy mappanévnek kell lennie, elérési útelválasztó nélkül.",
+    "shortcutNeedsModifier": "A globális billentyűparancshoz Ctrl, Alt vagy Meta, valamint egy billentyű vagy egy funkcióbillentyű szükséges.",
+    "shortcutsResetWarning": "{count} érvénytelen parancsikont visszaállítottak az alapértelmezett értékekre."
   },
   "legal": {
     "docTabsLabel": "Jogi dokumentumok",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "Tisztítható projekt eredmények nem találhatók",
     "emptyTitleIdle": "Még nem történt projektellenőrzés",
     "emptyDescClean": "A kiválasztott mappa tiszta. Nincs tisztítható node_modules, target vagy build-eredmény.",
-    "emptyDescIdle": "Válasszon egy mappát és indítson ellenőrzést a projekt függőségek és build-eredmények listázásához."
+    "emptyDescIdle": "Válasszon egy mappát és indítson ellenőrzést a projekt függőségek és build-eredmények listázásához.",
+    "kpiTargets": "Tisztítható célok",
+    "kpiTargetsSub": "{count} projektgyökérben",
+    "kpiTargetsUnknown": "Vizsgáljon újra a projektszám frissítéséhez"
   },
   "about": {
     "kpiVersion": "Verzió",
@@ -616,7 +650,8 @@
     "contactSupport": "Ügyfélszolgálat",
     "contactBillingDesc": "Számlázás, vállalati beszerzés és előfizetési támogatás",
     "contactPrivacyDesc": "Adatbiztonság, GDPR és adatvédelmi érdeklődés",
-    "ecoCacheScope": "npm gyorsítótár, Cargo registry, pip gyorsítótár, yarn"
+    "ecoCacheScope": "npm gyorsítótár, Cargo registry, pip gyorsítótár, yarn",
+    "contactBilling": "Számlázás és fizetések"
   },
   "docs": {
     "catGuide": "Útmutatók és architektúra",

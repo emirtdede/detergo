@@ -36,7 +36,9 @@
     "on": "開啟",
     "off": "關閉",
     "items": "{n} 項",
-    "showing": "顯示 {n}"
+    "showing": "顯示 {n}",
+    "scanAll": "全部掃描",
+    "scanAllDesc": "專案、AI 工具儲存空間與套件快取"
   },
   "header": {
     "changeLocation": "變更位置",
@@ -49,7 +51,8 @@
     "addFavorite": "將目前位置加入我的最愛",
     "removeFavorite": "從我的最愛中移除位置",
     "favoriteAdded": "位置已加入我的最愛。",
-    "favoriteRemoved": "位置已從我的最愛中移除。"
+    "favoriteRemoved": "位置已從我的最愛中移除。",
+    "changeLocationConfirmDesc": "變更位置將清除目前的掃描結果與選取項目。已儲存的掃描歷程與上次掃描快照將會保留。"
   },
   "window": {
     "minimize": "最小化",
@@ -133,7 +136,17 @@
     "ecoAgent": "AI 代理",
     "ecoCache": "快取",
     "ecoOther": "其他產物",
-    "distTotalBadge": "{size} 可清理"
+    "distTotalBadge": "{size} 可清理",
+    "noticeInfoTitle": "資訊",
+    "noticeInfoHint": "已略過系統保護的位置，無需採取任何動作。",
+    "noticeIssueHint": "部分位置無法讀取，因此結果可能不完整。",
+    "copyDetails": "複製詳細資料",
+    "detailsCopied": "詳細資料已複製到剪貼簿",
+    "coverage": "掃描涵蓋範圍",
+    "sectionSkipped": "已略過",
+    "sectionFailed": "失敗",
+    "sectionPartial": "不完整",
+    "sectionNoRoot": "未選擇資料夾"
   },
   "table": {
     "project": "專案",
@@ -215,7 +228,7 @@
     "confirmPermanent": "永久刪除",
     "permanentAck": "我明白此操作無法復原。",
     "blockedReasons": "被封鎖的目標",
-    "expires": "此計畫將於15分鐘後到期。",
+    "expires": "此計畫將於30分鐘後到期。",
     "close": "關閉",
     "working": "正在工作…",
     "runInBackground": "在背景執行",
@@ -223,7 +236,11 @@
     "cancelling": "正在取消…",
     "progress": "已處理 {processed} / {total}",
     "currentItem": "目前：{path}",
-    "alreadyRunning": "清理已在執行中。"
+    "alreadyRunning": "清理已在執行中。",
+    "coveredByParent": "被封鎖",
+    "noMethod": "被封鎖",
+    "officialActionRequired": "官方指令",
+    "modeNotAllowed": "永久"
   },
   "result": {
     "title": "清理結果",
@@ -238,6 +255,7 @@
     "verified": "已驗證",
     "cancelled": "清理已取消",
     "cancelledNote": "已處理 {processed} 個項目，略過 {skipped} 個。",
+    "progressIncomplete": "無法顯示 {count} 則進度更新。",
     "processed": "已處理",
     "skipped": "已略過",
     "viewResults": "檢視結果",
@@ -390,7 +408,10 @@
     "clearScansBtn": "清除掃描",
     "scopeProjects": "專案依賴",
     "scopeAgents": "AI 代理",
-    "scopeAllDrives": "所有磁碟"
+    "scopeAllDrives": "所有磁碟",
+    "statusPartial": "部分",
+    "totalCleaned": "回收總量",
+    "statusDepthLimited": "部分"
   },
   "settings": {
     "general": "外觀",
@@ -451,6 +472,12 @@
     "protectionsHint": "絕對不能刪除的資料夾及要跳過的名稱。",
     "agentsHint": "AI 代理快取的清理政策。",
     "privacyHint": "本地歷史紀錄與螢幕路徑遮罩。",
+    "resetAppDataTitle": "重置所有應用程式數據",
+    "resetAppDataHint": "刪除所有設定、清理記錄、掃描記錄、操作日誌和已儲存的上次掃描，然後重新啟動應用程式。此操作無法撤銷。",
+    "resetAppDataConfirmBtn": "刪除資料並重啟",
+    "resetAppDataBusy": "正在重置...",
+    "resetAppDataSuccess": "所有應用程式資料均已重設。恢復預設值。",
+    "resetAppDataBlocked": "掃描或清理正在運行。在重置應用程式資料之前停止它。",
     "aboutHint": "版本、建置細節、目錄與 Vellium。",
     "legalHint": "使用條款、隱私政策與開源授權。",
     "sidebar": "側邊欄",
@@ -547,7 +574,11 @@
     "standardMotion": "標準動畫",
     "aboutTitleBy": "Dev Cleaner · Vellium",
     "mcpDestructiveTitle": "允許 MCP 破壞性操作",
-    "mcpDestructiveHint": "需要 --allow-destructive 旗標；每次執行仍需要一次性預覽權杖"
+    "mcpDestructiveHint": "需要 --allow-destructive 旗標；每次執行仍需要一次性預覽權杖",
+    "pathMustBeAbsolute": "路徑必須是絕對路徑，例如 C:\\Projects。",
+    "excludedNameInvalid": "規則必須是單一檔案或資料夾名稱，不帶路徑分隔符號。",
+    "shortcutNeedsModifier": "全域快捷鍵需要 Ctrl、Alt 或 Meta 加一個鍵或一個功能鍵。",
+    "shortcutsResetWarning": "{count} 個無效捷徑已重設為其預設值。"
   },
   "legal": {
     "docTabsLabel": "法律文件",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "未找到可清理的專案產物",
     "emptyTitleIdle": "尚未執行專案掃描",
     "emptyDescClean": "選取的目錄已清潔。未找到可清理的 node_modules、target 或建置產物。",
-    "emptyDescIdle": "選擇資料夾並掃描以列出專案依賴和建置產物。"
+    "emptyDescIdle": "選擇資料夾並掃描以列出專案依賴和建置產物。",
+    "kpiTargets": "可清理的目標",
+    "kpiTargetsSub": "涵蓋 {count} 個專案根目錄",
+    "kpiTargetsUnknown": "重新掃描以更新專案數量"
   },
   "about": {
     "kpiVersion": "版本",
@@ -616,7 +650,8 @@
     "contactSupport": "客戶支援",
     "contactBillingDesc": "帳單、企業採購及訂閱支援",
     "contactPrivacyDesc": "資料安全、GDPR 及隱私詢問",
-    "ecoCacheScope": "npm快取、Cargo註冊表、pip快取、yarn"
+    "ecoCacheScope": "npm快取、Cargo註冊表、pip快取、yarn",
+    "contactBilling": "帳單與付款"
   },
   "docs": {
     "catGuide": "指南與架構",

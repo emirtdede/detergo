@@ -173,7 +173,10 @@
 }
 
 .items-row {
-  height: 56px;
+  /* Dynamic rows: the virtualizer measures each row, so this is a floor, not a
+     fixed height. A hard `height` clipped the second line of wrapped paths and
+     made neighbouring rows overlap. */
+  min-height: 56px;
   border-bottom: 1px solid var(--separator);
   font-size: var(--text-sm);
   transition: background var(--duration-fast) var(--ease-standard);
@@ -568,4 +571,102 @@
   display: flex;
   justify-content: flex-end;
   gap: var(--space-2);
+}
+
+/* Cache action console (see CachesView). Colours live in tokens.css so the
+   console keeps its terminal contrast in every theme without inline hex. */
+.cache-terminal {
+  margin-top: 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--terminal-border);
+  background: var(--terminal-bg);
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.cache-terminal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--terminal-border-subtle);
+  background: var(--terminal-header-bg);
+  color: var(--terminal-muted);
+  font-size: 11px;
+}
+
+.cache-terminal-title,
+.cache-terminal-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cache-terminal-title {
+  gap: 6px;
+}
+
+.cache-terminal-body {
+  padding: 10px 12px;
+  max-height: 180px;
+  overflow-y: auto;
+  color: var(--terminal-text);
+  line-height: 1.5;
+}
+
+.cache-terminal-command {
+  color: var(--terminal-cyan);
+}
+
+.cache-terminal-prompt {
+  color: var(--terminal-purple);
+}
+
+.cache-terminal-running {
+  margin-top: 4px;
+  color: var(--terminal-muted);
+  font-style: italic;
+}
+
+.cache-terminal-stdout {
+  margin: 6px 0;
+  color: var(--terminal-stdout);
+  white-space: pre-wrap;
+}
+
+.cache-terminal-stderr {
+  margin: 6px 0;
+  color: var(--terminal-error);
+  white-space: pre-wrap;
+}
+
+.cache-terminal-result {
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.cache-terminal-result.is-success {
+  color: var(--terminal-success);
+}
+
+.cache-terminal-result.is-error {
+  color: var(--terminal-error);
+}
+
+.cache-terminal-icon {
+  color: var(--terminal-icon);
+}
+
+.cache-terminal-cyan {
+  color: var(--terminal-cyan);
+}
+
+.cache-terminal-success {
+  color: var(--terminal-success);
+}
+
+.cache-terminal-error {
+  color: var(--terminal-error);
 }

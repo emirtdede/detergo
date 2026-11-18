@@ -36,7 +36,9 @@
     "on": "ચાલુ",
     "off": "બંધ",
     "items": "{n} આઇટમ્સ",
-    "showing": "{n} દર્શાવવામાં આવ્યા"
+    "showing": "{n} દર્શાવવામાં આવ્યા",
+    "scanAll": "બધું સ્કેન કરો",
+    "scanAllDesc": "પ્રોજેક્ટ્સ, AI ટૂલ સ્ટોરેજ અને પેકેજ કેશ"
   },
   "header": {
     "changeLocation": "સ્થાન બદલો",
@@ -49,7 +51,8 @@
     "addFavorite": "વર્તમાન સ્થાનને ફેવરિટ્સમાં ઉમેરો",
     "removeFavorite": "ફેવરિટ્સમાંથી સ્થાન દૂર કરો",
     "favoriteAdded": "સ્થાન ફેવરિટ્સમાં ઉમેરવામાં આવ્યું.",
-    "favoriteRemoved": "સ્થાન ફેવરિટ્સમાંથી દૂર કરી દેવાયું."
+    "favoriteRemoved": "સ્થાન ફેવરિટ્સમાંથી દૂર કરી દેવાયું.",
+    "changeLocationConfirmDesc": "સ્થાન બદલવાથી વર્તમાન સ્કેન પરિણામો અને પસંદગી સાફ થાય છે. તમારો સાચવેલો સ્કેન ઇતિહાસ અને છેલ્લું સ્કેન સ્નેપશોટ સચવાય છે."
   },
   "window": {
     "minimize": "નાનું કરો",
@@ -133,7 +136,17 @@
     "ecoAgent": "એઆઈ એજન્ટ્સ",
     "ecoCache": "કેશેસ",
     "ecoOther": "અન્ય કલાચિત્રો",
-    "distTotalBadge": "{size} કુલ"
+    "distTotalBadge": "{size} કુલ",
+    "noticeInfoTitle": "માહિતી",
+    "noticeInfoHint": "સિસ્ટમ-સુરક્ષિત સ્થાનો છોડી દેવામાં આવ્યા છે. કોઈ ક્રિયા જરૂરી નથી.",
+    "noticeIssueHint": "કેટલાક સ્થાનો વાંચી શકાયા નથી, તેથી પરિણામો અધૂરા હોઈ શકે છે.",
+    "copyDetails": "વિગતો કૉપિ કરો",
+    "detailsCopied": "વિગતો ક્લિપબોર્ડ પર કૉપિ કરવામાં આવી",
+    "coverage": "સ્કેન કવરેજ",
+    "sectionSkipped": "છોડી દેવાયું",
+    "sectionFailed": "નિષ્ફળ",
+    "sectionPartial": "અધૂરું",
+    "sectionNoRoot": "કોઈ ફોલ્ડર પસંદ કરેલ નથી"
   },
   "table": {
     "project": "પ્રોજેક્ટ",
@@ -215,7 +228,7 @@
     "confirmPermanent": "કાયમી રીતે ડિલીટ કરો",
     "permanentAck": "હું સમજું છું કે તેને પૂર્વવત્ કરી શકાતું નથી.",
     "blockedReasons": "અવરોધિત લક્ષ્યો",
-    "expires": "આ યોજના 15 મિનિટમાં સમાપ્ત થાય છે.",
+    "expires": "આ યોજના 30 મિનિટમાં સમાપ્ત થાય છે.",
     "close": "બંધ કરો",
     "working": "કામ કરી રહ્યું છે…",
     "runInBackground": "પૃષ્ઠભૂમિમાં ચલાવો",
@@ -223,7 +236,11 @@
     "cancelling": "રદ કરી રહ્યાં છીએ…",
     "progress": "પ્રક્રિયા કરેલ {processed} / {total}",
     "currentItem": "વર્તમાન: {path}",
-    "alreadyRunning": "સફાઈ પહેલેથી ચાલી રહી છે."
+    "alreadyRunning": "સફાઈ પહેલેથી ચાલી રહી છે.",
+    "coveredByParent": "અવરોધિત",
+    "noMethod": "અવરોધિત",
+    "officialActionRequired": "સત્તાવાર કમાન્ડ",
+    "modeNotAllowed": "કાયમી"
   },
   "result": {
     "title": "સાફસફાઈ પરિણામ",
@@ -238,6 +255,7 @@
     "verified": "ચકાસવામાં આવ્યું",
     "cancelled": "સફાઈ રદ કરવામાં આવી",
     "cancelledNote": "{processed} વસ્તુઓની પ્રક્રિયા થઈ, {skipped} છોડી દેવામાં આવી.",
+    "progressIncomplete": "{count} પ્રગતિ અપડેટ બતાવી શકાયા નથી.",
     "processed": "પ્રક્રિયા કરેલ",
     "skipped": "છોડી દેવામાં આવેલ",
     "viewResults": "પરિણામો જુઓ",
@@ -390,7 +408,10 @@
     "clearScansBtn": "સ્કેન સાફ કરો",
     "scopeProjects": "પ્રોજેક્ટ ડિપેન્ડન્સી",
     "scopeAgents": "એઆઈ એજન્ટ્સ",
-    "scopeAllDrives": "બધી ડ્રાઇવ્સ"
+    "scopeAllDrives": "બધી ડ્રાઇવ્સ",
+    "statusPartial": "આંશિક",
+    "totalCleaned": "કુલ પુન:પ્રાપ્તિ",
+    "statusDepthLimited": "આંશિક"
   },
   "settings": {
     "general": "દેખાવ",
@@ -451,6 +472,12 @@
     "protectionsHint": "ફોલ્ડરો કે જે ક્યારેય કાઢી ન શકાય અને નામો છોડવા જોઈએ.",
     "agentsHint": "એઆઇ એજન્ટ કેશ માટેની સફાઈ નીતિ.",
     "privacyHint": "સ્થાનિક ઇતિહાસ અને ઓન-સ્ક્રીન પાથ માસ્કિંગ.",
+    "resetAppDataTitle": "તમામ એપ્લિકેશન ડેટા રીસેટ કરો",
+    "resetAppDataHint": "તમામ સેટિંગ્સ, ક્લિનઅપ ઇતિહાસ, સ્કેન ઇતિહાસ, ક્રિયા લૉગ્સ અને સાચવેલ છેલ્લું સ્કેન કાઢી નાખે છે, પછી એપ્લિકેશનને ફરીથી પ્રારંભ કરે છે. આ પૂર્વવત્ કરી શકાતું નથી.",
+    "resetAppDataConfirmBtn": "ડેટા કાઢી નાખો અને પુનઃપ્રારંભ કરો",
+    "resetAppDataBusy": "રીસેટ કરી રહ્યું છે...",
+    "resetAppDataSuccess": "તમામ એપ્લિકેશન ડેટા રીસેટ કરવામાં આવ્યો છે. ડિફૉલ્ટ સેટિંગ્સ પુનઃસ્થાપિત.",
+    "resetAppDataBlocked": "સ્કેન અથવા ક્લિનઅપ ચાલી રહ્યું છે. એપ્લિકેશન ડેટા રીસેટ કરતા પહેલા તેને રોકો.",
     "aboutHint": "વર્સન, બિલ્ડ વિગતો, કેટલોગ અને વેલિયમ.",
     "legalHint": "ઉપયોગની શરતો, ગોપનીયતા નીતિ અને ખુલ્લા સ્ત્રોતના લાઇસન્સ.",
     "sidebar": "સાઇડબાર",
@@ -547,7 +574,11 @@
     "standardMotion": "સ્ટાન્ડર્ડ એનિમેશન",
     "aboutTitleBy": "Dev Cleaner બાય Vellium",
     "mcpDestructiveTitle": "MCP વિનાશક ક્રિયાઓને મંજૂરી આપો",
-    "mcpDestructiveHint": "--allow-destructive ફ્લેગ જરૂરી છે; દરેક ચલાવવા માટે હજી પણ એક-વપરાશ પૂર્વાવલોકન ટોકન જરૂરી છે"
+    "mcpDestructiveHint": "--allow-destructive ફ્લેગ જરૂરી છે; દરેક ચલાવવા માટે હજી પણ એક-વપરાશ પૂર્વાવલોકન ટોકન જરૂરી છે",
+    "pathMustBeAbsolute": "પાથ ચોક્કસ હોવા જોઈએ, ઉદાહરણ તરીકે C:\\Projects.",
+    "excludedNameInvalid": "નિયમ પાથ વિભાજક વિના, એક ફાઇલ અથવા ફોલ્ડરનું નામ હોવું આવશ્યક છે.",
+    "shortcutNeedsModifier": "વૈશ્વિક શૉર્ટકટ માટે Ctrl, Alt અથવા Meta વત્તા કી અથવા ફંક્શન કીની જરૂર પડે છે.",
+    "shortcutsResetWarning": "{count} અમાન્ય શોર્ટકટ(ઓ) તેમના ડિફોલ્ટ પર રીસેટ કરવામાં આવ્યા હતા."
   },
   "legal": {
     "docTabsLabel": "કાયદેસર દસ્તાવેજો",
@@ -579,7 +610,10 @@
     "emptyTitleClean": "કોઈ સાફ કરવા લાયક પ્રોજેક્ટ આર્ટિફેક્ટ્સ શોધાતા નથી",
     "emptyTitleIdle": "હજુ કોઈ પ્રોજેક્ટ સ્કેન કરવામાં આવ્યો નથી",
     "emptyDescClean": "પસંદ કરેલી ડિરેક્ટરી સાફ છે. કોઈ સાફ કરવા લાયક node_modules, target, અથવા build artifacts મળ્યા નથી.",
-    "emptyDescIdle": "પ્રોજેક્ટ નિર્ભરતાઓ અને બિલ્ડ આર્ટિફેક્ટ્સની સૂચિ બનાવવા માટે ફોલ્ડર પસંદ કરો અને સ્કેન કરો."
+    "emptyDescIdle": "પ્રોજેક્ટ નિર્ભરતાઓ અને બિલ્ડ આર્ટિફેક્ટ્સની સૂચિ બનાવવા માટે ફોલ્ડર પસંદ કરો અને સ્કેન કરો.",
+    "kpiTargets": "સાફ કરી શકાય તેવા લક્ષ્યો",
+    "kpiTargetsSub": "{count} પ્રોજેક્ટ રૂટ્સમાં",
+    "kpiTargetsUnknown": "પ્રોજેક્ટ ગણતરી રિફ્રેશ કરવા માટે ફરી સ્કેન કરો"
   },
   "about": {
     "kpiVersion": "સંસ્કરણ",
@@ -616,7 +650,8 @@
     "contactSupport": "ગ્રાહક સપોર્ટ",
     "contactBillingDesc": "બિલિંગ, એન્ટરપ્રાઇઝ પ્રોક્યોરમેન્ટ, અને સબ્સ્ક્રિપ્શન સપોર્ટ",
     "contactPrivacyDesc": "ડેટા સુરક્ષા, GDPR, અને ગોપનીયતા સંબંધિત પૂછપરછ",
-    "ecoCacheScope": "npm કૅશ, Cargo રજિસ્ટ્રી, pip કૅશ, yarn"
+    "ecoCacheScope": "npm કૅશ, Cargo રજિસ્ટ્રી, pip કૅશ, yarn",
+    "contactBilling": "બિલિંગ અને ચુકવણીઓ"
   },
   "docs": {
     "catGuide": "માર્ગદર્શિકા અને આર્કિટેક્ચર",
