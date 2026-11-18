@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/emirtdede/Node-Cleaner/security/advisories/new
+    url: https://github.com/emirtdede/dev-cleaner/security/advisories/new
     about: Report privately. Never disclose a deletion or privilege bug in a public issue.
   - name: Documentation
-    url: https://github.com/emirtdede/Node-Cleaner/blob/main/docs/README.md
+    url: https://github.com/emirtdede/dev-cleaner/blob/main/docs/README.md
     about: Specification, architecture, security model and release evidence.

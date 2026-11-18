@@ -38,8 +38,8 @@ Two rules shape almost every review:
 ## Local setup
 
 ```bash
-git clone https://github.com/emirtdede/Node-Cleaner.git
-cd Node-Cleaner
+git clone https://github.com/emirtdede/dev-cleaner.git
+cd dev-cleaner
 npm ci
 ```
 

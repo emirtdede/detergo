@@ -147,7 +147,7 @@ Dev Cleaner operates **100% locally** with zero telemetry, zero analytics, and z
 ## Project Structure
 
 ```tree
-Node-Cleaner/
+dev-cleaner/
 ├── assets/                         # Vector brand assets & master logo
 │   └── brand/                      # dev-cleaner-icon.svg, installer/, github/
 ├── docs/                           # All project documentation (see docs/README.md)
@@ -287,8 +287,8 @@ flowchart TD
 1. **Clone the Repository:**
 
    ```bash
-   git clone https://github.com/emirtdede/Node-Cleaner.git
-   cd Node-Cleaner
+   git clone https://github.com/emirtdede/dev-cleaner.git
+   cd dev-cleaner
    ```
 
 2. **Install Node Dependencies:**
@@ -464,7 +464,7 @@ Uygulama **%100 yerel ve çevrimdışı** çalışır; hiçbir harici sunucuya b
 ## Project Structure (Proje Klasör Yapısı)
 
 ```tree
-Node-Cleaner/
+dev-cleaner/
 ├── assets/                         # Vektörel marka varlıkları ve master logo
 │   └── brand/                      # dev-cleaner-icon.svg, installer/, github/
 ├── docs/                           # Tüm proje dokümantasyonu (bkz. docs/README.md)
@@ -574,8 +574,8 @@ Node-Cleaner/
 1. **Depoyu Klonlayın:**
 
    ```bash
-   git clone https://github.com/emirtdede/Node-Cleaner.git
-   cd Node-Cleaner
+   git clone https://github.com/emirtdede/dev-cleaner.git
+   cd dev-cleaner
    ```
 
 2. **Node Bağımlılıklarını Yükleyin:**
