@@ -372,7 +372,7 @@ community rules. Security problems must be reported privately following
 
 ## License
 
-Distributed under the **MIT License**. Copyright &copy; 2026 Emir Dede.
+Distributed under the **MIT License**. Copyright &copy; 2026 Vellium.
 
 See [`LICENSE`](LICENSE) for the full text.
 
@@ -661,7 +661,7 @@ iletilmelidir.
 
 ## License (Lisans)
 
-Bu proje **MIT Lisansı** ile dağıtılır. Telif Hakkı &copy; 2026 Emir Dede.
+Bu proje **MIT Lisansı** ile dağıtılır. Telif Hakkı &copy; 2026 Vellium.
 
 Tam metin için [`LICENSE`](LICENSE) dosyasına bakın.
 

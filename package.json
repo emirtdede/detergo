@@ -2,6 +2,13 @@
   "name": "dev-cleaner",
   "private": true,
   "version": "2.2.3",
+  "description": "Dev Cleaner by Vellium - multi-ecosystem developer artifact and AI agent storage cleaner",
+  "author": "Vellium",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emirtdede/dev-cleaner.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "node scripts/build-docs-index.mjs && vite",
