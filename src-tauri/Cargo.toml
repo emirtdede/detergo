@@ -42,7 +42,7 @@ crossbeam-channel = "0.5"
 mimalloc = "0.1.52"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "blocking"] }
 # Support diagnostics are zipped on the device; no archive service is involved.
-zip = { version = "2", default-features = false, features = ["deflate"] }
+zip = { version = "9", default-features = false, features = ["deflate"] }
 # Audit history store (T-38). `default-features = false` is mandatory: the
 # crate's defaults select the WASM FFI backend, which cannot link in a desktop
 # Tauri build. `bundled` compiles the SQLite amalgamation we ship.
