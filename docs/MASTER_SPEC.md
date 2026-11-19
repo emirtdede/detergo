@@ -9,7 +9,9 @@
 
 Dev Cleaner detects and safely removes reproducible developer artifacts across
 ecosystems and analyses AI coding agent storage. Everything runs locally. There
-is no telemetry, account, server, advertisement or cloud dependency.
+is no telemetry, account, server, advertisement or cloud dependency, and no
+network request starts without a click (an optional webhook, the update check or
+opening a link).
 
 ### Supported modules
 

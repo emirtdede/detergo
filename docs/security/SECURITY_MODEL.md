@@ -22,7 +22,7 @@
 | Stale approval | Plan created before files changed | 15-min TTL, token, size/identity check |
 | Trash failure | Network path / disabled bin | Error reported; **no permanent fallback** |
 | Secret leakage | Chat transcripts in logs | Metadata-only scans; no content reads in audit |
-| Silent telemetry | Hidden upload | No network client in dependencies; offline by design |
+| Silent telemetry | Hidden upload | No startup or scheduled request; the only network calls are user-triggered (webhook test, update check, opening a link) |
 | Unclear success | Delete partially fails | Per-item results + existence verification |
 
 ## 3. Defence layers

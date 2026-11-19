@@ -94,7 +94,9 @@ Traditional filesystem scanners freeze system I/O by recursing deep into nested 
 
 With strict **Multi-Layer Safety Verification (`SEC-DEL`)**, protected system folders (like `C:\Windows`, `Program Files`, and user profile roots) cannot be selected or deleted. Dev Cleaner supports both reversible **Windows Recycle Bin** soft deletion (`IFileOperation` / `SHFileOperationW`) and lightning-fast **Permanent** deletion with interactive confirmations.
 
-Dev Cleaner operates **100% locally** with zero telemetry, zero analytics, and zero external network dependencies.
+Dev Cleaner operates **100% locally** with zero telemetry and zero analytics. It starts no network
+request on its own; the only outbound calls are ones you trigger (an optional webhook, the
+"Check for updates" button, and opening a link in your browser).
 
 ---
 
@@ -113,7 +115,7 @@ Dev Cleaner operates **100% locally** with zero telemetry, zero analytics, and z
 - **Global Localization (73 Languages)**: Full native support for 73 languages with zero translation leakage via robust proxy fallbacks. RTL (Right-to-Left) dynamic mirroring for Arabic, Hebrew, Persian, and Urdu. The Windows NSIS installer speaks all 73 languages: the picker opens on every run (preselecting the remembered language) and the 21 languages NSIS does not ship are generated from English templates, including Tauri's installer messages.
 - **Modern Dark-Transparent Glassmorphism UI**: Custom frameless window styling with curated dark aesthetic design tokens, smooth animations, and responsive layouts.
 - **Real-Time Search & Sorting**: Filter projects by name, filesystem path, or package manager (`npm`, `pnpm`, `yarn`, `bun`), and sort by largest disk size or oldest modified date.
-- **100% Offline & Private**: Zero telemetry, zero analytics, zero external network requests.
+- **100% Offline & Private**: Zero telemetry, zero analytics, no background network requests.
 
 ---
 
@@ -413,7 +415,7 @@ Geleneksel dosya tarayıcıları iç içe geçmiş bağımlılık ağaçlarında
 
 Gelişmiş **Çok Katmanlı Güvenlik Mekanizması (`SEC-DEL`)** sayesinde Windows sistem dizinleri (`C:\Windows`, `Program Files` vb.) ve kullanıcı ana klasörleri kesinlikle silinemez. Dev Cleaner hem geri alınabilir **Windows Çöp Kutusu** (`IFileOperation`) hem de kalıcı silme seçeneklerini çift onaylı koruma ile sunar.
 
-Uygulama **%100 yerel ve çevrimdışı** çalışır; hiçbir harici sunucuya bağlanmaz, telemetri veya analitik verisi toplamaz.
+Uygulama **%100 yerel ve çevrimdışı** çalışır; kendiliğinden hiçbir ağ isteği başlatmaz, telemetri veya analitik verisi toplamaz. Dış bağlantı yalnızca sizin tetiklediğiniz işlemlerde kurulur (isteğe bağlı webhook, "Güncellemeleri denetle" düğmesi ve tarayıcıda açılan bağlantı).
 
 ---
 
@@ -432,7 +434,7 @@ Uygulama **%100 yerel ve çevrimdışı** çalışır; hiçbir harici sunucuya b
 - **Küresel Yerelleştirme (73 Dil)**: Güçlü vekil (proxy fallback) mimarisi sayesinde sıfır dil sızıntısı ile 73 dilde eksiksiz çalışma. Arapça, İbranice, Farsça ve Urduca için dinamik RTL desteği. Windows NSIS kurulum sihirbazı 73 dilin tamamını konuşur: dil seçici her çalıştırmada açılır (hatırlanan dili önseçili getirir) ve NSIS'in kendi dil dosyası bulunmayan 21 dil, Tauri kurulum mesajları dâhil İngilizce şablonlardan üretilir.
 - **Modern Karanlık Cam Efektli (Glassmorphism) Arayüz**: Özel çerçevesiz pencere tasarımı, estetik karanlık renk paleti ve akıcı mikro animasyonlar.
 - **Gerçek Zamanlı Arama ve Sıralama**: Proje adı veya dosya yoluna göre anında filtreleme; en büyük boyuta veya en eski değiştirilme tarihine göre sıralama.
-- **Tamamen Çevrimdışı ve Gizli**: Sıfır telemetri, sıfır analiz, sıfır dış ağ bağlantısı.
+- **Tamamen Çevrimdışı ve Gizli**: Sıfır telemetri, sıfır analiz, arka planda dış ağ bağlantısı yok.
 
 ---
 
