@@ -30,6 +30,7 @@
 ![Languages](https://img.shields.io/badge/Languages-73%20Supported-success?style=for-the-badge&logo=google-translate)
 ![Safety](https://img.shields.io/badge/Safety-Recycle%20Bin%20%7C%20Zero%20Data%20Loss-brightgreen?style=for-the-badge&logo=windows)
 ![MCP](https://img.shields.io/badge/MCP-Server%20Builtin-blueviolet?style=for-the-badge)
+![CI](https://img.shields.io/github/actions/workflow/status/emirtdede/dev-cleaner/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI)
 
 </div>
 
@@ -57,7 +58,7 @@ Updates & health, Contact, Legal) so its sections no longer leave uneven gaps.
 Documentation commands all have one-click copy buttons. See
 [`docs/CHANGELOG.md`](docs/CHANGELOG.md).
 
-Source quality gates pass: 256 frontend tests, 238 Rust library tests plus the
+Source quality gates pass: 256 frontend tests, 241 Rust library tests plus the
 integration suites, zero Clippy warnings and the full accessibility suite
 (16 Playwright/axe checks). See `docs/release/TEST_MATRIX.md` for the recorded
 run.
