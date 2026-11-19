@@ -78,20 +78,20 @@ docs/
    The repository root keeps only `README.md` and `LICENSE`, which GitHub
    requires; community files live in `.github/`.
 
-## Current release status (1.0.1)
+## Current release status (1.0.0)
 
 ```
 Code gates:            14/14 PASS (256 frontend tests, 238 Rust lib + integration suites, clippy, rustfmt, build, 16/16 a11y)
 Brand gates:           3/3 PASS (check:icons, check:brand, format:check)
-Release build:         1.0.1 — clean tree, 3 artifacts, provenance manifest verified
-Runtime checks:        2.2.2 evidence in release/TEST_MATRIX.md; the 1.0.1 installer harnesses were not re-run
+Release build:         1.0.0 — clean tree, 3 artifacts, provenance manifest verified
+Runtime checks:        2.2.2 evidence in release/TEST_MATRIX.md; the 1.0.0 installer harnesses were not re-run
 Release gates:         PENDING — signed installers (G4), clean-VM repeat, legal (G0), design (G9)
 Source availability:   PUBLIC — MIT licensed, contributions welcome
 ```
 
-Source gates run on every push and pull request in AppVeyor (see
-`appveyor.yml`; GitHub Actions is not used) and the results are recorded in
-`docs/release/TEST_MATRIX.md`. Any package must be built from a clean tree so
+Source gates run on every push and pull request in GitHub Actions (see
+`.github/workflows/ci.yml`; AppVeyor stays as a redundant Windows path) and the
+results are recorded in `docs/release/TEST_MATRIX.md`. Any package must be built from a clean tree so
 `release_output/BUILD_INFO.json` reports `"dirty": false` and
 `npm run check:build-info` passes.
 

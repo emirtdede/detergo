@@ -1,17 +1,20 @@
 # Release Checklist & Gates
 
-**Version:** 1.0.1
+**Version:** 1.0.0
 **Date:** 2026-11-19
 **Source revision:** the commit recorded in `release_output/BUILD_INFO.json`,
 which must equal `git rev-parse HEAD` at build time
 **Deployment mode:** DIRECT-LIVE (local Windows desktop; NSIS / MSI / portable
 go straight to users; no staging, no canary)
-**CI:** AppVeyor (`appveyor.yml`). GitHub Actions is not used.
+**CI:** GitHub Actions (`.github/workflows/ci.yml`) runs the frontend and
+Rust gates on every push; AppVeyor (`appveyor.yml`) stays as a redundant
+Windows path.
 
-> **1.0.1 status.** Patch release on the first open-source line (catalog
-> explorer, update check, local error log). Source gates (`G1` code gates and
-> `G2` brand gates) pass on the release commit, and `G6` reports a clean tree
-> with three artifacts. The installer, shell-icon and upgrade evidence in
+> **1.0.0 status.** First open-source release, including the catalog explorer,
+> the user-initiated update check, the local error log and the Settings >
+> Diagnostics support bundle. Source gates (`G1` code gates and `G2` brand
+> gates) pass on the release commit, and `G6` reports a clean tree with three
+> artifacts. The installer, shell-icon and upgrade evidence in
 > `G3`/`G5`/`G7` below was produced on the development Windows 11 host and
 > should be repeated on a pristine VM.
 
@@ -20,7 +23,7 @@ go straight to users; no staging, no canary)
 | Gate | Requirement | Result | Evidence |
 |---|---|---|---|
 | G0 | Trademark clearance signed | **PENDING** | `docs/brand/TRADEMARK_CLEARANCE.md` (counsel decision and signature) |
-| G1 | Code gates | **PASS** | `npm run typecheck`, `npm test` (256), `cargo test` (238 lib + integration suites, opt-in heavy tests ignored), `cargo clippy -D warnings`, `cargo fmt --check`, `npm run build`, `npm run test:a11y` (16 Playwright tests) |
+| G1 | Code gates | **PASS** | `npm run typecheck`, `npm test` (256), `cargo test` (241 lib + integration suites, opt-in heavy tests ignored), `cargo clippy -D warnings`, `cargo fmt --check`, `npm run build`, `npm run test:a11y` (16 Playwright tests) |
 | G2 | Brand asset gates | **PASS** | `npm run check:icons`, `npm run check:brand`, `npm run format:check` |
 | G3 | NSIS installer + shell surfaces | **PASS (dev host)** | `npm run verify:installer` 8/8 and `npm run verify:shell-icons` 8/8 on the development Windows 11 host; clean-VM repeat still advisable |
 | G4 | MSI per-machine | **PENDING** | `npm run verify:msi` refuses a non-elevated session (verified); needs an elevated run on a separate host |
@@ -31,7 +34,7 @@ go straight to users; no staging, no canary)
 | G9 | Design-board visual approval | **PENDING** | 15-frame set recorded in `docs/release/TEST_MATRIX.md`; signature still missing |
 
 Historical pre-1.0 evidence is no longer part of the repository; the git history
-keeps it. Do not reuse an older installer as a 1.0.1 deliverable and never patch
+keeps it. Do not reuse an older installer as a 1.0.0 deliverable and never patch
 a shipped executable in place.
 
 ## Brand rollout checklist
@@ -108,7 +111,7 @@ Copy-Item <path>\Dev-Cleaner-<previous>-x64.msi        release_output\baseline\
 - [x] Prettier PASS
 - [x] Brand and icon structure PASS
 - [x] Production frontend build PASS
-- [x] Clean-tree release build PASS (1.0.1)
+- [x] Clean-tree release build PASS (1.0.0)
 - [x] NSIS install â†’ launch â†’ icons â†’ uninstall PASS
 - [ ] MSI install â†’ launch â†’ uninstall PASS (elevated, per-machine)
 - [x] Previous release upgrade PASS (NSIS; MSI pending)
@@ -140,7 +143,7 @@ mistaken for new breakage.
    vocabulary; the gate reports **PASS for all four themes** and is part of
    `npm run test:a11y`, so the Playwright suite runs in CI instead of being
    skipped.
-2. **`npm run check:build-info`** passes against the 1.0.1 build. Re-run it after
+2. **`npm run check:build-info`** passes against the 1.0.0 build. Re-run it after
    any further source change, because the gate requires the recorded commit to
    equal `HEAD`.
 3. **Code signing (F-6).** Binaries are unsigned; SmartScreen warns.

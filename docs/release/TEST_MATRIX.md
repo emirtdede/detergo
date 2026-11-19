@@ -101,17 +101,17 @@ tokens the checker expects are now defined in `src/styles/tokens.css`. The
 Playwright accessibility suite is therefore part of the release gate rather than
 being skipped.
 
-## 0b. 1.0.1 patch release (2026-11-19)
+## 0c. 1.0.0 release build (2026-11-19)
 
-Re-run on the release commit `0a8fea5` (tag `v1.0.1`) on Windows 11 x64 with
-Node 26.13.1 and the pinned Rust toolchain, after the About-page, update-check and
-local-error-log changes:
+Re-run on the release commit (tag `v1.0.0`) on Windows 11 x64 with Node 26.13.1
+and the pinned Rust toolchain, after the Settings dialogs, About side menu,
+copyable docs, diagnostic bundle and directory-link delete fix:
 
 | Suite | Command | Result |
 |---|---|---|
 | TypeScript | `npm run typecheck` | **PASS** |
 | Frontend unit/feature | `npm test` | **256 passed** in 30 files, 0 failed |
-| Rust library | `cargo test --manifest-path src-tauri/Cargo.toml` | **238 passed**, 0 failed |
+| Rust library | `cargo test --manifest-path src-tauri/Cargo.toml` | **241 passed**, 0 failed |
 | Rust integration | same command | **PASS** (crash, git, MCP, recycle failure, secrets, webhook suites), 0 failed |
 | Update-check parser | `cargo test updates` | **9 passed** — semver ordering, pre-release, draft/prerelease, malformed payloads |
 | Accessibility (Playwright + axe) | `npm run test:a11y` | **16 passed** — the 13 existing checks plus three About assertions (catalog counts, rule expansion, panel row) |
@@ -120,10 +120,10 @@ local-error-log changes:
 | Prettier | `npm run format:check` | **PASS** |
 | Production frontend build | `npm run build` | **PASS** |
 | Regression gates | `npm run check:gates` | **PASS** — includes the new preview-catalog freshness gate |
-| i18n | `npm run check:i18n` | **PASS** — 90,311 key checks, no missing keys |
+| i18n | `npm run check:i18n` | **PASS** — 92,725 key checks across 503 locale files, no missing keys |
 | Brand / contrast / audit | `check:brand`, `check:contrast`, `check:audit` | **PASS** |
-| Bindings | `npm run check:bindings` | **PASS** — `UpdateInfo`/`UpdateAsset` generated |
-| Provenance | `npm run check:build-info` | **PASS** — version 1.0.1, commit `0a8fea5`, clean tree, 3 artifacts |
+| Bindings | `npm run check:bindings` | **PASS** — `UpdateInfo`/`UpdateAsset`/`SupportBundle*` generated |
+| Provenance | `npm run check:build-info` | **PASS** — version 1.0.0, clean tree, 3 artifacts |
 | CLI smoke | `npm run verify:smoke` | **10/10 PASS** — includes the loopback/private webhook refusal |
 
 The webhook delivery cases (S-01, S-02) changed shape in this release: the
