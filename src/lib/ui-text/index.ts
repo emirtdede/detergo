@@ -668,6 +668,32 @@ export interface UIText {
     contactBillingDesc: string;
     contactPrivacyDesc: string;
   };
+  catalog: {
+    details: string;
+    hint: string;
+    matches: string;
+    regenerate: string;
+    note: string;
+    empty: string;
+  };
+  updates: {
+    title: string;
+    hint: string;
+    check: string;
+    checking: string;
+    upToDate: string;
+    available: (version: string) => string;
+    notes: string;
+    download: string;
+    failed: string;
+    privacy: string;
+  };
+  diagnostics: {
+    title: string;
+    hint: string;
+    empty: string;
+    report: string;
+  };
   docs: {
     catGuide: string;
     catCli: string;

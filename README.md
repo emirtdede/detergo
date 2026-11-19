@@ -35,17 +35,22 @@
 
 ---
 
-## Release status (1.0.0 — Dev Cleaner)
+## Release status (1.0.1 — Dev Cleaner)
 
 Dev Cleaner is a catalog-driven, multi-ecosystem developer-artifact and
-AI-agent storage reclaimer for Windows 11 x64. Version 1.0.0 is the first
+AI-agent storage reclaimer for Windows 11 x64. Version 1.0.0 was the first
 open-source release: 73 languages, a 56-rule cleanup catalog, 21 supported
 developer-tool caches, a built-in MCP server, an interactive CLI and a
 reversible Recycle Bin deletion path guarded by the Rust safety layer.
 
-Source quality gates pass: 237 frontend tests, 230 Rust library tests plus 21
-integration tests, zero Clippy warnings and the full accessibility suite
-(13 Playwright/axe checks). See `docs/release/TEST_MATRIX.md` for the recorded
+Version 1.0.1 completes it: the About page now has a clickable catalog explorer,
+a user-initiated update check against the public GitHub release feed and a local
+error log that never leaves the device. See
+[`docs/CHANGELOG.md`](docs/CHANGELOG.md).
+
+Source quality gates pass: 256 frontend tests, 238 Rust library tests plus the
+integration suites, zero Clippy warnings and the full accessibility suite
+(16 Playwright/axe checks). See `docs/release/TEST_MATRIX.md` for the recorded
 run.
 
 The installers attached to the tagged release are the supported downloads.
@@ -166,9 +171,9 @@ dev-cleaner/
 │   ├── icons/notification.png      # Dev-browser notification icon
 │   └── vellium.svg                 # Publisher logo
 ├── release_output/                 # Production builds (git-ignored, regenerated)
-│   ├── Dev-Cleaner-1.0.0-x64-Setup.exe    # NSIS per-user installer
-│   ├── Dev-Cleaner-1.0.0-x64.msi          # MSI per-machine installer
-│   ├── Dev-Cleaner-1.0.0-Portable.exe     # Standalone portable binary
+│   ├── Dev-Cleaner-1.0.1-x64-Setup.exe    # NSIS per-user installer
+│   ├── Dev-Cleaner-1.0.1-x64.msi          # MSI per-machine installer
+│   ├── Dev-Cleaner-1.0.1-Portable.exe     # Standalone portable binary
 │   ├── BUILD_INFO.json                    # Commit, dirty flag and per-artifact hashes
 │   ├── SHA256SUMS.txt                     # Cryptographic SHA-256 checksums
 │   └── verify-checksums.bat               # 1-Click SHA-256 verification tool
@@ -348,9 +353,9 @@ Full reference, JSON schema and npkill migration table:
 
 Ready-to-use production packages are generated into the `release_output/` directory (git-ignored; run `npm run build:release`):
 
-- **NSIS Setup Installer**: `Dev-Cleaner-1.0.0-x64-Setup.exe` _(Per-user installer with desktop/start menu shortcuts)_
-- **MSI Enterprise Installer**: `Dev-Cleaner-1.0.0-x64.msi` _(Per-machine enterprise & GPO silent deployment)_
-- **Standalone Portable**: `Dev-Cleaner-1.0.0-Portable.exe` _(Zero installation, run standalone from USB or any folder)_
+- **NSIS Setup Installer**: `Dev-Cleaner-1.0.1-x64-Setup.exe` _(Per-user installer with desktop/start menu shortcuts)_
+- **MSI Enterprise Installer**: `Dev-Cleaner-1.0.1-x64.msi` _(Per-machine enterprise & GPO silent deployment)_
+- **Standalone Portable**: `Dev-Cleaner-1.0.1-Portable.exe` _(Zero installation, run standalone from USB or any folder)_
 - **Integrity Verification**: `verify-checksums.bat` & `SHA256SUMS.txt`
 
 > **Do not install the NSIS and MSI builds on the same machine.** They use
@@ -483,9 +488,9 @@ dev-cleaner/
 │   ├── icons/notification.png      # Geliştirme tarayıcısı bildirim ikonu
 │   └── vellium.svg                 # Yayıncı logosu
 ├── release_output/                 # Üretim paketleri (git-ignored, yeniden üretilir)
-│   ├── Dev-Cleaner-1.0.0-x64-Setup.exe    # NSIS kullanıcı bazlı kurulum
-│   ├── Dev-Cleaner-1.0.0-x64.msi          # MSI makine bazlı kurulum
-│   ├── Dev-Cleaner-1.0.0-Portable.exe     # Taşınabilir tekil exe
+│   ├── Dev-Cleaner-1.0.1-x64-Setup.exe    # NSIS kullanıcı bazlı kurulum
+│   ├── Dev-Cleaner-1.0.1-x64.msi          # MSI makine bazlı kurulum
+│   ├── Dev-Cleaner-1.0.1-Portable.exe     # Taşınabilir tekil exe
 │   ├── BUILD_INFO.json                    # Commit, dirty bayrağı ve artefakt hash'leri
 │   ├── SHA256SUMS.txt                     # Kriptografik SHA-256 sağlama özetleri
 │   └── verify-checksums.bat               # Tek tıkla hash doğrulama aracı
@@ -568,7 +573,7 @@ dev-cleaner/
 
 - **Node.js**: Sürüm 18.0.0 veya üzeri
 - **Rust & Cargo**: Sürüm 1.75.0 veya üzeri
-- **İşletim Sistemi**: Windows 11 (64-bit x64), doğrulandı. Windows 10, 1.0.0
+- **İşletim Sistemi**: Windows 11 (64-bit x64), doğrulandı. Windows 10, 1.0.1
   için doğrulanmadı ve desteklenen sistem olarak sunulmuyor.
 - **WebView2 Çalışma Zamanı**: Windows 11'de varsayılan olarak yerleşiktir
 
@@ -635,9 +640,9 @@ Komut referansı, JSON şeması ve npkill geçiş tablosu:
 
 Hazır derlenmiş resmi release paketleri `release_output/` klasörüne üretilir (git-ignored; `npm run build:release`):
 
-- **NSIS Kurulum Sihirbazı**: `Dev-Cleaner-1.0.0-x64-Setup.exe` _(Kullanıcı bazlı kurulum, masaüstü ve başlat menüsü kısayolları)_
-- **MSI Kurumsal Installer**: `Dev-Cleaner-1.0.0-x64.msi` _(Makine bazlı kurulum, sessiz kurulum ve GPO dağıtımı)_
-- **Standalone Taşınabilir Sürüm**: `Dev-Cleaner-1.0.0-Portable.exe` _(Kurulumsuz, doğrudan çalışır)_
+- **NSIS Kurulum Sihirbazı**: `Dev-Cleaner-1.0.1-x64-Setup.exe` _(Kullanıcı bazlı kurulum, masaüstü ve başlat menüsü kısayolları)_
+- **MSI Kurumsal Installer**: `Dev-Cleaner-1.0.1-x64.msi` _(Makine bazlı kurulum, sessiz kurulum ve GPO dağıtımı)_
+- **Standalone Taşınabilir Sürüm**: `Dev-Cleaner-1.0.1-Portable.exe` _(Kurulumsuz, doğrudan çalışır)_
 - **Bütünlük Doğrulama**: `verify-checksums.bat` ve `SHA256SUMS.txt`
 
 > **NSIS ve MSI sürümlerini aynı makinede kurmayın.** Kurulum kapsamları

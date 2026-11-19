@@ -31,6 +31,9 @@ import { getLegalDocMeta, LEGAL_REVISION } from "@/features/legal/legal-content"
 import { useLegalLocale } from "@/features/legal/use-legal-locale";
 import { LegalView } from "@/features/legal/LegalView";
 import { SystemHealthPanel } from "./SystemHealthPanel";
+import { DiagnosticsPanel } from "./DiagnosticsPanel";
+import { UpdatePanel } from "./UpdatePanel";
+import { CatalogExplorer, ecosystemMeta, groupRules } from "./CatalogExplorer";
 import "./about.css";
 
 const VELLIUM_URL = "https://vellium.dev";
@@ -108,6 +111,29 @@ export const AboutView: React.FC<AboutViewProps> = ({
   const backButtonRef = useRef<HTMLButtonElement | null>(null);
   const returnFocusDocRef = useRef<string | null>(null);
   const wasLegalRef = useRef(false);
+  const [selectedEcosystem, setSelectedEcosystem] = useState<string | null>(null);
+  const explorerRef = useRef<HTMLElement | null>(null);
+  const catalogRules = catalog?.rules ?? [];
+
+  /** Shows the explorer for one ecosystem and brings it into view. */
+  const showEcosystem = (ecosystem: string | null) => {
+    setSelectedEcosystem(ecosystem);
+    if (ecosystem) {
+      // The panel sits below the cards, so a click that changes nothing on
+      // screen would look broken on a short window.
+      requestAnimationFrame(() => {
+        explorerRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      });
+    }
+  };
+
+  const ecosystemGroups = useMemo(
+    () =>
+      [...groupRules(catalogRules).entries()].sort((a, b) =>
+        ecosystemMeta(a[0]).label.localeCompare(ecosystemMeta(b[0]).label),
+      ),
+    [catalogRules],
+  );
 
   useEffect(() => {
     if (aboutPane === "legal") {
@@ -297,60 +323,36 @@ export const AboutView: React.FC<AboutViewProps> = ({
           </div>
 
           <div className="about-rules-catalog-grid">
-            <div className="about-rule-card">
-              <div className="about-rule-head">
-                <span className="about-rule-dot" style={{ backgroundColor: "var(--accent)" }} />
-                <span className="about-rule-name">{ui.overview.ecoNode}</span>
-                <span className="about-rule-badge">{ui.common.on}</span>
-              </div>
-              <span className="about-rule-scope">node_modules, .next, dist, build, .turbo</span>
-            </div>
-
-            <div className="about-rule-card">
-              <div className="about-rule-head">
-                <span className="about-rule-dot" style={{ backgroundColor: "var(--eco-rust)" }} />
-                <span className="about-rule-name">{ui.overview.ecoRust}</span>
-                <span className="about-rule-badge">{ui.common.on}</span>
-              </div>
-              <span className="about-rule-scope">{ui.about.ecoRustScope}</span>
-            </div>
-
-            <div className="about-rule-card">
-              <div className="about-rule-head">
-                <span className="about-rule-dot" style={{ backgroundColor: "var(--success)" }} />
-                <span className="about-rule-name">{ui.overview.ecoPython}</span>
-                <span className="about-rule-badge">{ui.common.on}</span>
-              </div>
-              <span className="about-rule-scope">venv, .venv, __pycache__, .pytest_cache</span>
-            </div>
-
-            <div className="about-rule-card">
-              <div className="about-rule-head">
-                <span className="about-rule-dot" style={{ backgroundColor: "var(--eco-agent)" }} />
-                <span className="about-rule-name">{ui.about.ruleAgents}</span>
-                <span className="about-rule-badge">{ui.common.on}</span>
-              </div>
-              <span className="about-rule-scope">Claude Code, Cursor, Codex, Antigravity</span>
-            </div>
-
-            <div className="about-rule-card">
-              <div className="about-rule-head">
-                <span className="about-rule-dot" style={{ backgroundColor: "var(--eco-cache)" }} />
-                <span className="about-rule-name">{ui.about.ruleCaches}</span>
-                <span className="about-rule-badge">{ui.common.on}</span>
-              </div>
-              <span className="about-rule-scope">{ui.about.ecoCacheScope}</span>
-            </div>
-
-            <div className="about-rule-card">
-              <div className="about-rule-head">
-                <span className="about-rule-dot" style={{ backgroundColor: "var(--eco-build)" }} />
-                <span className="about-rule-name">{ui.about.ruleBuild}</span>
-                <span className="about-rule-badge">{ui.common.on}</span>
-              </div>
-              <span className="about-rule-scope">{ui.about.ruleBuildScope}</span>
-            </div>
+            {ecosystemGroups.map(([ecosystem, rules]) => {
+              const meta = ecosystemMeta(ecosystem);
+              return (
+                <button
+                  key={ecosystem}
+                  type="button"
+                  className={`about-rule-card about-rule-card--button${
+                    selectedEcosystem === ecosystem ? " is-active" : ""
+                  }`}
+                  aria-expanded={selectedEcosystem === ecosystem}
+                  onClick={() => showEcosystem(selectedEcosystem === ecosystem ? null : ecosystem)}
+                >
+                  <div className="about-rule-head">
+                    <span className="about-rule-dot" style={{ backgroundColor: meta.color }} />
+                    <span className="about-rule-name">{meta.label}</span>
+                    {/* The badge carries the number only: "1 rules" reads wrong
+                        and a plural form per locale is not worth inventing. */}
+                    <span className="about-rule-badge" title={ui.settings.rules}>
+                      {rules.length}
+                    </span>
+                  </div>
+                  <span className="about-rule-scope">
+                    {rules.map((rule) => rule.names[0]).join(", ")}
+                  </span>
+                </button>
+              );
+            })}
           </div>
+
+          {catalogRules.length === 0 && <p className="about-catalog-empty">{ui.catalog.empty}</p>}
 
           <div className="about-meta-list">
             <div className="about-meta-row">
@@ -367,9 +369,22 @@ export const AboutView: React.FC<AboutViewProps> = ({
         </div>
       </section>
 
-      {/* System health: existing diagnostics surfaced without a new IPC command. */}
-      <section className="about-workspace-grid">
+      {/* The explorer follows the summary cards: a count alone does not tell a
+          user what will actually be deleted, so every rule is listed here. */}
+      <section className="about-workspace-grid about-workspace-grid--full" ref={explorerRef}>
+        <CatalogExplorer
+          rules={catalogRules}
+          selected={selectedEcosystem}
+          onSelect={setSelectedEcosystem}
+        />
+      </section>
+
+      {/* Update check, local health and the local error log share one row so no
+          half of the grid is left empty. */}
+      <section className="about-workspace-grid about-workspace-grid--three">
+        <UpdatePanel version={buildInfo?.version ?? "—"} />
         <SystemHealthPanel />
+        <DiagnosticsPanel version={buildInfo?.version ?? "—"} />
       </section>
 
       {/* Middle: Vellium Official Communication Channels — 100% Full Width */}

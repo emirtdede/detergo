@@ -78,13 +78,13 @@ docs/
    The repository root keeps only `README.md` and `LICENSE`, which GitHub
    requires; community files live in `.github/`.
 
-## Current release status (1.0.0)
+## Current release status (1.0.1)
 
 ```
-Code gates:            14/14 PASS (237 frontend tests, 230 Rust lib + 21 integration, clippy, rustfmt, build, 13/13 a11y)
+Code gates:            14/14 PASS (256 frontend tests, 238 Rust lib + integration suites, clippy, rustfmt, build, 16/16 a11y)
 Brand gates:           3/3 PASS (check:icons, check:brand, format:check)
-Release build:         1.0.0 — clean tree, 3 artifacts, provenance manifest verified
-Runtime checks:        2.2.2 evidence in release/TEST_MATRIX.md; the 1.0.0 installer harnesses were not re-run
+Release build:         1.0.1 — clean tree, 3 artifacts, provenance manifest verified
+Runtime checks:        2.2.2 evidence in release/TEST_MATRIX.md; the 1.0.1 installer harnesses were not re-run
 Release gates:         PENDING — signed installers (G4), clean-VM repeat, legal (G0), design (G9)
 Source availability:   PUBLIC — MIT licensed, contributions welcome
 ```

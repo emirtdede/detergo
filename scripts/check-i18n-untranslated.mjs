@@ -80,6 +80,29 @@ const ALLOWED_IDENTICAL_VALUES = new Set([
   "Version",
   "Workspace",
   "Web, Rust, Python, Agents...",
+  // Awaiting translation: the catalog explorer, update check and error log
+  // shipped in 1.0.0 with English source so no unreviewed machine translation
+  // reaches users. Turkish is translated (tr.ts is a source dictionary). Delete
+  // an entry here as soon as every locale file carries a real translation.
+  "Rule details",
+  "Pick an ecosystem to see every rule it contributes, what it matches and how safe it is.",
+  "Matches",
+  "Regenerate with",
+  "Note",
+  "This catalog has no rules.",
+  "Software updates",
+  "Ask GitHub for the newest release. Nothing is downloaded automatically.",
+  "Check for updates",
+  "Checking…",
+  "You are running the latest version.",
+  "Release notes",
+  "Open the download page",
+  "Could not reach the update server. Check your connection and try again.",
+  "Runs only when you press the button. It asks api.github.com for the latest release tag and sends nothing about your device.",
+  "Error log",
+  "Problems caught in this session. Stored only on this device, never uploaded.",
+  "No errors recorded.",
+  "Report an issue",
 ]);
 
 const findings = [];

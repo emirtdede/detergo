@@ -1,14 +1,15 @@
 # Release Checklist & Gates
 
-**Version:** 1.0.0
-**Date:** 2026-11-18
+**Version:** 1.0.1
+**Date:** 2026-11-19
 **Source revision:** the commit recorded in `release_output/BUILD_INFO.json`,
 which must equal `git rev-parse HEAD` at build time
 **Deployment mode:** DIRECT-LIVE (local Windows desktop; NSIS / MSI / portable
 go straight to users; no staging, no canary)
 **CI:** AppVeyor (`appveyor.yml`). GitHub Actions is not used.
 
-> **1.0.0 status.** First open-source release. Source gates (`G1` code gates and
+> **1.0.1 status.** Patch release on the first open-source line (catalog
+> explorer, update check, local error log). Source gates (`G1` code gates and
 > `G2` brand gates) pass on the release commit, and `G6` reports a clean tree
 > with three artifacts. The installer, shell-icon and upgrade evidence in
 > `G3`/`G5`/`G7` below was produced on the development Windows 11 host and
@@ -19,7 +20,7 @@ go straight to users; no staging, no canary)
 | Gate | Requirement | Result | Evidence |
 |---|---|---|---|
 | G0 | Trademark clearance signed | **PENDING** | `docs/brand/TRADEMARK_CLEARANCE.md` (counsel decision and signature) |
-| G1 | Code gates | **PASS** | `npm run typecheck`, `npm test` (237), `cargo test` (230 lib + 21 integration, 5 opt-in ignored), `cargo clippy -D warnings`, `cargo fmt --check`, `npm run build`, `npm run test:a11y` (13 Playwright tests) |
+| G1 | Code gates | **PASS** | `npm run typecheck`, `npm test` (256), `cargo test` (238 lib + integration suites, opt-in heavy tests ignored), `cargo clippy -D warnings`, `cargo fmt --check`, `npm run build`, `npm run test:a11y` (16 Playwright tests) |
 | G2 | Brand asset gates | **PASS** | `npm run check:icons`, `npm run check:brand`, `npm run format:check` |
 | G3 | NSIS installer + shell surfaces | **PASS (dev host)** | `npm run verify:installer` 8/8 and `npm run verify:shell-icons` 8/8 on the development Windows 11 host; clean-VM repeat still advisable |
 | G4 | MSI per-machine | **PENDING** | `npm run verify:msi` refuses a non-elevated session (verified); needs an elevated run on a separate host |
@@ -30,12 +31,12 @@ go straight to users; no staging, no canary)
 | G9 | Design-board visual approval | **PENDING** | 15-frame set recorded in `docs/release/TEST_MATRIX.md`; signature still missing |
 
 Historical pre-1.0 evidence is no longer part of the repository; the git history
-keeps it. Do not reuse an older installer as a 1.0.0 deliverable and never patch
+keeps it. Do not reuse an older installer as a 1.0.1 deliverable and never patch
 a shipped executable in place.
 
 ## Brand rollout checklist
 
-- [x] Canonical master at `assets/brand/dev-cleaner-icon.svg` (512Ã—512, no text)
+- [x] Canonical master at `assets/brand/dev-cleaner-icon.svg` (512×512, no text)
 - [x] Transparent `currentColor` glyph at `assets/brand/dev-cleaner-glyph.svg`
 - [x] 15-frame `src-tauri/icons/icon.ico`; 256 PNG, other frames 32-bit DIB, 16-first
 - [x] Eight tray PNGs (`16â€“48`) and runtime DPI selection; `image-png` enabled
@@ -48,7 +49,7 @@ a shipped executable in place.
 - [x] WiX `UpgradeCode` pinned to `40ef2964-2821-54d7-ac14-2894d8e84709`
 - [x] `bundle.icon`, NSIS and WiX artwork paths point at generated files
 - [x] README logo, artifact names, tree and installer note updated
-- [x] GitHub social preview (1280Ã—640) and circle-safe avatar
+- [x] GitHub social preview (1280×640) and circle-safe avatar
 - [x] Old identity retired; no shipping file references it
 - [x] Brand scan fails on retired asset names and shell-cache shortcuts
 - [x] CI runs `check:icons` and `check:brand`; `build:release` runs the PE gate
@@ -99,15 +100,15 @@ Copy-Item <path>\Dev-Cleaner-<previous>-x64.msi        release_output\baseline\
 ## Packaging checklist
 
 - [x] Rust tests PASS (230 lib + 21 integration; 5 opt-in heavy tests ignored)
-- [x] Frontend tests PASS (237 in 28 files)
-- [x] Playwright accessibility gate PASS (13 tests: axe on all views and four themes, APG tabs, focus traps, table semantics, 320 px reflow)
+- [x] Frontend tests PASS (256 in 30 files)
+- [x] Playwright accessibility gate PASS (16 tests: axe on all views and four themes, APG tabs, focus traps, table semantics, 320 px reflow, About panels)
 - [x] Typecheck PASS
 - [x] Clippy PASS (0 warnings, all targets)
 - [x] rustfmt PASS
 - [x] Prettier PASS
 - [x] Brand and icon structure PASS
 - [x] Production frontend build PASS
-- [x] Clean-tree release build PASS (1.0.0)
+- [x] Clean-tree release build PASS (1.0.1)
 - [x] NSIS install â†’ launch â†’ icons â†’ uninstall PASS
 - [ ] MSI install â†’ launch â†’ uninstall PASS (elevated, per-machine)
 - [x] Previous release upgrade PASS (NSIS; MSI pending)
@@ -139,7 +140,7 @@ mistaken for new breakage.
    vocabulary; the gate reports **PASS for all four themes** and is part of
    `npm run test:a11y`, so the Playwright suite runs in CI instead of being
    skipped.
-2. **`npm run check:build-info`** passes against the 1.0.0 build. Re-run it after
+2. **`npm run check:build-info`** passes against the 1.0.1 build. Re-run it after
    any further source change, because the gate requires the recorded commit to
    equal `HEAD`.
 3. **Code signing (F-6).** Binaries are unsigned; SmartScreen warns.

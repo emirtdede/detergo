@@ -1,6 +1,7 @@
 import { Component, ErrorInfo, ReactNode } from "react";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { log } from "@/lib/logging";
+import { recordError } from "@/lib/diagnostics/error-log";
 import { getErrorBoundaryText } from "./error-boundary-text";
 
 interface Props {
@@ -36,6 +37,9 @@ export class ErrorBoundary extends Component<Props, State> {
     // The stack belongs in a log, never on screen: it can contain local paths
     // and internal module names.
     log.error("Uncaught React error", error, errorInfo.componentStack);
+    // Keep a masked copy for Settings > About so the user can report the crash
+    // even after the screen was reloaded.
+    recordError("render", error);
     this.setState({ error, errorInfo });
   }
 

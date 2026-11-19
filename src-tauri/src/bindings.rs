@@ -36,6 +36,7 @@ use crate::settings::{
     AgentPolicy, AppSettings, CustomAgentProvider, FavoriteItem, NotificationChannel,
     NotificationPreferences, SortConfig,
 };
+use crate::updates::{UpdateAsset, UpdateInfo};
 
 /// Every type that crosses the IPC boundary, in a stable order.
 pub fn collect() -> Types {
@@ -74,6 +75,8 @@ pub fn collect() -> Types {
         .register::<DiskSpaceInfo>()
         .register::<KnownLocation>()
         .register::<BuildInfo>()
+        .register::<UpdateInfo>()
+        .register::<UpdateAsset>()
         .register::<LastScanSnapshot>()
         .register::<CustomAgentProvider>()
         .register::<AgentPolicy>()

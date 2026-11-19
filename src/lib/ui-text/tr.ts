@@ -684,6 +684,33 @@ export const TR: UIText = {
     contactBillingDesc: "Ödeme, abonelik ve kurumsal faturalandırma",
     contactPrivacyDesc: "Veri güvenliği ve gizlilik politikası",
   },
+  catalog: {
+    details: "Kural ayrıntıları",
+    hint: "Bir ekosistem seçin; o ekosistemin tüm kurallarını, neyi eşleştirdiğini ve ne kadar güvenli olduğunu görün.",
+    matches: "Eşleşmeler",
+    regenerate: "Yeniden üretim",
+    note: "Not",
+    empty: "Bu katalogda kural yok.",
+  },
+  updates: {
+    title: "Yazılım güncellemeleri",
+    hint: "En yeni sürümü GitHub'dan sorgular. Hiçbir dosya kendiliğinden indirilmez.",
+    check: "Güncellemeleri denetle",
+    checking: "Denetleniyor…",
+    upToDate: "En güncel sürümü kullanıyorsunuz.",
+    available: (version) => `${version} sürümü yayımlandı`,
+    notes: "Sürüm notları",
+    download: "İndirme sayfasını aç",
+    failed: "Güncelleme sunucusuna ulaşılamadı. Bağlantınızı denetleyip yeniden deneyin.",
+    privacy:
+      "Yalnızca düğmeye bastığınızda çalışır. api.github.com üzerinden en son sürüm etiketini sorar, cihazınızla ilgili hiçbir bilgi göndermez.",
+  },
+  diagnostics: {
+    title: "Hata günlüğü",
+    hint: "Bu oturumda yakalanan sorunlar. Yalnızca bu cihazda tutulur, hiçbir yere gönderilmez.",
+    empty: "Kayıtlı hata yok.",
+    report: "Sorun bildir",
+  },
   docs: {
     catGuide: "Rehberler & Mimari",
     catCli: "Terminal & CLI",

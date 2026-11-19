@@ -1,6 +1,6 @@
 [package]
 name = "dev-cleaner"
-version = "1.0.0"
+version = "1.0.1"
 description = "Dev Cleaner by Vellium - multi-ecosystem developer artifact and AI agent storage cleaner"
 authors = ["Vellium"]
 edition = "2021"

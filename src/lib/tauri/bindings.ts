@@ -1256,3 +1256,24 @@ export type TargetSnapshot_Serialize = {
 	modifiedSecs: number | null,
 	fileId: string | null,
 };
+
+export type UpdateAsset = {
+	name: string,
+	size: number,
+	downloadUrl: string,
+};
+
+export type UpdateInfo = {
+	/**  Version of the running binary. */
+	currentVersion: string,
+	/**  Newest published version, normalised without a leading `v`. */
+	latestVersion: string,
+	/**  `true` when the published release is strictly newer than the binary. */
+	available: boolean,
+	releaseName: string,
+	releaseUrl: string,
+	/**  Markdown release notes as published, empty when the body has none. */
+	notes: string,
+	publishedAt: string,
+	assets: UpdateAsset[],
+};

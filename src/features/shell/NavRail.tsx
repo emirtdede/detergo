@@ -19,11 +19,8 @@ import { useUIText, UIText } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { log } from "@/lib/logging";
 import { BREAKPOINTS, NARROW_RAIL_MEDIA_QUERY } from "@/lib/layout";
+import { REPOSITORY_URL, SPONSOR_URL } from "@/lib/links";
 import "./shell.css";
-
-/** Public project page and the sponsorship profile of the publisher. */
-const REPOSITORY_URL = "https://github.com/emirtdede/dev-cleaner";
-const SPONSOR_URL = "https://github.com/sponsors/emirtdede";
 
 /**
  * The GitHub mark, inlined because the icon set no longer ships brand logos.

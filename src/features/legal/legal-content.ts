@@ -190,8 +190,8 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: "5. Ağ erişimi ve üçüncü taraflar",
         paragraphs: [
-          "Uygulama; analiz, telemetri, kilitlenme raporu, reklam veya kimlik doğrulama amacıyla hiçbir ağ isteği göndermez. Vellium'a ait bir analitik veya izleme altyapısı yoktur.",
-          "Sizin başlattığınız durumlarda ağ kullanılabilir: resmî araç komutlarını çalıştırdığınızda ilgili araç kendi paket kayıt defterine bağlanabilir; bir bağlantıya tıkladığınızda sayfa varsayılan tarayıcınızda açılır. Bu işlemler ilgili üçüncü tarafın kendi gizlilik politikasına tabidir ve Vellium bu hizmetlere veri sağlamaz.",
+          "Uygulama; analiz, telemetri, kilitlenme raporu, reklam veya kimlik doğrulama amacıyla hiçbir ağ isteği göndermez. Hata kayıtları yalnızca cihazınızda tutulur ve hiçbir yere gönderilmez. Vellium'a ait bir analitik veya izleme altyapısı yoktur.",
+          'Sizin başlattığınız durumlarda ağ kullanılabilir: resmî araç komutlarını çalıştırdığınızda ilgili araç kendi paket kayıt defterine bağlanabilir; "Güncellemeleri denetle" düğmesine bastığınızda uygulama en son sürüm etiketini öğrenmek için GitHub\'a bağlanır; bir bağlantıya tıkladığınızda sayfa varsayılan tarayıcınızda açılır. Bu işlemler ilgili üçüncü tarafın kendi gizlilik politikasına tabidir ve Vellium bu hizmetlere veri sağlamaz.',
         ],
       },
       {
@@ -224,7 +224,7 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: "10. Güvenlik",
         paragraphs: [
-          "Uygulama, ağ üzerinden veri alışverişi yapmadığı için aktarım sırasında veri sızması riski oluşmaz. Yerel dosyalar Windows kullanıcı profilinizin erişim izinleriyle korunur. Uygulama, yönetici (administrator) yetkisi talep etmez.",
+          "Uygulama, sizin başlattığınız isteğe bağlı güncelleme denetimi dışında ağ üzerinden veri alışverişi yapmaz; bu denetim de HTTPS üzerinden yalnızca herkese açık sürüm bilgisini okur. Yerel dosyalar Windows kullanıcı profilinizin erişim izinleriyle korunur. Uygulama, yönetici (administrator) yetkisi talep etmez.",
           "Bilgisayarınızı paylaşıyorsanız, %APPDATA% klasöründeki yerel geçmiş dosyalarına diğer kullanıcıların erişebileceğini unutmayın; ekranda yolları maskele seçeneği yalnızca arayüzü etkiler, dosya içeriğini değiştirmez.",
         ],
       },
@@ -438,7 +438,7 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         heading: "5. Network access and third parties",
         paragraphs: [
           "The application sends no network request for analytics, telemetry, crash reporting, advertising or authentication. Vellium has no analytics or monitoring infrastructure.",
-          "Network access can occur only when you initiate it: running an official tool command may let that tool contact its own package registry, and clicking a link opens the page in your default browser. Those actions are governed by the third party's own privacy policy, and Vellium does not supply data to those services.",
+          'Network access can occur only when you initiate it: running an official tool command may let that tool contact its own package registry, pressing "Check for updates" asks GitHub for the newest release tag, and clicking a link opens the page in your default browser. Those actions are governed by the third party\'s own privacy policy, and Vellium does not supply data to those services.',
         ],
       },
       {
@@ -471,7 +471,7 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: "10. Security",
         paragraphs: [
-          "Because the application exchanges no data over the network, there is no interception risk in transit. Local files are protected by the access permissions of your Windows user profile. The application does not request administrator rights.",
+          "Apart from the optional update check you start yourself — which uses HTTPS and reads only public release data — the application exchanges no data over the network, so there is no interception risk in transit. Local files are protected by the access permissions of your Windows user profile. The application does not request administrator rights.",
           "If you share your computer, remember that other users may be able to read the local history files under %APPDATA%; the path-masking option affects the interface only and does not change file contents.",
         ],
       },

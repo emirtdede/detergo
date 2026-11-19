@@ -1,7 +1,7 @@
 {
   "name": "dev-cleaner",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Dev Cleaner by Vellium - multi-ecosystem developer artifact and AI agent storage cleaner",
   "author": "Vellium",
   "license": "MIT",
@@ -22,6 +22,7 @@
     "check:gates": "node scripts/check-regression-gates.mjs",
     "check:bindings": "cargo run --manifest-path src-tauri/Cargo.toml --locked --features bindings --bin export_bindings -- --check",
     "generate:bindings": "cargo run --manifest-path src-tauri/Cargo.toml --features bindings --bin export_bindings",
+    "generate:mock-catalog": "node scripts/generate-mock-catalog.mjs",
     "check:i18n": "node scripts/check-i18n-scripts.mjs && node scripts/check-i18n-coverage.mjs && node scripts/check-i18n-untranslated.mjs && node scripts/check-i18n-unused.mjs",
     "check:i18n:coverage": "node scripts/check-i18n-coverage.mjs",
     "check:i18n:untranslated": "node scripts/check-i18n-untranslated.mjs",

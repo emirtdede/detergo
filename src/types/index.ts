@@ -705,6 +705,30 @@ export interface BuildInfo {
   builtAt: string;
 }
 
+/** One downloadable file attached to a published release. */
+export interface UpdateAsset {
+  name: string;
+  size: number;
+  downloadUrl: string;
+}
+
+/**
+ * Result of a user-initiated update check.
+ *
+ * `available` is computed in Rust from a semver comparison, so the UI never has
+ * to compare version strings itself (and cannot get `1.9` vs `1.10` wrong).
+ */
+export interface UpdateInfo {
+  currentVersion: string;
+  latestVersion: string;
+  available: boolean;
+  releaseName: string;
+  releaseUrl: string;
+  notes: string;
+  publishedAt: string;
+  assets: UpdateAsset[];
+}
+
 export type AppErrorCode =
   | "InvalidPath"
   | "AccessDenied"

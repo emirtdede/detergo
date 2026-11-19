@@ -8,6 +8,7 @@ pub mod provider_commands;
 pub mod scan_commands;
 pub mod settings_commands;
 pub mod system_commands;
+pub mod update_commands;
 pub mod webhook_commands;
 pub mod window_commands;
 
@@ -21,5 +22,6 @@ pub use provider_commands::*;
 pub use scan_commands::*;
 pub use settings_commands::*;
 pub use system_commands::*;
+pub use update_commands::*;
 pub use webhook_commands::*;
 pub use window_commands::*;

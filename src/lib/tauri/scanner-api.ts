@@ -23,6 +23,7 @@ import {
   ScanSummary,
   CleanupTotals,
   DiskSpaceInfo,
+  UpdateInfo,
 } from "@/types";
 
 export function isTauriEnvironment(): boolean {
@@ -84,6 +85,7 @@ export interface ScannerApi {
   hideToTray(): Promise<void>;
   quitApp(): Promise<void>;
   getBuildInfo(): Promise<BuildInfo>;
+  checkForUpdates(): Promise<UpdateInfo>;
   testWebhook(
     url: string,
     payload?: Record<string, unknown>,
@@ -281,6 +283,10 @@ const realApi: ScannerApi = {
 
   async getBuildInfo(): Promise<BuildInfo> {
     return await invoke<BuildInfo>("get_build_info");
+  },
+
+  async checkForUpdates(): Promise<UpdateInfo> {
+    return await invoke<UpdateInfo>("check_for_updates");
   },
 
   async testWebhook(

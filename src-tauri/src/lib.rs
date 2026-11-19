@@ -16,6 +16,7 @@ pub mod providers;
 pub mod safety;
 pub mod scanner;
 pub mod settings;
+pub mod updates;
 
 use commands::*;
 
@@ -94,6 +95,7 @@ pub fn run() {
             save_app_settings,
             reset_app_data,
             get_build_info,
+            check_for_updates,
             test_webhook,
             dispatch_webhook,
             get_last_scan,

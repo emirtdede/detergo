@@ -4,6 +4,7 @@ import {
   AppSettings,
   AuditRecord,
   BuildInfo,
+  UpdateInfo,
   CacheMeasureEvent,
   CacheProviderInfo,
   CatalogDto,
@@ -24,6 +25,7 @@ import {
   ScanSummary,
 } from "@/types";
 import type { ScannerApi } from "./scanner-api";
+import { MOCK_CATALOG_RULES } from "./mock-catalog";
 
 // Demo/offline data used when the app runs outside Tauri (browser preview and
 // unit tests). This module is imported dynamically only when `import.meta.env.DEV`
@@ -87,72 +89,9 @@ let memorySettings: AppSettings = {
   mcpAllowDestructive: false,
 };
 
-const fallbackRules: CatalogRule[] = [
-  {
-    id: "npm-node-modules",
-    ecosystem: "javascript",
-    category: "dependencies",
-    kind: "directory",
-    names: ["node_modules"],
-    markers: ["package.json"],
-    markerMode: "any",
-    content: [],
-    minEvidence: 1,
-    safety: "safe",
-    confidence: "high",
-    cleanup: "trash",
-    regenerate: "npm install",
-    genericName: false,
-    protected: false,
-    nestedIn: [],
-    childRules: [],
-    gitPolicy: "ignore",
-    requiresIdle: false,
-  },
-  {
-    id: "cargo-target",
-    ecosystem: "rust",
-    category: "build-output",
-    kind: "directory",
-    names: ["target"],
-    markers: ["Cargo.toml"],
-    markerMode: "any",
-    content: [],
-    minEvidence: 1,
-    safety: "safe",
-    confidence: "high",
-    cleanup: "trash",
-    regenerate: "cargo build",
-    genericName: false,
-    protected: false,
-    nestedIn: [],
-    childRules: [],
-    gitPolicy: "ignore",
-    requiresIdle: false,
-  },
-  {
-    id: "python-venv",
-    ecosystem: "python",
-    category: "environments",
-    kind: "directory",
-    names: [".venv", "venv"],
-    markers: ["pyproject.toml", "requirements.txt"],
-    markerMode: "any",
-    content: [],
-    minEvidence: 1,
-    safety: "regenerate",
-    confidence: "high",
-    cleanup: "trash",
-    regenerate: "python -m venv .venv",
-    genericName: false,
-    protected: false,
-    nestedIn: [],
-    childRules: [],
-    gitPolicy: "ignore",
-    requiresIdle: false,
-  },
-];
-
+// Browser-preview catalog. Generated from assets/targets.toml so the About
+// page and the catalog explorer show the same rules the engine applies.
+const fallbackRules: CatalogRule[] = MOCK_CATALOG_RULES;
 const mockAuditRecords: AuditRecord[] = [
   {
     id: "audit-1",
@@ -926,6 +865,21 @@ export function createMockScannerApi(): ScannerApi {
         dirty: false,
         profile: "release",
         builtAt: "2026-11-05T02:00:00Z",
+      };
+    },
+
+    // The browser preview has no backend, so the mock reports the same version
+    // the bundle claims instead of inventing a network call.
+    async checkForUpdates(): Promise<UpdateInfo> {
+      return {
+        currentVersion: "1.0.0",
+        latestVersion: "1.0.0",
+        available: false,
+        releaseName: "Dev Cleaner 1.0.0",
+        releaseUrl: "https://github.com/emirtdede/dev-cleaner/releases/latest",
+        notes: "",
+        publishedAt: "",
+        assets: [],
       };
     },
 

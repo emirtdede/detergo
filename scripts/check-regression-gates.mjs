@@ -180,6 +180,40 @@ if (!existsSync(bindingsPath)) {
   });
 }
 
+// The browser-preview catalog is generated from the real rule file. If the two
+// diverge, the preview's About page shows a catalog the engine does not apply —
+// which is how it used to report "3 rules" for a 56-rule catalog.
+{
+  const tomlFile = "src-tauri/assets/targets.toml";
+  const mockFile = "src/lib/tauri/mock-catalog.ts";
+  const tomlPath = join(root, tomlFile);
+  const mockPath = join(root, mockFile);
+  if (!existsSync(mockPath)) {
+    violations.push({
+      file: mockFile,
+      line: 0,
+      text: "",
+      reason: "The preview catalog is missing. Run `npm run generate:mock-catalog`.",
+    });
+  } else {
+    const tomlIds = [...readFileSync(tomlPath, "utf8").matchAll(/^id\s*=\s*"([^"]+)"/gm)].map(
+      (match) => match[1],
+    );
+    const mockIds = [...readFileSync(mockPath, "utf8").matchAll(/^\s{4}id: "([^"]+)"/gm)].map(
+      (match) => match[1],
+    );
+    if (tomlIds.join(",") !== mockIds.join(",")) {
+      violations.push({
+        file: mockFile,
+        line: 0,
+        text: `${mockIds.length} rule(s) vs ${tomlIds.length} in ${tomlFile}`,
+        reason:
+          "The preview catalog drifted from the rule file. Run `npm run generate:mock-catalog`.",
+      });
+    }
+  }
+}
+
 const dist = join(root, "dist");
 if (existsSync(dist)) {
   if (!existsSync(join(dist, "theme-boot.js"))) {
@@ -229,7 +263,7 @@ if (existsSync(dist)) {
 
 if (violations.length === 0) {
   console.log(
-    "Regression gates passed: docs ?raw, console.*, mutex unwrap, IPC command parity, generated contract and optional dependency contracts.",
+    "Regression gates passed: docs ?raw, console.*, mutex unwrap, IPC command parity, generated contract, mock catalog freshness and optional dependency contracts.",
   );
   process.exit(0);
 }

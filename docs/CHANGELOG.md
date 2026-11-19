@@ -8,6 +8,46 @@ The versions before `1.0.0` were internal pre-release iterations of the same
 codebase (the 2.x line). Their work is folded into the first release below; the
 commit history keeps the detailed trail.
 
+## [1.0.1] — 2026-11-19
+
+Follow-up to the first open-source release: the About page now answers the
+questions a reviewer actually asks, and the app can tell you when a newer
+release exists.
+
+### Added
+
+- **Catalog explorer** — every ecosystem card on the About page is now a button
+  that opens the rules behind it: the folder names each rule matches, its
+  category, its safety class, its regeneration command and the catalog's own
+  note. The data comes from the live catalog, so the panel can never describe
+  rules the scanner does not apply. Dark, light, 320 px reflow and axe (WCAG
+  2.2 AA) all pass with the panel open.
+- **Update check** — *Settings > About > Software updates* asks the public
+  GitHub Releases API for the newest tag, compares it with the running version
+  and shows the release notes. The request happens only after you press the
+  button: nothing contacts the network at startup, nothing is downloaded and
+  nothing installs itself. The check is free to run and needs no server.
+- **Local error log** — uncaught errors, rejected promises and failed backend
+  commands are recorded in a 20-entry ring buffer in `localStorage`, with user
+  paths and webhook credentials masked before they are written. The About page
+  lists them, copies them to the clipboard and can pre-fill a GitHub issue. The
+  log is never uploaded: it only leaves the device if you paste it somewhere.
+- `npm run generate:mock-catalog` regenerates the browser-preview catalog from
+  `src-tauri/assets/targets.toml`, and `npm run check:gates` fails when the two
+  drift apart.
+
+### Fixed
+
+- **About layout** — the diagnostics panel used to leave the bottom-right half
+  of the two-column grid empty. The update check, the health panel and the error
+  log now share one row, collapsing to two columns and then to one.
+- **Rule counts in the browser preview** — the preview shipped three
+  hand-written rules, so About reported "3 rules / 3 ecosystems" while the
+  packaged app reported 56 / 14. The preview now renders the generated catalog.
+- **Privacy and licence text** — the "no network request" paragraphs now name
+  the update check as the one request you can start yourself, in both the
+  English original and the Turkish translation.
+
 ## [1.0.0] — 2026-11-18
 
 First open-source release. MIT licensed, Windows 11 x64.

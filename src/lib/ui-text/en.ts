@@ -678,6 +678,33 @@ export const EN: UIText = {
     contactBillingDesc: "Billing, enterprise procurement, and subscription support",
     contactPrivacyDesc: "Data security, GDPR, and privacy inquiries",
   },
+  catalog: {
+    details: "Rule details",
+    hint: "Pick an ecosystem to see every rule it contributes, what it matches and how safe it is.",
+    matches: "Matches",
+    regenerate: "Regenerate with",
+    note: "Note",
+    empty: "This catalog has no rules.",
+  },
+  updates: {
+    title: "Software updates",
+    hint: "Ask GitHub for the newest release. Nothing is downloaded automatically.",
+    check: "Check for updates",
+    checking: "Checking…",
+    upToDate: "You are running the latest version.",
+    available: (version) => `Version ${version} is available`,
+    notes: "Release notes",
+    download: "Open the download page",
+    failed: "Could not reach the update server. Check your connection and try again.",
+    privacy:
+      "Runs only when you press the button. It asks api.github.com for the latest release tag and sends nothing about your device.",
+  },
+  diagnostics: {
+    title: "Error log",
+    hint: "Problems caught in this session. Stored only on this device, never uploaded.",
+    empty: "No errors recorded.",
+    report: "Report an issue",
+  },
   docs: {
     catGuide: "Guides & Architecture",
     catCli: "Terminal & CLI",
