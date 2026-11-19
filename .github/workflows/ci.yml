@@ -20,9 +20,9 @@ jobs:
     name: Frontend gates (Linux)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -63,9 +63,9 @@ jobs:
     name: Rust gates (Windows)
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -101,9 +101,9 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -129,5 +129,6 @@ jobs:
             release_output/*.msi
             release_output/SHA256SUMS.txt
             release_output/BUILD_INFO.json
-          body_path: docs/CHANGELOG.md
+            release_output/verify-checksums.bat
+          body_path: release_output/RELEASE_NOTES.md
           fail_on_unmatched_files: false

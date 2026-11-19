@@ -258,6 +258,22 @@ fs.writeFileSync(
   "utf8",
 );
 
+// The GitHub release body is the changelog entry for this version, not the
+// whole file: the page should open with "1.0.0" and its highlights.
+const changelogPath = path.join(rootDir, "docs", "CHANGELOG.md");
+if (fs.existsSync(changelogPath)) {
+  const changelog = fs.readFileSync(changelogPath, "utf8").replace(/\r\n/g, "\n");
+  const start = changelog.indexOf(`## [${version}]`);
+  const next = start === -1 ? -1 : changelog.indexOf("\n## [", start + 3);
+  if (start !== -1) {
+    const section = changelog.slice(start, next === -1 ? undefined : next).trim();
+    fs.writeFileSync(path.join(releaseOutputDir, "RELEASE_NOTES.md"), section + "\n", "utf8");
+    console.log(`  [NOTES] RELEASE_NOTES.md (${section.split("\n").length} lines)`);
+  } else {
+    console.warn(`  [WARN] docs/CHANGELOG.md has no "## [${version}]" section.`);
+  }
+}
+
 if (dirty !== "false") {
   console.log("\n[WARN] BU UYARI: kaynak ağacı kirliydi; bu paketler yayınlanamaz.");
 }
