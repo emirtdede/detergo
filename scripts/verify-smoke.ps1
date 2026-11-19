@@ -8,9 +8,14 @@ shipped CLI is checked here against the real release binary.
 
   S-00  binary starts and reports the expected version
   S-00b scan finds a real cleanup target in a sandbox project
-  S-01  webhook returns 200  (payload delivered, success reported)
-  S-02  webhook returns 500  (warning, no crash)
+  S-01  webhook to a loopback address is refused (SSRF policy)
+  S-02  webhook to a private address is refused (SSRF policy)
   S-03  webhook unreachable  (warning, no crash)
+
+Delivery itself (2xx, 4xx, 5xx with retries, timeouts) is covered by the Rust
+integration suite in src-tauri/tests/webhook.rs, because the production policy
+rejects loopback and private destinations and a successful delivery therefore
+needs a public endpoint this harness must not depend on.
   S-08  language switch is reflected in CLI output (tr -> en)
   S-09  settings persist between processes
   S-10  GUI starts and stays alive
@@ -125,36 +130,6 @@ function Complete-Cli($Handle) {
     }
 }
 
-function Start-MockServer([int]$StatusCode) {
-    # HttpListener needs a concrete port; ask the OS for a free one first.
-    $probe = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 0)
-    $probe.Start()
-    $port = $probe.LocalEndpoint.Port
-    $probe.Stop()
-    $listener = New-Object System.Net.HttpListener
-    $listener.Prefixes.Add("http://127.0.0.1:$port/")
-    $listener.Start()
-    return [pscustomobject]@{ Listener = $listener; Port = $port; Status = $StatusCode }
-}
-
-function Complete-MockRequest($Mock, [int]$TimeoutMs = 30000) {
-    $task = $Mock.Listener.GetContextAsync()
-    if (-not $task.Wait($TimeoutMs)) { return $null }
-    $context = $task.Result
-    $reader = New-Object System.IO.StreamReader($context.Request.InputStream, [System.Text.Encoding]::UTF8)
-    $body = $reader.ReadToEnd()
-    $reader.Dispose()
-    $context.Response.StatusCode = $Mock.Status
-    $payload = [System.Text.Encoding]::UTF8.GetBytes('{"received":true}')
-    $context.Response.OutputStream.Write($payload, 0, $payload.Length)
-    $context.Response.Close()
-    return [pscustomobject]@{ Method = $context.Request.HttpMethod; Body = $body }
-}
-
-function Stop-MockServer($Mock) {
-    try { $Mock.Listener.Stop(); $Mock.Listener.Close() } catch {}
-}
-
 $gui = $null
 try {
     Write-Host "[INFO] binary: $Exe"
@@ -174,31 +149,18 @@ try {
     Record "S-00b" "scan finds the sandbox target" ($scan.Status -eq 0 -and $foundTarget) "exit=$($scan.Status) target=$foundTarget"
 
     # S-01 / S-02 --------------------------------------------------------
+    # The backend refuses to deliver to loopback or private addresses, so a
+    # remote config cannot turn the app into an SSRF proxy against this machine
+    # or the LAN. Both cases must warn and still exit 0. A real delivery needs a
+    # public receiver, which is why src-tauri/tests/webhook.rs owns that path.
     foreach ($case in @(
-            @{ Id = "S-01"; Label = "webhook returns 200"; Status = 200 },
-            @{ Id = "S-02"; Label = "webhook returns 500"; Status = 500 }
+            @{ Id = "S-01"; Label = "loopback webhook refused"; Url = "http://127.0.0.1:9/hook" },
+            @{ Id = "S-02"; Label = "private webhook refused"; Url = "http://192.168.1.10/hook" }
         )) {
-        $mock = Start-MockServer -StatusCode $case.Status
-        try {
-            $url = "http://127.0.0.1:$($mock.Port)/hook"
-            # Start the CLI without waiting: this thread has to answer the HTTP
-            # request before the CLI can finish, so waiting here would deadlock.
-            $handle = Start-Cli @("scan", $project, "--scope", "projects", "--webhook", $url)
-            $request = Complete-MockRequest -Mock $mock
-            $cliOut = (Complete-Cli $handle).Combined
-            $delivered = ($null -ne $request) -and ($request.Body.Length -gt 0)
-            if ($case.Status -eq 200) {
-                $handled = $cliOut -match "successfully dispatched"
-            }
-            else {
-                $handled = $cliOut -match "\[WARN\]"
-            }
-            $bytes = if ($null -ne $request) { $request.Body.Length } else { 0 }
-            Record $case.Id $case.Label ($delivered -and $handled) "delivered=$delivered bytes=$bytes"
-        }
-        finally {
-            Stop-MockServer $mock
-        }
+        $refused = Invoke-Cli @("scan", $project, "--scope", "projects", "--webhook", $case.Url)
+        $warned = $refused.Combined -match "\[WARN\]"
+        $policy = $refused.Combined -match "public address"
+        Record $case.Id $case.Label ($refused.Status -eq 0 -and $warned -and $policy) "exit=$($refused.Status) warn=$warned policy=$policy"
     }
 
     # S-03 ---------------------------------------------------------------

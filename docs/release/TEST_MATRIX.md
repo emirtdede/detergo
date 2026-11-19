@@ -79,7 +79,7 @@ results prove the packages behave, not that a pristine image is unaffected.
 | MSI elevation guard | `npm run verify:msi` (non-elevated) | **Correctly aborts (exit 2)** - refuses to test the per-machine package as a per-user install |
 | Installer language table (silent) | `setup.exe /S /LANG=1045` then uninstall | **PASS (2.2.1 run)** â€” silent install/removal worked with a non-English language id. Re-run for 2.2.2 is listed under *Still NOT EXECUTED* below |
 | Installer message packs present | `npm run check:languages` + generated `installer.nsi` | **PASS** â€” 54 `customLanguageFiles` entries are passed to makensis; Polish (`pl`) is among them, so the languages that would otherwise fall back to English for Tauri's own messages now have their own strings |
-| Installer language picker, remembered language | open the setup with `Installer Language` = 1031 and 1115 | **PASS** â€” the dialog is shown on both runs, its title/info are localized (`YÃ¼kleyici Dili` / `LÃ¼tfen bir dil seÃ§in.` under the Turkish Windows UI language), and it preselects the remembered language under its native name (`Deutsch`, `à·ƒà·’à¶‚à·„à¶½`). The title follows the Windows UI language because MUI resolves the defines before it reads the registry; the stock LangDLL OK/Cancel labels are compiled into the plugin and stay English |
+| Installer language picker, remembered language | open the setup with `Installer Language` = 1031 and 1115 | **PASS** — the dialog is shown on both runs, its title/info are localized (`Yükleyici Dili` / `Lütfen bir dil seçin.` under the Turkish Windows UI language), and it preselects the remembered language under its native name (`Deutsch`, `සිංහල`). The title follows the Windows UI language because MUI resolves the defines before it reads the registry; the stock LangDLL OK/Cancel labels are compiled into the plugin and stay English |
 | Generated-language wizard chrome | Sinhala (1115), Tamil (1097), Urdu (1056) wizard captures | **PASS** â€” title, welcome text, directory page, buttons, body sentence and footer localized; `Next >`/`Browse...` no longer leak; Urdu mirrors the header to the left |
 | Uninstaller chrome and branding | real 2.2.2 install, Sinhala uninstaller welcome/confirm/finish captures | **PASS** â€” `unheader.bmp` lockup inset beside the title, sidebar finish page lockup with 34 px margins, footer `Â© 2026 Vellium`, and every sentence localized including `Click Uninstall` and `Click Finish` |
 | Installed shell surfaces, 100% | manual capture after the same NSIS install | **6/6 PASS** - desktop shortcut, Start menu result, Explorer extra-large icons, running taskbar button, tray overflow and in-app chrome all show the new mark (captures were review artifacts, not committed) |
@@ -100,6 +100,36 @@ pages of those tables share the same generated file and were inspected as text.
 tokens the checker expects are now defined in `src/styles/tokens.css`. The
 Playwright accessibility suite is therefore part of the release gate rather than
 being skipped.
+
+## 0b. 1.0.1 patch release (2026-11-19)
+
+Re-run on the release commit `0a8fea5` (tag `v1.0.1`) on Windows 11 x64 with
+Node 26.13.1 and the pinned Rust toolchain, after the About-page, update-check and
+local-error-log changes:
+
+| Suite | Command | Result |
+|---|---|---|
+| TypeScript | `npm run typecheck` | **PASS** |
+| Frontend unit/feature | `npm test` | **256 passed** in 30 files, 0 failed |
+| Rust library | `cargo test --manifest-path src-tauri/Cargo.toml` | **238 passed**, 0 failed |
+| Rust integration | same command | **PASS** (crash, git, MCP, recycle failure, secrets, webhook suites), 0 failed |
+| Update-check parser | `cargo test updates` | **9 passed** — semver ordering, pre-release, draft/prerelease, malformed payloads |
+| Accessibility (Playwright + axe) | `npm run test:a11y` | **16 passed** — the 13 existing checks plus three About assertions (catalog counts, rule expansion, panel row) |
+| Clippy | `cargo clippy --all-targets -- -D warnings` | **PASS**, 0 warnings |
+| rustfmt | `cargo fmt -- --check` | **PASS** |
+| Prettier | `npm run format:check` | **PASS** |
+| Production frontend build | `npm run build` | **PASS** |
+| Regression gates | `npm run check:gates` | **PASS** — includes the new preview-catalog freshness gate |
+| i18n | `npm run check:i18n` | **PASS** — 90,311 key checks, no missing keys |
+| Brand / contrast / audit | `check:brand`, `check:contrast`, `check:audit` | **PASS** |
+| Bindings | `npm run check:bindings` | **PASS** — `UpdateInfo`/`UpdateAsset` generated |
+| Provenance | `npm run check:build-info` | **PASS** — version 1.0.1, commit `0a8fea5`, clean tree, 3 artifacts |
+| CLI smoke | `npm run verify:smoke` | **10/10 PASS** — includes the loopback/private webhook refusal |
+
+The webhook delivery cases (S-01, S-02) changed shape in this release: the
+backend now refuses loopback and private destinations, so the harness asserts the
+refusal instead of a delivery, and `src-tauri/tests/webhook.rs` owns the transport
+evidence (2xx, 4xx, 5xx retries).
 
 ## 1. Automated results
 
@@ -260,7 +290,7 @@ is inside that budget on this hardware.
 | 9 | Windows 10 clean install smoke test | **NOT EXECUTED** â€” no Windows 10 machine available (audit host is Windows 11 10.0.26200) |
 | 10 | 50k-candidate and 1M-entry measurement | **PASS** (Â§5) |
 | 11 | Close the window during a scan â†’ guard dialog, process survives | **PASS** â€” packaged build, native `WM_CLOSE` (2026-11-02) |
-| 12 | Tray: minimize to tray, restore, and quit from the tray/dialog | **PASS** â€” packaged build (`hide_to_tray` keeps the process alive; "Tamamen Ã§Ä±k" exits) |
+| 12 | Tray: minimize to tray, restore, and quit from the tray/dialog | **PASS** — packaged build (`hide_to_tray` keeps the process alive; "Tamamen çık" exits) |
 | 13 | Restart restores the last scan, with a stale warning before acting | **PASS** â€” packaged build with a seeded `last-scan.json` |
 | 14 | Cache measurement continues after leaving Tool Caches | **PASS (automated)** â€” `cache-store` test |
 | 15 | Close choice is remembered and reversible from Settings | **PASS** â€” packaged build: dialog checkbox and Settings select both persist `closeAction`; native close then follows it, and `ask` restores the dialog |
