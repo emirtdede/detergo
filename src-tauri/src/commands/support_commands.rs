@@ -251,7 +251,9 @@ pub fn compose_support_mail(
             .unwrap_or_default()
     );
 
-    let draft_ok = open_outlook_draft(&path, &subject, &body).unwrap_or(false);
+    let draft_ok = open_outlook_draft(&path, &subject, &body).unwrap_or(false)
+        || open_thunderbird_draft(&path, &subject, &body).unwrap_or(false)
+        || open_mapi_draft(&path, &subject, &body);
     if draft_ok {
         return Ok(SupportMailResult {
             mode: "draft".to_string(),
@@ -299,22 +301,238 @@ try {
   exit 2
 }
 "#;
-    let status = std::process::Command::new("powershell")
-        .args([
-            "-NoProfile",
-            "-NonInteractive",
-            "-WindowStyle",
-            "Hidden",
-            "-Command",
-            script,
-        ])
-        .env("DC_SUPPORT_TO", SUPPORT_EMAIL)
-        .env("DC_SUPPORT_SUBJECT", subject)
-        .env("DC_SUPPORT_BODY", body)
-        .env("DC_SUPPORT_ZIP", path)
+    let mut cmd = std::process::Command::new("powershell");
+    cmd.args([
+        "-NoProfile",
+        "-NonInteractive",
+        "-WindowStyle",
+        "Hidden",
+        "-Command",
+        script,
+    ])
+    .env("DC_SUPPORT_TO", SUPPORT_EMAIL)
+    .env("DC_SUPPORT_SUBJECT", subject)
+    .env("DC_SUPPORT_BODY", body)
+    .env("DC_SUPPORT_ZIP", path);
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    let status = cmd
         .status()
         .map_err(|err| AppError::Unknown(err.to_string()))?;
     Ok(status.success())
+}
+
+/// Opens a Thunderbird compose window with the support ZIP pre-attached when
+/// Thunderbird is installed. Non-modal and never sends automatically.
+fn open_thunderbird_draft(path: &Path, subject: &str, body: &str) -> Result<bool, AppError> {
+    if !cfg!(windows) {
+        return Ok(false);
+    }
+    let candidates = [
+        std::env::var_os("ProgramFiles")
+            .map(|root| PathBuf::from(root).join(r"Mozilla Thunderbird\thunderbird.exe")),
+        std::env::var_os("ProgramFiles(x86)")
+            .map(|root| PathBuf::from(root).join(r"Mozilla Thunderbird\thunderbird.exe")),
+    ];
+    let Some(exe) = candidates.into_iter().flatten().find(|p| p.is_file()) else {
+        return Ok(false);
+    };
+    let clean = |s: &str| s.replace('\'', " ").replace('\r', "");
+    let attachment = format!("file:///{}", path.to_string_lossy().replace('\\', "/"));
+    let compose = format!(
+        "to='{SUPPORT_EMAIL}',subject='{}',body='{}',attachment='{}'",
+        clean(subject),
+        clean(body).replace('\n', "%0A"),
+        clean(&attachment)
+    );
+    Ok(std::process::Command::new(exe)
+        .args(["-compose", &compose])
+        .spawn()
+        .is_ok())
+}
+
+/// Checks whether Windows has a registered MAPI desktop mail client before
+/// invoking `MAPI32.DLL` so unconfigured systems never show a modal OS error.
+#[cfg(windows)]
+fn has_registered_mapi_client() -> bool {
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+    for key in [r"HKCU\SOFTWARE\Clients\Mail", r"HKLM\SOFTWARE\Clients\Mail"] {
+        if let Ok(output) = std::process::Command::new("reg.exe")
+            .args(["query", key, "/ve"])
+            .creation_flags(CREATE_NO_WINDOW)
+            .output()
+        {
+            if output.status.success() {
+                let text = String::from_utf8_lossy(&output.stdout);
+                for line in text.lines() {
+                    if let Some((_, val)) = line.split_once("REG_SZ") {
+                        let name = val.trim();
+                        if !name.is_empty() && !name.eq_ignore_ascii_case("Hotmail") {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    false
+}
+
+/// Uses Windows Simple MAPI (`MAPISendMailW`) in modeless dialog mode so any
+/// registered MAPI client can open a draft with the ZIP attached without
+/// blocking the UI thread.
+#[cfg(windows)]
+fn open_mapi_draft(path: &Path, subject: &str, body: &str) -> bool {
+    use std::ffi::c_void;
+    use std::os::windows::ffi::OsStrExt;
+    use std::ptr::null_mut;
+
+    if !has_registered_mapi_client() {
+        return false;
+    }
+
+    #[repr(C)]
+    struct MapiFileDescW {
+        ul_reserved: u32,
+        fl_flags: u32,
+        n_position: u32,
+        lpsz_path_name: *mut u16,
+        lpsz_file_name: *mut u16,
+        lp_file_type: *mut c_void,
+    }
+
+    #[repr(C)]
+    struct MapiRecipDescW {
+        ul_reserved: u32,
+        ul_recip_class: u32,
+        lpsz_name: *mut u16,
+        lpsz_address: *mut u16,
+        ul_eid_size: u32,
+        lp_entry_id: *mut c_void,
+    }
+
+    #[repr(C)]
+    struct MapiMessageW {
+        ul_reserved: u32,
+        lpsz_subject: *mut u16,
+        lpsz_note_text: *mut u16,
+        lpsz_message_type: *mut u16,
+        lpsz_date_received: *mut u16,
+        lpsz_conversation_id: *mut u16,
+        fl_flags: u32,
+        lp_originator: *mut MapiRecipDescW,
+        n_recip_count: u32,
+        lp_recips: *mut MapiRecipDescW,
+        n_file_count: u32,
+        lp_files: *mut MapiFileDescW,
+    }
+
+    type MapiSendMailWFn = unsafe extern "system" fn(
+        lh_session: usize,
+        ul_ui_param: usize,
+        lp_message: *mut MapiMessageW,
+        fl_flags: u32,
+        ul_reserved: u32,
+    ) -> u32;
+
+    extern "system" {
+        fn LoadLibraryW(lp_lib_file_name: *const u16) -> *mut c_void;
+        fn GetProcAddress(h_module: *mut c_void, lp_proc_name: *const u8) -> *const c_void;
+        fn FreeLibrary(h_lib_module: *mut c_void) -> i32;
+    }
+
+    fn wide_z(text: &str) -> Vec<u16> {
+        text.encode_utf16().chain(std::iter::once(0)).collect()
+    }
+
+    let dll_name = wide_z("MAPI32.DLL");
+    let mut subject_w = wide_z(subject);
+    let mut body_w = wide_z(body);
+    let mut to_name_w = wide_z(SUPPORT_EMAIL);
+    let mut to_addr_w = wide_z(&format!("SMTP:{SUPPORT_EMAIL}"));
+    let mut path_w: Vec<u16> = path
+        .as_os_str()
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+    let mut file_name_w = wide_z(
+        &path
+            .file_name()
+            .map(|n| n.to_string_lossy().to_string())
+            .unwrap_or_else(|| "dev-cleaner-support.zip".to_string()),
+    );
+
+    const MAPI_LOGON_UI: u32 = 0x0000_0001;
+    const MAPI_DIALOG_MODELESS: u32 = 0x0000_0004;
+    const MAPI_DIALOG: u32 = 0x0000_0008;
+    const MAPI_TO: u32 = 1;
+    const SUCCESS_SUCCESS: u32 = 0;
+
+    // SAFETY: All wide string buffers live for the duration of `MAPISendMailW`
+    // and the library handle is freed before returning.
+    unsafe {
+        let module = LoadLibraryW(dll_name.as_ptr());
+        if module.is_null() {
+            return false;
+        }
+        let proc = GetProcAddress(module, c"MAPISendMailW".as_ptr().cast::<u8>());
+        if proc.is_null() {
+            FreeLibrary(module);
+            return false;
+        }
+        let send_mail: MapiSendMailWFn = std::mem::transmute(proc);
+
+        let mut recip = MapiRecipDescW {
+            ul_reserved: 0,
+            ul_recip_class: MAPI_TO,
+            lpsz_name: to_name_w.as_mut_ptr(),
+            lpsz_address: to_addr_w.as_mut_ptr(),
+            ul_eid_size: 0,
+            lp_entry_id: null_mut(),
+        };
+        let mut file = MapiFileDescW {
+            ul_reserved: 0,
+            fl_flags: 0,
+            n_position: u32::MAX,
+            lpsz_path_name: path_w.as_mut_ptr(),
+            lpsz_file_name: file_name_w.as_mut_ptr(),
+            lp_file_type: null_mut(),
+        };
+        let mut message = MapiMessageW {
+            ul_reserved: 0,
+            lpsz_subject: subject_w.as_mut_ptr(),
+            lpsz_note_text: body_w.as_mut_ptr(),
+            lpsz_message_type: null_mut(),
+            lpsz_date_received: null_mut(),
+            lpsz_conversation_id: null_mut(),
+            fl_flags: 0,
+            lp_originator: null_mut(),
+            n_recip_count: 1,
+            lp_recips: &mut recip,
+            n_file_count: 1,
+            lp_files: &mut file,
+        };
+
+        let result = send_mail(
+            0,
+            0,
+            &mut message,
+            MAPI_LOGON_UI | MAPI_DIALOG | MAPI_DIALOG_MODELESS,
+            0,
+        );
+        FreeLibrary(module);
+        result == SUCCESS_SUCCESS
+    }
+}
+
+#[cfg(not(windows))]
+fn open_mapi_draft(_path: &Path, _subject: &str, _body: &str) -> bool {
+    false
 }
 
 /// Minimal percent-encoding for a `mailto:` query value.

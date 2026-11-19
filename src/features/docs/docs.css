@@ -129,7 +129,7 @@
 
 .docs-nav-link.active {
   background: var(--accent-subtle);
-  color: var(--accent);
+  color: var(--accent-foreground);
   font-weight: 600;
 }
 
@@ -252,6 +252,67 @@
   align-items: center;
   gap: 8px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Individual per-command copy list */
+.docs-cmd-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.docs-cmd-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.docs-cmd-row:first-child {
+  border-top: none;
+}
+
+.docs-cmd-row:hover {
+  background: var(--surface-hover);
+}
+
+.docs-cmd-row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.docs-cmd-row-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.docs-cmd-row-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: transparent;
+  padding: 0;
+}
+
+.docs-cmd-copy-btn {
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.docs-cmd-copy-btn.is-copied {
+  border-color: var(--success);
+  color: var(--success);
 }
 
 .docs-copy-action {

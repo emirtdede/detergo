@@ -93,6 +93,13 @@ pub fn handle_cli() -> Option<i32> {
                 Some(scan_exit_code(&err))
             }
         },
+        "system" => match crate::system_cleaner::cli::run(&args[2..]) {
+            Ok(()) => Some(0),
+            Err(err) => {
+                eprintln!("system cleanup failed: {err}");
+                Some(scan_exit_code(&err))
+            }
+        },
         other => {
             eprintln!("Unknown command: {other}");
             print_help();
@@ -156,6 +163,7 @@ fn print_help() {
     for line in [
         "  scan [DIRECTORY]         Scan projects, AI tools, and caches / clean safe targets",
         "  caches                   List or clean cache status for 21 developer tools",
+        "  system                   Clean Windows temp, Prefetch, Update leftovers (see below)",
         "  history                  List past cleanup and audit records",
         "  mcp                      Start the Model Context Protocol (MCP) stdio server",
     ] {
@@ -191,6 +199,18 @@ fn print_help() {
     ] {
         out.push_str(&format!("{}\n", t(line)));
     }
+    out.push('\n');
+
+    out.push_str("SYSTEM OPTIONS:\n");
+    out.push_str(
+        "  --list                   List the system cleanup actions and their safety class\n",
+    );
+    out.push_str(
+        "  --clean <PROFILE|IDS>    quick | standard | deep | all | comma-separated ids\n",
+    );
+    out.push_str("  --yes                    Required before anything is deleted\n");
+    out.push_str("  --dry-run                Show measured sizes and exit without deleting\n");
+    out.push_str("  --scheduled              Mark the run as coming from the Windows task\n");
     out.push('\n');
 
     out.push_str(&format!("{}\n", t("HISTORY OPTIONS:")));

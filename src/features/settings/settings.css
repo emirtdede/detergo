@@ -9,7 +9,14 @@
   gap: var(--space-4);
   width: 100%;
   min-width: 0;
-  padding-bottom: var(--space-8);
+}
+
+.settings-card-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
 /* 1. Subpage Navigation Tabs (Horizontal Strip) ----------------------------- */

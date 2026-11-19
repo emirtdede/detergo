@@ -37,6 +37,14 @@ First open-source release. MIT licensed, Windows 11 x64.
   `SECURITY.md`, issue and pull-request templates, Dependabot, `.editorconfig`
   and `.gitattributes`.
 
+- **C: drive cleaner** — a new side-menu tab that clears Windows temp
+  folders, Prefetch data, Windows Update leftovers, Windows error reports and
+  the Recycle Bin, and drives Disk Cleanup and component-store (DISM) cleanup
+  without the user typing a command. Every action is measured first, nothing is
+  deleted before an explicit confirmation, and a Windows scheduled task can run
+  the quick or standard profile daily or weekly. Elevation is on demand: the app
+  restarts itself as administrator only when a selected action needs it. Guide:
+  [`SYSTEM_CLEANER.md`](SYSTEM_CLEANER.md).
 - **Catalog explorer** — every ecosystem card on the About page is now a button
   that opens the rules behind it: the folder names each rule matches, its
   category, its safety class, its regeneration command and the catalog's own
@@ -94,15 +102,31 @@ First open-source release. MIT licensed, Windows 11 x64.
   the update check as the one request you can start yourself, in both the
   English original and the Turkish translation.
 
-- **Settings layout** — About is now split into five panes behind a
-  second side menu (overview, catalog, updates & health, contacts, legal), so
-  the uneven gaps of the single long page are gone.
-- **Scan header** — the "Scan all" description wraps to two lines and has a
-  hover title instead of being cut to an unreadable ellipsis.
-- **AI Tools empty state** — the unscanned state fills the page like the
-  Projects one instead of sitting in a small floating card.
-- **Documentation** — every command block has a one-click copy button in both
-  the English and Turkish docs.
+- **Settings & About layout** — both Settings and About now share the same
+  full-bleed second side menu as Documentation, keeping navigation consistent
+  and eliminating duplicated section headers, misaligned update controls and
+  uneven gaps.
+- **Scan engine accuracy & speed** — fixed Windows reparse-tag inspection so
+  transparent WOF/Dedup/hydrated cloud folders are never skipped while symlinks,
+  junctions and unhydrated stubs stay blocked; stopped pruning subtrees beneath
+  unverified generic directories so nested `node_modules` are always found;
+  scoped drive-root OS exclusions to actual drive roots; filtered false
+  positives inside source subtrees (`src/`, `wwwroot/`, `public/`) and
+  mismatched ecosystems; and cached Git root lookups once per winning target.
+- **Scan profiles** — added the `Full` scan profile alongside `Fast`,
+  `Balanced` (default), `Thorough`, `Deep` and `Maximum` in both the profile
+  picker dialog and the Settings > Scan limits selector.
+- **Support mail draft** — added Thunderbird CLI and Windows Simple MAPI
+  (`MAPISendMailW`) draft composition after Outlook COM, plus automatic
+  clipboard copy of the ZIP path on `mailto:` fallback.
+- **Scan header** — the "Scan all" description wraps cleanly without truncation
+  and provides a full hover tooltip.
+- **AI Tools empty state** — the unscanned state fills the viewport height like
+  Projects, and combined scans (`--scope combined`) now update AI Tools status.
+- **Documentation** — every individual command across Quickstart, CLI Guide,
+  MCP and C: Drive Cleaner (including Windows CMD reference commands) has its
+  own one-click copy button, and the interactive CLI Command Builder copy button
+  is wired up in both English and Turkish docs.
 
 ### Known limitations
 

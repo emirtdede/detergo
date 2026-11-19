@@ -747,3 +747,191 @@ fn discovery_does_not_descend_into_junctions() {
         "junction content must not be discovered outside the scan root"
     );
 }
+
+#[test]
+fn monorepo_discovers_all_sibling_and_workspace_node_modules() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+
+    // Typical monorepo with root + multiple package/service node_modules.
+    fs::write(root.join("package.json"), "{\"name\":\"mono\"}").unwrap();
+    write(&root.join("node_modules/.package-lock.json"), 16);
+    write(&root.join("node_modules/pkg/index.js"), 32);
+
+    fs::create_dir_all(root.join("apps/web")).unwrap();
+    fs::write(root.join("apps/web/package.json"), "{\"name\":\"web\"}").unwrap();
+    write(&root.join("apps/web/node_modules/.package-lock.json"), 16);
+
+    fs::create_dir_all(root.join("services/api")).unwrap();
+    fs::write(root.join("services/api/package.json"), "{\"name\":\"api\"}").unwrap();
+    write(&root.join("services/api/node_modules/express/index.js"), 64);
+
+    // Nested node_modules inside a package's own node_modules must still be pruned.
+    write(
+        &root.join("apps/web/node_modules/subpkg/node_modules/a/index.js"),
+        16,
+    );
+
+    let (items, _, stop) = discover_all(root);
+    assert!(stop.is_none());
+    let nm_items: Vec<_> = items
+        .iter()
+        .filter(|i| i.rule_id == "js.node_modules")
+        .collect();
+    assert_eq!(
+        nm_items.len(),
+        3,
+        "all three top-level/workspace node_modules must be discovered, got: {:?}",
+        nm_items.iter().map(|i| &i.display_path).collect::<Vec<_>>()
+    );
+    assert!(nm_items
+        .iter()
+        .all(|i| i.safety_class == SafetyClass::Regenerate));
+}
+
+#[test]
+fn node_modules_inside_unverified_generic_dir_is_still_discovered() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+
+    // A user workspace folder named "build" or "Temp" without a project manifest
+    // at its root must NOT prune its subtree and hide real projects inside it.
+    fs::create_dir_all(root.join("build/my-web-app/node_modules/pkg")).unwrap();
+    fs::write(
+        root.join("build/my-web-app/package.json"),
+        "{\"name\":\"my-web-app\"}",
+    )
+    .unwrap();
+    write(&root.join("build/my-web-app/node_modules/pkg/index.js"), 32);
+
+    let (items, _, stop) = discover_all(root);
+    assert!(stop.is_none());
+    assert!(
+        items
+            .iter()
+            .any(|i| i.rule_id == "js.node_modules" && i.display_path.contains("my-web-app")),
+        "node_modules inside an unverified generic container must still be found"
+    );
+}
+
+#[test]
+fn windows_subfolder_inside_user_project_is_not_excluded() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+
+    // Flutter / React Native / desktop apps legitimately have a `windows/`
+    // directory at depth 1 inside a project root.
+    fs::create_dir_all(root.join("windows/app/node_modules/pkg")).unwrap();
+    fs::write(
+        root.join("windows/app/package.json"),
+        "{\"name\":\"win-app\"}",
+    )
+    .unwrap();
+    write(&root.join("windows/app/node_modules/pkg/index.js"), 32);
+
+    let (items, _, stop) = discover_all(root);
+    assert!(stop.is_none());
+    assert!(
+        items.iter().any(|i| i.rule_id == "js.node_modules"),
+        "project subfolder named windows/ must not trigger drive-root OS exclusions"
+    );
+}
+
+#[test]
+fn source_subtrees_and_mismatched_ecosystems_do_not_produce_false_positives() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+
+    // Rust project with `src/bin` — must never match .NET `bin`.
+    fs::create_dir_all(root.join("rust-app")).unwrap();
+    fs::write(root.join("rust-app/Cargo.toml"), "[package]\nname=\"r\"").unwrap();
+    write(&root.join("rust-app/src/bin/cli.rs"), 64);
+
+    // JS/Next.js project with `src/features/library`, `src/app/api/saved`,
+    // `src/vendor`, and `public/dist` — none of these are Unity/Unreal/Go/JS artifacts.
+    fs::create_dir_all(root.join("web-app")).unwrap();
+    fs::write(root.join("web-app/package.json"), "{\"name\":\"web\"}").unwrap();
+    write(&root.join("web-app/src/features/library/index.ts"), 64);
+    write(&root.join("web-app/src/app/api/saved/route.ts"), 64);
+    write(&root.join("web-app/src/vendor/adapter.ts"), 64);
+    write(&root.join("web-app/public/dist/bundle.js"), 64);
+
+    // .NET project with `wwwroot/lib/bootstrap/dist` — must never match JS `dist`.
+    fs::create_dir_all(root.join("dotnet-app")).unwrap();
+    fs::write(root.join("dotnet-app/App.csproj"), "<Project />").unwrap();
+    write(
+        &root.join("dotnet-app/wwwroot/lib/bootstrap/dist/bootstrap.min.js"),
+        64,
+    );
+
+    let (items, _, _) = discover_all(root);
+    assert!(
+        items.is_empty(),
+        "source directories and mismatched ecosystems must not be flagged as artifacts, got: {:?}",
+        items
+            .iter()
+            .map(|i| (&i.rule_id, &i.display_path))
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn node_modules_with_content_signature_below_monorepo_root_is_regenerate() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+
+    // User selects a monorepo subfolder whose package.json sits outside the scan
+    // root, while node_modules itself contains `.package-lock.json`.
+    let sub = root.join("packages/ui");
+    write(&sub.join("node_modules/.package-lock.json"), 32);
+    write(&sub.join("node_modules/react/index.js"), 64);
+
+    let (items, _, _) = discover_all(&sub);
+    let nm = items
+        .iter()
+        .find(|i| i.rule_id == "js.node_modules")
+        .expect("node_modules must be discovered");
+    assert_eq!(nm.safety_class, SafetyClass::Regenerate);
+    assert!(
+        !nm.warning_codes.contains(&"NO_PROJECT_MARKER".to_string()),
+        "content signature proof must keep node_modules out of NO_PROJECT_MARKER review"
+    );
+}
+
+#[test]
+fn max_depth_prunes_non_matching_deep_directories() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+
+    // Depth 1: a, Depth 2: a/b, Depth 3: a/b/c, Depth 4: a/b/c/node_modules
+    fs::create_dir_all(root.join("a/b/c/node_modules/pkg")).unwrap();
+    fs::write(root.join("a/b/c/package.json"), "{}").unwrap();
+    write(&root.join("a/b/c/node_modules/pkg/index.js"), 16);
+
+    let catalog = catalog();
+    let token = CancellationToken::new();
+    let limits = ScanLimits {
+        max_depth: 2,
+        ..ScanLimits::default()
+    };
+    let mut engine = DiscoveryEngine::new(&catalog, token, limits);
+    let outcome = engine
+        .discover(
+            DiscoveryConfig {
+                root,
+                exclusions: &[],
+                protected_paths: &[],
+                scan_session_id: "s-test",
+                limits,
+            },
+            |_| {},
+            |_| {},
+        )
+        .expect("discovery should succeed");
+
+    assert!(
+        outcome.items.is_empty(),
+        "directories deeper than max_depth must not be visited"
+    );
+    assert_eq!(outcome.stop_reason, Some(StopReason::DepthLimit));
+}

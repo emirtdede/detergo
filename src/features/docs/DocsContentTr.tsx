@@ -18,6 +18,7 @@ import {
 import { NumberField } from "@/components/primitives/NumberField";
 import { McpIdeKey, mcpConfigs, webhookSampleJson } from "./docs-data";
 import { McpIdeSelector } from "./McpIdeSelector";
+import { DocsCommandList } from "./DocsCommandList";
 import { APP_VERSION } from "@/lib/app-version";
 
 // Syntax highlighter function
@@ -32,7 +33,7 @@ function highlightBash(code: string): React.ReactNode[] {
         </span>
       );
     }
-    const regex = /(--[a-zA-Z0-9_-]+|-[a-zA-Z0-9]+|"[^"]*"|'[^']*'|\b(?:dev-cleaner|npm|nvm|pip|cargo|docker|powershell|git|New-ScheduledTaskAction|Register-ScheduledTask)\b|\d+)/g;
+    const regex = /(--[a-zA-Z0-9_-]+|\/[a-zA-Z0-9:_-]+|-[a-zA-Z0-9]+|"[^"]*"|'[^']*'|\b(?:dev-cleaner|cleanmgr|DISM\.exe|del|npm|nvm|pip|cargo|docker|powershell|git|New-ScheduledTaskAction|Register-ScheduledTask)\b|\d+)/g;
     const parts: React.ReactNode[] = [];
     let lastIndex = 0;
     let match: RegExpExecArray | null;
@@ -269,20 +270,31 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
               </div>
             </div>
 
-            <div className="docs-code-card">
-              <div className="docs-code-header">
-                <span className="docs-code-header-left">Terminal CLI ile 5 Saniyede Başlayın</span>
-                <button
-                  type="button"
-                  className="docs-copy-action"
-                  onClick={() => copyToClipboard("dev-cleaner scan D:\\projeler --scope all --auto-clean --dry-run", "qs-cli")}
-                >
-                  {copiedKey === "qs-cli" ? <Check size={13} /> : <Copy size={13} />}
-                  {copiedKey === "qs-cli" ? "Kopyalandı!" : "Kopyala"}
-                </button>
-              </div>
-              <pre className="docs-code-pre">{highlightBash("dev-cleaner scan D:\\projeler --scope all --auto-clean --dry-run")}</pre>
-            </div>
+            <DocsCommandList
+              title="Terminal CLI ile 5 Saniyede Başlayın"
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel="Kopyala"
+              copiedLabel="Kopyalandı!"
+              highlight={highlightBash}
+              items={[
+                {
+                  id: "qs-cli",
+                  label: "Projeleri simülasyon (dry-run) modunda tara",
+                  command: 'dev-cleaner scan "D:\\projeler" --scope all --auto-clean --dry-run',
+                },
+                {
+                  id: "qs-combined",
+                  label: "Projeler ve AI ajan depolarını tek seferde tara",
+                  command: 'dev-cleaner scan "D:\\projeler" --scope combined',
+                },
+                {
+                  id: "qs-system",
+                  label: "C: sürücüsü sistem temizliği kalemlerini ölç",
+                  command: "dev-cleaner system --list",
+                },
+              ]}
+            />
           </article>
         )}
 
@@ -350,20 +362,22 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
 
             <h2 className="docs-h2">Yöntem 2: PowerShell ile Terminalden Kurtarma</h2>
             <p className="docs-p">Terminalden ayrılmadan Geri Dönüşüm Kutusundaki silinen öğeleri sorgulamak ve incelemek için:</p>
-            <div className="docs-code-card">
-              <div className="docs-code-header">
-                <span>PowerShell ile Son Silinenleri Listele</span>
-                <button
-                  type="button"
-                  className="docs-copy-action"
-                  onClick={() => copyToClipboard('(New-Object -ComObject Shell.Application).Namespace(0xa).Items() | Select-Object Name, Path', 'rec-ps')}
-                >
-                  {copiedKey === 'rec-ps' ? <Check size={13} /> : <Copy size={13} />}
-                  {copiedKey === 'rec-ps' ? 'Kopyalandı!' : 'Kopyala'}
-                </button>
-              </div>
-              <pre className="docs-code-pre">{highlightBash('(New-Object -ComObject Shell.Application).Namespace(0xa).Items() | Select-Object Name, Path')}</pre>
-            </div>
+            <DocsCommandList
+              title="PowerShell ile Son Silinenleri Listele"
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel="Kopyala"
+              copiedLabel="Kopyalandı!"
+              highlight={highlightBash}
+              items={[
+                {
+                  id: "rec-ps",
+                  label: "Geri Dönüşüm Kutusundaki öğeleri ad ve yol olarak listele",
+                  command:
+                    "(New-Object -ComObject Shell.Application).Namespace(0xa).Items() | Select-Object Name, Path",
+                },
+              ]}
+            />
 
             <div className="docs-callout">
               <ShieldCheck className="docs-callout-icon" size={18} />
@@ -427,8 +441,32 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                 <span>Temizlikten sonra diskim neden anında boşalmadı?</span>
               </div>
               <p className="docs-faq-a">
-                Güvenlik manifestomuz gereği dosyalar Geri Dönüşüm Kutusuna taşınır. Disk alanını kalıcı olarak serbest bırakmak için
-                masaüstündeki Geri Dönüşüm Kutusunu sağ tıklayıp "Geri Dönüşüm Kutusunu Boşalt" seçeneğini kullanabilirsiniz.
+                Güvenlik manifestomuz gereği proje ve AI artıkları Geri Dönüşüm Kutusuna taşınır. Disk alanını kalıcı olarak serbest bırakmak için
+                masaüstündeki Geri Dönüşüm Kutusunu boşaltabilir veya <strong>Sistem temizleyici</strong> sekmesindeki Geri Dönüşüm Kutusu seçeneğini kullanabilirsiniz.
+              </p>
+            </div>
+
+            <div className="docs-faq-card">
+              <div className="docs-faq-q">
+                <HelpCircle size={16} className="text-accent" />
+                <span>Tarama profilleri (Hızlı, Dengeli, Tam, Kapsamlı, Derin, Azami) neyi değiştirir?</span>
+              </div>
+              <p className="docs-faq-a">
+                Profiller yalnızca maksimum klasör derinliği, aday sayısı ve zaman aşımı sınırlarını önceden doldurur. Varsayılan
+                <strong> Dengeli</strong> profil günlük projeler için idealdir; çok iç içe geçmiş büyük monorepolarda
+                <strong> Tam</strong>, <strong>Kapsamlı</strong> veya <strong>Derin</strong> profilini seçebilirsiniz.
+              </p>
+            </div>
+
+            <div className="docs-faq-card">
+              <div className="docs-faq-q">
+                <HelpCircle size={16} className="text-accent" />
+                <span>Hata günlükleri ve sistem mesajları otomatik olarak gönderiliyor mu?</span>
+              </div>
+              <p className="docs-faq-a">
+                Hayır. Tüm günlükler yalnızca cihazınızda saklanır. <strong>Ayarlar &gt; Hata günlüğü</strong> sekmesinden
+                dilerseniz tek tıkla maskelenmiş bir ZIP destek paketi oluşturup posta uygulamanızda <code>support@vellium.dev</code> için
+                hazır taslak açabilirsiniz; siz Gönder&apos;e basmadan hiçbir veri paylaşılmaz.
               </p>
             </div>
           </article>
@@ -472,53 +510,63 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
 
             <h2 className="docs-h2">1. `dev-cleaner scan`</h2>
             <p className="docs-p">Hedef dizindeki geliştirici bağımlılıklarını tarar veya otonom temizler.</p>
-            <div className="docs-code-card">
-              <div className="docs-code-header">
-                <span>Örnek Kullanım ({cliShell})</span>
-                <button
-                  type="button"
-                  className="docs-copy-action"
-                  onClick={() => copyToClipboard(
-                    cliShell === "bash"
-                      ? "dev-cleaner scan /d/projeler --auto-clean --safety safe,regenerate"
-                      : "dev-cleaner scan \"D:\\projeler\" --auto-clean --safety safe,regenerate",
-                    "cli-scan"
-                  )}
-                >
-                  {copiedKey === "cli-scan" ? <Check size={13} /> : <Copy size={13} />}
-                  {copiedKey === "cli-scan" ? "Kopyalandı" : "Kopyala"}
-                </button>
-              </div>
-              <pre className="docs-code-pre">
-                {cliShell === "bash"
-                  ? highlightBash(
-`# Standart tarama ve insan okunabilir çıktı
-dev-cleaner scan "/d/projeler"
-
-# Otonom temizlik (Yalnızca güvenli ve yeniden üretilebilir hedefleri çöpe taşır)
-dev-cleaner scan "/d/projeler" --auto-clean --safety safe,regenerate
-
-# Simülasyon modu (Hiçbir şeyi silmez, nelerin temizleneceğini raporlar)
-dev-cleaner scan "/d/projeler" --auto-clean --dry-run
-
-# JSON çıktısı ile CI/CD entegrasyonu
-dev-cleaner scan "/d/projeler" --json`
-                    )
-                  : highlightBash(
-`# Standart tarama ve insan okunabilir çıktı
-dev-cleaner scan "D:\\projeler"
-
-# Otonom temizlik (Yalnızca güvenli ve yeniden üretilebilir hedefleri çöpe taşır)
-dev-cleaner scan "D:\\projeler" --auto-clean --safety safe,regenerate
-
-# Simülasyon modu (Hiçbir şeyi silmez, nelerin temizleneceğini raporlar)
-dev-cleaner scan "D:\\projeler" --auto-clean --dry-run
-
-# JSON çıktısı ile CI/CD entegrasyonu
-dev-cleaner scan "D:\\projeler" --json`
-                    )}
-              </pre>
-            </div>
+            <DocsCommandList
+              title={`Örnek Kullanım (${cliShell})`}
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel="Kopyala"
+              copiedLabel="Kopyalandı!"
+              highlight={highlightBash}
+              items={
+                cliShell === "bash"
+                  ? [
+                      {
+                        id: "cli-scan-std",
+                        label: "Standart tarama ve insan okunabilir çıktı",
+                        command: 'dev-cleaner scan "/d/projeler"',
+                      },
+                      {
+                        id: "cli-scan-auto",
+                        label: "Otonom temizlik (Yalnızca güvenli ve yeniden üretilebilir hedefleri çöpe taşır)",
+                        command:
+                          'dev-cleaner scan "/d/projeler" --auto-clean --safety safe,regenerate',
+                      },
+                      {
+                        id: "cli-scan-dry",
+                        label: "Simülasyon modu (Hiçbir şeyi silmez, nelerin temizleneceğini raporlar)",
+                        command: 'dev-cleaner scan "/d/projeler" --auto-clean --dry-run',
+                      },
+                      {
+                        id: "cli-scan-json",
+                        label: "JSON çıktısı ile CI/CD entegrasyonu",
+                        command: 'dev-cleaner scan "/d/projeler" --json',
+                      },
+                    ]
+                  : [
+                      {
+                        id: "cli-scan-std",
+                        label: "Standart tarama ve insan okunabilir çıktı",
+                        command: 'dev-cleaner scan "D:\\projeler"',
+                      },
+                      {
+                        id: "cli-scan-auto",
+                        label: "Otonom temizlik (Yalnızca güvenli ve yeniden üretilebilir hedefleri çöpe taşır)",
+                        command:
+                          'dev-cleaner scan "D:\\projeler" --auto-clean --safety safe,regenerate',
+                      },
+                      {
+                        id: "cli-scan-dry",
+                        label: "Simülasyon modu (Hiçbir şeyi silmez, nelerin temizleneceğini raporlar)",
+                        command: 'dev-cleaner scan "D:\\projeler" --auto-clean --dry-run',
+                      },
+                      {
+                        id: "cli-scan-json",
+                        label: "JSON çıktısı ile CI/CD entegrasyonu",
+                        command: 'dev-cleaner scan "D:\\projeler" --json',
+                      },
+                    ]
+              }
+            />
 
             <div className="docs-table-wrapper">
               <table className="docs-table">
@@ -585,53 +633,92 @@ dev-cleaner scan "D:\\projeler" --json`
 
             <h2 className="docs-h2">2. `dev-cleaner caches`</h2>
             <p className="docs-p">21 geliştirici aracının paket önbelleklerini listeler veya resmi komutla temizler.</p>
-            <div className="docs-code-card">
-              <div className="docs-code-header">
-                <span>Önbellek Komutları</span>
-                <button
-                  type="button"
-                  className="docs-copy-action"
-                  onClick={() => copyToClipboard("dev-cleaner caches --clean all --yes", "cli-cache")}
-                >
-                  {copiedKey === "cli-cache" ? <Check size={13} /> : <Copy size={13} />}
-                  {copiedKey === "cli-cache" ? "Kopyalandı" : "Kopyala"}
-                </button>
-              </div>
-              <pre className="docs-code-pre">
-                {highlightBash(
-`# Tüm önbellek durumunu listele
-dev-cleaner caches
+            <DocsCommandList
+              title="Önbellek Komutları"
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel="Kopyala"
+              copiedLabel="Kopyalandı!"
+              highlight={highlightBash}
+              items={[
+                {
+                  id: "cli-cache-list",
+                  label: "Tüm önbellek durumunu listele",
+                  command: "dev-cleaner caches",
+                },
+                {
+                  id: "cli-cache-npm",
+                  label: "Belirli bir aracın önbelleğini temizle (örn. npm, pip, cargo, docker)",
+                  command: "dev-cleaner caches --clean npm",
+                },
+                {
+                  id: "cli-cache-dry",
+                  label: "Hiçbir şey silmeden tam temizliği önizle",
+                  command: "dev-cleaner caches --clean all --dry-run",
+                },
+                {
+                  id: "cli-cache-all",
+                  label: "Tüm yüklü araçların önbelleklerini onaylayarak temizle",
+                  command: "dev-cleaner caches --clean all --yes",
+                },
+              ]}
+            />
 
-# Belirli bir aracın önbelleğini temizle (örn. npm, pip, cargo, docker)
-dev-cleaner caches --clean npm
+            <h2 className="docs-h2">3. `dev-cleaner system`</h2>
+            <p className="docs-p">C: sürücüsündeki Windows geçici dosyalarını, Prefetch, Windows Update artıkları ve WinSxS bileşen deposunu yönetir.</p>
+            <DocsCommandList
+              title="C: Sürücüsü Sistem Temizliği Komutları"
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel="Kopyala"
+              copiedLabel="Kopyalandı!"
+              highlight={highlightBash}
+              items={[
+                {
+                  id: "cli-sys-list",
+                  label: "Tüm sistem temizliği kalemlerini ve boyutlarını listele",
+                  command: "dev-cleaner system --list",
+                },
+                {
+                  id: "cli-sys-dry",
+                  label: "Hızlı profili silmeden önizle (dry-run)",
+                  command: "dev-cleaner system --clean quick --dry-run",
+                },
+                {
+                  id: "cli-sys-quick",
+                  label: "Hızlı sistem temizliğini onaylayarak çalıştır",
+                  command: "dev-cleaner system --clean quick --yes",
+                },
+                {
+                  id: "cli-sys-std",
+                  label: "Standart sistem temizliğini çalıştır (Yönetici önerilir)",
+                  command: "dev-cleaner system --clean standard --yes",
+                },
+              ]}
+            />
 
-# Hiçbir şey silmeden tam temizliği önizle
-dev-cleaner caches --clean all --dry-run
-
-# Tüm yüklü araçların önbelleklerini onaylayarak temizle
-dev-cleaner caches --clean all --yes`
-                )}
-              </pre>
-            </div>
-
-            <h2 className="docs-h2">3. `dev-cleaner history`</h2>
+            <h2 className="docs-h2">4. `dev-cleaner history`</h2>
             <p className="docs-p">Geçmiş temizlik denetim kayıtlarını listeler.</p>
-            <div className="docs-code-card">
-              <div className="docs-code-header">
-                <span className="docs-code-header-left">
-                  <Terminal size={13} /> terminal
-                </span>
-                <button
-                  type="button"
-                  className="docs-copy-action"
-                  onClick={() => copyToClipboard("dev-cleaner history --limit 15", "cli-history")}
-                >
-                  {copiedKey === "cli-history" ? <Check size={13} /> : <Copy size={13} />}
-                  {copiedKey === "cli-history" ? "Kopyalandı!" : "Kopyala"}
-                </button>
-              </div>
-              <pre className="docs-code-pre">{highlightBash("dev-cleaner history --limit 15")}</pre>
-            </div>
+            <DocsCommandList
+              title="Denetim Geçmişi Komutları"
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel="Kopyala"
+              copiedLabel="Kopyalandı!"
+              highlight={highlightBash}
+              items={[
+                {
+                  id: "cli-history",
+                  label: "Son 15 temizlik kaydını göster",
+                  command: "dev-cleaner history --limit 15",
+                },
+                {
+                  id: "cli-history-json",
+                  label: "Geçmişi JSON olarak dışa aktar",
+                  command: "dev-cleaner history --limit 50 --json",
+                },
+              ]}
+            />
           </article>
         )}
 
@@ -749,6 +836,7 @@ dev-cleaner caches --clean all --yes`
                   <button
                     type="button"
                     className="docs-copy-action"
+                    onClick={() => copyToClipboard(generatedCliCommand, "gen-cli")}
                   >
                     {copiedKey === "gen-cli" ? <Check size={13} /> : <Copy size={13} />}
                     {copiedKey === "gen-cli" ? "Kopyalandı!" : "Komutu Kopyala"}
@@ -826,22 +914,26 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             </div>
 
             <h2 className="docs-h2">Sunucuyu Başlatma</h2>
-            <div className="docs-code-card">
-              <div className="docs-code-header">
-                <span className="docs-code-header-left">
-                  <Terminal size={13} /> terminal
-                </span>
-                <button
-                  type="button"
-                  className="docs-copy-action"
-                  onClick={() => copyToClipboard("dev-cleaner mcp", "mcp-start")}
-                >
-                  {copiedKey === "mcp-start" ? <Check size={13} /> : <Copy size={13} />}
-                  {copiedKey === "mcp-start" ? "Kopyalandı!" : "Kopyala"}
-                </button>
-              </div>
-              <pre className="docs-code-pre">{highlightBash("dev-cleaner mcp")}</pre>
-            </div>
+            <DocsCommandList
+              title="MCP Sunucu Komutları"
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel="Kopyala"
+              copiedLabel="Kopyalandı!"
+              highlight={highlightBash}
+              items={[
+                {
+                  id: "mcp-start",
+                  label: "Standart modda (salt okunur + önizleme) başlat",
+                  command: "dev-cleaner mcp",
+                },
+                {
+                  id: "mcp-start-destructive",
+                  label: "Yıkıcı araçlara izin vererek başlat (Ayarlar'da da açık olmalıdır)",
+                  command: "dev-cleaner mcp --allow-destructive",
+                },
+              ]}
+            />
           </article>
         )}
 
@@ -1110,6 +1202,158 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
         )}
 
         {/* TOPIC 15: TROUBLESHOOTING (NEW!) */}
+        {activeTopicId === "system-cleaner" && (
+          <article className="docs-article">
+            <div className="docs-badge-row">
+              <span className="docs-category-pill">Windows Bakımı</span>
+              <span className="docs-version-pill">Rehber</span>
+            </div>
+            <h1 className="docs-title">C: Sürücüsü Temizleyici &amp; Zamanlanmış Otomasyon</h1>
+            <p className="docs-lead">
+              Tek bir komut yazmadan sistem sürücüsünde yer açın. Hiçbir şey silinmeden önce her işlem ölçülür.
+            </p>
+
+            <h2 className="docs-h2">Neleri temizler</h2>
+            <p>
+              Temizleyici; geçici dosyalarınızı, Windows geçici dosyalarını, Prefetch verilerini, Windows Update
+              artıklarını, Windows hata raporlarını, Geri Dönüşüm Kutusu'nu, Windows Disk Temizleme profilini ve bileşen
+              deposunu (WinSxS) kapsar. Proje klasörleri, belgeler ve İndirilenler denetlenen tüm köklerin dışındadır ve
+              asla seçilemez.
+            </p>
+
+            <h2 className="docs-h2">Yönetici hakları</h2>
+            <p>
+              Windows, sistem klasörlerini standart kullanıcılara kapatır. Bir işlem yükseltme gerektirdiğinde sayfa tek
+              bir yeniden başlatma düğmesi sunar; uygulama seçiminiz korunarak aynı sayfada yeniden açılır. Uygulamanın
+              kendisi yönetici hakları olmadan açılmaya devam eder; kendi dosyalarınızı taramak ve temizlemek hiçbir zaman
+              onay istemez.
+            </p>
+
+            <h2 className="docs-h2">Tasarım gereği güvenli</h2>
+            <p>
+              Arayüz yalnızca işlem kimliklerini gönderir; yollar yerel tarafta sabit ve denetlenmiş bir listeye göre
+              çözümlenir ve yeniden doğrulanır. Silme işlemi junction veya sembolik bağlantıları asla izlemez, kilitli
+              dosyalar atlanır ve bildirilir; her çalıştırma yerel denetim geçmişine yazılır.
+            </p>
+
+            <div className="docs-callout docs-callout--info">
+              <Info className="docs-callout-icon" size={18} />
+              <div>
+                <p>Hiçbir veri yüklenmez. Boyutlar, günlükler ve denetim kayıtları bu cihazda kalır.</p>
+              </div>
+            </div>
+
+            <h2 className="docs-h2">Otomatik temizlik</h2>
+            <p>
+              Bir Windows zamanlanmış görevi, hızlı veya standart profili günlük ya da haftalık çalıştırabilir. Görev,
+              hesabınızın izin verdiği en yüksek haklarla çalışır ve soru sormaz; zamanlamayı aynı panelden istediğiniz
+              zaman kaldırabilirsiniz. Prefetch, Geri Dönüşüm Kutusu ve bileşen deposu asla otomatik seçilmez.
+            </p>
+
+            <h2 className="docs-h2">Komut satırı (Dev Cleaner CLI)</h2>
+            <p className="docs-p">
+              Aynı işlemler betikler ve CI için başsız (headless) olarak da kullanılabilir:
+            </p>
+            <DocsCommandList
+              title="Dev Cleaner Sistem Temizleyici CLI"
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel="Kopyala"
+              copiedLabel="Kopyalandı!"
+              highlight={highlightBash}
+              items={[
+                {
+                  id: "sys-cli-list",
+                  label: "Tüm sistem hedeflerini ve ölçülebilir boyutları listele",
+                  command: "dev-cleaner system --list",
+                },
+                {
+                  id: "sys-cli-dry",
+                  label: "Hiçbir şey silmeden hızlı profili önizle",
+                  command: "dev-cleaner system --clean quick --dry-run",
+                },
+                {
+                  id: "sys-cli-quick",
+                  label: "Hızlı profili çalıştır (kullanıcı temp + Windows Update artıkları)",
+                  command: "dev-cleaner system --clean quick --yes",
+                },
+                {
+                  id: "sys-cli-standard",
+                  label: "Standart profili çalıştır (Yönetici haklarıyla temp, Prefetch, hata raporları)",
+                  command: "dev-cleaner system --clean standard --yes",
+                },
+                {
+                  id: "sys-cli-deep",
+                  label: "Derin profili çalıştır (Disk Temizleme ve DISM WinSxS dâhil)",
+                  command: "dev-cleaner system --clean deep --yes",
+                },
+              ]}
+            />
+
+            <h2 className="docs-h2">Windows CMD Referans Komutları (Yönetici)</h2>
+            <p className="docs-p">
+              Dev Cleaner bu işlemleri arayüzden tek tıkla yürütür. Manuel çalıştırmak isterseniz
+              Komut İstemi&apos;ni <strong>Yönetici olarak</strong> açıp aşağıdaki komutları tek tek kopyalayabilirsiniz:
+            </p>
+            <DocsCommandList
+              title="1. Windows Disk Temizleme Aracı (Cleanmgr)"
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel="Kopyala"
+              copiedLabel="Kopyalandı!"
+              highlight={highlightBash}
+              items={[
+                {
+                  id: "cmd-cleanmgr-c",
+                  label: "C: diski için standart Windows Disk Temizleme arayüzünü aç",
+                  command: "cleanmgr /d c:",
+                },
+                {
+                  id: "cmd-cleanmgr-sageset",
+                  label: "Otomatik temizlik profili 1'i oluştur ve temizlenecek öğeleri seç",
+                  command: "cleanmgr /sageset:1",
+                },
+                {
+                  id: "cmd-cleanmgr-sagerun",
+                  label: "Profil 1'i kullanıcı onayı beklemeden arka planda çalıştır",
+                  command: "cleanmgr /sagerun:1",
+                },
+              ]}
+            />
+
+            <DocsCommandList
+              title="2. Geçici Dosyalar (Temp), Prefetch ve Windows Update (DISM)"
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel="Kopyala"
+              copiedLabel="Kopyalandı!"
+              highlight={highlightBash}
+              items={[
+                {
+                  id: "cmd-del-user-temp",
+                  label: "Kullanıcı geçici dosyalarını (%TEMP%) temizle",
+                  command: "del /q /f /s %TEMP%\\*",
+                },
+                {
+                  id: "cmd-del-win-temp",
+                  label: "Windows sistem geçici dosyalarını (C:\\Windows\\Temp) temizle",
+                  command: "del /q /f /s C:\\Windows\\Temp\\*",
+                },
+                {
+                  id: "cmd-del-prefetch",
+                  label: "Önbellek (Prefetch) dosyalarını temizle",
+                  command: "del /q /f /s C:\\Windows\\Prefetch\\*",
+                },
+                {
+                  id: "cmd-dism-winsxs",
+                  label: "Windows Update kalıntılarını ve WinSxS bileşen deposunu temizle (DISM)",
+                  command: "DISM.exe /Online /Cleanup-Image /StartComponentCleanup",
+                },
+              ]}
+            />
+          </article>
+        )}
+
         {activeTopicId === "troubleshooting" && (
           <article className="docs-article">
             <div className="docs-badge-row">

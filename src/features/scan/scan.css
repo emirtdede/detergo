@@ -392,20 +392,18 @@
   white-space: nowrap;
 }
 
-/* The "scan all" description is a sentence, not a path: it must wrap instead of
-   being cut to an unreadable ellipsis. The title attribute keeps the full text
-   available on hover as a fallback. */
+/* The "scan all" description is a sentence, not a path: it must wrap cleanly
+   so the full text is always readable without truncation, with a native title
+   tooltip as an extra affordance. */
 .location-menu-item-path--desc {
+  display: block;
   font-family: inherit;
-  font-size: 10.5px;
-  line-height: 1.35;
+  font-size: 11px;
+  line-height: 1.4;
   white-space: normal;
+  overflow-wrap: anywhere;
   overflow: visible;
   text-overflow: clip;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .location-menu-item-check {
@@ -539,7 +537,8 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  width: 260px;
+  width: 304px;
+  max-width: calc(100vw - 24px);
   padding: 6px;
   background: var(--surface-strong);
   border: 1px solid var(--border-strong);

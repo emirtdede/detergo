@@ -76,6 +76,7 @@ pub struct DiscoveryEngine<'a> {
     budget: ScanBudget,
     resolver: ProjectResolver,
     active: HashMap<PathBuf, (String, String)>,
+    git_repo_cache: HashMap<PathBuf, Option<PathBuf>>,
 }
 
 impl<'a> DiscoveryEngine<'a> {
@@ -86,6 +87,7 @@ impl<'a> DiscoveryEngine<'a> {
             budget: ScanBudget::new(limits),
             resolver: ProjectResolver::new(catalog.project_markers()),
             active: HashMap::new(),
+            git_repo_cache: HashMap::new(),
         }
     }
 
@@ -150,11 +152,12 @@ impl<'a> DiscoveryEngine<'a> {
         let mut last_progress = Instant::now();
         let mut stop_reason: Option<StopReason> = None;
 
+        let is_drive_root = is_drive_root_path(config.root);
         let walker = WalkDir::new(config.root)
             .follow_links(false)
             .same_file_system(true)
             .into_iter()
-            .filter_entry(|entry| entry_allowed(entry, &exclusions));
+            .filter_entry(move |entry| entry_allowed(entry, &exclusions, is_drive_root));
 
         let mut it = walker;
         while let Some(result) = it.next() {
@@ -230,8 +233,22 @@ impl<'a> DiscoveryEngine<'a> {
             let ancestor = self.nearest_active(&path);
             let candidates = self.catalog.rules_for_name(&name);
             if candidates.is_empty() {
+                if depth_limited {
+                    it.skip_current_dir();
+                }
                 continue;
             }
+
+            let parent = path.parent().unwrap_or(config.root);
+            let resolved_project = self.resolver.resolve(parent);
+            let project_root = resolved_project
+                .as_ref()
+                .map(|p| PathBuf::from(&p.project_root));
+            let workspace_root = resolved_project
+                .as_ref()
+                .map(|p| PathBuf::from(&p.root_project_root));
+            let inside_source_subtree =
+                is_inside_source_subtree(parent, project_root.as_deref().unwrap_or(config.root));
 
             let mut matched_rule = None;
             let mut matched_evidence = None;
@@ -264,26 +281,59 @@ impl<'a> DiscoveryEngine<'a> {
                     }
                 }
 
-                let parent = path.parent().unwrap_or(config.root);
-                let project = self.resolver.resolve(parent);
-                let project_root = project.as_ref().map(|p| PathBuf::from(&p.project_root));
-                let workspace_root = project
-                    .as_ref()
-                    .map(|p| PathBuf::from(&p.root_project_root));
-
-                let git_state = if rule.git_policy == crate::catalog::GitPolicy::DenyTracked {
-                    Some(git_guard::git_state_for(&path))
-                } else {
-                    None
-                };
+                // Generic names (`bin`, `build`, `dist`, `Library`, `vendor`,
+                // `target`, ...) inside source/asset trees (`src/`, `wwwroot/`,
+                // `public/`) are almost always authored code or vendored web
+                // assets, not build output.
+                if rule.generic_name && inside_source_subtree {
+                    continue;
+                }
 
                 let evidence = collect_evidence(
                     rule,
                     &path,
                     project_root.as_deref(),
                     workspace_root.as_deref(),
-                    git_state,
+                    None,
                 );
+
+                // Eliminate ecosystem-mismatched false positives:
+                // 1) Protected ecosystem folders (e.g. Unreal `Saved`) must
+                //    only match when their ecosystem marker actually exists;
+                //    otherwise `src/app/.../saved` in a web app gets flagged.
+                // 2) Ecosystem-specific generic folders (`dotnet.bin`,
+                //    `unity.library`, `go.vendor`, `rs.target`, ...) must not
+                //    fire inside a different ecosystem or without their marker.
+                // 3) Generic JS `build` without any project at all stays
+                //    discoverable as `review` (`NO_PROJECT_MARKER`) for
+                //    transparency, without pruning its subtree below.
+                if !rule.markers.is_empty()
+                    && evidence.marker_hits.is_empty()
+                    && evidence.content_hits.is_empty()
+                {
+                    if rule.is_protected() {
+                        continue;
+                    }
+                    let conflicting_project = resolved_project.is_some();
+                    let allow_unverified_generic = rule.id == "js.build" && !conflicting_project;
+                    if rule.generic_name && !allow_unverified_generic {
+                        continue;
+                    }
+                    if !rule.generic_name
+                        && matches!(
+                            rule.id.as_str(),
+                            "unreal.intermediate"
+                                | "unreal.ddc"
+                                | "dotnet.testresults"
+                                | "elixir.build"
+                                | "swift.build"
+                                | "godot.imported"
+                        )
+                    {
+                        continue;
+                    }
+                }
+
                 let key = (
                     evidence.marker_hits.len(),
                     evidence.content_hits.len(),
@@ -303,15 +353,24 @@ impl<'a> DiscoveryEngine<'a> {
                 }
             }
 
-            let (Some(rule), Some(evidence)) = (matched_rule, matched_evidence) else {
+            let (Some(rule), Some(mut evidence)) = (matched_rule, matched_evidence) else {
+                if depth_limited {
+                    it.skip_current_dir();
+                }
                 continue;
             };
 
-            let parent = path.parent().unwrap_or(config.root);
-            let project = self
-                .resolver
-                .resolve(parent)
-                .unwrap_or_else(|| fallback_project(parent));
+            // Run Git inspection once for the winning rule only when needed,
+            // instead of spawning multiple `git` processes per candidate rule.
+            if rule.git_policy == crate::catalog::GitPolicy::DenyTracked
+                && !evidence.marker_hits.is_empty()
+            {
+                let state = git_guard::fast_git_state(&path, &mut self.git_repo_cache);
+                evidence.git_repo = state != GitState::NotRepository;
+                evidence.git_state = Some(state);
+            }
+
+            let project = resolved_project.unwrap_or_else(|| fallback_project(parent));
             let classification = classify(&rule, &evidence);
 
             let path_key = crate::safety::path_guard::normalize_key(&path);
@@ -444,6 +503,13 @@ impl<'a> DiscoveryEngine<'a> {
             });
 
             if entry.file_type().is_dir() {
+                // Never prune the subtree of an unverified generic directory:
+                // a workspace container named `build` or `Temp` without project
+                // markers can still hold real projects with `node_modules`
+                // inside it.
+                let unverified_generic = rule.generic_name
+                    && evidence.marker_hits.is_empty()
+                    && evidence.content_hits.is_empty();
                 if depth_limited {
                     // The rule match above still ran, so the boundary directory
                     // itself could be reported; its contents were not scanned.
@@ -451,7 +517,7 @@ impl<'a> DiscoveryEngine<'a> {
                 } else if self.catalog.has_child_rules(&rule.id) {
                     self.active
                         .insert(path.clone(), (rule.id.clone(), item_id.clone()));
-                } else {
+                } else if !unverified_generic {
                     it.skip_current_dir();
                 }
             }
@@ -518,7 +584,37 @@ impl<'a> DiscoveryEngine<'a> {
     }
 }
 
-fn entry_allowed(entry: &walkdir::DirEntry, exclusions: &HashSet<String>) -> bool {
+fn is_drive_root_path(path: &Path) -> bool {
+    let s = path.to_string_lossy();
+    let stripped = s.strip_prefix(r"\\?\").unwrap_or(&s);
+    let bytes = stripped.as_bytes();
+    (bytes.len() == 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':')
+        || (bytes.len() == 3
+            && bytes[0].is_ascii_alphabetic()
+            && bytes[1] == b':'
+            && (bytes[2] == b'\\' || bytes[2] == b'/'))
+}
+
+fn is_inside_source_subtree(parent: &Path, boundary: &Path) -> bool {
+    const SOURCE_DIRS: &[&str] = &["src", "source", "wwwroot", "public", "assets"];
+    let Ok(relative) = parent.strip_prefix(boundary) else {
+        return false;
+    };
+    relative.components().any(|component| {
+        if let std::path::Component::Normal(name) = component {
+            let lower = name.to_string_lossy().to_lowercase();
+            SOURCE_DIRS.iter().any(|dir| *dir == lower)
+        } else {
+            false
+        }
+    })
+}
+
+fn entry_allowed(
+    entry: &walkdir::DirEntry,
+    exclusions: &HashSet<String>,
+    is_drive_root: bool,
+) -> bool {
     if entry.depth() == 0 {
         return true;
     }
@@ -526,7 +622,10 @@ fn entry_allowed(entry: &walkdir::DirEntry, exclusions: &HashSet<String>) -> boo
     if exclusions.contains(&name) {
         return false;
     }
-    if entry.depth() == 1 && SYSTEM_EXCLUSIONS.iter().any(|s| *s == name) {
+    // System directory exclusions belong only to drive roots (`C:\`, `D:\`).
+    // Applying them to user project folders skipped legitimate sub-apps like
+    // `<monorepo>/windows/` in Flutter, React Native and Tauri workspaces.
+    if is_drive_root && entry.depth() == 1 && SYSTEM_EXCLUSIONS.iter().any(|s| *s == name) {
         return false;
     }
     if name == "packages" || name == "microsoft" {

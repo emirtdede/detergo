@@ -26,9 +26,114 @@ import {
   SupportBundle,
   SupportBundleRequest,
   SupportMailResult,
+  SystemActionId,
+  SystemActionInfo,
+  SystemActionResult,
+  SystemAutomationConfig,
+  SystemCleanReport,
+  SystemEvent,
+  SystemPreview,
+  SystemScanReport,
 } from "@/types";
 import type { ScannerApi } from "./scanner-api";
 import { MOCK_CATALOG_RULES } from "./mock-catalog";
+
+let memorySystemAutomation: SystemAutomationConfig = {
+  enabled: false,
+  frequency: "weekly",
+  time: "12:00",
+  weekday: 0,
+  profile: "quick",
+  installed: false,
+  lastRun: null,
+  lastFreedBytes: null,
+};
+
+/** Deterministic demo sizes for the browser preview. */
+function mockSystemActions(): SystemActionInfo[] {
+  return [
+    {
+      id: "userTemp",
+      safety: "safe",
+      requiresAdmin: false,
+      available: true,
+      reason: null,
+      bytes: 1_450_000_000,
+      fileCount: 4210,
+      measured: true,
+    },
+    {
+      id: "windowsTemp",
+      safety: "regenerate",
+      requiresAdmin: true,
+      available: true,
+      reason: "needsAdmin",
+      bytes: 320_000_000,
+      fileCount: 812,
+      measured: true,
+    },
+    {
+      id: "prefetch",
+      safety: "regenerate",
+      requiresAdmin: true,
+      available: true,
+      reason: "needsAdmin",
+      bytes: 48_000_000,
+      fileCount: 121,
+      measured: true,
+    },
+    {
+      id: "windowsUpdate",
+      safety: "regenerate",
+      requiresAdmin: true,
+      available: true,
+      reason: "needsAdmin",
+      bytes: 2_600_000_000,
+      fileCount: 3021,
+      measured: true,
+    },
+    {
+      id: "errorReports",
+      safety: "safe",
+      requiresAdmin: true,
+      available: true,
+      reason: "needsAdmin",
+      bytes: 12_000_000,
+      fileCount: 44,
+      measured: true,
+    },
+    {
+      id: "recycleBin",
+      safety: "review",
+      requiresAdmin: false,
+      available: true,
+      reason: null,
+      bytes: 640_000_000,
+      fileCount: 17,
+      measured: true,
+    },
+    {
+      id: "diskCleanup",
+      safety: "review",
+      requiresAdmin: true,
+      available: true,
+      reason: "needsAdmin",
+      bytes: 0,
+      fileCount: 0,
+      measured: false,
+    },
+    {
+      id: "componentStore",
+      safety: "review",
+      requiresAdmin: true,
+      available: true,
+      reason: "needsAdmin",
+      bytes: 0,
+      fileCount: 0,
+      measured: false,
+    },
+  ];
+}
 
 // Demo/offline data used when the app runs outside Tauri (browser preview and
 // unit tests). This module is imported dynamically only when `import.meta.env.DEV`
@@ -525,6 +630,120 @@ export function createMockScannerApi(): ScannerApi {
           percentUsed: 98.2,
         },
       ];
+    },
+
+    async systemScan(): Promise<SystemScanReport> {
+      return {
+        elevated: false,
+        actions: mockSystemActions(),
+        totalBytes: mockSystemActions()
+          .filter((action) => action.measured)
+          .reduce((sum, action) => sum + action.bytes, 0),
+        disk: {
+          drive: "C:",
+          freeBytes: 120_000_000_000,
+          totalBytes: 512_000_000_000,
+          percentUsed: 76.6,
+        },
+        scannedAt: new Date().toISOString(),
+        warnings: [],
+      };
+    },
+
+    async systemPreview(actionIds: SystemActionId[]): Promise<SystemPreview> {
+      const actions = mockSystemActions().filter((action) => actionIds.includes(action.id));
+      return {
+        token: "mock-system-token",
+        actions,
+        totalBytes: actions.reduce((sum, action) => sum + action.bytes, 0),
+        expiresMs: 300_000,
+        requiresAdmin: actions.some((action) => action.requiresAdmin),
+        elevated: false,
+      };
+    },
+
+    async systemExecute(
+      _token: string,
+      onEvent: (event: SystemEvent) => void,
+    ): Promise<SystemCleanReport> {
+      const actions = mockSystemActions().slice(0, 3);
+      onEvent({ type: "started", total: actions.length });
+      const results: SystemActionResult[] = [];
+      actions.forEach((action, index) => {
+        onEvent({ type: "actionStarted", id: action.id, index, total: actions.length });
+        const freedBytes = action.bytes;
+        results.push({
+          id: action.id,
+          success: true,
+          freedBytes,
+          deletedFiles: action.fileCount,
+          skipped: 0,
+          skippedSample: [],
+          exitCode: null,
+          logTail: null,
+          durationMs: 120,
+          errorCode: null,
+        });
+        onEvent({
+          type: "actionFinished",
+          id: action.id,
+          success: true,
+          freedBytes,
+          skipped: 0,
+        });
+      });
+      const freedBytes = results.reduce((sum, result) => sum + result.freedBytes, 0);
+      onEvent({ type: "finished", freedBytes, cancelled: false });
+      const finishedAt = new Date().toISOString();
+      return {
+        results,
+        freedBytes,
+        cancelled: false,
+        startedAt: finishedAt,
+        finishedAt,
+        elevated: false,
+      };
+    },
+
+    async systemCancel(): Promise<void> {
+      return;
+    },
+
+    async systemRestartElevated(): Promise<void> {
+      // The browser preview cannot elevate; the UI shows the same message a
+      // dismissed UAC prompt would produce.
+      throw { code: "AccessDenied", message: "Simulated (browser preview)" };
+    },
+
+    async systemLaunchCleanmgr(_mode: "dialog" | "sageset" | "sagerun"): Promise<void> {
+      return;
+    },
+
+    async getSystemAutomation(): Promise<SystemAutomationConfig> {
+      return { ...memorySystemAutomation };
+    },
+
+    async setSystemAutomation(config: SystemAutomationConfig): Promise<SystemAutomationConfig> {
+      memorySystemAutomation = { ...config, installed: config.enabled };
+      return { ...memorySystemAutomation };
+    },
+
+    async removeSystemAutomation(): Promise<SystemAutomationConfig> {
+      memorySystemAutomation = {
+        enabled: false,
+        frequency: "weekly",
+        time: "12:00",
+        weekday: 0,
+        profile: "quick",
+        installed: false,
+        lastRun: null,
+        lastFreedBytes: null,
+      };
+      return { ...memorySystemAutomation };
+    },
+
+    async takeLaunchView(): Promise<string | null> {
+      return null;
     },
 
     async getOfficialActionHistory(_limit = 200): Promise<ActionAuditRecord[]> {

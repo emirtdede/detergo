@@ -27,6 +27,12 @@ import {
   SupportBundle,
   SupportBundleRequest,
   SupportMailResult,
+  SystemActionId,
+  SystemAutomationConfig,
+  SystemCleanReport,
+  SystemEvent,
+  SystemPreview,
+  SystemScanReport,
 } from "@/types";
 
 export function isTauriEnvironment(): boolean {
@@ -78,6 +84,21 @@ export interface ScannerApi {
   clearCleanupsHistory(): Promise<void>;
   clearActionsHistory(): Promise<void>;
   getGrowthReport(): Promise<GrowthReport>;
+  /** Measures every Windows cleanup action and the system drive space. */
+  systemScan(): Promise<SystemScanReport>;
+  /** Confirms the exact action set and returns a short-lived token. */
+  systemPreview(actionIds: SystemActionId[]): Promise<SystemPreview>;
+  systemExecute(token: string, onEvent: (event: SystemEvent) => void): Promise<SystemCleanReport>;
+  systemCancel(): Promise<void>;
+  /** Relaunches the app elevated; the current process exits on success. */
+  systemRestartElevated(): Promise<void>;
+  /** Opens native Windows Disk Cleanup (`cleanmgr /d c:`, `/sageset:1`, or `/sagerun:1`). */
+  systemLaunchCleanmgr(mode: "dialog" | "sageset" | "sagerun"): Promise<void>;
+  getSystemAutomation(): Promise<SystemAutomationConfig>;
+  setSystemAutomation(config: SystemAutomationConfig): Promise<SystemAutomationConfig>;
+  removeSystemAutomation(): Promise<SystemAutomationConfig>;
+  /** View requested by `--open-view`, e.g. the elevated relaunch. */
+  takeLaunchView(): Promise<string | null>;
   getAppSettings(): Promise<AppSettings>;
   saveAppSettings(settings: AppSettings): Promise<AppSettings>;
   /** Deletes settings and local history; refuses while a scan/cleanup runs. */
@@ -252,6 +273,51 @@ const realApi: ScannerApi = {
 
   async getGrowthReport(): Promise<GrowthReport> {
     return await invoke<GrowthReport>("get_growth_report");
+  },
+
+  async systemScan(): Promise<SystemScanReport> {
+    return await invoke<SystemScanReport>("system_scan");
+  },
+
+  async systemPreview(actionIds: SystemActionId[]): Promise<SystemPreview> {
+    return await invoke<SystemPreview>("system_preview", { actionIds });
+  },
+
+  async systemExecute(
+    token: string,
+    onEvent: (event: SystemEvent) => void,
+  ): Promise<SystemCleanReport> {
+    const channel = new Channel<SystemEvent>();
+    channel.onmessage = (event: SystemEvent) => onEvent(event);
+    return await invoke<SystemCleanReport>("system_execute", { token, onEvent: channel });
+  },
+
+  async systemCancel(): Promise<void> {
+    await invoke("system_cancel");
+  },
+
+  async systemRestartElevated(): Promise<void> {
+    await invoke("system_restart_elevated");
+  },
+
+  async systemLaunchCleanmgr(mode: "dialog" | "sageset" | "sagerun"): Promise<void> {
+    await invoke("system_launch_cleanmgr", { mode });
+  },
+
+  async getSystemAutomation(): Promise<SystemAutomationConfig> {
+    return await invoke<SystemAutomationConfig>("get_system_automation");
+  },
+
+  async setSystemAutomation(config: SystemAutomationConfig): Promise<SystemAutomationConfig> {
+    return await invoke<SystemAutomationConfig>("set_system_automation", { config });
+  },
+
+  async removeSystemAutomation(): Promise<SystemAutomationConfig> {
+    return await invoke<SystemAutomationConfig>("remove_system_automation");
+  },
+
+  async takeLaunchView(): Promise<string | null> {
+    return await invoke<string | null>("take_launch_view");
   },
 
   async getAppSettings(): Promise<AppSettings> {

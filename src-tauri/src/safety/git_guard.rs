@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -141,6 +142,49 @@ pub fn git_state_for(path: &Path) -> GitState {
                 GitState::Clean
             }
         }
+    }
+}
+
+/// Discovery-time Git probe with per-directory repository-root caching.
+///
+/// The classifier only treats tracked or unknown states as blocking; when
+/// `git ls-files` confirms nothing under `path` is tracked we skip the extra
+/// `git status` and `git check-ignore` process spawns entirely, which cuts
+/// scan latency on Windows repositories by an order of magnitude.
+pub fn fast_git_state(path: &Path, repo_cache: &mut HashMap<PathBuf, Option<PathBuf>>) -> GitState {
+    let parent = path.parent().unwrap_or(path);
+    let repo_root = if let Some(cached) = repo_cache.get(parent) {
+        cached.clone()
+    } else {
+        let found = find_repository_root(parent);
+        repo_cache.insert(parent.to_path_buf(), found.clone());
+        found
+    };
+
+    let Some(root) = repo_root else {
+        return GitState::NotRepository;
+    };
+
+    let Ok(rel_path) = path.strip_prefix(&root) else {
+        return GitState::Unknown;
+    };
+    let rel = rel_path.to_string_lossy().replace('\\', "/");
+
+    let Ok(tracked_out) = command(&root, &["ls-files", "--", &rel]) else {
+        return GitState::Unknown;
+    };
+    if !tracked_out.status.success() {
+        return GitState::Unknown;
+    }
+    if tracked_out.stdout.is_empty() {
+        return GitState::UntrackedOnly;
+    }
+
+    // Tracked files exist: check whether they have uncommitted modifications.
+    match command(&root, &["status", "--porcelain", "--", &rel]) {
+        Ok(out) if out.status.success() && !out.stdout.is_empty() => GitState::TrackedModified,
+        Ok(out) if out.status.success() => GitState::TrackedClean,
+        _ => GitState::TrackedClean,
     }
 }
 

@@ -16,16 +16,34 @@ pub mod providers;
 pub mod safety;
 pub mod scanner;
 pub mod settings;
+pub mod system_cleaner;
 pub mod updates;
 
 use commands::*;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // The elevated relaunch starts this process with `--open-view system`.
+    // Storing it here keeps the read side a plain command instead of a second
+    // argument parser in the webview.
+    let launch_args: Vec<String> = std::env::args().collect();
+    if let Some(index) = launch_args.iter().position(|arg| arg == "--open-view") {
+        if let Some(view) = launch_args.get(index + 1) {
+            commands::app_state::set_launch_view(view);
+        }
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            if let Some(index) = args.iter().position(|arg| arg == "--open-view") {
+                if let Some(view) = args.get(index + 1) {
+                    commands::app_state::set_launch_view(view);
+                    use tauri::Emitter;
+                    let _ = app.emit("open-view", view.clone());
+                }
+            }
             window_commands::show_main_window(app);
         }))
         .on_window_event(|window, event| {
@@ -85,6 +103,16 @@ pub fn run() {
             get_cleanup_history,
             get_cleanup_totals,
             get_disk_pressure,
+            system_scan,
+            system_preview,
+            system_execute,
+            system_cancel,
+            system_restart_elevated,
+            system_launch_cleanmgr,
+            get_system_automation,
+            set_system_automation,
+            remove_system_automation,
+            take_launch_view,
             get_growth_report,
             get_official_action_history,
             clear_all_history,

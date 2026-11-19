@@ -16,6 +16,7 @@ date.
 | 6 | [`security/SECURITY_MODEL.md`](security/SECURITY_MODEL.md) | Trust boundaries, protected paths and the deletion contract. |
 | 7 | [`security/FINAL_SECURITY_AUDIT.md`](security/FINAL_SECURITY_AUDIT.md) | Executed security evidence (path, MCP and webhook scenarios). |
 | 8 | [`CLI.md`](CLI.md) | Terminal reference: commands, exit codes, JSON, webhooks and npkill migration. |
+| 9 | [`SYSTEM_CLEANER.md`](SYSTEM_CLEANER.md) | C: drive cleaner: audited roots, elevation, Disk Cleanup, DISM and scheduled runs. |
 | 9 | [`architecture/SCAN_HISTORY_MIGRATION.md`](architecture/SCAN_HISTORY_MIGRATION.md) | Where scan history lives and the migration path. |
 | 10 | [`architecture/NOTIFICATIONS.md`](architecture/NOTIFICATIONS.md) | How notifications surface and what the fallback is. |
 | 11 | [`audit/2026-11-17-pre-deployment-qa-audit-v3.md`](audit/2026-11-17-pre-deployment-qa-audit-v3.md) | Final pre-deployment audit: findings, fixes and the re-run evidence. |

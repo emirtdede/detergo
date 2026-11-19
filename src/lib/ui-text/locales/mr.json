@@ -8,6 +8,7 @@
     "about": "बद्दल",
     "agents": "एआय साधने",
     "caches": "साधन कॅशे",
+    "system": "System cleaner",
     "docs": "दस्तऐवज",
     "github": "GitHub",
     "sponsor": "Sponsor"
@@ -590,7 +591,12 @@
     "profileMaximumHint": "No practical limit. Slow and disk-heavy; use it for a one-off audit.",
     "profileDialogHint": "A profile only pre-fills the limits below; you can still fine-tune them.",
     "securityOpen": "Open security settings",
-    "profileDefaultBadge": "Default"
+    "profileDefaultBadge": "Default",
+    "profileFull": "Full",
+    "profileFullHint": "Scans complete workspaces and large repositories with generous limits.",
+    "groupPreferences": "Preferences",
+    "groupSafety": "Safety & Integrations",
+    "groupMaintenance": "Maintenance & Support"
   },
   "legal": {
     "docTabsLabel": "कायदेशीर दस्तऐवज",
@@ -669,7 +675,9 @@
     "navCatalog": "Rule catalog",
     "navHealth": "Updates & health",
     "navContacts": "Contact",
-    "navLegal": "Legal"
+    "navLegal": "Legal",
+    "healthTitle": "System health & storage",
+    "healthSubtitle": "Audit totals, last snapshot age and local storage integrity."
   },
   "docs": {
     "catGuide": "मार्गदर्शक आणि आर्किटेक्चर",
@@ -767,7 +775,8 @@
     "notes": "Release notes",
     "download": "Open the download page",
     "failed": "Could not reach the update server. Check your connection and try again.",
-    "privacy": "Runs only when you press the button. It asks api.github.com for the latest release tag and sends nothing about your device."
+    "privacy": "Runs only when you press the button. It asks api.github.com for the latest release tag and sends nothing about your device.",
+    "latestVersion": "Latest version"
   },
   "diagnostics": {
     "title": "Error log",
@@ -792,5 +801,64 @@
     "clearAll": "Clear logs",
     "noSystem": "No system messages recorded.",
     "notSent": "Never uploaded automatically."
+  },
+  "system": {
+    "title": "C: drive cleaner",
+    "subtitle": "Clear Windows temp folders, Prefetch data and update leftovers. Your projects, documents and Downloads are never touched.",
+    "quickClean": "Quick clean",
+    "cleanSelected": "Clean selected",
+    "selectAll": "Select all",
+    "clearSelection": "Clear selection",
+    "reclaimable": "Reclaimable",
+    "freed": "Freed",
+    "notMeasured": "Not measured",
+    "windowsReported": "Reported by Windows",
+    "adminBadge": "Administrator",
+    "adminTitle": "Administrator rights are needed",
+    "adminBody": "Windows blocks system folders for standard users. Restart the app as administrator to clean them; your selection is kept.",
+    "restartAdmin": "Restart as administrator",
+    "elevated": "Running as administrator",
+    "confirmTitle": "Delete the selected system files?",
+    "confirmBody": "They are removed permanently, not moved to the Recycle Bin. Items marked as regenerable are rebuilt by Windows automatically.",
+    "stopAfterStep": "Stop after the current Windows step",
+    "showLog": "Show Windows output",
+    "hideLog": "Hide Windows output",
+    "automatedTitle": "Automatic cleanup",
+    "automatedBody": "Windows Task Scheduler runs a quick cleanup on a schedule, with the highest rights your account allows and without any prompt. The app can remove the task again at any time.",
+    "frequency": "Frequency",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "time": "Time",
+    "weekday": "Day",
+    "scope": "Scope",
+    "scopeQuick": "Quick",
+    "scopeStandard": "Standard",
+    "scopeDeep": "Deep",
+    "saveSchedule": "Save schedule",
+    "removeSchedule": "Remove schedule",
+    "scheduleInstalled": "Scheduled task installed",
+    "scheduleMissing": "Windows has no task for this schedule. Save again to repair it.",
+    "scheduleSaved": "Schedule saved",
+    "scheduleRemoved": "Schedule removed",
+    "runNow": "Run now",
+    "lastRun": "Last run",
+    "never": "Never",
+    "actions": {
+      "userTemp": "Your temporary files",
+      "windowsTemp": "Windows temporary files",
+      "prefetch": "Prefetch data",
+      "windowsUpdate": "Windows Update leftovers",
+      "errorReports": "Windows error reports",
+      "recycleBin": "Recycle Bin",
+      "diskCleanup": "Windows Disk Cleanup",
+      "componentStore": "Component store cleanup"
+    },
+    "freeSpace": "Free space",
+    "cleanmgrTitle": "Windows Disk Cleanup (cleanmgr)",
+    "cleanmgrBody": "Launch the built-in Windows Disk Cleanup wizard or configure and run saved profile 1 without typing CMD commands.",
+    "cleanmgrOpen": "Open Disk Cleanup (C:)",
+    "cleanmgrConfigure": "Configure profile 1",
+    "cleanmgrRunProfile": "Run profile 1",
+    "cleanmgrLaunched": "Windows Disk Cleanup launched."
   }
 }

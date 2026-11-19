@@ -25,6 +25,7 @@ import { useUiStore } from "@/stores/ui-store";
 import { useUIText, resolveUiLocale } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { log } from "@/lib/logging";
+import { APP_VERSION } from "@/lib/app-version";
 import { countCatalogStats, type CatalogStats } from "@/lib/catalog-stats";
 import type { BuildInfo, CatalogDto } from "@/types";
 import { getLegalDocMeta, LEGAL_REVISION } from "@/features/legal/legal-content";
@@ -171,9 +172,19 @@ export const AboutView: React.FC<AboutViewProps> = ({
       : ui.settings.buildProfileDev
     : ui.settings.buildProfileUnknown;
 
-  if (aboutPane === "legal") {
-    return (
-      <div className="about-page">
+  const appVersion = buildInfo?.version ?? APP_VERSION;
+
+  const navItems = [
+    { id: "overview" as const, label: ui.about.navOverview, icon: <Sparkles size={15} /> },
+    { id: "catalog" as const, label: ui.about.navCatalog, icon: <Boxes size={15} /> },
+    { id: "health" as const, label: ui.about.navHealth, icon: <ShieldCheck size={15} /> },
+    { id: "contacts" as const, label: ui.about.navContacts, icon: <Mail size={15} /> },
+    { id: "legal" as const, label: ui.about.navLegal, icon: <ScrollText size={15} /> },
+  ];
+
+  const mainBody =
+    aboutPane === "legal" ? (
+      <div className="about-content">
         <div className="about-subview-header">
           <button
             type="button"
@@ -188,411 +199,420 @@ export const AboutView: React.FC<AboutViewProps> = ({
         </div>
         <LegalView />
       </div>
+    ) : (
+      <div className="about-content">
+        {aboutNav === "overview" && (
+          <>
+            {/* Shared Bento KPI Strip for About View — 100% Width */}
+            <div className="nc-bento-strip nc-bento-strip--4">
+              <div className="nc-kpi-card">
+                <div className="nc-kpi-card-header">
+                  <span className="nc-kpi-card-label">{ui.about.kpiVersion}</span>
+                  <span className="nc-kpi-card-icon nc-kpi-card-icon--accent">
+                    <Sparkles size={14} />
+                  </span>
+                </div>
+                <div className="nc-kpi-card-body">
+                  <span className="nc-kpi-card-value">v{appVersion}</span>
+                  <span className="nc-kpi-card-sub">
+                    {profileLabel} {ui.settings.buildProfile}
+                  </span>
+                </div>
+              </div>
+
+              <div className="nc-kpi-card">
+                <div className="nc-kpi-card-header">
+                  <span className="nc-kpi-card-label">{ui.about.kpiCatalog}</span>
+                  <span className="nc-kpi-card-icon nc-kpi-card-icon--success">
+                    <Boxes size={14} />
+                  </span>
+                </div>
+                <div className="nc-kpi-card-body">
+                  <span className="nc-kpi-card-value">
+                    {catalogStats.rules} {ui.settings.rules}
+                  </span>
+                  <span className="nc-kpi-card-sub">{ui.about.kpiRulesSub}</span>
+                </div>
+              </div>
+
+              <div className="nc-kpi-card">
+                <div className="nc-kpi-card-header">
+                  <span className="nc-kpi-card-label">{ui.about.kpiEco}</span>
+                  <span className="nc-kpi-card-icon nc-kpi-card-icon--purple">
+                    <Layers size={14} />
+                  </span>
+                </div>
+                <div className="nc-kpi-card-body">
+                  <span className="nc-kpi-card-value">
+                    {catalogStats.ecosystems} {ui.settings.ecosystems}
+                  </span>
+                  <span className="nc-kpi-card-sub">{ui.about.kpiEcoSub}</span>
+                </div>
+              </div>
+
+              <div className="nc-kpi-card">
+                <div className="nc-kpi-card-header">
+                  <span className="nc-kpi-card-label">{ui.about.kpiLicense}</span>
+                  <span className="nc-kpi-card-icon nc-kpi-card-icon--warning">
+                    <ScrollText size={14} />
+                  </span>
+                </div>
+                <div className="nc-kpi-card-body">
+                  <span className="nc-kpi-card-value">{ui.about.kpiLicenseValue}</span>
+                  <span className="nc-kpi-card-sub">{ui.about.kpiLicenseSub}</span>
+                </div>
+              </div>
+            </div>
+
+            <section className="about-workspace-grid about-workspace-grid--full">
+              <div className="about-bento-panel">
+                <div className="about-panel-header">
+                  <div className="about-panel-logo-clean">
+                    <VelliumLogo size={46} color="var(--accent)" />
+                  </div>
+                  <div className="about-panel-title-group">
+                    <h2 className="about-panel-title">{ui.settings.aboutTitleBy}</h2>
+                    <span className="about-panel-desc">{ui.settings.aboutTagline}</span>
+                  </div>
+                </div>
+
+                <div className="about-meta-list">
+                  <div className="about-meta-row">
+                    <span className="about-meta-label">{ui.about.appVersion}</span>
+                    <span className="about-meta-value">v{appVersion}</span>
+                  </div>
+                  <div className="about-meta-row">
+                    <span className="about-meta-label">{ui.about.gitCommitHash}</span>
+                    <span className="about-meta-value">
+                      {buildInfo ? buildInfo.commitShort : "—"}
+                    </span>
+                  </div>
+                  <div className="about-meta-row">
+                    <span className="about-meta-label">{ui.settings.buildProfile}</span>
+                    <span className="about-meta-value">{profileLabel}</span>
+                  </div>
+                  {builtAt && (
+                    <div className="about-meta-row">
+                      <span className="about-meta-label">{ui.about.builtAt}</span>
+                      <span className="about-meta-value">{builtAt}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="about-trust-strip">
+                  <ShieldCheck size={18} className="about-trust-icon" />
+                  <span>{ui.about.localSafeNote}</span>
+                </div>
+              </div>
+            </section>
+          </>
+        )}
+
+        {aboutNav === "catalog" && (
+          <>
+            <section className="about-workspace-grid about-workspace-grid--full">
+              <div className="about-bento-panel">
+                <div className="about-panel-header">
+                  <div className="about-panel-icon about-panel-icon--purple">
+                    <Code2 size={20} />
+                  </div>
+                  <div className="about-panel-title-group">
+                    <h2 className="about-panel-title">{ui.about.catalogTitle}</h2>
+                    <span className="about-panel-desc">
+                      {catalogStats.rules} {ui.settings.rules} · {catalogStats.categories}{" "}
+                      {ui.settings.categories} · {catalogStats.ecosystems} {ui.settings.ecosystems}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="about-rules-catalog-grid">
+                  {ecosystemGroups.map(([ecosystem, rules]) => {
+                    const meta = ecosystemMeta(ecosystem);
+                    return (
+                      <button
+                        key={ecosystem}
+                        type="button"
+                        className={`about-rule-card about-rule-card--button${
+                          selectedEcosystem === ecosystem ? " is-active" : ""
+                        }`}
+                        aria-expanded={selectedEcosystem === ecosystem}
+                        onClick={() =>
+                          showEcosystem(selectedEcosystem === ecosystem ? null : ecosystem)
+                        }
+                      >
+                        <div className="about-rule-head">
+                          <span
+                            className="about-rule-dot"
+                            style={{ backgroundColor: meta.color }}
+                          />
+                          <span className="about-rule-name">{meta.label}</span>
+                          {/* The badge carries the number only: "1 rules" reads wrong
+                              and a plural form per locale is not worth inventing. */}
+                          <span className="about-rule-badge" title={ui.settings.rules}>
+                            {rules.length}
+                          </span>
+                        </div>
+                        <span className="about-rule-scope">
+                          {rules.map((rule) => rule.names[0]).join(", ")}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {catalogRules.length === 0 && (
+                  <p className="about-catalog-empty">{ui.catalog.empty}</p>
+                )}
+
+                <div className="about-meta-list">
+                  <div className="about-meta-row">
+                    <span className="about-meta-label">{ui.about.catalogTitle}</span>
+                    <span className="about-meta-value">{ui.about.schemaVerified}</span>
+                  </div>
+                  <div className="about-meta-row">
+                    <span className="about-meta-label">{ui.about.safetyEngine}</span>
+                    <span className="about-meta-value" style={{ color: "var(--success)" }}>
+                      {ui.about.safetyActive}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* The explorer follows the summary cards: a count alone does not tell a
+                user what will actually be deleted, so every rule is listed here. */}
+            <section className="about-workspace-grid about-workspace-grid--full" ref={explorerRef}>
+              <CatalogExplorer
+                rules={catalogRules}
+                selected={selectedEcosystem}
+                onSelect={setSelectedEcosystem}
+              />
+            </section>
+          </>
+        )}
+
+        {aboutNav === "health" && (
+          <>
+            <UpdatePanel version={appVersion} />
+            <SystemHealthPanel />
+            <DiagnosticsPanel version={appVersion} />
+          </>
+        )}
+
+        {aboutNav === "contacts" && (
+          <section className="about-contacts-section">
+            <div className="about-panel-header">
+              <div className="about-panel-icon about-panel-icon--blue">
+                <Mail size={18} />
+              </div>
+              <div className="about-panel-title-group">
+                <h2 className="about-panel-title">{ui.about.contactsTitle}</h2>
+                <span className="about-panel-desc">{ui.about.contactsSubtitle}</span>
+              </div>
+            </div>
+
+            <div className="about-contacts-grid">
+              <a
+                href="mailto:contact@vellium.dev"
+                className="about-contact-card"
+                title="contact@vellium.dev"
+              >
+                <div className="about-contact-icon about-contact-icon--blue">
+                  <Mail size={16} />
+                </div>
+                <div className="about-contact-info">
+                  <span className="about-contact-label">{ui.about.contactGeneral}</span>
+                  <strong className="about-contact-email">contact@vellium.dev</strong>
+                  <span className="about-contact-desc">{ui.about.contactGeneralDesc}</span>
+                </div>
+              </a>
+
+              <a
+                href="mailto:billing@vellium.dev"
+                className="about-contact-card"
+                title="billing@vellium.dev"
+              >
+                <div className="about-contact-icon about-contact-icon--purple">
+                  <CreditCard size={16} />
+                </div>
+                <div className="about-contact-info">
+                  <span className="about-contact-label">{ui.about.contactBilling}</span>
+                  <strong className="about-contact-email">billing@vellium.dev</strong>
+                  <span className="about-contact-desc">{ui.about.contactBillingDesc}</span>
+                </div>
+              </a>
+
+              <a
+                href="mailto:legal@vellium.dev"
+                className="about-contact-card"
+                title="legal@vellium.dev"
+              >
+                <div className="about-contact-icon about-contact-icon--warning">
+                  <ScrollText size={16} />
+                </div>
+                <div className="about-contact-info">
+                  <span className="about-contact-label">{ui.about.contactLegal}</span>
+                  <strong className="about-contact-email">legal@vellium.dev</strong>
+                  <span className="about-contact-desc">{ui.about.contactLegalDesc}</span>
+                </div>
+              </a>
+
+              <a
+                href="mailto:privacy@vellium.dev"
+                className="about-contact-card"
+                title="privacy@vellium.dev"
+              >
+                <div className="about-contact-icon about-contact-icon--green">
+                  <Lock size={16} />
+                </div>
+                <div className="about-contact-info">
+                  <span className="about-contact-label">{ui.about.contactPrivacy}</span>
+                  <strong className="about-contact-email">privacy@vellium.dev</strong>
+                  <span className="about-contact-desc">{ui.about.contactPrivacyDesc}</span>
+                </div>
+              </a>
+
+              <a
+                href="mailto:security@vellium.dev"
+                className="about-contact-card"
+                title="security@vellium.dev"
+              >
+                <div className="about-contact-icon about-contact-icon--red">
+                  <ShieldAlert size={16} />
+                </div>
+                <div className="about-contact-info">
+                  <span className="about-contact-label">{ui.about.contactSecurity}</span>
+                  <strong className="about-contact-email">security@vellium.dev</strong>
+                  <span className="about-contact-desc">{ui.about.contactSecurityDesc}</span>
+                </div>
+              </a>
+
+              <a
+                href="mailto:support@vellium.dev"
+                className="about-contact-card"
+                title="support@vellium.dev"
+              >
+                <div className="about-contact-icon about-contact-icon--accent">
+                  <Headphones size={16} />
+                </div>
+                <div className="about-contact-info">
+                  <span className="about-contact-label">{ui.about.contactSupport}</span>
+                  <strong className="about-contact-email">support@vellium.dev</strong>
+                  <span className="about-contact-desc">{ui.about.contactSupportDesc}</span>
+                </div>
+              </a>
+            </div>
+          </section>
+        )}
+
+        {aboutNav === "legal" && (
+          <section className="about-legal-section">
+            <div className="about-panel-header">
+              <div className="about-panel-icon about-panel-icon--success">
+                <ScrollText size={18} />
+              </div>
+              <div className="about-panel-title-group">
+                <h2 className="about-panel-title">{ui.settings.aboutLegalTitle}</h2>
+                <span className="about-panel-desc">{ui.settings.aboutLegalHint}</span>
+              </div>
+            </div>
+
+            <div className="about-legal-cards-grid">
+              {legalDocs.map((doc) => (
+                <button
+                  key={doc.id}
+                  type="button"
+                  className="about-legal-btn"
+                  data-legal-doc={doc.id}
+                  onClick={() => {
+                    returnFocusDocRef.current = doc.id;
+                    openLegalDoc(doc.id);
+                  }}
+                >
+                  <div className="about-legal-btn-header">
+                    <span className="about-legal-btn-title">{doc.label}</span>
+                    <ChevronRight size={15} className="about-legal-btn-arrow" />
+                  </div>
+                  <p className="about-legal-btn-desc">{doc.hint}</p>
+                  <span className="about-legal-btn-rev">
+                    {ui.settings.aboutLegalRevision}:{" "}
+                    {LEGAL_REVISION[locale === "tr" ? "tr" : "en"]}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <footer className="about-footer-bar">
+              <span>
+                <Copyright
+                  size={12}
+                  style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }}
+                />
+                {new Date().getFullYear()} Vellium. {ui.settings.aboutCopyright}
+              </span>
+              <span>{ui.settings.aboutLocalFirst}</span>
+            </footer>
+          </section>
+        )}
+      </div>
     );
+
+  if (!isStandalone) {
+    return <div className="about-page">{mainBody}</div>;
   }
 
   return (
-    <div className="about-page">
-      {isStandalone && (
-        <PageHeader
-          title={ui.nav.about}
-          description={ui.settings.aboutHint}
-          actions={
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={<Globe size={13} />}
-              onClick={() => openUrl(VELLIUM_URL)}
-            >
-              {ui.settings.aboutVisit} <ExternalLink size={12} />
-            </Button>
-          }
-        />
-      )}
+    <div className="split-layout about-split-layout">
+      <aside className="split-sidebar" aria-label={ui.about.navTitle}>
+        <div className="split-sidebar-header">
+          <h2 className="split-sidebar-title">{ui.nav.about}</h2>
+          <p className="split-sidebar-subtitle">{ui.settings.aboutHint}</p>
+        </div>
 
-      <div className="about-layout">
-        <aside className="about-side-nav" aria-label={ui.about.navTitle}>
-          <span className="about-side-nav-title">{ui.about.navTitle}</span>
-          {(
-            [
-              ["overview", ui.about.navOverview, <Sparkles key="o" size={14} />],
-              ["catalog", ui.about.navCatalog, <Boxes key="c" size={14} />],
-              ["health", ui.about.navHealth, <ShieldCheck key="h" size={14} />],
-              ["contacts", ui.about.navContacts, <Mail key="m" size={14} />],
-              ["legal", ui.about.navLegal, <ScrollText key="l" size={14} />],
-            ] as const
-          ).map(([id, label, icon]) => (
-            <button
-              key={id}
-              type="button"
-              className={`about-side-nav-item ${aboutNav === id ? "is-active" : ""}`}
-              aria-current={aboutNav === id ? "page" : undefined}
-              onClick={() => setAboutNav(id)}
-            >
-              {icon}
-              <span>{label}</span>
-            </button>
-          ))}
-        </aside>
+        <div className="split-sidebar-scroll">
+          <div className="split-nav-group">
+            <span className="split-nav-group-title">{ui.about.navTitle}</span>
+            {navItems.map((item) => {
+              const active = aboutPane === "legal" ? item.id === "legal" : aboutNav === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`split-nav-link ${active ? "active" : ""}`}
+                  aria-current={active ? "page" : undefined}
+                  onClick={() => {
+                    if (aboutPane === "legal") closeLegalDoc();
+                    setAboutNav(item.id);
+                  }}
+                >
+                  <span className="split-nav-link-icon" aria-hidden="true">
+                    {item.icon}
+                  </span>
+                  <span className="split-nav-link-label">{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </aside>
 
-        <div className="about-content">
-          {aboutNav === "overview" && (
-            <>
-              {/* Shared Bento KPI Strip for About View — 100% Width */}
-              <div className="nc-bento-strip nc-bento-strip--4">
-                <div className="nc-kpi-card">
-                  <div className="nc-kpi-card-header">
-                    <span className="nc-kpi-card-label">{ui.about.kpiVersion}</span>
-                    <span className="nc-kpi-card-icon nc-kpi-card-icon--accent">
-                      <Sparkles size={14} />
-                    </span>
-                  </div>
-                  <div className="nc-kpi-card-body">
-                    <span className="nc-kpi-card-value">v{buildInfo?.version ?? "—"}</span>
-                    <span className="nc-kpi-card-sub">
-                      {profileLabel} {ui.settings.buildProfile}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="nc-kpi-card">
-                  <div className="nc-kpi-card-header">
-                    <span className="nc-kpi-card-label">{ui.about.kpiCatalog}</span>
-                    <span className="nc-kpi-card-icon nc-kpi-card-icon--success">
-                      <Boxes size={14} />
-                    </span>
-                  </div>
-                  <div className="nc-kpi-card-body">
-                    <span className="nc-kpi-card-value">
-                      {catalogStats.rules} {ui.settings.rules}
-                    </span>
-                    <span className="nc-kpi-card-sub">{ui.about.kpiRulesSub}</span>
-                  </div>
-                </div>
-
-                <div className="nc-kpi-card">
-                  <div className="nc-kpi-card-header">
-                    <span className="nc-kpi-card-label">{ui.about.kpiEco}</span>
-                    <span className="nc-kpi-card-icon nc-kpi-card-icon--purple">
-                      <Layers size={14} />
-                    </span>
-                  </div>
-                  <div className="nc-kpi-card-body">
-                    <span className="nc-kpi-card-value">
-                      {catalogStats.ecosystems} {ui.settings.ecosystems}
-                    </span>
-                    <span className="nc-kpi-card-sub">{ui.about.kpiEcoSub}</span>
-                  </div>
-                </div>
-
-                <div className="nc-kpi-card">
-                  <div className="nc-kpi-card-header">
-                    <span className="nc-kpi-card-label">{ui.about.kpiLicense}</span>
-                    <span className="nc-kpi-card-icon nc-kpi-card-icon--warning">
-                      <ScrollText size={14} />
-                    </span>
-                  </div>
-                  <div className="nc-kpi-card-body">
-                    <span className="nc-kpi-card-value">{ui.about.kpiLicenseValue}</span>
-                    <span className="nc-kpi-card-sub">{ui.about.kpiLicenseSub}</span>
-                  </div>
-                </div>
-              </div>
-
-              <section className="about-workspace-grid about-workspace-grid--full">
-                <div className="about-bento-panel">
-                  <div className="about-panel-header">
-                    <div className="about-panel-logo-clean">
-                      <VelliumLogo size={46} color="var(--accent)" />
-                    </div>
-                    <div className="about-panel-title-group">
-                      <h2 className="about-panel-title">{ui.settings.aboutTitleBy}</h2>
-                      <span className="about-panel-desc">{ui.settings.aboutTagline}</span>
-                    </div>
-                  </div>
-
-                  <div className="about-meta-list">
-                    <div className="about-meta-row">
-                      <span className="about-meta-label">{ui.about.appVersion}</span>
-                      <span className="about-meta-value">v{buildInfo?.version ?? "—"}</span>
-                    </div>
-                    <div className="about-meta-row">
-                      <span className="about-meta-label">{ui.about.gitCommitHash}</span>
-                      <span className="about-meta-value">
-                        {buildInfo ? buildInfo.commitShort : "—"}
-                      </span>
-                    </div>
-                    <div className="about-meta-row">
-                      <span className="about-meta-label">{ui.settings.buildProfile}</span>
-                      <span className="about-meta-value">{profileLabel}</span>
-                    </div>
-                    {builtAt && (
-                      <div className="about-meta-row">
-                        <span className="about-meta-label">{ui.about.builtAt}</span>
-                        <span className="about-meta-value">{builtAt}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="about-trust-strip">
-                    <ShieldCheck size={18} className="about-trust-icon" />
-                    <span>{ui.about.localSafeNote}</span>
-                  </div>
-                </div>
-              </section>
-            </>
-          )}
-
-          {aboutNav === "catalog" && (
-            <>
-              <section className="about-workspace-grid about-workspace-grid--full">
-                <div className="about-bento-panel">
-                  <div className="about-panel-header">
-                    <div className="about-panel-icon about-panel-icon--purple">
-                      <Code2 size={20} />
-                    </div>
-                    <div className="about-panel-title-group">
-                      <h2 className="about-panel-title">{ui.about.catalogTitle}</h2>
-                      <span className="about-panel-desc">
-                        {catalogStats.rules} {ui.settings.rules} · {catalogStats.categories}{" "}
-                        {ui.settings.categories} · {catalogStats.ecosystems}{" "}
-                        {ui.settings.ecosystems}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="about-rules-catalog-grid">
-                    {ecosystemGroups.map(([ecosystem, rules]) => {
-                      const meta = ecosystemMeta(ecosystem);
-                      return (
-                        <button
-                          key={ecosystem}
-                          type="button"
-                          className={`about-rule-card about-rule-card--button${
-                            selectedEcosystem === ecosystem ? " is-active" : ""
-                          }`}
-                          aria-expanded={selectedEcosystem === ecosystem}
-                          onClick={() =>
-                            showEcosystem(selectedEcosystem === ecosystem ? null : ecosystem)
-                          }
-                        >
-                          <div className="about-rule-head">
-                            <span
-                              className="about-rule-dot"
-                              style={{ backgroundColor: meta.color }}
-                            />
-                            <span className="about-rule-name">{meta.label}</span>
-                            {/* The badge carries the number only: "1 rules" reads wrong
-                                and a plural form per locale is not worth inventing. */}
-                            <span className="about-rule-badge" title={ui.settings.rules}>
-                              {rules.length}
-                            </span>
-                          </div>
-                          <span className="about-rule-scope">
-                            {rules.map((rule) => rule.names[0]).join(", ")}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {catalogRules.length === 0 && (
-                    <p className="about-catalog-empty">{ui.catalog.empty}</p>
-                  )}
-
-                  <div className="about-meta-list">
-                    <div className="about-meta-row">
-                      <span className="about-meta-label">{ui.about.catalogTitle}</span>
-                      <span className="about-meta-value">{ui.about.schemaVerified}</span>
-                    </div>
-                    <div className="about-meta-row">
-                      <span className="about-meta-label">{ui.about.safetyEngine}</span>
-                      <span className="about-meta-value" style={{ color: "var(--success)" }}>
-                        {ui.about.safetyActive}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              {/* The explorer follows the summary cards: a count alone does not tell a
-                  user what will actually be deleted, so every rule is listed here. */}
-              <section
-                className="about-workspace-grid about-workspace-grid--full"
-                ref={explorerRef}
+      <div className="split-content-pane">
+        <div className="split-content-inner">
+          <PageHeader
+            title={ui.nav.about}
+            description={ui.settings.aboutHint}
+            actions={
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<Globe size={13} />}
+                onClick={() => openUrl(VELLIUM_URL)}
               >
-                <CatalogExplorer
-                  rules={catalogRules}
-                  selected={selectedEcosystem}
-                  onSelect={setSelectedEcosystem}
-                />
-              </section>
-            </>
-          )}
-
-          {aboutNav === "health" && (
-            <>
-              <UpdatePanel version={buildInfo?.version ?? "—"} />
-              <SystemHealthPanel />
-              <DiagnosticsPanel version={buildInfo?.version ?? "—"} />
-            </>
-          )}
-
-          {aboutNav === "contacts" && (
-            <section className="about-contacts-section">
-              <div className="about-panel-header">
-                <div className="about-panel-icon about-panel-icon--blue">
-                  <Mail size={18} />
-                </div>
-                <div className="about-panel-title-group">
-                  <h2 className="about-panel-title">{ui.about.contactsTitle}</h2>
-                  <span className="about-panel-desc">{ui.about.contactsSubtitle}</span>
-                </div>
-              </div>
-
-              <div className="about-contacts-grid">
-                <a
-                  href="mailto:contact@vellium.dev"
-                  className="about-contact-card"
-                  title="contact@vellium.dev"
-                >
-                  <div className="about-contact-icon about-contact-icon--blue">
-                    <Mail size={16} />
-                  </div>
-                  <div className="about-contact-info">
-                    <span className="about-contact-label">{ui.about.contactGeneral}</span>
-                    <strong className="about-contact-email">contact@vellium.dev</strong>
-                    <span className="about-contact-desc">{ui.about.contactGeneralDesc}</span>
-                  </div>
-                </a>
-
-                <a
-                  href="mailto:billing@vellium.dev"
-                  className="about-contact-card"
-                  title="billing@vellium.dev"
-                >
-                  <div className="about-contact-icon about-contact-icon--purple">
-                    <CreditCard size={16} />
-                  </div>
-                  <div className="about-contact-info">
-                    <span className="about-contact-label">{ui.about.contactBilling}</span>
-                    <strong className="about-contact-email">billing@vellium.dev</strong>
-                    <span className="about-contact-desc">{ui.about.contactBillingDesc}</span>
-                  </div>
-                </a>
-
-                <a
-                  href="mailto:legal@vellium.dev"
-                  className="about-contact-card"
-                  title="legal@vellium.dev"
-                >
-                  <div className="about-contact-icon about-contact-icon--warning">
-                    <ScrollText size={16} />
-                  </div>
-                  <div className="about-contact-info">
-                    <span className="about-contact-label">{ui.about.contactLegal}</span>
-                    <strong className="about-contact-email">legal@vellium.dev</strong>
-                    <span className="about-contact-desc">{ui.about.contactLegalDesc}</span>
-                  </div>
-                </a>
-
-                <a
-                  href="mailto:privacy@vellium.dev"
-                  className="about-contact-card"
-                  title="privacy@vellium.dev"
-                >
-                  <div className="about-contact-icon about-contact-icon--green">
-                    <Lock size={16} />
-                  </div>
-                  <div className="about-contact-info">
-                    <span className="about-contact-label">{ui.about.contactPrivacy}</span>
-                    <strong className="about-contact-email">privacy@vellium.dev</strong>
-                    <span className="about-contact-desc">{ui.about.contactPrivacyDesc}</span>
-                  </div>
-                </a>
-
-                <a
-                  href="mailto:security@vellium.dev"
-                  className="about-contact-card"
-                  title="security@vellium.dev"
-                >
-                  <div className="about-contact-icon about-contact-icon--red">
-                    <ShieldAlert size={16} />
-                  </div>
-                  <div className="about-contact-info">
-                    <span className="about-contact-label">{ui.about.contactSecurity}</span>
-                    <strong className="about-contact-email">security@vellium.dev</strong>
-                    <span className="about-contact-desc">{ui.about.contactSecurityDesc}</span>
-                  </div>
-                </a>
-
-                <a
-                  href="mailto:support@vellium.dev"
-                  className="about-contact-card"
-                  title="support@vellium.dev"
-                >
-                  <div className="about-contact-icon about-contact-icon--accent">
-                    <Headphones size={16} />
-                  </div>
-                  <div className="about-contact-info">
-                    <span className="about-contact-label">{ui.about.contactSupport}</span>
-                    <strong className="about-contact-email">support@vellium.dev</strong>
-                    <span className="about-contact-desc">{ui.about.contactSupportDesc}</span>
-                  </div>
-                </a>
-              </div>
-            </section>
-          )}
-
-          {aboutNav === "legal" && (
-            <section className="about-legal-section">
-              <div className="about-panel-header">
-                <div className="about-panel-icon about-panel-icon--success">
-                  <ScrollText size={18} />
-                </div>
-                <div className="about-panel-title-group">
-                  <h2 className="about-panel-title">{ui.settings.aboutLegalTitle}</h2>
-                  <span className="about-panel-desc">{ui.settings.aboutLegalHint}</span>
-                </div>
-              </div>
-
-              <div className="about-legal-cards-grid">
-                {legalDocs.map((doc) => (
-                  <button
-                    key={doc.id}
-                    type="button"
-                    className="about-legal-btn"
-                    data-legal-doc={doc.id}
-                    onClick={() => {
-                      returnFocusDocRef.current = doc.id;
-                      openLegalDoc(doc.id);
-                    }}
-                  >
-                    <div className="about-legal-btn-header">
-                      <span className="about-legal-btn-title">{doc.label}</span>
-                      <ChevronRight size={15} className="about-legal-btn-arrow" />
-                    </div>
-                    <p className="about-legal-btn-desc">{doc.hint}</p>
-                    <span className="about-legal-btn-rev">
-                      {ui.settings.aboutLegalRevision}:{" "}
-                      {LEGAL_REVISION[locale === "tr" ? "tr" : "en"]}
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              <footer className="about-footer-bar">
-                <span>
-                  <Copyright
-                    size={12}
-                    style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }}
-                  />
-                  {new Date().getFullYear()} Vellium. {ui.settings.aboutCopyright}
-                </span>
-                <span>{ui.settings.aboutLocalFirst}</span>
-              </footer>
-            </section>
-          )}
+                {ui.settings.aboutVisit} <ExternalLink size={12} />
+              </Button>
+            }
+          />
+          {mainBody}
         </div>
       </div>
     </div>

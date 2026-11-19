@@ -160,7 +160,10 @@ export const SettingsDiagnostics: React.FC<SettingsDiagnosticsProps> = ({ versio
       if (result.mode === "draft") {
         showToast(ui.diagnostics.mailOpened, "success");
       } else if (result.mode === "mailto") {
-        showToast(ui.diagnostics.mailFallback, "warning");
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(created.path).catch(() => {});
+        }
+        showToast(ui.diagnostics.mailFallback, "warning", 7000);
       } else {
         showToast(ui.diagnostics.mailFailed, "error");
       }

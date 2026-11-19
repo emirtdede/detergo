@@ -30,6 +30,7 @@ import {
 } from "@/stores/scan-store";
 import { useSelectionStore } from "@/stores/selection-store";
 import { useCacheStore } from "@/stores/cache-store";
+import { useSystemStore } from "@/stores/system-store";
 import { AppView, useAppStore } from "@/stores/app-store";
 import { isGlobalShortcutBlocked, useUiStore } from "@/stores/ui-store";
 import { useUIText, getUIText, localizeAppError, loadUIText } from "@/lib/ui-text";
@@ -51,6 +52,9 @@ const AgentsView = lazy(() =>
 const CachesView = lazy(() =>
   import("@/features/caches/CachesView").then((m) => ({ default: m.CachesView })),
 );
+const SystemView = lazy(() =>
+  import("@/features/system/SystemView").then((m) => ({ default: m.SystemView })),
+);
 const DocsView = lazy(() =>
   import("@/features/docs/DocsView").then((m) => ({ default: m.DocsView })),
 );
@@ -69,6 +73,7 @@ const NAV_MAP: Record<string, AppView> = {
   navProjects: "projects",
   navAgents: "agents",
   navCaches: "caches",
+  navSystem: "system",
   navDocs: "docs",
   navHistory: "history",
   navSettings: "settings",
@@ -98,6 +103,37 @@ const AppShell: React.FC = () => {
       cancelled = true;
     };
   }, [preferencesLoaded, language]);
+
+  // The elevated relaunch starts a fresh process with `--open-view system`, and
+  // a second launch of the running app forwards the same argument as an event.
+  // Both paths land here so the user ends up on the page they asked for.
+  useEffect(() => {
+    let cancelled = false;
+    const applyView = (requested: string | null) => {
+      if (cancelled || !requested) return;
+      const match = (Object.values(NAV_MAP) as string[]).includes(requested);
+      if (match) useAppStore.getState().setView(requested as AppView);
+    };
+    scannerApi
+      .takeLaunchView()
+      .then(applyView)
+      .catch((err) => log.debug("No launch view to apply", err));
+
+    let unlisten: (() => void) | undefined;
+    void (async () => {
+      try {
+        const { listen } = await import("@tauri-apps/api/event");
+        unlisten = await listen<string>("open-view", (event) => applyView(event.payload));
+      } catch {
+        // Browser preview has no Tauri event bridge.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, []);
 
   // The keydown listener is registered once. These refs keep it pointing at the
   // current controller functions without re-registering the listener.
@@ -271,6 +307,15 @@ const AppShell: React.FC = () => {
             }
           } else if (appStore.view === "agents") {
             void startScanRef.current(undefined, "agents");
+          } else if (appStore.view === "system") {
+            // Mirror the Quick clean button: measure freely, but never delete
+            // without the confirmation dialog.
+            const system = useSystemStore.getState();
+            if (system.running) {
+              void system.cancel();
+            } else if (!system.loading && !system.previewing) {
+              void system.load();
+            }
           } else {
             const scope = useScanStore.getState().scope;
             void startScanRef.current(undefined, scope === "allDrives" ? "allDrives" : "project");
@@ -303,7 +348,13 @@ const AppShell: React.FC = () => {
         <main
           id="main"
           tabIndex={-1}
-          className={`view-container ${view === "docs" ? "view-container--docs" : ""}`}
+          className={`view-container ${
+            view === "docs"
+              ? "view-container--docs"
+              : view === "settings" || view === "about"
+                ? "view-container--split"
+                : ""
+          }`}
         >
           <PartialScanBanner />
           <ScanWarningsBanner />
@@ -313,6 +364,7 @@ const AppShell: React.FC = () => {
             {view === "projects" && <ProjectsView />}
             {view === "agents" && <AgentsView />}
             {view === "caches" && <CachesView />}
+            {view === "system" && <SystemView />}
             {view === "docs" && <DocsView />}
             {view === "history" && <HistoryView />}
             {view === "settings" && <SettingsView />}

@@ -37,6 +37,10 @@ use crate::settings::{
     AgentPolicy, AppSettings, CustomAgentProvider, FavoriteItem, NotificationChannel,
     NotificationPreferences, SortConfig,
 };
+use crate::system_cleaner::{
+    SystemActionId, SystemActionInfo, SystemActionResult, SystemAutomationConfig,
+    SystemCleanReport, SystemEvent, SystemPreview, SystemSafety, SystemScanReport,
+};
 use crate::updates::{UpdateAsset, UpdateInfo};
 
 /// Every type that crosses the IPC boundary, in a stable order.
@@ -81,6 +85,15 @@ pub fn collect() -> Types {
         .register::<SupportBundleRequest>()
         .register::<SupportBundle>()
         .register::<SupportMailResult>()
+        .register::<SystemActionId>()
+        .register::<SystemSafety>()
+        .register::<SystemActionInfo>()
+        .register::<SystemScanReport>()
+        .register::<SystemPreview>()
+        .register::<SystemEvent>()
+        .register::<SystemActionResult>()
+        .register::<SystemCleanReport>()
+        .register::<SystemAutomationConfig>()
         .register::<LastScanSnapshot>()
         .register::<CustomAgentProvider>()
         .register::<AgentPolicy>()

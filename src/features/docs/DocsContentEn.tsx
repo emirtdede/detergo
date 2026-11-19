@@ -18,6 +18,7 @@ import { NumberField } from "@/components/primitives/NumberField";
 import { McpIdeKey, mcpConfigs, webhookSampleJson } from "./docs-data";
 import { APP_VERSION } from "@/lib/app-version";
 import { McpIdeSelector } from "./McpIdeSelector";
+import { DocsCommandList } from "./DocsCommandList";
 import { useDocsT } from "./docs-i18n";
 import { useUIText } from "@/lib/ui-text";
 
@@ -33,7 +34,7 @@ function highlightBash(code: string): React.ReactNode[] {
         </span>
       );
     }
-    const regex = /(--[a-zA-Z0-9_-]+|-[a-zA-Z0-9]+|"[^"]*"|'[^']*'|\b(?:dev-cleaner|npm|nvm|pip|cargo|docker|powershell|git|New-ScheduledTaskAction|Register-ScheduledTask)\b|\d+)/g;
+    const regex = /(--[a-zA-Z0-9_-]+|\/[a-zA-Z0-9:_-]+|-[a-zA-Z0-9]+|"[^"]*"|'[^']*'|\b(?:dev-cleaner|cleanmgr|DISM\.exe|del|npm|nvm|pip|cargo|docker|powershell|git|New-ScheduledTaskAction|Register-ScheduledTask)\b|\d+)/g;
     const parts: React.ReactNode[] = [];
     let lastIndex = 0;
     let match: RegExpExecArray | null;
@@ -283,20 +284,31 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
               </div>
             </div>
 
-            <div className="docs-code-card">
-              <div className="docs-code-header">
-                <span className="docs-code-header-left">{t("Get Started with Terminal CLI in 5 Seconds")}</span>
-                <button
-                  type="button"
-                  className="docs-copy-action"
-                  onClick={() => copyToClipboard("dev-cleaner scan D:\\projects --scope all --auto-clean --dry-run", "qs-cli")}
-                >
-                  {copiedKey === "qs-cli" ? <Check size={13} /> : <Copy size={13} />}
-                  {copiedKey === "qs-cli" ? ui.docs.copied : ui.docs.copy}
-                </button>
-              </div>
-              <pre className="docs-code-pre">{highlightBash("dev-cleaner scan D:\\projects --scope all --auto-clean --dry-run")}</pre>
-            </div>
+            <DocsCommandList
+              title={t("Get Started with Terminal CLI in 5 Seconds")}
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel={ui.docs.copy}
+              copiedLabel={ui.docs.copied}
+              highlight={highlightBash}
+              items={[
+                {
+                  id: "qs-cli",
+                  label: t("Simulation mode (dry-run without modifying or removing any files)"),
+                  command: 'dev-cleaner scan "D:\\projects" --scope all --auto-clean --dry-run',
+                },
+                {
+                  id: "qs-combined",
+                  label: ui.common.scanAllDesc,
+                  command: 'dev-cleaner scan "D:\\projects" --scope combined',
+                },
+                {
+                  id: "qs-system",
+                  label: ui.system.title,
+                  command: "dev-cleaner system --list",
+                },
+              ]}
+            />
           </article>
         )}
 
@@ -360,20 +372,22 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
 
             <h2 className="docs-h2">{t("Method 2: Restoring via PowerShell Terminal")}</h2>
             <p className="docs-p">{t("To query and inspect items in the Recycle Bin without leaving your terminal:")}</p>
-            <div className="docs-code-card">
-              <div className="docs-code-header">
-                <span>{t("List Recently Deleted with PowerShell")}</span>
-                <button
-                  type="button"
-                  className="docs-copy-action"
-                  onClick={() => copyToClipboard('(New-Object -ComObject Shell.Application).Namespace(0xa).Items() | Select-Object Name, Path', 'rec-ps')}
-                >
-                  {copiedKey === 'rec-ps' ? <Check size={13} /> : <Copy size={13} />}
-                  {copiedKey === 'rec-ps' ? ui.docs.copied : ui.docs.copy}
-                </button>
-              </div>
-              <pre className="docs-code-pre">{highlightBash('(New-Object -ComObject Shell.Application).Namespace(0xa).Items() | Select-Object Name, Path')}</pre>
-            </div>
+            <DocsCommandList
+              title={t("List Recently Deleted with PowerShell")}
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel={ui.docs.copy}
+              copiedLabel={ui.docs.copied}
+              highlight={highlightBash}
+              items={[
+                {
+                  id: "rec-ps",
+                  label: t("List Recently Deleted with PowerShell"),
+                  command:
+                    "(New-Object -ComObject Shell.Application).Namespace(0xa).Items() | Select-Object Name, Path",
+                },
+              ]}
+            />
 
             <div className="docs-callout">
               <ShieldCheck className="docs-callout-icon" size={18} />
@@ -441,8 +455,31 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                 <span>{t("Why wasn't disk space freed immediately after cleanup?")}</span>
               </div>
               <p className="docs-faq-a">
-                  
-                  {t("By default safety design, deleted files are moved to the Recycle Bin. To reclaim raw drive capacity permanently, right-click the Recycle Bin icon on your desktop and select \"Empty Recycle Bin\".")}
+                {t("By default safety design, deleted files are moved to the Recycle Bin. To reclaim raw drive capacity permanently, right-click the Recycle Bin icon on your desktop and select \"Empty Recycle Bin\".")}
+              </p>
+            </div>
+
+            <div className="docs-faq-card">
+              <div className="docs-faq-q">
+                <HelpCircle size={16} className="text-accent" />
+                <span>What do the scan profiles (Fast, Balanced, Full, Thorough, Deep, Maximum) change?</span>
+              </div>
+              <p className="docs-faq-a">
+                Profiles only pre-fill maximum folder depth, candidate budget, and timeout limits.
+                Balanced is the default for day-to-day workspaces; choose Full, Thorough, or Deep for
+                large nested monorepos and full drives.
+              </p>
+            </div>
+
+            <div className="docs-faq-card">
+              <div className="docs-faq-q">
+                <HelpCircle size={16} className="text-accent" />
+                <span>Are error logs or diagnostics uploaded automatically?</span>
+              </div>
+              <p className="docs-faq-a">
+                Never. All logs remain strictly on your device. From Settings &gt; Error log you can
+                optionally zip your masked logs into one archive and open a ready mail draft to{" "}
+                <code>support@vellium.dev</code>; nothing is sent until you press Send in your mail app.
               </p>
             </div>
           </article>
@@ -490,53 +527,71 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
 
             <h2 className="docs-h2">{t("1. `dev-cleaner scan`")}</h2>
             <p className="docs-p">{t("Scans candidate project dependencies in the target directory or cleans them autonomously.")}</p>
-            <div className="docs-code-card">
-              <div className="docs-code-header">
-                <span>{t("Example Usage (")}{cliShell})</span>
-                <button
-                  type="button"
-                  className="docs-copy-action"
-                  onClick={() => copyToClipboard(
-                    cliShell === "bash"
-                      ? "dev-cleaner scan /d/projects --auto-clean --safety safe,regenerate"
-                      : "dev-cleaner scan \"D:\\projects\" --auto-clean --safety safe,regenerate",
-                    "cli-scan"
-                  )}
-                >
-                  {copiedKey === "cli-scan" ? <Check size={13} /> : <Copy size={13} />}
-                  {copiedKey === "cli-scan" ? ui.docs.copied : ui.docs.copy}
-                </button>
-              </div>
-              <pre className="docs-code-pre">
-                {cliShell === "bash"
-                  ? highlightBash(
-`# ${t("Standard scan with human-readable console summary")}
-dev-cleaner scan "/d/projects"
-
-# ${t("Autonomous cleanup (moves only safe and regenerate targets to Recycle Bin)")}
-dev-cleaner scan "/d/projects" --auto-clean --safety safe,regenerate
-
-# ${t("Simulation mode (dry-run without modifying or removing any files)")}
-dev-cleaner scan "/d/projects" --auto-clean --dry-run
-
-# ${t("Structured JSON output for CI/CD and script automation")}
-dev-cleaner scan "/d/projects" --json`
-                    )
-                  : highlightBash(
-`# ${t("Standard scan with human-readable console summary")}
-dev-cleaner scan "D:\\projects"
-
-# ${t("Autonomous cleanup (moves only safe and regenerate targets to Recycle Bin)")}
-dev-cleaner scan "D:\\projects" --auto-clean --safety safe,regenerate
-
-# ${t("Simulation mode (dry-run without modifying or removing any files)")}
-dev-cleaner scan "D:\\projects" --auto-clean --dry-run
-
-# ${t("Structured JSON output for CI/CD and script automation")}
-dev-cleaner scan "D:\\projects" --json`
-                    )}
-              </pre>
-            </div>
+            <DocsCommandList
+              title={`${t("Example Usage (")}${cliShell})`}
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel={ui.docs.copy}
+              copiedLabel={ui.docs.copied}
+              highlight={highlightBash}
+              items={
+                cliShell === "bash"
+                  ? [
+                      {
+                        id: "cli-scan-std",
+                        label: t("Standard scan with human-readable console summary"),
+                        command: 'dev-cleaner scan "/d/projects"',
+                      },
+                      {
+                        id: "cli-scan-auto",
+                        label: t(
+                          "Autonomous cleanup (moves only safe and regenerate targets to Recycle Bin)",
+                        ),
+                        command:
+                          'dev-cleaner scan "/d/projects" --auto-clean --safety safe,regenerate',
+                      },
+                      {
+                        id: "cli-scan-dry",
+                        label: t(
+                          "Simulation mode (dry-run without modifying or removing any files)",
+                        ),
+                        command: 'dev-cleaner scan "/d/projects" --auto-clean --dry-run',
+                      },
+                      {
+                        id: "cli-scan-json",
+                        label: t("Structured JSON output for CI/CD and script automation"),
+                        command: 'dev-cleaner scan "/d/projects" --json',
+                      },
+                    ]
+                  : [
+                      {
+                        id: "cli-scan-std",
+                        label: t("Standard scan with human-readable console summary"),
+                        command: 'dev-cleaner scan "D:\\projects"',
+                      },
+                      {
+                        id: "cli-scan-auto",
+                        label: t(
+                          "Autonomous cleanup (moves only safe and regenerate targets to Recycle Bin)",
+                        ),
+                        command:
+                          'dev-cleaner scan "D:\\projects" --auto-clean --safety safe,regenerate',
+                      },
+                      {
+                        id: "cli-scan-dry",
+                        label: t(
+                          "Simulation mode (dry-run without modifying or removing any files)",
+                        ),
+                        command: 'dev-cleaner scan "D:\\projects" --auto-clean --dry-run',
+                      },
+                      {
+                        id: "cli-scan-json",
+                        label: t("Structured JSON output for CI/CD and script automation"),
+                        command: 'dev-cleaner scan "D:\\projects" --json',
+                      },
+                    ]
+              }
+            />
 
             <div className="docs-table-wrapper">
               <table className="docs-table">
@@ -603,53 +658,92 @@ dev-cleaner scan "D:\\projects" --json`
 
             <h2 className="docs-h2">{t("2. `dev-cleaner caches`")}</h2>
             <p className="docs-p">{t("Queries package caches for 21 developer tools or purges them via official CLI commands.")}</p>
-            <div className="docs-code-card">
-              <div className="docs-code-header">
-                <span>{t("Cache Commands")}</span>
-                <button
-                  type="button"
-                  className="docs-copy-action"
-                  onClick={() => copyToClipboard("dev-cleaner caches --clean all --yes", "cli-cache")}
-                >
-                  {copiedKey === "cli-cache" ? <Check size={13} /> : <Copy size={13} />}
-                  {copiedKey === "cli-cache" ? ui.docs.copied : ui.docs.copy}
-                </button>
-              </div>
-              <pre className="docs-code-pre">
-                {highlightBash(
-`# ${t("List metrics for all supported package caches")}
-dev-cleaner caches
+            <DocsCommandList
+              title={t("Cache Commands")}
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel={ui.docs.copy}
+              copiedLabel={ui.docs.copied}
+              highlight={highlightBash}
+              items={[
+                {
+                  id: "cli-cache-list",
+                  label: t("List metrics for all supported package caches"),
+                  command: "dev-cleaner caches",
+                },
+                {
+                  id: "cli-cache-npm",
+                  label: t("Purge a specific tool cache (e.g., npm, pip, cargo, docker)"),
+                  command: "dev-cleaner caches --clean npm",
+                },
+                {
+                  id: "cli-cache-dry",
+                  label: t("Preview a full purge without deleting anything"),
+                  command: "dev-cleaner caches --clean all --dry-run",
+                },
+                {
+                  id: "cli-cache-all",
+                  label: t("Purge caches for all detected installed tools"),
+                  command: "dev-cleaner caches --clean all --yes",
+                },
+              ]}
+            />
 
-# ${t("Purge a specific tool cache (e.g., npm, pip, cargo, docker)")}
-dev-cleaner caches --clean npm
-
-# ${t("Preview a full purge without deleting anything")}
-dev-cleaner caches --clean all --dry-run
-
-# ${t("Purge caches for all detected installed tools")}
-dev-cleaner caches --clean all --yes`
-                )}
-              </pre>
-            </div>
+            <h2 className="docs-h2">3. `dev-cleaner system`</h2>
+            <p className="docs-p">{ui.system.subtitle}</p>
+            <DocsCommandList
+              title={ui.system.title}
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel={ui.docs.copy}
+              copiedLabel={ui.docs.copied}
+              highlight={highlightBash}
+              items={[
+                {
+                  id: "cli-sys-list",
+                  label: "List all C: drive cleanup actions and measured sizes",
+                  command: "dev-cleaner system --list",
+                },
+                {
+                  id: "cli-sys-dry",
+                  label: "Preview quick cleanup without deleting anything",
+                  command: "dev-cleaner system --clean quick --dry-run",
+                },
+                {
+                  id: "cli-sys-quick",
+                  label: "Run quick system cleanup (user temp + Windows Update leftovers)",
+                  command: "dev-cleaner system --clean quick --yes",
+                },
+                {
+                  id: "cli-sys-std",
+                  label: "Run standard system cleanup (Administrator recommended)",
+                  command: "dev-cleaner system --clean standard --yes",
+                },
+              ]}
+            />
 
             <h2 className="docs-h2">{t("3. `dev-cleaner history`")}</h2>
             <p className="docs-p">{t("Lists historical cleanup records and reclaimed bytes audit logs.")}</p>
-            <div className="docs-code-card">
-              <div className="docs-code-header">
-                <span className="docs-code-header-left">
-                  <Terminal size={13} /> terminal
-                </span>
-                <button
-                  type="button"
-                  className="docs-copy-action"
-                  onClick={() => copyToClipboard("dev-cleaner history --limit 15", "cli-history")}
-                >
-                  {copiedKey === "cli-history" ? <Check size={13} /> : <Copy size={13} />}
-                  {copiedKey === "cli-history" ? ui.docs.copied : ui.docs.copy}
-                </button>
-              </div>
-              <pre className="docs-code-pre">{highlightBash("dev-cleaner history --limit 15")}</pre>
-            </div>
+            <DocsCommandList
+              title="terminal"
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel={ui.docs.copy}
+              copiedLabel={ui.docs.copied}
+              highlight={highlightBash}
+              items={[
+                {
+                  id: "cli-history",
+                  label: "Show the 15 most recent cleanup records",
+                  command: "dev-cleaner history --limit 15",
+                },
+                {
+                  id: "cli-history-json",
+                  label: "Export cleanup history as JSON",
+                  command: "dev-cleaner history --limit 50 --json",
+                },
+              ]}
+            />
           </article>
         )}
 
@@ -768,6 +862,7 @@ dev-cleaner caches --clean all --yes`
                   <button
                     type="button"
                     className="docs-copy-action"
+                    onClick={() => copyToClipboard(generatedCliCommand, "gen-cli")}
                   >
                     {copiedKey === "gen-cli" ? <Check size={13} /> : <Copy size={13} />}
                     {copiedKey === "gen-cli" ? ui.docs.copied : t("Copy Command")}
@@ -842,22 +937,26 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             </div>
 
             <h2 className="docs-h2">{t("Starting the Server")}</h2>
-            <div className="docs-code-card">
-              <div className="docs-code-header">
-                <span className="docs-code-header-left">
-                  <Terminal size={13} /> terminal
-                </span>
-                <button
-                  type="button"
-                  className="docs-copy-action"
-                  onClick={() => copyToClipboard("dev-cleaner mcp", "mcp-start")}
-                >
-                  {copiedKey === "mcp-start" ? <Check size={13} /> : <Copy size={13} />}
-                  {copiedKey === "mcp-start" ? ui.docs.copied : ui.docs.copy}
-                </button>
-              </div>
-              <pre className="docs-code-pre">{highlightBash("dev-cleaner mcp")}</pre>
-            </div>
+            <DocsCommandList
+              title="MCP Server"
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel={ui.docs.copy}
+              copiedLabel={ui.docs.copied}
+              highlight={highlightBash}
+              items={[
+                {
+                  id: "mcp-start",
+                  label: "Start in standard read-only / preview mode",
+                  command: "dev-cleaner mcp",
+                },
+                {
+                  id: "mcp-start-destructive",
+                  label: "Start with destructive tools enabled (must also be enabled in Settings)",
+                  command: "dev-cleaner mcp --allow-destructive",
+                },
+              ]}
+            />
           </article>
         )}
 
@@ -1134,6 +1233,148 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
         )}
 
         {/* TOPIC 15: TROUBLESHOOTING (NEW!) */}
+        {activeTopicId === "system-cleaner" && (
+          <article className="docs-article">
+            <div className="docs-badge-row">
+              <span className="docs-category-pill">{t("Windows Maintenance")}</span>
+              <span className="docs-version-pill">{t("Guide")}</span>
+            </div>
+            <h1 className="docs-title">{t("C: Drive Cleaner & Scheduled Automation")}</h1>
+            <p className="docs-lead">
+              {t("Reclaim space on the system drive without typing a single command. Every action is measured before anything is deleted.")}
+            </p>
+
+            <h2 className="docs-h2">{t("What it cleans")}</h2>
+            <p>
+              {t("The cleaner covers your temporary files, Windows temporary files, Prefetch data, Windows Update leftovers, Windows error reports, the Recycle Bin, the Windows Disk Cleanup profile and the component store (WinSxS). Project folders, documents and Downloads sit outside every audited root and can never be selected.")}
+            </p>
+
+            <h2 className="docs-h2">{t("Administrator rights")}</h2>
+            <p>
+              {t("Windows blocks system folders for standard users. When an action needs elevation the page offers a single restart button; the app reopens on the same page with your selection intact. The app itself still starts without administrator rights, so scanning and cleaning your own files never needs a prompt.")}
+            </p>
+
+            <h2 className="docs-h2">{t("Safe by design")}</h2>
+            <p>
+              {t("The interface only sends action identifiers; paths are resolved and re-verified on the native side against a fixed audited list. Deletion never follows junctions or symbolic links, locked files are skipped and reported, and every run is written to the local audit history.")}
+            </p>
+
+            <div className="docs-callout docs-callout--info">
+              <Info className="docs-callout-icon" size={18} />
+              <div>
+                <p>{t("Nothing is uploaded. Sizes, logs and audit records stay on this device.")}</p>
+              </div>
+            </div>
+
+            <h2 className="docs-h2">{t("Automatic cleanup")}</h2>
+            <p>
+              {t("A Windows scheduled task can run the quick or standard profile daily or weekly. The task runs with the highest rights your account allows and asks nothing; remove the schedule from the same panel at any time. Prefetch, the Recycle Bin and the component store are never chosen automatically.")}
+            </p>
+
+            <h2 className="docs-h2">{t("Command line")}</h2>
+            <p className="docs-p">
+              {t("The same actions are available headlessly for scripts and CI: dev-cleaner system --list, dev-cleaner system --clean quick --yes, or --dry-run to measure only.")}
+            </p>
+            <DocsCommandList
+              title="Dev Cleaner System Cleaner CLI"
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel={ui.docs.copy}
+              copiedLabel={ui.docs.copied}
+              highlight={highlightBash}
+              items={[
+                {
+                  id: "sys-cli-list",
+                  label: "List all system actions and measurable sizes",
+                  command: "dev-cleaner system --list",
+                },
+                {
+                  id: "sys-cli-dry",
+                  label: "Preview quick cleanup without deleting anything",
+                  command: "dev-cleaner system --clean quick --dry-run",
+                },
+                {
+                  id: "sys-cli-quick",
+                  label: "Run quick cleanup (user temp + Windows Update leftovers)",
+                  command: "dev-cleaner system --clean quick --yes",
+                },
+                {
+                  id: "sys-cli-standard",
+                  label: "Run standard cleanup (Administrator: temp, Prefetch, WER)",
+                  command: "dev-cleaner system --clean standard --yes",
+                },
+                {
+                  id: "sys-cli-deep",
+                  label: "Run deep cleanup (includes Disk Cleanup & DISM WinSxS)",
+                  command: "dev-cleaner system --clean deep --yes",
+                },
+              ]}
+            />
+
+            <h2 className="docs-h2">Windows CMD Reference Commands (Administrator)</h2>
+            <p className="docs-p">
+              Dev Cleaner automates these tasks from the UI. If you prefer running them manually,
+              open Command Prompt as Administrator and copy any command below with one click:
+            </p>
+            <DocsCommandList
+              title="1. Windows Disk Cleanup (cleanmgr)"
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel={ui.docs.copy}
+              copiedLabel={ui.docs.copied}
+              highlight={highlightBash}
+              items={[
+                {
+                  id: "cmd-cleanmgr-c",
+                  label: "Open the standard Windows Disk Cleanup wizard for C:",
+                  command: "cleanmgr /d c:",
+                },
+                {
+                  id: "cmd-cleanmgr-sageset",
+                  label: "Configure automated cleanup profile 1 once",
+                  command: "cleanmgr /sageset:1",
+                },
+                {
+                  id: "cmd-cleanmgr-sagerun",
+                  label: "Run profile 1 unattended in the background",
+                  command: "cleanmgr /sagerun:1",
+                },
+              ]}
+            />
+
+            <DocsCommandList
+              title="2. Temporary Files (Temp), Prefetch & Windows Update (DISM)"
+              copiedKey={copiedKey}
+              onCopy={copyToClipboard}
+              copyLabel={ui.docs.copy}
+              copiedLabel={ui.docs.copied}
+              highlight={highlightBash}
+              items={[
+                {
+                  id: "cmd-del-user-temp",
+                  label: "Clear user temporary files (%TEMP%)",
+                  command: "del /q /f /s %TEMP%\\*",
+                },
+                {
+                  id: "cmd-del-win-temp",
+                  label: "Clear Windows temporary files (C:\\Windows\\Temp)",
+                  command: "del /q /f /s C:\\Windows\\Temp\\*",
+                },
+                {
+                  id: "cmd-del-prefetch",
+                  label: "Clear Windows Prefetch cache",
+                  command: "del /q /f /s C:\\Windows\\Prefetch\\*",
+                },
+                {
+                  id: "cmd-dism-winsxs",
+                  label: "Clean superseded Windows Update components (WinSxS via DISM)",
+                  command: "DISM.exe /Online /Cleanup-Image /StartComponentCleanup",
+                },
+              ]}
+            />
+          </article>
+        )}
+
         {activeTopicId === "troubleshooting" && (
           <article className="docs-article">
             <div className="docs-badge-row">

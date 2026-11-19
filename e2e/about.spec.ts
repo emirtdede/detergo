@@ -27,6 +27,13 @@ async function openAbout(page: Page) {
     .click();
 }
 
+async function openAboutSection(page: Page, name: string) {
+  await page
+    .locator(".about-split-layout .split-sidebar")
+    .getByRole("button", { name, exact: true })
+    .click();
+}
+
 test("About reports the real catalog size", async ({ page }) => {
   await openAbout(page);
 
@@ -34,12 +41,14 @@ test("About reports the real catalog size", async ({ page }) => {
   await expect(kpis.filter({ hasText: "Rule Catalog" })).toContainText(String(CATALOG_RULES));
   await expect(kpis.filter({ hasText: "Ecosystems" })).toContainText(String(CATALOG_ECOSYSTEMS));
 
-  // Every ecosystem contributes at least one summary card.
+  // Every ecosystem contributes at least one summary card inside the catalog pane.
+  await openAboutSection(page, "Rule catalog");
   await expect(page.locator(".about-rule-card--button")).toHaveCount(CATALOG_ECOSYSTEMS);
 });
 
 test("a catalog card opens the rules behind it", async ({ page }) => {
   await openAbout(page);
+  await openAboutSection(page, "Rule catalog");
 
   const explorer = page.locator(".about-catalog-explorer");
   await expect(explorer).toBeVisible();
@@ -62,16 +71,19 @@ test("a catalog card opens the rules behind it", async ({ page }) => {
   await expect(body).toContainText("Regenerate with");
 });
 
-test("the error log and update check sit next to the health panel", async ({ page }) => {
+test("the error log and update check sit together in Updates & health", async ({ page }) => {
   await openAbout(page);
+  await openAboutSection(page, "Updates & health");
 
-  const row = page.locator(".about-workspace-grid--three");
-  await expect(row.locator(".about-update-panel")).toBeVisible();
-  await expect(row.locator(".about-diagnostics-panel")).toBeVisible();
+  await expect(page.locator(".about-update-panel")).toBeVisible();
+  await expect(page.locator(".about-health-panel")).toBeVisible();
+  await expect(page.locator(".about-diagnostics-panel")).toBeVisible();
   // Local-only log: an untouched profile shows the "nothing recorded" state.
-  await expect(row.locator(".about-diagnostics-panel")).toContainText("No errors recorded.");
+  await expect(page.locator(".about-diagnostics-panel")).toContainText("No errors recorded.");
 
   // The check runs only on demand, so no request happens before the click.
-  const check = row.getByRole("button", { name: "Check for updates" });
+  const check = page.locator(".about-update-panel").getByRole("button", {
+    name: "Check for updates",
+  });
   await expect(check).toBeEnabled();
 });

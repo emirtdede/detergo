@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Lock,
   Wrench,
+  HardDrive,
 } from "lucide-react";
 import { translateDocs } from "./docs-i18n";
 
@@ -56,6 +57,13 @@ export function getDocsTopics(locale = "en"): DocTopic[] {
       category: "guide",
       icon: <HelpCircle size={14} />,
       keywords: ["faq", "sorular", "cevaplar", "questions", "node_modules", "target"],
+    },
+    {
+      id: "system-cleaner",
+      title: "C: Drive Cleaner & Scheduled Automation",
+      category: "guide",
+      icon: <HardDrive size={14} />,
+      keywords: ["system", "windows", "temp", "prefetch", "cleanmgr", "dism", "scheduler"],
     },
 
     // 2. Terminal & CLI

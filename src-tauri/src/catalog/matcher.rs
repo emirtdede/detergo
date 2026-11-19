@@ -137,7 +137,12 @@ pub fn classify(rule: &Rule, evidence: &Evidence) -> Classification {
     let mut safety = rule.safety;
     let mut confidence = rule.confidence;
 
-    if !rule.markers.is_empty() && evidence.marker_hits.is_empty() {
+    // Non-generic targets with internal content signatures (for example a real
+    // `node_modules` containing `.package-lock.json` or `.pnpm` inside a
+    // scanned monorepo subfolder whose root `package.json` sits above the scan
+    // boundary) are still positively verified by their content signatures.
+    let satisfied_by_content = !rule.generic_name && !evidence.content_hits.is_empty();
+    if !rule.markers.is_empty() && evidence.marker_hits.is_empty() && !satisfied_by_content {
         warnings.push("NO_PROJECT_MARKER".to_string());
         safety = SafetyClass::Review;
         confidence = Confidence::Low;

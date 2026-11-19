@@ -5,6 +5,7 @@ export type AppView =
   | "projects"
   | "agents"
   | "caches"
+  | "system"
   | "docs"
   | "history"
   | "settings"

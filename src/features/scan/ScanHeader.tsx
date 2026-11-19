@@ -604,6 +604,7 @@ export const ScanHeader: React.FC = () => {
                     role="menuitem"
                     className="location-menu-item"
                     onClick={handleStartFullScan}
+                    title={ui.common.scanAllDesc}
                   >
                     <div className="location-menu-item-info">
                       <span className="location-menu-item-title">{ui.common.scanAll}</span>

@@ -7,6 +7,7 @@ import { useUIText } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { log } from "@/lib/logging";
 import { RELEASES_URL } from "@/lib/links";
+import { APP_VERSION } from "@/lib/app-version";
 import type { UpdateInfo } from "@/types";
 
 type CheckState =
@@ -17,6 +18,8 @@ type CheckState =
 
 interface UpdatePanelProps {
   version: string;
+  /** Hides the inner card header when the parent section already renders one. */
+  hideHeader?: boolean;
 }
 
 /**
@@ -27,10 +30,12 @@ interface UpdatePanelProps {
  * page. Nothing is downloaded or installed automatically, so the "no silent
  * network request" promise stays true: the request happens only after a click.
  */
-export const UpdatePanel: React.FC<UpdatePanelProps> = ({ version }) => {
+export const UpdatePanel: React.FC<UpdatePanelProps> = ({ version, hideHeader = false }) => {
   const ui = useUIText();
   const showToast = useUiStore((s) => s.showToast);
   const [state, setState] = useState<CheckState>({ kind: "idle" });
+
+  const displayVersion = version && version !== "—" ? version : APP_VERSION;
 
   const check = async () => {
     setState({ kind: "checking" });
@@ -55,24 +60,26 @@ export const UpdatePanel: React.FC<UpdatePanelProps> = ({ version }) => {
 
   return (
     <section className="about-bento-panel about-update-panel">
-      <div className="about-panel-header">
-        <div className="about-panel-icon about-panel-icon--accent">
-          <Rocket size={18} />
+      {!hideHeader && (
+        <div className="about-panel-header">
+          <div className="about-panel-icon about-panel-icon--accent">
+            <Rocket size={18} />
+          </div>
+          <div className="about-panel-title-group">
+            <h2 className="about-panel-title">{ui.updates.title}</h2>
+            <span className="about-panel-desc">{ui.updates.hint}</span>
+          </div>
         </div>
-        <div className="about-panel-title-group">
-          <h2 className="about-panel-title">{ui.updates.title}</h2>
-          <span className="about-panel-desc">{ui.updates.hint}</span>
-        </div>
-      </div>
+      )}
 
       <div className="about-meta-list">
         <div className="about-meta-row">
           <span className="about-meta-label">{ui.about.appVersion}</span>
-          <span className="about-meta-value">v{version}</span>
+          <span className="about-meta-value">v{displayVersion}</span>
         </div>
-        {info && info.latestVersion !== version && (
+        {info && (
           <div className="about-meta-row">
-            <span className="about-meta-label">{ui.settings.version}</span>
+            <span className="about-meta-label">{ui.updates.latestVersion}</span>
             <span className="about-meta-value">v{info.latestVersion}</span>
           </div>
         )}

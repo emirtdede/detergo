@@ -8,6 +8,20 @@ use crate::last_scan::LastScanRepository;
 use crate::scanner::cancellation::CancellationToken;
 use crate::scanner::session::ScanRegistry;
 use crate::settings::SettingsRepository;
+use crate::system_cleaner::schedule::SystemAutomationRepository;
+
+/// A view requested on the command line, e.g. by the elevated relaunch.
+static LAUNCH_VIEW: Mutex<Option<String>> = Mutex::new(None);
+
+pub fn set_launch_view(view: &str) {
+    if let Ok(mut slot) = LAUNCH_VIEW.lock() {
+        *slot = Some(view.to_string());
+    }
+}
+
+pub fn take_launch_view() -> Option<String> {
+    LAUNCH_VIEW.lock().ok().and_then(|mut slot| slot.take())
+}
 
 pub struct AppState {
     pub registry: ScanRegistry,
@@ -27,6 +41,12 @@ pub struct AppState {
     /// the slot is occupied, and `cancel_cleanup` uses the token to stop the
     /// current run between items.
     pub cleanup_token: Mutex<Option<CancellationToken>>,
+    /// Held while a system cleanup runs. Separate from `cleanup_token` so the
+    /// two features cannot cancel each other.
+    pub system_token: Mutex<Option<CancellationToken>>,
+    pub system_preview:
+        Mutex<Option<crate::commands::system_cleaner_commands::PendingSystemPreview>>,
+    pub system_automation: SystemAutomationRepository,
 }
 
 impl AppState {
@@ -47,6 +67,9 @@ impl AppState {
             cache_token: Mutex::new(None),
             preview_token: Mutex::new(None),
             cleanup_token: Mutex::new(None),
+            system_token: Mutex::new(None),
+            system_preview: Mutex::new(None),
+            system_automation: SystemAutomationRepository::new(),
         }
     }
 
@@ -81,6 +104,8 @@ impl AppState {
             Some("cache measurement")
         } else if is_active(&self.preview_token) {
             Some("cache preview")
+        } else if is_active(&self.system_token) {
+            Some("system cleanup")
         } else {
             None
         }

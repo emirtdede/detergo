@@ -1,11 +1,11 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 
 /// Free/total space for one local volume. The frontend turns this into a
 /// localized "disk is almost full" notification; the backend only reports
 /// facts so the threshold stays a presentation concern.
 #[cfg_attr(feature = "bindings", derive(specta::Type))]
-#[derive(Debug, Clone, Serialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct DiskSpaceInfo {
     pub drive: String,

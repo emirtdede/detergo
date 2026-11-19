@@ -97,17 +97,108 @@ mod win {
         facts(path).map(|f| f.identity)
     }
 
-    pub fn is_reparse_point(path: &Path) -> bool {
-        use std::os::windows::fs::MetadataExt;
-        match std::fs::symlink_metadata(path) {
-            Ok(meta) => {
-                if meta.file_type().is_symlink() {
-                    return true;
-                }
-                meta.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT.0 != 0
-            }
-            Err(_) => true,
+    /// Reparse tags that transparently store or compress files in-place on the
+    /// same volume without redirecting traversal to another directory tree.
+    ///
+    /// - `IO_REPARSE_TAG_WOF` (0x80000017): Windows Overlay Filter (CompactOS).
+    /// - `IO_REPARSE_TAG_DEDUP` (0x80000013): NTFS Data Deduplication.
+    /// - `IO_REPARSE_TAG_CLOUD*` (0x9000_X01A): Cloud Files (OneDrive / iCloud)
+    ///   when hydrated locally (offline/recall attributes are checked separately).
+    fn is_transparent_reparse_tag(tag: u32) -> bool {
+        const IO_REPARSE_TAG_DEDUP: u32 = 0x8000_0013;
+        const IO_REPARSE_TAG_WOF: u32 = 0x8000_0017;
+        const IO_REPARSE_TAG_CLOUD_MASK: u32 = 0xFFFF_0FFF;
+        const IO_REPARSE_TAG_CLOUD_BASE: u32 = 0x9000_001A;
+
+        tag == IO_REPARSE_TAG_WOF
+            || tag == IO_REPARSE_TAG_DEDUP
+            || (tag & IO_REPARSE_TAG_CLOUD_MASK) == IO_REPARSE_TAG_CLOUD_BASE
+    }
+
+    fn is_bare_drive_root(path: &Path) -> bool {
+        let s = path.to_string_lossy();
+        let stripped = s.strip_prefix(r"\\?\").unwrap_or(&s);
+        let bytes = stripped.as_bytes();
+        (bytes.len() == 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':')
+            || (bytes.len() == 3
+                && bytes[0].is_ascii_alphabetic()
+                && bytes[1] == b':'
+                && (bytes[2] == b'\\' || bytes[2] == b'/'))
+    }
+
+    /// Reads the NTFS reparse tag via `FindFirstFileW` (using a `\\?\` verbatim
+    /// path so paths longer than `MAX_PATH` succeed).
+    fn query_reparse_tag(path: &Path) -> Option<u32> {
+        use windows::Win32::Storage::FileSystem::{FindClose, FindFirstFileW, WIN32_FIND_DATAW};
+
+        let mut wide_path = super::super::wide_verbatim(path);
+        // `FindFirstFileW` rejects a trailing backslash on non-root directories.
+        while wide_path.len() > 2 && wide_path[wide_path.len() - 2] == '\\' as u16 {
+            wide_path.remove(wide_path.len() - 2);
         }
+        let mut data = WIN32_FIND_DATAW::default();
+        let handle = unsafe { FindFirstFileW(PCWSTR(wide_path.as_ptr()), &mut data) }.ok()?;
+        let _ = unsafe { FindClose(handle) };
+        Some(data.dwReserved0)
+    }
+
+    /// True when `path` is a redirecting reparse point (symlink, junction,
+    /// volume mount point, app execution alias, unknown reparse tag) or an
+    /// unhydrated cloud placeholder that would download data on read.
+    ///
+    /// Uses `\\?\` verbatim paths so directories deeper than 260 characters are
+    /// inspected accurately instead of failing closed as fake symlinks, and
+    /// allows transparent local storage tags (CompactOS WOF, hydrated OneDrive,
+    /// NTFS dedup) so normal user projects are never silently skipped.
+    pub fn is_reparse_point(path: &Path) -> bool {
+        use windows::Win32::Storage::FileSystem::{
+            GetFileAttributesW, FILE_ATTRIBUTE_OFFLINE, FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS,
+            FILE_ATTRIBUTE_RECALL_ON_OPEN, INVALID_FILE_ATTRIBUTES,
+        };
+
+        if is_bare_drive_root(path) {
+            return false;
+        }
+
+        let wide_path = super::super::wide_verbatim(path);
+        let attrs = unsafe { GetFileAttributesW(PCWSTR(wide_path.as_ptr())) };
+        if attrs == INVALID_FILE_ATTRIBUTES {
+            // Fall back once to `symlink_metadata` (e.g. relative paths in unit
+            // tests before canonicalisation). Fail closed if still unreadable.
+            use std::os::windows::fs::MetadataExt;
+            let Ok(meta) = std::fs::symlink_metadata(path) else {
+                return true;
+            };
+            if meta.file_type().is_symlink() {
+                return true;
+            }
+            let fallback_attrs = meta.file_attributes();
+            let cloud_stub = FILE_ATTRIBUTE_OFFLINE.0
+                | FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS.0
+                | FILE_ATTRIBUTE_RECALL_ON_OPEN.0;
+            if fallback_attrs & cloud_stub != 0 {
+                return true;
+            }
+            if fallback_attrs & FILE_ATTRIBUTE_REPARSE_POINT.0 == 0 {
+                return false;
+            }
+            return !query_reparse_tag(path).is_some_and(is_transparent_reparse_tag);
+        }
+
+        let cloud_stub = FILE_ATTRIBUTE_OFFLINE.0
+            | FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS.0
+            | FILE_ATTRIBUTE_RECALL_ON_OPEN.0;
+        if attrs & cloud_stub != 0 {
+            return true;
+        }
+        if attrs & FILE_ATTRIBUTE_REPARSE_POINT.0 == 0 {
+            return false;
+        }
+
+        // Inspect the actual reparse tag: symlinks (0xA000000C), directory
+        // junctions / mount points (0xA0000003), app execution aliases and any
+        // unrecognized tag fail closed as `true`.
+        !query_reparse_tag(path).is_some_and(is_transparent_reparse_tag)
     }
 
     pub fn is_remote_path(path: &Path) -> bool {

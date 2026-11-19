@@ -4,6 +4,7 @@ import {
   FolderTree,
   Bot,
   Package,
+  HardDrive,
   History,
   BookOpen,
   Settings,
@@ -44,6 +45,7 @@ const ITEMS: Array<{ view: AppView; icon: React.ReactNode; key: keyof UIText["na
   { view: "projects", icon: <FolderTree size={17} />, key: "projects" },
   { view: "agents", icon: <Bot size={17} />, key: "agents" },
   { view: "caches", icon: <Package size={17} />, key: "caches" },
+  { view: "system", icon: <HardDrive size={17} />, key: "system" },
   { view: "docs", icon: <BookOpen size={17} />, key: "docs" },
   { view: "history", icon: <History size={17} />, key: "history" },
 ];

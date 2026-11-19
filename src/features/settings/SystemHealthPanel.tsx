@@ -83,8 +83,8 @@ export const SystemHealthPanel: React.FC = () => {
           <Activity size={18} />
         </div>
         <div className="about-panel-title-group">
-          <h2 className="about-panel-title">{ui.history.title}</h2>
-          <span className="about-panel-desc">{ui.history.subtitle}</span>
+          <h2 className="about-panel-title">{ui.about.healthTitle}</h2>
+          <span className="about-panel-desc">{ui.about.healthSubtitle}</span>
         </div>
       </div>
 

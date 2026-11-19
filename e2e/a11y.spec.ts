@@ -8,6 +8,7 @@ const VIEWS: Array<{ nav: string; view: string }> = [
   { nav: "Projects", view: "projects" },
   { nav: "AI Tools", view: "agents" },
   { nav: "Tool Caches", view: "caches" },
+  { nav: "System cleaner", view: "system" },
   { nav: "History", view: "history" },
   { nav: "Settings", view: "settings" },
 ];
@@ -93,6 +94,10 @@ test("About and the embedded legal documents pass axe", async ({ page }) => {
   await goToView(page, "About");
   await expectNoViolations(page, "about");
 
+  await page
+    .locator(".about-split-layout .split-sidebar")
+    .getByRole("button", { name: "Legal", exact: true })
+    .click();
   const firstDoc = page.locator("[data-legal-doc]").first();
   await firstDoc.click();
   const back = page.getByRole("button", { name: "Back", exact: true });
@@ -456,6 +461,5 @@ test("320 CSS px reflow keeps every page inside the viewport", async ({ page }) 
   }
 
   await goToView(page, "Settings");
-  await expect(page.locator(".settings-tabs-mobile")).toBeVisible();
-  await expect(page.locator(".settings-tabs")).toBeHidden();
+  await expect(page.locator(".settings-split-layout .split-sidebar")).toBeVisible();
 });

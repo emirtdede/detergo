@@ -41,6 +41,7 @@ import {
 } from "@/types";
 import { comboFromEvent, validateShortcut } from "@/lib/shortcuts";
 import { log } from "@/lib/logging";
+import { APP_VERSION } from "@/lib/app-version";
 import { useSettingsSections } from "./settings-sections";
 import { AboutView } from "./AboutView";
 import { PrivacySection } from "./PrivacySection";
@@ -83,18 +84,20 @@ const PROFILE_DEFAULTS: Record<
 > = {
   fast: { maxDepth: 16, maxCandidates: 10000, timeoutMinutes: 5 },
   balanced: { maxDepth: 32, maxCandidates: 50000, timeoutMinutes: 15 },
-  thorough: { maxDepth: 48, maxCandidates: 100000, timeoutMinutes: 20 },
+  full: { maxDepth: 40, maxCandidates: 80000, timeoutMinutes: 20 },
+  thorough: { maxDepth: 48, maxCandidates: 100000, timeoutMinutes: 25 },
   deep: { maxDepth: 64, maxCandidates: 200000, timeoutMinutes: 30 },
   maximum: { maxDepth: 128, maxCandidates: 500000, timeoutMinutes: 60 },
 };
 
 /** Ordered list for the profile picker; the defaults above stay the source. */
-const PROFILE_KEYS = ["fast", "balanced", "thorough", "deep", "maximum"] as const;
+const PROFILE_KEYS = ["fast", "balanced", "full", "thorough", "deep", "maximum"] as const;
 
 function profileLabel(profile: string, ui: UIText): string {
   const labels: Record<string, string> = {
     fast: ui.settings.profileFast,
     balanced: ui.settings.profileBalanced,
+    full: ui.settings.profileFull,
     thorough: ui.settings.profileThorough,
     deep: ui.settings.profileDeep,
     maximum: ui.settings.profileMaximum,
@@ -106,6 +109,7 @@ function profileHint(profile: string, ui: UIText): string {
   const hints: Record<string, string> = {
     fast: ui.settings.profileFastHint,
     balanced: ui.settings.profileBalancedHint,
+    full: ui.settings.profileFullHint,
     thorough: ui.settings.profileThoroughHint,
     deep: ui.settings.profileDeepHint,
     maximum: ui.settings.profileMaximumHint,
@@ -445,20 +449,6 @@ export const SettingsView: React.FC = () => {
     return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [recordingId, prefs.shortcuts, shortcutDefs, ui]);
 
-  const moveTab = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
-    let next = index;
-    if (event.key === "ArrowRight" || event.key === "ArrowDown")
-      next = (index + 1) % sections.length;
-    else if (event.key === "ArrowLeft" || event.key === "ArrowUp")
-      next = (index - 1 + sections.length) % sections.length;
-    else if (event.key === "Home") next = 0;
-    else if (event.key === "End") next = sections.length - 1;
-    else return;
-    event.preventDefault();
-    setSettingsSection(sections[next].id);
-    document.getElementById(`settings-tab-${sections[next].id}`)?.focus();
-  };
-
   const save = async (patch: Parameters<typeof prefs.updateSettings>[0]) => {
     prefs.updateSettings(patch);
     try {
@@ -474,816 +464,848 @@ export const SettingsView: React.FC = () => {
     save({ scanProfile: profile, ...defaults });
   };
 
+  const sectionGroups = useMemo(
+    () => [
+      {
+        id: "preferences",
+        title: ui.settings.groupPreferences,
+        items: sections.filter((s) =>
+          ["general", "scan", "notifications", "shortcuts"].includes(s.id),
+        ),
+      },
+      {
+        id: "safety",
+        title: ui.settings.groupSafety,
+        items: sections.filter((s) =>
+          ["protections", "agents", "automation", "privacy"].includes(s.id),
+        ),
+      },
+      {
+        id: "maintenance",
+        title: ui.settings.groupMaintenance,
+        items: sections.filter((s) => ["updates", "diagnostics"].includes(s.id)),
+      },
+    ],
+    [sections, ui.settings],
+  );
+
+  const flatGroupedSections = useMemo(() => sectionGroups.flatMap((g) => g.items), [sectionGroups]);
+
+  const moveGroupedTab = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    let next = index;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown")
+      next = (index + 1) % flatGroupedSections.length;
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp")
+      next = (index - 1 + flatGroupedSections.length) % flatGroupedSections.length;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = flatGroupedSections.length - 1;
+    else return;
+    event.preventDefault();
+    setSettingsSection(flatGroupedSections[next].id);
+    document.getElementById(`settings-tab-${flatGroupedSections[next].id}`)?.focus();
+  };
+
+  const appVersion = buildInfo?.version ?? APP_VERSION;
+
   return (
-    <div className="settings-page">
-      <PageHeader title={ui.nav.settings} description={ui.settings.subtitle} />
-
-      {catalog && !catalog.valid && (
-        <details className="items-warning catalog-warning" style={{ marginBottom: 12 }}>
-          <summary>
-            <AlertTriangle size={13} /> {ui.about.kpiCatalog} · {ui.errors.title}
-          </summary>
-          {/* The raw error comes from the backend, so it is translated through
-              the shared backend dictionary before being shown. */}
-          <p style={{ margin: "var(--space-2) 0 0" }}>
-            {translateBackendText(catalog.error ?? "", prefs.language)}
-          </p>
-        </details>
-      )}
-
-      {/* Shared Bento KPI Strip for Settings. Each card is the shortcut to the
-          control it summarises: appearance/language and the scan profile open a
-          focused dialog, security jumps to the protections tab. */}
-      <div className="nc-bento-strip nc-bento-strip--3">
-        <button
-          type="button"
-          className="nc-kpi-card settings-kpi-action"
-          onClick={() => {
-            setAppearanceTab("theme");
-            setAppearanceOpen(true);
-          }}
-          aria-haspopup="dialog"
-        >
-          <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">{ui.settings.kpiAppearance}</span>
-            <span className="nc-kpi-card-icon nc-kpi-card-icon--accent">
-              <Palette size={14} />
-            </span>
-          </div>
-          <div className="nc-kpi-card-body">
-            <span className="nc-kpi-card-value" style={{ fontSize: "var(--text-lg)" }}>
-              {themeLabel(prefs.theme, ui)}
-            </span>
-            <span className="nc-kpi-card-sub">
-              {ui.settings.language}: {resolveUiLocale(prefs.language).toUpperCase()} ·{" "}
-              {prefs.reduceMotion ? ui.settings.reducedMotion : ui.settings.standardMotion}
-            </span>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          className="nc-kpi-card settings-kpi-action"
-          onClick={() => setProfileOpen(true)}
-          aria-haspopup="dialog"
-        >
-          <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">{ui.settings.kpiScanProfile}</span>
-            <span className="nc-kpi-card-icon nc-kpi-card-icon--success">
-              <Cpu size={14} />
-            </span>
-          </div>
-          <div className="nc-kpi-card-body">
-            <span className="nc-kpi-card-value" style={{ fontSize: "var(--text-lg)" }}>
-              {profileLabel(prefs.scanProfile, ui)}
-            </span>
-            <span className="nc-kpi-card-sub">
-              {ui.settings.maxDepth}: {prefs.maxDepth} · {ui.settings.maxCandidates}:{" "}
-              {(prefs.maxCandidates / 1000).toFixed(0)}k
-            </span>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          className="nc-kpi-card settings-kpi-action"
-          onClick={() => setSettingsSection("protections")}
-        >
-          <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">{ui.settings.kpiSecurity}</span>
-            <span className="nc-kpi-card-icon nc-kpi-card-icon--purple">
-              <ShieldCheck size={14} />
-            </span>
-          </div>
-          <div className="nc-kpi-card-body">
-            <span className="nc-kpi-card-value" style={{ fontSize: "var(--text-lg)" }}>
-              {ui.settings.kpiFoldersDefined(prefs.protectedPaths.length)}
-            </span>
-            <span className="nc-kpi-card-sub">
-              {ui.settings.kpiRulesDefined(prefs.excludedNames.length)}
-            </span>
-          </div>
-        </button>
-      </div>
-
-      {/* Modern Subpage Horizontal Tabs */}
-      <div className="settings-tabs" role="tablist" aria-label={ui.nav.settings}>
-        {sections.map((item, index) => {
-          const active = item.id === activeSection.id;
-          return (
-            <button
-              key={item.id}
-              id={`settings-tab-${item.id}`}
-              type="button"
-              role="tab"
-              className={`settings-tab ${active ? "is-active" : ""}`}
-              onClick={() => setSettingsSection(item.id)}
-              onKeyDown={(event) => moveTab(event, index)}
-              aria-selected={active}
-              aria-controls="settings-panel"
-              tabIndex={active ? 0 : -1}
-            >
-              <span className="settings-tab-icon" aria-hidden="true">
-                {item.icon}
-              </span>
-              <span className="settings-tab-label">{item.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="settings-tabs-mobile">
-        <label className="sr-only" htmlFor="settings-section-select">
-          {ui.nav.settings}
-        </label>
-        <select
-          id="settings-section-select"
-          value={activeSection.id}
-          onChange={(event) =>
-            setSettingsSection(event.target.value as (typeof sections)[number]["id"])
-          }
-        >
-          {sections.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="settings-section-header">
-        <span className="settings-section-icon" aria-hidden="true">
-          {activeSection.icon}
-        </span>
-        <div className="settings-section-copy">
-          <span className="settings-section-title">{activeSection.label}</span>
-          <span className="settings-section-hint">{activeSection.hint}</span>
+    <div className="split-layout settings-split-layout">
+      <aside className="split-sidebar" aria-label={ui.nav.settings}>
+        <div className="split-sidebar-header">
+          <h2 className="split-sidebar-title">{ui.nav.settings}</h2>
+          <p className="split-sidebar-subtitle">{ui.settings.subtitle}</p>
         </div>
-      </div>
 
-      <div
-        className="settings-body"
-        id="settings-panel"
-        role="tabpanel"
-        aria-labelledby={`settings-tab-${activeSection.id}`}
-      >
-        {activeSection.id === "general" && (
-          <section className="settings-card">
-            <label className="form-row">
-              <span>{ui.settings.theme}</span>
-              <select value={prefs.theme} onChange={(e) => prefs.setTheme(e.target.value)}>
-                {THEMES.map((theme) => (
-                  <option key={theme} value={theme}>
-                    {themeLabel(theme, ui)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="form-row">
-              <span>{ui.settings.language}</span>
-              <select
-                value={resolveUiLocale(prefs.language)}
-                onChange={(e) => prefs.setLanguage(e.target.value as SupportedLanguage)}
-              >
-                {uiLanguages.map((language) => (
-                  <option key={language.id} value={language.id}>
-                    {language.nativeName}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="form-row">
-              <span>{ui.settings.reduceMotion}</span>
-              <Switch
-                checked={prefs.reduceMotion}
-                onLabel={ui.common.on}
-                offLabel={ui.common.off}
-                aria-label={ui.settings.reduceMotion}
-                onChange={(v) => prefs.setReduceMotion(v)}
-              />
+        <div
+          className="split-sidebar-scroll"
+          role="tablist"
+          aria-orientation="vertical"
+          aria-label={ui.nav.settings}
+        >
+          {sectionGroups.map((group) => (
+            <div key={group.id} className="split-nav-group">
+              <span className="split-nav-group-title">{group.title}</span>
+              {group.items.map((item) => {
+                const active = item.id === activeSection.id;
+                const flatIndex = flatGroupedSections.findIndex((s) => s.id === item.id);
+                return (
+                  <button
+                    key={item.id}
+                    id={`settings-tab-${item.id}`}
+                    type="button"
+                    role="tab"
+                    className={`split-nav-link ${active ? "active" : ""}`}
+                    onClick={() => setSettingsSection(item.id)}
+                    onKeyDown={(event) => moveGroupedTab(event, flatIndex)}
+                    aria-selected={active}
+                    aria-controls="settings-panel"
+                    tabIndex={active ? 0 : -1}
+                  >
+                    <span className="split-nav-link-icon" aria-hidden="true">
+                      {item.icon}
+                    </span>
+                    <span className="split-nav-link-label">{item.label}</span>
+                  </button>
+                );
+              })}
             </div>
-            <label className="form-row">
-              <span>{ui.settings.sidebar}</span>
-              <select
-                value={prefs.sidebarMode}
-                onChange={(e) =>
-                  prefs.setSidebarMode(e.target.value === "collapsed" ? "collapsed" : "expanded")
-                }
-              >
-                <option value="expanded">{ui.settings.sidebarExpanded}</option>
-                <option value="collapsed">{ui.settings.sidebarCollapsed}</option>
-              </select>
-            </label>
-            <label className="form-row">
-              <span>{ui.settings.closeAction}</span>
-              <select
-                value={prefs.closeAction}
-                onChange={(e) =>
-                  prefs.setCloseAction(
-                    e.target.value === "tray" || e.target.value === "quit" ? e.target.value : "ask",
-                  )
-                }
-              >
-                <option value="ask">{ui.settings.closeAsk}</option>
-                <option value="tray">{ui.settings.closeTray}</option>
-                <option value="quit">{ui.settings.closeQuit}</option>
-              </select>
-            </label>
-            <label className="form-row">
-              <span>{ui.settings.cacheMeasure}</span>
-              <select
-                value={prefs.cacheMeasureMode}
-                onChange={(e) =>
-                  prefs.setCacheMeasureMode(e.target.value === "full" ? "full" : "fast")
-                }
-              >
-                <option value="fast">{ui.settings.cacheMeasureFast}</option>
-                <option value="full">{ui.settings.cacheMeasureFull}</option>
-              </select>
-            </label>
-          </section>
-        )}
+          ))}
+        </div>
+      </aside>
 
-        {activeSection.id === "scan" && (
-          <section className="settings-card">
-            <label className="form-row">
-              <span>{ui.settings.scanProfile}</span>
-              <select value={prefs.scanProfile} onChange={(e) => setProfile(e.target.value)}>
-                <option value="fast">{ui.settings.profileFast}</option>
-                <option value="balanced">{ui.settings.profileBalanced}</option>
-                <option value="deep">{ui.settings.profileDeep}</option>
-              </select>
-            </label>
-            <div className="form-row">
-              <span>{ui.settings.maxDepth}</span>
-              <NumberField
-                value={prefs.maxDepth}
-                min={SETTING_LIMITS.maxDepth.min}
-                max={SETTING_LIMITS.maxDepth.max}
-                ariaLabel={ui.settings.maxDepth}
-                increaseLabel={ui.common.increase}
-                decreaseLabel={ui.common.decrease}
-                onCommit={(v) => save({ maxDepth: v })}
-              />
-            </div>
-            <div className="form-row">
-              <span>{ui.settings.maxCandidates}</span>
-              <NumberField
-                value={prefs.maxCandidates}
-                min={SETTING_LIMITS.maxCandidates.min}
-                max={SETTING_LIMITS.maxCandidates.max}
-                step={1000}
-                ariaLabel={ui.settings.maxCandidates}
-                increaseLabel={ui.common.increase}
-                decreaseLabel={ui.common.decrease}
-                onCommit={(v) => save({ maxCandidates: v })}
-              />
-            </div>
-            <div className="form-row">
-              <span>{ui.settings.timeout}</span>
-              <NumberField
-                value={prefs.timeoutMinutes}
-                min={SETTING_LIMITS.timeoutMinutes.min}
-                max={SETTING_LIMITS.timeoutMinutes.max}
-                ariaLabel={ui.settings.timeout}
-                increaseLabel={ui.common.increase}
-                decreaseLabel={ui.common.decrease}
-                onCommit={(v) => save({ timeoutMinutes: v })}
-              />
-            </div>
-            <div className="form-row">
-              <span>{ui.settings.minSize}</span>
-              <NumberField
-                value={Math.round(prefs.minSizeBytes / (1024 * 1024))}
-                min={SETTING_LIMITS.minSizeBytes.min}
-                max={SETTING_LIMITS.minSizeBytes.max / (1024 * 1024)}
-                ariaLabel={ui.settings.minSize}
-                increaseLabel={ui.common.increase}
-                decreaseLabel={ui.common.decrease}
-                onCommit={(v) => save({ minSizeBytes: v * 1024 * 1024 })}
-              />
-            </div>
-          </section>
-        )}
+      <div className="split-content-pane">
+        <div className="split-content-inner settings-page">
+          <PageHeader title={ui.nav.settings} description={ui.settings.subtitle} />
 
-        {activeSection.id === "notifications" && (
-          <section className="settings-card">
-            <div
-              className="settings-banner"
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: 16,
-              }}
-            >
-              <div>
-                <h3 className="settings-group-title" style={{ margin: 0 }}>
-                  {ui.settings.notifTitle}
-                </h3>
-                <p className="settings-hint" style={{ margin: "4px 0 0" }}>
-                  {ui.settings.notifDesc}
-                </p>
-              </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  icon={<Bell size={13} />}
-                  onClick={() => notificationService.testDesktopNotification()}
-                >
-                  {ui.settings.testDesktop}
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => notificationService.testInAppNotification()}
-                >
-                  {ui.settings.testInApp}
-                </Button>
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div>
-                <span>{ui.settings.notifSounds}</span>
-                <p className="settings-hint">{ui.settings.notifSoundsHint}</p>
-              </div>
-              <Switch
-                checked={prefs.notifications?.soundEnabled ?? true}
-                onChange={(checked) => updateNotify("soundEnabled", checked)}
-                aria-label={ui.settings.notifSounds}
-              />
-            </div>
-
-            <h4 className="settings-group-title" style={{ marginTop: 20, marginBottom: 8 }}>
-              {ui.settings.eventMatrixTitle}
-            </h4>
-
-            <label className="form-row">
-              <div>
-                <span>{ui.settings.evScanDone}</span>
-                <p className="settings-hint">{ui.settings.evScanDoneHint}</p>
-              </div>
-              <select
-                value={prefs.notifications?.scanComplete ?? "both"}
-                onChange={(e) =>
-                  updateNotify("scanComplete", e.target.value as NotificationChannel)
-                }
-              >
-                <option value="both">{ui.settings.chBoth}</option>
-                <option value="in_app">{ui.settings.chInApp}</option>
-                <option value="desktop">{ui.settings.chDesktop}</option>
-                <option value="none">{ui.settings.chNone}</option>
-              </select>
-            </label>
-
-            <label className="form-row">
-              <div>
-                <span>{ui.settings.evCleanDone}</span>
-                <p className="settings-hint">{ui.settings.evCleanDoneHint}</p>
-              </div>
-              <select
-                value={prefs.notifications?.cleanComplete ?? "both"}
-                onChange={(e) =>
-                  updateNotify("cleanComplete", e.target.value as NotificationChannel)
-                }
-              >
-                <option value="both">{ui.settings.chBoth}</option>
-                <option value="in_app">{ui.settings.chInApp}</option>
-                <option value="desktop">{ui.settings.chDesktop}</option>
-                <option value="none">{ui.settings.chNone}</option>
-              </select>
-            </label>
-
-            <label className="form-row">
-              <div>
-                <span>{ui.settings.evDiskAlert}</span>
-                <p className="settings-hint">{ui.settings.evDiskAlertHint}</p>
-              </div>
-              <select
-                value={prefs.notifications?.diskPressure ?? "both"}
-                onChange={(e) =>
-                  updateNotify("diskPressure", e.target.value as NotificationChannel)
-                }
-              >
-                <option value="both">{ui.settings.chBoth}</option>
-                <option value="in_app">{ui.settings.chInApp}</option>
-                <option value="desktop">{ui.settings.chDesktop}</option>
-                <option value="none">{ui.settings.chNone}</option>
-              </select>
-            </label>
-
-            <label className="form-row">
-              <div>
-                <span>{ui.settings.evLockConflict}</span>
-                <p className="settings-hint">{ui.settings.evLockConflictHint}</p>
-              </div>
-              <select
-                value={prefs.notifications?.processLock ?? "in_app"}
-                onChange={(e) => updateNotify("processLock", e.target.value as NotificationChannel)}
-              >
-                <option value="both">{ui.settings.chBoth}</option>
-                <option value="in_app">{ui.settings.chInApp}</option>
-                <option value="desktop">{ui.settings.chDesktop}</option>
-                <option value="none">{ui.settings.chNone}</option>
-              </select>
-            </label>
-
-            <label className="form-row">
-              <div>
-                <span>{ui.settings.evAutomation}</span>
-                <p className="settings-hint">{ui.settings.evAutomationHint}</p>
-              </div>
-              <select
-                value={prefs.notifications?.automationWebhook ?? "both"}
-                onChange={(e) =>
-                  updateNotify("automationWebhook", e.target.value as NotificationChannel)
-                }
-              >
-                <option value="both">{ui.settings.chBoth}</option>
-                <option value="in_app">{ui.settings.chInApp}</option>
-                <option value="desktop">{ui.settings.chDesktop}</option>
-                <option value="none">{ui.settings.chNone}</option>
-              </select>
-            </label>
-          </section>
-        )}
-
-        {activeSection.id === "shortcuts" && (
-          <section className="settings-card">
-            <div className="shortcuts-header-row">
-              <div>
-                <h3 className="settings-group-title">{ui.settings.shortcutsTitle}</h3>
-                <p className="settings-hint">{ui.settings.shortcutsDesc}</p>
-              </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  prefs.resetShortcuts();
-                  setConflictWarning(null);
-                  setRecordingId(null);
-                  void (async () => {
-                    try {
-                      await usePreferencesStore.getState().persistSettings();
-                      showToast(ui.settings.toastShortcutsReset, "info", 2000);
-                    } catch (err) {
-                      showToast(
-                        `${ui.settings.saveError}: ${localizeAppError(err, ui)}`,
-                        "error",
-                        6000,
-                      );
-                    }
-                  })();
-                }}
-              >
-                <RotateCcw size={13} style={{ marginRight: 6 }} />
-                {ui.settings.resetShortcuts}
-              </Button>
-            </div>
-
-            {conflictWarning && (
-              <div className="shortcut-conflict-alert" role="alert">
-                <AlertTriangle size={15} />
-                <span>{conflictWarning}</span>
-              </div>
-            )}
-
-            <table className="shortcuts-table">
-              <thead>
-                <tr>
-                  <th style={{ width: "35%" }}>{ui.settings.thAction}</th>
-                  <th style={{ width: "40%" }}>{ui.settings.thDesc}</th>
-                  <th style={{ width: "25%", textAlign: "right" }}>{ui.settings.thShortcut}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {shortcutDefs.map((def) => {
-                  const currentShortcut =
-                    (prefs.shortcuts ?? DEFAULT_SHORTCUTS)[def.id] ?? DEFAULT_SHORTCUTS[def.id];
-                  const isRecording = recordingId === def.id;
-
-                  return (
-                    <tr key={def.id}>
-                      <td>
-                        <span className="shortcut-action-name">{def.label}</span>
-                      </td>
-                      <td>
-                        <span className="shortcut-action-hint">{def.hint}</span>
-                      </td>
-                      <td style={{ textAlign: "right" }}>
-                        <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                          {isRecording ? (
-                            <span className="shortcut-recording-badge">{ui.settings.pressKey}</span>
-                          ) : (
-                            <span className="shortcut-key-badge">{currentShortcut}</span>
-                          )}
-
-                          <Button
-                            variant={isRecording ? "primary" : "secondary"}
-                            size="sm"
-                            onClick={() => {
-                              if (isRecording) {
-                                setRecordingId(null);
-                                setConflictWarning(null);
-                              } else {
-                                setConflictWarning(null);
-                                setRecordingId(def.id);
-                              }
-                            }}
-                          >
-                            {isRecording ? ui.common.cancel : ui.settings.changeKey}
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </section>
-        )}
-
-        {activeSection.id === "automation" && (
-          <section className="settings-card">
-            <h3 className="settings-group-title">{ui.settings.webhookTitle}</h3>
-            <p className="settings-hint" style={{ marginBottom: 16 }}>
-              {ui.settings.webhookDesc}
-            </p>
-
-            <div className="form-row form-row--stretch">
-              <input
-                type="url"
-                placeholder={ui.settings.webhookPlaceholder}
-                value={webhookDraft ?? prefs.webhookUrl ?? ""}
-                onChange={(e) => setWebhookDraft(e.target.value)}
-                onBlur={commitWebhook}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    commitWebhook();
-                  }
-                }}
-                aria-label={ui.settings.webhookUrl}
-              />
-              <Button
-                variant="primary"
-                size="sm"
-                icon={<Send size={13} />}
-                onClick={handleTestWebhook}
-                disabled={testingWebhook || (!prefs.webhookUrl && !webhookDraft?.trim())}
-              >
-                {testingWebhook ? ui.settings.webhookSending : ui.settings.webhookTestBtn}
-              </Button>
-            </div>
-
-            {webhookTestStatus && (
-              <p
-                className="plan-note"
-                style={{
-                  marginTop: 8,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  color: webhookTestStatus.success ? "var(--color-success)" : "var(--color-danger)",
-                }}
-              >
-                {webhookTestStatus.success ? <Check size={14} /> : <X size={14} />}
-                <span>{webhookTestStatus.text}</span>
+          {catalog && !catalog.valid && (
+            <details className="items-warning catalog-warning" style={{ marginBottom: 4 }}>
+              <summary>
+                <AlertTriangle size={13} /> {ui.about.kpiCatalog} · {ui.errors.title}
+              </summary>
+              {/* The raw error comes from the backend, so it is translated through
+                  the shared backend dictionary before being shown. */}
+              <p style={{ margin: "var(--space-2) 0 0" }}>
+                {translateBackendText(catalog.error ?? "", prefs.language)}
               </p>
+            </details>
+          )}
+
+          {/* Shared Bento KPI Strip for Settings. Each card is the shortcut to the
+              control it summarises: appearance/language and the scan profile open a
+              focused dialog, security jumps to the protections tab. */}
+          <div className="nc-bento-strip nc-bento-strip--3">
+            <button
+              type="button"
+              className="nc-kpi-card settings-kpi-action"
+              onClick={() => {
+                setAppearanceTab("theme");
+                setAppearanceOpen(true);
+              }}
+              aria-haspopup="dialog"
+            >
+              <div className="nc-kpi-card-header">
+                <span className="nc-kpi-card-label">{ui.settings.kpiAppearance}</span>
+                <span className="nc-kpi-card-icon nc-kpi-card-icon--accent">
+                  <Palette size={14} />
+                </span>
+              </div>
+              <div className="nc-kpi-card-body">
+                <span className="nc-kpi-card-value" style={{ fontSize: "var(--text-lg)" }}>
+                  {themeLabel(prefs.theme, ui)}
+                </span>
+                <span className="nc-kpi-card-sub">
+                  {ui.settings.language}: {resolveUiLocale(prefs.language).toUpperCase()} ·{" "}
+                  {prefs.reduceMotion ? ui.settings.reducedMotion : ui.settings.standardMotion}
+                </span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              className="nc-kpi-card settings-kpi-action"
+              onClick={() => setProfileOpen(true)}
+              aria-haspopup="dialog"
+            >
+              <div className="nc-kpi-card-header">
+                <span className="nc-kpi-card-label">{ui.settings.kpiScanProfile}</span>
+                <span className="nc-kpi-card-icon nc-kpi-card-icon--success">
+                  <Cpu size={14} />
+                </span>
+              </div>
+              <div className="nc-kpi-card-body">
+                <span className="nc-kpi-card-value" style={{ fontSize: "var(--text-lg)" }}>
+                  {profileLabel(prefs.scanProfile || "balanced", ui)}
+                </span>
+                <span className="nc-kpi-card-sub">
+                  {ui.settings.maxDepth}: {prefs.maxDepth} · {ui.settings.maxCandidates}:{" "}
+                  {(prefs.maxCandidates / 1000).toFixed(0)}k
+                </span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              className="nc-kpi-card settings-kpi-action"
+              onClick={() => setSettingsSection("protections")}
+              title={ui.settings.securityOpen}
+            >
+              <div className="nc-kpi-card-header">
+                <span className="nc-kpi-card-label">{ui.settings.kpiSecurity}</span>
+                <span className="nc-kpi-card-icon nc-kpi-card-icon--purple">
+                  <ShieldCheck size={14} />
+                </span>
+              </div>
+              <div className="nc-kpi-card-body">
+                <span className="nc-kpi-card-value" style={{ fontSize: "var(--text-lg)" }}>
+                  {ui.settings.kpiFoldersDefined(prefs.protectedPaths.length)}
+                </span>
+                <span className="nc-kpi-card-sub">
+                  {ui.settings.kpiRulesDefined(prefs.excludedNames.length)}
+                </span>
+              </div>
+            </button>
+          </div>
+
+          <div className="settings-section-header">
+            <span className="settings-section-icon" aria-hidden="true">
+              {activeSection.icon}
+            </span>
+            <div className="settings-section-copy">
+              <span className="settings-section-title">{activeSection.label}</span>
+              <span className="settings-section-hint">{activeSection.hint}</span>
+            </div>
+          </div>
+
+          <div
+            className="settings-body"
+            id="settings-panel"
+            role="tabpanel"
+            aria-labelledby={`settings-tab-${activeSection.id}`}
+          >
+            {activeSection.id === "general" && (
+              <section className="settings-card">
+                <label className="form-row">
+                  <span>{ui.settings.theme}</span>
+                  <select value={prefs.theme} onChange={(e) => prefs.setTheme(e.target.value)}>
+                    {THEMES.map((theme) => (
+                      <option key={theme} value={theme}>
+                        {themeLabel(theme, ui)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="form-row">
+                  <span>{ui.settings.language}</span>
+                  <select
+                    value={resolveUiLocale(prefs.language)}
+                    onChange={(e) => prefs.setLanguage(e.target.value as SupportedLanguage)}
+                  >
+                    {uiLanguages.map((language) => (
+                      <option key={language.id} value={language.id}>
+                        {language.nativeName}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="form-row">
+                  <span>{ui.settings.reduceMotion}</span>
+                  <Switch
+                    checked={prefs.reduceMotion}
+                    onLabel={ui.common.on}
+                    offLabel={ui.common.off}
+                    aria-label={ui.settings.reduceMotion}
+                    onChange={(v) => prefs.setReduceMotion(v)}
+                  />
+                </div>
+                <label className="form-row">
+                  <span>{ui.settings.sidebar}</span>
+                  <select
+                    value={prefs.sidebarMode}
+                    onChange={(e) =>
+                      prefs.setSidebarMode(
+                        e.target.value === "collapsed" ? "collapsed" : "expanded",
+                      )
+                    }
+                  >
+                    <option value="expanded">{ui.settings.sidebarExpanded}</option>
+                    <option value="collapsed">{ui.settings.sidebarCollapsed}</option>
+                  </select>
+                </label>
+                <label className="form-row">
+                  <span>{ui.settings.closeAction}</span>
+                  <select
+                    value={prefs.closeAction}
+                    onChange={(e) =>
+                      prefs.setCloseAction(
+                        e.target.value === "tray" || e.target.value === "quit"
+                          ? e.target.value
+                          : "ask",
+                      )
+                    }
+                  >
+                    <option value="ask">{ui.settings.closeAsk}</option>
+                    <option value="tray">{ui.settings.closeTray}</option>
+                    <option value="quit">{ui.settings.closeQuit}</option>
+                  </select>
+                </label>
+                <label className="form-row">
+                  <span>{ui.settings.cacheMeasure}</span>
+                  <select
+                    value={prefs.cacheMeasureMode}
+                    onChange={(e) =>
+                      prefs.setCacheMeasureMode(e.target.value === "full" ? "full" : "fast")
+                    }
+                  >
+                    <option value="fast">{ui.settings.cacheMeasureFast}</option>
+                    <option value="full">{ui.settings.cacheMeasureFull}</option>
+                  </select>
+                </label>
+              </section>
             )}
 
-            <div className="form-row" style={{ marginTop: 16 }}>
-              <div>
-                <span>{ui.settings.webhookScanDone}</span>
-                <p className="settings-hint">{ui.settings.webhookScanDoneHint}</p>
-              </div>
-              <Switch
-                checked={prefs.webhookOnScan ?? true}
-                onChange={(checked) => save({ webhookOnScan: checked })}
-                aria-label={ui.settings.webhookScanDone}
-              />
-            </div>
+            {activeSection.id === "scan" && (
+              <section className="settings-card">
+                <label className="form-row">
+                  <span>{ui.settings.scanProfile}</span>
+                  <select
+                    value={prefs.scanProfile || "balanced"}
+                    onChange={(e) => setProfile(e.target.value)}
+                  >
+                    {PROFILE_KEYS.map((key) => (
+                      <option key={key} value={key}>
+                        {profileLabel(key, ui)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="form-row">
+                  <span>{ui.settings.maxDepth}</span>
+                  <NumberField
+                    value={prefs.maxDepth}
+                    min={SETTING_LIMITS.maxDepth.min}
+                    max={SETTING_LIMITS.maxDepth.max}
+                    ariaLabel={ui.settings.maxDepth}
+                    increaseLabel={ui.common.increase}
+                    decreaseLabel={ui.common.decrease}
+                    onCommit={(v) => save({ maxDepth: v })}
+                  />
+                </div>
+                <div className="form-row">
+                  <span>{ui.settings.maxCandidates}</span>
+                  <NumberField
+                    value={prefs.maxCandidates}
+                    min={SETTING_LIMITS.maxCandidates.min}
+                    max={SETTING_LIMITS.maxCandidates.max}
+                    step={1000}
+                    ariaLabel={ui.settings.maxCandidates}
+                    increaseLabel={ui.common.increase}
+                    decreaseLabel={ui.common.decrease}
+                    onCommit={(v) => save({ maxCandidates: v })}
+                  />
+                </div>
+                <div className="form-row">
+                  <span>{ui.settings.timeout}</span>
+                  <NumberField
+                    value={prefs.timeoutMinutes}
+                    min={SETTING_LIMITS.timeoutMinutes.min}
+                    max={SETTING_LIMITS.timeoutMinutes.max}
+                    ariaLabel={ui.settings.timeout}
+                    increaseLabel={ui.common.increase}
+                    decreaseLabel={ui.common.decrease}
+                    onCommit={(v) => save({ timeoutMinutes: v })}
+                  />
+                </div>
+                <div className="form-row">
+                  <span>{ui.settings.minSize}</span>
+                  <NumberField
+                    value={Math.round(prefs.minSizeBytes / (1024 * 1024))}
+                    min={SETTING_LIMITS.minSizeBytes.min}
+                    max={SETTING_LIMITS.minSizeBytes.max / (1024 * 1024)}
+                    ariaLabel={ui.settings.minSize}
+                    increaseLabel={ui.common.increase}
+                    decreaseLabel={ui.common.decrease}
+                    onCommit={(v) => save({ minSizeBytes: v * 1024 * 1024 })}
+                  />
+                </div>
+              </section>
+            )}
 
-            <div className="form-row">
-              <div>
-                <span>{ui.settings.webhookCleanDone}</span>
-                <p className="settings-hint">{ui.settings.webhookCleanDoneHint}</p>
-              </div>
-              <Switch
-                checked={prefs.webhookOnClean ?? true}
-                onChange={(checked) => save({ webhookOnClean: checked })}
-                aria-label={ui.settings.webhookCleanDone}
-              />
-            </div>
+            {activeSection.id === "notifications" && (
+              <section className="settings-card">
+                <div className="settings-card-toolbar">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={<Bell size={13} />}
+                    onClick={() => notificationService.testDesktopNotification()}
+                  >
+                    {ui.settings.testDesktop}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => notificationService.testInAppNotification()}
+                  >
+                    {ui.settings.testInApp}
+                  </Button>
+                </div>
 
-            <div className="form-row">
-              <div>
-                <span>{ui.settings.mcpDestructiveTitle}</span>
-                <p className="settings-hint">{ui.settings.mcpDestructiveHint}</p>
-              </div>
-              <Switch
-                checked={prefs.mcpAllowDestructive ?? false}
-                onChange={(checked) => save({ mcpAllowDestructive: checked })}
-                aria-label={ui.settings.mcpDestructiveTitle}
-              />
-            </div>
-          </section>
-        )}
-
-        {activeSection.id === "protections" && (
-          <>
-            <section className="settings-card">
-              <h3 className="settings-group-title">{ui.settings.protectedPaths}</h3>
-              <div className="form-row form-row--stretch">
-                <input
-                  type="text"
-                  placeholder={ui.settings.addPath}
-                  value={protectedInput}
-                  aria-label={ui.settings.protectedPaths}
-                  onChange={(e) => setProtectedInput(e.target.value)}
-                />
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  icon={<FolderOpen size={12} />}
-                  onClick={async () => {
-                    const selected = await scannerApi.selectFolderDialog(
-                      ui.settings.protectedPaths,
-                    );
-                    if (selected) setProtectedInput(selected);
-                  }}
-                >
-                  {ui.common.browse}
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  icon={<Plus size={12} />}
-                  onClick={() => {
-                    const value = protectedInput.trim();
-                    if (!value) return;
-                    // A relative path never matches a scanned absolute path, so
-                    // the user would believe a folder was protected while it
-                    // was not. Reject it with an explanation instead of storing
-                    // a rule that can never fire.
-                    const isAbsolute = /^[A-Za-z]:\\/.test(value) || value.startsWith("\\\\");
-                    if (!isAbsolute) {
-                      showToast(ui.settings.pathMustBeAbsolute, "warning");
-                      return;
-                    }
-                    const normalized = value.replace(/[\\/]+$/, "");
-                    if (
-                      !prefs.protectedPaths.some(
-                        (p) => p.toLowerCase() === normalized.toLowerCase(),
-                      )
-                    ) {
-                      save({ protectedPaths: [...prefs.protectedPaths, normalized] });
-                    }
-                    setProtectedInput("");
-                  }}
-                >
-                  {ui.common.add}
-                </Button>
-              </div>
-              <div className="list-editor">
-                {prefs.protectedPaths.length === 0 && (
-                  <span className="plan-note">{ui.common.none}</span>
-                )}
-                {prefs.protectedPaths.map((path) => (
-                  <div key={path} className="list-row">
-                    <span>{path}</span>
-                    <button
-                      type="button"
-                      className="icon-btn icon-btn-sm"
-                      aria-label={`${ui.settings.remove}: ${path}`}
-                      onClick={() =>
-                        save({ protectedPaths: prefs.protectedPaths.filter((p) => p !== path) })
-                      }
-                    >
-                      <X size={12} />
-                    </button>
+                <div className="form-row">
+                  <div>
+                    <span>{ui.settings.notifSounds}</span>
+                    <p className="settings-hint">{ui.settings.notifSoundsHint}</p>
                   </div>
-                ))}
-              </div>
-            </section>
+                  <Switch
+                    checked={prefs.notifications?.soundEnabled ?? true}
+                    onChange={(checked) => updateNotify("soundEnabled", checked)}
+                    aria-label={ui.settings.notifSounds}
+                  />
+                </div>
 
-            <section className="settings-card">
-              <h3 className="settings-group-title">{ui.settings.excludedNames}</h3>
-              <div className="form-row form-row--stretch">
-                <input
-                  type="text"
-                  placeholder={ui.settings.excludedNames}
-                  value={excludedInput}
-                  aria-label={ui.settings.excludedNames}
-                  onChange={(e) => setExcludedInput(e.target.value)}
-                />
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  icon={<Plus size={12} />}
-                  onClick={() => {
-                    const value = excludedInput.trim();
-                    if (!value) return;
-                    // Rules are matched against a single path segment; a value
-                    // containing a separator silently never matched.
-                    if (/[\\/]/.test(value)) {
-                      showToast(ui.settings.excludedNameInvalid, "warning");
-                      return;
-                    }
-                    const normalized = value.toLowerCase();
-                    if (!prefs.excludedNames.some((n) => n.toLowerCase() === normalized)) {
-                      save({ excludedNames: [...prefs.excludedNames, value] });
-                    }
-                    setExcludedInput("");
-                  }}
-                >
-                  {ui.common.add}
-                </Button>
-              </div>
-              <div className="list-editor">
-                {prefs.excludedNames.length === 0 && (
-                  <span className="plan-note">{ui.common.none}</span>
-                )}
-                {prefs.excludedNames.map((name) => (
-                  <div key={name} className="list-row">
-                    <span>{name}</span>
-                    <button
-                      type="button"
-                      className="icon-btn icon-btn-sm"
-                      aria-label={`${ui.settings.remove}: ${name}`}
-                      onClick={() =>
-                        save({ excludedNames: prefs.excludedNames.filter((n) => n !== name) })
-                      }
-                    >
-                      <X size={12} />
-                    </button>
+                <h4 className="settings-group-title" style={{ marginTop: 20, marginBottom: 8 }}>
+                  {ui.settings.eventMatrixTitle}
+                </h4>
+
+                <label className="form-row">
+                  <div>
+                    <span>{ui.settings.evScanDone}</span>
+                    <p className="settings-hint">{ui.settings.evScanDoneHint}</p>
                   </div>
-                ))}
-              </div>
-            </section>
-          </>
-        )}
+                  <select
+                    value={prefs.notifications?.scanComplete ?? "both"}
+                    onChange={(e) =>
+                      updateNotify("scanComplete", e.target.value as NotificationChannel)
+                    }
+                  >
+                    <option value="both">{ui.settings.chBoth}</option>
+                    <option value="in_app">{ui.settings.chInApp}</option>
+                    <option value="desktop">{ui.settings.chDesktop}</option>
+                    <option value="none">{ui.settings.chNone}</option>
+                  </select>
+                </label>
 
-        {activeSection.id === "agents" && (
-          <section className="settings-card">
-            <div className="form-row">
-              <span>{ui.settings.agentCacheCleanup}</span>
-              <Switch
-                checked={prefs.agentPolicy.allowCacheCleanup}
-                onLabel={ui.common.on}
-                offLabel={ui.common.off}
-                aria-label={ui.settings.agentCacheCleanup}
-                onChange={(v) =>
-                  save({ agentPolicy: { ...prefs.agentPolicy, allowCacheCleanup: v } })
-                }
+                <label className="form-row">
+                  <div>
+                    <span>{ui.settings.evCleanDone}</span>
+                    <p className="settings-hint">{ui.settings.evCleanDoneHint}</p>
+                  </div>
+                  <select
+                    value={prefs.notifications?.cleanComplete ?? "both"}
+                    onChange={(e) =>
+                      updateNotify("cleanComplete", e.target.value as NotificationChannel)
+                    }
+                  >
+                    <option value="both">{ui.settings.chBoth}</option>
+                    <option value="in_app">{ui.settings.chInApp}</option>
+                    <option value="desktop">{ui.settings.chDesktop}</option>
+                    <option value="none">{ui.settings.chNone}</option>
+                  </select>
+                </label>
+
+                <label className="form-row">
+                  <div>
+                    <span>{ui.settings.evDiskAlert}</span>
+                    <p className="settings-hint">{ui.settings.evDiskAlertHint}</p>
+                  </div>
+                  <select
+                    value={prefs.notifications?.diskPressure ?? "both"}
+                    onChange={(e) =>
+                      updateNotify("diskPressure", e.target.value as NotificationChannel)
+                    }
+                  >
+                    <option value="both">{ui.settings.chBoth}</option>
+                    <option value="in_app">{ui.settings.chInApp}</option>
+                    <option value="desktop">{ui.settings.chDesktop}</option>
+                    <option value="none">{ui.settings.chNone}</option>
+                  </select>
+                </label>
+
+                <label className="form-row">
+                  <div>
+                    <span>{ui.settings.evLockConflict}</span>
+                    <p className="settings-hint">{ui.settings.evLockConflictHint}</p>
+                  </div>
+                  <select
+                    value={prefs.notifications?.processLock ?? "in_app"}
+                    onChange={(e) =>
+                      updateNotify("processLock", e.target.value as NotificationChannel)
+                    }
+                  >
+                    <option value="both">{ui.settings.chBoth}</option>
+                    <option value="in_app">{ui.settings.chInApp}</option>
+                    <option value="desktop">{ui.settings.chDesktop}</option>
+                    <option value="none">{ui.settings.chNone}</option>
+                  </select>
+                </label>
+
+                <label className="form-row">
+                  <div>
+                    <span>{ui.settings.evAutomation}</span>
+                    <p className="settings-hint">{ui.settings.evAutomationHint}</p>
+                  </div>
+                  <select
+                    value={prefs.notifications?.automationWebhook ?? "both"}
+                    onChange={(e) =>
+                      updateNotify("automationWebhook", e.target.value as NotificationChannel)
+                    }
+                  >
+                    <option value="both">{ui.settings.chBoth}</option>
+                    <option value="in_app">{ui.settings.chInApp}</option>
+                    <option value="desktop">{ui.settings.chDesktop}</option>
+                    <option value="none">{ui.settings.chNone}</option>
+                  </select>
+                </label>
+              </section>
+            )}
+
+            {activeSection.id === "shortcuts" && (
+              <section className="settings-card">
+                <div className="settings-card-toolbar">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      prefs.resetShortcuts();
+                      setConflictWarning(null);
+                      setRecordingId(null);
+                      void (async () => {
+                        try {
+                          await usePreferencesStore.getState().persistSettings();
+                          showToast(ui.settings.toastShortcutsReset, "info", 2000);
+                        } catch (err) {
+                          showToast(
+                            `${ui.settings.saveError}: ${localizeAppError(err, ui)}`,
+                            "error",
+                            6000,
+                          );
+                        }
+                      })();
+                    }}
+                  >
+                    <RotateCcw size={13} style={{ marginRight: 6 }} />
+                    {ui.settings.resetShortcuts}
+                  </Button>
+                </div>
+
+                {conflictWarning && (
+                  <div className="shortcut-conflict-alert" role="alert">
+                    <AlertTriangle size={15} />
+                    <span>{conflictWarning}</span>
+                  </div>
+                )}
+
+                <table className="shortcuts-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: "35%" }}>{ui.settings.thAction}</th>
+                      <th style={{ width: "40%" }}>{ui.settings.thDesc}</th>
+                      <th style={{ width: "25%", textAlign: "right" }}>{ui.settings.thShortcut}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {shortcutDefs.map((def) => {
+                      const currentShortcut =
+                        (prefs.shortcuts ?? DEFAULT_SHORTCUTS)[def.id] ?? DEFAULT_SHORTCUTS[def.id];
+                      const isRecording = recordingId === def.id;
+
+                      return (
+                        <tr key={def.id}>
+                          <td>
+                            <span className="shortcut-action-name">{def.label}</span>
+                          </td>
+                          <td>
+                            <span className="shortcut-action-hint">{def.hint}</span>
+                          </td>
+                          <td style={{ textAlign: "right" }}>
+                            <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                              {isRecording ? (
+                                <span className="shortcut-recording-badge">
+                                  {ui.settings.pressKey}
+                                </span>
+                              ) : (
+                                <span className="shortcut-key-badge">{currentShortcut}</span>
+                              )}
+
+                              <Button
+                                variant={isRecording ? "primary" : "secondary"}
+                                size="sm"
+                                onClick={() => {
+                                  if (isRecording) {
+                                    setRecordingId(null);
+                                    setConflictWarning(null);
+                                  } else {
+                                    setConflictWarning(null);
+                                    setRecordingId(def.id);
+                                  }
+                                }}
+                              >
+                                {isRecording ? ui.common.cancel : ui.settings.changeKey}
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </section>
+            )}
+
+            {activeSection.id === "automation" && (
+              <section className="settings-card">
+                <div className="form-row form-row--stretch">
+                  <input
+                    type="url"
+                    placeholder={ui.settings.webhookPlaceholder}
+                    value={webhookDraft ?? prefs.webhookUrl ?? ""}
+                    onChange={(e) => setWebhookDraft(e.target.value)}
+                    onBlur={commitWebhook}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        commitWebhook();
+                      }
+                    }}
+                    aria-label={ui.settings.webhookUrl}
+                  />
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    icon={<Send size={13} />}
+                    onClick={handleTestWebhook}
+                    disabled={testingWebhook || (!prefs.webhookUrl && !webhookDraft?.trim())}
+                  >
+                    {testingWebhook ? ui.settings.webhookSending : ui.settings.webhookTestBtn}
+                  </Button>
+                </div>
+
+                {webhookTestStatus && (
+                  <p
+                    className="plan-note"
+                    style={{
+                      marginTop: 8,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      color: webhookTestStatus.success
+                        ? "var(--color-success)"
+                        : "var(--color-danger)",
+                    }}
+                  >
+                    {webhookTestStatus.success ? <Check size={14} /> : <X size={14} />}
+                    <span>{webhookTestStatus.text}</span>
+                  </p>
+                )}
+
+                <div className="form-row" style={{ marginTop: 16 }}>
+                  <div>
+                    <span>{ui.settings.webhookScanDone}</span>
+                    <p className="settings-hint">{ui.settings.webhookScanDoneHint}</p>
+                  </div>
+                  <Switch
+                    checked={prefs.webhookOnScan ?? true}
+                    onChange={(checked) => save({ webhookOnScan: checked })}
+                    aria-label={ui.settings.webhookScanDone}
+                  />
+                </div>
+
+                <div className="form-row">
+                  <div>
+                    <span>{ui.settings.webhookCleanDone}</span>
+                    <p className="settings-hint">{ui.settings.webhookCleanDoneHint}</p>
+                  </div>
+                  <Switch
+                    checked={prefs.webhookOnClean ?? true}
+                    onChange={(checked) => save({ webhookOnClean: checked })}
+                    aria-label={ui.settings.webhookCleanDone}
+                  />
+                </div>
+
+                <div className="form-row">
+                  <div>
+                    <span>{ui.settings.mcpDestructiveTitle}</span>
+                    <p className="settings-hint">{ui.settings.mcpDestructiveHint}</p>
+                  </div>
+                  <Switch
+                    checked={prefs.mcpAllowDestructive ?? false}
+                    onChange={(checked) => save({ mcpAllowDestructive: checked })}
+                    aria-label={ui.settings.mcpDestructiveTitle}
+                  />
+                </div>
+              </section>
+            )}
+
+            {activeSection.id === "protections" && (
+              <>
+                <section className="settings-card">
+                  <h3 className="settings-group-title">{ui.settings.protectedPaths}</h3>
+                  <div className="form-row form-row--stretch">
+                    <input
+                      type="text"
+                      placeholder={ui.settings.addPath}
+                      value={protectedInput}
+                      aria-label={ui.settings.protectedPaths}
+                      onChange={(e) => setProtectedInput(e.target.value)}
+                    />
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={<FolderOpen size={12} />}
+                      onClick={async () => {
+                        const selected = await scannerApi.selectFolderDialog(
+                          ui.settings.protectedPaths,
+                        );
+                        if (selected) setProtectedInput(selected);
+                      }}
+                    >
+                      {ui.common.browse}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={<Plus size={12} />}
+                      onClick={() => {
+                        const value = protectedInput.trim();
+                        if (!value) return;
+                        // A relative path never matches a scanned absolute path, so
+                        // the user would believe a folder was protected while it
+                        // was not. Reject it with an explanation instead of storing
+                        // a rule that can never fire.
+                        const isAbsolute = /^[A-Za-z]:\\/.test(value) || value.startsWith("\\\\");
+                        if (!isAbsolute) {
+                          showToast(ui.settings.pathMustBeAbsolute, "warning");
+                          return;
+                        }
+                        const normalized = value.replace(/[\\/]+$/, "");
+                        if (
+                          !prefs.protectedPaths.some(
+                            (p) => p.toLowerCase() === normalized.toLowerCase(),
+                          )
+                        ) {
+                          save({ protectedPaths: [...prefs.protectedPaths, normalized] });
+                        }
+                        setProtectedInput("");
+                      }}
+                    >
+                      {ui.common.add}
+                    </Button>
+                  </div>
+                  <div className="list-editor">
+                    {prefs.protectedPaths.length === 0 && (
+                      <span className="plan-note">{ui.common.none}</span>
+                    )}
+                    {prefs.protectedPaths.map((path) => (
+                      <div key={path} className="list-row">
+                        <span>{path}</span>
+                        <button
+                          type="button"
+                          className="icon-btn icon-btn-sm"
+                          aria-label={`${ui.settings.remove}: ${path}`}
+                          onClick={() =>
+                            save({ protectedPaths: prefs.protectedPaths.filter((p) => p !== path) })
+                          }
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="settings-card">
+                  <h3 className="settings-group-title">{ui.settings.excludedNames}</h3>
+                  <div className="form-row form-row--stretch">
+                    <input
+                      type="text"
+                      placeholder={ui.settings.excludedNames}
+                      value={excludedInput}
+                      aria-label={ui.settings.excludedNames}
+                      onChange={(e) => setExcludedInput(e.target.value)}
+                    />
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={<Plus size={12} />}
+                      onClick={() => {
+                        const value = excludedInput.trim();
+                        if (!value) return;
+                        // Rules are matched against a single path segment; a value
+                        // containing a separator silently never matched.
+                        if (/[\\/]/.test(value)) {
+                          showToast(ui.settings.excludedNameInvalid, "warning");
+                          return;
+                        }
+                        const normalized = value.toLowerCase();
+                        if (!prefs.excludedNames.some((n) => n.toLowerCase() === normalized)) {
+                          save({ excludedNames: [...prefs.excludedNames, value] });
+                        }
+                        setExcludedInput("");
+                      }}
+                    >
+                      {ui.common.add}
+                    </Button>
+                  </div>
+                  <div className="list-editor">
+                    {prefs.excludedNames.length === 0 && (
+                      <span className="plan-note">{ui.common.none}</span>
+                    )}
+                    {prefs.excludedNames.map((name) => (
+                      <div key={name} className="list-row">
+                        <span>{name}</span>
+                        <button
+                          type="button"
+                          className="icon-btn icon-btn-sm"
+                          aria-label={`${ui.settings.remove}: ${name}`}
+                          onClick={() =>
+                            save({ excludedNames: prefs.excludedNames.filter((n) => n !== name) })
+                          }
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </>
+            )}
+
+            {activeSection.id === "agents" && (
+              <section className="settings-card">
+                <div className="form-row">
+                  <span>{ui.settings.agentCacheCleanup}</span>
+                  <Switch
+                    checked={prefs.agentPolicy.allowCacheCleanup}
+                    onLabel={ui.common.on}
+                    offLabel={ui.common.off}
+                    aria-label={ui.settings.agentCacheCleanup}
+                    onChange={(v) =>
+                      save({ agentPolicy: { ...prefs.agentPolicy, allowCacheCleanup: v } })
+                    }
+                  />
+                </div>
+                <div className="form-row">
+                  <span>{ui.settings.browserRecordings}</span>
+                  <Switch
+                    checked={prefs.agentPolicy.protectBrowserRecordings}
+                    onLabel={ui.common.on}
+                    offLabel={ui.common.off}
+                    aria-label={ui.settings.browserRecordings}
+                    onChange={(v) =>
+                      save({ agentPolicy: { ...prefs.agentPolicy, protectBrowserRecordings: v } })
+                    }
+                  />
+                </div>
+                <div
+                  className="plan-note"
+                  style={{ display: "flex", gap: 6, alignItems: "flex-start" }}
+                >
+                  <ShieldCheck size={14} /> {ui.agents.subtitle}
+                </div>
+              </section>
+            )}
+
+            {activeSection.id === "privacy" && (
+              <PrivacySection
+                maskPaths={prefs.maskPaths}
+                historyEnabled={prefs.historyEnabled}
+                scanBusy={scanBusy}
+                onSave={(patch) => void save(patch)}
               />
-            </div>
-            <div className="form-row">
-              <span>{ui.settings.browserRecordings}</span>
-              <Switch
-                checked={prefs.agentPolicy.protectBrowserRecordings}
-                onLabel={ui.common.on}
-                offLabel={ui.common.off}
-                aria-label={ui.settings.browserRecordings}
-                onChange={(v) =>
-                  save({ agentPolicy: { ...prefs.agentPolicy, protectBrowserRecordings: v } })
-                }
+            )}
+
+            {activeSection.id === "updates" && <UpdatePanel version={appVersion} hideHeader />}
+
+            {activeSection.id === "diagnostics" && <SettingsDiagnostics version={appVersion} />}
+
+            {activeSection.id === "about" && (
+              <AboutView
+                buildInfo={buildInfo}
+                catalog={catalog}
+                catalogStats={catalogStats}
+                isStandalone={false}
               />
-            </div>
-            <div
-              className="plan-note"
-              style={{ display: "flex", gap: 6, alignItems: "flex-start" }}
-            >
-              <ShieldCheck size={14} /> {ui.agents.subtitle}
-            </div>
-          </section>
-        )}
-
-        {activeSection.id === "privacy" && (
-          <PrivacySection
-            maskPaths={prefs.maskPaths}
-            historyEnabled={prefs.historyEnabled}
-            scanBusy={scanBusy}
-            onSave={(patch) => void save(patch)}
-          />
-        )}
-
-        {activeSection.id === "updates" && <UpdatePanel version={buildInfo?.version ?? "1.0.0"} />}
-
-        {activeSection.id === "diagnostics" && (
-          <SettingsDiagnostics version={buildInfo?.version ?? "1.0.0"} />
-        )}
-
-        {activeSection.id === "about" && (
-          <AboutView
-            buildInfo={buildInfo}
-            catalog={catalog}
-            catalogStats={catalogStats}
-            isStandalone={false}
-          />
-        )}
+            )}
+          </div>
+        </div>
       </div>
 
       <Dialog

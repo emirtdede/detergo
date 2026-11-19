@@ -50,15 +50,17 @@ error log, and a Settings > Diagnostics pane that zips the logs, build details
 and a settings summary into one file and opens a ready mail draft addressed to
 support. Nothing is uploaded automatically; you press Send in your own mail app.
 
-Settings now has clickable summary cards: appearance and language open a
-two-tab dialog, the scan-profile card offers Fast / Balanced (default) /
-Thorough / Deep / Maximum, and the security card jumps straight to the
-protections tab. The About page uses a second side menu (Overview, Catalog,
-Updates & health, Contact, Legal) so its sections no longer leave uneven gaps.
-Documentation commands all have one-click copy buttons. See
+Settings now uses the same full-bleed second side menu as Documentation and About,
+and provides clickable summary cards: appearance and language open a two-tab dialog,
+the scan-profile card offers Fast / Balanced (default) / Full / Thorough / Deep /
+Maximum, and the security card jumps straight to the protections section. Every
+individual command in Documentation has its own one-click copy button, and the
+dedicated C: drive System Cleaner tab automates Windows temporary files, Prefetch,
+Windows Update leftovers, Disk Cleanup (`cleanmgr`), DISM WinSxS cleanup and Task
+Scheduler profiles without requiring manual CMD commands. See
 [`docs/CHANGELOG.md`](docs/CHANGELOG.md).
 
-Source quality gates pass: 256 frontend tests, 241 Rust library tests plus the
+Source quality gates pass: 262 frontend tests, 278 Rust library tests plus the
 integration suites, zero Clippy warnings and the full accessibility suite
 (16 Playwright/axe checks). See `docs/release/TEST_MATRIX.md` for the recorded
 run.
@@ -98,7 +100,7 @@ privately as described in [`SECURITY.md`](.github/SECURITY.md).
 
 ## Project Overview
 
-**Dev Cleaner** is a Windows desktop application built with **Tauri 2 (Rust)** and **React 19 (TypeScript)**. Version 2.2 discovers reproducible developer artifacts across JavaScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart and other ecosystems, analyses AI coding-agent storage (Codex, Claude Code, Antigravity) without reading file contents, and safely cleans selected targets. Every scan, measurement, classification and deletion runs in the Rust backend; the frontend only presents and selects backend-owned target IDs.
+**Dev Cleaner** is a Windows desktop application built with **Tauri 2 (Rust)** and **React 19 (TypeScript)**. Version 1.0.0 discovers reproducible developer artifacts across JavaScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart and other ecosystems, analyses AI coding-agent storage (Codex, Claude Code, Antigravity) without reading file contents, and safely cleans selected targets. Every scan, measurement, classification and deletion runs in the Rust backend; the frontend only presents and selects backend-owned target IDs.
 
 Traditional filesystem scanners freeze system I/O by recursing deep into nested dependency subfolders. **Dev Cleaner** solves this with an **Optimized Pruning Directory Traversal Engine**: as soon as a `node_modules` directory is discovered, deep recursive traversal is bypassed, and size calculation is offloaded to asynchronous worker pools.
 
@@ -113,6 +115,7 @@ request on its own; the only outbound calls are ones you trigger (an optional we
 ## Key Features
 
 - **One catalog, many ecosystems**: 56 evidence-backed rules cover JavaScript/TypeScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart, package-manager caches and AI coding-agent storage, each with a safety class and a regeneration hint.
+- **C: drive cleaner**: a dedicated tab clears Windows temp, Prefetch, Update leftovers and error reports, empties the Recycle Bin, drives Disk Cleanup and DISM component cleanup, and can schedule a prompt-free weekly or daily run. Every action is measured first and confirmed by the user; elevation is requested only when a selected action needs it. See the [system cleaner guide](docs/SYSTEM_CLEANER.md).
 - **Terminal-native when you want it**: `dev-cleaner scan .` prints a size-ranked table, `-i` turns it into a numbered picker, `--json` feeds CI, and `--webhook` reports to n8n/Slack/Discord. See [`docs/CLI.md`](docs/CLI.md).
 - **Built-in MCP server**: coding agents can discover and preview cleanups over the Model Context Protocol, with a mandatory preview → token → execute gate.
 - **Blazing-Fast Discovery Engine**: Traverses massive disk trees with millisecond response times, instantly skipping nested sub-directory recursion inside `node_modules` to find hundreds of projects without UI stutter.
@@ -419,7 +422,7 @@ See [`LICENSE`](LICENSE) for the full text.
 
 ## Project Overview (Proje Genel Bakışı)
 
-**Dev Cleaner**, **Tauri 2 (Rust)** ve **React 19 (TypeScript)** ile geliştirilmiş bir Windows masaüstü uygulamasıdır. 2.2 sürümü JavaScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart ve diğer ekosistemlerdeki yeniden üretilebilir geliştirici artıklarını bulur; Codex, Claude Code ve Antigravity gibi AI kodlama ajanlarının depolamasını dosya içeriğini okumadan analiz eder ve seçilen hedefleri güvenle temizler. Tarama, ölçüm, sınıflandırma ve silme tamamen Rust arka ucunda çalışır; ön yüz yalnızca arka ucun ürettiği hedef kimliklerini gösterir ve seçer.
+**Dev Cleaner**, **Tauri 2 (Rust)** ve **React 19 (TypeScript)** ile geliştirilmiş bir Windows masaüstü uygulamasıdır. 1.0.0 sürümü JavaScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart ve diğer ekosistemlerdeki yeniden üretilebilir geliştirici artıklarını bulur; Codex, Claude Code ve Antigravity gibi AI kodlama ajanlarının depolamasını dosya içeriğini okumadan analiz eder ve seçilen hedefleri güvenle temizler. Tarama, ölçüm, sınıflandırma ve silme tamamen Rust arka ucunda çalışır; ön yüz yalnızca arka ucun ürettiği hedef kimliklerini gösterir ve seçer.
 
 Geleneksel dosya tarayıcıları iç içe geçmiş bağımlılık ağaçlarında takılarak sistemi kilitler. **Dev Cleaner**, geliştirdiği **Budamalı Dizin Tarama Motoru** ile `node_modules` klasörüne ulaştığı anda derin özyinelemeli taramayı durdurarak boyutu arka plan iş parçacığı havuzlarına devreder ve yüzlerce projeyi saniyeler içinde listeler.
 
@@ -432,6 +435,7 @@ Uygulama **%100 yerel ve çevrimdışı** çalışır; kendiliğinden hiçbir a�
 ## Key Features (Önemli Özellikler)
 
 - **Tek katalog, çoklu ekosistem**: 56 kanıta dayalı kural JavaScript/TypeScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart, paket yöneticisi önbellekleri ve AI kodlama ajanı depolamasını kapsar; her kuralın bir güvenlik sınıfı ve yeniden üretim ipucu vardır.
+- **C: sürücüsü temizleyici**: ayrı bir yan menü sekmesi Windows geçici dosyalarını (`%TEMP%`, `C:\Windows\Temp`), Prefetch verilerini, Windows Update artıklarını, hata raporlarını, Geri Dönüşüm Kutusunu, Windows Disk Temizleme (`cleanmgr`) ve DISM WinSxS bileşen deposu temizliğini tek tıkla ölçüp yürütür; günlük/haftalık zamanlanmış görevlerle otomatikleştirilebilir. Ayrıntı: [`docs/SYSTEM_CLEANER.md`](docs/SYSTEM_CLEANER.md).
 - **İstediğinizde terminal aracı**: `dev-cleaner scan .` boyuta göre sıralı tablo yazdırır, `-i` numaralı seçim moduna geçer, `--json` CI'ı besler, `--webhook` n8n/Slack/Discord'a rapor gönderir. Ayrıntı: [`docs/CLI.md`](docs/CLI.md).
 - **Yerleşik MCP sunucusu**: kodlama ajanları Model Context Protocol üzerinden temizlik keşfedip önizleyebilir; yıkıcı işlem zorunlu önizleme → token → çalıştırma kapısından geçer.
 - **Işık Hızında Tarama Motoru**: Milyonlarca dosya içeren disk ağaçlarını tararken `node_modules` alt dizinlerine gereksiz girmeyerek taramayı budar ve sistemi dondurmadan yüzlerce projeyi saniyeler içinde bulur.

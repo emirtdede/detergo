@@ -225,5 +225,20 @@
   "server supported by Anthropic and the Linux Foundation. AI coding assistants (Cursor, Windsurf, Claude Code) can query workspace disk pressure and execute safe cleanups with your permission.": "เซิร์ฟเวอร์ที่รองรับโดย Anthropic และ Linux Foundation ผู้ช่วยเขียนโค้ด AI (Cursor, Windsurf, Claude Code) สามารถสืบค้นแรงกดดันของดิสก์ในพื้นที่ทำงาน และดำเนินการล้างข้อมูลอย่างปลอดภัยโดยได้รับอนุญาตจากคุณ",
   "simulations and headless automation.": "การจำลองและระบบอัตโนมัติแบบไม่มีหัว",
   "was found, but no root marker like": "พบ แต่ไม่มีเครื่องหมายรูทเหมือน",
-  "🎯 Best For:": "🎯 เหมาะสำหรับ:"
+  "🎯 Best For:": "🎯 เหมาะสำหรับ:",
+  "C: Drive Cleaner & Scheduled Automation": "C: Drive Cleaner & Scheduled Automation",
+  "Windows Maintenance": "Windows Maintenance",
+  "Guide": "Guide",
+  "Reclaim space on the system drive without typing a single command. Every action is measured before anything is deleted.": "Reclaim space on the system drive without typing a single command. Every action is measured before anything is deleted.",
+  "What it cleans": "What it cleans",
+  "The cleaner covers your temporary files, Windows temporary files, Prefetch data, Windows Update leftovers, Windows error reports, the Recycle Bin, the Windows Disk Cleanup profile and the component store (WinSxS). Project folders, documents and Downloads sit outside every audited root and can never be selected.": "The cleaner covers your temporary files, Windows temporary files, Prefetch data, Windows Update leftovers, Windows error reports, the Recycle Bin, the Windows Disk Cleanup profile and the component store (WinSxS). Project folders, documents and Downloads sit outside every audited root and can never be selected.",
+  "Administrator rights": "Administrator rights",
+  "Windows blocks system folders for standard users. When an action needs elevation the page offers a single restart button; the app reopens on the same page with your selection intact. The app itself still starts without administrator rights, so scanning and cleaning your own files never needs a prompt.": "Windows blocks system folders for standard users. When an action needs elevation the page offers a single restart button; the app reopens on the same page with your selection intact. The app itself still starts without administrator rights, so scanning and cleaning your own files never needs a prompt.",
+  "Safe by design": "Safe by design",
+  "The interface only sends action identifiers; paths are resolved and re-verified on the native side against a fixed audited list. Deletion never follows junctions or symbolic links, locked files are skipped and reported, and every run is written to the local audit history.": "The interface only sends action identifiers; paths are resolved and re-verified on the native side against a fixed audited list. Deletion never follows junctions or symbolic links, locked files are skipped and reported, and every run is written to the local audit history.",
+  "Nothing is uploaded. Sizes, logs and audit records stay on this device.": "Nothing is uploaded. Sizes, logs and audit records stay on this device.",
+  "Automatic cleanup": "Automatic cleanup",
+  "A Windows scheduled task can run the quick or standard profile daily or weekly. The task runs with the highest rights your account allows and asks nothing; remove the schedule from the same panel at any time. Prefetch, the Recycle Bin and the component store are never chosen automatically.": "A Windows scheduled task can run the quick or standard profile daily or weekly. The task runs with the highest rights your account allows and asks nothing; remove the schedule from the same panel at any time. Prefetch, the Recycle Bin and the component store are never chosen automatically.",
+  "Command line": "Command line",
+  "The same actions are available headlessly for scripts and CI: dev-cleaner system --list, dev-cleaner system --clean quick --yes, or --dry-run to measure only.": "The same actions are available headlessly for scripts and CI: dev-cleaner system --list, dev-cleaner system --clean quick --yes, or --dry-run to measure only."
 }

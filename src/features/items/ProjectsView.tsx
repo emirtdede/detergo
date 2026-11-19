@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { FolderTree, ShieldCheck, Boxes, Play } from "lucide-react";
+import { FolderOpen, FolderTree, ShieldCheck, Boxes, Play } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
 import { EmptyState } from "@/components/primitives/EmptyState";
 import { PageHeader } from "@/components/primitives/PageHeader";
@@ -15,7 +15,7 @@ import "./items.css";
 
 export const ProjectsView: React.FC = () => {
   const ui = useUIText();
-  const { isScanning, startScan } = useScanController();
+  const { isScanning, startScan, chooseFolderAndScan } = useScanController();
   const language = usePreferencesStore((s) => s.language);
   const itemsById = useScanStore((s) => s.itemsById);
   const itemIds = useScanStore((s) => s.itemIds);
@@ -102,19 +102,32 @@ export const ProjectsView: React.FC = () => {
         title={ui.nav.projects}
         description={subtitle}
         actions={
-          <Button
-            variant="primary"
-            size="sm"
-            icon={<Play size={12} fill="currentColor" />}
-            onClick={() => startScan(undefined, "project")}
-            disabled={isScanning}
-          >
-            {isScanning
-              ? ui.common.scanning
-              : status === "idle"
-                ? ui.common.chooseFolder
-                : ui.common.rescan}
-          </Button>
+          <>
+            <Button
+              variant={rootPath || status !== "idle" ? "secondary" : "primary"}
+              size="sm"
+              icon={<FolderOpen size={13} />}
+              onClick={() => void chooseFolderAndScan()}
+              disabled={isScanning}
+            >
+              {ui.common.chooseFolder}
+            </Button>
+            {(rootPath || status !== "idle") && (
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<Play size={12} fill="currentColor" />}
+                onClick={() => void startScan(undefined, "project")}
+                disabled={isScanning}
+              >
+                {isScanning
+                  ? ui.common.scanning
+                  : status === "idle"
+                    ? ui.common.scan
+                    : ui.common.rescan}
+              </Button>
+            )}
+          </>
         }
       />
 
@@ -180,14 +193,26 @@ export const ProjectsView: React.FC = () => {
           description={emptyDescription}
           actions={
             !isScanning ? (
-              <Button
-                variant="primary"
-                size="sm"
-                icon={<Play size={12} fill="currentColor" />}
-                onClick={() => startScan(undefined, "project")}
-              >
-                {status === "idle" ? ui.common.chooseFolder : ui.common.rescan}
-              </Button>
+              <>
+                <Button
+                  variant={status === "idle" && !rootPath ? "primary" : "secondary"}
+                  size="sm"
+                  icon={<FolderOpen size={13} />}
+                  onClick={() => void chooseFolderAndScan()}
+                >
+                  {ui.common.chooseFolder}
+                </Button>
+                {(rootPath || status !== "idle") && (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    icon={<Play size={12} fill="currentColor" />}
+                    onClick={() => void startScan(undefined, "project")}
+                  >
+                    {status === "idle" ? ui.common.scan : ui.common.rescan}
+                  </Button>
+                )}
+              </>
             ) : undefined
           }
         />

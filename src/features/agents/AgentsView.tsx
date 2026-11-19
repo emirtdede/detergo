@@ -319,7 +319,7 @@ export const AgentsView: React.FC = () => {
   // `itemIds` as "agents scanned" told the user their agent scan found nothing
   // right after a project scan. Only an agents/all-drives scan (or a restored
   // one) counts here.
-  const scopeCoversAgents = scope === "agents" || scope === "allDrives";
+  const scopeCoversAgents = scope === "agents" || scope === "allDrives" || scope === "combined";
   const isLoadedOrScanned =
     scopeCoversAgents &&
     (status === "completed" || status === "partial" || itemIds.length > 0 || restored);
@@ -363,7 +363,7 @@ export const AgentsView: React.FC = () => {
   }, [items, providers]);
 
   return (
-    <div className="page-view">
+    <div className="page-view agents-page-view">
       <PageHeader
         title={ui.agents.title}
         description={ui.agents.subtitle}

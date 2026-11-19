@@ -1,8 +1,8 @@
 pub mod windows;
 
 pub use windows::{
-    facts, identity, is_in_use, is_remote_path, is_reparse_point, running_process_names,
-    volume_free_bytes, FileFacts, FileIdentity,
+    facts, identity, is_elevated, is_in_use, is_remote_path, is_reparse_point, relaunch_elevated,
+    running_process_names, volume_free_bytes, FileFacts, FileIdentity,
 };
 pub use windows::{
     fixed_drive_roots, force_foreground, get_known_dev_locations, list_fixed_drives, DriveInfo,

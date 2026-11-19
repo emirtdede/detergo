@@ -343,6 +343,33 @@ export function useScanController() {
   );
 
   /**
+   * Always opens the native folder picker and immediately starts a project scan
+   * on the selected directory (used by "Choose folder" actions so they never
+   * silently re-scan a previous root).
+   */
+  const chooseFolderAndScan = useCallback(async (): Promise<boolean> => {
+    const current = useScanStore.getState();
+    if (
+      current.scanStartPending ||
+      current.combinedActive ||
+      current.status === "scanning" ||
+      current.status === "measuring" ||
+      current.status === "cancelling"
+    ) {
+      return false;
+    }
+    let picked: string | null = null;
+    try {
+      picked = await scannerApi.selectFolderDialog(getUIText().header.folderNotSelected);
+    } catch (err) {
+      useUiStore.getState().showToast(localizeAppError(toAppError(err)), "error", 6000);
+      return false;
+    }
+    if (!picked) return false;
+    return runScan(picked, "project");
+  }, [runScan]);
+
+  /**
    * "Scan everything": projects, AI agent storage and package caches.
    *
    * Projects and agents share one backend session (one progress stream, one
@@ -438,5 +465,13 @@ export function useScanController() {
     }
   }, []);
 
-  return { isScanning, status, combinedActive, startScan, startFullScan, cancelScan };
+  return {
+    isScanning,
+    status,
+    combinedActive,
+    startScan,
+    chooseFolderAndScan,
+    startFullScan,
+    cancelScan,
+  };
 }

@@ -1,5 +1,6 @@
 pub mod delete;
 pub mod drives;
+pub mod elevation;
 pub mod fs_meta;
 pub mod instance_guard;
 pub mod known_folders;
@@ -41,6 +42,7 @@ pub(crate) fn wide_verbatim(path: &std::path::Path) -> Vec<u16> {
 }
 
 pub use drives::{fixed_drive_roots, list_fixed_drives, DriveInfo};
+pub use elevation::{is_elevated, relaunch_elevated};
 pub use instance_guard::force_foreground;
 
 pub use fs_meta::{

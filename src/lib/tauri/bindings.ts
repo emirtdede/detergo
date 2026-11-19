@@ -1270,6 +1270,229 @@ export type SupportMailResult = {
 	message: string,
 };
 
+export type SystemActionId = "userTemp" | "windowsTemp" | "prefetch" | "windowsUpdate" | "errorReports" | "recycleBin" | "diskCleanup" | "componentStore";
+
+export type SystemActionInfo = SystemActionInfo_Serialize | SystemActionInfo_Deserialize;
+
+export type SystemActionInfo_Deserialize = {
+	id: SystemActionId,
+	safety: SystemSafety,
+	requiresAdmin: boolean,
+	/**
+	 *  False when the environment cannot offer this action at all (for
+	 *  example the cache folder does not exist).
+	 */
+	available: boolean,
+	/**
+	 *  Machine-readable reason when `available` or `measured` is false:
+	 *  `notPresent`, `needsAdmin`, `windowsReports`, `timedOut`, `cancelled`.
+	 */
+	reason?: string | null,
+	/**  The folder or tool this action operates on, shown under the label. */
+	path?: string | null,
+	bytes: number,
+	fileCount: number,
+	measured: boolean,
+};
+
+export type SystemActionInfo_Serialize = {
+	id: SystemActionId,
+	safety: SystemSafety,
+	requiresAdmin: boolean,
+	/**
+	 *  False when the environment cannot offer this action at all (for
+	 *  example the cache folder does not exist).
+	 */
+	available: boolean,
+	/**
+	 *  Machine-readable reason when `available` or `measured` is false:
+	 *  `notPresent`, `needsAdmin`, `windowsReports`, `timedOut`, `cancelled`.
+	 */
+	reason: string | null,
+	/**  The folder or tool this action operates on, shown under the label. */
+	path: string | null,
+	bytes: number,
+	fileCount: number,
+	measured: boolean,
+};
+
+export type SystemActionResult = SystemActionResult_Serialize | SystemActionResult_Deserialize;
+
+export type SystemActionResult_Deserialize = {
+	id: SystemActionId,
+	success: boolean,
+	freedBytes: number,
+	deletedFiles: number,
+	skipped: number,
+	/**  A bounded sample of the names that could not be removed (in use). */
+	skippedSample: string[],
+	exitCode?: number | null,
+	/**
+	 *  Short tail of the tool output for the two engine actions. Never a path
+	 *  outside the audited roots.
+	 */
+	logTail?: string | null,
+	durationMs: number,
+	errorCode?: string | null,
+};
+
+export type SystemActionResult_Serialize = {
+	id: SystemActionId,
+	success: boolean,
+	freedBytes: number,
+	deletedFiles: number,
+	skipped: number,
+	/**  A bounded sample of the names that could not be removed (in use). */
+	skippedSample: string[],
+	exitCode: number | null,
+	/**
+	 *  Short tail of the tool output for the two engine actions. Never a path
+	 *  outside the audited roots.
+	 */
+	logTail: string | null,
+	durationMs: number,
+	errorCode: string | null,
+};
+
+/**
+ *  Persistent description of the Windows scheduled task. The task itself is
+ *  the source of truth for execution; this mirror exists so the UI can show
+ *  what it asked Windows to do and can repair a task deleted by the user.
+ */
+export type SystemAutomationConfig = SystemAutomationConfig_Serialize | SystemAutomationConfig_Deserialize;
+
+/**
+ *  Persistent description of the Windows scheduled task. The task itself is
+ *  the source of truth for execution; this mirror exists so the UI can show
+ *  what it asked Windows to do and can repair a task deleted by the user.
+ */
+export type SystemAutomationConfig_Deserialize = {
+	enabled: boolean,
+	/**  `daily` or `weekly`. */
+	frequency: string,
+	/**  Local time, `HH:MM`. */
+	time: string,
+	/**  0 = Sunday … 6 = Saturday. Only used when `frequency` is `weekly`. */
+	weekday: number,
+	/**  `quick`, `standard` or `deep`. */
+	profile: string,
+	/**  Whether the scheduled task currently exists in Windows. */
+	installed: boolean,
+	/**  Last scheduled run reported by the app itself, RFC 3339. */
+	lastRun?: string | null,
+	lastFreedBytes?: number | null,
+};
+
+/**
+ *  Persistent description of the Windows scheduled task. The task itself is
+ *  the source of truth for execution; this mirror exists so the UI can show
+ *  what it asked Windows to do and can repair a task deleted by the user.
+ */
+export type SystemAutomationConfig_Serialize = {
+	enabled: boolean,
+	/**  `daily` or `weekly`. */
+	frequency: string,
+	/**  Local time, `HH:MM`. */
+	time: string,
+	/**  0 = Sunday … 6 = Saturday. Only used when `frequency` is `weekly`. */
+	weekday: number,
+	/**  `quick`, `standard` or `deep`. */
+	profile: string,
+	/**  Whether the scheduled task currently exists in Windows. */
+	installed: boolean,
+	/**  Last scheduled run reported by the app itself, RFC 3339. */
+	lastRun: string | null,
+	lastFreedBytes: number | null,
+};
+
+export type SystemCleanReport = SystemCleanReport_Serialize | SystemCleanReport_Deserialize;
+
+export type SystemCleanReport_Deserialize = {
+	results: SystemActionResult_Deserialize[],
+	freedBytes: number,
+	cancelled: boolean,
+	startedAt: string,
+	finishedAt: string,
+	elevated: boolean,
+};
+
+export type SystemCleanReport_Serialize = {
+	results: SystemActionResult_Serialize[],
+	freedBytes: number,
+	cancelled: boolean,
+	startedAt: string,
+	finishedAt: string,
+	elevated: boolean,
+};
+
+export type SystemEvent = { type: "started"; total: number } | { type: "actionStarted"; id: SystemActionId; index: number; total: number } | { type: "actionFinished"; id: SystemActionId; success: boolean; freedBytes: number; skipped: number } | { type: "finished"; freedBytes: number; cancelled: boolean };
+
+/**
+ *  A confirmed action set. The frontend must call `system_preview` first; the
+ *  token carries the exact actions so a stale UI cannot widen the scope.
+ */
+export type SystemPreview = SystemPreview_Serialize | SystemPreview_Deserialize;
+
+/**
+ *  A confirmed action set. The frontend must call `system_preview` first; the
+ *  token carries the exact actions so a stale UI cannot widen the scope.
+ */
+export type SystemPreview_Deserialize = {
+	token: string,
+	actions: SystemActionInfo_Deserialize[],
+	totalBytes: number,
+	expiresMs: number,
+	requiresAdmin: boolean,
+	elevated: boolean,
+};
+
+/**
+ *  A confirmed action set. The frontend must call `system_preview` first; the
+ *  token carries the exact actions so a stale UI cannot widen the scope.
+ */
+export type SystemPreview_Serialize = {
+	token: string,
+	actions: SystemActionInfo_Serialize[],
+	totalBytes: number,
+	expiresMs: number,
+	requiresAdmin: boolean,
+	elevated: boolean,
+};
+
+/**
+ *  How recoverable the affected data is. Mirrors the developer catalog's
+ *  vocabulary so the UI can use the same badge colours.
+ */
+export type SystemSafety = 
+/**  Recreated on demand; losing it only costs a little time. */
+"safe" | 
+/**  Windows rebuilds it automatically. */
+"regenerate" | 
+/**  The user should read what it is before running it. */
+"review";
+
+export type SystemScanReport = SystemScanReport_Serialize | SystemScanReport_Deserialize;
+
+export type SystemScanReport_Deserialize = {
+	elevated: boolean,
+	actions: SystemActionInfo_Deserialize[],
+	totalBytes: number,
+	/**  Free/total space of the volume that holds `%SystemDrive%`. */
+	disk?: DiskSpaceInfo | null,
+	scannedAt: string,
+	warnings: string[],
+};
+
+export type SystemScanReport_Serialize = {
+	elevated: boolean,
+	actions: SystemActionInfo_Serialize[],
+	totalBytes: number,
+	/**  Free/total space of the volume that holds `%SystemDrive%`. */
+	disk: DiskSpaceInfo | null,
+	scannedAt: string,
+	warnings: string[],
+};
+
 export type TargetKind = "directory" | "file" | "fileGroup";
 
 export type TargetSnapshot = TargetSnapshot_Serialize | TargetSnapshot_Deserialize;

@@ -787,3 +787,98 @@ export interface AppErrorDto {
   code: AppErrorCode;
   message: string;
 }
+
+/* -------------------------------------------------------------------------- */
+/* System cleanup (C: drive cleaner)                                           */
+/* -------------------------------------------------------------------------- */
+
+export type SystemActionId =
+  | "userTemp"
+  | "windowsTemp"
+  | "prefetch"
+  | "windowsUpdate"
+  | "errorReports"
+  | "recycleBin"
+  | "diskCleanup"
+  | "componentStore";
+
+export type SystemSafety = "safe" | "regenerate" | "review";
+
+export interface SystemActionInfo {
+  id: SystemActionId;
+  safety: SystemSafety;
+  requiresAdmin: boolean;
+  available: boolean;
+  reason?: string | null;
+  /** Folder or tool the action operates on, shown under the label. */
+  path?: string | null;
+  bytes: number;
+  fileCount: number;
+  measured: boolean;
+}
+
+export interface SystemScanReport {
+  elevated: boolean;
+  actions: SystemActionInfo[];
+  totalBytes: number;
+  disk?: DiskSpaceInfo | null;
+  scannedAt: string;
+  warnings: string[];
+}
+
+export interface SystemPreview {
+  token: string;
+  actions: SystemActionInfo[];
+  totalBytes: number;
+  expiresMs: number;
+  requiresAdmin: boolean;
+  elevated: boolean;
+}
+
+export type SystemEvent =
+  | { type: "started"; total: number }
+  | { type: "actionStarted"; id: SystemActionId; index: number; total: number }
+  | {
+      type: "actionFinished";
+      id: SystemActionId;
+      success: boolean;
+      freedBytes: number;
+      skipped: number;
+    }
+  | { type: "finished"; freedBytes: number; cancelled: boolean };
+
+export interface SystemActionResult {
+  id: SystemActionId;
+  success: boolean;
+  freedBytes: number;
+  deletedFiles: number;
+  skipped: number;
+  skippedSample: string[];
+  exitCode?: number | null;
+  logTail?: string | null;
+  durationMs: number;
+  errorCode?: string | null;
+}
+
+export interface SystemCleanReport {
+  results: SystemActionResult[];
+  freedBytes: number;
+  cancelled: boolean;
+  startedAt: string;
+  finishedAt: string;
+  elevated: boolean;
+}
+
+export type SystemAutomationFrequency = "daily" | "weekly";
+export type SystemAutomationProfile = "quick" | "standard" | "deep";
+
+export interface SystemAutomationConfig {
+  enabled: boolean;
+  frequency: string;
+  time: string;
+  weekday: number;
+  profile: string;
+  installed: boolean;
+  lastRun?: string | null;
+  lastFreedBytes?: number | null;
+}
