@@ -11,6 +11,7 @@ import {
   Bell,
   Send,
   RotateCcw,
+  Globe,
 } from "lucide-react";
 import { notificationService } from "@/lib/notifications/notification-service";
 import { NotificationChannel } from "@/types";
@@ -18,6 +19,7 @@ import { Button } from "@/components/primitives/Button";
 import { Switch } from "@/components/primitives/Switch";
 import { NumberField } from "@/components/primitives/NumberField";
 import { PageHeader } from "@/components/primitives/PageHeader";
+import { Dialog } from "@/components/primitives/Dialog";
 import { usePreferencesStore, SETTING_LIMITS } from "@/stores/preferences-store";
 import { useScanStore } from "@/stores/scan-store";
 import { useShallow } from "zustand/react/shallow";
@@ -42,6 +44,8 @@ import { log } from "@/lib/logging";
 import { useSettingsSections } from "./settings-sections";
 import { AboutView } from "./AboutView";
 import { PrivacySection } from "./PrivacySection";
+import { UpdatePanel } from "./UpdatePanel";
+import { SettingsDiagnostics } from "./SettingsDiagnostics";
 import "../items/items.css";
 import "../shell/shell.css";
 import "./settings.css";
@@ -79,8 +83,35 @@ const PROFILE_DEFAULTS: Record<
 > = {
   fast: { maxDepth: 16, maxCandidates: 10000, timeoutMinutes: 5 },
   balanced: { maxDepth: 32, maxCandidates: 50000, timeoutMinutes: 15 },
+  thorough: { maxDepth: 48, maxCandidates: 100000, timeoutMinutes: 20 },
   deep: { maxDepth: 64, maxCandidates: 200000, timeoutMinutes: 30 },
+  maximum: { maxDepth: 128, maxCandidates: 500000, timeoutMinutes: 60 },
 };
+
+/** Ordered list for the profile picker; the defaults above stay the source. */
+const PROFILE_KEYS = ["fast", "balanced", "thorough", "deep", "maximum"] as const;
+
+function profileLabel(profile: string, ui: UIText): string {
+  const labels: Record<string, string> = {
+    fast: ui.settings.profileFast,
+    balanced: ui.settings.profileBalanced,
+    thorough: ui.settings.profileThorough,
+    deep: ui.settings.profileDeep,
+    maximum: ui.settings.profileMaximum,
+  };
+  return labels[profile] ?? profile;
+}
+
+function profileHint(profile: string, ui: UIText): string {
+  const hints: Record<string, string> = {
+    fast: ui.settings.profileFastHint,
+    balanced: ui.settings.profileBalancedHint,
+    thorough: ui.settings.profileThoroughHint,
+    deep: ui.settings.profileDeepHint,
+    maximum: ui.settings.profileMaximumHint,
+  };
+  return hints[profile] ?? "";
+}
 
 /**
  * Validates a typed webhook draft and writes it through the store.
@@ -161,6 +192,9 @@ export const SettingsView: React.FC = () => {
   const [excludedInput, setExcludedInput] = useState("");
   const [catalog, setCatalog] = useState<CatalogDto | null>(null);
   const [buildInfo, setBuildInfo] = useState<BuildInfo | null>(null);
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
+  const [appearanceTab, setAppearanceTab] = useState<"theme" | "language">("theme");
+  const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
     // The catalogue is a large payload; leaving Settings before it lands must
@@ -457,9 +491,19 @@ export const SettingsView: React.FC = () => {
         </details>
       )}
 
-      {/* Shared Bento KPI Strip for Settings */}
+      {/* Shared Bento KPI Strip for Settings. Each card is the shortcut to the
+          control it summarises: appearance/language and the scan profile open a
+          focused dialog, security jumps to the protections tab. */}
       <div className="nc-bento-strip nc-bento-strip--3">
-        <div className="nc-kpi-card">
+        <button
+          type="button"
+          className="nc-kpi-card settings-kpi-action"
+          onClick={() => {
+            setAppearanceTab("theme");
+            setAppearanceOpen(true);
+          }}
+          aria-haspopup="dialog"
+        >
           <div className="nc-kpi-card-header">
             <span className="nc-kpi-card-label">{ui.settings.kpiAppearance}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--accent">
@@ -475,9 +519,14 @@ export const SettingsView: React.FC = () => {
               {prefs.reduceMotion ? ui.settings.reducedMotion : ui.settings.standardMotion}
             </span>
           </div>
-        </div>
+        </button>
 
-        <div className="nc-kpi-card">
+        <button
+          type="button"
+          className="nc-kpi-card settings-kpi-action"
+          onClick={() => setProfileOpen(true)}
+          aria-haspopup="dialog"
+        >
           <div className="nc-kpi-card-header">
             <span className="nc-kpi-card-label">{ui.settings.kpiScanProfile}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--success">
@@ -486,16 +535,20 @@ export const SettingsView: React.FC = () => {
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value" style={{ fontSize: "var(--text-lg)" }}>
-              {prefs.scanProfile.toUpperCase()}
+              {profileLabel(prefs.scanProfile, ui)}
             </span>
             <span className="nc-kpi-card-sub">
               {ui.settings.maxDepth}: {prefs.maxDepth} · {ui.settings.maxCandidates}:{" "}
               {(prefs.maxCandidates / 1000).toFixed(0)}k
             </span>
           </div>
-        </div>
+        </button>
 
-        <div className="nc-kpi-card">
+        <button
+          type="button"
+          className="nc-kpi-card settings-kpi-action"
+          onClick={() => setSettingsSection("protections")}
+        >
           <div className="nc-kpi-card-header">
             <span className="nc-kpi-card-label">{ui.settings.kpiSecurity}</span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--purple">
@@ -510,7 +563,7 @@ export const SettingsView: React.FC = () => {
               {ui.settings.kpiRulesDefined(prefs.excludedNames.length)}
             </span>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Modern Subpage Horizontal Tabs */}
@@ -1217,6 +1270,12 @@ export const SettingsView: React.FC = () => {
           />
         )}
 
+        {activeSection.id === "updates" && <UpdatePanel version={buildInfo?.version ?? "1.0.0"} />}
+
+        {activeSection.id === "diagnostics" && (
+          <SettingsDiagnostics version={buildInfo?.version ?? "1.0.0"} />
+        )}
+
         {activeSection.id === "about" && (
           <AboutView
             buildInfo={buildInfo}
@@ -1226,6 +1285,129 @@ export const SettingsView: React.FC = () => {
           />
         )}
       </div>
+
+      <Dialog
+        isOpen={appearanceOpen}
+        onClose={() => setAppearanceOpen(false)}
+        title={ui.settings.kpiAppearance}
+        maxWidth="640px"
+        footer={
+          <Button variant="secondary" size="sm" onClick={() => setAppearanceOpen(false)}>
+            {ui.common.close}
+          </Button>
+        }
+      >
+        <div className="settings-dialog-tabs" role="tablist" aria-label={ui.settings.kpiAppearance}>
+          {(
+            [
+              ["theme", ui.settings.theme, <Palette key="t" size={14} />],
+              ["language", ui.settings.language, <Globe key="l" size={14} />],
+            ] as const
+          ).map(([id, label, icon]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={appearanceTab === id}
+              className={`settings-dialog-tab ${appearanceTab === id ? "is-active" : ""}`}
+              onClick={() => setAppearanceTab(id)}
+            >
+              {icon}
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {appearanceTab === "theme" ? (
+          <div className="settings-theme-grid" role="tabpanel">
+            {THEMES.map((theme) => (
+              <button
+                key={theme}
+                type="button"
+                className={`settings-theme-option ${prefs.theme === theme ? "is-active" : ""}`}
+                aria-pressed={prefs.theme === theme}
+                onClick={() => prefs.setTheme(theme)}
+              >
+                <span>{themeLabel(theme, ui)}</span>
+                {prefs.theme === theme && <Check size={14} />}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div role="tabpanel" className="settings-language-panel">
+            <label className="form-row">
+              <span>{ui.settings.language}</span>
+              <select
+                value={resolveUiLocale(prefs.language)}
+                onChange={(e) => prefs.setLanguage(e.target.value as SupportedLanguage)}
+              >
+                {uiLanguages.map((language) => (
+                  <option key={language.id} value={language.id}>
+                    {language.nativeName}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="form-row">
+              <span>{ui.settings.reduceMotion}</span>
+              <Switch
+                checked={prefs.reduceMotion}
+                onLabel={ui.common.on}
+                offLabel={ui.common.off}
+                aria-label={ui.settings.reduceMotion}
+                onChange={(v) => prefs.setReduceMotion(v)}
+              />
+            </div>
+          </div>
+        )}
+      </Dialog>
+
+      <Dialog
+        isOpen={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        title={ui.settings.scanProfile}
+        maxWidth="620px"
+        footer={
+          <Button variant="secondary" size="sm" onClick={() => setProfileOpen(false)}>
+            {ui.common.close}
+          </Button>
+        }
+      >
+        <p className="settings-dialog-hint">{ui.settings.profileDialogHint}</p>
+        <div className="settings-profile-list">
+          {PROFILE_KEYS.map((key) => {
+            const active = (prefs.scanProfile || "balanced") === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                className={`settings-profile-option ${active ? "is-active" : ""}`}
+                aria-pressed={active}
+                onClick={() => {
+                  setProfile(key);
+                  setProfileOpen(false);
+                }}
+              >
+                <span className="settings-profile-name">
+                  {profileLabel(key, ui)}
+                  {key === "balanced" && (
+                    <span className="settings-profile-default">
+                      {ui.settings.profileDefaultBadge}
+                    </span>
+                  )}
+                </span>
+                <span className="settings-profile-hint">{profileHint(key, ui)}</span>
+                <span className="settings-profile-limits">
+                  {ui.settings.maxDepth} {PROFILE_DEFAULTS[key].maxDepth} ·{" "}
+                  {ui.settings.maxCandidates} {PROFILE_DEFAULTS[key].maxCandidates / 1000}k ·{" "}
+                  {ui.settings.timeout} {PROFILE_DEFAULTS[key].timeoutMinutes}
+                </span>
+                {active && <Check size={16} className="settings-profile-check" />}
+              </button>
+            );
+          })}
+        </div>
+      </Dialog>
     </div>
   );
 };

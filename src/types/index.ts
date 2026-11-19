@@ -729,6 +729,31 @@ export interface UpdateInfo {
   assets: UpdateAsset[];
 }
 
+/** Input for the on-device support ZIP. Every field is already sanitized. */
+export interface SupportBundleRequest {
+  version: string;
+  locale: string;
+  generatedAt: string;
+  errorLog: string;
+  systemLog: string;
+  settingsSummary: string;
+  systemInfo: string;
+}
+
+export interface SupportBundle {
+  path: string;
+  fileName: string;
+  bytes: number;
+  createdAt: string;
+}
+
+export interface SupportMailResult {
+  /** `draft` = client opened with the attachment; `mailto` = plain draft. */
+  mode: string;
+  path: string;
+  message: string;
+}
+
 export type AppErrorCode =
   | "InvalidPath"
   | "AccessDenied"

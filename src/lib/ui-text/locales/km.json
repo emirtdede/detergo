@@ -580,7 +580,17 @@
     "pathMustBeAbsolute": "ផ្លូវត្រូវតែដាច់ខាត ឧទាហរណ៍ C:\\Projects។",
     "excludedNameInvalid": "ច្បាប់ត្រូវតែជាឯកសារ ឬឈ្មោះថតតែមួយ ដោយគ្មានឧបករណ៍បំបែកផ្លូវ។",
     "shortcutNeedsModifier": "ផ្លូវកាត់សកលត្រូវការបញ្ជា (Ctrl) ជំនួស (Alt) ឬមេតា (Meta) បូកនឹងគ្រាប់ចុច ឬគ្រាប់ចុចមុខងារ។",
-    "shortcutsResetWarning": "{count} ផ្លូវកាត់មិនត្រឹមត្រូវត្រូវបានកំណត់ឡើងវិញទៅលំនាំដើមរបស់ពួកគេ។"
+    "shortcutsResetWarning": "{count} ផ្លូវកាត់មិនត្រឹមត្រូវត្រូវបានកំណត់ឡើងវិញទៅលំនាំដើមរបស់ពួកគេ។",
+    "profileThorough": "Thorough",
+    "profileMaximum": "Maximum",
+    "profileFastHint": "Skips deep folders and stops early. Best for a quick estimate.",
+    "profileBalancedHint": "The default: matches the catalog everywhere without crawling the whole disk.",
+    "profileThoroughHint": "Wider and slower than Balanced. Useful after a large dependency install.",
+    "profileDeepHint": "Crawls deeply nested monorepos and large drives.",
+    "profileMaximumHint": "No practical limit. Slow and disk-heavy; use it for a one-off audit.",
+    "profileDialogHint": "A profile only pre-fills the limits below; you can still fine-tune them.",
+    "securityOpen": "Open security settings",
+    "profileDefaultBadge": "Default"
   },
   "legal": {
     "docTabsLabel": "ឯកសារផ្លូវច្បាប់",
@@ -653,7 +663,13 @@
     "contactBillingDesc": "ការបង់ប្រាក់, ការជាវអង្គភាពទិញ, និងការគាំទ្រការជាវ",
     "contactPrivacyDesc": "សុវត្ថិភាពទិន្នន័យ, GDPR, និងសំណួរឯកជនភាព",
     "ecoCacheScope": "npmឃ្លាំងសម្ងាត់ Cargo បញ្ជីឈ្មោះ pipឃ្លាំងសម្ងាត់ yarn",
-    "contactBilling": "ការបង់ប្រាក់ និងការទូទាត់"
+    "contactBilling": "ការបង់ប្រាក់ និងការទូទាត់",
+    "navTitle": "On this page",
+    "navOverview": "Application",
+    "navCatalog": "Rule catalog",
+    "navHealth": "Updates & health",
+    "navContacts": "Contact",
+    "navLegal": "Legal"
   },
   "docs": {
     "catGuide": "មគ្គុទេសក៍ & ស្ថាបត្យកម្ម",
@@ -757,6 +773,24 @@
     "title": "Error log",
     "hint": "Problems caught in this session. Stored only on this device, never uploaded.",
     "empty": "No errors recorded.",
-    "report": "Report an issue"
+    "report": "Report an issue",
+    "systemTitle": "System messages",
+    "systemHint": "Warnings and lifecycle messages written by the app on this device.",
+    "errorsTitle": "Error reports",
+    "supportTitle": "Send diagnostics to support",
+    "supportHint": "Creates one ZIP with the logs below, the build details and a settings summary, then opens a ready mail draft to support@vellium.dev. Nothing is sent until you press Send in your mail app.",
+    "createBundle": "Create bundle and open draft",
+    "creating": "Creating bundle…",
+    "bundleReady": "Bundle ready: {path}",
+    "mailOpened": "Your mail app is open with the bundle attached. Press Send there.",
+    "mailFallback": "The mail app did not accept the attachment automatically. The bundle is in Explorer and its path was copied; attach it to the draft.",
+    "mailFailed": "Could not open a mail draft. The bundle is ready in Explorer.",
+    "reveal": "Show in Explorer",
+    "copyPath": "Copy path",
+    "sendTo": "Recipient: {email}",
+    "copyAll": "Copy everything",
+    "clearAll": "Clear logs",
+    "noSystem": "No system messages recorded.",
+    "notSent": "Never uploaded automatically."
   }
 }

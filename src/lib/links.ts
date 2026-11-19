@@ -11,5 +11,8 @@ export const SPONSOR_URL = "https://github.com/sponsors/emirtdede";
 export const RELEASES_URL = `${REPOSITORY_URL}/releases/latest`;
 export const NEW_ISSUE_URL = `${REPOSITORY_URL}/issues/new`;
 
+/** Product support inbox used by the on-device diagnostics bundle. */
+export const SUPPORT_EMAIL = "support@vellium.dev";
+
 /** Issue-template id used by the pre-filled "Report an issue" link. */
 export const BUG_REPORT_TEMPLATE = "bug_report.yml";

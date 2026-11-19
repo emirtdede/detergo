@@ -985,3 +985,20 @@
   padding: 0 !important;
   min-height: auto !important;
 }
+
+/* The AI Tools empty state must fill the page like the Projects one, not sit
+   in a small floating card. */
+.agents-empty-state {
+  flex: 1 1 auto !important;
+  min-height: clamp(340px, 46vh, 540px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--surface) !important;
+  border: 1px dashed var(--border-strong) !important;
+  border-radius: var(--radius-md) !important;
+  margin: var(--space-3) 0 0 0 !important;
+  box-sizing: border-box !important;
+  padding: var(--space-6) !important;
+}

@@ -23,6 +23,9 @@ import {
   ScanEvent,
   ScanRequest,
   ScanSummary,
+  SupportBundle,
+  SupportBundleRequest,
+  SupportMailResult,
 } from "@/types";
 import type { ScannerApi } from "./scanner-api";
 import { MOCK_CATALOG_RULES } from "./mock-catalog";
@@ -888,6 +891,23 @@ export function createMockScannerApi(): ScannerApi {
       _payload?: Record<string, unknown>,
     ): Promise<{ ok: boolean; status: number; latencyMs: number; message: string }> {
       return { ok: true, status: 200, latencyMs: 12, message: "Simulated (browser preview)" };
+    },
+
+    async createSupportBundle(request: SupportBundleRequest): Promise<SupportBundle> {
+      return {
+        path: "C:\\Users\\demo\\Downloads\\dev-cleaner-support-demo.zip",
+        fileName: "dev-cleaner-support-demo.zip",
+        bytes: request.errorLog.length + request.systemLog.length + 512,
+        createdAt: new Date().toISOString(),
+      };
+    },
+
+    async composeSupportMail(bundlePath: string): Promise<SupportMailResult> {
+      return {
+        mode: "mailto",
+        path: bundlePath,
+        message: "Simulated (browser preview)",
+      };
     },
 
     async dispatchWebhook(

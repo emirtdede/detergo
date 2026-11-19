@@ -640,21 +640,19 @@ export const AgentsView: React.FC = () => {
         {tab === "items" && items.length > 0 ? (
           <ItemTable items={items} showProject={false} />
         ) : tab === "items" ? (
-          <div className="agents-scan-results-card">
-            <EmptyState
-              variant="compact"
-              live={isScanning}
-              icon={
-                isLoadedOrScanned ? (
-                  <ShieldCheck size={28} style={{ color: "var(--success)" }} />
-                ) : (
-                  <ShieldAlert size={28} />
-                )
-              }
-              title={emptyTitle}
-              description={emptyDescription}
-            />
-          </div>
+          <EmptyState
+            className="agents-empty-state"
+            live={isScanning}
+            icon={
+              isLoadedOrScanned ? (
+                <ShieldCheck size={28} style={{ color: "var(--success)" }} />
+              ) : (
+                <ShieldAlert size={28} />
+              )
+            }
+            title={emptyTitle}
+            description={emptyDescription}
+          />
         ) : null}
       </div>
 

@@ -439,7 +439,17 @@ export interface UIText {
     scanProfile: string;
     profileBalanced: string;
     profileFast: string;
+    profileThorough: string;
     profileDeep: string;
+    profileMaximum: string;
+    profileFastHint: string;
+    profileBalancedHint: string;
+    profileThoroughHint: string;
+    profileDeepHint: string;
+    profileMaximumHint: string;
+    profileDialogHint: string;
+    profileDefaultBadge: string;
+    securityOpen: string;
     maxDepth: string;
     maxCandidates: string;
     timeout: string;
@@ -667,6 +677,12 @@ export interface UIText {
     contactBilling: string;
     contactBillingDesc: string;
     contactPrivacyDesc: string;
+    navTitle: string;
+    navOverview: string;
+    navCatalog: string;
+    navHealth: string;
+    navContacts: string;
+    navLegal: string;
   };
   catalog: {
     details: string;
@@ -693,6 +709,24 @@ export interface UIText {
     hint: string;
     empty: string;
     report: string;
+    systemTitle: string;
+    systemHint: string;
+    errorsTitle: string;
+    supportTitle: string;
+    supportHint: string;
+    createBundle: string;
+    creating: string;
+    bundleReady: (path: string) => string;
+    mailOpened: string;
+    mailFallback: string;
+    mailFailed: string;
+    reveal: string;
+    copyPath: string;
+    sendTo: (email: string) => string;
+    copyAll: string;
+    clearAll: string;
+    noSystem: string;
+    notSent: string;
   };
   docs: {
     catGuide: string;

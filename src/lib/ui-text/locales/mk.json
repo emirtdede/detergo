@@ -580,7 +580,17 @@
     "pathMustBeAbsolute": "Патеките мора да бидат апсолутни, на пример C:\\Projects.",
     "excludedNameInvalid": "Правилото мора да биде име на една датотека или папка, без раздвојувачи на патеки.",
     "shortcutNeedsModifier": "На глобалната кратенка му треба Ctrl, Alt или Meta плус копче или функциско копче.",
-    "shortcutsResetWarning": "{count} неважечки кратенки беа ресетирани на нивните стандардни вредности."
+    "shortcutsResetWarning": "{count} неважечки кратенки беа ресетирани на нивните стандардни вредности.",
+    "profileThorough": "Thorough",
+    "profileMaximum": "Maximum",
+    "profileFastHint": "Skips deep folders and stops early. Best for a quick estimate.",
+    "profileBalancedHint": "The default: matches the catalog everywhere without crawling the whole disk.",
+    "profileThoroughHint": "Wider and slower than Balanced. Useful after a large dependency install.",
+    "profileDeepHint": "Crawls deeply nested monorepos and large drives.",
+    "profileMaximumHint": "No practical limit. Slow and disk-heavy; use it for a one-off audit.",
+    "profileDialogHint": "A profile only pre-fills the limits below; you can still fine-tune them.",
+    "securityOpen": "Open security settings",
+    "profileDefaultBadge": "Default"
   },
   "legal": {
     "docTabsLabel": "Правни документи",
@@ -653,7 +663,13 @@
     "contactBillingDesc": "Фактурирање, корпоративно набавување и поддршка за претплати",
     "contactPrivacyDesc": "Безбедност на податоци, GDPR и прашања за приватност",
     "ecoCacheScope": "npm кеш, Cargo регистар, pip кеш, yarn",
-    "contactBilling": "Фактурирање и плаќања"
+    "contactBilling": "Фактурирање и плаќања",
+    "navTitle": "On this page",
+    "navOverview": "Application",
+    "navCatalog": "Rule catalog",
+    "navHealth": "Updates & health",
+    "navContacts": "Contact",
+    "navLegal": "Legal"
   },
   "docs": {
     "catGuide": "Водичи и архитектура",
@@ -757,6 +773,24 @@
     "title": "Error log",
     "hint": "Problems caught in this session. Stored only on this device, never uploaded.",
     "empty": "No errors recorded.",
-    "report": "Report an issue"
+    "report": "Report an issue",
+    "systemTitle": "System messages",
+    "systemHint": "Warnings and lifecycle messages written by the app on this device.",
+    "errorsTitle": "Error reports",
+    "supportTitle": "Send diagnostics to support",
+    "supportHint": "Creates one ZIP with the logs below, the build details and a settings summary, then opens a ready mail draft to support@vellium.dev. Nothing is sent until you press Send in your mail app.",
+    "createBundle": "Create bundle and open draft",
+    "creating": "Creating bundle…",
+    "bundleReady": "Bundle ready: {path}",
+    "mailOpened": "Your mail app is open with the bundle attached. Press Send there.",
+    "mailFallback": "The mail app did not accept the attachment automatically. The bundle is in Explorer and its path was copied; attach it to the draft.",
+    "mailFailed": "Could not open a mail draft. The bundle is ready in Explorer.",
+    "reveal": "Show in Explorer",
+    "copyPath": "Copy path",
+    "sendTo": "Recipient: {email}",
+    "copyAll": "Copy everything",
+    "clearAll": "Clear logs",
+    "noSystem": "No system messages recorded.",
+    "notSent": "Never uploaded automatically."
   }
 }

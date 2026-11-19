@@ -1,13 +1,12 @@
 # Continuous integration and release pipeline.
 #
-# AppVeyor is the only CI for this project. GitHub Actions is not used: the
-# account has no payment method on file, so every Actions job is refused before
-# its first step ("The job was not started because your account is locked due to
-# a billing issue"), and no amount of public-repo minutes lifts that lock.
-# AppVeyor builds open-source projects for free, including Windows images, so
-# the same gates run there instead.
+# GitHub Actions (`.github/workflows/ci.yml`) is the primary CI: it runs the
+# frontend gates on Linux, the Rust gates on Windows and publishes installers
+# for a pushed `v*` tag. AppVeyor is kept as a redundant Windows path; it builds
+# open-source projects for free and can publish the same tag if Actions is
+# unavailable.
 #
-# Setup, once:
+# Setup for AppVeyor, once:
 #   1. https://ci.appveyor.com -> sign in with GitHub -> New project -> this repo.
 #   2. Project settings -> Environment -> add a variable named `github_token`
 #      holding a GitHub personal access token with the `repo` scope, marked
@@ -16,7 +15,7 @@
 #      The build runs, `release_output/` is produced and the GitHub Release is
 #      created for that tag with the installers attached.
 
-version: 1.0.{build}
+version: 1.0.0.{build}
 
 image:
   - Ubuntu

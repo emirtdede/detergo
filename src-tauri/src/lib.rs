@@ -96,6 +96,8 @@ pub fn run() {
             reset_app_data,
             get_build_info,
             check_for_updates,
+            create_support_bundle,
+            compose_support_mail,
             test_webhook,
             dispatch_webhook,
             get_last_scan,

@@ -1239,6 +1239,37 @@ export type StorageSnapshot = {
 	itemCount: number,
 };
 
+export type SupportBundle = {
+	path: string,
+	fileName: string,
+	/**
+	 *  Bundle size in bytes; a support ZIP is a few MiB, so u32 is ample and
+	 *  keeps the generated TypeScript contract free of BigInt.
+	 */
+	bytes: number,
+	createdAt: string,
+};
+
+export type SupportBundleRequest = {
+	version: string,
+	locale: string,
+	generatedAt: string,
+	errorLog: string,
+	systemLog: string,
+	settingsSummary: string,
+	systemInfo: string,
+};
+
+export type SupportMailResult = {
+	/**
+	 *  `draft` when a mail client accepted the attachment, `mailto` when only a
+	 *  plain draft could be opened, `failed` when neither worked.
+	 */
+	mode: string,
+	path: string,
+	message: string,
+};
+
 export type TargetKind = "directory" | "file" | "fileGroup";
 
 export type TargetSnapshot = TargetSnapshot_Serialize | TargetSnapshot_Deserialize;

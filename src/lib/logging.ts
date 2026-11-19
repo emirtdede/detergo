@@ -1,4 +1,5 @@
 import { maskPath } from "@/lib/format/path";
+import { recordSystemMessage } from "@/lib/diagnostics/system-log";
 
 /**
  * Minimal level-aware logger.
@@ -82,9 +83,16 @@ function sanitize(value: unknown, depth = 0): unknown {
 }
 
 function emit(level: Level, args: unknown[]): void {
+  const sanitized = args.map((arg) => sanitize(arg));
+  // Diagnostics mirrors everything except debug noise. Recording happens even
+  // when production suppresses the console line: the point is to let the user
+  // read it in Settings > Diagnostics.
+  if (level !== "debug") {
+    recordSystemMessage(level, sanitized);
+  }
   if (!isDev && level !== "warn" && level !== "error") return;
   const sink = level === "error" ? console.error : level === "warn" ? console.warn : console.log;
-  sink(PREFIX, ...args.map((arg) => sanitize(arg)));
+  sink(PREFIX, ...sanitized);
 }
 
 export const log = {

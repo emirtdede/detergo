@@ -580,7 +580,17 @@
     "pathMustBeAbsolute": "પાથ ચોક્કસ હોવા જોઈએ, ઉદાહરણ તરીકે C:\\Projects.",
     "excludedNameInvalid": "નિયમ પાથ વિભાજક વિના, એક ફાઇલ અથવા ફોલ્ડરનું નામ હોવું આવશ્યક છે.",
     "shortcutNeedsModifier": "વૈશ્વિક શૉર્ટકટ માટે Ctrl, Alt અથવા Meta વત્તા કી અથવા ફંક્શન કીની જરૂર પડે છે.",
-    "shortcutsResetWarning": "{count} અમાન્ય શોર્ટકટ(ઓ) તેમના ડિફોલ્ટ પર રીસેટ કરવામાં આવ્યા હતા."
+    "shortcutsResetWarning": "{count} અમાન્ય શોર્ટકટ(ઓ) તેમના ડિફોલ્ટ પર રીસેટ કરવામાં આવ્યા હતા.",
+    "profileThorough": "Thorough",
+    "profileMaximum": "Maximum",
+    "profileFastHint": "Skips deep folders and stops early. Best for a quick estimate.",
+    "profileBalancedHint": "The default: matches the catalog everywhere without crawling the whole disk.",
+    "profileThoroughHint": "Wider and slower than Balanced. Useful after a large dependency install.",
+    "profileDeepHint": "Crawls deeply nested monorepos and large drives.",
+    "profileMaximumHint": "No practical limit. Slow and disk-heavy; use it for a one-off audit.",
+    "profileDialogHint": "A profile only pre-fills the limits below; you can still fine-tune them.",
+    "securityOpen": "Open security settings",
+    "profileDefaultBadge": "Default"
   },
   "legal": {
     "docTabsLabel": "કાયદેસર દસ્તાવેજો",
@@ -653,7 +663,13 @@
     "contactBillingDesc": "બિલિંગ, એન્ટરપ્રાઇઝ પ્રોક્યોરમેન્ટ, અને સબ્સ્ક્રિપ્શન સપોર્ટ",
     "contactPrivacyDesc": "ડેટા સુરક્ષા, GDPR, અને ગોપનીયતા સંબંધિત પૂછપરછ",
     "ecoCacheScope": "npm કૅશ, Cargo રજિસ્ટ્રી, pip કૅશ, yarn",
-    "contactBilling": "બિલિંગ અને ચુકવણીઓ"
+    "contactBilling": "બિલિંગ અને ચુકવણીઓ",
+    "navTitle": "On this page",
+    "navOverview": "Application",
+    "navCatalog": "Rule catalog",
+    "navHealth": "Updates & health",
+    "navContacts": "Contact",
+    "navLegal": "Legal"
   },
   "docs": {
     "catGuide": "માર્ગદર્શિકા અને આર્કિટેક્ચર",
@@ -757,6 +773,24 @@
     "title": "Error log",
     "hint": "Problems caught in this session. Stored only on this device, never uploaded.",
     "empty": "No errors recorded.",
-    "report": "Report an issue"
+    "report": "Report an issue",
+    "systemTitle": "System messages",
+    "systemHint": "Warnings and lifecycle messages written by the app on this device.",
+    "errorsTitle": "Error reports",
+    "supportTitle": "Send diagnostics to support",
+    "supportHint": "Creates one ZIP with the logs below, the build details and a settings summary, then opens a ready mail draft to support@vellium.dev. Nothing is sent until you press Send in your mail app.",
+    "createBundle": "Create bundle and open draft",
+    "creating": "Creating bundle…",
+    "bundleReady": "Bundle ready: {path}",
+    "mailOpened": "Your mail app is open with the bundle attached. Press Send there.",
+    "mailFallback": "The mail app did not accept the attachment automatically. The bundle is in Explorer and its path was copied; attach it to the draft.",
+    "mailFailed": "Could not open a mail draft. The bundle is ready in Explorer.",
+    "reveal": "Show in Explorer",
+    "copyPath": "Copy path",
+    "sendTo": "Recipient: {email}",
+    "copyAll": "Copy everything",
+    "clearAll": "Clear logs",
+    "noSystem": "No system messages recorded.",
+    "notSent": "Never uploaded automatically."
   }
 }

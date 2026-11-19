@@ -607,7 +607,12 @@ export const ScanHeader: React.FC = () => {
                   >
                     <div className="location-menu-item-info">
                       <span className="location-menu-item-title">{ui.common.scanAll}</span>
-                      <span className="location-menu-item-path">{ui.common.scanAllDesc}</span>
+                      <span
+                        className="location-menu-item-path location-menu-item-path--desc"
+                        title={ui.common.scanAllDesc}
+                      >
+                        {ui.common.scanAllDesc}
+                      </span>
                     </div>
                   </button>
                   <div className="location-menu-divider" />

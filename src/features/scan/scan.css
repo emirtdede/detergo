@@ -392,6 +392,22 @@
   white-space: nowrap;
 }
 
+/* The "scan all" description is a sentence, not a path: it must wrap instead of
+   being cut to an unreadable ellipsis. The title attribute keeps the full text
+   available on hover as a fallback. */
+.location-menu-item-path--desc {
+  font-family: inherit;
+  font-size: 10.5px;
+  line-height: 1.35;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .location-menu-item-check {
   color: var(--accent);
   flex-shrink: 0;

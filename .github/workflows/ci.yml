@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main, development]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend gates (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Version declarations agree
+        run: npm run check-version
+
+      - name: TypeScript
+        run: npm run typecheck
+
+      - name: Formatting
+        run: npm run format:check
+
+      - name: i18n
+        run: npm run check:i18n
+
+      - name: Unit tests
+        run: npm test -- --run
+
+      - name: Production bundle
+        run: npm run build
+
+      - name: Regression gates
+        run: npm run check:gates
+
+      - name: Dependency audit
+        run: npm run check:audit
+
+      - name: Contrast, icons and brand
+        run: |
+          npm run check:contrast
+          npm run check:icons
+          npm run check:brand
+
+  rust:
+    name: Rust gates (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Rust toolchain
+        run: rustup component add rustfmt clippy
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Formatting
+        run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+
+      - name: Check
+        run: cargo check --locked --manifest-path src-tauri/Cargo.toml
+
+      - name: Clippy
+        run: cargo clippy --locked --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+
+      - name: Tests
+        run: cargo test --locked --manifest-path src-tauri/Cargo.toml
+
+      - name: IPC contract is up to date
+        run: cargo run --locked --manifest-path src-tauri/Cargo.toml --features bindings --bin export_bindings -- --check
+
+  release:
+    name: Release build
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [frontend, rust]
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - run: npm ci
+
+      - name: Build installers and provenance
+        run: npm run build:release
+
+      - name: Verify provenance
+        run: npm run check:build-info
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release_output/*.exe
+            release_output/*.msi
+            release_output/SHA256SUMS.txt
+            release_output/BUILD_INFO.json
+          body_path: docs/CHANGELOG.md
+          fail_on_unmatched_files: false

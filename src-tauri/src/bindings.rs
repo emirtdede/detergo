@@ -22,6 +22,7 @@ use crate::cleanup::official_actions::{
 };
 use crate::cleanup::plan::{CleanupPlan, PlanItem, TargetSnapshot};
 use crate::cleanup::DeleteMode;
+use crate::commands::support_commands::{SupportBundle, SupportBundleRequest, SupportMailResult};
 use crate::commands::system_commands::DiskSpaceInfo;
 use crate::error::AppError;
 use crate::last_scan::LastScanSnapshot;
@@ -77,6 +78,9 @@ pub fn collect() -> Types {
         .register::<BuildInfo>()
         .register::<UpdateInfo>()
         .register::<UpdateAsset>()
+        .register::<SupportBundleRequest>()
+        .register::<SupportBundle>()
+        .register::<SupportMailResult>()
         .register::<LastScanSnapshot>()
         .register::<CustomAgentProvider>()
         .register::<AgentPolicy>()

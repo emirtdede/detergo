@@ -635,6 +635,19 @@ dev-cleaner caches --clean all --yes`
             <h2 className="docs-h2">{t("3. `dev-cleaner history`")}</h2>
             <p className="docs-p">{t("Lists historical cleanup records and reclaimed bytes audit logs.")}</p>
             <div className="docs-code-card">
+              <div className="docs-code-header">
+                <span className="docs-code-header-left">
+                  <Terminal size={13} /> terminal
+                </span>
+                <button
+                  type="button"
+                  className="docs-copy-action"
+                  onClick={() => copyToClipboard("dev-cleaner history --limit 15", "cli-history")}
+                >
+                  {copiedKey === "cli-history" ? <Check size={13} /> : <Copy size={13} />}
+                  {copiedKey === "cli-history" ? ui.docs.copied : ui.docs.copy}
+                </button>
+              </div>
               <pre className="docs-code-pre">{highlightBash("dev-cleaner history --limit 15")}</pre>
             </div>
           </article>
@@ -830,6 +843,19 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
 
             <h2 className="docs-h2">{t("Starting the Server")}</h2>
             <div className="docs-code-card">
+              <div className="docs-code-header">
+                <span className="docs-code-header-left">
+                  <Terminal size={13} /> terminal
+                </span>
+                <button
+                  type="button"
+                  className="docs-copy-action"
+                  onClick={() => copyToClipboard("dev-cleaner mcp", "mcp-start")}
+                >
+                  {copiedKey === "mcp-start" ? <Check size={13} /> : <Copy size={13} />}
+                  {copiedKey === "mcp-start" ? ui.docs.copied : ui.docs.copy}
+                </button>
+              </div>
               <pre className="docs-code-pre">{highlightBash("dev-cleaner mcp")}</pre>
             </div>
           </article>

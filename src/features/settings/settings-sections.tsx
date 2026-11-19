@@ -1,9 +1,11 @@
 import React from "react";
 import {
   Bell,
+  Bug,
   Keyboard,
   Cpu,
   ListChecks,
+  Rocket,
   ShieldCheck,
   SlidersHorizontal,
   UserRoundCog,
@@ -74,6 +76,18 @@ export function useSettingsSections(): SettingsSectionDef[] {
       label: ui.settings.privacy,
       hint: ui.settings.privacyHint,
       icon: <ListChecks size={15} />,
+    },
+    {
+      id: "updates",
+      label: ui.updates.title,
+      hint: ui.updates.hint,
+      icon: <Rocket size={15} />,
+    },
+    {
+      id: "diagnostics",
+      label: ui.diagnostics.title,
+      hint: ui.diagnostics.hint,
+      icon: <Bug size={15} />,
     },
   ];
 }

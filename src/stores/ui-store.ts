@@ -12,6 +12,8 @@ export type SettingsSection =
   | "protections"
   | "agents"
   | "privacy"
+  | "updates"
+  | "diagnostics"
   | "about";
 
 /** About hosts the legal documents as a subview rather than a settings page. */

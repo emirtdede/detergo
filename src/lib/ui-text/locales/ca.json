@@ -580,7 +580,17 @@
     "pathMustBeAbsolute": "Els camins han de ser absoluts, per exemple C:\\Projects.",
     "excludedNameInvalid": "Una regla ha de ser un sol nom de fitxer o carpeta, sense separadors de camí.",
     "shortcutNeedsModifier": "Una drecera global necessita Ctrl, Alt o Meta més una tecla o una tecla de funció.",
-    "shortcutsResetWarning": "S'han restablit {count} dreceres no vàlides als valors predeterminats."
+    "shortcutsResetWarning": "S'han restablit {count} dreceres no vàlides als valors predeterminats.",
+    "profileThorough": "Thorough",
+    "profileMaximum": "Maximum",
+    "profileFastHint": "Skips deep folders and stops early. Best for a quick estimate.",
+    "profileBalancedHint": "The default: matches the catalog everywhere without crawling the whole disk.",
+    "profileThoroughHint": "Wider and slower than Balanced. Useful after a large dependency install.",
+    "profileDeepHint": "Crawls deeply nested monorepos and large drives.",
+    "profileMaximumHint": "No practical limit. Slow and disk-heavy; use it for a one-off audit.",
+    "profileDialogHint": "A profile only pre-fills the limits below; you can still fine-tune them.",
+    "securityOpen": "Open security settings",
+    "profileDefaultBadge": "Default"
   },
   "legal": {
     "docTabsLabel": "Documents legals",
@@ -653,7 +663,13 @@
     "contactBillingDesc": "Facturació, adquisició empresarial i suport de subscripcions",
     "contactPrivacyDesc": "Seguretat de dades, GDPR i consultes de privacitat",
     "ecoCacheScope": "npm memòria cau, Cargo registre, pip memòria cau, yarn",
-    "contactBilling": "Facturació i pagaments"
+    "contactBilling": "Facturació i pagaments",
+    "navTitle": "On this page",
+    "navOverview": "Application",
+    "navCatalog": "Rule catalog",
+    "navHealth": "Updates & health",
+    "navContacts": "Contact",
+    "navLegal": "Legal"
   },
   "docs": {
     "catGuide": "Guies i arquitectura",
@@ -757,6 +773,24 @@
     "title": "Error log",
     "hint": "Problems caught in this session. Stored only on this device, never uploaded.",
     "empty": "No errors recorded.",
-    "report": "Report an issue"
+    "report": "Report an issue",
+    "systemTitle": "System messages",
+    "systemHint": "Warnings and lifecycle messages written by the app on this device.",
+    "errorsTitle": "Error reports",
+    "supportTitle": "Send diagnostics to support",
+    "supportHint": "Creates one ZIP with the logs below, the build details and a settings summary, then opens a ready mail draft to support@vellium.dev. Nothing is sent until you press Send in your mail app.",
+    "createBundle": "Create bundle and open draft",
+    "creating": "Creating bundle…",
+    "bundleReady": "Bundle ready: {path}",
+    "mailOpened": "Your mail app is open with the bundle attached. Press Send there.",
+    "mailFallback": "The mail app did not accept the attachment automatically. The bundle is in Explorer and its path was copied; attach it to the draft.",
+    "mailFailed": "Could not open a mail draft. The bundle is ready in Explorer.",
+    "reveal": "Show in Explorer",
+    "copyPath": "Copy path",
+    "sendTo": "Recipient: {email}",
+    "copyAll": "Copy everything",
+    "clearAll": "Clear logs",
+    "noSystem": "No system messages recorded.",
+    "notSent": "Never uploaded automatically."
   }
 }

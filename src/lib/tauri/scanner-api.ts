@@ -24,6 +24,9 @@ import {
   CleanupTotals,
   DiskSpaceInfo,
   UpdateInfo,
+  SupportBundle,
+  SupportBundleRequest,
+  SupportMailResult,
 } from "@/types";
 
 export function isTauriEnvironment(): boolean {
@@ -86,6 +89,8 @@ export interface ScannerApi {
   quitApp(): Promise<void>;
   getBuildInfo(): Promise<BuildInfo>;
   checkForUpdates(): Promise<UpdateInfo>;
+  createSupportBundle(request: SupportBundleRequest): Promise<SupportBundle>;
+  composeSupportMail(bundlePath: string, version: string): Promise<SupportMailResult>;
   testWebhook(
     url: string,
     payload?: Record<string, unknown>,
@@ -287,6 +292,14 @@ const realApi: ScannerApi = {
 
   async checkForUpdates(): Promise<UpdateInfo> {
     return await invoke<UpdateInfo>("check_for_updates");
+  },
+
+  async createSupportBundle(request: SupportBundleRequest): Promise<SupportBundle> {
+    return await invoke<SupportBundle>("create_support_bundle", { request });
+  },
+
+  async composeSupportMail(bundlePath: string, version: string): Promise<SupportMailResult> {
+    return await invoke<SupportMailResult>("compose_support_mail", { bundlePath, version });
   },
 
   async testWebhook(

@@ -617,6 +617,19 @@ dev-cleaner caches --clean all --yes`
             <h2 className="docs-h2">3. `dev-cleaner history`</h2>
             <p className="docs-p">Geçmiş temizlik denetim kayıtlarını listeler.</p>
             <div className="docs-code-card">
+              <div className="docs-code-header">
+                <span className="docs-code-header-left">
+                  <Terminal size={13} /> terminal
+                </span>
+                <button
+                  type="button"
+                  className="docs-copy-action"
+                  onClick={() => copyToClipboard("dev-cleaner history --limit 15", "cli-history")}
+                >
+                  {copiedKey === "cli-history" ? <Check size={13} /> : <Copy size={13} />}
+                  {copiedKey === "cli-history" ? "Kopyalandı!" : "Kopyala"}
+                </button>
+              </div>
               <pre className="docs-code-pre">{highlightBash("dev-cleaner history --limit 15")}</pre>
             </div>
           </article>
@@ -814,6 +827,19 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
 
             <h2 className="docs-h2">Sunucuyu Başlatma</h2>
             <div className="docs-code-card">
+              <div className="docs-code-header">
+                <span className="docs-code-header-left">
+                  <Terminal size={13} /> terminal
+                </span>
+                <button
+                  type="button"
+                  className="docs-copy-action"
+                  onClick={() => copyToClipboard("dev-cleaner mcp", "mcp-start")}
+                >
+                  {copiedKey === "mcp-start" ? <Check size={13} /> : <Copy size={13} />}
+                  {copiedKey === "mcp-start" ? "Kopyalandı!" : "Kopyala"}
+                </button>
+              </div>
               <pre className="docs-code-pre">{highlightBash("dev-cleaner mcp")}</pre>
             </div>
           </article>

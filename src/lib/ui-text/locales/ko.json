@@ -580,7 +580,17 @@
     "pathMustBeAbsolute": "경로는 절대 경로여야 합니다(예: C:\\Projects).",
     "excludedNameInvalid": "규칙은 경로 구분 기호가 없는 단일 파일 또는 폴더 이름이어야 합니다.",
     "shortcutNeedsModifier": "전역 단축키에는 Ctrl, Alt 또는 Meta와 키 또는 기능 키가 필요합니다.",
-    "shortcutsResetWarning": "{count}개의 잘못된 단축키가 기본값으로 재설정되었습니다."
+    "shortcutsResetWarning": "{count}개의 잘못된 단축키가 기본값으로 재설정되었습니다.",
+    "profileThorough": "Thorough",
+    "profileMaximum": "Maximum",
+    "profileFastHint": "Skips deep folders and stops early. Best for a quick estimate.",
+    "profileBalancedHint": "The default: matches the catalog everywhere without crawling the whole disk.",
+    "profileThoroughHint": "Wider and slower than Balanced. Useful after a large dependency install.",
+    "profileDeepHint": "Crawls deeply nested monorepos and large drives.",
+    "profileMaximumHint": "No practical limit. Slow and disk-heavy; use it for a one-off audit.",
+    "profileDialogHint": "A profile only pre-fills the limits below; you can still fine-tune them.",
+    "securityOpen": "Open security settings",
+    "profileDefaultBadge": "Default"
   },
   "legal": {
     "docTabsLabel": "법률 문서",
@@ -653,7 +663,13 @@
     "contactBillingDesc": "청구, 기업 구매, 구독 지원",
     "contactPrivacyDesc": "데이터 보안, GDPR 및 개인정보 보호 문의",
     "ecoCacheScope": "npm 캐시, Cargo 레지스트리, pip 캐시, yarn",
-    "contactBilling": "청구 및 결제"
+    "contactBilling": "청구 및 결제",
+    "navTitle": "On this page",
+    "navOverview": "Application",
+    "navCatalog": "Rule catalog",
+    "navHealth": "Updates & health",
+    "navContacts": "Contact",
+    "navLegal": "Legal"
   },
   "docs": {
     "catGuide": "가이드 및 아키텍처",
@@ -757,6 +773,24 @@
     "title": "Error log",
     "hint": "Problems caught in this session. Stored only on this device, never uploaded.",
     "empty": "No errors recorded.",
-    "report": "Report an issue"
+    "report": "Report an issue",
+    "systemTitle": "System messages",
+    "systemHint": "Warnings and lifecycle messages written by the app on this device.",
+    "errorsTitle": "Error reports",
+    "supportTitle": "Send diagnostics to support",
+    "supportHint": "Creates one ZIP with the logs below, the build details and a settings summary, then opens a ready mail draft to support@vellium.dev. Nothing is sent until you press Send in your mail app.",
+    "createBundle": "Create bundle and open draft",
+    "creating": "Creating bundle…",
+    "bundleReady": "Bundle ready: {path}",
+    "mailOpened": "Your mail app is open with the bundle attached. Press Send there.",
+    "mailFallback": "The mail app did not accept the attachment automatically. The bundle is in Explorer and its path was copied; attach it to the draft.",
+    "mailFailed": "Could not open a mail draft. The bundle is ready in Explorer.",
+    "reveal": "Show in Explorer",
+    "copyPath": "Copy path",
+    "sendTo": "Recipient: {email}",
+    "copyAll": "Copy everything",
+    "clearAll": "Clear logs",
+    "noSystem": "No system messages recorded.",
+    "notSent": "Never uploaded automatically."
   }
 }

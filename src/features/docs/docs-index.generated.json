@@ -81,7 +81,7 @@
       "Purge caches for all detected installed tools",
       "3. `dev-cleaner history`",
       "Lists historical cleanup records and reclaimed bytes audit logs.",
-      ") . ). projects | agents | combined | all 0 )}"
+      ") . ). projects | agents | combined | all 0 terminal )}"
     ],
     "cli-headless": [
       "Automation",
@@ -151,7 +151,7 @@
       "Prompt Injection Defense:",
       "AI agents cannot supply arbitrary deletion paths. They may only request removal of validated target IDs marked Safe or Regenerate during active verified scans.",
       "Starting the Server",
-      "MCP v )}"
+      "MCP v terminal )}"
     ],
     "mcp-prompts": [
       "AI Prompt Templates",
@@ -320,7 +320,7 @@
       "İnteraktif Araç İnteraktif CLI Komut Oluşturucu Aşağıdaki seçenekleri yapılandırın; Dev Cleaner sizin için kopyalanmaya hazır terminal komutunu dinamik olarak oluştursun: Hedef Dizin: Tarama Kapsamı: Projeler (Dependencies, build, cache) AI Ajanları (Claude, Cursor, Codex) Projeler + AI Ajanları (Tümünü tara) Tam Tarama (Tümü) Minimum Boyut Eşiği (MB): Webhook URL (İsteğe bağlı): Güvenlik Filtresi: Safe Regenerate (Önerilen) Yalnızca Safe (En Katı) Tümü (Review Dahil) --auto-clean (Otomatik Geri Dönüşüme Taşı) --json (Makine Okunabilir JSON Çıktısı) Oluşturulan Terminal Komutu )}"
     ],
     "cli-guide": [
-      "Terminal CLI Terminal CLI Komut Kılavuzu Dev Cleaner, Windows PATH üzerinde genel bir komut olarak çalışır. Terminalinizden dilediğiniz zaman çağırabilirsiniz: PowerShell CMD Git Bash / WSL 1. `dev-cleaner scan` Hedef dizindeki geliştirici bağımlılıklarını tarar veya otonom temizler. Örnek Kullanım () Parametre (Flag) Tür Varsayılan Açıklama dizin string . (aktif dizin) Taranacak kök klasör yolu (örn: D:\\projeler ). --scope kapsam projects | agents | combined | all projects Taranacak hedef grubu (proje bağımlılıkları veya AI ajan depoları). --auto-clean boolean false Tarama bittiğinde belirlenen güvenlik filtrelerine uygun hedefleri otomatik siler. --dry-run boolean false Simülasyon modu; hiçbir dosyaya dokunmadan nelerin temizleneceğini simüle eder. --safety sınıflar safe,regenerate,review safe,regenerate Temizlenecek güvenlik sınıfları virgülle ayrılarak belirtilir. --min-size mb number 0 Yalnızca belirtilen Megabayt değerinden büyük olan hedefleri kapsama alır. --json boolean false İnsan okunabilir tablo yerine scriptler ve CI/CD için saf JSON çıktısı üretir. --webhook url string (URL) null İşlem tamamlandığında JSON özet yükünü POST edecek HTTP webhook adresi. 2. `dev-cleaner caches` 21 geliştirici aracının paket önbelleklerini listeler veya resmi komutla temizler. Önbellek Komutları 3. `dev-cleaner history` Geçmiş temizlik denetim kayıtlarını listeler. )}"
+      "Terminal CLI Terminal CLI Komut Kılavuzu Dev Cleaner, Windows PATH üzerinde genel bir komut olarak çalışır. Terminalinizden dilediğiniz zaman çağırabilirsiniz: PowerShell CMD Git Bash / WSL 1. `dev-cleaner scan` Hedef dizindeki geliştirici bağımlılıklarını tarar veya otonom temizler. Örnek Kullanım () Parametre (Flag) Tür Varsayılan Açıklama dizin string . (aktif dizin) Taranacak kök klasör yolu (örn: D:\\projeler ). --scope kapsam projects | agents | combined | all projects Taranacak hedef grubu (proje bağımlılıkları veya AI ajan depoları). --auto-clean boolean false Tarama bittiğinde belirlenen güvenlik filtrelerine uygun hedefleri otomatik siler. --dry-run boolean false Simülasyon modu; hiçbir dosyaya dokunmadan nelerin temizleneceğini simüle eder. --safety sınıflar safe,regenerate,review safe,regenerate Temizlenecek güvenlik sınıfları virgülle ayrılarak belirtilir. --min-size mb number 0 Yalnızca belirtilen Megabayt değerinden büyük olan hedefleri kapsama alır. --json boolean false İnsan okunabilir tablo yerine scriptler ve CI/CD için saf JSON çıktısı üretir. --webhook url string (URL) null İşlem tamamlandığında JSON özet yükünü POST edecek HTTP webhook adresi. 2. `dev-cleaner caches` 21 geliştirici aracının paket önbelleklerini listeler veya resmi komutla temizler. Önbellek Komutları 3. `dev-cleaner history` Geçmiş temizlik denetim kayıtlarını listeler. terminal )}"
     ],
     "cli-headless": [
       "Otomasyon Headless Cron CI/CD Pipeline Entegrasyonu Dev Cleaner, Windows Görev Zamanlayıcısı (Task Scheduler) veya GitHub Actions / GitLab CI runner'larında arayüzsüz (headless) çalışarak disk doluluğunu periyodik olarak temizleyebilir. Windows Görev Zamanlayıcısı ile Haftalık Temizlik PowerShell Görev Tanımlama )}"
@@ -335,7 +335,7 @@
       "IDE Kurulumu Çoklu IDE MCP Konfigürasyonu Kullandığınız geliştirme ortamını seçin ve tek tıkla yapılandırma dosyanıza ekleyin: Hedef Dosya: )}"
     ],
     "mcp-overview": [
-      "AI Protokolü MCP v Model Context Protocol (MCP) Sunucusu Dev Cleaner, Anthropic ve Linux Foundation tarafından desteklenen Model Context Protocol (MCP) standart sunucusunu yerel olarak barındırır. Bu sayede Cursor, Windsurf veya Claude Code gibi AI ajanları doğrudan çalışma alanınızdaki disk yükünü sorgulayabilir ve onayınızla güvenli temizlik yapabilir. Prompt Injection Koruması: AI ajanları rastgele dosya yolu silme yetkisine sahip değildir. Yalnızca geçerli tarama oturumunda doğrulanmış ve güvenlik sınıfı Safe/Regenerate olan hedeflerin ID'lerini çöpe taşıyabilirler. Sunucuyu Başlatma )}"
+      "AI Protokolü MCP v Model Context Protocol (MCP) Sunucusu Dev Cleaner, Anthropic ve Linux Foundation tarafından desteklenen Model Context Protocol (MCP) standart sunucusunu yerel olarak barındırır. Bu sayede Cursor, Windsurf veya Claude Code gibi AI ajanları doğrudan çalışma alanınızdaki disk yükünü sorgulayabilir ve onayınızla güvenli temizlik yapabilir. Prompt Injection Koruması: AI ajanları rastgele dosya yolu silme yetkisine sahip değildir. Yalnızca geçerli tarama oturumunda doğrulanmış ve güvenlik sınıfı Safe/Regenerate olan hedeflerin ID'lerini çöpe taşıyabilirler. Sunucuyu Başlatma terminal )}"
     ],
     "mcp-prompts": [
       "Yapay Zeka Şablonları Tek Tıkla Kopyala Cursor Claude Code Hazır İstem Kütüphanesi Dev Cleaner MCP sunucusunu IDE'nize bağladıktan sonra, AI asistanınızla konuşurken kullanabileceğiniz yüksek verimli, doğrudan sonuç üreten hazır istem kartları: Şablon 1: Güvenli Alan Açma Analiz \"Dev Cleaner MCP sunucusunu kullanarak çalışma alanımdaki projeleri tara. 100 MB'tan büyük node_modules, target ve derleme artıklarını listele; onayımı alarak güvenle Geri Dönüşüm Kutusuna taşı.\" Şablon 2: Paket Önbellekleri Denetimi \"devcleaner_list_caches aracını çağır. npm, pip, cargo ve docker önbelleklerimin ne kadar disk alanı kapladığını incele ve bana bir temizlik özeti çıkar.\" Şablon 3: Dry-Run Simülasyonu \"Proje klasörümde simülasyon (dry-run) modunda tarama yap. Hiçbir dosyayı silmeden yalnızca temizlenebilecek alan toplamını ve hedefleri raporla.\" )}"
