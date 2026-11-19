@@ -36,6 +36,7 @@
     "check:brand": "node scripts/check-brand.mjs",
     "check:languages": "node scripts/check-installer-languages.mjs",
     "sync:nsis-languages": "node scripts/sync-nsis-languages.mjs",
+    "ensure:nsis-toolset": "node scripts/ensure-nsis-toolset.mjs",
     "generate:nsis-languages": "node scripts/generate-nsis-languages.mjs",
     "check:exe-icons": "node scripts/check-exe-icons.mjs",
     "generate:icons": "node scripts/generate-icons.mjs",

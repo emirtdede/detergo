@@ -111,10 +111,6 @@ console.log("\n[STEP 2/5] Sürüm senkronizasyonu ve marka varlıkları kontrol 
 execSync("npm run check-version", { cwd: rootDir, stdio: "inherit" });
 execSync("npm run check:icons", { cwd: rootDir, stdio: "inherit" });
 execSync("npm run check:brand", { cwd: rootDir, stdio: "inherit" });
-// NSIS only looks for language files inside its own installation, so the
-// project-supplied packs have to be copied there before the bundle is compiled.
-execSync("npm run sync:nsis-languages", { cwd: rootDir, stdio: "inherit" });
-execSync("npm run check:languages", { cwd: rootDir, stdio: "inherit" });
 
 const startedAt = Date.now();
 const buildEnv = {
@@ -124,6 +120,14 @@ const buildEnv = {
   NC_BUILD_DIRTY: dirty,
   NC_BUILD_TIME: String(Math.floor(startedAt / 1000)),
 };
+
+// NSIS only looks for language files inside its own installation, so the
+// project-supplied packs have to be copied there before the bundle is compiled.
+// A fresh machine (CI) has no NSIS toolset yet, and the bundler only fetches it
+// while compiling a bundle — warm it first so the sync has somewhere to copy to.
+execSync("npm run ensure:nsis-toolset", { cwd: rootDir, stdio: "inherit", env: buildEnv });
+execSync("npm run sync:nsis-languages", { cwd: rootDir, stdio: "inherit" });
+execSync("npm run check:languages", { cwd: rootDir, stdio: "inherit" });
 
 console.log("\n[STEP 3/5] Tauri release derlemesi başlatılıyor...");
 execSync("npm run tauri build", { cwd: rootDir, stdio: "inherit", env: buildEnv });

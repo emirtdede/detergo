@@ -10,22 +10,19 @@
  * result.
  */
 import { copyFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
-import { homedir } from "node:os";
 import { join } from "node:path";
 
 import { PROJECT_LANGUAGE_DIR, projectLanguages } from "./lib/installer-languages.mjs";
+import { nsisLanguageDir, nsisToolsetDir, tauriToolsDir } from "./lib/nsis-toolset.mjs";
 
-const nsisDir = join(
-  process.env.LOCALAPPDATA ?? join(homedir(), "AppData", "Local"),
-  "tauri",
-  "NSIS",
-);
-const langDir = join(nsisDir, "Contrib", "Language files");
+const nsisDir = nsisToolsetDir();
+const langDir = nsisLanguageDir();
 
 if (!existsSync(nsisDir)) {
   console.error(
-    "[sync-nsis-languages] Tauri's NSIS toolchain is not installed yet.\n" +
-      "Run `npx tauri build` once (it downloads NSIS), then re-run this script.",
+    "[sync-nsis-languages] Tauri's NSIS toolset is not installed yet.\n" +
+      `Expected at: ${nsisDir} (tools root: ${tauriToolsDir()})\n` +
+      "Run `npm run ensure:nsis-toolset` (or any Tauri NSIS build) once, then re-run this script.",
   );
   process.exit(1);
 }
