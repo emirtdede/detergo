@@ -87,7 +87,7 @@ fn delete_tree(root: &Path, expected: Option<FileIdentity>) -> Result<(), AppErr
                     "Reparse point target cannot be deleted.".to_string(),
                 ));
             }
-            remove_link_only(&path, meta.is_dir())?;
+            remove_link_only(&path)?;
             continue;
         }
 
@@ -110,11 +110,18 @@ fn delete_tree(root: &Path, expected: Option<FileIdentity>) -> Result<(), AppErr
     Ok(())
 }
 
-fn remove_link_only(path: &Path, is_dir: bool) -> Result<(), AppError> {
-    let result = if is_dir {
+fn remove_link_only(path: &Path) -> Result<(), AppError> {
+    // `symlink_metadata` reports a directory symlink as a file, so `is_dir()`
+    // on it is always false. Asking the target's metadata (which follows the
+    // link) picks the correct removal call: `remove_file` on a directory link
+    // fails with "Access is denied" on Windows.
+    let link_is_dir = fs::metadata(path)
+        .map(|meta| meta.is_dir())
+        .unwrap_or(false);
+    let result = if link_is_dir {
         fs::remove_dir(path)
     } else {
-        fs::remove_file(path)
+        fs::remove_file(path).or_else(|_| fs::remove_dir(path))
     };
     result.map_err(|e| AppError::PermanentDeleteFailed(e.to_string()))
 }
@@ -158,6 +165,22 @@ mod tests {
         }
     }
 
+    /// Creates a directory link for the tree walk. A symlink needs Developer
+    /// Mode or elevation; `mklink /J` (a junction) works for every user and is
+    /// also a reparse point, so the same branch is exercised on CI and locally.
+    fn make_dir_link(target: &Path, link: &Path) -> bool {
+        if std::os::windows::fs::symlink_dir(target, link).is_ok() {
+            return true;
+        }
+        std::process::Command::new("cmd")
+            .args(["/C", "mklink", "/J"])
+            .arg(link)
+            .arg(target)
+            .output()
+            .map(|out| out.status.success())
+            .unwrap_or(false)
+    }
+
     #[test]
     fn deletes_a_nested_tree_and_a_read_only_file() {
         let dir = tempfile::tempdir().expect("temp dir");
@@ -189,10 +212,9 @@ mod tests {
         let survivor = outside.join("survivor.txt");
         fs::write(&survivor, b"keep").expect("write survivor");
         let link = root.join("link");
-        if std::os::windows::fs::symlink_dir(&outside, &link).is_err() {
-            // Creating symlinks needs Developer Mode or elevation; the
-            // reparse-point branch is covered by `delete_tree` unit logic
-            // elsewhere when this is unavailable.
+        if !make_dir_link(&outside, &link) {
+            // No way to create a link in this environment; the reparse-point
+            // branch is covered by `delete_tree` unit logic elsewhere.
             return;
         }
 

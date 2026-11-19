@@ -225,7 +225,13 @@ pub(crate) fn validate_system_path(key: &str) -> Result<(), AppError> {
 
 fn validate_protected_paths(key: &str, protected: &[String]) -> Result<(), AppError> {
     for raw in protected {
-        let protected_key = normalize_key(Path::new(raw));
+        // Resolve the configured path too: a user can paste an 8.3 short path
+        // (`C:\Users\RUNNER~1\...`) or a path with a different drive-letter
+        // case, while `key` is always canonical. Comparing raw forms let a
+        // protected folder slip through when the two spellings differed.
+        let resolved =
+            fs::canonicalize(Path::new(raw)).unwrap_or_else(|_| Path::new(raw).to_path_buf());
+        let protected_key = normalize_key(&resolved);
         if protected_key.is_empty() {
             continue;
         }
