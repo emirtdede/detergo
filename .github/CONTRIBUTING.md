@@ -59,8 +59,7 @@ npm run build
 
 Run the same gates CI runs before opening a pull request. All of them must be
 green. GitHub Actions runs this list on every push and pull request (see
-`.github/workflows/ci.yml`); AppVeyor stays as a redundant Windows path (see
-`appveyor.yml`).
+`.github/workflows/ci.yml`).
 
 | Area                   | Command                                                                          |
 | ---------------------- | -------------------------------------------------------------------------------- |

@@ -6,9 +6,8 @@
 which must equal `git rev-parse HEAD` at build time
 **Deployment mode:** DIRECT-LIVE (local Windows desktop; NSIS / MSI / portable
 go straight to users; no staging, no canary)
-**CI:** GitHub Actions (`.github/workflows/ci.yml`) runs the frontend and
-Rust gates on every push; AppVeyor (`appveyor.yml`) stays as a redundant
-Windows path.
+**CI:** GitHub Actions (`.github/workflows/ci.yml`) runs the frontend gates on
+Linux, the Rust gates on Windows and publishes the installers for a `v*` tag.
 
 > **1.0.0 status.** First open-source release, including the catalog explorer,
 > the user-initiated update check, the local error log and the Settings >

@@ -90,8 +90,9 @@ Source availability:   PUBLIC — MIT licensed, contributions welcome
 ```
 
 Source gates run on every push and pull request in GitHub Actions (see
-`.github/workflows/ci.yml`; AppVeyor stays as a redundant Windows path) and the
-results are recorded in `docs/release/TEST_MATRIX.md`. Any package must be built from a clean tree so
+`.github/workflows/ci.yml`), a `v*` tag additionally builds and publishes the
+installers, and the results are recorded in `docs/release/TEST_MATRIX.md`. Any
+package must be built from a clean tree so
 `release_output/BUILD_INFO.json` reports `"dirty": false` and
 `npm run check:build-info` passes.
 
