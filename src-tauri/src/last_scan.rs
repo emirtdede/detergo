@@ -291,10 +291,17 @@ mod tests {
     }
 
     fn temp_path() -> PathBuf {
-        std::env::temp_dir().join(format!(
-            "dev-cleaner-last-scan-{}.json",
+        // Each test gets its own directory. `reset()` removes stray
+        // `last-scan.tmp.*.json` files next to the snapshot, which is correct
+        // for the real, per-app data directory; pointing every test at the
+        // shared system temp dir let one test delete another test's in-flight
+        // temporary file and made `save` fail at random.
+        let dir = std::env::temp_dir().join(format!(
+            "dev-cleaner-last-scan-{}",
             uuid::Uuid::new_v4().simple()
-        ))
+        ));
+        let _ = fs::create_dir_all(&dir);
+        dir.join("last-scan.json")
     }
 
     #[test]
