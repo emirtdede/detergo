@@ -8,7 +8,7 @@ use std::time::{Duration, Instant};
 use crate::catalog::TargetKind;
 use crate::error::AppError;
 use crate::scanner::cancellation::CancellationToken;
-use crate::scanner::measurement::{measure_path, measure_path_with_deadline};
+use crate::scanner::measurement::measure_path_with_deadline;
 
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(600);
 /// One `--version` probe is capped at 1.5 s. Probes for every provider run in
@@ -20,6 +20,10 @@ const VERSION_BUDGET: Duration = Duration::from_secs(2);
 /// walk a multi-gigabyte cache for minutes and freeze the dialog. Paths that
 /// cannot be measured within this budget are reported as "not measured".
 const PREVIEW_MEASURE_BUDGET: Duration = Duration::from_secs(8);
+/// Per-path measurement budget for `measure_cache_providers` so massive global
+/// caches (pnpm/npm/cargo/gradle/nuget) never hang CLI `c -j`, `s -t all -j`,
+/// or MCP `devcleaner_list_caches` past client timeouts.
+const CACHE_PATH_MEASURE_BUDGET: Duration = Duration::from_secs(8);
 
 #[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize)]
@@ -933,7 +937,12 @@ fn measure_dirs(
 /// metadata instead of being walked, and read-only providers never walk
 /// directories: those trees belong to another tool and walking them took
 /// minutes on real machines without producing an actionable number.
-fn measure_cache_path(def: &ProviderDef, path: &Path, token: &CancellationToken) -> Option<u64> {
+fn measure_cache_path(
+    def: &ProviderDef,
+    path: &Path,
+    token: &CancellationToken,
+    deadline: Instant,
+) -> Option<u64> {
     if !path.exists() {
         return None;
     }
@@ -943,7 +952,7 @@ fn measure_cache_path(def: &ProviderDef, path: &Path, token: &CancellationToken)
     if def.read_only {
         return None;
     }
-    measure_path(path, TargetKind::Directory, token)
+    measure_path_with_deadline(path, TargetKind::Directory, token, Some(deadline))
         .map(|s| s.allocated_bytes.unwrap_or(s.logical_bytes))
 }
 
@@ -1002,12 +1011,20 @@ pub fn measure_cache_providers<F>(
                     }
                     let path = expand(raw);
                     let exists = path.exists();
-                    let bytes = measure_cache_path(def, &path, token);
+                    let deadline = Instant::now() + CACHE_PATH_MEASURE_BUDGET;
+                    let bytes = measure_cache_path(def, &path, token, deadline);
                     if let Some(bytes) = bytes {
                         total_bytes = total_bytes.saturating_add(bytes);
                     }
                     let unmeasured_reason = if bytes.is_none() && exists {
-                        Some(if def.read_only { "readOnly" } else { "error" }.to_string())
+                        let reason = if def.read_only {
+                            "readOnly"
+                        } else if Instant::now() >= deadline {
+                            "timedOut"
+                        } else {
+                            "error"
+                        };
+                        Some(reason.to_string())
                     } else {
                         None
                     };

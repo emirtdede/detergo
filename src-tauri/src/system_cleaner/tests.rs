@@ -175,3 +175,43 @@ fn schedule_time_is_validated_without_panicking() {
         assert_eq!(config.time, expected, "input {input}");
     }
 }
+
+#[test]
+fn record_audit_persists_before_after_and_negative_delta_bytes() {
+    let temp = tempfile::tempdir().expect("temp dir");
+    let repo = crate::audit::AuditRepository::with_paths(
+        temp.path().join("history.json"),
+        temp.path().join("snapshots.json"),
+    );
+    let report = crate::system_cleaner::SystemCleanReport {
+        results: vec![crate::system_cleaner::SystemActionResult {
+            id: SystemActionId::UserTemp,
+            success: true,
+            freed_bytes: 600,
+            before_bytes: 1000,
+            deleted_files: 3,
+            skipped: 1,
+            skipped_sample: vec!["held.tmp".to_string()],
+            exit_code: None,
+            log_tail: None,
+            duration_ms: 42,
+            error_code: None,
+        }],
+        freed_bytes: 600,
+        cancelled: false,
+        started_at: "2026-11-20T12:00:00Z".to_string(),
+        finished_at: "2026-11-20T12:00:01Z".to_string(),
+        elevated: false,
+    };
+
+    let err = crate::system_cleaner::execute::record_audit(&repo, &report, true);
+    assert!(err.is_none());
+
+    let actions = repo.list_actions(10);
+    assert_eq!(actions.len(), 1);
+    assert_eq!(actions[0].provider_id, "system");
+    assert_eq!(actions[0].action_id, "userTemp");
+    assert_eq!(actions[0].before_bytes, 1000);
+    assert_eq!(actions[0].after_bytes, 400);
+    assert_eq!(actions[0].delta_bytes, -600);
+}

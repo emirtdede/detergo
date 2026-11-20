@@ -93,12 +93,29 @@ export const CachesView: React.FC = () => {
   const startMeasure = useCacheStore((s) => s.startMeasure);
 
   const maskPaths = usePreferencesStore((s) => s.maskPaths);
+  const cacheMeasureMode = usePreferencesStore((s) => s.cacheMeasureMode);
 
   const load = () => loadProviders(true);
 
   useEffect(() => {
     void loadProviders();
   }, [loadProviders]);
+
+  // Fast mode (default) keeps opening Caches instant with catalog metadata;
+  // full mode honors the user's explicit Settings choice and measures once.
+  const autoMeasureStarted = useRef(false);
+  useEffect(() => {
+    if (
+      loaded &&
+      cacheMeasureMode === "full" &&
+      !autoMeasureStarted.current &&
+      !measuring &&
+      !providers.some((p) => p.measured)
+    ) {
+      autoMeasureStarted.current = true;
+      void startMeasure();
+    }
+  }, [loaded, cacheMeasureMode, measuring, providers, startMeasure]);
 
   const previewAction = useMemo(
     () =>

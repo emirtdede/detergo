@@ -436,10 +436,18 @@ export const CleanupPlanDialog: React.FC = () => {
                 {plan.items.map((item) => (
                   <div key={item.targetId} className={`plan-row ${item.eligible ? "" : "blocked"}`}>
                     <div className="plan-row-main">
-                      <strong>{item.displayName}</strong>
+                      <div className="plan-row-title">
+                        <strong>{item.displayName}</strong>
+                        {item.projectName && item.projectName !== item.displayName && (
+                          <span className="chip plan-row-provider">{item.projectName}</span>
+                        )}
+                      </div>
                       <span className="items-path">
                         {maskPaths ? maskPath(item.displayPath) : item.displayPath}
                       </span>
+                      {item.regenerateHint && (
+                        <span className="plan-row-hint">{item.regenerateHint}</span>
+                      )}
                     </div>
                     <div className="plan-row-side">
                       {item.eligible ? (

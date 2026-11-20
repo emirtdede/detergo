@@ -990,7 +990,7 @@ fn session_registry_caps_retained_sessions_at_three() {
 async fn measure_entries_handles_over_200_candidates_without_deadlock() {
     let temp = tempfile::tempdir().unwrap();
     let mut entries = Vec::new();
-    for idx in 0..220 {
+    for idx in 0..500 {
         let dir = temp.path().join(format!("item-{idx}"));
         write(&dir.join("a.bin"), 128);
         entries.push((format!("id-{idx}"), dir, TargetKind::Directory));
@@ -1002,8 +1002,8 @@ async fn measure_entries_handles_over_200_candidates_without_deadlock() {
     let stop = engine
         .measure_entries(
             entries,
-            220,
-            220,
+            500,
+            500,
             |batch| {
                 for update in batch {
                     seen += 1;
@@ -1017,7 +1017,87 @@ async fn measure_entries_handles_over_200_candidates_without_deadlock() {
 
     assert_eq!(stop, measurement::MeasurementStop::Completed);
     assert_eq!(
-        seen, 220,
-        "all 220 candidates must stream without deadlocking"
+        seen, 500,
+        "all 500 candidates must stream without deadlocking"
     );
+}
+
+#[tokio::test]
+async fn min_size_bytes_blocks_on_first_measured_event_and_clears_auto_selectable() {
+    let temp = tempfile::tempdir().unwrap();
+    let proj = temp.path().join("app");
+    let cache = proj.join(".next").join("cache");
+    fs::create_dir_all(&cache).unwrap();
+    fs::write(proj.join("next.config.js"), "module.exports = {}").unwrap();
+    write(&proj.join(".next/BUILD_ID"), 16);
+    write(&cache.join("tiny.bin"), 64);
+
+    let catalog = std::sync::Arc::new(CatalogIndex::embedded().unwrap());
+    let registry = ScanRegistry::new();
+    let session = registry.create_session(
+        ScanScope::Project,
+        temp.path().to_path_buf(),
+        vec![temp.path().to_path_buf()],
+    );
+    let token = CancellationToken::new();
+    let request = ScanRequest {
+        root_path: temp.path().to_string_lossy().to_string(),
+        exclusions: vec![],
+        scope: ScanScope::Project,
+        include_agents: None,
+        profile: None,
+        max_depth: None,
+        max_candidates: None,
+        timeout_minutes: None,
+        min_size_bytes: Some(10 * 1024 * 1024),
+        protected_paths: vec![],
+    };
+
+    let measured_events: std::sync::Arc<std::sync::Mutex<Vec<MeasurementUpdate>>> =
+        std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let collector = measured_events.clone();
+    let policy = crate::cleanup::CleanupPolicy::default();
+    let _summary = run_scan(
+        request,
+        session.clone(),
+        token,
+        catalog,
+        &policy,
+        move |ev| {
+            if let ScanEvent::Measured { updates } = ev {
+                collector.lock().unwrap().extend(updates);
+            }
+        },
+    )
+    .await
+    .expect("scan");
+
+    let updates = measured_events.lock().unwrap();
+    assert!(!updates.is_empty());
+    for u in updates.iter() {
+        assert_eq!(u.status, ItemStatus::Blocked);
+        assert_eq!(u.selectable, Some(false));
+        assert_eq!(u.auto_selectable, Some(false));
+        assert!(u
+            .warning_codes
+            .as_ref()
+            .is_some_and(|w| w.iter().any(|c| c == "BELOW_MIN_SIZE")));
+    }
+
+    let guard = session.lock().unwrap();
+    for item in &guard.items {
+        assert!(!item.selectable);
+        assert!(!item.auto_selectable);
+        assert_eq!(item.status, ItemStatus::Blocked);
+        assert!(item.warning_codes.contains(&"BELOW_MIN_SIZE".to_string()));
+    }
+}
+
+#[test]
+fn scan_request_deserializes_include_agents_for_all_drives() {
+    let req: ScanRequest =
+        serde_json::from_str(r#"{"rootPath":"","scope":"allDrives","includeAgents":true}"#)
+            .expect("deserialize ScanRequest");
+    assert_eq!(req.scope, ScanScope::AllDrives);
+    assert_eq!(req.include_agents, Some(true));
 }

@@ -737,6 +737,7 @@ where
                     item.estimated_reclaim_bytes = None;
                     item.status = ItemStatus::Error;
                     item.selectable = false;
+                    item.auto_selectable = false;
                     if !item.warning_codes.iter().any(|code| code == "NOT_MEASURED") {
                         item.warning_codes.push("NOT_MEASURED".to_string());
                     }
@@ -767,6 +768,7 @@ where
                     .or(item.logical_bytes);
                 if measured.map(|bytes| bytes < limits.min_size_bytes) == Some(true) {
                     item.selectable = false;
+                    item.auto_selectable = false;
                     item.status = ItemStatus::Blocked;
                     if !item
                         .warning_codes
@@ -809,140 +811,147 @@ where
     if combined
         && stop_reason != Some(StopReason::Cancelled)
         && stop_reason != Some(StopReason::Timeout)
+        && stop_reason != Some(StopReason::CandidateLimit)
         && !token.is_cancelled()
     {
-        let _ = tx
-            .send(ScanEvent::Progress {
-                progress: ScanProgress {
-                    phase: "agents".to_string(),
-                    directories_visited,
-                    entries_found: items.len() as u64,
-                    entries_measured: items.len() as u64,
-                    bytes_measured: cleanable_own_bytes(&items),
-                    current_path: None,
-                    stop_reason: None,
-                },
+        let remaining_agent_candidates = limits.max_candidates.saturating_sub(items.len() as u64);
+        if remaining_agent_candidates == 0 {
+            stop_reason = merge_stop_reason(stop_reason, Some(StopReason::CandidateLimit));
+        } else {
+            let _ = tx
+                .send(ScanEvent::Progress {
+                    progress: ScanProgress {
+                        phase: "agents".to_string(),
+                        directories_visited,
+                        entries_found: items.len() as u64,
+                        entries_measured: items.len() as u64,
+                        bytes_measured: cleanable_own_bytes(&items),
+                        current_path: None,
+                        stop_reason: None,
+                    },
+                })
+                .await;
+            let agent_limits = ScanLimits {
+                max_depth: limits.max_depth,
+                max_candidates: remaining_agent_candidates,
+                timeout: scan_deadline.saturating_duration_since(Instant::now()),
+                min_size_bytes: limits.min_size_bytes,
+            };
+            let token_agents = token.clone();
+            let policy_agents = policy.clone();
+            let scan_id_agents = scan_id.clone();
+            let exclusions_agents = request.exclusions.clone();
+            let agent_result = tokio::task::spawn_blocking(move || {
+                providers::scan_agents_with_deadline(
+                    &scan_id_agents,
+                    &token_agents,
+                    &policy_agents,
+                    agent_limits,
+                    &exclusions_agents,
+                    scan_deadline,
+                )
             })
             .await;
-        let remaining_agent_candidates = limits.max_candidates.saturating_sub(items.len() as u64);
-        let agent_limits = ScanLimits {
-            max_depth: limits.max_depth,
-            max_candidates: remaining_agent_candidates.max(1),
-            timeout: scan_deadline.saturating_duration_since(Instant::now()),
-            min_size_bytes: limits.min_size_bytes,
-        };
-        let token_agents = token.clone();
-        let policy_agents = policy.clone();
-        let scan_id_agents = scan_id.clone();
-        let exclusions_agents = request.exclusions.clone();
-        let agent_result = tokio::task::spawn_blocking(move || {
-            providers::scan_agents_with_deadline(
-                &scan_id_agents,
-                &token_agents,
-                &policy_agents,
-                agent_limits,
-                &exclusions_agents,
-                scan_deadline,
-            )
-        })
-        .await;
 
-        match agent_result {
-            Ok(outcome) => {
-                for warning in &outcome.warnings {
-                    let _ = tx
-                        .send(ScanEvent::Warning {
-                            code: warning.0.clone(),
-                            path: warning.1.clone(),
-                            severity: notices::classify_agent(&warning.0, warning.1.as_deref()),
-                            root: None,
-                        })
-                        .await;
-                }
-                if policy.record_history && !outcome.snapshots.is_empty() {
-                    if let Err(err) = AuditRepository::new().append_snapshots(&outcome.snapshots) {
+            match agent_result {
+                Ok(outcome) => {
+                    for warning in &outcome.warnings {
                         let _ = tx
                             .send(ScanEvent::Warning {
-                                code: "HISTORY_WRITE_FAILED".to_string(),
-                                path: Some(err.to_string()),
-                                severity: ScanNoticeSeverity::Warning,
+                                code: warning.0.clone(),
+                                path: warning.1.clone(),
+                                severity: notices::classify_agent(&warning.0, warning.1.as_deref()),
                                 root: None,
                             })
                             .await;
                     }
-                }
-                // A target found by both steps must appear once: filter before
-                // emitting events so the frontend never receives duplicate rows.
-                let existing: std::collections::HashSet<String> = items
-                    .iter()
-                    .map(|item| item.display_path.to_lowercase())
-                    .collect();
-                let fresh: Vec<CleanupItem> = outcome
-                    .items
-                    .into_iter()
-                    .filter(|item| !existing.contains(&item.display_path.to_lowercase()))
-                    .collect();
-                let fresh_ids: std::collections::HashSet<String> =
-                    fresh.iter().map(|item| item.id.clone()).collect();
-                let mut agent_targets = outcome.targets;
-                agent_targets.retain(|target| fresh_ids.contains(&target.id));
+                    if policy.record_history && !outcome.snapshots.is_empty() {
+                        if let Err(err) =
+                            AuditRepository::new().append_snapshots(&outcome.snapshots)
+                        {
+                            let _ = tx
+                                .send(ScanEvent::Warning {
+                                    code: "HISTORY_WRITE_FAILED".to_string(),
+                                    path: Some(err.to_string()),
+                                    severity: ScanNoticeSeverity::Warning,
+                                    root: None,
+                                })
+                                .await;
+                        }
+                    }
+                    // A target found by both steps must appear once: filter before
+                    // emitting events so the frontend never receives duplicate rows.
+                    let existing: std::collections::HashSet<String> = items
+                        .iter()
+                        .map(|item| item.display_path.to_lowercase())
+                        .collect();
+                    let fresh: Vec<CleanupItem> = outcome
+                        .items
+                        .into_iter()
+                        .filter(|item| !existing.contains(&item.display_path.to_lowercase()))
+                        .collect();
+                    let fresh_ids: std::collections::HashSet<String> =
+                        fresh.iter().map(|item| item.id.clone()).collect();
+                    let mut agent_targets = outcome.targets;
+                    agent_targets.retain(|target| fresh_ids.contains(&target.id));
 
-                for batch in fresh.chunks(BATCH_SIZE) {
+                    for batch in fresh.chunks(BATCH_SIZE) {
+                        let _ = tx
+                            .send(ScanEvent::Candidates {
+                                items: batch.to_vec(),
+                            })
+                            .await;
+                        let updates = agent_measurement_updates(batch);
+                        if !updates.is_empty() {
+                            let _ = tx.send(ScanEvent::Measured { updates }).await;
+                        }
+                    }
+
+                    sections.push(ScanSectionResult {
+                        scope: ScanScope::Agents,
+                        status: if token.is_cancelled() {
+                            "partial"
+                        } else {
+                            "completed"
+                        }
+                        .to_string(),
+                        item_count: fresh.len() as u64,
+                        cleanable_bytes: cleanable_own_bytes(&fresh),
+                        error_code: None,
+                    });
+                    directories_visited += outcome.entries_scanned;
+                    {
+                        let mut guard = crate::lock!(session);
+                        for target in agent_targets {
+                            guard.targets.insert(target.id.clone(), target);
+                        }
+                        guard.items.extend(fresh.iter().cloned());
+                        items = guard.items.clone();
+                    }
+                    // The same precedence the per-root loop uses: a depth cut is a
+                    // configured boundary and must never mask a real interruption.
+                    // Keeping a project-step `DepthLimit` when the agent step timed
+                    // out produced `partial=false` and a "Completed" event for a
+                    // scan that was cut short.
+                    stop_reason = merge_stop_reason(stop_reason, outcome.stop_reason);
+                }
+                Err(err) => {
+                    sections.push(ScanSectionResult {
+                        scope: ScanScope::Agents,
+                        status: "failed".to_string(),
+                        item_count: 0,
+                        cleanable_bytes: 0,
+                        error_code: Some("SCAN_FAILED".to_string()),
+                    });
                     let _ = tx
-                        .send(ScanEvent::Candidates {
-                            items: batch.to_vec(),
+                        .send(ScanEvent::Warning {
+                            code: "AGENT_SCAN_FAILED".to_string(),
+                            path: Some(err.to_string()),
+                            severity: ScanNoticeSeverity::Error,
+                            root: None,
                         })
                         .await;
-                    let updates = agent_measurement_updates(batch);
-                    if !updates.is_empty() {
-                        let _ = tx.send(ScanEvent::Measured { updates }).await;
-                    }
                 }
-
-                sections.push(ScanSectionResult {
-                    scope: ScanScope::Agents,
-                    status: if token.is_cancelled() {
-                        "partial"
-                    } else {
-                        "completed"
-                    }
-                    .to_string(),
-                    item_count: fresh.len() as u64,
-                    cleanable_bytes: cleanable_own_bytes(&fresh),
-                    error_code: None,
-                });
-                directories_visited += outcome.entries_scanned;
-                {
-                    let mut guard = crate::lock!(session);
-                    for target in agent_targets {
-                        guard.targets.insert(target.id.clone(), target);
-                    }
-                    guard.items.extend(fresh.iter().cloned());
-                    items = guard.items.clone();
-                }
-                // The same precedence the per-root loop uses: a depth cut is a
-                // configured boundary and must never mask a real interruption.
-                // Keeping a project-step `DepthLimit` when the agent step timed
-                // out produced `partial=false` and a "Completed" event for a
-                // scan that was cut short.
-                stop_reason = merge_stop_reason(stop_reason, outcome.stop_reason);
-            }
-            Err(err) => {
-                sections.push(ScanSectionResult {
-                    scope: ScanScope::Agents,
-                    status: "failed".to_string(),
-                    item_count: 0,
-                    cleanable_bytes: 0,
-                    error_code: Some("SCAN_FAILED".to_string()),
-                });
-                let _ = tx
-                    .send(ScanEvent::Warning {
-                        code: "AGENT_SCAN_FAILED".to_string(),
-                        path: Some(err.to_string()),
-                        severity: ScanNoticeSeverity::Error,
-                        root: None,
-                    })
-                    .await;
             }
         }
     }

@@ -715,7 +715,9 @@ fn system_time_to_iso(time: std::time::SystemTime) -> String {
     }
 }
 
-/// Exposed for tests: evaluates a single directory without walking.
+/// Evaluates a single path against the catalog rules and project markers
+/// without running a full directory walk. Shared by unit tests and MCP
+/// `devcleaner_inspect_target`.
 pub fn evaluate_path(
     catalog: &CatalogIndex,
     path: &Path,
@@ -724,20 +726,63 @@ pub fn evaluate_path(
     let parent = path.parent()?;
     let mut resolver = ProjectResolver::new(catalog.project_markers());
     let project = resolver.resolve(parent);
+    let project_root = project.as_ref().map(|p| PathBuf::from(&p.project_root));
+    let workspace_root = project
+        .as_ref()
+        .map(|p| PathBuf::from(&p.root_project_root));
+    let inside_source_subtree = project_root
+        .as_deref()
+        .is_some_and(|root| is_inside_source_subtree(parent, root));
     let git_state = Some(GitState::Unknown);
+    let is_dir = path.is_dir();
+    let is_file = path.is_file();
+
+    let mut best: Option<(
+        usize,
+        usize,
+        usize,
+        String,
+        crate::catalog::SafetyClass,
+        Vec<String>,
+    )> = None;
     for rule in catalog.rules_for_name(&name) {
+        match rule.kind {
+            TargetKind::Directory if !is_dir => continue,
+            TargetKind::File | TargetKind::FileGroup if !is_file => continue,
+            _ => {}
+        }
+        if rule.generic_name && inside_source_subtree {
+            continue;
+        }
         let evidence = collect_evidence(
             rule,
             path,
-            project.as_ref().map(|p| Path::new(&p.project_root)),
-            project.as_ref().map(|p| Path::new(&p.root_project_root)),
+            project_root.as_deref(),
+            workspace_root.as_deref(),
             git_state,
         );
-        if evidence.marker_hits.is_empty() && !rule.markers.is_empty() {
+        if !rule.markers.is_empty()
+            && evidence.marker_hits.is_empty()
+            && evidence.content_hits.is_empty()
+        {
             continue;
         }
         let c = classify(rule, &evidence);
-        return Some((rule.id.clone(), c.safety_class, c.warnings));
+        let key = (
+            evidence.marker_hits.len(),
+            evidence.content_hits.len(),
+            if rule.generic_name { 0 } else { 1 },
+        );
+        if best.as_ref().is_none_or(|b| key > (b.0, b.1, b.2)) {
+            best = Some((
+                key.0,
+                key.1,
+                key.2,
+                rule.id.clone(),
+                c.safety_class,
+                c.warnings,
+            ));
+        }
     }
-    None
+    best.map(|(_, _, _, id, safety, warnings)| (id, safety, warnings))
 }

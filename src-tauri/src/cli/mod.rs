@@ -123,9 +123,56 @@ pub fn handle_cli() -> Option<i32> {
     attach_console();
 
     match first_arg.as_str() {
-        "-h" | "--help" | "help" => {
-            print_help();
-            Some(0)
+        "-h" | "--help" => {
+            if args.len() == 2 {
+                print_help();
+                Some(0)
+            } else {
+                eprintln!(
+                    "error: unexpected argument '{}'. Run `dev-cleaner -h` for usage.",
+                    args[2]
+                );
+                Some(3)
+            }
+        }
+        "help" => {
+            if args.len() == 2 {
+                print_help();
+                Some(0)
+            } else if args.len() == 3 {
+                match args[2].to_lowercase().as_str() {
+                    "s" | "scan" => {
+                        print_scan_help();
+                        Some(0)
+                    }
+                    "c" | "cache" | "caches" => {
+                        print_caches_help();
+                        Some(0)
+                    }
+                    "h" | "hist" | "history" => {
+                        print_history_help();
+                        Some(0)
+                    }
+                    "sys" | "system" => {
+                        print!("{}", crate::system_cleaner::cli::USAGE);
+                        Some(0)
+                    }
+                    "mcp" => {
+                        println!("Usage: dev-cleaner mcp [--allow-destructive]");
+                        Some(0)
+                    }
+                    other => {
+                        eprintln!("Unknown command: {other}");
+                        Some(3)
+                    }
+                }
+            } else {
+                eprintln!(
+                    "error: unexpected argument '{}'. Run `dev-cleaner -h` for usage.",
+                    args[3]
+                );
+                Some(3)
+            }
         }
         "-v" | "--version" | "version" => {
             println!(
@@ -442,6 +489,35 @@ fn measure_detected_caches() -> Vec<crate::cleanup::official_actions::CacheProvi
         }
     }
     providers
+}
+
+fn print_scan_help() {
+    println!(
+        "\
+Usage:
+  dev-cleaner s [DIR] [OPTIONS]
+
+Targets (-t, --targets):
+  p(projects), a(agents), c(caches), s(system), drives, all
+
+Options:
+  -c, --clean              Move matching safe targets to Recycle Bin (--auto-clean)
+  -n, --dry                Preview without deleting anything (--dry-run)
+  -s, --safety <LEVELS>    safe,regenerate,review,keep (default: safe,regenerate)
+  -m, --min <SIZE>         Minimum size threshold (e.g. 50, 500KB, 500MB, 1.5GB)
+  -i, --interactive        Pick targets by number, then move to Recycle Bin
+  -a, --all                List every discovered target (--top N limits rows)
+  -j, --json               Emit machine-readable JSON output
+  -w, --webhook <URL>      POST summary to n8n, Slack, or Discord
+  --scope <SCOPE>          Legacy alias: projects | agents | combined | all
+
+Examples:
+  dev-cleaner s .
+  dev-cleaner s D:\\Projects -t p,a -m 50MB
+  dev-cleaner s -t all -j
+  dev-cleaner s D:\\Projects -cn
+"
+    );
 }
 
 fn print_caches_help() {
@@ -1085,7 +1161,7 @@ fn parse_scan_args(args: &[String]) -> Result<ScanCliArgs, AppError> {
 fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
     let parsed = parse_scan_args(args)?;
     if parsed.help {
-        print_help();
+        print_scan_help();
         return Ok(());
     }
     let root_path = parsed.root_path;
@@ -1518,6 +1594,47 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
         .saturating_add(system_total_bytes);
 
     if as_json {
+        let format_json_item = |it: &crate::scanner::models::CleanupItem| {
+            json!({
+                "id": it.id,
+                "name": it.display_name,
+                "path": it.display_path,
+                "provider": it.provider,
+                "ecosystem": it.ecosystem,
+                "category": it.category,
+                "safety": it.safety_class,
+                "bytes": it.estimated_reclaim_bytes.unwrap_or(0),
+                "human": format_size(it.estimated_reclaim_bytes.unwrap_or(0))
+            })
+        };
+        let all_json_items: Vec<serde_json::Value> = items.iter().map(format_json_item).collect();
+        let projects_json: Vec<serde_json::Value> = items
+            .iter()
+            .filter(|it| it.ecosystem != "ai" && it.provider == "project")
+            .map(format_json_item)
+            .collect();
+        let agents_json: Vec<serde_json::Value> = items
+            .iter()
+            .filter(|it| it.ecosystem == "ai" || it.provider != "project")
+            .map(format_json_item)
+            .collect();
+        let include_projects_key =
+            selected_targets
+                .as_ref()
+                .map(|sel| sel.projects)
+                .unwrap_or(matches!(
+                    scan_scope,
+                    ScanScope::Project | ScanScope::Combined | ScanScope::AllDrives
+                ));
+        let include_agents_key =
+            selected_targets
+                .as_ref()
+                .map(|sel| sel.agents)
+                .unwrap_or(matches!(
+                    scan_scope,
+                    ScanScope::Agents | ScanScope::Combined
+                ));
+
         let mut payload = json!({
             "product": "Dev Cleaner by Vellium",
             "status": "success",
@@ -1533,17 +1650,15 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
             "cleaned_human": format_size(cleaned_bytes),
             "clean_errors": clean_errors,
             "audit_error": audit_error,
-            "items": items.iter().map(|it| json!({
-                "id": it.id,
-                "name": it.display_name,
-                "path": it.display_path,
-                "category": it.category,
-                "safety": it.safety_class,
-                "bytes": it.estimated_reclaim_bytes.unwrap_or(0),
-                "human": format_size(it.estimated_reclaim_bytes.unwrap_or(0))
-            })).collect::<Vec<_>>()
+            "items": all_json_items
         });
         if let Some(obj) = payload.as_object_mut() {
+            if include_projects_key {
+                obj.insert("projects".to_string(), json!(projects_json));
+            }
+            if include_agents_key {
+                obj.insert("agents".to_string(), json!(agents_json));
+            }
             if let Some(ref caches) = caches_data {
                 obj.insert("caches".to_string(), json!(caches));
                 obj.insert("caches_total_bytes".to_string(), json!(caches_total_bytes));

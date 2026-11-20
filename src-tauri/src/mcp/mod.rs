@@ -1452,7 +1452,7 @@ impl McpContext {
         let settings = state.settings.load();
         if !settings.mcp_allow_destructive {
             return ToolCallOutput::error(t(
-                "Blocked: MCP destructive actions are disabled in Settings → Automation.",
+                "Blocked: MCP destructive actions are disabled in Settings → Safety & Policy → AI agent policy.",
             ));
         }
 
@@ -1574,19 +1574,34 @@ impl McpContext {
         };
 
         let (protected, block_reason, canonical_path) = match path_guard_verdict {
-            Ok(canonical) => (hard_protected, None, Some(canonical)),
+            Ok(canonical) if hard_protected => (
+                true,
+                Some("HardProtected: target name is permanently protected.".to_string()),
+                Some(canonical),
+            ),
+            Ok(canonical) if is_symlink || is_reparse => (
+                true,
+                Some("ReparsePoint: symlinks and junctions are never deleted.".to_string()),
+                Some(canonical),
+            ),
+            Ok(canonical) => (false, None, Some(canonical)),
             Err(reason) => (true, Some(reason), None),
         };
 
-        let matched_rule = catalog.rules().iter().find(|r| {
-            if let Some(name) = target_path.file_name().and_then(|n| n.to_str()) {
-                r.names
-                    .iter()
-                    .any(|rule_name| rule_name.eq_ignore_ascii_case(name))
-            } else {
-                false
+        let evaluated = if exists && !protected {
+            crate::scanner::discovery::evaluate_path(&catalog, &target_path)
+        } else {
+            None
+        };
+        let (matched_rule, classified_safety, warnings) = match evaluated {
+            Some((rule_id, safety_class, eval_warnings)) => {
+                (catalog.rule(&rule_id), Some(safety_class), eval_warnings)
             }
-        });
+            None => (None, None, Vec::new()),
+        };
+
+        let keep_only = classified_safety == Some(crate::catalog::SafetyClass::Keep);
+        let eligible = !protected && exists && matched_rule.is_some() && !keep_only;
 
         let payload = json!({
             "path": target_path.to_string_lossy(),
@@ -1596,14 +1611,16 @@ impl McpContext {
             "is_reparse_point": is_reparse,
             "hard_protected": hard_protected,
             "protected": protected,
-            "eligible": !protected && exists && matched_rule.is_some(),
+            "eligible": eligible,
+            "classified_safety": classified_safety,
+            "warnings": warnings,
             "block_reason": block_reason,
             "matched_rule": matched_rule.map(|r| json!({
                 "id": r.id,
                 "ecosystem": r.ecosystem,
                 "category": r.category,
                 "names": r.names,
-                "safety": r.safety,
+                "safety": classified_safety.unwrap_or(r.safety),
                 "regenerate": r.regenerate
             }))
         });
@@ -1966,5 +1983,55 @@ mod tests {
                 .unwrap();
         assert_eq!(parsed["protected"], Value::Bool(true));
         assert_eq!(parsed["eligible"], Value::Bool(false));
+    }
+
+    #[test]
+    fn inspect_target_uses_evaluate_path_for_verified_and_unverified_folders() {
+        let temp = tempfile::tempdir().unwrap();
+        let verified_proj = temp.path().join("web-app");
+        let nm = verified_proj.join("node_modules");
+        std::fs::create_dir_all(&nm).unwrap();
+        std::fs::write(verified_proj.join("package.json"), "{}").unwrap();
+
+        let resp = call(
+            McpOptions::default(),
+            &json!({
+                "jsonrpc": "2.0",
+                "id": 15,
+                "method": "tools/call",
+                "params": {
+                    "name": "devcleaner_inspect_target",
+                    "arguments": { "path": nm.to_string_lossy() }
+                }
+            })
+            .to_string(),
+        );
+        let parsed: Value =
+            serde_json::from_str(resp["result"]["content"][0]["text"].as_str().unwrap()).unwrap();
+        assert_eq!(parsed["eligible"], Value::Bool(true));
+        assert_eq!(parsed["matched_rule"]["id"], "js.node_modules");
+
+        // An unverified `target` directory with no Cargo.toml or pom.xml must
+        // not falsely match Rust/Maven rules via bare name lookup.
+        let bare = temp.path().join("random-folder").join("target");
+        std::fs::create_dir_all(&bare).unwrap();
+        let resp_bare = call(
+            McpOptions::default(),
+            &json!({
+                "jsonrpc": "2.0",
+                "id": 16,
+                "method": "tools/call",
+                "params": {
+                    "name": "devcleaner_inspect_target",
+                    "arguments": { "path": bare.to_string_lossy() }
+                }
+            })
+            .to_string(),
+        );
+        let parsed_bare: Value =
+            serde_json::from_str(resp_bare["result"]["content"][0]["text"].as_str().unwrap())
+                .unwrap();
+        assert_eq!(parsed_bare["eligible"], Value::Bool(false));
+        assert!(parsed_bare["matched_rule"].is_null());
     }
 }

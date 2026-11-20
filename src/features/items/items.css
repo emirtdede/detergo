@@ -484,6 +484,26 @@
   min-width: 0;
 }
 
+.plan-row-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.plan-row-provider {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.plan-row-hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
 .plan-row-side {
   flex-shrink: 0;
   display: flex;
