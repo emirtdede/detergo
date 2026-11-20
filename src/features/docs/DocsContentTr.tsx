@@ -76,9 +76,11 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
             <div className="docs-callout">
               <Cpu className="docs-callout-icon" size={18} />
               <div>
-                <strong>Tümünü tara</strong> — Projeler, AI ajan depoları ve paket önbellekleri. Bu, komut çubuğundaki
-                eylemdir ve <code>--scope combined</code> ile aynıdır: projeler, AI ajan depoları ve paket önbelleği
-                ölçümü tek oturumda çalışır. Sayfa içindeki düğmeler yalnızca kendi kapsamlarını tarar.
+                <strong>Tek Merkezli Üst Tarama Çubuğu:</strong> Tüm taramalar yalnızca en üst komut çubuğundaki
+                tarama menüsünden başlatılır. İster tek tıkla <strong>Tümünü tara</strong> (Projeler, AI Araçları,
+                Araç Önbellekleri ve Sistem Temizleyici — terminalde <code>-t all</code>) çalıştırın, ister onay
+                kutularıyla yalnızca istediğiniz 1–2 kapsamı seçin. Tarama sürerken üst çubuk aktif kapsamı ve canlı
+                ilerlemeyi gösterir.
               </div>
             </div>
 
@@ -175,18 +177,18 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
               items={[
                 {
                   id: "qs-cli",
-                  label: "Projeleri simülasyon (dry-run) modunda tara",
-                  command: 'dev-cleaner scan "D:\\projeler" --scope all --auto-clean --dry-run',
+                  label: "Projeleri ve AI araçlarını simülasyon (dry-run) modunda tara",
+                  command: 'dev-cleaner s "D:\\projeler" -t p,a -c -n',
                 },
                 {
                   id: "qs-combined",
-                  label: "Projeler ve AI ajan depolarını tek seferde tara",
-                  command: 'dev-cleaner scan "D:\\projeler" --scope combined',
+                  label: "Tüm hedefleri (Projeler + AI + Önbellekler + Sistem) tek komutla tara",
+                  command: 'dev-cleaner s "D:\\projeler" -t all',
                 },
                 {
                   id: "qs-system",
                   label: "C: sürücüsü sistem temizliği kalemlerini ölç",
-                  command: "dev-cleaner system --list",
+                  command: "dev-cleaner sys",
                 },
               ]}
             />
@@ -403,8 +405,12 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
               </button>
             </div>
 
-            <h2 className="docs-h2">1. `dev-cleaner scan`</h2>
-            <p className="docs-p">Hedef dizindeki geliştirici bağımlılıklarını tarar veya otonom temizler.</p>
+            <h2 className="docs-h2">1. `dev-cleaner s` (`scan`)</h2>
+            <p className="docs-p">
+              Kısa ve öz terminal söz dizimiyle istediğiniz 1 veya birden fazla hedefi (<code>-t p,a,c,s</code>)
+              tarar veya otonom temizler. Uzun bayraklar (<code>scan</code>, <code>--auto-clean</code>, <code>--dry-run</code>)
+              mevcut betiklerle geriye dönük tam uyumludur.
+            </p>
             <DocsCommandList
               title={`Örnek Kullanım (${cliShell})`}
               copiedKey={copiedKey}
@@ -417,47 +423,65 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                   ? [
                       {
                         id: "cli-scan-std",
-                        label: "Standart tarama ve insan okunabilir çıktı",
-                        command: 'dev-cleaner scan "/d/projeler"',
+                        label: "Standart proje taraması",
+                        command: 'dev-cleaner s "/d/projeler"',
+                      },
+                      {
+                        id: "cli-scan-targets",
+                        label: "Seçili hedefler (Projeler + AI Araçları + Önbellekler)",
+                        command: 'dev-cleaner s "/d/projeler" -t p,a,c',
+                      },
+                      {
+                        id: "cli-scan-all",
+                        label: "Tüm hedefleri tek seferde tara (Projeler + AI + Önbellek + Sistem)",
+                        command: 'dev-cleaner s "/d/projeler" -t all',
                       },
                       {
                         id: "cli-scan-auto",
-                        label: "Otonom temizlik (Yalnızca güvenli ve yeniden üretilebilir hedefleri çöpe taşır)",
-                        command:
-                          'dev-cleaner scan "/d/projeler" --auto-clean --safety safe,regenerate',
+                        label: "Otonom temizlik (safe ve regenerate hedefleri Geri Dönüşüm'e taşır)",
+                        command: 'dev-cleaner s "/d/projeler" -c',
                       },
                       {
                         id: "cli-scan-dry",
-                        label: "Simülasyon modu (Hiçbir şeyi silmez, nelerin temizleneceğini raporlar)",
-                        command: 'dev-cleaner scan "/d/projeler" --auto-clean --dry-run',
+                        label: "Simülasyon modu (hiçbir dosyayı silmeden önizler)",
+                        command: 'dev-cleaner s "/d/projeler" -c -n',
                       },
                       {
                         id: "cli-scan-json",
                         label: "JSON çıktısı ile CI/CD entegrasyonu",
-                        command: 'dev-cleaner scan "/d/projeler" --json',
+                        command: 'dev-cleaner s "/d/projeler" -j',
                       },
                     ]
                   : [
                       {
                         id: "cli-scan-std",
-                        label: "Standart tarama ve insan okunabilir çıktı",
-                        command: 'dev-cleaner scan "D:\\projeler"',
+                        label: "Standart proje taraması",
+                        command: 'dev-cleaner s "D:\\projeler"',
+                      },
+                      {
+                        id: "cli-scan-targets",
+                        label: "Seçili hedefler (Projeler + AI Araçları + Önbellekler)",
+                        command: 'dev-cleaner s "D:\\projeler" -t p,a,c',
+                      },
+                      {
+                        id: "cli-scan-all",
+                        label: "Tüm hedefleri tek seferde tara (Projeler + AI + Önbellek + Sistem)",
+                        command: 'dev-cleaner s "D:\\projeler" -t all',
                       },
                       {
                         id: "cli-scan-auto",
-                        label: "Otonom temizlik (Yalnızca güvenli ve yeniden üretilebilir hedefleri çöpe taşır)",
-                        command:
-                          'dev-cleaner scan "D:\\projeler" --auto-clean --safety safe,regenerate',
+                        label: "Otonom temizlik (safe ve regenerate hedefleri Geri Dönüşüm'e taşır)",
+                        command: 'dev-cleaner s "D:\\projeler" -c',
                       },
                       {
                         id: "cli-scan-dry",
-                        label: "Simülasyon modu (Hiçbir şeyi silmez, nelerin temizleneceğini raporlar)",
-                        command: 'dev-cleaner scan "D:\\projeler" --auto-clean --dry-run',
+                        label: "Simülasyon modu (hiçbir dosyayı silmeden önizler)",
+                        command: 'dev-cleaner s "D:\\projeler" -c -n',
                       },
                       {
                         id: "cli-scan-json",
                         label: "JSON çıktısı ile CI/CD entegrasyonu",
-                        command: 'dev-cleaner scan "D:\\projeler" --json',
+                        command: 'dev-cleaner s "D:\\projeler" -j',
                       },
                     ]
               }
@@ -467,8 +491,8 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
               <table className="docs-table">
                 <thead>
                   <tr>
-                    <th>Parametre (Flag)</th>
-                    <th>Tür</th>
+                    <th>Kısa / Uzun Bayrak</th>
+                    <th>Değer</th>
                     <th>Varsayılan</th>
                     <th>Açıklama</th>
                   </tr>
@@ -476,58 +500,64 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                 <tbody>
                   <tr>
                     <td><code>&lt;dizin&gt;</code></td>
-                    <td>string</td>
+                    <td>yol</td>
                     <td><code>.</code> (aktif dizin)</td>
                     <td>Taranacak kök klasör yolu (örn: <code>D:\projeler</code>).</td>
                   </tr>
                   <tr>
-                    <td><code>--scope &lt;kapsam&gt;</code></td>
-                    <td><code>projects | agents | combined | all</code></td>
-                    <td><code>projects</code></td>
-                    <td>Taranacak hedef grubu (proje bağımlılıkları veya AI ajan depoları).</td>
+                    <td><code>-t, --targets &lt;liste&gt;</code></td>
+                    <td><code>p,a,c,s,drives,all</code></td>
+                    <td><code>p</code></td>
+                    <td>Virgülle seçilebilir tarama kapsamı: <code>p</code> (projeler), <code>a</code> (AI), <code>c</code> (önbellek), <code>s</code> (sistem), <code>drives</code> (tüm diskler), <code>all</code> (tümü).</td>
                   </tr>
                   <tr>
-                    <td><code>--auto-clean</code></td>
+                    <td><code>-c, --auto-clean</code></td>
                     <td>boolean</td>
                     <td><code>false</code></td>
-                    <td>Tarama bittiğinde belirlenen güvenlik filtrelerine uygun hedefleri otomatik siler.</td>
+                    <td>Güvenlik filtresine uyan hedefleri otomatik olarak Geri Dönüşüm Kutusu&apos;na taşır.</td>
                   </tr>
                   <tr>
-                    <td><code>--dry-run</code></td>
+                    <td><code>-n, --dry-run</code></td>
                     <td>boolean</td>
                     <td><code>false</code></td>
-                    <td>Simülasyon modu; hiçbir dosyaya dokunmadan nelerin temizleneceğini simüle eder.</td>
+                    <td>Simülasyon modu; hiçbir dosyaya dokunmadan nelerin temizleneceğini gösterir.</td>
                   </tr>
                   <tr>
-                    <td><code>--safety &lt;sınıflar&gt;</code></td>
-                    <td>safe,regenerate,review</td>
+                    <td><code>-s, --safety &lt;sınıflar&gt;</code></td>
+                    <td><code>safe,regenerate,review</code></td>
                     <td><code>safe,regenerate</code></td>
-                    <td>Temizlenecek güvenlik sınıfları virgülle ayrılarak belirtilir.</td>
+                    <td>Otomatik temizlikte izin verilen güvenlik sınıfları.</td>
                   </tr>
                   <tr>
-                    <td><code>--min-size &lt;mb&gt;</code></td>
-                    <td>number</td>
+                    <td><code>-m, --min-size &lt;mb&gt;</code></td>
+                    <td>sayı</td>
                     <td><code>0</code></td>
-                    <td>Yalnızca belirtilen Megabayt değerinden büyük olan hedefleri kapsama alır.</td>
+                    <td>Belirtilen MB eşiğinin üzerindeki hedefleri işler.</td>
                   </tr>
                   <tr>
-                    <td><code>--json</code></td>
+                    <td><code>-i, --interactive</code></td>
                     <td>boolean</td>
                     <td><code>false</code></td>
-                    <td>İnsan okunabilir tablo yerine scriptler ve CI/CD için saf JSON çıktısı üretir.</td>
+                    <td>Hedefleri numaralandırır ve seçiminize göre Geri Dönüşüm&apos;e taşır.</td>
                   </tr>
                   <tr>
-                    <td><code>--webhook &lt;url&gt;</code></td>
-                    <td>string (URL)</td>
+                    <td><code>-j, --json</code></td>
+                    <td>boolean</td>
+                    <td><code>false</code></td>
+                    <td>Betikler ve CI/CD için saf JSON çıktısı üretir.</td>
+                  </tr>
+                  <tr>
+                    <td><code>-w, --webhook &lt;url&gt;</code></td>
+                    <td>URL</td>
                     <td><code>null</code></td>
-                    <td>İşlem tamamlandığında JSON özet yükünü POST edecek HTTP webhook adresi.</td>
+                    <td>Tarama veya temizlik özetini POST edeceği webhook adresi.</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-            <h2 className="docs-h2">2. `dev-cleaner caches`</h2>
-            <p className="docs-p">21 geliştirici aracının paket önbelleklerini listeler veya resmi komutla temizler.</p>
+            <h2 className="docs-h2">2. `dev-cleaner c` (`caches`)</h2>
+            <p className="docs-p">21 geliştirici aracının paket önbelleklerini listeler veya resmî komutla temizler.</p>
             <DocsCommandList
               title="Önbellek Komutları"
               copiedKey={copiedKey}
@@ -539,27 +569,27 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                 {
                   id: "cli-cache-list",
                   label: "Tüm önbellek durumunu listele",
-                  command: "dev-cleaner caches",
+                  command: "dev-cleaner c",
                 },
                 {
                   id: "cli-cache-npm",
-                  label: "Belirli bir aracın önbelleğini temizle (örn. npm, pip, cargo, docker)",
-                  command: "dev-cleaner caches --clean npm",
+                  label: "Belirli bir aracın önbelleğini temizle (npm, pip, cargo, docker)",
+                  command: "dev-cleaner c npm",
                 },
                 {
                   id: "cli-cache-dry",
                   label: "Hiçbir şey silmeden tam temizliği önizle",
-                  command: "dev-cleaner caches --clean all --dry-run",
+                  command: "dev-cleaner c all -n",
                 },
                 {
                   id: "cli-cache-all",
                   label: "Tüm yüklü araçların önbelleklerini onaylayarak temizle",
-                  command: "dev-cleaner caches --clean all --yes",
+                  command: "dev-cleaner c all -y",
                 },
               ]}
             />
 
-            <h2 className="docs-h2">3. `dev-cleaner system`</h2>
+            <h2 className="docs-h2">3. `dev-cleaner sys` (`system`)</h2>
             <p className="docs-p">C: sürücüsündeki Windows geçici dosyalarını, Prefetch, Windows Update artıkları ve WinSxS bileşen deposunu yönetir.</p>
             <DocsCommandList
               title="C: Sürücüsü Sistem Temizliği Komutları"
@@ -571,28 +601,28 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
               items={[
                 {
                   id: "cli-sys-list",
-                  label: "Tüm sistem temizliği kalemlerini ve boyutlarını listele",
-                  command: "dev-cleaner system --list",
+                  label: "Tüm sistem temizliği kalemlerini ve boyutlarını ölç",
+                  command: "dev-cleaner sys",
                 },
                 {
                   id: "cli-sys-dry",
                   label: "Hızlı profili silmeden önizle (dry-run)",
-                  command: "dev-cleaner system --clean quick --dry-run",
+                  command: "dev-cleaner sys quick -n",
                 },
                 {
                   id: "cli-sys-quick",
                   label: "Hızlı sistem temizliğini onaylayarak çalıştır",
-                  command: "dev-cleaner system --clean quick --yes",
+                  command: "dev-cleaner sys quick -y",
                 },
                 {
                   id: "cli-sys-std",
                   label: "Standart sistem temizliğini çalıştır (Yönetici önerilir)",
-                  command: "dev-cleaner system --clean standard --yes",
+                  command: "dev-cleaner sys standard -y",
                 },
               ]}
             />
 
-            <h2 className="docs-h2">4. `dev-cleaner history`</h2>
+            <h2 className="docs-h2">4. `dev-cleaner hist` (`history`)</h2>
             <p className="docs-p">Geçmiş temizlik denetim kayıtlarını listeler.</p>
             <DocsCommandList
               title="Denetim Geçmişi Komutları"
@@ -605,12 +635,12 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                 {
                   id: "cli-history",
                   label: "Son 15 temizlik kaydını göster",
-                  command: "dev-cleaner history --limit 15",
+                  command: "dev-cleaner hist 15",
                 },
                 {
                   id: "cli-history-json",
                   label: "Geçmişi JSON olarak dışa aktar",
-                  command: "dev-cleaner history --limit 50 --json",
+                  command: "dev-cleaner hist 50 -j",
                 },
               ]}
             />
@@ -648,10 +678,12 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                     value={cliScope}
                     onChange={(e) => setCliScope(e.target.value)}
                   >
-                    <option value="projects">Projeler (Dependencies, build, cache)</option>
-                    <option value="agents">AI Ajanları (Claude, Cursor, Codex)</option>
-                    <option value="combined">Projeler + AI Ajanları (Tümünü tara)</option>
-                    <option value="all">Tam Tarama (Tümü)</option>
+                    <option value="projects">Projeler (p)</option>
+                    <option value="agents">AI Araçları (-t a)</option>
+                    <option value="p,a">Projeler + AI Araçları (-t p,a)</option>
+                    <option value="p,a,c">Projeler + AI + Önbellekler (-t p,a,c)</option>
+                    <option value="all">Tümü: Projeler + AI + Önbellek + Sistem (-t all)</option>
+                    <option value="drives">Tüm Sürücüler (-t drives)</option>
                   </select>
                 </div>
 
@@ -701,7 +733,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                     checked={cliAutoClean}
                     onChange={(e) => setCliAutoClean(e.target.checked)}
                   />
-                  <span>--auto-clean (Otomatik Geri Dönüşüme Taşı)</span>
+                  <span>-c / --auto-clean (Otomatik Geri Dönüşüme Taşı)</span>
                 </label>
 
                 {cliAutoClean && (
@@ -711,7 +743,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                       checked={cliDryRun}
                       onChange={(e) => setCliDryRun(e.target.checked)}
                     />
-                    <span>--dry-run (Simülasyon Modu)</span>
+                    <span>-n / --dry-run (Simülasyon Modu)</span>
                   </label>
                 )}
 
@@ -721,7 +753,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                     checked={cliJson}
                     onChange={(e) => setCliJson(e.target.checked)}
                   />
-                  <span>--json (Makine Okunabilir JSON Çıktısı)</span>
+                  <span>-j / --json (Makine Okunabilir JSON Çıktısı)</span>
                 </label>
               </div>
 
@@ -763,7 +795,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                   type="button"
                   className="docs-copy-action"
                   onClick={() => copyToClipboard(
-`$Action = New-ScheduledTaskAction -Execute "dev-cleaner.exe" -Argument "scan C:\\dev --auto-clean --min-size 100 --webhook https://n8n.sirket.com/cleanup"
+`$Action = New-ScheduledTaskAction -Execute "dev-cleaner.exe" -Argument "s C:\\dev -c -m 100 -w https://n8n.sirket.com/cleanup"
 $Trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At 3am
 Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWeekly" -Description "Haftalık güvenli bağımlılık temizliği"`,
                     "cron-task"
@@ -776,7 +808,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
               <pre className="docs-code-pre">
                 {highlightBash(
 `# PowerShell ile Pazar günleri 03:00'da çalışan otonom görev tanımlama
-$Action = New-ScheduledTaskAction -Execute "dev-cleaner.exe" -Argument "scan C:\\dev --auto-clean --min-size 100 --webhook https://n8n.sirket.com/cleanup"
+$Action = New-ScheduledTaskAction -Execute "dev-cleaner.exe" -Argument "s C:\\dev -c -m 100 -w https://n8n.sirket.com/cleanup"
 $Trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At 3am
 Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWeekly" -Description "Haftalık güvenli bağımlılık temizliği"`
                 )}
@@ -1160,27 +1192,27 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
                 {
                   id: "sys-cli-list",
                   label: "Tüm sistem hedeflerini ve ölçülebilir boyutları listele",
-                  command: "dev-cleaner system --list",
+                  command: "dev-cleaner sys",
                 },
                 {
                   id: "sys-cli-dry",
                   label: "Hiçbir şey silmeden hızlı profili önizle",
-                  command: "dev-cleaner system --clean quick --dry-run",
+                  command: "dev-cleaner sys quick -n",
                 },
                 {
                   id: "sys-cli-quick",
                   label: "Hızlı profili çalıştır (kullanıcı temp + Windows Update artıkları)",
-                  command: "dev-cleaner system --clean quick --yes",
+                  command: "dev-cleaner sys quick -y",
                 },
                 {
                   id: "sys-cli-standard",
                   label: "Standart profili çalıştır (Yönetici haklarıyla temp, Prefetch, hata raporları)",
-                  command: "dev-cleaner system --clean standard --yes",
+                  command: "dev-cleaner sys standard -y",
                 },
                 {
                   id: "sys-cli-deep",
                   label: "Derin profili çalıştır (Disk Temizleme ve DISM WinSxS dâhil)",
-                  command: "dev-cleaner system --clean deep --yes",
+                  command: "dev-cleaner sys deep -y",
                 },
               ]}
             />

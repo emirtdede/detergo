@@ -1,59 +1,81 @@
 # Dev Cleaner CLI
 
-The same executable that opens the desktop window is also a scriptable
-terminal tool. Run it with no arguments to launch the GUI; run it with a
+The same executable that opens the desktop window is also a fast, concise
+terminal tool. Run it with no arguments to launch the GUI; run it with a short
 command to stay in the terminal.
 
 ```text
 dev-cleaner                     # open the desktop app
-dev-cleaner scan .              # list the largest reclaimable targets under .
-dev-cleaner scan . -i           # pick targets by number, then delete
-dev-cleaner caches --clean npm  # run the official npm cache clean
-dev-cleaner history             # show past cleanup records
+dev-cleaner s .                 # scan projects under .
+dev-cleaner s . -t p,a          # scan projects + AI tools
+dev-cleaner s . -t all          # scan everything (projects, AI, caches, C: system)
+dev-cleaner s . -i              # pick targets by number, move to Recycle Bin
+dev-cleaner s . -c -n           # dry-run auto-clean preview
+dev-cleaner c npm               # run the official npm cache clean
+dev-cleaner sys                 # list C: system cleaner targets
+dev-cleaner sys quick -y        # run quick C: cleanup
+dev-cleaner hist 15             # show 15 most recent cleanup records
 ```
 
+> All long subcommands and flags (`scan`, `caches`, `system`, `history`,
+> `--auto-clean`, `--dry-run`, `--scope`, `--json`, etc.) remain 100% supported
+> for backward compatibility.
+>
 > On Windows the installed binary may be on `PATH` as `dev-cleaner`. The
-> portable build is `Dev-Cleaner-2.2.3-Portable.exe`; rename it to
+> portable build is `Dev-Cleaner-1.0.0-Portable.exe`; rename it to
 > `dev-cleaner.exe` to use the examples verbatim.
 
 ## Commands
 
-| Command | Purpose |
-| --- | --- |
-| `scan [DIRECTORY]` | Discover projects, AI-agent storage and caches; optionally clean. Defaults to the current directory. |
-| `caches` | List the 21 supported developer tools, their versions and detection status. |
-| `caches --clean <TOOL\|all>` | Run a tool's official cache clean. `all` requires `--yes`. |
-| `history` | Print past cleanup records from the audit database. |
-| `mcp` | Start the Model Context Protocol server on stdio. |
-| `help`, `--help`, `-h` | Print the manual (works after any subcommand too). |
-| `version`, `--version`, `-v` | Print the product and version. |
+| Short | Long | Purpose |
+| --- | --- | --- |
+| `s [DIR]` | `scan [DIR]` | Discover projects, AI tools, caches and/or C: system targets; optionally clean. Defaults to `.`. |
+| `c [TOOL\|all]` | `caches` | List the 21 developer-tool caches or clean one/all via official CLI commands (`all` needs `-y`). |
+| `sys [PROFILE]` | `system` | Measure or clean C: drive maintenance targets (`quick`, `standard`, `deep`, or comma-separated IDs). |
+| `h [N]` / `hist [N]` | `history` | Print past cleanup records from the audit database. |
+| `mcp` | `mcp` | Start the Model Context Protocol server on stdio. |
+| `-h` | `help`, `--help` | Print the manual (works after any subcommand too). |
+| `-v` | `version`, `--version` | Print the product and version. |
 
-## `scan`
+## `s` / `scan`
 
 ```text
-dev-cleaner scan [DIRECTORY] [OPTIONS]
+dev-cleaner s [DIRECTORY] [OPTIONS]
 ```
 
-| Option | Meaning |
-| --- | --- |
-| `--scope <SCOPE>` | `projects` (default), `agents`, `combined`, or `all` (every fixed drive). |
-| `--min-size <MB>` | Ignore targets smaller than this. |
-| `--safety <LEVELS>` | Comma-separated allow-list: `safe`, `regenerate`, `review`, `keep`. Default `safe,regenerate`. |
-| `--top <COUNT>` | Print the `COUNT` largest targets (default 20). |
-| `--all` | Print every discovered target. |
-| `-i`, `--interactive` | Number the selectable targets, read a selection, then move it to the Recycle Bin. |
-| `--auto-clean` | Move every target that matches `--safety` and `--min-size` to the Recycle Bin without prompting. |
-| `--dry-run` | With `--auto-clean`, report what would happen without deleting. |
-| `--json` | Emit one machine-readable JSON document on stdout. |
-| `--webhook <URL>` | POST the run summary to an n8n, Slack or Discord webhook. |
+| Short | Long | Meaning |
+| --- | --- | --- |
+| `-t <LIST>` | `--targets`, `--scope` | Comma-separated targets: `p` (projects, default), `a` (AI agents), `c` (caches), `s` (C: system), `drives` (all fixed drives), `combined` (`p,a`), `all` (`p,a,c,s`). |
+| `-m <MB>` | `--min-size <MB>` | Ignore targets smaller than this threshold. |
+| `-s <LEVELS>` | `--safety <LEVELS>` | Comma-separated allow-list: `safe`, `regenerate`, `review`, `keep`. Default `safe,regenerate`. |
+| — | `--top <COUNT>` | Print the `COUNT` largest targets (default 20). |
+| `-a` | `--all` | Print every discovered target. |
+| `-i` | `--interactive` | Number the selectable targets, read a selection, then move it to the Recycle Bin. |
+| `-c` | `--clean`, `--auto-clean` | Move matching targets to the Recycle Bin without prompting. |
+| `-n` | `--dry`, `--dry-run` | With `-c`, report what would happen without deleting. |
+| `-j` | `--json` | Emit one machine-readable JSON document on stdout. |
+| `-w <URL>` | `--webhook <URL>` | POST the run summary to an n8n, Slack or Discord webhook. |
 
-`--interactive` and `--auto-clean` are mutually exclusive, and
-`--interactive` cannot be combined with `--json`.
+`-i` (`--interactive`) and `-c` (`--auto-clean`) are mutually exclusive, and
+`-i` cannot be combined with `-j` (`--json`).
+
+### Multi-target selection (`-t`)
+
+Matches the checkboxes in the desktop top bar so you can scan any 1–4 subsets in
+one command:
+
+```text
+dev-cleaner s D:\work -t p,a         # projects + AI tools
+dev-cleaner s D:\work -t p,a,c       # projects + AI tools + package caches
+dev-cleaner s D:\work -t all         # projects + AI tools + caches + C: system
+dev-cleaner s -t c,s                 # package caches + C: system only
+dev-cleaner s -t drives              # full scan across all fixed drives
+```
 
 ### Interactive selection
 
 ```text
-$ dev-cleaner scan . -i
+$ dev-cleaner s . -i
 
 Selectable targets (largest first):
   #        Size  Safety        Target
@@ -72,7 +94,7 @@ so they remain restorable.
 
 ### Output
 
-Without `--json`, `scan` prints a size-ranked table followed by a summary:
+Without `-j`, `s` prints a size-ranked table followed by a summary:
 
 ```text
 Targets (largest first):
@@ -90,14 +112,14 @@ Targets (largest first):
 Targets the safety layer refuses are shown with `[not selectable]` so the
 reason a large folder is missing from the reclaimable total is visible.
 
-## `caches`
+## `c` / `caches`
 
 ```text
-dev-cleaner caches                          # table of detected tools
-dev-cleaner caches --json                   # machine-readable provider list
-dev-cleaner caches --clean npm              # clean one tool
-dev-cleaner caches --clean all --dry-run    # preview every tool
-dev-cleaner caches --clean all --yes        # clean every detected tool
+dev-cleaner c                # table of detected tools
+dev-cleaner c -j             # machine-readable provider list
+dev-cleaner c npm            # clean one tool
+dev-cleaner c all -n         # preview every tool
+dev-cleaner c all -y         # clean every detected tool
 ```
 
 Cache cleanup only runs the provider's own official command (for example
@@ -105,11 +127,24 @@ Cache cleanup only runs the provider's own official command (for example
 by hand. It is disabled unless **Settings → Automation → Allow cache cleanup**
 is enabled.
 
-## `history`
+## `sys` / `system`
 
 ```text
-dev-cleaner history --limit 10
-dev-cleaner history --json
+dev-cleaner sys                  # measure & list all C: system cleaner targets
+dev-cleaner sys quick -n         # preview quick profile without deleting
+dev-cleaner sys quick -y         # clean user temp + Windows Update leftovers
+dev-cleaner sys standard -y      # clean temp, Prefetch, WER (Admin recommended)
+dev-cleaner sys deep -y          # includes Disk Cleanup & DISM WinSxS
+```
+
+Every action resolves paths against a fixed audited list on the native side and
+never touches user projects, Documents, or Downloads.
+
+## `h` / `hist` / `history`
+
+```text
+dev-cleaner hist 10          # last 10 cleanup records
+dev-cleaner hist 50 -j       # JSON export of last 50 records
 ```
 
 ## Exit codes
@@ -129,7 +164,7 @@ was printed, so CI and Task Scheduler see the correct status.
 
 ## JSON output
 
-`scan --json` prints a single object:
+`s -j` (`scan --json`) prints a single object:
 
 ```json
 {
@@ -154,13 +189,12 @@ was printed, so CI and Task Scheduler see the correct status.
 }
 ```
 
-`caches --json` and `history --json` emit their own documents; see the source
-in `src-tauri/src/cli/mod.rs`.
+`c -j` and `hist -j` emit their own documents; see `src-tauri/src/cli/mod.rs`.
 
 ## Webhooks
 
 ```text
-dev-cleaner scan D:\work --webhook https://discord.com/api/webhooks/…
+dev-cleaner s D:\work -w https://discord.com/api/webhooks/…
 ```
 
 Only the origin of the URL is ever logged or printed; the path is treated as a
@@ -182,13 +216,13 @@ only removes an additional operator opt-in, not the token gate. See
 
 | npkill | Dev Cleaner |
 | --- | --- |
-| `npx npkill` | `dev-cleaner scan .` |
-| Interactive arrow-key selection | `dev-cleaner scan . -i` |
-| `npkill -d ~/projects` | `dev-cleaner scan ~/projects` |
-| `npkill -x` / exclude | `--safety` and the settings protected-path list |
-| Deletes `node_modules` only | 56-rule catalog: JS, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart, AI-agent storage and caches |
+| `npx npkill` | `dev-cleaner s .` |
+| Interactive arrow-key selection | `dev-cleaner s . -i` |
+| `npkill -d ~/projects` | `dev-cleaner s ~/projects` |
+| `npkill -x` / exclude | `-s` (`--safety`) and the settings protected-path list |
+| Deletes `node_modules` only | 56-rule catalog: JS, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart, AI-agent storage, caches & C: system |
 | Permanent delete | Recycle Bin by default, with an audit record |
 
-The desktop app is the fully interactive experience (virtualised table,
-monorepo grouping, size measurement, preview and confirmation); the CLI is the
-same engine without the window.
+The desktop app is the fully interactive experience (unified top-bar multi-target
+scan hub, virtualised table, monorepo grouping, live progress, preview and
+confirmation); the CLI is the same engine without the window.

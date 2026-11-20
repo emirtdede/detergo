@@ -269,7 +269,7 @@ fn compose_support_mail_blocking(
 
     let draft_ok = open_outlook_draft(&path, &subject, &body).unwrap_or(false)
         || open_thunderbird_draft(&path, &subject, &body).unwrap_or(false)
-        || open_mapi_draft(&path, &subject, &body);
+        || open_mapi_draft_bounded(&path, &subject, &body);
     if draft_ok {
         return Ok(SupportMailResult {
             mode: "draft".to_string(),
@@ -428,6 +428,32 @@ fn has_registered_mapi_client() -> bool {
         }
     }
     false
+}
+
+/// Runs `open_mapi_draft` on a detached thread with a short timeout.
+///
+/// Several Windows MAPI handlers ignore `MAPI_DIALOG_MODELESS` and block
+/// `MAPISendMailW` until the user closes the compose window. Waiting forever
+/// left the UI stuck in "Creating bundle..." (and broke if the ZIP was deleted
+/// while the draft stayed open). If MAPI is still running after 4 s, a mail
+/// client has taken over the draft, so we return `true` without blocking IPC.
+fn open_mapi_draft_bounded(path: &Path, subject: &str, body: &str) -> bool {
+    if !cfg!(windows) {
+        return false;
+    }
+    let path = path.to_path_buf();
+    let subject = subject.to_string();
+    let body = body.to_string();
+    let (tx, rx) = std::sync::mpsc::channel();
+    std::thread::spawn(move || {
+        let ok = open_mapi_draft(&path, &subject, &body);
+        let _ = tx.send(ok);
+    });
+    match rx.recv_timeout(std::time::Duration::from_secs(4)) {
+        Ok(ok) => ok,
+        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => true,
+        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => false,
+    }
 }
 
 /// Uses Windows Simple MAPI (`MAPISendMailW`) in modeless dialog mode so any

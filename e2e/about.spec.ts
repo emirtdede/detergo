@@ -16,9 +16,14 @@ const CATALOG_ECOSYSTEMS = 14;
 async function openAbout(page: Page) {
   await page.goto("/");
   await expect(page.locator("main#main")).toBeVisible();
-  // The app follows the OS locale; pin English so the assertions are stable.
+  // The app follows the OS locale; wait for startup settings to finish loading
+  // before pinning English so `loadPreferences()` cannot overwrite it back.
   await page.evaluate(async () => {
     const { usePreferencesStore } = await import("/src/stores/preferences-store.ts");
+    const deadline = Date.now() + 5000;
+    while (!usePreferencesStore.getState().isLoaded && Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 20));
+    }
     usePreferencesStore.getState().setLanguage("en");
   });
   await page

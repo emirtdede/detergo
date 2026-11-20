@@ -11,6 +11,7 @@ import {
 import { useSelectionStore } from "@/stores/selection-store";
 import { useUiStore } from "@/stores/ui-store";
 import { useCacheStore } from "@/stores/cache-store";
+import { useSystemStore } from "@/stores/system-store";
 import { ScanEvent, ScanRequest, ScanScope, ScanSummary } from "@/types";
 import { appendScanHistory } from "@/features/history/scan-history";
 import { getUIText, localizeAppError } from "@/lib/ui-text";
@@ -20,7 +21,13 @@ import { toAppError } from "@/lib/errors/app-error";
 import { log } from "@/lib/logging";
 import { waitForCondition, withTimeout } from "@/lib/async/with-timeout";
 import { startCombinedCacheMeasure, abortCombinedCacheMeasure } from "./combined-measure";
-import { useScanActive } from "./scan-activity";
+import {
+  ALL_SCAN_TARGETS,
+  isScanActiveNow,
+  ScanTargetKey,
+  useScanActive,
+  useScanTargetsStore,
+} from "./scan-activity";
 
 /**
  * A backend that never answers must not hold the scan start slot forever. The
@@ -43,6 +50,8 @@ export function useScanController() {
       rootOverride?: string,
       scope: ScanScope = "project",
       measureCaches = false,
+      scanSystem = false,
+      activeTargetsOverride?: ScanTargetKey[],
     ): Promise<boolean> => {
       const current = useScanStore.getState();
       if (
@@ -56,9 +65,16 @@ export function useScanController() {
       }
 
       if (!current.acquireScanStart()) return false;
-      // The cache step of a combined run is started next to the walk, not after
-      // it, so it has to survive into the `finally` below.
+      // The cache & system steps of a combined run are started next to the walk,
+      // not after it, so they have to survive into the `finally` below.
       let measureRun: Promise<void> | null = null;
+      let systemRun: Promise<void> | null = null;
+      const inferredTargets: ScanTargetKey[] = activeTargetsOverride ?? [
+        ...(scope === "agents" ? (["agents"] as const) : (["projects"] as const)),
+        ...(scope === "combined" || scope === "allDrives" ? (["agents"] as const) : []),
+        ...(measureCaches ? (["caches"] as const) : []),
+        ...(scanSystem ? (["system"] as const) : []),
+      ];
       try {
         // Only a project scan has a single root. `agents` and `allDrives` are
         // virtual scopes: reusing the last project path made the header claim a
@@ -100,16 +116,20 @@ export function useScanController() {
         const prefs = usePreferencesStore.getState();
         const runId = useScanStore.getState().beginScanRun();
         useSelectionStore.getState().clearSelection();
+        useScanTargetsStore.getState().setActiveRun(inferredTargets, scope === "allDrives");
         useScanStore.getState().startScanState(root, scope);
 
-        // "Scan everything" covers three scopes. Package caches use a separate
-        // backend session, so the measurement starts here, alongside the
-        // project/agent walk. Measuring it last left the caches page reading
-        // "not measured" for the whole scan — it looked like the action never
-        // included caches — and a user "Stop" then resolved the walk and
-        // *started* a fresh measurement.
+        // Package caches and C: system scan use separate backend sessions, so
+        // they start alongside the project/agent walk. Measuring them last left
+        // those views reading "not measured" for the whole scan and could race a
+        // user "Stop".
         if (measureCaches) {
           measureRun = startCombinedCacheMeasure();
+        }
+        if (scanSystem) {
+          systemRun = useSystemStore.getState().load();
+        }
+        if (measureRun || systemRun) {
           useScanStore.getState().setCombinedActive(true);
         }
 
@@ -318,19 +338,29 @@ export function useScanController() {
           return false;
         }
       } finally {
-        // The scan start slot only guards the walk. The cache step owns a
-        // separate backend session, so awaiting it here made a command that
-        // never settles keep `scanStartPending` (and therefore every future
-        // start) blocked until the app restarted.
+        // The scan start slot only guards the walk. Parallel cache and system
+        // steps own separate backend sessions, so awaiting them here would block
+        // future starts if one never settled.
         useScanStore.getState().releaseScanStart();
-        if (measureRun) {
-          void withTimeout(measureRun, COMBINED_MEASURE_TIMEOUT_MS, "combined cache measure")
+        const companionRuns = [measureRun, systemRun].filter(
+          (run): run is Promise<void> => run !== null,
+        );
+        if (companionRuns.length > 0) {
+          void withTimeout(
+            Promise.allSettled(companionRuns),
+            COMBINED_MEASURE_TIMEOUT_MS,
+            "combined companion scans",
+          )
             .catch(() => {
-              log.warn("Combined cache measurement did not settle in time");
+              log.warn("Combined companion scan did not settle in time");
             })
-            .finally(() => useScanStore.getState().setCombinedActive(false));
+            .finally(() => {
+              useScanStore.getState().setCombinedActive(false);
+              useScanTargetsStore.getState().clearActiveRun();
+            });
         } else {
           useScanStore.getState().setCombinedActive(false);
+          useScanTargetsStore.getState().clearActiveRun();
         }
       }
     },
@@ -370,16 +400,73 @@ export function useScanController() {
   }, [runScan]);
 
   /**
-   * "Scan everything": projects, AI agent storage and package caches.
+   * Unified multi-target scan entry point for the top command bar.
    *
-   * Projects and agents share one backend session (one progress stream, one
-   * cancel, one result set). Package caches use the dedicated official-action
-   * pipeline, so they are measured in parallel by the same action; the header's
-   * single "Stop" cancels both.
+   * Runs any user-selected subset of `{projects, agents, caches, system}` (and
+   * optional all-drives mode) in parallel under one live header indicator.
+   */
+  const startSelectedScan = useCallback(
+    async (
+      targetsOverride?: ScanTargetKey[],
+      allDrivesOverride?: boolean,
+      rootOverride?: string,
+    ): Promise<boolean> => {
+      if (isScanActiveNow() || useScanStore.getState().scanStartPending) {
+        return false;
+      }
+      const targetState = useScanTargetsStore.getState();
+      const rawTargets = targetsOverride ?? targetState.targets;
+      const targets: ScanTargetKey[] =
+        rawTargets.length > 0 ? [...rawTargets] : [...ALL_SCAN_TARGETS];
+
+      const hasProjects = targets.includes("projects");
+      const hasAgents = targets.includes("agents");
+      const hasCaches = targets.includes("caches");
+      const hasSystem = targets.includes("system");
+
+      const effectiveAllDrives =
+        hasProjects &&
+        (allDrivesOverride ??
+          (targetState.allDrives || useScanStore.getState().scope === "allDrives"));
+
+      if (hasProjects || hasAgents) {
+        const scope: ScanScope =
+          hasProjects && effectiveAllDrives
+            ? "allDrives"
+            : hasProjects && hasAgents
+              ? "combined"
+              : hasProjects
+                ? "project"
+                : "agents";
+        return runScan(rootOverride, scope, hasCaches, hasSystem, targets);
+      }
+
+      // Only caches and/or C: system cleaner selected — run without starting a
+      // filesystem project/agent walk.
+      useScanTargetsStore.getState().setActiveRun(targets, false);
+      if (hasCaches) {
+        useScanStore.getState().setCombinedActive(true);
+      }
+      try {
+        const tasks: Promise<void>[] = [];
+        if (hasCaches) tasks.push(startCombinedCacheMeasure());
+        if (hasSystem) tasks.push(useSystemStore.getState().load());
+        await Promise.allSettled(tasks);
+        return true;
+      } finally {
+        useScanStore.getState().setCombinedActive(false);
+        useScanTargetsStore.getState().clearActiveRun();
+      }
+    },
+    [runScan],
+  );
+
+  /**
+   * "Scan everything": projects, AI agent storage, package caches and C: system.
    */
   const startFullScan = useCallback(
-    async (rootOverride?: string) => runScan(rootOverride, "combined", true),
-    [runScan],
+    async (rootOverride?: string) => startSelectedScan([...ALL_SCAN_TARGETS], false, rootOverride),
+    [startSelectedScan],
   );
 
   const cancelScan = useCallback(async () => {
@@ -471,6 +558,7 @@ export function useScanController() {
     combinedActive,
     startScan,
     chooseFolderAndScan,
+    startSelectedScan,
     startFullScan,
     cancelScan,
   };

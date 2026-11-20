@@ -1,8 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import {
+  Bot,
   FolderOpen,
   Folder,
   FolderPlus,
+  FolderTree,
+  HardDrive,
+  Package,
   Play,
   Square,
   Star,
@@ -13,31 +17,50 @@ import {
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
+import { Checkbox } from "@/components/primitives/Checkbox";
 import { Dialog } from "@/components/primitives/Dialog";
 import { Logo } from "@/components/brand/Logo";
 import { WindowControls } from "@/components/layout/WindowControls";
 import { useScanStore } from "@/stores/scan-store";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
+import { useCacheStore } from "@/stores/cache-store";
+import { useSystemStore } from "@/stores/system-store";
 import { scannerApi } from "@/lib/tauri/scanner-api";
-import { KnownLocation, ScanScope } from "@/types";
+import { KnownLocation } from "@/types";
 import { getUIText, localizeAppError, useUIText } from "@/lib/ui-text";
 import { maskPath, truncatePath } from "@/lib/format/path";
+import { formatBytes } from "@/lib/formatters";
 import { getKnownLocationLabel } from "./scan-helpers";
+import { ALL_SCAN_TARGETS, ScanTargetKey, useScanTargetsStore } from "./scan-activity";
 import { useScanController } from "./useScanController";
 import "./scan.css";
-import { useCacheStore } from "@/stores/cache-store";
 
 export const ScanHeader: React.FC = () => {
   const ui = useUIText();
   const currentRootPath = useScanStore((s) => s.currentRootPath);
   const scanScope = useScanStore((s) => s.scope);
-  const { isScanning, status, combinedActive, startScan, startFullScan, cancelScan } =
-    useScanController();
+  const progress = useScanStore((s) => s.progress);
+  const cacheMeasuring = useCacheStore((s) => s.measuring);
+  const measureDone = useCacheStore((s) => s.measureDone);
+  const measureTotal = useCacheStore((s) => s.measureTotal);
+  const systemLoading = useSystemStore((s) => s.loading);
+  const { isScanning, status, combinedActive, startSelectedScan, cancelScan } = useScanController();
+  const selectedTargets = useScanTargetsStore((s) => s.targets);
+  const allDrivesSelected = useScanTargetsStore((s) => s.allDrives);
+  const activeTargets = useScanTargetsStore((s) => s.activeTargets);
+  const activeAllDrives = useScanTargetsStore((s) => s.activeAllDrives);
+  const toggleTarget = useScanTargetsStore((s) => s.toggleTarget);
+  const selectAllTargets = useScanTargetsStore((s) => s.selectAllTargets);
+  const setAllDrives = useScanTargetsStore((s) => s.setAllDrives);
   // After a user cancel the walk reports `cancelled` while the combined run is
   // still winding down (the cache step may be finishing). Re-enabling the button
   // in that window invited a second press that looked like the real stop.
   const stopping = status === "cancelling" || (status === "cancelled" && combinedActive);
+  const walkRunning = status === "scanning" || status === "measuring" || status === "cancelling";
+  const canStop = walkRunning || combinedActive || cacheMeasuring;
+
+  const language = usePreferencesStore((s) => s.language);
 
   const favorites = usePreferencesStore((s) => s.favorites);
   const recentLocations = usePreferencesStore((s) => s.recentLocations);
@@ -197,9 +220,11 @@ export const ScanHeader: React.FC = () => {
       // All-drives has no single root; keeping the previous project path would
       // leave a stale location (and a stray favorite star) behind.
       useScanStore.setState({ currentRootPath: null, scope: "allDrives" });
+      setAllDrives(true);
       return;
     }
     useScanStore.setState({ currentRootPath: path, scope: "project" });
+    setAllDrives(false);
     addRecentLocation(path);
   };
 
@@ -258,20 +283,124 @@ export const ScanHeader: React.FC = () => {
     }
   };
 
-  const handleStartFullScan = () => {
-    setIsScanMenuOpen(false);
-    // Projects + AI agent storage share one backend session; package caches
-    // are measured in parallel by the same action.
-    void startFullScan();
+  const targetLabel = (key: ScanTargetKey): string => {
+    switch (key) {
+      case "projects":
+        return ui.nav.projects;
+      case "agents":
+        return ui.nav.agents;
+      case "caches":
+        return ui.nav.caches;
+      case "system":
+        return ui.nav.system;
+    }
   };
 
-  const handleStartScope = (scope: ScanScope) => {
-    setIsScanMenuOpen(false);
-    if (scope === "globalCaches") {
-      void useCacheStore.getState().startMeasure();
-      return;
+  const targetIcon = (key: ScanTargetKey): React.ReactNode => {
+    switch (key) {
+      case "projects":
+        return <FolderTree size={14} />;
+      case "agents":
+        return <Bot size={14} />;
+      case "caches":
+        return <Package size={14} />;
+      case "system":
+        return <HardDrive size={14} />;
     }
-    void startScan(undefined, scope);
+  };
+
+  const effectiveAllDrives = allDrivesSelected || isAllDrives;
+  const allTargetsSelected =
+    selectedTargets.length === ALL_SCAN_TARGETS.length && !effectiveAllDrives;
+
+  const primaryScanLabel = (() => {
+    if (effectiveAllDrives && selectedTargets.length === 1 && selectedTargets[0] === "projects") {
+      return ui.common.allDrives;
+    }
+    if (allTargetsSelected) return ui.common.scanAll;
+    if (selectedTargets.length === 1) {
+      return `${ui.common.scan}: ${targetLabel(selectedTargets[0])}`;
+    }
+    return `${ui.common.scan} (${selectedTargets.length}/${ALL_SCAN_TARGETS.length})`;
+  })();
+
+  const selectedTargetsSummary = selectedTargets
+    .map((key) =>
+      key === "projects" && effectiveAllDrives
+        ? `${targetLabel(key)} (${ui.common.allDrives})`
+        : targetLabel(key),
+    )
+    .join(", ");
+
+  const runningTargets: ScanTargetKey[] =
+    activeTargets.length > 0
+      ? activeTargets
+      : [
+          ...(walkRunning && scanScope !== "agents" ? (["projects"] as const) : []),
+          ...(walkRunning &&
+          (scanScope === "agents" || scanScope === "combined" || scanScope === "allDrives")
+            ? (["agents"] as const)
+            : []),
+          ...(cacheMeasuring ? (["caches"] as const) : []),
+          ...(systemLoading ? (["system"] as const) : []),
+        ];
+
+  const activeScopeLabel = (() => {
+    if (activeAllDrives && runningTargets.length <= 1) return ui.common.allDrives;
+    if (runningTargets.length >= ALL_SCAN_TARGETS.length) return ui.common.scanAll;
+    if (runningTargets.length === 1) return targetLabel(runningTargets[0]);
+    if (runningTargets.length === 2) {
+      return `${targetLabel(runningTargets[0])} + ${targetLabel(runningTargets[1])}`;
+    }
+    if (runningTargets.length > 2) {
+      return `${targetLabel(runningTargets[0])} + ${targetLabel(runningTargets[1])} +${runningTargets.length - 2}`;
+    }
+    return ui.common.scanning;
+  })();
+
+  const { activeProgressDetail, progressPct } = (() => {
+    if (stopping) {
+      return { activeProgressDetail: ui.plan.cancelling, progressPct: null as number | null };
+    }
+    if (walkRunning) {
+      if (progress && progress.entriesFound > 0) {
+        if (progress.entriesMeasured > 0) {
+          const pct = Math.min(
+            100,
+            Math.round((progress.entriesMeasured / progress.entriesFound) * 100),
+          );
+          const detail =
+            status === "measuring"
+              ? `${pct}% · ${progress.entriesMeasured}/${progress.entriesFound} · ${formatBytes(progress.bytesMeasured, language)}`
+              : `${progress.entriesMeasured}/${progress.entriesFound} · ${formatBytes(progress.bytesMeasured, language)}`;
+          return { activeProgressDetail: detail, progressPct: status === "measuring" ? pct : null };
+        }
+        return {
+          activeProgressDetail: `${progress.entriesFound} · ${formatBytes(progress.bytesMeasured, language)}`,
+          progressPct: null as number | null,
+        };
+      }
+      return { activeProgressDetail: ui.common.scanning, progressPct: null as number | null };
+    }
+    if (cacheMeasuring) {
+      if (measureTotal > 0) {
+        const pct = Math.min(100, Math.round((measureDone / measureTotal) * 100));
+        return {
+          activeProgressDetail: `${measureDone}/${measureTotal} (${pct}%)`,
+          progressPct: pct,
+        };
+      }
+      return { activeProgressDetail: ui.caches.measuring, progressPct: null as number | null };
+    }
+    if (systemLoading) {
+      return { activeProgressDetail: ui.caches.measuring, progressPct: null as number | null };
+    }
+    return { activeProgressDetail: ui.common.scanning, progressPct: null as number | null };
+  })();
+
+  const handleStartSelectedScan = () => {
+    setIsScanMenuOpen(false);
+    void startSelectedScan();
   };
 
   const handleCancelScan = () => {
@@ -280,7 +409,10 @@ export const ScanHeader: React.FC = () => {
 
   return (
     <>
-      <header className="top-command-bar" data-tauri-drag-region="deep">
+      <header
+        className={`top-command-bar ${isScanning ? "is-scanning" : ""}`}
+        data-tauri-drag-region="deep"
+      >
         {/* 1. Left: Single Brand Title */}
         <div className="command-brand" data-tauri-drag-region="false">
           <Logo size={18} showWordmark={false} />
@@ -556,17 +688,35 @@ export const ScanHeader: React.FC = () => {
         {/* 3. Right: Actions + Window Controls */}
         <div className="command-actions" data-tauri-drag-region="false">
           {isScanning ? (
-            <Button
-              variant="danger-outline"
-              size="sm"
-              className={`command-scan-btn is-cancelling ${stopping ? "is-stopping" : ""}`}
-              icon={<Square size={11} fill="currentColor" />}
-              onClick={handleCancelScan}
-              disabled={stopping}
-              aria-busy={stopping}
-            >
-              {stopping ? ui.plan.cancelling : ui.common.stop}
-            </Button>
+            <div className="command-scan-active">
+              <div
+                className="command-scan-status"
+                role="status"
+                aria-live="polite"
+                title={`${activeScopeLabel} — ${activeProgressDetail}`}
+              >
+                <span className="command-scan-pulse" aria-hidden="true" />
+                <span className="command-scan-scope">{activeScopeLabel}</span>
+                <span className="command-scan-sep" aria-hidden="true">
+                  ·
+                </span>
+                <span className="command-scan-metric">{activeProgressDetail}</span>
+              </div>
+
+              {canStop && (
+                <Button
+                  variant="danger-outline"
+                  size="sm"
+                  className={`command-scan-btn is-cancelling ${stopping ? "is-stopping" : ""}`}
+                  icon={<Square size={11} fill="currentColor" />}
+                  onClick={handleCancelScan}
+                  disabled={stopping}
+                  aria-busy={stopping}
+                >
+                  {stopping ? ui.plan.cancelling : ui.common.stop}
+                </Button>
+              )}
+            </div>
           ) : (
             <div className="command-scan-group" ref={scanMenuRef}>
               <Button
@@ -574,20 +724,20 @@ export const ScanHeader: React.FC = () => {
                 size="sm"
                 className="command-scan-btn"
                 icon={<Play size={11} fill="currentColor" />}
-                onClick={handleStartFullScan}
+                onClick={handleStartSelectedScan}
+                title={selectedTargetsSummary}
               >
-                {ui.common.scanAll}
+                {primaryScanLabel}
               </Button>
               <button
                 ref={scanMenuTriggerRef}
                 type="button"
                 className={`command-scan-menu-trigger ${isScanMenuOpen ? "is-open" : ""}`}
                 onClick={() => setIsScanMenuOpen((prev) => !prev)}
-                aria-haspopup="menu"
                 aria-expanded={isScanMenuOpen}
                 aria-controls={isScanMenuOpen ? "scan-scope-menu" : undefined}
-                aria-label={ui.common.scanAll}
-                title={ui.common.scanAllDesc}
+                aria-label={ui.overview.coverage}
+                title={selectedTargetsSummary}
               >
                 <ChevronDown size={13} />
               </button>
@@ -596,67 +746,90 @@ export const ScanHeader: React.FC = () => {
                 <div
                   id="scan-scope-menu"
                   className="command-scan-menu"
-                  role="menu"
+                  role="group"
+                  aria-label={ui.overview.coverage}
                   data-tauri-drag-region="false"
                 >
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="location-menu-item"
-                    onClick={handleStartFullScan}
-                    title={ui.common.scanAllDesc}
-                  >
-                    <div className="location-menu-item-info">
-                      <span className="location-menu-item-title">{ui.common.scanAll}</span>
-                      <span
-                        className="location-menu-item-path location-menu-item-path--desc"
-                        title={ui.common.scanAllDesc}
-                      >
-                        {ui.common.scanAllDesc}
-                      </span>
-                    </div>
-                  </button>
+                  <div className="location-menu-section-header">
+                    <span>{ui.overview.coverage}</span>
+                    <span className="location-menu-badge">
+                      {selectedTargets.length}/{ALL_SCAN_TARGETS.length}
+                    </span>
+                  </div>
+
+                  <div className="scan-scope-list">
+                    {ALL_SCAN_TARGETS.map((key) => {
+                      const checked = selectedTargets.includes(key);
+                      const isOnlySelected = checked && selectedTargets.length === 1;
+                      return (
+                        <div
+                          key={key}
+                          className={`scan-scope-option ${checked ? "is-selected" : ""}`}
+                        >
+                          <Checkbox
+                            id={`scan-target-${key}`}
+                            checked={checked}
+                            disabled={isOnlySelected}
+                            onChange={() => toggleTarget(key)}
+                            label={
+                              <span className="scan-scope-label">
+                                <span className="scan-scope-icon" aria-hidden="true">
+                                  {targetIcon(key)}
+                                </span>
+                                <span className="scan-scope-title">{targetLabel(key)}</span>
+                              </span>
+                            }
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+
                   <div className="location-menu-divider" />
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="location-menu-item"
-                    onClick={() => handleStartScope("project")}
+
+                  <div
+                    className={`scan-scope-option scan-scope-option--subtle ${effectiveAllDrives ? "is-selected" : ""}`}
                   >
-                    <div className="location-menu-item-info">
-                      <span className="location-menu-item-title">{ui.nav.projects}</span>
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="location-menu-item"
-                    onClick={() => handleStartScope("agents")}
-                  >
-                    <div className="location-menu-item-info">
-                      <span className="location-menu-item-title">{ui.nav.agents}</span>
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="location-menu-item"
-                    onClick={() => handleStartScope("globalCaches")}
-                  >
-                    <div className="location-menu-item-info">
-                      <span className="location-menu-item-title">{ui.nav.caches}</span>
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="location-menu-item"
-                    onClick={() => handleStartScope("allDrives")}
-                  >
-                    <div className="location-menu-item-info">
-                      <span className="location-menu-item-title">{ui.common.allDrives}</span>
-                    </div>
-                  </button>
+                    <Checkbox
+                      id="scan-target-all-drives"
+                      checked={effectiveAllDrives}
+                      onChange={(next) => {
+                        setAllDrives(next);
+                        if (!next && isAllDrives && resultCount === 0) {
+                          useScanStore.setState({ scope: "project" });
+                        }
+                      }}
+                      label={
+                        <span className="scan-scope-label">
+                          <span className="scan-scope-icon" aria-hidden="true">
+                            <HardDrive size={14} />
+                          </span>
+                          <span className="scan-scope-title">{ui.common.allDrives}</span>
+                        </span>
+                      }
+                    />
+                  </div>
+
+                  <div className="location-menu-divider" />
+
+                  <div className="scan-scope-footer">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={selectAllTargets}
+                      disabled={allTargetsSelected}
+                    >
+                      {ui.system.selectAll}
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      icon={<Play size={11} fill="currentColor" />}
+                      onClick={handleStartSelectedScan}
+                    >
+                      {ui.common.scan}
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -664,6 +837,22 @@ export const ScanHeader: React.FC = () => {
 
           <WindowControls />
         </div>
+
+        {isScanning && (
+          <div
+            className="command-progress-track"
+            role="progressbar"
+            aria-label={activeScopeLabel}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progressPct ?? undefined}
+          >
+            <div
+              className={`command-progress-bar ${progressPct === null ? "is-indeterminate" : ""}`}
+              style={progressPct !== null ? { width: `${progressPct}%` } : undefined}
+            />
+          </div>
+        )}
       </header>
 
       <Dialog

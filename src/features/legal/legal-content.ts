@@ -34,8 +34,8 @@ export interface LegalDocMeta {
   hint: string;
 }
 
-const UPDATED_TR = "17 Kasım 2026 (v" + APP_VERSION + ")";
-const UPDATED_EN = "17 November 2026 (v" + APP_VERSION + ")";
+const UPDATED_TR = "20 Kasım 2026 (v" + APP_VERSION + ")";
+const UPDATED_EN = "20 November 2026 (v" + APP_VERSION + ")";
 
 const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
   eula: {
@@ -177,21 +177,23 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
           "%APPDATA%\\dev-cleaner\\last-scan.json — son tamamlanan veya iptal edilen taramanın aday listesi (yol, boyut, sınıflandırma) ve özeti. Tek bir anlık görüntü tutulur, geçmiş biriktirilmez; 64 MB sınırı aşılırsa dosya yazılmaz. Bir sonraki tarama dosyanın üzerine yazar; kalıcı olarak kaldırmak için bu dosyayı silebilirsiniz.",
           "%APPDATA%\\dev-cleaner\\history.jsonl — temizlik geçmişi.",
           "%APPDATA%\\dev-cleaner\\snapshots.jsonl ve actions.jsonl — sürücü doluluk anlık görüntüleri ve resmî araç kayıtları.",
+          "%APPDATA%\\dev-cleaner\\system-automation.json ve logs\\dev-cleaner.log — isteğe bağlı zamanlanmış C: temizlik profili ve yerel hata/yaşam döngüsü günlüğü.",
+          "%USERPROFILE%\\Downloads\\dev-cleaner-support-*.zip — yalnızca Ayarlar > Hata günlüğü bölümünden siz tetiklediğinizde oluşturulan maskelenmiş yerel destek arşivi.",
           "Windows Geri Dönüşüm Kutusu — varsayılan silme yönteminde taşınan dosyalar.",
         ],
       },
       {
         heading: "4. Dosya sistemi erişimi",
         paragraphs: [
-          "Uygulama yalnızca sizin seçtiğiniz veya izin verdiğiniz kök dizinleri tarar. Sistem dizinleri (Windows, Program Files, sürücü kökleri) koruma kurallarıyla taranmaz ve silinemez. Silme işlemi, siz onaylamadan hiçbir zaman başlamaz.",
+          "Proje ve AI taraması yalnızca sizin seçtiğiniz veya izin verdiğiniz kök dizinleri tarar; sistem dizinleri (Windows, Program Files, sürücü kökleri) koruma kurallarıyla engellenir. Ayrı olarak sunduğumuz C: Sistem Temizleyici sekmesi ise yalnızca önceden denetlenmiş sabit Windows bakım konumlarına (Temp, Prefetch, Windows Update artıkları, hata raporları, Geri Dönüşüm Kutusu, cleanmgr ve DISM WinSxS) ölçüm ve açık onayınız sonrasında işlem yapar; proje klasörlerinize, belgelerinize ve İndirilenler dizininize asla dokunmaz.",
           "Yazılım hiçbir dosyayı okumadan dışarı aktarmaz; dosya içerikleri analiz edilmez, yüklenmez veya kopyalanmaz. Yalnızca üst veri (boyut, yol, tarih) kullanılır.",
         ],
       },
       {
         heading: "5. Ağ erişimi ve üçüncü taraflar",
         paragraphs: [
-          "Uygulama; analiz, telemetri, kilitlenme raporu, reklam veya kimlik doğrulama amacıyla hiçbir ağ isteği göndermez. Hata kayıtları yalnızca cihazınızda tutulur ve hiçbir yere gönderilmez. Vellium'a ait bir analitik veya izleme altyapısı yoktur.",
-          'Sizin başlattığınız durumlarda ağ kullanılabilir: resmî araç komutlarını çalıştırdığınızda ilgili araç kendi paket kayıt defterine bağlanabilir; "Güncellemeleri denetle" düğmesine bastığınızda uygulama en son sürüm etiketini öğrenmek için GitHub\'a bağlanır; bir bağlantıya tıkladığınızda sayfa varsayılan tarayıcınızda açılır. Bu işlemler ilgili üçüncü tarafın kendi gizlilik politikasına tabidir ve Vellium bu hizmetlere veri sağlamaz.',
+          "Uygulama; analiz, telemetri, kilitlenme raporu, reklam veya kimlik doğrulama amacıyla hiçbir ağ isteği göndermez. Hata kayıtları yalnızca cihazınızda tutulur ve hiçbir yere kendiliğinden gönderilmez. Vellium'a ait bir analitik veya izleme altyapısı yoktur.",
+          "Sizin başlattığınız durumlarda ağ veya dış uygulama kullanılabilir: resmî araç komutlarını çalıştırdığınızda ilgili araç kendi paket kayıt defterine bağlanabilir; isteğe bağlı bir webhook adresi tanımlarsanız tarama/temizlik özeti o adrese iletilir; \"Güncellemeleri denetle\" düğmesine bastığınızda uygulama en son sürüm etiketini öğrenmek için GitHub'a bağlanır; Ayarlar > Hata günlüğü bölümünden destek paketi oluşturduğunuzda kendi e-posta uygulamanızda support@vellium.dev için hazır taslak açılır (siz Gönder'e basmadan hiçbir veri paylaşılmaz); bir bağlantıya tıkladığınızda sayfa varsayılan tarayıcınızda açılır.",
         ],
       },
       {
@@ -224,7 +226,7 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: "10. Güvenlik",
         paragraphs: [
-          "Uygulama, sizin başlattığınız isteğe bağlı güncelleme denetimi dışında ağ üzerinden veri alışverişi yapmaz; bu denetim de HTTPS üzerinden yalnızca herkese açık sürüm bilgisini okur. Yerel dosyalar Windows kullanıcı profilinizin erişim izinleriyle korunur. Uygulama, yönetici (administrator) yetkisi talep etmez.",
+          "Uygulama, sizin başlattığınız isteğe bağlı güncelleme denetimi veya webhook bildirimi dışında ağ üzerinden veri alışverişi yapmaz; güncelleme denetimi HTTPS üzerinden yalnızca herkese açık sürüm bilgisini okur. Yerel dosyalar Windows kullanıcı profilinizin erişim izinleriyle korunur. Uygulama varsayılan olarak yönetici (administrator) yetkisi olmadan çalışır; UAC yükseltmesi yalnızca siz C: Sistem Temizleyici bölümünde yönetici gerektiren bir bakım eylemi için yeniden başlatmayı açıkça seçtiğinizde istenir.",
           "Bilgisayarınızı paylaşıyorsanız, %APPDATA% klasöründeki yerel geçmiş dosyalarına diğer kullanıcıların erişebileceğini unutmayın; ekranda yolları maskele seçeneği yalnızca arayüzü etkiler, dosya içeriğini değiştirmez.",
         ],
       },
@@ -424,21 +426,23 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
           "%APPDATA%\\dev-cleaner\\last-scan.json — the candidate list (path, size, classification) and summary of the last completed or cancelled scan. Only one snapshot is kept, never a history; writes over 64 MB are refused. Your next scan replaces the file; delete it to remove it permanently.",
           "%APPDATA%\\dev-cleaner\\history.jsonl — cleanup history.",
           "%APPDATA%\\dev-cleaner\\snapshots.jsonl and actions.jsonl — drive-usage snapshots and official tool records.",
+          "%APPDATA%\\dev-cleaner\\system-automation.json and logs\\dev-cleaner.log — optional scheduled C: cleanup profile and local error/lifecycle log.",
+          "%USERPROFILE%\\Downloads\\dev-cleaner-support-*.zip — masked local support archive created only when you explicitly click the button under Settings > Error log.",
           "The Windows Recycle Bin — files moved there by the default deletion method.",
         ],
       },
       {
         heading: "4. File system access",
         paragraphs: [
-          "The application scans only the root directories you select or authorise. System locations (Windows, Program Files, drive roots) are excluded by protection rules and cannot be scanned or deleted. No deletion ever starts without your confirmation.",
+          "Project and AI scans inspect only the root directories you select or authorise; system locations (Windows, Program Files, drive roots) are excluded by protection rules. The separate C: System Cleaner tab acts exclusively on a fixed, audited list of Windows maintenance locations (Temp, Prefetch, Windows Update leftovers, WER, Recycle Bin, cleanmgr and DISM WinSxS) after measurement and explicit user confirmation, and never touches your project folders, Documents or Downloads.",
           "The Software never exports file contents; file bodies are not analysed, uploaded or copied. Only metadata (size, path, date) is used.",
         ],
       },
       {
         heading: "5. Network access and third parties",
         paragraphs: [
-          "The application sends no network request for analytics, telemetry, crash reporting, advertising or authentication. Vellium has no analytics or monitoring infrastructure.",
-          'Network access can occur only when you initiate it: running an official tool command may let that tool contact its own package registry, pressing "Check for updates" asks GitHub for the newest release tag, and clicking a link opens the page in your default browser. Those actions are governed by the third party\'s own privacy policy, and Vellium does not supply data to those services.',
+          "The application sends no network request for analytics, telemetry, crash reporting, advertising or authentication. Error logs stay strictly on your device and are never uploaded automatically. Vellium has no analytics or monitoring infrastructure.",
+          'Network or external app access occurs only when you initiate it: running an official tool command may let that tool contact its own package registry, configuring an optional webhook posts a scan/cleanup summary to your chosen URL, pressing "Check for updates" asks GitHub for the newest release tag, creating a diagnostics support bundle opens a ready mail draft to support@vellium.dev in your own mail app (nothing is sent until you press Send), and clicking a link opens the page in your default browser.',
         ],
       },
       {
@@ -471,7 +475,7 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: "10. Security",
         paragraphs: [
-          "Apart from the optional update check you start yourself — which uses HTTPS and reads only public release data — the application exchanges no data over the network, so there is no interception risk in transit. Local files are protected by the access permissions of your Windows user profile. The application does not request administrator rights.",
+          "Apart from the optional update check or webhook you initiate yourself — where the update check uses HTTPS and reads only public release metadata — the application exchanges no data over the network. Local files are protected by the access permissions of your Windows user profile. By default the application launches and operates without administrator rights; UAC elevation is requested only if you explicitly choose to restart elevated for administrator-only C: System Cleaner maintenance actions.",
           "If you share your computer, remember that other users may be able to read the local history files under %APPDATA%; the path-masking option affects the interface only and does not change file contents.",
         ],
       },
@@ -615,7 +619,7 @@ export function localizeRevisionDate(locale: string): string {
       day: "numeric",
       month: "long",
       year: "numeric",
-    }).format(new Date(Date.UTC(2026, 10, 17)));
+    }).format(new Date(Date.UTC(2026, 10, 20)));
     return `${formatted} (v${APP_VERSION})`;
   } catch {
     return UPDATED_EN;

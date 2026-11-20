@@ -197,19 +197,25 @@ export const DocsView: React.FC = () => {
     return groups;
   }, [filteredTopics]);
 
-  // Dynamic CLI Command Generation
+  // Dynamic CLI Command Generation (short & concise syntax)
   const generatedCliCommand = useMemo(() => {
-    const parts = ["dev-cleaner", "scan"];
-    if (cliPath.trim()) parts.push(quoteCliArg(cliPath.trim(), cliShell));
-    if (cliScope !== "projects") parts.push(`--scope ${cliScope}`);
-    if (cliAutoClean) {
-      parts.push("--auto-clean");
-      if (cliSafety !== "safe,regenerate") parts.push(`--safety ${cliSafety}`);
-      if (cliDryRun) parts.push("--dry-run");
+    const parts = ["dev-cleaner", "s"];
+    if (cliPath.trim() && cliScope !== "agents" && cliScope !== "drives") {
+      parts.push(quoteCliArg(cliPath.trim(), cliShell));
     }
-    if (cliMinSize && Number(cliMinSize) > 0) parts.push(`--min-size ${cliMinSize}`);
-    if (cliJson) parts.push("--json");
-    if (cliWebhook.trim()) parts.push(`--webhook ${quoteCliArg(cliWebhook.trim(), cliShell)}`);
+    if (cliScope === "agents") parts.push("-t a");
+    else if (cliScope === "p,a" || cliScope === "combined") parts.push("-t p,a");
+    else if (cliScope === "p,a,c") parts.push("-t p,a,c");
+    else if (cliScope === "all") parts.push("-t all");
+    else if (cliScope === "drives") parts.push("-t drives");
+    if (cliAutoClean) {
+      parts.push("-c");
+      if (cliSafety !== "safe,regenerate") parts.push(`-s ${cliSafety}`);
+      if (cliDryRun) parts.push("-n");
+    }
+    if (cliMinSize && Number(cliMinSize) > 0) parts.push(`-m ${cliMinSize}`);
+    if (cliJson) parts.push("-j");
+    if (cliWebhook.trim()) parts.push(`-w ${quoteCliArg(cliWebhook.trim(), cliShell)}`);
     return parts.join(" ");
   }, [
     cliPath,

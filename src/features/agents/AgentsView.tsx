@@ -22,7 +22,7 @@ import { PageHeader } from "@/components/primitives/PageHeader";
 
 import { useScanStore } from "@/stores/scan-store";
 
-import { useScanController } from "@/features/scan/useScanController";
+import { useScanActive } from "@/features/scan/scan-activity";
 
 import { useUIText, getUIText, localizeAppError, localizeBackendNote } from "@/lib/ui-text";
 
@@ -68,7 +68,7 @@ const BUILTIN_NAMES: Record<string, string> = {
 export const AgentsView: React.FC = () => {
   const ui = useUIText();
 
-  const { startScan, isScanning } = useScanController();
+  const isScanning = useScanActive();
 
   const itemsById = useScanStore((s) => s.itemsById);
 
@@ -393,16 +393,6 @@ export const AgentsView: React.FC = () => {
               disabled={loading}
             >
               {ui.common.refresh}
-            </Button>
-
-            <Button
-              variant="primary"
-              size="sm"
-              icon={<Bot size={13} />}
-              onClick={() => startScan(undefined, "agents")}
-              disabled={isScanning}
-            >
-              {ui.agents.scan}
             </Button>
           </>
         }

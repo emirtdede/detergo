@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Bug,
   Copy,
@@ -8,6 +8,7 @@ import {
   RefreshCw,
   ShieldCheck,
   Trash2,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/primitives/Button";
@@ -15,6 +16,8 @@ import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
 import { useUIText, resolveUiLocale, localizeAppError } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
+import { withTimeout } from "@/lib/async/with-timeout";
+import { toAppError } from "@/lib/errors/app-error";
 import { log } from "@/lib/logging";
 import { SUPPORT_EMAIL } from "@/lib/links";
 import {
@@ -58,6 +61,7 @@ export const SettingsDiagnostics: React.FC<SettingsDiagnosticsProps> = ({ versio
   const [system, setSystem] = useState<SystemLogEntry[]>([]);
   const [busy, setBusy] = useState(false);
   const [bundle, setBundle] = useState<SupportBundle | null>(null);
+  const unmountedRef = useRef(false);
 
   const refresh = useCallback(() => {
     setErrors(readErrorLog());
@@ -65,7 +69,11 @@ export const SettingsDiagnostics: React.FC<SettingsDiagnosticsProps> = ({ versio
   }, []);
 
   useEffect(() => {
+    unmountedRef.current = false;
     refresh();
+    return () => {
+      unmountedRef.current = true;
+    };
   }, [refresh]);
 
   const copy = async (text: string) => {
@@ -95,7 +103,9 @@ export const SettingsDiagnostics: React.FC<SettingsDiagnosticsProps> = ({ versio
   };
 
   const buildBundle = async () => {
+    if (busy) return;
     setBusy(true);
+    setBundle(null);
     try {
       const settingsSummary = JSON.stringify(
         { version, locale, theme, scanProfile, maskPaths, historyEnabled },
@@ -109,18 +119,28 @@ export const SettingsDiagnostics: React.FC<SettingsDiagnosticsProps> = ({ versio
         `Locale: ${locale}`,
       ].join("\n");
 
-      const created = await scannerApi.createSupportBundle({
-        version,
-        locale,
-        generatedAt: new Date().toISOString(),
-        errorLog: formatErrorLog(errors),
-        systemLog: formatSystemLog(system),
-        settingsSummary,
-        systemInfo,
-      });
+      const created = await withTimeout(
+        scannerApi.createSupportBundle({
+          version,
+          locale,
+          generatedAt: new Date().toISOString(),
+          errorLog: formatErrorLog(errors),
+          systemLog: formatSystemLog(system),
+          settingsSummary,
+          systemInfo,
+        }),
+        20_000,
+        "createSupportBundle",
+      );
+      if (unmountedRef.current) return;
       setBundle(created);
 
-      const result = await scannerApi.composeSupportMail(created.path, version);
+      const result = await withTimeout(
+        scannerApi.composeSupportMail(created.path, version),
+        15_000,
+        "composeSupportMail",
+      );
+      if (unmountedRef.current) return;
       if (result.mode === "draft") {
         showToast(ui.diagnostics.mailOpened, "success");
       } else if (result.mode === "mailto") {
@@ -133,9 +153,11 @@ export const SettingsDiagnostics: React.FC<SettingsDiagnosticsProps> = ({ versio
       }
     } catch (err) {
       log.error("Could not create the support bundle", err);
-      showToast(`${ui.diagnostics.mailFailed}: ${localizeAppError(err, ui)}`, "error");
+      if (!unmountedRef.current) {
+        showToast(`${ui.diagnostics.mailFailed}: ${localizeAppError(err, ui)}`, "error", 6000);
+      }
     } finally {
-      setBusy(false);
+      if (!unmountedRef.current) setBusy(false);
     }
   };
 
@@ -143,7 +165,13 @@ export const SettingsDiagnostics: React.FC<SettingsDiagnosticsProps> = ({ versio
     if (!bundle) return;
     scannerApi.openPathInExplorer(bundle.path).catch((err) => {
       log.warn("Could not reveal the support bundle", err);
-      showToast(`${ui.errors.title}: ${localizeAppError(err, ui)}`, "error");
+      const appErr = toAppError(err);
+      // The user deleted or moved the ZIP outside the app: drop the stale
+      // bundle card immediately instead of leaving broken Explorer/Copy buttons.
+      if (appErr.code === "PathNotFound" || appErr.code === "InvalidPath") {
+        setBundle(null);
+      }
+      showToast(`${ui.errors.title}: ${localizeAppError(appErr, ui)}`, "warning", 6000);
     });
   };
 
@@ -195,7 +223,17 @@ export const SettingsDiagnostics: React.FC<SettingsDiagnosticsProps> = ({ versio
         </div>
 
         {bundle && (
-          <p className="settings-diag-bundle">{ui.diagnostics.bundleReady(bundle.path)}</p>
+          <div className="settings-diag-bundle">
+            <span>{ui.diagnostics.bundleReady(bundle.path)}</span>
+            <button
+              type="button"
+              className="icon-btn icon-btn-sm"
+              aria-label={ui.common.close}
+              onClick={() => setBundle(null)}
+            >
+              <X size={13} />
+            </button>
+          </div>
         )}
 
         <div className="settings-diag-meta">

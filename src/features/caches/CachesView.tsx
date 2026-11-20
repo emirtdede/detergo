@@ -92,8 +92,6 @@ export const CachesView: React.FC = () => {
 
   const startMeasure = useCacheStore((s) => s.startMeasure);
 
-  const cancelMeasure = useCacheStore((s) => s.cancelMeasure);
-
   const maskPaths = usePreferencesStore((s) => s.maskPaths);
 
   const measureMode = usePreferencesStore((s) => s.cacheMeasureMode);
@@ -252,27 +250,6 @@ export const CachesView: React.FC = () => {
                 onClick={cancelPreview}
               >
                 {ui.common.cancel}
-              </Button>
-            )}
-
-            {measuring ? (
-              <Button
-                variant="danger-outline"
-                size="sm"
-                icon={<Square size={11} fill="currentColor" />}
-                onClick={() => void cancelMeasure()}
-              >
-                {ui.caches.cancelMeasure}
-              </Button>
-            ) : (
-              <Button
-                variant="secondary"
-                size="sm"
-                icon={<Gauge size={13} />}
-                onClick={() => void startMeasure()}
-                disabled={loading || providers.length === 0}
-              >
-                {ui.caches.measure}
               </Button>
             )}
 

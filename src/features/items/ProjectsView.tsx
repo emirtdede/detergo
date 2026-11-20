@@ -1,10 +1,9 @@
 import React, { useMemo } from "react";
-import { FolderOpen, FolderTree, ShieldCheck, Boxes, Play } from "lucide-react";
-import { Button } from "@/components/primitives/Button";
+import { FolderTree, ShieldCheck, Boxes } from "lucide-react";
 import { EmptyState } from "@/components/primitives/EmptyState";
 import { PageHeader } from "@/components/primitives/PageHeader";
 import { useScanStore } from "@/stores/scan-store";
-import { useScanController } from "@/features/scan/useScanController";
+import { useScanActive } from "@/features/scan/scan-activity";
 import { useUIText, localizeAppError } from "@/lib/ui-text";
 import { ItemTable } from "./ItemTable";
 import { maskPath, truncatePath } from "@/lib/format/path";
@@ -15,7 +14,7 @@ import "./items.css";
 
 export const ProjectsView: React.FC = () => {
   const ui = useUIText();
-  const { isScanning, startScan, chooseFolderAndScan } = useScanController();
+  const isScanning = useScanActive();
   const language = usePreferencesStore((s) => s.language);
   const itemsById = useScanStore((s) => s.itemsById);
   const itemIds = useScanStore((s) => s.itemIds);
@@ -98,38 +97,7 @@ export const ProjectsView: React.FC = () => {
 
   return (
     <div className="items-view">
-      <PageHeader
-        title={ui.nav.projects}
-        description={subtitle}
-        actions={
-          <>
-            <Button
-              variant={rootPath || status !== "idle" ? "secondary" : "primary"}
-              size="sm"
-              icon={<FolderOpen size={13} />}
-              onClick={() => void chooseFolderAndScan()}
-              disabled={isScanning}
-            >
-              {ui.common.chooseFolder}
-            </Button>
-            {(rootPath || status !== "idle") && (
-              <Button
-                variant="primary"
-                size="sm"
-                icon={<Play size={12} fill="currentColor" />}
-                onClick={() => void startScan(undefined, "project")}
-                disabled={isScanning}
-              >
-                {isScanning
-                  ? ui.common.scanning
-                  : status === "idle"
-                    ? ui.common.scan
-                    : ui.common.rescan}
-              </Button>
-            )}
-          </>
-        }
-      />
+      <PageHeader title={ui.nav.projects} description={subtitle} />
 
       {/* Shared Bento KPI Strip for Projects */}
       <div className="nc-bento-strip nc-bento-strip--3">
@@ -191,30 +159,6 @@ export const ProjectsView: React.FC = () => {
           icon={<FolderTree size={22} />}
           title={emptyTitle}
           description={emptyDescription}
-          actions={
-            !isScanning ? (
-              <>
-                <Button
-                  variant={status === "idle" && !rootPath ? "primary" : "secondary"}
-                  size="sm"
-                  icon={<FolderOpen size={13} />}
-                  onClick={() => void chooseFolderAndScan()}
-                >
-                  {ui.common.chooseFolder}
-                </Button>
-                {(rootPath || status !== "idle") && (
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    icon={<Play size={12} fill="currentColor" />}
-                    onClick={() => void startScan(undefined, "project")}
-                  >
-                    {status === "idle" ? ui.common.scan : ui.common.rescan}
-                  </Button>
-                )}
-              </>
-            ) : undefined
-          }
         />
       ) : (
         <ItemTable items={items} />

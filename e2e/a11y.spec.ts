@@ -61,9 +61,14 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("main#main")).toBeVisible();
   // The app follows the OS locale by default, which makes English role/name
-  // assertions fail on a Turkish machine. Pin the UI language for every test.
+  // assertions fail on a Turkish machine. Wait for startup settings to load
+  // before pinning English so `loadPreferences()` cannot overwrite it back.
   await page.evaluate(async () => {
     const { usePreferencesStore } = await import("/src/stores/preferences-store.ts");
+    const deadline = Date.now() + 5000;
+    while (!usePreferencesStore.getState().isLoaded && Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 20));
+    }
     usePreferencesStore.getState().setLanguage("en");
   });
   await expect(navButton(page, "AI Tools")).toBeVisible();

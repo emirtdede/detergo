@@ -75,25 +75,25 @@ pub fn handle_cli() -> Option<i32> {
             crate::mcp::run_mcp_server_with_options(crate::mcp::McpOptions { allow_destructive });
             Some(0)
         }
-        "caches" => match run_caches_cli(&args[2..]) {
+        "caches" | "cache" | "c" => match run_caches_cli(&args[2..]) {
             Ok(()) => Some(0),
             Err(err) => {
                 eprintln!("caches failed: {err}");
                 Some(scan_exit_code(&err))
             }
         },
-        "history" => {
+        "history" | "hist" | "h" => {
             run_history_cli(&args[2..]);
             Some(0)
         }
-        "scan" => match run_scan_cli(&args[2..]) {
+        "scan" | "s" => match run_scan_cli(&args[2..]) {
             Ok(()) => Some(0),
             Err(err) => {
                 eprintln!("scan failed: {err}");
                 Some(scan_exit_code(&err))
             }
         },
-        "system" => match crate::system_cleaner::cli::run(&args[2..]) {
+        "system" | "sys" => match crate::system_cleaner::cli::run(&args[2..]) {
             Ok(()) => Some(0),
             Err(err) => {
                 eprintln!("system cleanup failed: {err}");
@@ -119,6 +119,72 @@ fn scan_exit_code(err: &AppError) -> i32 {
     }
 }
 
+/// Parsed multi-target selection for `-t` / `--targets`.
+#[derive(Debug, Default, PartialEq, Eq)]
+struct TargetSelection {
+    projects: bool,
+    agents: bool,
+    caches: bool,
+    system: bool,
+    all_drives: bool,
+}
+
+impl TargetSelection {
+    fn parse(raw: &str) -> Result<Self, AppError> {
+        let mut sel = Self::default();
+        for token in raw.split(',').map(|s| s.trim().to_lowercase()) {
+            if token.is_empty() {
+                continue;
+            }
+            match token.as_str() {
+                "p" | "project" | "projects" => sel.projects = true,
+                "a" | "agent" | "agents" => sel.agents = true,
+                "c" | "cache" | "caches" => sel.caches = true,
+                "s" | "sys" | "system" => sel.system = true,
+                "drives" | "all-drives" => {
+                    sel.projects = true;
+                    sel.all_drives = true;
+                }
+                "combined" => {
+                    sel.projects = true;
+                    sel.agents = true;
+                }
+                "all" => {
+                    sel.projects = true;
+                    sel.agents = true;
+                    sel.caches = true;
+                    sel.system = true;
+                }
+                other => {
+                    return Err(AppError::InvalidPath(format!(
+                        "Unknown target '{other}'; use p(projects), a(agents), c(caches), s(system), drives or all."
+                    )));
+                }
+            }
+        }
+        if !sel.projects && !sel.agents && !sel.caches && !sel.system {
+            return Err(AppError::InvalidPath(
+                "No target selected; use -t p,a,c,s or -t all.".to_string(),
+            ));
+        }
+        Ok(sel)
+    }
+
+    fn scanner_scope(&self) -> Option<ScanScope> {
+        if self.all_drives {
+            Some(ScanScope::AllDrives)
+        } else if self.projects && self.agents {
+            Some(ScanScope::Combined)
+        } else if self.projects {
+            Some(ScanScope::Project)
+        } else if self.agents {
+            Some(ScanScope::Agents)
+        } else {
+            None
+        }
+    }
+}
+
 /// Maps the CLI `--scope` value to the scanner scope. `all` means a full-drive
 /// scan, matching the frontend's `allDrives` mode.
 ///
@@ -127,9 +193,9 @@ fn scan_exit_code(err: &AppError) -> i32 {
 /// the scanner scope always rejected it with `PlatformUnsupported`.
 fn parse_scan_scope(scope: &str) -> Result<ScanScope, AppError> {
     match scope {
-        "projects" | "project" => Ok(ScanScope::Project),
-        "agents" => Ok(ScanScope::Agents),
-        "all" => Ok(ScanScope::AllDrives),
+        "projects" | "project" | "p" => Ok(ScanScope::Project),
+        "agents" | "agent" | "a" => Ok(ScanScope::Agents),
+        "all" | "drives" => Ok(ScanScope::AllDrives),
         // Same meaning as the GUI's "scan everything": projects and agent
         // storage in one session. Package caches stay a separate command.
         "combined" => Ok(ScanScope::Combined),
@@ -161,77 +227,46 @@ fn print_help() {
 
     out.push_str(&format!("{}\n", t("COMMANDS:")));
     for line in [
-        "  scan [DIRECTORY]         Scan projects, AI tools, and caches / clean safe targets",
-        "  caches                   List or clean cache status for 21 developer tools",
-        "  system                   Clean Windows temp, Prefetch, Update leftovers (see below)",
-        "  history                  List past cleanup and audit records",
+        "  s, scan [DIR]            Scan selected targets (-t p,a,c,s | all | drives)",
+        "  c, cache [TOOL|all]      List or clean developer tool caches (-n dry, -y confirm)",
+        "  sys [PROFILE|IDS]        Clean C: drive temp, Prefetch, Windows Update (-l, -n, -y)",
+        "  h, hist [N]              Show past cleanup & audit records (-l N, -j)",
         "  mcp                      Start the Model Context Protocol (MCP) stdio server",
     ] {
-        out.push_str(&format!("{}\n", t(line)));
+        out.push_str(&format!("{line}\n"));
     }
     out.push('\n');
 
     out.push_str(&format!("{}\n", t("SCAN OPTIONS:")));
     for line in [
-        "  --scope <SCOPE>          projects | agents | combined | all (default: projects)",
-        "  --auto-clean             Automatically move found safe targets to Recycle Bin",
-        "  --safety <LEVELS>        safe,regenerate,review (comma-separated, default: safe,regenerate)",
-        "  --dry-run                Simulate actions without deleting anything",
-        "  --min-size <MB>          Process only targets larger than specified MB",
-        "  --top <COUNT>            List the COUNT largest targets (default: 20)",
-        "  --all                    List every discovered target, not only the largest",
-        "  -i, --interactive        Pick targets by number, then move them to the Recycle Bin",
-        "  --json                   Output results in JSON format",
-        "  --webhook <URL>          Send result summary to n8n, Slack, or Discord webhook",
-        "  -h, --help               Display help information",
-        "  -v, --version            Display version information",
+        "  -t, --targets <LIST>     p(projects), a(agents), c(caches), s(system), all, drives",
+        "  -c, --clean              Move matching safe targets to Recycle Bin (--auto-clean)",
+        "  -n, --dry                Preview without deleting anything (--dry-run)",
+        "  -s, --safety <LEVELS>    safe,regenerate,review (default: safe,regenerate)",
+        "  -m, --min <MB>           Only include targets >= MB (--min-size)",
+        "  -i, --interactive        Pick targets by number, then move to Recycle Bin",
+        "  -a, --all                List every discovered target (--top N limits rows)",
+        "  -j, --json               Emit machine-readable JSON output",
+        "  -w, --webhook <URL>      POST summary to n8n, Slack, or Discord",
+        "  --scope <SCOPE>          Legacy alias: projects | agents | combined | all",
+        "  -h, --help / -v          Show help or version",
     ] {
-        out.push_str(&format!("{}\n", t(line)));
-    }
-    out.push('\n');
-
-    out.push_str(&format!("{}\n", t("CACHES OPTIONS:")));
-    for line in [
-        "  --clean <TOOL|all>       Clean cache for a specific tool (npm, pip, cargo, etc.) or all",
-        "  --yes                    Confirm 'caches --clean all' without prompting",
-        "  --dry-run                Simulate actions without deleting anything",
-        "  --json                   Output results in JSON format",
-    ] {
-        out.push_str(&format!("{}\n", t(line)));
-    }
-    out.push('\n');
-
-    out.push_str("SYSTEM OPTIONS:\n");
-    out.push_str(
-        "  --list                   List the system cleanup actions and their safety class\n",
-    );
-    out.push_str(
-        "  --clean <PROFILE|IDS>    quick | standard | deep | all | comma-separated ids\n",
-    );
-    out.push_str("  --yes                    Required before anything is deleted\n");
-    out.push_str("  --dry-run                Show measured sizes and exit without deleting\n");
-    out.push_str("  --scheduled              Mark the run as coming from the Windows task\n");
-    out.push('\n');
-
-    out.push_str(&format!("{}\n", t("HISTORY OPTIONS:")));
-    for line in [
-        "  --limit <COUNT>          Number of records to show (default: 20)",
-        "  --json                   Output results in JSON format",
-    ] {
-        out.push_str(&format!("{}\n", t(line)));
+        out.push_str(&format!("{line}\n"));
     }
     out.push('\n');
 
     out.push_str(&format!("{}\n", t("EXAMPLES:")));
     for line in [
-        "dev-cleaner scan .",
-        "dev-cleaner scan . --interactive",
-        "dev-cleaner scan \"D:\\Projects\"",
-        "dev-cleaner scan \"D:\\Projects\" --auto-clean --safety safe,regenerate --dry-run",
-        "dev-cleaner scan \"D:\\Projects\" --auto-clean --min-size 100 --webhook \"https://n8n.example.com/webhook/clean\"",
-        "dev-cleaner caches --clean npm",
-        "dev-cleaner caches --json",
-        "dev-cleaner history --limit 10",
+        "dev-cleaner s .",
+        "dev-cleaner s D:\\Projects -t p,a",
+        "dev-cleaner s -t all",
+        "dev-cleaner s D:\\Projects -c -n",
+        "dev-cleaner s . -i",
+        "dev-cleaner c npm",
+        "dev-cleaner c all -n",
+        "dev-cleaner sys quick -n",
+        "dev-cleaner sys quick -y",
+        "dev-cleaner hist -l 15 -j",
     ] {
         out.push_str(&format!("  {line}\n"));
     }
@@ -243,16 +278,22 @@ fn format_size(bytes: u64) -> String {
 }
 
 fn run_caches_cli(args: &[String]) -> Result<(), AppError> {
-    let as_json = args.iter().any(|a| a == "--json");
-    let dry_run = args.iter().any(|a| a == "--dry-run");
-    let confirmed = args.iter().any(|a| a == "--yes");
+    let as_json = args.iter().any(|a| a == "--json" || a == "-j");
+    let dry_run = args
+        .iter()
+        .any(|a| a == "--dry-run" || a == "--dry" || a == "-n");
+    let confirmed = args.iter().any(|a| a == "--yes" || a == "-y");
     let mut clean_target: Option<String> = None;
 
     let mut i = 0;
     while i < args.len() {
-        if args[i] == "--clean" && i + 1 < args.len() {
+        let arg = &args[i];
+        if (arg == "--clean" || arg == "-c") && i + 1 < args.len() {
             clean_target = Some(args[i + 1].clone());
             i += 1;
+        } else if !arg.starts_with('-') && clean_target.is_none() {
+            // Concise positional form: `dev-cleaner c npm` or `dev-cleaner c all -y`
+            clean_target = Some(arg.clone());
         }
         i += 1;
     }
@@ -454,16 +495,21 @@ fn run_caches_cli(args: &[String]) -> Result<(), AppError> {
 }
 
 fn run_history_cli(args: &[String]) {
-    let as_json = args.iter().any(|a| a == "--json");
+    let as_json = args.iter().any(|a| a == "--json" || a == "-j");
     let mut limit = 20usize;
 
     let mut i = 0;
     while i < args.len() {
-        if args[i] == "--limit" && i + 1 < args.len() {
+        let arg = &args[i];
+        if (arg == "--limit" || arg == "-l") && i + 1 < args.len() {
             if let Ok(l) = args[i + 1].parse::<usize>() {
                 limit = l;
             }
             i += 1;
+        } else if !arg.starts_with('-') {
+            if let Ok(l) = arg.parse::<usize>() {
+                limit = l;
+            }
         }
         i += 1;
     }
@@ -622,6 +668,7 @@ fn parse_selection(input: &str, len: usize) -> Vec<usize> {
 fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
     let mut root_path = PathBuf::from(".");
     let mut scope = "projects".to_string();
+    let mut targets_arg: Option<String> = None;
     let mut as_json = false;
     let mut auto_clean = false;
     let mut dry_run = false;
@@ -635,38 +682,94 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
     let mut i = 0;
     while i < args.len() {
         let arg = &args[i];
-        if arg == "--json" {
+        if arg == "--json" || arg == "-j" {
             as_json = true;
-        } else if arg == "--auto-clean" {
+        } else if arg == "--auto-clean" || arg == "--clean" || arg == "-c" {
             auto_clean = true;
-        } else if arg == "--dry-run" {
+        } else if arg == "--dry-run" || arg == "--dry" || arg == "-n" {
             dry_run = true;
-        } else if arg == "--all" {
+        } else if arg == "--all" || arg == "-a" {
             show_all = true;
         } else if arg == "-i" || arg == "--interactive" {
             interactive = true;
         } else if arg == "--top" && i + 1 < args.len() {
             top = args[i + 1].parse::<usize>().ok().map(|count| count.max(1));
             i += 1;
+        } else if (arg == "--targets" || arg == "-t") && i + 1 < args.len() {
+            targets_arg = Some(args[i + 1].clone());
+            i += 1;
         } else if arg == "--scope" && i + 1 < args.len() {
             scope = args[i + 1].clone();
             i += 1;
-        } else if arg == "--safety" && i + 1 < args.len() {
+        } else if (arg == "--safety" || arg == "-s") && i + 1 < args.len() {
             safety_levels = args[i + 1]
                 .split(',')
                 .map(|s| s.trim().to_lowercase())
                 .collect();
             i += 1;
-        } else if arg == "--min-size" && i + 1 < args.len() {
+        } else if (arg == "--min-size" || arg == "--min" || arg == "-m") && i + 1 < args.len() {
             min_size_mb = args[i + 1].parse().unwrap_or(0);
             i += 1;
-        } else if arg == "--webhook" && i + 1 < args.len() {
+        } else if (arg == "--webhook" || arg == "-w") && i + 1 < args.len() {
             webhook_url = Some(args[i + 1].clone());
             i += 1;
-        } else if !arg.starts_with("--") {
+        } else if !arg.starts_with('-') {
             root_path = PathBuf::from(arg);
         }
         i += 1;
+    }
+
+    let selected_targets = if let Some(raw) = &targets_arg {
+        Some(TargetSelection::parse(raw)?)
+    } else {
+        None
+    };
+    let include_caches = selected_targets.as_ref().is_some_and(|t| t.caches);
+    let include_system = selected_targets.as_ref().is_some_and(|t| t.system);
+
+    // When `-t` picks only caches and/or system (no project/agent walk), run
+    // those measurements directly without requiring a project directory walk.
+    if let Some(ref sel) = selected_targets {
+        if sel.scanner_scope().is_none() {
+            let caches_data = if include_caches {
+                Some(crate::cleanup::official_actions::list_cache_providers())
+            } else {
+                None
+            };
+            let system_data = if include_system {
+                let elevated = crate::platform::is_elevated();
+                let token = crate::scanner::cancellation::CancellationToken::new();
+                Some(crate::system_cleaner::measure::scan(elevated, &token).actions)
+            } else {
+                None
+            };
+            if as_json {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&json!({
+                        "product": "Dev Cleaner by Vellium",
+                        "version": env!("CARGO_PKG_VERSION"),
+                        "targets": targets_arg,
+                        "caches": caches_data,
+                        "system": system_data,
+                    }))
+                    .unwrap_or_default()
+                );
+            } else {
+                if let Some(providers) = caches_data {
+                    let detected = providers.iter().filter(|p| p.detected).count();
+                    println!(
+                        "\n[Caches] {detected} / {} detected (run `dev-cleaner c` for details)",
+                        providers.len()
+                    );
+                }
+                if let Some(actions) = system_data {
+                    let total: u64 = actions.iter().filter(|a| a.measured).map(|a| a.bytes).sum();
+                    println!("\n[System C:] {} reclaimable across {} actions (run `dev-cleaner sys quick -n` to preview)", format_size(total), actions.len());
+                }
+            }
+            return Ok(());
+        }
     }
 
     // Reject typos instead of silently matching nothing (or, previously,
@@ -693,12 +796,22 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
         ));
     }
 
+    let scan_scope = if let Some(ref sel) = selected_targets {
+        sel.scanner_scope().unwrap_or(ScanScope::Project)
+    } else {
+        parse_scan_scope(&scope)?
+    };
+    let effective_scope_label = targets_arg.as_deref().unwrap_or(scope.as_str());
+
     if !as_json {
         println!(
             "\n{}",
             tf("[Dev Cleaner] Starting scan: {}", &[&root_path.display()])
         );
-        println!("{}", tf("[Dev Cleaner] Scope: {}", &[&scope]));
+        println!(
+            "{}",
+            tf("[Dev Cleaner] Scope: {}", &[&effective_scope_label])
+        );
         if auto_clean {
             println!(
                 "{}",
@@ -710,7 +823,7 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
         }
     }
 
-    if !root_path.exists() {
+    if matches!(scan_scope, ScanScope::Project) && !root_path.exists() {
         if as_json {
             println!(
                 "{}",
@@ -734,8 +847,6 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
             root_path.to_string_lossy().to_string(),
         ));
     }
-
-    let scan_scope = parse_scan_scope(&scope)?;
 
     let state = AppState::new();
     let catalog = match state.catalog() {
@@ -1107,6 +1218,27 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
         );
     }
 
+    if !as_json {
+        if include_caches {
+            let providers = crate::cleanup::official_actions::list_cache_providers();
+            let detected = providers.iter().filter(|p| p.detected).count();
+            println!(
+                "  [Caches]            : {detected} / {} detected (`dev-cleaner c`)",
+                providers.len()
+            );
+        }
+        if include_system {
+            let elevated = crate::platform::is_elevated();
+            let token = crate::scanner::cancellation::CancellationToken::new();
+            let actions = crate::system_cleaner::measure::scan(elevated, &token).actions;
+            let sys_total: u64 = actions.iter().filter(|a| a.measured).map(|a| a.bytes).sum();
+            println!(
+                "  [System C:]         : {} (`dev-cleaner sys quick -n`)",
+                format_size(sys_total)
+            );
+        }
+    }
+
     // M5: a cleanup that reported failures must not exit 0. The output above is
     // already written, so CI sees both the detail and the correct status code.
     if auto_clean && !dry_run && !clean_errors.is_empty() {
@@ -1215,6 +1347,26 @@ mod tests {
         assert_eq!(scan_exit_code(&AppError::Blocked("x".into())), 4);
         assert_eq!(scan_exit_code(&AppError::UnsafeDeleteTarget("x".into())), 4);
         assert_eq!(scan_exit_code(&AppError::PlanInvalid("x".into())), 4);
+    }
+
+    #[test]
+    fn target_selection_parses_short_and_long_subsets() {
+        let pa = TargetSelection::parse("p,a").unwrap();
+        assert!(pa.projects && pa.agents && !pa.caches && !pa.system);
+        assert_eq!(pa.scanner_scope(), Some(ScanScope::Combined));
+
+        let cs = TargetSelection::parse("caches,sys").unwrap();
+        assert!(!cs.projects && !cs.agents && cs.caches && cs.system);
+        assert_eq!(cs.scanner_scope(), None);
+
+        let all = TargetSelection::parse("all").unwrap();
+        assert!(all.projects && all.agents && all.caches && all.system);
+        assert_eq!(all.scanner_scope(), Some(ScanScope::Combined));
+
+        let drives = TargetSelection::parse("drives").unwrap();
+        assert_eq!(drives.scanner_scope(), Some(ScanScope::AllDrives));
+
+        assert!(TargetSelection::parse("bogus").is_err());
     }
 
     #[test]

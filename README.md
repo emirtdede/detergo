@@ -115,8 +115,9 @@ request on its own; the only outbound calls are ones you trigger (an optional we
 ## Key Features
 
 - **One catalog, many ecosystems**: 56 evidence-backed rules cover JavaScript/TypeScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart, package-manager caches and AI coding-agent storage, each with a safety class and a regeneration hint.
+- **Unified top-bar scan hub**: all scanning runs from the single command-bar menu — select any 1–4 targets (Projects, AI Tools, Package Caches, C: System) or scan everything in one click, with active scope and live progress right in the top bar.
 - **C: drive cleaner**: a dedicated tab clears Windows temp, Prefetch, Update leftovers and error reports, empties the Recycle Bin, drives Disk Cleanup and DISM component cleanup, and can schedule a prompt-free weekly or daily run. Every action is measured first and confirmed by the user; elevation is requested only when a selected action needs it. See the [system cleaner guide](docs/SYSTEM_CLEANER.md).
-- **Terminal-native when you want it**: `dev-cleaner scan .` prints a size-ranked table, `-i` turns it into a numbered picker, `--json` feeds CI, and `--webhook` reports to n8n/Slack/Discord. See [`docs/CLI.md`](docs/CLI.md).
+- **Short, concise terminal CLI**: `dev-cleaner s .` lists the largest targets, `-t p,a,c,s` selects any subset (or `-t all`), `-i` turns it into a numbered picker, `-c -n` previews auto-clean, `dev-cleaner c npm` cleans package caches, and `dev-cleaner sys` manages C: cleanup. See [`docs/CLI.md`](docs/CLI.md).
 - **Built-in MCP server**: coding agents can discover and preview cleanups over the Model Context Protocol, with a mandatory preview → token → execute gate.
 - **Blazing-Fast Discovery Engine**: Traverses massive disk trees with millisecond response times, instantly skipping nested sub-directory recursion inside `node_modules` to find hundreds of projects without UI stutter.
 - **Multi-Layer Safety Guard (`SEC-DEL`)**: Hardened path boundary checks prevent deletion of Windows system directories, user root folders, non-`node_modules` targets, or drive roots (`C:\`).
@@ -349,12 +350,14 @@ flowchart TD
 The installed binary doubles as a terminal tool:
 
 ```bash
-dev-cleaner scan .                 # list the largest reclaimable targets under .
-dev-cleaner scan . --top 10        # show only the ten largest
-dev-cleaner scan . --interactive   # pick targets by number, move them to the Recycle Bin
-dev-cleaner scan . --json          # one machine-readable document
-dev-cleaner caches --clean npm     # run the official npm cache clean
-dev-cleaner history                # past cleanup records
+dev-cleaner s .                 # list the largest reclaimable targets under .
+dev-cleaner s . -t p,a          # scan projects + AI tools
+dev-cleaner s . -t all          # scan projects + AI + caches + C: system
+dev-cleaner s . -i              # pick targets by number, move them to the Recycle Bin
+dev-cleaner s . -j              # one machine-readable JSON document
+dev-cleaner c npm               # run the official npm cache clean
+dev-cleaner sys                 # list C: system cleaner targets
+dev-cleaner hist 15             # past cleanup records
 ```
 
 Full reference, JSON schema and npkill migration table:
@@ -435,8 +438,9 @@ Uygulama **%100 yerel ve çevrimdışı** çalışır; kendiliğinden hiçbir a�
 ## Key Features (Önemli Özellikler)
 
 - **Tek katalog, çoklu ekosistem**: 56 kanıta dayalı kural JavaScript/TypeScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart, paket yöneticisi önbellekleri ve AI kodlama ajanı depolamasını kapsar; her kuralın bir güvenlik sınıfı ve yeniden üretim ipucu vardır.
+- **Tek merkezli üst tarama çubuğu**: tüm taramalar en üst komut çubuğundan yönetilir; Projeler, AI Araçları, Araç Önbellekleri ve C: Sistem kapsamlarından dilediğiniz 1–4 tanesini seçip tek seferde tarayabilir, aktif kapsam ve ilerlemeyi üst çubukta canlı izleyebilirsiniz.
 - **C: sürücüsü temizleyici**: ayrı bir yan menü sekmesi Windows geçici dosyalarını (`%TEMP%`, `C:\Windows\Temp`), Prefetch verilerini, Windows Update artıklarını, hata raporlarını, Geri Dönüşüm Kutusunu, Windows Disk Temizleme (`cleanmgr`) ve DISM WinSxS bileşen deposu temizliğini tek tıkla ölçüp yürütür; günlük/haftalık zamanlanmış görevlerle otomatikleştirilebilir. Ayrıntı: [`docs/SYSTEM_CLEANER.md`](docs/SYSTEM_CLEANER.md).
-- **İstediğinizde terminal aracı**: `dev-cleaner scan .` boyuta göre sıralı tablo yazdırır, `-i` numaralı seçim moduna geçer, `--json` CI'ı besler, `--webhook` n8n/Slack/Discord'a rapor gönderir. Ayrıntı: [`docs/CLI.md`](docs/CLI.md).
+- **Kısa ve öz terminal aracı**: `dev-cleaner s .` hedefleri sıralar, `-t p,a,c,s` (veya `-t all`) çoklu kapsam seçer, `-i` numaralı seçim modunu açar, `dev-cleaner c npm` önbellek temizler ve `dev-cleaner sys` C: bakımını yönetir. Ayrıntı: [`docs/CLI.md`](docs/CLI.md).
 - **Yerleşik MCP sunucusu**: kodlama ajanları Model Context Protocol üzerinden temizlik keşfedip önizleyebilir; yıkıcı işlem zorunlu önizleme → token → çalıştırma kapısından geçer.
 - **Işık Hızında Tarama Motoru**: Milyonlarca dosya içeren disk ağaçlarını tararken `node_modules` alt dizinlerine gereksiz girmeyerek taramayı budar ve sistemi dondurmadan yüzlerce projeyi saniyeler içinde bulur.
 - **Çok Katmanlı Güvenlik Kalkanı (`SEC-DEL`)**: Windows sistem kökü (`C:\`), `Windows`, `Program Files`, kullanıcı profil dizinleri veya `node_modules` dışındaki klasörlerin yanlışlıkla silinmesini kesin olarak engeller.
@@ -637,12 +641,14 @@ dev-cleaner/
 Kurulu uygulama aynı zamanda bir terminal aracıdır:
 
 ```bash
-dev-cleaner scan .                 # . altındaki en büyük hedefleri listeler
-dev-cleaner scan . --top 10        # yalnızca en büyük 10 hedefi gösterir
-dev-cleaner scan . --interactive   # numarayla seç, Çöp Kutusu'na taşı
-dev-cleaner scan . --json          # tek makine-okunur belge
-dev-cleaner caches --clean npm     # resmî npm önbellek temizliğini çalıştırır
-dev-cleaner history                # geçmiş temizlik kayıtları
+dev-cleaner s .                 # . altındaki en büyük hedefleri listeler
+dev-cleaner s . -t p,a          # projeler + AI araçları taraması
+dev-cleaner s . -t all          # projeler + AI + önbellek + C: sistem taraması
+dev-cleaner s . -i              # numarayla seç, Çöp Kutusu'na taşı
+dev-cleaner s . -j              # tek makine-okunur JSON belge
+dev-cleaner c npm               # resmî npm önbellek temizliğini çalıştırır
+dev-cleaner sys                 # C: sistem temizliği hedeflerini listeler
+dev-cleaner hist 15             # son 15 temizlik kaydı
 ```
 
 Komut referansı, JSON şeması ve npkill geçiş tablosu:

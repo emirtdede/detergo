@@ -537,9 +537,9 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  width: 304px;
+  width: 312px;
   max-width: calc(100vw - 24px);
-  padding: 6px;
+  padding: 8px;
   background: var(--surface-strong);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
@@ -548,6 +548,165 @@
     0 0 0 1px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   animation: scanMenuEnter var(--duration-fast) var(--ease-standard);
+}
+
+.scan-scope-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.scan-scope-option {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.scan-scope-option:hover {
+  background: var(--surface-hover);
+  border-color: var(--border);
+}
+
+.scan-scope-option.is-selected {
+  background: var(--accent-subtle);
+  border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.scan-scope-option .checkbox-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scan-scope-option .checkbox-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.scan-scope-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.scan-scope-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.scan-scope-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scan-scope-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 2px 2px;
+}
+
+/* Active live scan indicator inside the top command bar */
+.top-command-bar.is-scanning {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+.top-command-bar.is-scanning .command-center {
+  position: static;
+  transform: none;
+  justify-content: center;
+  min-width: 0;
+}
+
+.top-command-bar.is-scanning .location-dropdown-container {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.command-scan-active {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.command-scan-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 11px;
+  border-radius: var(--radius-full);
+  background: var(--accent-subtle);
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
+  color: var(--text-primary);
+  font-size: 11.5px;
+  max-width: 300px;
+  min-width: 0;
+}
+
+.command-scan-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  flex-shrink: 0;
+  animation: scanDotPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes scanDotPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
+}
+
+.command-scan-scope {
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.command-scan-sep {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.command-scan-metric {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 @keyframes scanMenuEnter {
@@ -820,12 +979,26 @@
   .command-scan-btn {
     padding: 0 10px !important;
   }
+
+  .command-scan-status {
+    max-width: 170px;
+    padding: 0 8px;
+  }
+
+  .command-scan-sep,
+  .command-scan-metric {
+    display: none;
+  }
 }
 
 /* Very narrow: the scan CTA keeps its icon and loses its label so the header
    stays on one line. Text stays in the DOM for assistive tech. */
 @media (max-width: 600px) {
   .command-scan-btn > span:not(.btn-icon) {
+    display: none;
+  }
+
+  .command-scan-status {
     display: none;
   }
 }

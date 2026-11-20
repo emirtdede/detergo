@@ -87,11 +87,11 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
             <div className="docs-callout">
               <Cpu className="docs-callout-icon" size={18} />
               <div>
-                <strong>{ui.common.scanAll}</strong> — {ui.common.scanAllDesc}. This is
-                the command bar action, and it is the same as{" "}
-                <code>--scope combined</code>: projects, AI tool storage and the
-                package-cache measurement run in one session. The buttons inside a
-                page scan only that page&apos;s scope.
+                <strong>Unified Top Command Bar:</strong> All scans start from the single scan hub
+                in the top bar. Run <strong>{ui.common.scanAll}</strong> (Projects, AI Tools,
+                Package Caches and System Cleaner — CLI <code>-t all</code>) in one click, or pick
+                any 1–3 targets via checkboxes. While running, the header shows the active scope and
+                live progress alongside Stop.
               </div>
             </div>
 
@@ -190,17 +190,17 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                 {
                   id: "qs-cli",
                   label: t("Simulation mode (dry-run without modifying or removing any files)"),
-                  command: 'dev-cleaner scan "D:\\projects" --scope all --auto-clean --dry-run',
+                  command: 'dev-cleaner s "D:\\projects" -t p,a -c -n',
                 },
                 {
                   id: "qs-combined",
-                  label: ui.common.scanAllDesc,
-                  command: 'dev-cleaner scan "D:\\projects" --scope combined',
+                  label: `${ui.common.scanAll} (Projects + AI + Caches + System)`,
+                  command: 'dev-cleaner s "D:\\projects" -t all',
                 },
                 {
                   id: "qs-system",
                   label: ui.system.title,
-                  command: "dev-cleaner system --list",
+                  command: "dev-cleaner sys",
                 },
               ]}
             />
@@ -420,8 +420,12 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
               </button>
             </div>
 
-            <h2 className="docs-h2">{t("1. `dev-cleaner scan`")}</h2>
-            <p className="docs-p">{t("Scans candidate project dependencies in the target directory or cleans them autonomously.")}</p>
+            <h2 className="docs-h2">1. `dev-cleaner s` (`scan`)</h2>
+            <p className="docs-p">
+              Short, concise CLI syntax with multi-target selection (<code>-t p,a,c,s</code>). All
+              long flags (<code>scan</code>, <code>--auto-clean</code>, <code>--dry-run</code>)
+              remain 100% supported for existing scripts.
+            </p>
             <DocsCommandList
               title={`${t("Example Usage (")}${cliShell})`}
               copiedKey={copiedKey}
@@ -435,54 +439,72 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                       {
                         id: "cli-scan-std",
                         label: t("Standard scan with human-readable console summary"),
-                        command: 'dev-cleaner scan "/d/projects"',
+                        command: 'dev-cleaner s "/d/projects"',
+                      },
+                      {
+                        id: "cli-scan-targets",
+                        label: "Selected targets (Projects + AI Tools + Package Caches)",
+                        command: 'dev-cleaner s "/d/projects" -t p,a,c',
+                      },
+                      {
+                        id: "cli-scan-all",
+                        label: "All targets in one command (Projects + AI + Caches + System)",
+                        command: 'dev-cleaner s "/d/projects" -t all',
                       },
                       {
                         id: "cli-scan-auto",
                         label: t(
                           "Autonomous cleanup (moves only safe and regenerate targets to Recycle Bin)",
                         ),
-                        command:
-                          'dev-cleaner scan "/d/projects" --auto-clean --safety safe,regenerate',
+                        command: 'dev-cleaner s "/d/projects" -c',
                       },
                       {
                         id: "cli-scan-dry",
                         label: t(
                           "Simulation mode (dry-run without modifying or removing any files)",
                         ),
-                        command: 'dev-cleaner scan "/d/projects" --auto-clean --dry-run',
+                        command: 'dev-cleaner s "/d/projects" -c -n',
                       },
                       {
                         id: "cli-scan-json",
                         label: t("Structured JSON output for CI/CD and script automation"),
-                        command: 'dev-cleaner scan "/d/projects" --json',
+                        command: 'dev-cleaner s "/d/projects" -j',
                       },
                     ]
                   : [
                       {
                         id: "cli-scan-std",
                         label: t("Standard scan with human-readable console summary"),
-                        command: 'dev-cleaner scan "D:\\projects"',
+                        command: 'dev-cleaner s "D:\\projects"',
+                      },
+                      {
+                        id: "cli-scan-targets",
+                        label: "Selected targets (Projects + AI Tools + Package Caches)",
+                        command: 'dev-cleaner s "D:\\projects" -t p,a,c',
+                      },
+                      {
+                        id: "cli-scan-all",
+                        label: "All targets in one command (Projects + AI + Caches + System)",
+                        command: 'dev-cleaner s "D:\\projects" -t all',
                       },
                       {
                         id: "cli-scan-auto",
                         label: t(
                           "Autonomous cleanup (moves only safe and regenerate targets to Recycle Bin)",
                         ),
-                        command:
-                          'dev-cleaner scan "D:\\projects" --auto-clean --safety safe,regenerate',
+                        command: 'dev-cleaner s "D:\\projects" -c',
                       },
                       {
                         id: "cli-scan-dry",
                         label: t(
                           "Simulation mode (dry-run without modifying or removing any files)",
                         ),
-                        command: 'dev-cleaner scan "D:\\projects" --auto-clean --dry-run',
+                        command: 'dev-cleaner s "D:\\projects" -c -n',
                       },
                       {
                         id: "cli-scan-json",
                         label: t("Structured JSON output for CI/CD and script automation"),
-                        command: 'dev-cleaner scan "D:\\projects" --json',
+                        command: 'dev-cleaner s "D:\\projects" -j',
                       },
                     ]
               }
@@ -506,43 +528,49 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                     <td>{t("Target root folder path to inspect (e.g.,")} <code>{t("D:\\projects")}</code>).</td>
                   </tr>
                   <tr>
-                    <td><code>{t("--scope <scope>")}</code></td>
-                    <td><code>projects | agents | combined | all</code></td>
-                    <td><code>{t("projects")}</code></td>
-                    <td>{t("Target group to scan (project dependencies or AI agent storage).")}</td>
+                    <td><code>-t, --targets &lt;list&gt;</code></td>
+                    <td><code>p,a,c,s,drives,all</code></td>
+                    <td><code>p</code></td>
+                    <td>Comma-separated targets: <code>p</code> (projects), <code>a</code> (AI), <code>c</code> (caches), <code>s</code> (system), <code>drives</code> (all fixed drives), <code>all</code> (everything).</td>
                   </tr>
                   <tr>
-                    <td><code>{t("--auto-clean")}</code></td>
+                    <td><code>-c, --auto-clean</code></td>
                     <td>{t("boolean")}</td>
                     <td><code>{t("false")}</code></td>
                     <td>{t("Automatically cleans matching targets that satisfy the active safety filter.")}</td>
                   </tr>
                   <tr>
-                    <td><code>{t("--dry-run")}</code></td>
+                    <td><code>-n, --dry-run</code></td>
                     <td>{t("boolean")}</td>
                     <td><code>{t("false")}</code></td>
                     <td>{t("Simulation mode; inspects and reports without moving any files.")}</td>
                   </tr>
                   <tr>
-                    <td><code>{t("--safety <classes>")}</code></td>
+                    <td><code>-s, --safety &lt;classes&gt;</code></td>
                     <td>{t("safe,regenerate,review")}</td>
                     <td><code>{t("safe,regenerate")}</code></td>
                     <td>{t("Comma-separated list of safety tiers permitted for automatic deletion.")}</td>
                   </tr>
                   <tr>
-                    <td><code>{t("--min-size <mb>")}</code></td>
+                    <td><code>-m, --min-size &lt;mb&gt;</code></td>
                     <td>{t("number")}</td>
                     <td><code>0</code></td>
                     <td>{t("Only targets strictly larger than the specified Megabytes are processed.")}</td>
                   </tr>
                   <tr>
-                    <td><code>{t("--json")}</code></td>
+                    <td><code>-i, --interactive</code></td>
+                    <td>{t("boolean")}</td>
+                    <td><code>{t("false")}</code></td>
+                    <td>Number selectable targets, pick interactively, and move to Recycle Bin.</td>
+                  </tr>
+                  <tr>
+                    <td><code>-j, --json</code></td>
                     <td>{t("boolean")}</td>
                     <td><code>{t("false")}</code></td>
                     <td>{t("Outputs pure JSON payload to stdout instead of the human-readable table.")}</td>
                   </tr>
                   <tr>
-                    <td><code>{t("--webhook <url>")}</code></td>
+                    <td><code>-w, --webhook &lt;url&gt;</code></td>
                     <td>{t("string (URL)")}</td>
                     <td><code>{t("null")}</code></td>
                     <td>{t("HTTP webhook endpoint to POST the final completion JSON payload to.")}</td>
@@ -551,7 +579,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
               </table>
             </div>
 
-            <h2 className="docs-h2">{t("2. `dev-cleaner caches`")}</h2>
+            <h2 className="docs-h2">2. `dev-cleaner c` (`caches`)</h2>
             <p className="docs-p">{t("Queries package caches for 21 developer tools or purges them via official CLI commands.")}</p>
             <DocsCommandList
               title={t("Cache Commands")}
@@ -564,27 +592,27 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                 {
                   id: "cli-cache-list",
                   label: t("List metrics for all supported package caches"),
-                  command: "dev-cleaner caches",
+                  command: "dev-cleaner c",
                 },
                 {
                   id: "cli-cache-npm",
                   label: t("Purge a specific tool cache (e.g., npm, pip, cargo, docker)"),
-                  command: "dev-cleaner caches --clean npm",
+                  command: "dev-cleaner c npm",
                 },
                 {
                   id: "cli-cache-dry",
                   label: t("Preview a full purge without deleting anything"),
-                  command: "dev-cleaner caches --clean all --dry-run",
+                  command: "dev-cleaner c all -n",
                 },
                 {
                   id: "cli-cache-all",
                   label: t("Purge caches for all detected installed tools"),
-                  command: "dev-cleaner caches --clean all --yes",
+                  command: "dev-cleaner c all -y",
                 },
               ]}
             />
 
-            <h2 className="docs-h2">3. `dev-cleaner system`</h2>
+            <h2 className="docs-h2">3. `dev-cleaner sys` (`system`)</h2>
             <p className="docs-p">{ui.system.subtitle}</p>
             <DocsCommandList
               title={ui.system.title}
@@ -597,27 +625,27 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                 {
                   id: "cli-sys-list",
                   label: "List all C: drive cleanup actions and measured sizes",
-                  command: "dev-cleaner system --list",
+                  command: "dev-cleaner sys",
                 },
                 {
                   id: "cli-sys-dry",
                   label: "Preview quick cleanup without deleting anything",
-                  command: "dev-cleaner system --clean quick --dry-run",
+                  command: "dev-cleaner sys quick -n",
                 },
                 {
                   id: "cli-sys-quick",
                   label: "Run quick system cleanup (user temp + Windows Update leftovers)",
-                  command: "dev-cleaner system --clean quick --yes",
+                  command: "dev-cleaner sys quick -y",
                 },
                 {
                   id: "cli-sys-std",
                   label: "Run standard system cleanup (Administrator recommended)",
-                  command: "dev-cleaner system --clean standard --yes",
+                  command: "dev-cleaner sys standard -y",
                 },
               ]}
             />
 
-            <h2 className="docs-h2">4. `dev-cleaner history`</h2>
+            <h2 className="docs-h2">4. `dev-cleaner hist` (`history`)</h2>
             <p className="docs-p">{t("Lists historical cleanup records and reclaimed bytes audit logs.")}</p>
             <DocsCommandList
               title="Audit History Commands"
@@ -630,12 +658,12 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                 {
                   id: "cli-history",
                   label: "Show the 15 most recent cleanup records",
-                  command: "dev-cleaner history --limit 15",
+                  command: "dev-cleaner hist 15",
                 },
                 {
                   id: "cli-history-json",
                   label: "Export cleanup history as JSON",
-                  command: "dev-cleaner history --limit 50 --json",
+                  command: "dev-cleaner hist 50 -j",
                 },
               ]}
             />
@@ -676,8 +704,10 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                   >
                     <option value="projects">{t("Projects (Dependencies, build, cache)")}</option>
                     <option value="agents">{t("AI Coding Agents (Claude, Cursor, Codex)")}</option>
-                    <option value="combined">{ui.common.scanAll}</option>
-                    <option value="all">{t("Full System Scan (All)")}</option>
+                    <option value="p,a">Projects + AI Tools (-t p,a)</option>
+                    <option value="p,a,c">Projects + AI + Caches (-t p,a,c)</option>
+                    <option value="all">{ui.common.scanAll} (-t all)</option>
+                    <option value="drives">{ui.common.allDrives} (-t drives)</option>
                   </select>
                 </div>
 
@@ -727,7 +757,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                     checked={cliAutoClean}
                     onChange={(e) => setCliAutoClean(e.target.checked)}
                   />
-                  <span>{t("--auto-clean (Automatically move to Recycle Bin)")}</span>
+                  <span>-c / {t("--auto-clean (Automatically move to Recycle Bin)")}</span>
                 </label>
 
                 {cliAutoClean && (
@@ -737,7 +767,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                       checked={cliDryRun}
                       onChange={(e) => setCliDryRun(e.target.checked)}
                     />
-                    <span>{t("--dry-run (Simulation Mode)")}</span>
+                    <span>-n / {t("--dry-run (Simulation Mode)")}</span>
                   </label>
                 )}
 
@@ -747,7 +777,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                     checked={cliJson}
                     onChange={(e) => setCliJson(e.target.checked)}
                   />
-                  <span>{t("--json (Machine-readable JSON Output)")}</span>
+                  <span>-j / {t("--json (Machine-readable JSON Output)")}</span>
                 </label>
               </div>
 
@@ -789,7 +819,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                   type="button"
                   className="docs-copy-action"
                   onClick={() => copyToClipboard(
-`$Action = New-ScheduledTaskAction -Execute "dev-cleaner.exe" -Argument "scan C:\\dev --auto-clean --min-size 100 --webhook https://n8n.company.com/cleanup"
+`$Action = New-ScheduledTaskAction -Execute "dev-cleaner.exe" -Argument "s C:\\dev -c -m 100 -w https://n8n.company.com/cleanup"
 $Trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At 3am
 Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWeekly" -Description \"${t("Weekly automated safe dependency cleanup")}\"`,
                     "cron-task"
@@ -802,7 +832,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
               <pre className="docs-code-pre">
                 {highlightBash(
 `# ${t("Configure autonomous task running every Sunday at 03:00 via PowerShell")}
-$Action = New-ScheduledTaskAction -Execute "dev-cleaner.exe" -Argument "scan C:\\dev --auto-clean --min-size 100 --webhook https://n8n.company.com/cleanup"
+$Action = New-ScheduledTaskAction -Execute "dev-cleaner.exe" -Argument "s C:\\dev -c -m 100 -w https://n8n.company.com/cleanup"
 $Trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At 3am
 Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWeekly" -Description \"${t("Weekly automated safe dependency cleanup")}\"`
                 )}
@@ -1168,7 +1198,10 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
 
             <h2 className="docs-h2">{t("Command line")}</h2>
             <p className="docs-p">
-              {t("The same actions are available headlessly for scripts and CI: dev-cleaner system --list, dev-cleaner system --clean quick --yes, or --dry-run to measure only.")}
+              The same actions are available headlessly for scripts and CI with short commands:{" "}
+              <code>dev-cleaner sys</code>, <code>dev-cleaner sys quick -n</code>, or{" "}
+              <code>dev-cleaner sys quick -y</code> (legacy <code>system --clean</code> flags still
+              work).
             </p>
             <DocsCommandList
               title="Dev Cleaner System Cleaner CLI"
@@ -1181,27 +1214,27 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
                 {
                   id: "sys-cli-list",
                   label: "List all system actions and measurable sizes",
-                  command: "dev-cleaner system --list",
+                  command: "dev-cleaner sys",
                 },
                 {
                   id: "sys-cli-dry",
                   label: "Preview quick cleanup without deleting anything",
-                  command: "dev-cleaner system --clean quick --dry-run",
+                  command: "dev-cleaner sys quick -n",
                 },
                 {
                   id: "sys-cli-quick",
                   label: "Run quick cleanup (user temp + Windows Update leftovers)",
-                  command: "dev-cleaner system --clean quick --yes",
+                  command: "dev-cleaner sys quick -y",
                 },
                 {
                   id: "sys-cli-standard",
                   label: "Run standard cleanup (Administrator: temp, Prefetch, WER)",
-                  command: "dev-cleaner system --clean standard --yes",
+                  command: "dev-cleaner sys standard -y",
                 },
                 {
                   id: "sys-cli-deep",
                   label: "Run deep cleanup (includes Disk Cleanup & DISM WinSxS)",
-                  command: "dev-cleaner system --clean deep --yes",
+                  command: "dev-cleaner sys deep -y",
                 },
               ]}
             />

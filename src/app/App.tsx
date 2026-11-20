@@ -29,7 +29,6 @@ import {
   hasScheduledScanPersist,
 } from "@/stores/scan-store";
 import { useSelectionStore } from "@/stores/selection-store";
-import { useCacheStore } from "@/stores/cache-store";
 import { useSystemStore } from "@/stores/system-store";
 import { AppView, useAppStore } from "@/stores/app-store";
 import { isGlobalShortcutBlocked, useUiStore } from "@/stores/ui-store";
@@ -82,7 +81,7 @@ const NAV_MAP: Record<string, AppView> = {
 const AppShell: React.FC = () => {
   const loadPreferences = usePreferencesStore((s) => s.loadPreferences);
   const view = useAppStore((s) => s.view);
-  const { startScan, cancelScan } = useScanController();
+  const { startSelectedScan, cancelScan } = useScanController();
   const ui = useUIText();
   const language = usePreferencesStore((s) => s.language);
   const preferencesLoaded = usePreferencesStore((s) => s.isLoaded);
@@ -137,12 +136,12 @@ const AppShell: React.FC = () => {
 
   // The keydown listener is registered once. These refs keep it pointing at the
   // current controller functions without re-registering the listener.
-  const startScanRef = useRef(startScan);
+  const startSelectedScanRef = useRef(startSelectedScan);
   const cancelScanRef = useRef(cancelScan);
   useEffect(() => {
-    startScanRef.current = startScan;
+    startSelectedScanRef.current = startSelectedScan;
     cancelScanRef.current = cancelScan;
-  }, [startScan, cancelScan]);
+  }, [startSelectedScan, cancelScan]);
 
   // Boot sequence: settings first, then the last scan. They used to be two
   // independent effects, so whichever resolved last won; a stale
@@ -294,31 +293,13 @@ const AppShell: React.FC = () => {
         if (isScanActiveNow()) {
           void cancelScanRef.current();
         } else {
-          const appStore = useAppStore.getState();
-          // Mirror the header button: the primary action belongs to the view
-          // the user is on. Always starting a project scan here made Ctrl+Enter
-          // ignore the Caches and Agents pages.
-          if (appStore.view === "caches") {
-            const cache = useCacheStore.getState();
-            if (cache.measuring) {
-              void cache.cancelMeasure();
-            } else {
-              void cache.startMeasure();
-            }
-          } else if (appStore.view === "agents") {
-            void startScanRef.current(undefined, "agents");
-          } else if (appStore.view === "system") {
-            // Mirror the Quick clean button: measure freely, but never delete
-            // without the confirmation dialog.
-            const system = useSystemStore.getState();
-            if (system.running) {
-              void system.cancel();
-            } else if (!system.loading && !system.previewing) {
-              void system.load();
-            }
+          const system = useSystemStore.getState();
+          if (system.running) {
+            void system.cancel();
           } else {
-            const scope = useScanStore.getState().scope;
-            void startScanRef.current(undefined, scope === "allDrives" ? "allDrives" : "project");
+            // Always mirror the unified top-bar scan hub (user-selected scan
+            // targets or all targets together).
+            void startSelectedScanRef.current();
           }
         }
         return;

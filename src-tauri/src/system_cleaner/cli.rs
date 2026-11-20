@@ -14,9 +14,9 @@ use super::SystemActionId;
 
 pub const USAGE: &str = "\
 Usage:
-  dev-cleaner system --list
-  dev-cleaner system --clean <profile|ids> --yes [--scheduled]
-  dev-cleaner system --clean <profile|ids> --dry-run
+  dev-cleaner sys                  (or `dev-cleaner sys -l`) List actions
+  dev-cleaner sys <profile|ids> -n Preview measured sizes (--dry-run)
+  dev-cleaner sys <profile|ids> -y Clean after confirmation (--yes)
 
 Profiles: quick (user temp + Windows Update leftovers)
           standard (+ Windows temp, Prefetch, error reports)
@@ -24,8 +24,8 @@ Profiles: quick (user temp + Windows Update leftovers)
 Ids:      userTemp, windowsTemp, prefetch, windowsUpdate, errorReports,
           recycleBin, diskCleanup, componentStore
 
-The scheduled task created by the app calls:
-  dev-cleaner system --clean quick --yes --scheduled
+Legacy form also supported:
+  dev-cleaner system --clean quick --yes [--scheduled]
 ";
 
 fn fail(message: &str) -> Result<(), AppError> {
@@ -33,12 +33,12 @@ fn fail(message: &str) -> Result<(), AppError> {
 }
 
 pub fn run(args: &[String]) -> Result<(), AppError> {
-    if args.is_empty() || args.iter().any(|arg| arg == "--help" || arg == "-h") {
+    if args.iter().any(|arg| arg == "--help" || arg == "-h") {
         print!("{USAGE}");
         return Ok(());
     }
 
-    let list_only = args.iter().any(|arg| arg == "--list");
+    let list_only = args.is_empty() || args.iter().any(|arg| arg == "--list" || arg == "-l");
     if list_only {
         println!("{:<18} {:<12} {:<10} Action", "ID", "Safety", "Admin");
         for action in ACTIONS {
@@ -54,7 +54,13 @@ pub fn run(args: &[String]) -> Result<(), AppError> {
     }
 
     let profile = value_after(args, "--clean")
-        .ok_or_else(|| AppError::InvalidPath("Missing --clean <profile|ids>.".to_string()))?;
+        .or_else(|| value_after(args, "-c"))
+        .or_else(|| args.iter().find(|arg| !arg.starts_with('-')).cloned())
+        .ok_or_else(|| {
+            AppError::InvalidPath(
+                "Missing <profile|ids> (e.g. `dev-cleaner sys quick -n`).".to_string(),
+            )
+        })?;
 
     let ids = parse_selection(&profile)?;
     let elevated = crate::platform::is_elevated();
@@ -68,7 +74,10 @@ pub fn run(args: &[String]) -> Result<(), AppError> {
         ));
     }
 
-    if args.iter().any(|arg| arg == "--dry-run") {
+    if args
+        .iter()
+        .any(|arg| arg == "--dry-run" || arg == "--dry" || arg == "-n")
+    {
         let token = CancellationToken::new();
         let actions = super::measure::measure_actions(&ids, elevated, &token);
         let total: u64 = actions.iter().map(|action| action.bytes).sum();
@@ -92,8 +101,8 @@ pub fn run(args: &[String]) -> Result<(), AppError> {
         return Ok(());
     }
 
-    if !args.iter().any(|arg| arg == "--yes") {
-        return fail("Refusing to delete without --yes. Add --dry-run to preview the sizes.");
+    if !args.iter().any(|arg| arg == "--yes" || arg == "-y") {
+        return fail("Refusing to delete without -y/--yes. Add -n/--dry-run to preview the sizes.");
     }
 
     let token = CancellationToken::new();

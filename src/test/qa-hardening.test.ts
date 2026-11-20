@@ -44,7 +44,12 @@ import { disposeScanBuffers, flushPendingSummary, useScanStore } from "../stores
 import { redactSecrets } from "../lib/logging";
 import { classifyWebhookFailure, describeWebhookFailure } from "../lib/errors/webhook-failure";
 import { getUIText } from "../lib/ui-text";
-import { isScanActiveNow } from "../features/scan/scan-activity";
+import {
+  ALL_SCAN_TARGETS,
+  isScanActiveNow,
+  useScanTargetsStore,
+} from "../features/scan/scan-activity";
+import { useSystemStore } from "../stores/system-store";
 import { makeItem } from "./fixtures";
 import { CacheProviderInfo, CleanupItem, LastScanSnapshot } from "../types";
 
@@ -260,5 +265,42 @@ describe("single source of scan activity (Y3)", () => {
 
     useScanStore.setState({ status: "cancelling", combinedActive: false });
     expect(isScanActiveNow()).toBe(true);
+
+    // System cleaner measurement is also tracked as active scan work.
+    useScanStore.setState({ status: "idle", combinedActive: false });
+    useSystemStore.setState({ loading: true });
+    expect(isScanActiveNow()).toBe(true);
+    useSystemStore.setState({ loading: false });
+    expect(isScanActiveNow()).toBe(false);
+  });
+
+  it("supports multi-target selection while always keeping at least one target checked", () => {
+    const store = useScanTargetsStore.getState();
+    store.selectAllTargets();
+    expect(useScanTargetsStore.getState().targets).toEqual([...ALL_SCAN_TARGETS]);
+
+    // Uncheck three targets, leaving only projects.
+    store.toggleTarget("agents");
+    store.toggleTarget("caches");
+    store.toggleTarget("system");
+    expect(useScanTargetsStore.getState().targets).toEqual(["projects"]);
+
+    // Attempting to uncheck the last remaining target must be ignored.
+    store.toggleTarget("projects");
+    expect(useScanTargetsStore.getState().targets).toEqual(["projects"]);
+
+    // Adding a second target preserves canonical order.
+    store.toggleTarget("caches");
+    expect(useScanTargetsStore.getState().targets).toEqual(["projects", "caches"]);
+
+    // Enabling allDrives ensures projects is included.
+    store.toggleTarget("projects");
+    expect(useScanTargetsStore.getState().targets).toEqual(["caches"]);
+    store.setAllDrives(true);
+    expect(useScanTargetsStore.getState().targets).toEqual(["projects", "caches"]);
+    expect(useScanTargetsStore.getState().allDrives).toBe(true);
+
+    store.selectAllTargets();
+    expect(useScanTargetsStore.getState().allDrives).toBe(false);
   });
 });

@@ -7,7 +7,6 @@ import {
   HardDrive,
   Lock,
   Play,
-  RefreshCw,
   ShieldAlert,
   ShieldCheck,
   SlidersHorizontal,
@@ -118,7 +117,9 @@ export const SystemView: React.FC = () => {
 
   useEffect(() => {
     unmountedRef.current = false;
-    void load();
+    if (!useSystemStore.getState().report && !useSystemStore.getState().loading) {
+      void load();
+    }
     void loadAutomation();
     return () => {
       unmountedRef.current = true;
@@ -257,15 +258,6 @@ export const SystemView: React.FC = () => {
                 <ShieldAlert size={13} /> {ui.system.adminBadge}
               </span>
             )}
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={<RefreshCw size={13} />}
-              onClick={() => void load()}
-              disabled={loading || running}
-            >
-              {ui.common.refresh}
-            </Button>
             <Button
               variant="secondary"
               size="sm"
@@ -503,14 +495,6 @@ export const SystemView: React.FC = () => {
         ) : (
           <div className="system-empty-box">
             <span className="plan-note">{ui.system.notMeasured}</span>
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={<RefreshCw size={13} />}
-              onClick={() => void load()}
-            >
-              {ui.common.refresh}
-            </Button>
           </div>
         )}
       </section>
