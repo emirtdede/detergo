@@ -34,8 +34,8 @@ pub fn run() {
     }
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_notification::init())
+        // Must be the first plugin registered so a second launch exits before
+        // other plugins or the main window flash on screen.
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             if let Some(index) = args.iter().position(|arg| arg == "--open-view") {
                 if let Some(view) = args.get(index + 1) {
@@ -46,6 +46,8 @@ pub fn run() {
             }
             window_commands::show_main_window(app);
         }))
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_notification::init())
         .on_window_event(|window, event| {
             // The close button never terminates the process on its own. The
             // window asks the frontend to show a guard dialog so the user can
