@@ -9,8 +9,8 @@ use std::fs;
 use std::path::Path;
 
 use crate::error::AppError;
+use crate::platform::is_reparse_point;
 use crate::platform::windows::delete::{delete_by_handle, HandleDeleteError};
-use crate::platform::{facts, is_reparse_point};
 use crate::scanner::cancellation::CancellationToken;
 
 /// Names kept in the report. The rest only increment `skipped`.
@@ -18,6 +18,7 @@ const SKIPPED_SAMPLE: usize = 20;
 
 #[derive(Debug, Default)]
 pub struct DeleteOutcome {
+    pub scanned_bytes: u64,
     pub freed_bytes: u64,
     pub deleted_files: u64,
     pub deleted_dirs: u64,
@@ -105,7 +106,8 @@ pub fn delete_contents(root: &Path, token: &CancellationToken) -> Result<DeleteO
             continue;
         }
 
-        let size = facts(&path).map(|f| f.logical_bytes).unwrap_or(meta.len());
+        let size = meta.len();
+        outcome.scanned_bytes = outcome.scanned_bytes.saturating_add(size);
         match delete_file(&path) {
             Ok(()) => {
                 outcome.deleted_files = outcome.deleted_files.saturating_add(1);

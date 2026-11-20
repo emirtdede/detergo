@@ -12,6 +12,7 @@ import {
   CleanupEvent,
   CleanupPlan,
   CleanupReport,
+  CliEnvironmentStatus,
   DeleteMode,
   GrowthReport,
   KnownLocation,
@@ -109,6 +110,8 @@ export interface ScannerApi {
   hideToTray(): Promise<void>;
   quitApp(): Promise<void>;
   getBuildInfo(): Promise<BuildInfo>;
+  getCliEnvironmentStatus(): Promise<CliEnvironmentStatus>;
+  registerCliInUserPath(): Promise<CliEnvironmentStatus>;
   checkForUpdates(): Promise<UpdateInfo>;
   createSupportBundle(request: SupportBundleRequest): Promise<SupportBundle>;
   composeSupportMail(bundlePath: string, version: string): Promise<SupportMailResult>;
@@ -354,6 +357,14 @@ const realApi: ScannerApi = {
 
   async getBuildInfo(): Promise<BuildInfo> {
     return await invoke<BuildInfo>("get_build_info");
+  },
+
+  async getCliEnvironmentStatus(): Promise<CliEnvironmentStatus> {
+    return await invoke<CliEnvironmentStatus>("get_cli_environment_status");
+  },
+
+  async registerCliInUserPath(): Promise<CliEnvironmentStatus> {
+    return await invoke<CliEnvironmentStatus>("register_cli_in_user_path");
   },
 
   async checkForUpdates(): Promise<UpdateInfo> {

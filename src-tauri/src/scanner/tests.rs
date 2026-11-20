@@ -300,6 +300,7 @@ fn depth_limit_is_treated_as_a_completed_scan() {
         root_path: "C:\\tmp".to_string(),
         exclusions: vec![],
         scope: crate::scanner::models::ScanScope::Project,
+        include_agents: None,
         profile: None,
         max_depth: Some(2),
         max_candidates: None,
@@ -415,6 +416,7 @@ fn summary_and_provider_totals_do_not_double_count_nested_targets() {
         root_path: "C:\\tmp".to_string(),
         exclusions: vec![],
         scope: ScanScope::Project,
+        include_agents: None,
         profile: None,
         max_depth: None,
         max_candidates: None,
@@ -536,6 +538,7 @@ async fn end_to_end_scan_plan_and_permanent_delete() {
         root_path: temp.path().to_string_lossy().to_string(),
         exclusions: vec![],
         scope: crate::scanner::models::ScanScope::Project,
+        include_agents: None,
         profile: None,
         max_depth: None,
         max_candidates: None,
@@ -934,4 +937,87 @@ fn max_depth_prunes_non_matching_deep_directories() {
         "directories deeper than max_depth must not be visited"
     );
     assert_eq!(outcome.stop_reason, Some(StopReason::DepthLimit));
+}
+
+#[test]
+fn monorepo_apps_local_packages_is_not_excluded_as_windows_appdata() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+
+    // A monorepo with `apps/local/packages/ui/node_modules` contains `local/packages`
+    // without `appdata/local/packages` — it must NOT be skipped by the Windows UWP guard.
+    let pkg_dir = root.join("apps/local/packages/ui");
+    fs::create_dir_all(pkg_dir.join("node_modules/react")).unwrap();
+    fs::write(pkg_dir.join("package.json"), "{\"name\":\"ui\"}").unwrap();
+    write(&pkg_dir.join("node_modules/react/index.js"), 64);
+
+    let (items, _, stop) = discover_all(root);
+    assert!(stop.is_none());
+    assert!(
+        items
+            .iter()
+            .any(|i| i.rule_id == "js.node_modules" && i.display_path.contains("ui")),
+        "monorepo `apps/local/packages` must not be confused with `AppData\\Local\\Packages`"
+    );
+}
+
+#[test]
+fn session_registry_caps_retained_sessions_at_three() {
+    let registry = ScanRegistry::new();
+    let root = std::path::PathBuf::from("C:\\");
+    let mut ids = Vec::new();
+    for _ in 0..5 {
+        let session = registry.create_session(ScanScope::Project, root.clone(), vec![root.clone()]);
+        let id = session.lock().unwrap().id.clone();
+        ids.push(id);
+        std::thread::sleep(std::time::Duration::from_millis(2));
+    }
+
+    assert!(
+        registry.get_session(&ids[0]).is_err(),
+        "oldest session must be evicted"
+    );
+    assert!(
+        registry.get_session(&ids[1]).is_err(),
+        "second oldest session must be evicted"
+    );
+    assert!(registry.get_session(&ids[2]).is_ok());
+    assert!(registry.get_session(&ids[3]).is_ok());
+    assert!(registry.get_session(&ids[4]).is_ok());
+}
+
+#[tokio::test]
+async fn measure_entries_handles_over_200_candidates_without_deadlock() {
+    let temp = tempfile::tempdir().unwrap();
+    let mut entries = Vec::new();
+    for idx in 0..220 {
+        let dir = temp.path().join(format!("item-{idx}"));
+        write(&dir.join("a.bin"), 128);
+        entries.push((format!("id-{idx}"), dir, TargetKind::Directory));
+    }
+
+    let token = CancellationToken::new();
+    let engine = measurement::MeasurementEngine::new(token).with_concurrency(4);
+    let mut seen = 0usize;
+    let stop = engine
+        .measure_entries(
+            entries,
+            220,
+            220,
+            |batch| {
+                for update in batch {
+                    seen += 1;
+                    assert!(update.logical_bytes >= 128);
+                }
+                async {}
+            },
+            |_| async {},
+        )
+        .await;
+
+    assert_eq!(stop, measurement::MeasurementStop::Completed);
+    assert_eq!(
+        seen, 220,
+        "all 220 candidates must stream without deadlocking"
+    );
 }

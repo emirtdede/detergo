@@ -72,6 +72,7 @@ fn scan_and_audit_never_persist_file_contents_or_secrets() {
         root_path: root.to_string_lossy().to_string(),
         exclusions: Vec::new(),
         scope: ScanScope::Project,
+        include_agents: None,
         profile: Some("balanced".to_string()),
         max_depth: Some(16),
         max_candidates: Some(500),

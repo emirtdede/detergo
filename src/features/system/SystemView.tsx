@@ -347,7 +347,9 @@ export const SystemView: React.FC = () => {
 
         <div className="nc-kpi-card">
           <div className="nc-kpi-card-header">
-            <span className="nc-kpi-card-label">{disk?.drive ?? "C:"}</span>
+            <span className="nc-kpi-card-label">
+              {disk?.drive ? disk.drive.replace(/\\+$/, "") : "C:"}
+            </span>
             <span className="nc-kpi-card-icon nc-kpi-card-icon--success">
               <HardDrive size={14} />
             </span>

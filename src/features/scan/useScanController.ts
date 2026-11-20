@@ -71,7 +71,7 @@ export function useScanController() {
       let systemRun: Promise<void> | null = null;
       const inferredTargets: ScanTargetKey[] = activeTargetsOverride ?? [
         ...(scope === "agents" ? (["agents"] as const) : (["projects"] as const)),
-        ...(scope === "combined" || scope === "allDrives" ? (["agents"] as const) : []),
+        ...(scope === "combined" ? (["agents"] as const) : []),
         ...(measureCaches ? (["caches"] as const) : []),
         ...(scanSystem ? (["system"] as const) : []),
       ];
@@ -197,6 +197,7 @@ export function useScanController() {
         const request: ScanRequest = {
           rootPath: scope === "agents" ? "" : root,
           scope,
+          includeAgents: scope === "allDrives" ? inferredTargets.includes("agents") : undefined,
           exclusions: prefs.excludedNames,
           protectedPaths: prefs.protectedPaths,
           profile: prefs.scanProfile,
@@ -230,7 +231,7 @@ export function useScanController() {
               store.completeScan(summary);
             }
           }
-          if (scope === "project" && root) {
+          if ((scope === "project" || scope === "combined") && root) {
             prefs.addRecentLocation(root);
           }
           // Persist every finished result (including a partial one); failures keep
@@ -424,10 +425,7 @@ export function useScanController() {
       const hasCaches = targets.includes("caches");
       const hasSystem = targets.includes("system");
 
-      const effectiveAllDrives =
-        hasProjects &&
-        (allDrivesOverride ??
-          (targetState.allDrives || useScanStore.getState().scope === "allDrives"));
+      const effectiveAllDrives = hasProjects && (allDrivesOverride ?? targetState.allDrives);
 
       if (hasProjects || hasAgents) {
         const scope: ScanScope =
@@ -444,7 +442,7 @@ export function useScanController() {
       // Only caches and/or C: system cleaner selected — run without starting a
       // filesystem project/agent walk.
       useScanTargetsStore.getState().setActiveRun(targets, false);
-      if (hasCaches) {
+      if (hasCaches || hasSystem) {
         useScanStore.getState().setCombinedActive(true);
       }
       try {
@@ -476,21 +474,22 @@ export function useScanController() {
     const previous = useScanStore.getState().status;
     const combined = useScanStore.getState().combinedActive;
     const cacheRunning = useCacheStore.getState().measuring;
+    const systemRunning = useSystemStore.getState().loading;
     // Only a scan session can be cancelled on the backend. A combined run may
-    // still be measuring caches after the scan itself reported `completed`;
-    // that state must not send a scan-cancel for a session that no longer
-    // exists (it used to leave the header stuck in `cancelling`).
+    // still be measuring caches or C: system targets after the scan itself
+    // reported `completed`; that state must not send a scan-cancel for a session
+    // that no longer exists (it used to leave the header stuck in `cancelling`).
     const scanRunning =
       previous === "scanning" || previous === "measuring" || previous === "cancelling";
     // Idle is the only state with nothing to cancel; every other state may
     // still hold a backend session that should be released.
-    if (!scanRunning && !cacheRunning && !combined) return;
+    if (!scanRunning && !cacheRunning && !systemRunning && !combined) return;
     // Rows buffered just before the cancel must not be lost.
     flushPendingWrites();
-    // The cache step of a combined run is aborted even when its measurement has
-    // not started yet: it may still be loading provider rows, and that pending
-    // start used to ignore the first "Stop" and begin measuring afterwards.
+    // The cache & system steps of a combined run are aborted even when their
+    // measurement has not started yet.
     const abortCaches = combined || cacheRunning;
+    const abortSystem = combined || systemRunning;
     if (scanRunning) useScanStore.setState({ status: "cancelling" });
     try {
       await Promise.all([
@@ -507,6 +506,15 @@ export function useScanController() {
               "abort combined cache measure",
             ).catch((err) => {
               log.warn("Combined cache measurement did not stop in time", err);
+            })
+          : Promise.resolve(),
+        abortSystem
+          ? withTimeout(
+              useSystemStore.getState().cancel(),
+              CANCEL_SETTLE_TIMEOUT_MS,
+              "abort system scan",
+            ).catch((err) => {
+              log.warn("System scan did not stop in time", err);
             })
           : Promise.resolve(),
       ]);

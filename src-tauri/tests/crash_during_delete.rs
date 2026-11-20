@@ -66,6 +66,7 @@ fn child_main() {
         root_path: root.to_string_lossy().to_string(),
         exclusions: Vec::new(),
         scope: dev_cleaner_lib::scanner::models::ScanScope::Project,
+        include_agents: None,
         profile: Some("balanced".to_string()),
         max_depth: Some(16),
         max_candidates: Some(50_000),

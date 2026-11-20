@@ -1,4 +1,5 @@
 import React from "react";
+import { CliEnvironmentStatus } from "@/types";
 import { McpIdeKey } from "./docs-data";
 
 export function highlightBash(code: string): React.ReactNode[] {
@@ -141,4 +142,8 @@ export interface DocsContentProps {
   activeIde: McpIdeKey;
   setActiveIde: (ide: McpIdeKey) => void;
   generatedCliCommand: string;
+  cliEnv?: CliEnvironmentStatus | null;
+  cliPathBusy?: boolean;
+  onRegisterCliPath?: () => void;
+  mcpCommand?: string;
 }

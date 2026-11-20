@@ -22,21 +22,21 @@ export const ViewSkeleton: React.FC = () => (
         height: "28px",
         width: "38%",
         borderRadius: "6px",
-        background: "var(--surface-raised, #1F1F26)",
+        background: "var(--surface-strong)",
       }}
     />
     <div
       style={{
         height: "120px",
         borderRadius: "10px",
-        background: "var(--surface-raised, #1F1F26)",
+        background: "var(--surface-strong)",
       }}
     />
     <div
       style={{
         height: "120px",
         borderRadius: "10px",
-        background: "var(--surface-raised, #1F1F26)",
+        background: "var(--surface-strong)",
       }}
     />
   </div>

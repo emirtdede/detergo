@@ -65,7 +65,19 @@ impl SystemAutomationRepository {
         if let Some(parent) = self.path.parent() {
             fs::create_dir_all(parent).map_err(|e| AppError::SettingsWriteFailed(e.to_string()))?;
         }
-        fs::write(&self.path, text).map_err(|e| AppError::SettingsWriteFailed(e.to_string()))
+        let tmp = self.path.with_extension("json.tmp");
+        fs::write(&tmp, text).map_err(|e| AppError::SettingsWriteFailed(e.to_string()))?;
+        if let Err(err) = fs::rename(&tmp, &self.path) {
+            // Windows `MoveFile` fails if the destination exists; remove and retry.
+            let _ = fs::remove_file(&self.path);
+            if let Err(retry_err) = fs::rename(&tmp, &self.path) {
+                let _ = fs::remove_file(&tmp);
+                return Err(AppError::SettingsWriteFailed(format!(
+                    "{err}; retry failed: {retry_err}"
+                )));
+            }
+        }
+        Ok(())
     }
 
     pub fn clear(&self) -> Result<(), AppError> {

@@ -191,6 +191,11 @@ pub struct SystemActionResult {
     pub success: bool,
     #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub freed_bytes: u64,
+    /// Total bytes observed before deleting this action, used internally for
+    /// accurate `before_bytes` / `after_bytes` audit records without an extra
+    /// disk walk.
+    #[serde(skip)]
+    pub before_bytes: u64,
     #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub deleted_files: u64,
     #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]

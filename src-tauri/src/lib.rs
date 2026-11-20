@@ -27,6 +27,14 @@ pub fn run() {
     // Storing it here keeps the read side a plain command instead of a second
     // argument parser in the webview.
     let launch_args: Vec<String> = std::env::args().collect();
+    if let Some(index) = launch_args.iter().position(|arg| arg == "--wait-pid") {
+        if let Some(pid) = launch_args
+            .get(index + 1)
+            .and_then(|s| s.parse::<u32>().ok())
+        {
+            platform::wait_for_pid_exit(pid, 3000);
+        }
+    }
     if let Some(index) = launch_args.iter().position(|arg| arg == "--open-view") {
         if let Some(view) = launch_args.get(index + 1) {
             commands::app_state::set_launch_view(view);
@@ -105,6 +113,8 @@ pub fn run() {
             get_cleanup_history,
             get_cleanup_totals,
             get_disk_pressure,
+            get_cli_environment_status,
+            register_cli_in_user_path,
             system_scan,
             system_preview,
             system_execute,

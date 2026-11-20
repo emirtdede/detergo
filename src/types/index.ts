@@ -195,12 +195,16 @@ export interface MeasurementUpdate {
   fileCount: number;
   hardlinkDedupBytes: number;
   status: ItemStatus;
+  selectable?: boolean | null;
+  autoSelectable?: boolean | null;
+  warningCodes?: string[] | null;
 }
 
 export interface ScanRequest {
   rootPath: string;
   exclusions?: string[];
   scope?: ScanScope;
+  includeAgents?: boolean | null;
   profile?: string;
   maxDepth?: number;
   maxCandidates?: number;
@@ -574,6 +578,14 @@ export interface DiskSpaceInfo {
   freeBytes: number;
   totalBytes: number;
   percentUsed: number;
+}
+
+/** CLI availability and PATH shim registration status on the host machine. */
+export interface CliEnvironmentStatus {
+  executablePath: string;
+  shimDir: string;
+  inPath: boolean;
+  shimUpToDate: boolean;
 }
 
 export interface ActionAuditRecord {

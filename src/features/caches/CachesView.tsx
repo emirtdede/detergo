@@ -94,34 +94,11 @@ export const CachesView: React.FC = () => {
 
   const maskPaths = usePreferencesStore((s) => s.maskPaths);
 
-  const measureMode = usePreferencesStore((s) => s.cacheMeasureMode);
-
   const load = () => loadProviders(true);
 
   useEffect(() => {
     void loadProviders();
   }, [loadProviders]);
-
-  // "Full" mode measures on open; "fast" lets the user decide. The store keeps
-
-  // the run alive across unmounts, so this only ever starts once per mount and
-
-  // a manual cancel is not immediately undone by the effect.
-
-  const autoMeasureStarted = useRef(false);
-
-  useEffect(() => {
-    if (
-      loaded &&
-      measureMode === "full" &&
-      !autoMeasureStarted.current &&
-      !providers.some((p) => p.measured)
-    ) {
-      autoMeasureStarted.current = true;
-
-      void startMeasure();
-    }
-  }, [loaded, measureMode, providers, startMeasure]);
 
   const previewAction = useMemo(
     () =>

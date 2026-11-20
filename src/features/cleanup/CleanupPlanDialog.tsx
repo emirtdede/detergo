@@ -391,6 +391,7 @@ export const CleanupPlanDialog: React.FC = () => {
                 disabled={previewing || busy}
                 onChange={() => switchMode("recycleBin")}
               />
+              <span className="plan-mode-radio" aria-hidden="true" />
               <span>{ui.plan.trash}</span>
             </label>
             <label className={`plan-mode ${mode === "permanent" ? "active" : ""}`}>
@@ -401,6 +402,7 @@ export const CleanupPlanDialog: React.FC = () => {
                 disabled={previewing || busy}
                 onChange={() => switchMode("permanent")}
               />
+              <span className="plan-mode-radio" aria-hidden="true" />
               <span>{ui.plan.permanent}</span>
             </label>
           </div>

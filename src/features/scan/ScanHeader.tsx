@@ -58,7 +58,7 @@ export const ScanHeader: React.FC = () => {
   // in that window invited a second press that looked like the real stop.
   const stopping = status === "cancelling" || (status === "cancelled" && combinedActive);
   const walkRunning = status === "scanning" || status === "measuring" || status === "cancelling";
-  const canStop = walkRunning || combinedActive || cacheMeasuring;
+  const canStop = walkRunning || combinedActive || cacheMeasuring || systemLoading;
 
   const language = usePreferencesStore((s) => s.language);
 
@@ -309,7 +309,7 @@ export const ScanHeader: React.FC = () => {
     }
   };
 
-  const effectiveAllDrives = allDrivesSelected || isAllDrives;
+  const effectiveAllDrives = allDrivesSelected;
   const allTargetsSelected =
     selectedTargets.length === ALL_SCAN_TARGETS.length && !effectiveAllDrives;
 
@@ -338,7 +338,9 @@ export const ScanHeader: React.FC = () => {
       : [
           ...(walkRunning && scanScope !== "agents" ? (["projects"] as const) : []),
           ...(walkRunning &&
-          (scanScope === "agents" || scanScope === "combined" || scanScope === "allDrives")
+          (scanScope === "agents" ||
+            scanScope === "combined" ||
+            (scanScope === "allDrives" && selectedTargets.includes("agents")))
             ? (["agents"] as const)
             : []),
           ...(cacheMeasuring ? (["caches"] as const) : []),
@@ -376,7 +378,16 @@ export const ScanHeader: React.FC = () => {
           return { activeProgressDetail: detail, progressPct: status === "measuring" ? pct : null };
         }
         return {
-          activeProgressDetail: `${progress.entriesFound} · ${formatBytes(progress.bytesMeasured, language)}`,
+          activeProgressDetail:
+            progress.directoriesVisited > 0
+              ? `${progress.entriesFound} · ${progress.directoriesVisited.toLocaleString(language || undefined)}`
+              : `${progress.entriesFound}`,
+          progressPct: null as number | null,
+        };
+      }
+      if (progress && progress.directoriesVisited > 0) {
+        return {
+          activeProgressDetail: `${ui.common.scanning} · ${progress.directoriesVisited.toLocaleString(language || undefined)}`,
           progressPct: null as number | null,
         };
       }
@@ -795,8 +806,10 @@ export const ScanHeader: React.FC = () => {
                       checked={effectiveAllDrives}
                       onChange={(next) => {
                         setAllDrives(next);
-                        if (!next && isAllDrives && resultCount === 0) {
-                          useScanStore.setState({ scope: "project" });
+                        if (!next && isAllDrives) {
+                          useScanStore.setState({
+                            scope: selectedTargets.includes("agents") ? "combined" : "project",
+                          });
                         }
                       }}
                       label={

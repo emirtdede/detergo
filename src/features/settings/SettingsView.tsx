@@ -555,7 +555,7 @@ export const SettingsView: React.FC = () => {
 
       <div className="split-content-pane">
         <div className="split-content-inner settings-page">
-          <PageHeader title={ui.nav.settings} description={ui.settings.subtitle} />
+          <PageHeader title={activeSection.label} description={activeSection.hint} />
 
           {catalog && !catalog.valid && (
             <details className="items-warning catalog-warning" style={{ marginBottom: 4 }}>
@@ -590,9 +590,7 @@ export const SettingsView: React.FC = () => {
                 </span>
               </div>
               <div className="nc-kpi-card-body">
-                <span className="nc-kpi-card-value" style={{ fontSize: "var(--text-lg)" }}>
-                  {themeLabel(prefs.theme, ui)}
-                </span>
+                <span className="nc-kpi-card-value">{themeLabel(prefs.theme, ui)}</span>
                 <span className="nc-kpi-card-sub">
                   {ui.settings.language}: {resolveUiLocale(prefs.language).toUpperCase()} ·{" "}
                   {prefs.reduceMotion ? ui.settings.reducedMotion : ui.settings.standardMotion}
@@ -613,7 +611,7 @@ export const SettingsView: React.FC = () => {
                 </span>
               </div>
               <div className="nc-kpi-card-body">
-                <span className="nc-kpi-card-value" style={{ fontSize: "var(--text-lg)" }}>
+                <span className="nc-kpi-card-value">
                   {profileLabel(prefs.scanProfile || "balanced", ui)}
                 </span>
                 <span className="nc-kpi-card-sub">
@@ -636,7 +634,7 @@ export const SettingsView: React.FC = () => {
                 </span>
               </div>
               <div className="nc-kpi-card-body">
-                <span className="nc-kpi-card-value" style={{ fontSize: "var(--text-lg)" }}>
+                <span className="nc-kpi-card-value">
                   {ui.settings.kpiFoldersDefined(prefs.protectedPaths.length)}
                 </span>
                 <span className="nc-kpi-card-sub">
@@ -644,16 +642,6 @@ export const SettingsView: React.FC = () => {
                 </span>
               </div>
             </button>
-          </div>
-
-          <div className="settings-section-header">
-            <span className="settings-section-icon" aria-hidden="true">
-              {activeSection.icon}
-            </span>
-            <div className="settings-section-copy">
-              <span className="settings-section-title">{activeSection.label}</span>
-              <span className="settings-section-hint">{activeSection.hint}</span>
-            </div>
           </div>
 
           <div
@@ -974,60 +962,65 @@ export const SettingsView: React.FC = () => {
                   </div>
                 )}
 
-                <table className="shortcuts-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: "35%" }}>{ui.settings.thAction}</th>
-                      <th style={{ width: "40%" }}>{ui.settings.thDesc}</th>
-                      <th style={{ width: "25%", textAlign: "right" }}>{ui.settings.thShortcut}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {shortcutDefs.map((def) => {
-                      const currentShortcut =
-                        (prefs.shortcuts ?? DEFAULT_SHORTCUTS)[def.id] ?? DEFAULT_SHORTCUTS[def.id];
-                      const isRecording = recordingId === def.id;
+                <div className="shortcuts-table-wrap">
+                  <table className="shortcuts-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: "35%" }}>{ui.settings.thAction}</th>
+                        <th style={{ width: "40%" }}>{ui.settings.thDesc}</th>
+                        <th style={{ width: "25%", textAlign: "right" }}>
+                          {ui.settings.thShortcut}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {shortcutDefs.map((def) => {
+                        const currentShortcut =
+                          (prefs.shortcuts ?? DEFAULT_SHORTCUTS)[def.id] ??
+                          DEFAULT_SHORTCUTS[def.id];
+                        const isRecording = recordingId === def.id;
 
-                      return (
-                        <tr key={def.id}>
-                          <td>
-                            <span className="shortcut-action-name">{def.label}</span>
-                          </td>
-                          <td>
-                            <span className="shortcut-action-hint">{def.hint}</span>
-                          </td>
-                          <td style={{ textAlign: "right" }}>
-                            <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                              {isRecording ? (
-                                <span className="shortcut-recording-badge">
-                                  {ui.settings.pressKey}
-                                </span>
-                              ) : (
-                                <span className="shortcut-key-badge">{currentShortcut}</span>
-                              )}
+                        return (
+                          <tr key={def.id}>
+                            <td>
+                              <span className="shortcut-action-name">{def.label}</span>
+                            </td>
+                            <td>
+                              <span className="shortcut-action-hint">{def.hint}</span>
+                            </td>
+                            <td style={{ textAlign: "right" }}>
+                              <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                                {isRecording ? (
+                                  <span className="shortcut-recording-badge">
+                                    {ui.settings.pressKey}
+                                  </span>
+                                ) : (
+                                  <span className="shortcut-key-badge">{currentShortcut}</span>
+                                )}
 
-                              <Button
-                                variant={isRecording ? "primary" : "secondary"}
-                                size="sm"
-                                onClick={() => {
-                                  if (isRecording) {
-                                    setRecordingId(null);
-                                    setConflictWarning(null);
-                                  } else {
-                                    setConflictWarning(null);
-                                    setRecordingId(def.id);
-                                  }
-                                }}
-                              >
-                                {isRecording ? ui.common.cancel : ui.settings.changeKey}
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                                <Button
+                                  variant={isRecording ? "primary" : "secondary"}
+                                  size="sm"
+                                  onClick={() => {
+                                    if (isRecording) {
+                                      setRecordingId(null);
+                                      setConflictWarning(null);
+                                    } else {
+                                      setConflictWarning(null);
+                                      setRecordingId(def.id);
+                                    }
+                                  }}
+                                >
+                                  {isRecording ? ui.common.cancel : ui.settings.changeKey}
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </section>
             )}
 
@@ -1068,8 +1061,8 @@ export const SettingsView: React.FC = () => {
                       alignItems: "center",
                       gap: 6,
                       color: webhookTestStatus.success
-                        ? "var(--color-success)"
-                        : "var(--color-danger)",
+                        ? "var(--success-text)"
+                        : "var(--danger-foreground)",
                     }}
                   >
                     {webhookTestStatus.success ? <Check size={14} /> : <X size={14} />}

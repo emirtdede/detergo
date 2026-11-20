@@ -1,15 +1,41 @@
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 use std::time::Instant;
 
-use tokio::sync::{mpsc, Semaphore};
+use tokio::task::JoinSet;
 use walkdir::WalkDir;
 
 use crate::catalog::TargetKind;
 use crate::platform::{facts, FileIdentity};
 use crate::scanner::cancellation::CancellationToken;
 use crate::scanner::models::{ItemStatus, MeasurementUpdate, ScanProgress};
+
+#[cfg(windows)]
+fn entry_is_reparse_point(entry: &walkdir::DirEntry) -> bool {
+    use std::os::windows::fs::MetadataExt;
+    const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x0400;
+    const FILE_ATTRIBUTE_OFFLINE: u32 = 0x1000;
+    const FILE_ATTRIBUTE_RECALL_ON_OPEN: u32 = 0x0004_0000;
+    const FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS: u32 = 0x0040_0000;
+    if let Ok(meta) = entry.metadata() {
+        let attrs = meta.file_attributes();
+        if (attrs
+            & (FILE_ATTRIBUTE_REPARSE_POINT
+                | FILE_ATTRIBUTE_OFFLINE
+                | FILE_ATTRIBUTE_RECALL_ON_OPEN
+                | FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS))
+            == 0
+        {
+            return false;
+        }
+    }
+    crate::platform::is_reparse_point(entry.path())
+}
+
+#[cfg(not(windows))]
+fn entry_is_reparse_point(entry: &walkdir::DirEntry) -> bool {
+    crate::platform::is_reparse_point(entry.path())
+}
 
 #[derive(Debug, Clone, Default)]
 pub struct PathSize {
@@ -91,8 +117,7 @@ pub fn measure_path_with_deadline(
         .follow_links(false)
         .into_iter()
         .filter_entry(|e| {
-            e.depth() == 0
-                || (!e.file_type().is_symlink() && !crate::platform::is_reparse_point(e.path()))
+            e.depth() == 0 || (!e.file_type().is_symlink() && !entry_is_reparse_point(e))
         });
 
     for entry in walker {
@@ -185,40 +210,31 @@ impl MeasurementEngine {
         P: FnMut(ScanProgress) -> PF,
         PF: std::future::Future<Output = ()>,
     {
-        let (tx, mut rx) = mpsc::channel::<MeasurementUpdate>(200);
-        let semaphore = Arc::new(Semaphore::new(self.concurrency_limit));
         let token = self.cancellation_token.clone();
         let total = entries.len() as u64;
         let deadline = self.deadline;
+        let concurrency = self.concurrency_limit.max(1);
         let mut stop = MeasurementStop::Completed;
 
-        for (id, path, kind) in entries {
-            if token.is_cancelled() {
-                stop = MeasurementStop::Cancelled;
-                break;
-            }
-            if past_deadline(deadline) {
-                stop = MeasurementStop::TimedOut;
-                break;
-            }
-            let sem = semaphore.clone();
-            let tx_clone = tx.clone();
-            let token_clone = token.clone();
+        // Streaming bounded JoinSet: at most `concurrency` measurement tasks
+        // exist in memory at any time, and there is no intermediate bounded
+        // channel that could deadlock when `entries.len() > channel_cap`.
+        let mut join_set: JoinSet<Option<MeasurementUpdate>> = JoinSet::new();
+        let mut pending = entries.into_iter();
 
-            tokio::spawn(async move {
-                let Ok(_permit) = sem.acquire().await else {
-                    return;
-                };
-                if token_clone.is_cancelled() || past_deadline(deadline) {
-                    return;
+        let spawn_one = |set: &mut JoinSet<Option<MeasurementUpdate>>,
+                         id: String,
+                         path: PathBuf,
+                         kind: TargetKind,
+                         tok: CancellationToken| {
+            set.spawn_blocking(move || {
+                if tok.is_cancelled() || past_deadline(deadline) {
+                    return None;
                 }
-                let measured = tokio::task::spawn_blocking(move || {
-                    measure_path_with_deadline(&path, kind, &token_clone, deadline)
-                })
-                .await
-                .ok()
-                .flatten();
-
+                let measured = measure_path_with_deadline(&path, kind, &tok, deadline);
+                if tok.is_cancelled() || past_deadline(deadline) {
+                    return None;
+                }
                 let update = match measured {
                     Some(size) => MeasurementUpdate {
                         id,
@@ -228,6 +244,9 @@ impl MeasurementEngine {
                         file_count: size.file_count,
                         hardlink_dedup_bytes: size.hardlink_dedup_bytes,
                         status: ItemStatus::Ready,
+                        selectable: None,
+                        auto_selectable: None,
+                        warning_codes: None,
                     },
                     None => MeasurementUpdate {
                         id,
@@ -237,38 +256,72 @@ impl MeasurementEngine {
                         file_count: 0,
                         hardlink_dedup_bytes: 0,
                         status: ItemStatus::Error,
+                        selectable: Some(false),
+                        auto_selectable: Some(false),
+                        warning_codes: Some(vec!["NOT_MEASURED".to_string()]),
                     },
                 };
-                let _ = tx_clone.send(update).await;
+                Some(update)
             });
+        };
+
+        for _ in 0..concurrency {
+            if token.is_cancelled() {
+                stop = MeasurementStop::Cancelled;
+                break;
+            }
+            if past_deadline(deadline) {
+                stop = MeasurementStop::TimedOut;
+                break;
+            }
+            match pending.next() {
+                Some((id, path, kind)) => spawn_one(&mut join_set, id, path, kind, token.clone()),
+                None => break,
+            }
         }
-        drop(tx);
 
         let mut measured = 0u64;
         let mut bytes = 0u64;
         let mut buffer: Vec<MeasurementUpdate> = Vec::with_capacity(100);
         let mut last_progress = Instant::now();
 
-        while let Some(update) = rx.recv().await {
-            measured += 1;
-            bytes = bytes.saturating_add(update.estimated_reclaim_bytes);
-            buffer.push(update);
+        while let Some(joined) = join_set.join_next().await {
+            if let Ok(Some(update)) = joined {
+                measured += 1;
+                bytes = bytes.saturating_add(update.estimated_reclaim_bytes);
+                buffer.push(update);
 
-            if buffer.len() >= 100 {
-                on_measured(std::mem::take(&mut buffer)).await;
+                if buffer.len() >= 100 {
+                    on_measured(std::mem::take(&mut buffer)).await;
+                }
+                if last_progress.elapsed().as_millis() >= 100 || measured == total {
+                    on_progress(ScanProgress {
+                        phase: "measuring".to_string(),
+                        directories_visited,
+                        entries_found: total_discovered,
+                        entries_measured: measured,
+                        bytes_measured: bytes,
+                        current_path: None,
+                        stop_reason: stop.code().map(|s| s.to_string()),
+                    })
+                    .await;
+                    last_progress = Instant::now();
+                }
             }
-            if last_progress.elapsed().as_millis() >= 100 || measured == total {
-                on_progress(ScanProgress {
-                    phase: "measuring".to_string(),
-                    directories_visited,
-                    entries_found: total_discovered,
-                    entries_measured: measured,
-                    bytes_measured: bytes,
-                    current_path: None,
-                    stop_reason: stop.code().map(|s| s.to_string()),
-                })
-                .await;
-                last_progress = Instant::now();
+
+            if token.is_cancelled() {
+                stop = MeasurementStop::Cancelled;
+                join_set.abort_all();
+                break;
+            }
+            if past_deadline(deadline) {
+                stop = MeasurementStop::TimedOut;
+                join_set.abort_all();
+                break;
+            }
+
+            if let Some((id, path, kind)) = pending.next() {
+                spawn_one(&mut join_set, id, path, kind, token.clone());
             }
         }
 

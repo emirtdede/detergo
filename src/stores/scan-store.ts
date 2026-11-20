@@ -166,12 +166,22 @@ function applyUpdate(item: CleanupItem, update: MeasurementUpdate): CleanupItem 
   // M7: an unreadable target is not an empty folder. The backend sends a zero
   // placeholder on the wire for compatibility, but the row must keep `null`
   // sizes so the table shows "Not measured" instead of "0 B".
+  // Eligibility flags are merged monotonically: a measurement pass can narrow
+  // selectability (e.g. `minSizeBytes` or `NOT_MEASURED`) but never unlock an
+  // item already blocked during discovery.
   const failed = update.status === "error";
+  const mergedWarnings =
+    update.warningCodes && update.warningCodes.length > 0
+      ? Array.from(new Set([...(item.warningCodes ?? []), ...update.warningCodes]))
+      : item.warningCodes;
   return {
     ...item,
     logicalBytes: failed ? null : update.logicalBytes,
     allocatedBytes: failed ? null : update.allocatedBytes,
     estimatedReclaimBytes: failed ? null : update.estimatedReclaimBytes,
+    selectable: update.selectable === false ? false : item.selectable,
+    autoSelectable: update.autoSelectable === false ? false : item.autoSelectable,
+    warningCodes: mergedWarnings,
     status:
       update.status === "error" ? "error" : item.status === "blocked" ? "blocked" : update.status,
   };

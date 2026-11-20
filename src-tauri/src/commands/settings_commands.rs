@@ -42,6 +42,8 @@ pub fn reset_app_data(app: tauri::AppHandle, state: State<'_, AppState>) -> Resu
     state.audit.reset()?;
     state.last_scan.reset()?;
     state.settings.reset()?;
+    let _ = crate::system_cleaner::schedule::uninstall();
+    state.system_automation.clear()?;
     // The saved language is gone; the native tray must not keep the old labels.
     crate::refresh_tray_labels(&app, None);
     Ok(())

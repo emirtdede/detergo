@@ -13,6 +13,7 @@ import {
   CleanupPlan,
   CleanupReport,
   CleanupTotals,
+  CliEnvironmentStatus,
   DeleteMode,
   DiskSpaceInfo,
   GrowthReport,
@@ -1087,6 +1088,24 @@ export function createMockScannerApi(): ScannerApi {
         dirty: false,
         profile: "release",
         builtAt: "2026-11-05T02:00:00Z",
+      };
+    },
+
+    async getCliEnvironmentStatus(): Promise<CliEnvironmentStatus> {
+      return {
+        executablePath: "C:\\Program Files\\Dev Cleaner\\dev-cleaner.exe",
+        shimDir: "C:\\Users\\demo\\AppData\\Local\\dev-cleaner\\bin",
+        inPath: true,
+        shimUpToDate: true,
+      };
+    },
+
+    async registerCliInUserPath(): Promise<CliEnvironmentStatus> {
+      return {
+        executablePath: "C:\\Program Files\\Dev Cleaner\\dev-cleaner.exe",
+        shimDir: "C:\\Users\\demo\\AppData\\Local\\dev-cleaner\\bin",
+        inPath: true,
+        shimUpToDate: true,
       };
     },
 

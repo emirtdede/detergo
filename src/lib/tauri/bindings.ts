@@ -587,6 +587,18 @@ export type CleanupTotals = {
 	errorCount: number,
 };
 
+/**
+ *  Snapshot of the current CLI & MCP executable environment so Docs and
+ *  Settings can show the exact running executable path and let Portable users
+ *  register a `dev-cleaner` shim in their per-user `PATH` with one click.
+ */
+export type CliEnvironmentStatus = {
+	executablePath: string,
+	shimDir: string,
+	inPath: boolean,
+	shimUpToDate: boolean,
+};
+
 export type Confidence = "high" | "medium" | "low";
 
 /**
@@ -728,6 +740,9 @@ export type MeasurementUpdate_Deserialize = {
 	fileCount: number,
 	hardlinkDedupBytes: number,
 	status: ItemStatus,
+	selectable?: boolean | null,
+	autoSelectable?: boolean | null,
+	warningCodes?: string[] | null,
 };
 
 export type MeasurementUpdate_Serialize = {
@@ -738,6 +753,9 @@ export type MeasurementUpdate_Serialize = {
 	fileCount: number,
 	hardlinkDedupBytes: number,
 	status: ItemStatus,
+	selectable: boolean | null,
+	autoSelectable: boolean | null,
+	warningCodes: string[] | null,
 };
 
 export type NotificationChannel = "both" | "in_app" | "desktop" | "none";
@@ -1042,6 +1060,11 @@ export type ScanRequest_Deserialize = {
 	rootPath: string,
 	exclusions?: string[],
 	scope?: ScanScope,
+	/**
+	 *  When true alongside `AllDrives` (or `Project`), also runs the AI agent
+	 *  storage scan in the same session.
+	 */
+	includeAgents?: boolean | null,
 	profile?: string | null,
 	maxDepth?: number | null,
 	maxCandidates?: number | null,
@@ -1054,6 +1077,11 @@ export type ScanRequest_Serialize = {
 	rootPath: string,
 	exclusions: string[],
 	scope: ScanScope,
+	/**
+	 *  When true alongside `AllDrives` (or `Project`), also runs the AI agent
+	 *  storage scan in the same session.
+	 */
+	includeAgents: boolean | null,
 	profile: string | null,
 	maxDepth: number | null,
 	maxCandidates: number | null,

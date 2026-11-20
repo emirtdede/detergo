@@ -85,6 +85,8 @@ export const PrivacySection: React.FC<PrivacySectionProps> = ({
         localStorage.removeItem("dev_cleaner_lang");
         localStorage.removeItem("dev_cleaner_language");
         localStorage.removeItem("node_cleaner_language");
+        localStorage.removeItem("dev-cleaner.scan-targets.v1");
+        localStorage.removeItem("dev-cleaner.system-selection.v1");
       } catch (err) {
         log.warn("Could not clear local caches during the application reset", err);
       }

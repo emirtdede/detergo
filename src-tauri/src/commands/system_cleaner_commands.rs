@@ -20,29 +20,62 @@ pub struct PendingSystemPreview {
     expires: Instant,
 }
 
+fn normalize_drive_letter(value: &str) -> Option<char> {
+    value
+        .trim()
+        .trim_start_matches(r"\\?\")
+        .chars()
+        .next()
+        .filter(|ch| ch.is_ascii_alphabetic())
+        .map(|ch| ch.to_ascii_uppercase())
+}
+
 fn disk_for_system_drive() -> Option<crate::commands::system_commands::DiskSpaceInfo> {
     let disks = crate::commands::system_commands::get_disk_pressure();
     let system_drive = std::env::var("SystemDrive").unwrap_or_else(|_| "C:".to_string());
+    let target_letter = normalize_drive_letter(&system_drive);
     disks
         .iter()
-        .find(|disk| disk.drive.eq_ignore_ascii_case(&system_drive))
+        .find(|disk| {
+            target_letter.is_some() && normalize_drive_letter(&disk.drive) == target_letter
+        })
         .or_else(|| disks.first())
         .cloned()
 }
 
 #[tauri::command]
 pub async fn system_scan(state: State<'_, AppState>) -> Result<SystemScanReport, AppError> {
-    if crate::lock!(state.system_token).is_some() {
-        return Err(AppError::Blocked(
-            "A system cleanup is already running.".to_string(),
-        ));
+    let token = CancellationToken::new();
+    {
+        let mut slot = crate::lock!(state.system_token);
+        if slot.is_some() {
+            return Err(AppError::Blocked(
+                "A system cleanup or scan is already running.".to_string(),
+            ));
+        }
+        *slot = Some(token.clone());
     }
 
     let elevated = crate::platform::is_elevated();
-    let token = CancellationToken::new();
-    let outcome = tokio::task::spawn_blocking(move || measure::scan(elevated, &token))
-        .await
-        .map_err(|e| AppError::Unknown(format!("System measurement failed: {e}")))?;
+    let worker_token = token.clone();
+    let outcome_result =
+        tokio::task::spawn_blocking(move || measure::scan(elevated, &worker_token))
+            .await
+            .map_err(|e| AppError::Unknown(format!("System measurement failed: {e}")));
+
+    {
+        let mut slot = crate::lock!(state.system_token);
+        if slot.as_ref().map(|t| t.same(&token)).unwrap_or(false) {
+            *slot = None;
+        }
+    }
+
+    let outcome = outcome_result?;
+    if token.is_cancelled() {
+        return Err(AppError::ScanCancelled(
+            "System scan was cancelled.".to_string(),
+        ));
+    }
 
     let total = outcome
         .actions

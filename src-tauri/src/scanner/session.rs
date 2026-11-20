@@ -287,6 +287,8 @@ pub struct ScanRegistry {
     plans: Mutex<HashMap<String, PendingPlan>>,
 }
 
+const MAX_RETAINED_SESSIONS: usize = 3;
+
 impl ScanRegistry {
     pub fn new() -> Self {
         Self::default()
@@ -312,6 +314,22 @@ impl ScanRegistry {
         let handle = Arc::new(Mutex::new(session));
         let mut sessions = crate::lock!(self.sessions);
         sessions.retain(|_, s| !s.lock().map(|s| s.is_expired()).unwrap_or(true));
+        while sessions.len() >= MAX_RETAINED_SESSIONS {
+            let oldest = sessions
+                .iter()
+                .min_by_key(|(_, s)| {
+                    s.lock()
+                        .map(|guard| guard.created)
+                        .unwrap_or_else(|_| Instant::now())
+                })
+                .map(|(key, _)| key.clone());
+            match oldest {
+                Some(key) => {
+                    sessions.remove(&key);
+                }
+                None => break,
+            }
+        }
         sessions.insert(id, handle.clone());
         handle
     }

@@ -82,6 +82,7 @@ fn run_native(id: SystemActionId, token: &CancellationToken) -> SystemActionResu
         Ok(outcome) => {
             result.success = !outcome.incomplete;
             result.freed_bytes = outcome.freed_bytes;
+            result.before_bytes = outcome.scanned_bytes.max(outcome.freed_bytes);
             result.deleted_files = outcome.deleted_files;
             result.skipped = outcome.skipped;
             result.skipped_sample = outcome.skipped_sample;
@@ -99,11 +100,13 @@ fn run_native(id: SystemActionId, token: &CancellationToken) -> SystemActionResu
 fn run_recycle_bin() -> SystemActionResult {
     let mut result = base_result(SystemActionId::RecycleBin);
     let before = super::recycle::size_bytes().unwrap_or(0);
+    result.before_bytes = before;
     match super::recycle::empty() {
         Ok(()) => {
             let after = super::recycle::size_bytes().unwrap_or(0);
             result.success = true;
             result.freed_bytes = before.saturating_sub(after);
+            result.before_bytes = before.max(result.freed_bytes);
         }
         Err(err) => result.error_code = Some(error_code(&err)),
     }
@@ -153,6 +156,7 @@ fn base_result(id: SystemActionId) -> SystemActionResult {
         id,
         success: false,
         freed_bytes: 0,
+        before_bytes: 0,
         deleted_files: 0,
         skipped: 0,
         skipped_sample: Vec::new(),
@@ -188,6 +192,9 @@ pub fn record_audit(
     }
     let mut failure = None;
     for result in &report.results {
+        let before_bytes = result.before_bytes.max(result.freed_bytes);
+        let after_bytes = before_bytes.saturating_sub(result.freed_bytes);
+        let delta_bytes = -(result.freed_bytes.min(i64::MAX as u64) as i64);
         let entry = crate::audit::ActionAuditRecord {
             id: format!("s-{}", uuid::Uuid::new_v4().simple()),
             timestamp: report.finished_at.clone(),
@@ -196,9 +203,9 @@ pub fn record_audit(
             label: spec(result.id).label.to_string(),
             success: result.success,
             exit_code: result.exit_code,
-            before_bytes: 0,
-            after_bytes: 0,
-            delta_bytes: result.freed_bytes as i64,
+            before_bytes,
+            after_bytes,
+            delta_bytes,
             duration_ms: result.duration_ms,
         };
         if let Err(err) = repository.append_action(&entry) {

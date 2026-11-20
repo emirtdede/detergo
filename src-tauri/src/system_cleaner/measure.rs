@@ -25,18 +25,53 @@ pub struct ScanOutcome {
 }
 
 pub fn scan(elevated: bool, token: &CancellationToken) -> ScanOutcome {
-    let mut actions = Vec::new();
-    let mut warnings = Vec::new();
-
-    for action in super::actions::ACTIONS {
-        let info = measure_one(action, elevated, token);
-        if info.available && !info.measured && info.reason.as_deref() == Some("unmeasured") {
-            warnings.push(action.id.as_str().to_string());
-        }
-        actions.push(info);
-    }
+    let specs: Vec<&'static ActionSpec> = super::actions::ACTIONS.iter().collect();
+    let actions = measure_specs_parallel(&specs, elevated, token);
+    let warnings = actions
+        .iter()
+        .filter(|info| {
+            info.available && !info.measured && info.reason.as_deref() == Some("unmeasured")
+        })
+        .map(|info| info.id.as_str().to_string())
+        .collect();
 
     ScanOutcome { actions, warnings }
+}
+
+fn measure_specs_parallel(
+    specs: &[&'static ActionSpec],
+    elevated: bool,
+    token: &CancellationToken,
+) -> Vec<SystemActionInfo> {
+    if specs.len() <= 1 {
+        return specs
+            .iter()
+            .map(|action| measure_one(action, elevated, token))
+            .collect();
+    }
+
+    let worker_count = specs.len().min(4);
+    let next_index = std::sync::atomic::AtomicUsize::new(0);
+    let results: std::sync::Mutex<Vec<Option<SystemActionInfo>>> =
+        std::sync::Mutex::new(vec![None; specs.len()]);
+
+    std::thread::scope(|scope| {
+        for _ in 0..worker_count {
+            let next_index = &next_index;
+            let results = &results;
+            scope.spawn(move || loop {
+                let idx = next_index.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                let Some(action) = specs.get(idx) else {
+                    return;
+                };
+                let info = measure_one(action, elevated, token);
+                crate::lock!(results)[idx] = Some(info);
+            });
+        }
+    });
+
+    let out = crate::lock!(results).drain(..).flatten().collect();
+    out
 }
 
 fn measure_one(
@@ -136,9 +171,8 @@ pub fn measure_actions(
     elevated: bool,
     token: &CancellationToken,
 ) -> Vec<SystemActionInfo> {
-    ids.iter()
-        .map(|id| measure_one(spec(*id), elevated, token))
-        .collect()
+    let specs: Vec<&'static ActionSpec> = ids.iter().map(|id| spec(*id)).collect();
+    measure_specs_parallel(&specs, elevated, token)
 }
 
 /// Whether the action can run in the current session.

@@ -23,7 +23,7 @@ use crate::cleanup::official_actions::{
 use crate::cleanup::plan::{CleanupPlan, PlanItem, TargetSnapshot};
 use crate::cleanup::DeleteMode;
 use crate::commands::support_commands::{SupportBundle, SupportBundleRequest, SupportMailResult};
-use crate::commands::system_commands::DiskSpaceInfo;
+use crate::commands::system_commands::{CliEnvironmentStatus, DiskSpaceInfo};
 use crate::error::AppError;
 use crate::last_scan::LastScanSnapshot;
 use crate::platform::KnownLocation;
@@ -78,6 +78,7 @@ pub fn collect() -> Types {
         .register::<GrowthEntry>()
         .register::<StorageSnapshot>()
         .register::<DiskSpaceInfo>()
+        .register::<CliEnvironmentStatus>()
         .register::<KnownLocation>()
         .register::<BuildInfo>()
         .register::<UpdateInfo>()

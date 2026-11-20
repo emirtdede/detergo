@@ -226,8 +226,11 @@ export const AboutView: React.FC<AboutViewProps> = ({
 
           <button
             type="button"
-            className={`nc-kpi-card about-kpi-action ${aboutNav === "catalog" ? "is-active" : ""}`}
-            onClick={() => setAboutNav("catalog")}
+            className={`nc-kpi-card about-kpi-action ${aboutNav === "catalog" && selectedEcosystem === null ? "is-active" : ""}`}
+            onClick={() => {
+              setSelectedEcosystem(null);
+              setAboutNav("catalog");
+            }}
           >
             <div className="nc-kpi-card-header">
               <span className="nc-kpi-card-label">{ui.about.kpiCatalog}</span>
@@ -245,7 +248,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
 
           <button
             type="button"
-            className={`nc-kpi-card about-kpi-action ${aboutNav === "catalog" ? "is-active" : ""}`}
+            className={`nc-kpi-card about-kpi-action ${aboutNav === "catalog" && selectedEcosystem !== null ? "is-active" : ""}`}
             onClick={() => setAboutNav("catalog")}
           >
             <div className="nc-kpi-card-header">
@@ -637,7 +640,11 @@ export const AboutView: React.FC<AboutViewProps> = ({
       <div className="split-content-pane">
         <div className="split-content-inner">
           <PageHeader
-            title={ui.nav.about}
+            title={
+              aboutPane === "legal"
+                ? ui.about.navLegal
+                : (navItems.find((item) => item.id === aboutNav)?.label ?? ui.nav.about)
+            }
             description={ui.settings.aboutHint}
             actions={
               <Button

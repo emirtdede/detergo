@@ -971,47 +971,78 @@ pub fn measure_cache_providers<F>(
         provider_count: selected.len(),
     });
 
-    for def in selected {
-        if token.is_cancelled() {
-            emit(CacheMeasureEvent::Cancelled);
-            return;
-        }
-        let mut total_bytes = 0u64;
-        for raw in def.cache_paths {
-            if token.is_cancelled() {
-                emit(CacheMeasureEvent::Cancelled);
-                return;
-            }
-            let path = expand(raw);
-            let exists = path.exists();
-            let bytes = measure_cache_path(def, &path, token);
-            if let Some(bytes) = bytes {
-                total_bytes = total_bytes.saturating_add(bytes);
-            }
-            let unmeasured_reason = if bytes.is_none() && exists {
-                Some(if def.read_only { "readOnly" } else { "error" }.to_string())
-            } else {
-                None
-            };
-            emit(CacheMeasureEvent::PathMeasured {
-                provider_id: def.id.to_string(),
-                path: path.to_string_lossy().to_string(),
-                exists,
-                bytes,
-                unmeasured_reason,
-            });
-        }
-        if token.is_cancelled() {
-            emit(CacheMeasureEvent::Cancelled);
-            return;
-        }
-        emit(CacheMeasureEvent::ProviderFinished {
-            provider_id: def.id.to_string(),
-            total_bytes,
-        });
+    if selected.is_empty() {
+        emit(CacheMeasureEvent::Finished);
+        return;
     }
 
-    emit(CacheMeasureEvent::Finished);
+    // Measure up to 4 cache providers in parallel while streaming events back
+    // over a channel so the UI updates progressively without serial stalls.
+    let worker_count = selected.len().min(4);
+    let next_index = std::sync::atomic::AtomicUsize::new(0);
+    let (tx, rx) = crossbeam_channel::unbounded::<CacheMeasureEvent>();
+
+    std::thread::scope(|scope| {
+        for _ in 0..worker_count {
+            let tx = tx.clone();
+            let selected = &selected;
+            let next_index = &next_index;
+            scope.spawn(move || loop {
+                if token.is_cancelled() {
+                    return;
+                }
+                let idx = next_index.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                let Some(def) = selected.get(idx) else {
+                    return;
+                };
+                let mut total_bytes = 0u64;
+                for raw in def.cache_paths {
+                    if token.is_cancelled() {
+                        return;
+                    }
+                    let path = expand(raw);
+                    let exists = path.exists();
+                    let bytes = measure_cache_path(def, &path, token);
+                    if let Some(bytes) = bytes {
+                        total_bytes = total_bytes.saturating_add(bytes);
+                    }
+                    let unmeasured_reason = if bytes.is_none() && exists {
+                        Some(if def.read_only { "readOnly" } else { "error" }.to_string())
+                    } else {
+                        None
+                    };
+                    let _ = tx.send(CacheMeasureEvent::PathMeasured {
+                        provider_id: def.id.to_string(),
+                        path: path.to_string_lossy().to_string(),
+                        exists,
+                        bytes,
+                        unmeasured_reason,
+                    });
+                }
+                if token.is_cancelled() {
+                    return;
+                }
+                let _ = tx.send(CacheMeasureEvent::ProviderFinished {
+                    provider_id: def.id.to_string(),
+                    total_bytes,
+                });
+            });
+        }
+        drop(tx);
+
+        for event in rx {
+            if token.is_cancelled() {
+                break;
+            }
+            emit(event);
+        }
+    });
+
+    if token.is_cancelled() {
+        emit(CacheMeasureEvent::Cancelled);
+    } else {
+        emit(CacheMeasureEvent::Finished);
+    }
 }
 
 /// Pending official-action previews kept at once.

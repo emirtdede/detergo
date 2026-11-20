@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
 import { Dialog } from "@/components/primitives/Dialog";
+import { PageHeader } from "@/components/primitives/PageHeader";
 import { useScanStore, viewForScanScope } from "@/stores/scan-store";
 import { useUIText, localizeAppError } from "@/lib/ui-text";
 import { useScanController } from "@/features/scan/useScanController";
@@ -32,6 +33,7 @@ import { useUiStore } from "@/stores/ui-store";
 import { useSelectionStore } from "@/stores/selection-store";
 import { useAppStore } from "@/stores/app-store";
 import { useCacheStore } from "@/stores/cache-store";
+import { useSystemStore } from "@/stores/system-store";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { log } from "@/lib/logging";
 import "../items/items.css";
@@ -39,7 +41,7 @@ import "./overview.css";
 
 export const OverviewView: React.FC = () => {
   const ui = useUIText();
-  const { isScanning } = useScanController();
+  const { isScanning, status: scanStatus } = useScanController();
   const itemsById = useScanStore((s) => s.itemsById);
   const itemIds = useScanStore((s) => s.itemIds);
   const progress = useScanStore((s) => s.progress);
@@ -51,6 +53,7 @@ export const OverviewView: React.FC = () => {
   const setView = useAppStore((s) => s.setView);
   const cacheProviders = useCacheStore((s) => s.providers);
   const loadCacheProviders = useCacheStore((s) => s.loadProviders);
+  const systemReport = useSystemStore((s) => s.report);
   const showToast = useUiStore((s) => s.showToast);
   const restored = useScanStore((s) => s.restored);
   const lastSavedAt = useScanStore((s) => s.lastSavedAt);
@@ -324,54 +327,58 @@ export const OverviewView: React.FC = () => {
     [cacheProviders],
   );
 
+  const walkActive =
+    scanStatus === "scanning" || scanStatus === "measuring" || scanStatus === "cancelling";
+
   return (
     <div className="overview-page">
       {/* 1. TOP HEADER & TELEMETRY */}
-      <header className="overview-header">
-        <div className="overview-header-copy">
-          <h1 className="overview-title">{ui.overview.pageTitle}</h1>
-          <p className="overview-subtitle">{ui.overview.pageSubtitle}</p>
-        </div>
+      <PageHeader
+        title={ui.overview.pageTitle}
+        description={ui.overview.pageSubtitle}
+        actions={
+          <div className="overview-header-telemetry">
+            <div className="overview-status-pill">
+              <span
+                className={`overview-status-pulse ${isScanning ? "is-scanning" : ""}`}
+                aria-hidden="true"
+              />
+              <span>
+                {isScanning
+                  ? walkActive
+                    ? `${ui.common.scanning} (${progress?.entriesFound ?? 0} ${ui.overview.candidates})`
+                    : `${ui.common.scanning} · ${ui.caches.measuring}`
+                  : items.length > 0
+                    ? ui.overview.statusReady
+                    : ui.overview.statusIdle}
+              </span>
+            </div>
 
-        <div className="overview-header-telemetry">
-          <div className="overview-status-pill">
-            <span
-              className={`overview-status-pulse ${isScanning ? "is-scanning" : ""}`}
-              aria-hidden="true"
-            />
-            <span>
-              {isScanning
-                ? `${ui.common.scanning} (${progress?.entriesFound ?? 0} ${ui.overview.candidates})`
-                : items.length > 0
-                  ? ui.overview.statusReady
-                  : ui.overview.statusIdle}
-            </span>
+            <div className="overview-header-actions" role="toolbar" aria-label={ui.overview.title}>
+              <button
+                type="button"
+                className="overview-header-btn"
+                onClick={() => setResetDialogOpen(true)}
+                disabled={isScanning || (items.length === 0 && !restored)}
+                title={ui.overview.resetUi}
+                aria-label={ui.overview.resetUi}
+              >
+                <RotateCcw size={14} />
+              </button>
+              <button
+                type="button"
+                className="overview-header-btn"
+                onClick={() => setRestoreDialogOpen(true)}
+                disabled={isScanning || !hasLastSnapshot}
+                title={ui.overview.restoreLastScan}
+                aria-label={ui.overview.restoreLastScan}
+              >
+                <History size={14} />
+              </button>
+            </div>
           </div>
-
-          <div className="overview-header-actions" role="toolbar" aria-label={ui.overview.title}>
-            <button
-              type="button"
-              className="overview-header-btn"
-              onClick={() => setResetDialogOpen(true)}
-              disabled={isScanning || (items.length === 0 && !restored)}
-              title={ui.overview.resetUi}
-              aria-label={ui.overview.resetUi}
-            >
-              <RotateCcw size={14} />
-            </button>
-            <button
-              type="button"
-              className="overview-header-btn"
-              onClick={() => setRestoreDialogOpen(true)}
-              disabled={isScanning || !hasLastSnapshot}
-              title={ui.overview.restoreLastScan}
-              aria-label={ui.overview.restoreLastScan}
-            >
-              <History size={14} />
-            </button>
-          </div>
-        </div>
-      </header>
+        }
+      />
 
       {/* 2. 4-COLUMN BENTO KPI ROW */}
       <section className="overview-kpi-grid" aria-label={ui.overview.title}>
@@ -709,7 +716,39 @@ export const OverviewView: React.FC = () => {
             </div>
           </div>
 
-          {/* Hub 4: Cleanup & Operation History */}
+          {/* Hub 4: System Cleaner (C:) */}
+          <div
+            className="overview-hub-card"
+            role="button"
+            tabIndex={0}
+            onClick={() => setView("system")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setView("system");
+              }
+            }}
+          >
+            <div className="overview-hub-left">
+              <div className="overview-hub-icon overview-hub-icon--system">
+                <HardDrive size={20} />
+              </div>
+              <div className="overview-hub-info">
+                <h3 className="overview-hub-title">{ui.system.title}</h3>
+                <span className="overview-hub-desc">{ui.system.subtitle}</span>
+              </div>
+            </div>
+            <div className="overview-hub-right">
+              <span className="overview-hub-badge">
+                {systemReport && systemReport.totalBytes > 0
+                  ? formatBytes(systemReport.totalBytes, language)
+                  : ui.nav.system}
+              </span>
+              <ArrowUpRight size={16} className="overview-hub-arrow" />
+            </div>
+          </div>
+
+          {/* Hub 5: Cleanup & Operation History */}
           <div
             className="overview-hub-card"
             role="button"

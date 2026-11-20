@@ -361,13 +361,66 @@
   padding: var(--space-3);
   border: 1px solid var(--border-control);
   border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  color: var(--text-primary);
   cursor: pointer;
   font-size: var(--text-sm);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard);
+}
+
+.plan-mode:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-hover);
 }
 
 .plan-mode.active {
   border-color: var(--accent);
   background: var(--accent-subtle);
+}
+
+.plan-mode input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.plan-mode-radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.plan-mode-radio::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: scale(0);
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.plan-mode.active .plan-mode-radio {
+  border-color: var(--accent);
+}
+
+.plan-mode.active .plan-mode-radio::after {
+  transform: scale(1);
+}
+
+.plan-mode input[type="radio"]:focus-visible + .plan-mode-radio {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .plan-note {
@@ -518,7 +571,7 @@
   padding: var(--space-3);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: var(--surface-elevated, var(--surface));
+  background: var(--surface-strong);
 }
 
 .cleanup-progress-head {
@@ -533,7 +586,8 @@
   height: 6px;
   width: 100%;
   border-radius: 999px;
-  background: var(--surface-sunken, var(--surface));
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
   overflow: hidden;
 }
 
@@ -552,18 +606,18 @@
 
 .cleanup-dock {
   position: fixed;
-  right: var(--space-4);
-  bottom: var(--space-4);
+  right: var(--space-6);
+  bottom: 72px;
   z-index: 40;
   width: min(380px, calc(100vw - 2 * var(--space-4)));
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
-  background: var(--surface-elevated, var(--surface));
-  box-shadow: var(--shadow-lg, var(--shadow-sm));
+  background: var(--surface-strong);
+  box-shadow: var(--shadow-lg);
   font-size: var(--text-sm);
 }
 

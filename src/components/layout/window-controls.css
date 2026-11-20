@@ -24,12 +24,12 @@
 }
 
 .win-btn:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--surface-hover);
   color: var(--text-primary);
 }
 
 .win-btn:active {
-  background-color: rgba(255, 255, 255, 0.14);
+  background-color: var(--surface-active);
 }
 
 .win-close:hover {

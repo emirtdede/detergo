@@ -118,30 +118,8 @@
   min-height: 0;
 }
 
-.provider-grid {
-  display: grid;
-  /* `min(280px, 100%)` lets the track shrink below its ideal width instead of
-     forcing horizontal scrolling when the viewport is narrower than a card. */
-  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
-}
-
 .provider-grid > .empty-state {
   grid-column: 1 / -1;
-}
-
-.provider-card {
-  /* Cards live in a grid; without this a long unbreakable path sets the
-     min-content width and pushes the whole column past the viewport. */
-  min-width: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  padding: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
 }
 
 .provider-card > * {
@@ -151,17 +129,6 @@
 .provider-card-icon {
   flex: 0 0 auto;
   opacity: 0.7;
-}
-
-.provider-card-name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.provider-card .form-row {
-  min-width: 0;
 }
 
 .provider-card .form-row > * {
@@ -185,17 +152,6 @@
   overflow-wrap: anywhere;
 }
 
-.provider-card h3 {
-  margin: 0;
-  font-size: var(--text-base);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
 /* Chips must never stretch or push the card wider than its column. */
 .provider-card h3 .chip {
   flex: 0 1 auto;
@@ -204,21 +160,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.provider-paths {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.5;
-  color: var(--text-muted);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  /* `anywhere` also shrinks the min-content size, which `break-word` does not;
-     that is what stopped long pip/docker paths from widening the card. */
-  overflow-wrap: anywhere;
-  word-break: break-word;
 }
 
 .provider-paths span {
@@ -623,14 +564,16 @@
 
 .provider-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  /* `min(280px, 100%)` lets the track shrink below its ideal width instead of
+     forcing horizontal scrolling when the viewport is narrower than a card. */
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
   gap: var(--space-3);
   margin-bottom: var(--space-4);
 }
 
 .provider-card {
   min-width: 0;
-  height: 252px;
+  min-height: 240px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -747,7 +690,7 @@
 
 .provider-card-footer .provider-actions .btn {
   background: var(--surface-alt) !important;
-  border: 1px solid var(--border-control, rgba(255, 255, 255, 0.12)) !important;
+  border: 1px solid var(--border-control) !important;
   color: var(--text-secondary) !important;
   font-family: var(--font-mono) !important;
   font-size: 11px !important;
@@ -1048,7 +991,7 @@
    ========================================================================== */
 .agents-provider-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
   margin-bottom: var(--space-4);
   width: 100%;
@@ -1056,14 +999,13 @@
 
 @media (max-width: 1024px) {
   .agents-provider-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
   }
 }
 
 .agents-provider-card {
   min-width: 0;
-  height: 310px;
-  min-height: 310px;
+  min-height: 290px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;

@@ -103,6 +103,12 @@ pub struct MeasurementUpdate {
     #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub hardlink_dedup_bytes: u64,
     pub status: ItemStatus,
+    #[serde(default)]
+    pub selectable: Option<bool>,
+    #[serde(default)]
+    pub auto_selectable: Option<bool>,
+    #[serde(default)]
+    pub warning_codes: Option<Vec<String>>,
 }
 
 #[cfg_attr(feature = "bindings", derive(specta::Type))]
@@ -114,6 +120,10 @@ pub struct ScanRequest {
     pub exclusions: Vec<String>,
     #[serde(default)]
     pub scope: ScanScope,
+    /// When true alongside `AllDrives` (or `Project`), also runs the AI agent
+    /// storage scan in the same session.
+    #[serde(default)]
+    pub include_agents: Option<bool>,
     #[serde(default)]
     pub profile: Option<String>,
     #[serde(default)]

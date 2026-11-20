@@ -62,7 +62,7 @@ export class ErrorBoundary extends Component<Props, State> {
           style={{
             padding: "32px",
             color: "var(--text-primary, #fff)",
-            background: "var(--bg-app, #16161a)",
+            background: "var(--app-bg, #16161a)",
             minHeight: "100vh",
             fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
             display: "flex",
@@ -74,16 +74,16 @@ export class ErrorBoundary extends Component<Props, State> {
           <div
             style={{
               maxWidth: "600px",
-              background: "var(--surface-raised, #1F1F26)",
-              border: "1px solid var(--border-subtle, #2A2A31)",
+              background: "var(--surface-strong, #1F1F26)",
+              border: "1px solid var(--border, #2A2A31)",
               borderRadius: "16px",
               padding: "28px",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+              boxShadow: "var(--shadow-lg, 0 8px 32px rgba(0,0,0,0.4))",
             }}
           >
             <h2
               style={{
-                color: "var(--danger, #E5484D)",
+                color: "var(--danger-foreground, #E5484D)",
                 marginBottom: "12px",
                 fontSize: "20px",
               }}
@@ -102,12 +102,12 @@ export class ErrorBoundary extends Component<Props, State> {
             {import.meta.env.DEV && this.state.error?.message && (
               <pre
                 style={{
-                  background: "var(--bg-sunken, rgba(0,0,0,0.5))",
+                  background: "var(--surface-alt, rgba(0,0,0,0.5))",
                   padding: "12px",
                   borderRadius: "8px",
                   fontSize: "12px",
                   overflowX: "auto",
-                  color: "var(--warning, #f5a623)",
+                  color: "var(--warning-text, #f5a623)",
                   maxHeight: "200px",
                 }}
               >
@@ -134,7 +134,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 marginTop: "20px",
                 padding: "10px 20px",
                 background: "var(--accent, #0A84FF)",
-                color: "#fff",
+                color: "var(--on-accent, #fff)",
                 border: "none",
                 borderRadius: "8px",
                 cursor: "pointer",

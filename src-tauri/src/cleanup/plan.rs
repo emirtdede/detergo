@@ -265,7 +265,7 @@ pub fn build_plan(
     session: &ScanSession,
     target_ids: &[String],
     mode: DeleteMode,
-    _catalog: &CatalogIndex,
+    catalog: &CatalogIndex,
     policy: &crate::cleanup::CleanupPolicy,
 ) -> Result<CleanupPlan, AppError> {
     if target_ids.is_empty() {
@@ -273,6 +273,13 @@ pub fn build_plan(
             "At least one target must be selected for cleanup.".to_string(),
         ));
     }
+
+    let session_items: std::collections::HashMap<&str, &crate::scanner::models::CleanupItem> =
+        session
+            .items
+            .iter()
+            .map(|item| (item.id.as_str(), item))
+            .collect();
 
     let mut seen = std::collections::HashSet::new();
     let mut ordered: Vec<&crate::scanner::models::StoredTarget> = Vec::new();
@@ -346,17 +353,31 @@ pub fn build_plan(
             blocked_count += 1;
         }
 
+        let session_item = session_items.get(target.id.as_str()).copied();
+        let project_name = session_item
+            .and_then(|item| item.project_name.clone())
+            .or_else(|| {
+                target.project_root.as_ref().and_then(|p| {
+                    Path::new(p)
+                        .file_name()
+                        .map(|n| n.to_string_lossy().to_string())
+                })
+            });
+        let regenerate_hint = session_item
+            .and_then(|item| item.regenerate_hint.clone())
+            .or_else(|| {
+                catalog
+                    .rule(&target.rule_id)
+                    .and_then(|r| r.regenerate.clone())
+            });
+
         items.push(PlanItem {
             target_id: target.id.clone(),
             display_path,
             display_name,
             rule_id: target.rule_id.clone(),
             provider: target.provider.clone(),
-            project_name: target.project_root.as_ref().and_then(|p| {
-                Path::new(p)
-                    .file_name()
-                    .map(|n| n.to_string_lossy().to_string())
-            }),
+            project_name,
             safety_class: target.safety_class,
             cleanup_method: target.cleanup_method,
             logical_bytes: logical,
@@ -365,7 +386,7 @@ pub fn build_plan(
             eligible,
             blocked_code,
             blocked_reason,
-            regenerate_hint: None,
+            regenerate_hint,
             snapshot: TargetSnapshot::capture(&target.path),
         });
     }

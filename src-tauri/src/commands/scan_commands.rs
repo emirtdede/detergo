@@ -53,6 +53,7 @@ pub async fn start_scan(
     }
     if request.scope == crate::scanner::models::ScanScope::Agents
         || request.scope == crate::scanner::models::ScanScope::Combined
+        || request.include_agents.unwrap_or(false)
     {
         for root in crate::providers::root_locator::locate_agent_roots() {
             if root.path.is_dir() && !allowed_roots.iter().any(|p| p == &root.path) {

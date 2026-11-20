@@ -99,15 +99,21 @@ impl ProjectResolver {
         }
 
         let mut result: Option<ProjectInfo> = None;
+        let mut visited: Vec<PathBuf> = Vec::new();
         let mut current = Some(dir);
         let mut depth = 0;
 
         while let Some(candidate) = current {
+            if let Some(cached) = self.cache.get(candidate) {
+                result = cached.clone();
+                break;
+            }
             if depth > MAX_ANCESTOR_DEPTH {
                 break;
             }
-            if has_any_marker(candidate, &self.markers) {
-                let markers = found_markers(candidate, &self.markers);
+            visited.push(candidate.to_path_buf());
+            let markers = find_matching_markers(candidate, &self.markers);
+            if !markers.is_empty() {
                 let (workspace_root, workspace_kind) =
                     find_workspace_root(candidate, self.boundary.as_deref());
                 let detected_name = project_name(candidate);
@@ -138,7 +144,9 @@ impl ProjectResolver {
             depth += 1;
         }
 
-        self.cache.insert(dir.to_path_buf(), result.clone());
+        for ancestor in visited {
+            self.cache.insert(ancestor, result.clone());
+        }
         result
     }
 }
@@ -162,8 +170,39 @@ pub fn normalized_key(path: &Path) -> String {
     s.to_lowercase()
 }
 
-fn has_any_marker(dir: &Path, markers: &[String]) -> bool {
-    markers.iter().any(|m| marker_exists(dir, m))
+/// Checks every configured project marker against `dir` in a single `read_dir`
+/// pass instead of issuing dozens of separate `exists` + `read_dir` syscalls.
+fn find_matching_markers(dir: &Path, markers: &[String]) -> Vec<String> {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return Vec::new();
+    };
+    let mut names: Vec<String> = Vec::new();
+    for entry in entries.flatten() {
+        names.push(entry.file_name().to_string_lossy().to_lowercase());
+    }
+    if names.is_empty() {
+        return Vec::new();
+    }
+
+    let mut matched = Vec::new();
+    for marker in markers {
+        if marker.contains('/') || marker.contains('\\') {
+            if dir.join(marker).exists() {
+                matched.push(marker.clone());
+            }
+            continue;
+        }
+        let lower = marker.to_lowercase();
+        let hit = if lower.contains('*') {
+            names.iter().any(|name| pattern_matches(&lower, name))
+        } else {
+            names.iter().any(|name| name == &lower)
+        };
+        if hit {
+            matched.push(marker.clone());
+        }
+    }
+    matched
 }
 
 pub fn marker_exists(dir: &Path, marker: &str) -> bool {
@@ -182,14 +221,6 @@ pub fn marker_exists(dir: &Path, marker: &str) -> bool {
     } else {
         dir.join(marker).exists()
     }
-}
-
-fn found_markers(dir: &Path, markers: &[String]) -> Vec<String> {
-    markers
-        .iter()
-        .filter(|m| marker_exists(dir, m))
-        .cloned()
-        .collect()
 }
 
 fn find_workspace_root(start: &Path, boundary: Option<&Path>) -> (Option<PathBuf>, Option<String>) {

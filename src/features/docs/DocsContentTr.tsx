@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   ShieldCheck,
   HelpCircle,
@@ -15,8 +15,10 @@ import {
   Terminal,
   Target,
 } from "lucide-react";
+import { Button } from "@/components/primitives/Button";
+import { Checkbox } from "@/components/primitives/Checkbox";
 import { NumberField } from "@/components/primitives/NumberField";
-import { mcpConfigs, webhookSampleJson } from "./docs-data";
+import { getMcpConfigs, webhookSampleJson } from "./docs-data";
 import { McpIdeSelector } from "./McpIdeSelector";
 import { DocsCommandList } from "./DocsCommandList";
 import { DocsContentProps, highlightBash, highlightJson } from "./docs-highlight";
@@ -47,7 +49,13 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
   activeIde,
   setActiveIde,
   generatedCliCommand,
+  cliEnv,
+  cliPathBusy,
+  onRegisterCliPath,
+  mcpCommand,
 }) => {
+  const activeMcpConfigs = useMemo(() => getMcpConfigs(mcpCommand), [mcpCommand]);
+
   return (
     <>
 
@@ -327,8 +335,11 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                 <span>Terminalde <code>dev-cleaner</code> komutu bulunamadı (Command not found) hatası alıyorum?</span>
               </div>
               <p className="docs-faq-a">
-                Dev Cleaner, <code>%LOCALAPPDATA%\Microsoft\WindowsApps\dev-cleaner.exe</code> konumuna kurulur. Eğer terminaliniz
-                açıkken kurulum yaptıysanız, terminalin ortam değişkenlerini yenilemek için terminal penceresini kapatıp yeniden açmanız yeterlidir.
+                NSIS kurulumu <code>dev-cleaner</code> komutunu kullanıcı <code>PATH</code> ortam değişkenine otomatik olarak
+                ekler. Taşınabilir (.exe) sürümü kullanıyorsanız <strong>Terminal CLI Komut Kılavuzu</strong> sekmesindeki{" "}
+                <strong>CLI&apos;yi PATH&apos;e Ekle</strong> düğmesi{" "}
+                <code>%LOCALAPPDATA%\dev-cleaner\bin\dev-cleaner.cmd</code> köprüsünü oluşturup PATH&apos;e kaydeder.
+                Değişikliğin etkili olması için açık terminal penceresini kapatıp yeniden açmanız yeterlidir.
               </p>
             </div>
 
@@ -379,6 +390,37 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
             <p className="docs-lead">
               Dev Cleaner, Windows PATH üzerinde genel bir komut olarak çalışır. Terminalinizden dilediğiniz zaman çağırabilirsiniz:
             </p>
+
+            {onRegisterCliPath && (
+              <div className="docs-cli-env-banner">
+                <div className="docs-cli-env-copy">
+                  <strong>
+                    {cliEnv?.inPath && cliEnv?.shimUpToDate
+                      ? "CLI kullanıcı PATH ortam değişkeninde hazır"
+                      : "dev-cleaner komutu kullanıcı PATH içinde değil veya güncellenmeli"}
+                  </strong>
+                  <span>
+                    {cliEnv?.executablePath ? (
+                      <>
+                        Çalıştırılabilir dosya: <code>{cliEnv.executablePath}</code>
+                      </>
+                    ) : (
+                      "Tek tıkla kullanıcı PATH kaydını oluşturun ve yeni terminalde dev-cleaner komutunu kullanın."
+                    )}
+                  </span>
+                </div>
+                <Button
+                  variant={cliEnv?.inPath && cliEnv?.shimUpToDate ? "secondary" : "primary"}
+                  size="sm"
+                  disabled={cliPathBusy}
+                  onClick={onRegisterCliPath}
+                >
+                  {cliEnv?.inPath && cliEnv?.shimUpToDate
+                    ? "PATH Köprüsünü Güncelle"
+                    : "CLI'yi PATH'e Ekle"}
+                </Button>
+              </div>
+            )}
 
             {/* Shell Switcher Tabs */}
             <div className="ide-tabs-bar">
@@ -727,34 +769,28 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
               </div>
 
               <div className="cli-builder-checkboxes">
-                <label className="cli-checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={cliAutoClean}
-                    onChange={(e) => setCliAutoClean(e.target.checked)}
-                  />
-                  <span>-c / --auto-clean (Otomatik Geri Dönüşüme Taşı)</span>
-                </label>
+                <Checkbox
+                  id="docs-tr-cli-autoclean"
+                  checked={cliAutoClean}
+                  onChange={setCliAutoClean}
+                  label="-c / --auto-clean (Otomatik Geri Dönüşüme Taşı)"
+                />
 
                 {cliAutoClean && (
-                  <label className="cli-checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={cliDryRun}
-                      onChange={(e) => setCliDryRun(e.target.checked)}
-                    />
-                    <span>-n / --dry-run (Simülasyon Modu)</span>
-                  </label>
+                  <Checkbox
+                    id="docs-tr-cli-dryrun"
+                    checked={cliDryRun}
+                    onChange={setCliDryRun}
+                    label="-n / --dry-run (Simülasyon Modu)"
+                  />
                 )}
 
-                <label className="cli-checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={cliJson}
-                    onChange={(e) => setCliJson(e.target.checked)}
-                  />
-                  <span>-j / --json (Makine Okunabilir JSON Çıktısı)</span>
-                </label>
+                <Checkbox
+                  id="docs-tr-cli-json"
+                  checked={cliJson}
+                  onChange={setCliJson}
+                  label="-j / --json (Makine Okunabilir JSON Çıktısı)"
+                />
               </div>
 
               <div className="docs-code-card" style={{ marginTop: 8 }}>
@@ -881,26 +917,41 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
               onSelect={setActiveIde}
             />
 
+            {onRegisterCliPath && cliEnv && (!cliEnv.inPath || !cliEnv.shimUpToDate) && (
+              <div className="docs-cli-env-banner">
+                <div className="docs-cli-env-copy">
+                  <strong>Tam dosya yolu otomatik eklendi</strong>
+                  <span>
+                    <code>dev-cleaner</code> henüz PATH içinde olmadığı için aşağıdaki şablon doğrudan{" "}
+                    <code>{cliEnv.executablePath}</code> yolunu kullanır. İsterseniz tek tıkla PATH&apos;e ekleyebilirsiniz.
+                  </span>
+                </div>
+                <Button variant="primary" size="sm" disabled={cliPathBusy} onClick={onRegisterCliPath}>
+                  CLI&apos;yi PATH&apos;e Ekle
+                </Button>
+              </div>
+            )}
+
             <div className="docs-code-card">
               <div className="docs-code-header">
-                <span className="docs-code-header-left">Hedef Dosya: {mcpConfigs[activeIde].file}</span>
+                <span className="docs-code-header-left">Hedef Dosya: {activeMcpConfigs[activeIde].file}</span>
                 <button
                   type="button"
                   className="docs-copy-action"
-                  onClick={() => copyToClipboard(mcpConfigs[activeIde].json, `mcp-${activeIde}`)}
+                  onClick={() => copyToClipboard(activeMcpConfigs[activeIde].json, `mcp-${activeIde}`)}
                 >
                   {copiedKey === `mcp-${activeIde}` ? <Check size={13} /> : <Copy size={13} />}
                   {copiedKey === `mcp-${activeIde}`
                     ? "Kopyalandı!"
-                    : mcpConfigs[activeIde].syntax === "toml"
+                    : activeMcpConfigs[activeIde].syntax === "toml"
                       ? "Kopyala"
                       : "JSON'ı Kopyala"}
                 </button>
               </div>
               <pre className="docs-code-pre">
-                {mcpConfigs[activeIde].syntax === "toml"
-                  ? highlightBash(mcpConfigs[activeIde].json)
-                  : highlightJson(mcpConfigs[activeIde].json)}
+                {activeMcpConfigs[activeIde].syntax === "toml"
+                  ? highlightBash(activeMcpConfigs[activeIde].json)
+                  : highlightJson(activeMcpConfigs[activeIde].json)}
               </pre>
             </div>
           </article>
@@ -989,33 +1040,42 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             </div>
             <h1 className="docs-title">Dev Cleaner MCP Araçları Referansı</h1>
             <p className="docs-lead">
-              Dev Cleaner MCP sunucusu 8 araç sunar: 6 standart araç ve yalnızca
-              --allow-destructive ile görünen 2 yıkıcı araç.
+              Dev Cleaner MCP sunucusu 11 araç sunar: 8 salt-okunur / önizleme aracı ve yalnızca
+              <code>--allow-destructive</code> ile açılan 3 yıkıcı araç (tümü tek kullanımlık önizleme token&apos;ı ile korunur).
             </p>
 
             <h2 className="docs-h2">1. `devcleaner_scan_workspace`</h2>
-            <p className="docs-p">Çalışma alanını tarayarak temizlenebilir hedefleri JSON olarak sunar.</p>
+            <p className="docs-p">Çalışma alanını tarayarak temizlenebilir hedefleri (<code>targets</code>) ve <code>scan_id</code> değerini yapılandırılmış JSON olarak sunar.</p>
 
             <h2 className="docs-h2">2. `devcleaner_preview_cleanup`</h2>
-            <p className="docs-p">Temizlik planı oluşturur, tek kullanımlık token döner ve hiçbir şeyi silmez.</p>
+            <p className="docs-p">Temizlik planı oluşturur, tek kullanımlık <code>preview_token</code> döner ve hiçbir şeyi silmez.</p>
 
-            <h2 className="docs-h2">3. `devcleaner_clean_safe` (kullanımdan kaldırıldı)</h2>
-            <p className="docs-p">devcleaner_preview_cleanup için eski takma addır. Yalnızca önizleme yapar; hiçbir şeyi silmez. Yeni akış preview_cleanup + execute_cleanup'tır.</p>
+            <h2 className="docs-h2">3. `devcleaner_list_caches`</h2>
+            <p className="docs-p">21 geliştirici aracının ölçülmüş paket önbellek boyutlarını ve mevcut temizlik aksiyonlarını JSON olarak raporlar.</p>
 
-            <h2 className="docs-h2">4. `devcleaner_list_caches`</h2>
-            <p className="docs-p">21 geliştirici aracının paket önbellek boyutlarını raporlar.</p>
+            <h2 className="docs-h2">4. `devcleaner_preview_cache`</h2>
+            <p className="docs-p">Seçilen paket önbelleği aksiyonunu önizler ve tek kullanımlık <code>preview_token</code> üretir.</p>
 
-            <h2 className="docs-h2">5. `devcleaner_get_history`</h2>
-            <p className="docs-p">Geçmiş temizlik kayıtlarını döner.</p>
+            <h2 className="docs-h2">5. `devcleaner_system_scan`</h2>
+            <p className="docs-p">C: sürücüsü sistem temizliği kalemlerini, disk alanını ve yönetici gereksinimlerini ölçer.</p>
 
-            <h2 className="docs-h2">6. `devcleaner_inspect_target`</h2>
-            <p className="docs-p">Belirli bir dosya yolunun güvenlik sınıfını ve kurallarını inceler.</p>
+            <h2 className="docs-h2">6. `devcleaner_system_preview`</h2>
+            <p className="docs-p">Seçilen sistem temizliği aksiyonlarını (veya profilini) önizleyip tek kullanımlık token üretir.</p>
 
-            <h2 className="docs-h2">7. `devcleaner_execute_cleanup` (yıkıcı)</h2>
-            <p className="docs-p">Önizlenen planı yürütür. confirm:true, tek kullanımlık token, --allow-destructive ve MCP yıkıcı işlem ayarı gerekir.</p>
+            <h2 className="docs-h2">7. `devcleaner_get_history`</h2>
+            <p className="docs-p">Geçmiş temizlik ve resmi aksiyon denetim kayıtlarını döner.</p>
 
-            <h2 className="docs-h2">8. `devcleaner_clean_cache` (yıkıcı)</h2>
-            <p className="docs-p">Resmi paket yöneticisi komutuyla önbelleği temizler. confirm:true, --allow-destructive ve MCP yıkıcı işlem ayarı gerekir.</p>
+            <h2 className="docs-h2">8. `devcleaner_inspect_target`</h2>
+            <p className="docs-p">Belirli bir dosya yolunun güvenlik sınıfını, kurallarını ve <code>PathGuard</code> durumunu inceler.</p>
+
+            <h2 className="docs-h2">9. `devcleaner_execute_cleanup` (yıkıcı)</h2>
+            <p className="docs-p">Önizlenen proje planını yürütür. <code>confirm:true</code>, tek kullanımlık token, <code>--allow-destructive</code> ve Ayarlar&apos;daki MCP yıkıcı işlem izni gerekir.</p>
+
+            <h2 className="docs-h2">10. `devcleaner_clean_cache` (yıkıcı)</h2>
+            <p className="docs-p">Önizlenen paket yöneticisi önbellek komutunu yürütür. <code>preview_token</code>, <code>confirm:true</code>, <code>--allow-destructive</code> ve Ayarlar izni gerekir.</p>
+
+            <h2 className="docs-h2">11. `devcleaner_system_execute` (yıkıcı)</h2>
+            <p className="docs-p">Önizlenen C: sürücüsü sistem temizliği token&apos;ını yürütür ve denetim geçmişine yazar.</p>
           </article>
         )}
 

@@ -628,11 +628,11 @@
 .about-terminal-code {
   font-family: var(--font-mono);
   font-size: 11px;
-  background: #06090e;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--terminal-bg);
+  border: 1px solid var(--terminal-border);
   border-radius: 6px;
   padding: 8px 10px;
-  color: #38bdf8;
+  color: var(--terminal-cyan);
   white-space: pre-wrap;
   margin: 0;
   overflow-x: auto;
@@ -714,7 +714,7 @@
 .about-eco-chip.is-active {
   border-color: var(--accent);
   color: var(--text-primary);
-  background: var(--accent-soft, var(--surface));
+  background: var(--accent-subtle);
 }
 
 .about-eco-chip:focus-visible,

@@ -11,12 +11,61 @@ pub mod i18n;
 
 use i18n::{t, tf};
 
+/// Attaches to the parent terminal console while preserving any redirected
+/// `stdin`, `stdout`, or `stderr` handles (pipes or file redirections such as
+/// `dev-cleaner s . -j | ConvertFrom-Json` or `> report.json`).
+///
+/// Never called for GUI launch flags (`--open-view`, `--wait-pid`) or `mcp`
+/// stdio server mode.
 #[cfg(windows)]
 pub fn attach_console() {
-    use windows::Win32::System::Console::{AttachConsole, ATTACH_PARENT_PROCESS};
+    use windows::Win32::Foundation::{HANDLE, INVALID_HANDLE_VALUE};
+    use windows::Win32::Storage::FileSystem::{GetFileType, FILE_TYPE_DISK, FILE_TYPE_PIPE};
+    use windows::Win32::System::Console::{
+        AttachConsole, GetStdHandle, SetStdHandle, ATTACH_PARENT_PROCESS, STD_ERROR_HANDLE,
+        STD_INPUT_HANDLE, STD_OUTPUT_HANDLE,
+    };
+
     unsafe {
+        let is_redirected = |h: HANDLE| -> bool {
+            if h.is_invalid() || h == INVALID_HANDLE_VALUE || h.0.is_null() {
+                return false;
+            }
+            let kind = GetFileType(h);
+            kind == FILE_TYPE_PIPE || kind == FILE_TYPE_DISK
+        };
+
+        let saved_in = GetStdHandle(STD_INPUT_HANDLE)
+            .ok()
+            .filter(|&h| is_redirected(h));
+        let saved_out = GetStdHandle(STD_OUTPUT_HANDLE)
+            .ok()
+            .filter(|&h| is_redirected(h));
+        let saved_err = GetStdHandle(STD_ERROR_HANDLE)
+            .ok()
+            .filter(|&h| is_redirected(h));
+
         let _ = AttachConsole(ATTACH_PARENT_PROCESS);
+
+        if let Some(h) = saved_in {
+            let _ = SetStdHandle(STD_INPUT_HANDLE, h);
+        }
+        if let Some(h) = saved_out {
+            let _ = SetStdHandle(STD_OUTPUT_HANDLE, h);
+        }
+        if let Some(h) = saved_err {
+            let _ = SetStdHandle(STD_ERROR_HANDLE, h);
+        }
     }
+}
+
+/// Returns true when the process was invoked with internal GUI launch flags
+/// (such as `--open-view system --wait-pid <pid>` from an elevated relaunch).
+pub fn is_gui_launch_args(args: &[String]) -> bool {
+    if args.len() <= 1 {
+        return true;
+    }
+    matches!(args[1].as_str(), "--open-view" | "--wait-pid")
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -40,23 +89,39 @@ pub struct WebhookPayload {
 
 pub fn handle_cli() -> Option<i32> {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() <= 1 {
+    if is_gui_launch_args(&args) {
         return None;
     }
 
-    // `dev-cleaner scan --help` must print the manual instead of treating the
-    // flag as a directory (the old parser silently ignored unknown `--flags`).
-    if args[1..].iter().any(|arg| arg == "-h" || arg == "--help") {
-        #[cfg(windows)]
-        attach_console();
-        print_help();
+    let first_arg = args[1].to_lowercase();
+
+    // MCP speaks raw JSON-RPC over stdin/stdout pipes: never attach a console.
+    if matches!(first_arg.as_str(), "mcp" | "--mcp") {
+        let mut allow_destructive = false;
+        for arg in &args[2..] {
+            match arg.as_str() {
+                "--allow-destructive" => allow_destructive = true,
+                "-h" | "--help" => {
+                    #[cfg(windows)]
+                    attach_console();
+                    println!("Usage: dev-cleaner mcp [--allow-destructive]");
+                    return Some(0);
+                }
+                other => {
+                    #[cfg(windows)]
+                    attach_console();
+                    eprintln!("error: unknown mcp flag '{other}'");
+                    return Some(3);
+                }
+            }
+        }
+        crate::mcp::run_mcp_server_with_options(crate::mcp::McpOptions { allow_destructive });
         return Some(0);
     }
 
     #[cfg(windows)]
     attach_console();
 
-    let first_arg = args[1].to_lowercase();
     match first_arg.as_str() {
         "-h" | "--help" | "help" => {
             print_help();
@@ -70,11 +135,6 @@ pub fn handle_cli() -> Option<i32> {
             );
             Some(0)
         }
-        "mcp" | "--mcp" => {
-            let allow_destructive = args[2..].iter().any(|arg| arg == "--allow-destructive");
-            crate::mcp::run_mcp_server_with_options(crate::mcp::McpOptions { allow_destructive });
-            Some(0)
-        }
         "caches" | "cache" | "c" => match run_caches_cli(&args[2..]) {
             Ok(()) => Some(0),
             Err(err) => {
@@ -82,10 +142,13 @@ pub fn handle_cli() -> Option<i32> {
                 Some(scan_exit_code(&err))
             }
         },
-        "history" | "hist" | "h" => {
-            run_history_cli(&args[2..]);
-            Some(0)
-        }
+        "history" | "hist" | "h" => match run_history_cli(&args[2..]) {
+            Ok(()) => Some(0),
+            Err(err) => {
+                eprintln!("history failed: {err}");
+                Some(scan_exit_code(&err))
+            }
+        },
         "scan" | "s" => match run_scan_cli(&args[2..]) {
             Ok(()) => Some(0),
             Err(err) => {
@@ -277,48 +340,207 @@ fn format_size(bytes: u64) -> String {
     crate::format::human_bytes(bytes)
 }
 
-fn run_caches_cli(args: &[String]) -> Result<(), AppError> {
-    let as_json = args.iter().any(|a| a == "--json" || a == "-j");
-    let dry_run = args
+/// Parses a size argument for `-m`/`--min`/`--min-size`.
+///
+/// Bare numbers keep backwards compatibility as megabytes (e.g. `-m 50` = 50 MiB).
+/// Explicit suffixes (`B`, `K`/`KB`/`KiB`, `M`/`MB`/`MiB`, `G`/`GB`/`GiB`,
+/// `T`/`TB`/`TiB`, including decimals like `1.5GB`) are converted to bytes.
+/// Invalid text fails closed with `AppError::InvalidPath` (exit code 3).
+fn parse_human_size(raw: &str) -> Result<u64, AppError> {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() || trimmed.starts_with('-') {
+        return Err(AppError::InvalidPath(format!(
+            "Invalid size '{raw}'; use e.g. 50 (MB), 500KB, 500MB, or 1.5GB."
+        )));
+    }
+    let split_idx = trimmed
+        .find(|c: char| !c.is_ascii_digit() && c != '.')
+        .unwrap_or(trimmed.len());
+    let (num_part, unit_part) = trimmed.split_at(split_idx);
+    let value: f64 = num_part.parse().map_err(|_| {
+        AppError::InvalidPath(format!(
+            "Invalid size '{raw}'; use e.g. 50 (MB), 500KB, 500MB, or 1.5GB."
+        ))
+    })?;
+    if !value.is_finite() || value < 0.0 {
+        return Err(AppError::InvalidPath(format!(
+            "Invalid size '{raw}'; size must be a non-negative number."
+        )));
+    }
+    let multiplier: f64 = match unit_part.trim().to_ascii_lowercase().as_str() {
+        "" | "m" | "mb" | "mib" => 1024.0 * 1024.0,
+        "b" => 1.0,
+        "k" | "kb" | "kib" => 1024.0,
+        "g" | "gb" | "gib" => 1024.0 * 1024.0 * 1024.0,
+        "t" | "tb" | "tib" => 1024.0 * 1024.0 * 1024.0 * 1024.0,
+        other => {
+            return Err(AppError::InvalidPath(format!(
+                "Unknown size unit '{other}' in '{raw}'; use B, KB, MB, GB, or TB."
+            )));
+        }
+    };
+    let bytes = value * multiplier;
+    if bytes >= u64::MAX as f64 {
+        Ok(u64::MAX)
+    } else {
+        Ok(bytes.round() as u64)
+    }
+}
+
+fn measure_detected_caches() -> Vec<crate::cleanup::official_actions::CacheProviderInfo> {
+    let mut providers = crate::cleanup::official_actions::list_cache_providers();
+    let detected_ids: Vec<String> = providers
         .iter()
-        .any(|a| a == "--dry-run" || a == "--dry" || a == "-n");
-    let confirmed = args.iter().any(|a| a == "--yes" || a == "-y");
+        .filter(|p| p.detected)
+        .map(|p| p.id.clone())
+        .collect();
+    if detected_ids.is_empty() {
+        return providers;
+    }
+    type PathSizeEntry = (bool, Option<u64>, Option<String>);
+    let token = crate::scanner::cancellation::CancellationToken::new();
+    let mut totals: std::collections::HashMap<String, u64> = std::collections::HashMap::new();
+    let mut path_sizes: std::collections::HashMap<(String, String), PathSizeEntry> =
+        std::collections::HashMap::new();
+
+    crate::cleanup::official_actions::measure_cache_providers(
+        &token,
+        Some(&detected_ids),
+        |event| match event {
+            crate::cleanup::official_actions::CacheMeasureEvent::PathMeasured {
+                provider_id,
+                path,
+                exists,
+                bytes,
+                unmeasured_reason,
+            } => {
+                path_sizes.insert((provider_id, path), (exists, bytes, unmeasured_reason));
+            }
+            crate::cleanup::official_actions::CacheMeasureEvent::ProviderFinished {
+                provider_id,
+                total_bytes,
+            } => {
+                totals.insert(provider_id, total_bytes);
+            }
+            _ => {}
+        },
+    );
+
+    for provider in &mut providers {
+        if let Some(&total) = totals.get(&provider.id) {
+            provider.total_bytes = total;
+            provider.measured = true;
+        }
+        for cp in &mut provider.cache_paths {
+            if let Some((exists, bytes, reason)) =
+                path_sizes.get(&(provider.id.clone(), cp.path.clone()))
+            {
+                cp.exists = *exists;
+                cp.bytes = *bytes;
+                cp.unmeasured_reason = reason.clone();
+            }
+        }
+    }
+    providers
+}
+
+fn print_caches_help() {
+    println!(
+        "\
+Usage:
+  dev-cleaner c [-j]                       List & measure developer tool caches
+  dev-cleaner c <tool|all> -n [-j]         Preview cache cleanup (--dry-run)
+  dev-cleaner c <tool|all> -y [-j]         Clean cache via official tool command (--yes)
+"
+    );
+}
+
+fn print_history_help() {
+    println!(
+        "\
+Usage:
+  dev-cleaner hist [N] [-l N] [-j]         Show past cleanup audit records
+"
+    );
+}
+
+fn run_caches_cli(args: &[String]) -> Result<(), AppError> {
+    let mut help = false;
+    let mut as_json = false;
+    let mut dry_run = false;
+    let mut confirmed = false;
     let mut clean_target: Option<String> = None;
 
     let mut i = 0;
     while i < args.len() {
         let arg = &args[i];
-        if (arg == "--clean" || arg == "-c") && i + 1 < args.len() {
-            clean_target = Some(args[i + 1].clone());
-            i += 1;
-        } else if !arg.starts_with('-') && clean_target.is_none() {
-            // Concise positional form: `dev-cleaner c npm` or `dev-cleaner c all -y`
-            clean_target = Some(arg.clone());
+        match arg.as_str() {
+            "-h" | "--help" => help = true,
+            "-j" | "--json" => as_json = true,
+            "-n" | "--dry" | "--dry-run" => dry_run = true,
+            "-y" | "--yes" => confirmed = true,
+            "-c" | "--clean" => {
+                let value = args.get(i + 1).ok_or_else(|| {
+                    AppError::InvalidPath(format!("Missing tool name after '{arg}'."))
+                })?;
+                clean_target = Some(value.clone());
+                i += 1;
+            }
+            other if other.starts_with("--") => {
+                return Err(AppError::InvalidPath(format!(
+                    "Unknown flag '{other}'. Run `dev-cleaner c -h` for usage."
+                )));
+            }
+            other if other.starts_with('-') && other.len() > 1 => {
+                for ch in other[1..].chars() {
+                    match ch {
+                        'h' => help = true,
+                        'j' => as_json = true,
+                        'n' => dry_run = true,
+                        'y' => confirmed = true,
+                        unknown => {
+                            return Err(AppError::InvalidPath(format!(
+                                "Unknown flag '-{unknown}'. Run `dev-cleaner c -h` for usage."
+                            )));
+                        }
+                    }
+                }
+            }
+            positional => {
+                if clean_target.is_some() {
+                    return Err(AppError::InvalidPath(format!(
+                        "Unexpected argument '{positional}'."
+                    )));
+                }
+                clean_target = Some(positional.to_string());
+            }
         }
         i += 1;
     }
 
-    let providers = crate::cleanup::official_actions::list_cache_providers();
+    if help {
+        print_caches_help();
+        return Ok(());
+    }
 
     if let Some(ref target) = clean_target {
-        // L6: `--clean all` runs every action of every detected tool. It is a
-        // bulk destructive operation, so it needs explicit confirmation, and a
-        // preview must stay possible without deleting anything.
-        if target == "all" && !confirmed && !dry_run {
+        if !confirmed && !dry_run {
             eprintln!(
-                "  {}",
-                t("Refusing 'caches --clean all' without --yes. Re-run with --yes, or use --dry-run to preview.")
+                "  Refusing to clean cache '{target}' without -y/--yes. Re-run with -y/--yes, or use -n/--dry-run to preview."
             );
-            return Err(AppError::InvalidPath(
-                "--yes is required for `caches --clean all`".to_string(),
-            ));
+            return Err(AppError::InvalidPath(format!(
+                "--yes is required for `caches {target}`"
+            )));
         }
         let state = AppState::new();
-        if !state.settings.load().agent_policy.allow_cache_cleanup {
+        let settings = state.settings.load();
+        if !settings.agent_policy.allow_cache_cleanup {
             return Err(AppError::Blocked(
-                "Cache cleanup is disabled in Settings → Automation.".to_string(),
+                "Cache cleanup is disabled in Settings → Safety & Policy → AI agent policy."
+                    .to_string(),
             ));
         }
+        let providers = crate::cleanup::official_actions::list_cache_providers();
         let registry = crate::cleanup::official_actions::OfficialActionRegistry::new();
         let mut executed = Vec::new();
         let mut failures = 0usize;
@@ -357,6 +579,22 @@ fn run_caches_cli(args: &[String]) -> Result<(), AppError> {
                             &preview.token,
                         ) {
                             Ok(res) => {
+                                if settings.history_enabled {
+                                    let record = crate::audit::ActionAuditRecord {
+                                        id: format!("a-{}", uuid::Uuid::new_v4().simple()),
+                                        timestamp: chrono::Local::now().to_rfc3339(),
+                                        provider_id: res.provider_id.clone(),
+                                        action_id: res.action_id.clone(),
+                                        label: res.label.clone(),
+                                        success: res.success,
+                                        exit_code: res.exit_code,
+                                        before_bytes: res.before_bytes,
+                                        after_bytes: res.after_bytes,
+                                        delta_bytes: res.delta_bytes,
+                                        duration_ms: res.duration_ms,
+                                    };
+                                    let _ = state.audit.append_action(&record);
+                                }
                                 if !res.success {
                                     failures += 1;
                                 }
@@ -458,6 +696,7 @@ fn run_caches_cli(args: &[String]) -> Result<(), AppError> {
         return Ok(());
     }
 
+    let providers = measure_detected_caches();
     if as_json {
         let json = serde_json::to_string_pretty(&providers).unwrap_or_default();
         println!("{}", json);
@@ -466,15 +705,17 @@ fn run_caches_cli(args: &[String]) -> Result<(), AppError> {
 
     println!("\n--- {} ---", t("Dev Cleaner: Developer Tool Caches"));
     println!(
-        "{:<20} {:<15} {:<30}",
+        "{:<20} {:<15} {:>12}  {:<24}",
         t("Tool / Package"),
         t("Version"),
+        t("Size"),
         t("Status")
     );
-    println!("{:-<65}", "");
+    println!("{:-<75}", "");
     let installed = t("Installed / Detected");
     let missing = t("Not found");
     let providers_count = providers.len();
+    let mut total_bytes = 0u64;
     for p in providers {
         let status = if p.detected {
             installed.as_str()
@@ -482,36 +723,82 @@ fn run_caches_cli(args: &[String]) -> Result<(), AppError> {
             missing.as_str()
         };
         let ver = p.version.unwrap_or_else(|| "-".to_string());
-        println!("{:<20} {:<15} {:<30}", p.name, ver, status);
+        let size_str = if p.measured {
+            total_bytes = total_bytes.saturating_add(p.total_bytes);
+            format_size(p.total_bytes)
+        } else {
+            "-".to_string()
+        };
+        println!(
+            "{:<20} {:<15} {:>12}  {:<24}",
+            p.name, ver, size_str, status
+        );
     }
     println!(
-        "\n{}\n",
+        "\nMeasured total: {} — {}\n",
+        format_size(total_bytes),
         tf(
-            "Checked {} tools in total. To clean: dev-cleaner caches --clean <tool|all>",
+            "Checked {} tools in total. To clean: dev-cleaner c <tool|all> -y",
             &[&providers_count]
         )
     );
     Ok(())
 }
 
-fn run_history_cli(args: &[String]) {
-    let as_json = args.iter().any(|a| a == "--json" || a == "-j");
+fn run_history_cli(args: &[String]) -> Result<(), AppError> {
+    let mut help = false;
+    let mut as_json = false;
     let mut limit = 20usize;
 
     let mut i = 0;
     while i < args.len() {
         let arg = &args[i];
-        if (arg == "--limit" || arg == "-l") && i + 1 < args.len() {
-            if let Ok(l) = args[i + 1].parse::<usize>() {
-                limit = l;
+        match arg.as_str() {
+            "-h" | "--help" => help = true,
+            "-j" | "--json" => as_json = true,
+            "-l" | "--limit" => {
+                let raw = args.get(i + 1).ok_or_else(|| {
+                    AppError::InvalidPath(format!("Missing count after '{arg}'."))
+                })?;
+                limit = raw.parse::<usize>().map_err(|_| {
+                    AppError::InvalidPath(format!(
+                        "Invalid limit '{raw}'; expected positive integer."
+                    ))
+                })?;
+                i += 1;
             }
-            i += 1;
-        } else if !arg.starts_with('-') {
-            if let Ok(l) = arg.parse::<usize>() {
-                limit = l;
+            other if other.starts_with("--") => {
+                return Err(AppError::InvalidPath(format!(
+                    "Unknown flag '{other}'. Run `dev-cleaner hist -h` for usage."
+                )));
+            }
+            other if other.starts_with('-') && other.len() > 1 => {
+                for ch in other[1..].chars() {
+                    match ch {
+                        'h' => help = true,
+                        'j' => as_json = true,
+                        unknown => {
+                            return Err(AppError::InvalidPath(format!(
+                                "Unknown flag '-{unknown}'. Run `dev-cleaner hist -h` for usage."
+                            )));
+                        }
+                    }
+                }
+            }
+            positional => {
+                limit = positional.parse::<usize>().map_err(|_| {
+                    AppError::InvalidPath(format!(
+                        "Invalid limit '{positional}'; expected positive integer."
+                    ))
+                })?;
             }
         }
         i += 1;
+    }
+
+    if help {
+        print_history_help();
+        return Ok(());
     }
 
     let state = AppState::new();
@@ -522,7 +809,7 @@ fn run_history_cli(args: &[String]) {
             "{}",
             serde_json::to_string_pretty(&records).unwrap_or_default()
         );
-        return;
+        return Ok(());
     }
 
     println!(
@@ -554,17 +841,19 @@ fn run_history_cli(args: &[String]) {
             } else {
                 &r.timestamp
             };
+            let display_bytes = r.moved_bytes.max(r.reclaim_bytes);
             println!(
                 "{:<22} {:<15} {:<12} {:<15} {:<15}",
                 date,
                 r.plan_id,
                 r.success_count,
-                format_size(r.reclaim_bytes),
+                format_size(display_bytes),
                 mode
             );
         }
     }
     println!();
+    Ok(())
 }
 
 fn safety_label(item: &crate::scanner::models::CleanupItem) -> String {
@@ -665,59 +954,152 @@ fn parse_selection(input: &str, len: usize) -> Vec<usize> {
     chosen
 }
 
-fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
-    let mut root_path = PathBuf::from(".");
-    let mut scope = "projects".to_string();
-    let mut targets_arg: Option<String> = None;
-    let mut as_json = false;
-    let mut auto_clean = false;
-    let mut dry_run = false;
-    let mut min_size_mb: u64 = 0;
-    let mut safety_levels = vec!["safe".to_string(), "regenerate".to_string()];
-    let mut webhook_url: Option<String> = None;
-    let mut top: Option<usize> = None;
-    let mut show_all = false;
-    let mut interactive = false;
+#[derive(Debug)]
+struct ScanCliArgs {
+    help: bool,
+    root_path: PathBuf,
+    scope: String,
+    targets_arg: Option<String>,
+    as_json: bool,
+    auto_clean: bool,
+    dry_run: bool,
+    min_size_bytes: u64,
+    safety_levels: Vec<String>,
+    webhook_url: Option<String>,
+    top: Option<usize>,
+    show_all: bool,
+    interactive: bool,
+}
+
+fn parse_scan_args(args: &[String]) -> Result<ScanCliArgs, AppError> {
+    let mut parsed = ScanCliArgs {
+        help: false,
+        root_path: PathBuf::from("."),
+        scope: "projects".to_string(),
+        targets_arg: None,
+        as_json: false,
+        auto_clean: false,
+        dry_run: false,
+        min_size_bytes: 0,
+        safety_levels: vec!["safe".to_string(), "regenerate".to_string()],
+        webhook_url: None,
+        top: None,
+        show_all: false,
+        interactive: false,
+    };
+    let mut root_set = false;
 
     let mut i = 0;
     while i < args.len() {
         let arg = &args[i];
-        if arg == "--json" || arg == "-j" {
-            as_json = true;
-        } else if arg == "--auto-clean" || arg == "--clean" || arg == "-c" {
-            auto_clean = true;
-        } else if arg == "--dry-run" || arg == "--dry" || arg == "-n" {
-            dry_run = true;
-        } else if arg == "--all" || arg == "-a" {
-            show_all = true;
-        } else if arg == "-i" || arg == "--interactive" {
-            interactive = true;
-        } else if arg == "--top" && i + 1 < args.len() {
-            top = args[i + 1].parse::<usize>().ok().map(|count| count.max(1));
-            i += 1;
-        } else if (arg == "--targets" || arg == "-t") && i + 1 < args.len() {
-            targets_arg = Some(args[i + 1].clone());
-            i += 1;
-        } else if arg == "--scope" && i + 1 < args.len() {
-            scope = args[i + 1].clone();
-            i += 1;
-        } else if (arg == "--safety" || arg == "-s") && i + 1 < args.len() {
-            safety_levels = args[i + 1]
-                .split(',')
-                .map(|s| s.trim().to_lowercase())
-                .collect();
-            i += 1;
-        } else if (arg == "--min-size" || arg == "--min" || arg == "-m") && i + 1 < args.len() {
-            min_size_mb = args[i + 1].parse().unwrap_or(0);
-            i += 1;
-        } else if (arg == "--webhook" || arg == "-w") && i + 1 < args.len() {
-            webhook_url = Some(args[i + 1].clone());
-            i += 1;
-        } else if !arg.starts_with('-') {
-            root_path = PathBuf::from(arg);
+        match arg.as_str() {
+            "-h" | "--help" => parsed.help = true,
+            "-j" | "--json" => parsed.as_json = true,
+            "-c" | "--clean" | "--auto-clean" => parsed.auto_clean = true,
+            "-n" | "--dry" | "--dry-run" => parsed.dry_run = true,
+            "-a" | "--all" => parsed.show_all = true,
+            "-i" | "--interactive" => parsed.interactive = true,
+            "--top" => {
+                let raw = args.get(i + 1).ok_or_else(|| {
+                    AppError::InvalidPath("Missing number after '--top'.".to_string())
+                })?;
+                let count = raw
+                    .parse::<usize>()
+                    .map_err(|_| AppError::InvalidPath(format!("Invalid --top value '{raw}'.")))?;
+                parsed.top = Some(count.max(1));
+                i += 1;
+            }
+            "-t" | "--targets" => {
+                let raw = args.get(i + 1).ok_or_else(|| {
+                    AppError::InvalidPath(format!("Missing target list after '{arg}'."))
+                })?;
+                parsed.targets_arg = Some(raw.clone());
+                i += 1;
+            }
+            "--scope" => {
+                let raw = args.get(i + 1).ok_or_else(|| {
+                    AppError::InvalidPath("Missing scope after '--scope'.".to_string())
+                })?;
+                parsed.scope = raw.clone();
+                i += 1;
+            }
+            "-s" | "--safety" => {
+                let raw = args.get(i + 1).ok_or_else(|| {
+                    AppError::InvalidPath(format!("Missing levels after '{arg}'."))
+                })?;
+                parsed.safety_levels = raw.split(',').map(|s| s.trim().to_lowercase()).collect();
+                i += 1;
+            }
+            "-m" | "--min" | "--min-size" => {
+                let raw = args
+                    .get(i + 1)
+                    .ok_or_else(|| AppError::InvalidPath(format!("Missing size after '{arg}'.")))?;
+                parsed.min_size_bytes = parse_human_size(raw)?;
+                i += 1;
+            }
+            "-w" | "--webhook" => {
+                let raw = args
+                    .get(i + 1)
+                    .ok_or_else(|| AppError::InvalidPath(format!("Missing URL after '{arg}'.")))?;
+                parsed.webhook_url = Some(raw.clone());
+                i += 1;
+            }
+            other if other.starts_with("--") => {
+                return Err(AppError::InvalidPath(format!(
+                    "Unknown flag '{other}'. Run `dev-cleaner s -h` for valid options."
+                )));
+            }
+            other if other.starts_with('-') && other.len() > 1 => {
+                for ch in other[1..].chars() {
+                    match ch {
+                        'h' => parsed.help = true,
+                        'j' => parsed.as_json = true,
+                        'c' => parsed.auto_clean = true,
+                        'n' => parsed.dry_run = true,
+                        'a' => parsed.show_all = true,
+                        'i' => parsed.interactive = true,
+                        unknown => {
+                            return Err(AppError::InvalidPath(format!(
+                                "Unknown flag '-{unknown}'. Run `dev-cleaner s -h` for valid options."
+                            )));
+                        }
+                    }
+                }
+            }
+            positional => {
+                if root_set {
+                    return Err(AppError::InvalidPath(format!(
+                        "Unexpected positional argument '{positional}'."
+                    )));
+                }
+                parsed.root_path = PathBuf::from(positional);
+                root_set = true;
+            }
         }
         i += 1;
     }
+
+    Ok(parsed)
+}
+
+fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
+    let parsed = parse_scan_args(args)?;
+    if parsed.help {
+        print_help();
+        return Ok(());
+    }
+    let root_path = parsed.root_path;
+    let scope = parsed.scope;
+    let targets_arg = parsed.targets_arg;
+    let as_json = parsed.as_json;
+    let mut auto_clean = parsed.auto_clean;
+    let dry_run = parsed.dry_run;
+    let min_bytes = parsed.min_size_bytes;
+    let safety_levels = parsed.safety_levels;
+    let webhook_url = parsed.webhook_url;
+    let top = parsed.top;
+    let show_all = parsed.show_all;
+    let interactive = parsed.interactive;
 
     let selected_targets = if let Some(raw) = &targets_arg {
         Some(TargetSelection::parse(raw)?)
@@ -732,7 +1114,7 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
     if let Some(ref sel) = selected_targets {
         if sel.scanner_scope().is_none() {
             let caches_data = if include_caches {
-                Some(crate::cleanup::official_actions::list_cache_providers())
+                Some(measure_detected_caches())
             } else {
                 None
             };
@@ -758,9 +1140,15 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
             } else {
                 if let Some(providers) = caches_data {
                     let detected = providers.iter().filter(|p| p.detected).count();
+                    let cache_total: u64 = providers
+                        .iter()
+                        .filter(|p| p.measured)
+                        .map(|p| p.total_bytes)
+                        .sum();
                     println!(
-                        "\n[Caches] {detected} / {} detected (run `dev-cleaner c` for details)",
-                        providers.len()
+                        "\n[Caches] {detected} / {} detected, {} measured (run `dev-cleaner c` for details)",
+                        providers.len(),
+                        format_size(cache_total)
                     );
                 }
                 if let Some(actions) = system_data {
@@ -866,17 +1254,12 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
         root_path: root_path.to_string_lossy().to_string(),
         exclusions: Vec::new(),
         scope: scan_scope,
+        include_agents: selected_targets.as_ref().map(|sel| sel.agents),
         profile: None,
         max_depth: None,
         max_candidates: None,
         timeout_minutes: None,
-        min_size_bytes: if min_size_mb > 0 {
-            // Saturating: `--min-size-mb` is a raw u64 from clap, and a huge
-            // value wrapped to a tiny threshold (release) or panicked (debug).
-            Some(min_size_mb.saturating_mul(1024 * 1024))
-        } else {
-            None
-        },
+        min_size_bytes: if min_bytes > 0 { Some(min_bytes) } else { None },
         protected_paths: Vec::new(),
     };
 
@@ -900,8 +1283,7 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
         sum.saturating_add(bytes)
     });
 
-    // Prepare autonomous cleanup plan (see the saturation note above).
-    let min_bytes = min_size_mb.saturating_mul(1024 * 1024);
+    // Prepare autonomous cleanup plan.
     let safety_name = |item: &crate::scanner::models::CleanupItem| {
         serde_json::to_string(&item.safety_class)
             .unwrap_or_default()
@@ -1104,15 +1486,46 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
         }
     }
 
+    // Measure optional caches and C: system targets BEFORE emitting JSON or
+    // dispatching webhooks so `-t all -j` carries the complete multi-target view.
+    let caches_data = if include_caches {
+        Some(measure_detected_caches())
+    } else {
+        None
+    };
+    let system_data = if include_system {
+        let elevated = crate::platform::is_elevated();
+        let token = crate::scanner::cancellation::CancellationToken::new();
+        Some(crate::system_cleaner::measure::scan(elevated, &token).actions)
+    } else {
+        None
+    };
+    let caches_total_bytes: u64 = caches_data
+        .as_ref()
+        .map(|list| {
+            list.iter()
+                .filter(|p| p.measured)
+                .map(|p| p.total_bytes)
+                .sum()
+        })
+        .unwrap_or(0);
+    let system_total_bytes: u64 = system_data
+        .as_ref()
+        .map(|list| list.iter().filter(|a| a.measured).map(|a| a.bytes).sum())
+        .unwrap_or(0);
+    let combined_total_bytes = total_bytes
+        .saturating_add(caches_total_bytes)
+        .saturating_add(system_total_bytes);
+
     if as_json {
-        let payload = json!({
+        let mut payload = json!({
             "product": "Dev Cleaner by Vellium",
             "status": "success",
             "root": root_path.to_string_lossy(),
-            "scope": scope,
+            "scope": effective_scope_label,
             "target_count": total_items,
-            "estimated_reclaim_bytes": total_bytes,
-            "estimated_reclaim_human": format_size(total_bytes),
+            "estimated_reclaim_bytes": combined_total_bytes,
+            "estimated_reclaim_human": format_size(combined_total_bytes),
             "auto_clean": auto_clean,
             "dry_run": dry_run,
             "cleaned_count": cleaned_count,
@@ -1130,6 +1543,16 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
                 "human": format_size(it.estimated_reclaim_bytes.unwrap_or(0))
             })).collect::<Vec<_>>()
         });
+        if let Some(obj) = payload.as_object_mut() {
+            if let Some(ref caches) = caches_data {
+                obj.insert("caches".to_string(), json!(caches));
+                obj.insert("caches_total_bytes".to_string(), json!(caches_total_bytes));
+            }
+            if let Some(ref system) = system_data {
+                obj.insert("system".to_string(), json!(system));
+                obj.insert("system_total_bytes".to_string(), json!(system_total_bytes));
+            }
+        }
         println!(
             "{}",
             serde_json::to_string_pretty(&payload).unwrap_or_default()
@@ -1141,6 +1564,20 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
             "  {}",
             tf("Reclaimable Space   : {}", &[&format_size(total_bytes)])
         );
+        if let Some(ref providers) = caches_data {
+            let detected = providers.iter().filter(|p| p.detected).count();
+            println!(
+                "  [Caches]            : {detected} / {} detected, {} (`dev-cleaner c`)",
+                providers.len(),
+                format_size(caches_total_bytes)
+            );
+        }
+        if system_data.is_some() {
+            println!(
+                "  [System C:]         : {} (`dev-cleaner sys quick -n`)",
+                format_size(system_total_bytes)
+            );
+        }
         if auto_clean {
             if dry_run {
                 println!(
@@ -1195,10 +1632,10 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
                 timestamp: chrono::Utc::now().to_rfc3339(),
                 product: "Dev Cleaner by Vellium".to_string(),
                 version: env!("CARGO_PKG_VERSION").to_string(),
-                scope: scope.to_string(),
+                scope: effective_scope_label.to_string(),
                 target_count: total_items,
-                total_bytes,
-                total_human: format_size(total_bytes),
+                total_bytes: combined_total_bytes,
+                total_human: format_size(combined_total_bytes),
                 status: "success".to_string(),
                 cleaned_count: if auto_clean {
                     Some(cleaned_count)
@@ -1216,27 +1653,6 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
             // document; webhook diagnostics go to stderr.
             as_json,
         );
-    }
-
-    if !as_json {
-        if include_caches {
-            let providers = crate::cleanup::official_actions::list_cache_providers();
-            let detected = providers.iter().filter(|p| p.detected).count();
-            println!(
-                "  [Caches]            : {detected} / {} detected (`dev-cleaner c`)",
-                providers.len()
-            );
-        }
-        if include_system {
-            let elevated = crate::platform::is_elevated();
-            let token = crate::scanner::cancellation::CancellationToken::new();
-            let actions = crate::system_cleaner::measure::scan(elevated, &token).actions;
-            let sys_total: u64 = actions.iter().filter(|a| a.measured).map(|a| a.bytes).sum();
-            println!(
-                "  [System C:]         : {} (`dev-cleaner sys quick -n`)",
-                format_size(sys_total)
-            );
-        }
     }
 
     // M5: a cleanup that reported failures must not exit 0. The output above is
@@ -1378,5 +1794,42 @@ mod tests {
         assert_eq!(parse_selection(" 2 2 9 0 ", 4), vec![1]);
         assert_eq!(parse_selection("4-2", 5), Vec::<usize>::new());
         assert_eq!(parse_selection("x,2,y", 5), vec![1]);
+    }
+
+    #[test]
+    fn gui_launch_flags_are_never_captured_by_cli() {
+        assert!(is_gui_launch_args(&["dev-cleaner.exe".into()]));
+        assert!(is_gui_launch_args(&[
+            "dev-cleaner.exe".into(),
+            "--open-view".into(),
+            "system".into(),
+        ]));
+        assert!(is_gui_launch_args(&[
+            "dev-cleaner.exe".into(),
+            "--wait-pid".into(),
+            "1234".into(),
+        ]));
+        assert!(!is_gui_launch_args(&["dev-cleaner.exe".into(), "s".into()]));
+    }
+
+    #[test]
+    fn unknown_scan_flags_fail_closed_with_exit_code_3() {
+        let args = vec![".".into(), "-c".into(), "--dryrun".into()];
+        let err = parse_scan_args(&args).unwrap_err();
+        assert_eq!(scan_exit_code(&err), 3);
+
+        let args = vec!["-cn".into(), "-m".into(), "500MB".into()];
+        let parsed = parse_scan_args(&args).unwrap();
+        assert!(parsed.auto_clean && parsed.dry_run);
+        assert_eq!(parsed.min_size_bytes, 500 * 1024 * 1024);
+    }
+
+    #[test]
+    fn human_size_parses_units_and_rejects_garbage() {
+        assert_eq!(parse_human_size("50").unwrap(), 50 * 1024 * 1024);
+        assert_eq!(parse_human_size("500KB").unwrap(), 500 * 1024);
+        assert_eq!(parse_human_size("1.5GB").unwrap(), 1_610_612_736);
+        assert!(parse_human_size("abc").is_err());
+        assert!(parse_human_size("-5MB").is_err());
     }
 }

@@ -263,9 +263,21 @@
   background: var(--danger-subtle);
 }
 
-.icon-btn-sm {
+.list-row .icon-btn-sm {
   width: 22px;
   height: 22px;
+}
+
+.settings-hint {
+  margin: 3px 0 0;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.shortcuts-table-wrap {
+  width: 100%;
+  overflow-x: auto;
 }
 
 /* Keyboard Shortcuts Tab */
@@ -290,7 +302,7 @@
 
 .shortcuts-table td {
   padding: 12px 14px;
-  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.05));
+  border-bottom: 1px solid var(--separator);
   font-size: var(--text-sm);
   vertical-align: middle;
 }
@@ -320,7 +332,7 @@
   align-items: center;
   gap: 4px;
   padding: 4px 8px;
-  background: var(--surface-strong, #1e222d);
+  background: var(--surface-strong);
   border: 1px solid var(--border);
   border-bottom-width: 2px;
   border-radius: var(--radius-xs, 4px);
@@ -328,7 +340,7 @@
   font-size: 12px;
   font-weight: 600;
   color: var(--text-primary);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .shortcut-recording-badge {
@@ -363,16 +375,22 @@
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid var(--danger, #ef4444);
+  background: var(--danger-subtle);
+  border: 1px solid var(--danger);
   border-radius: var(--radius-sm, 6px);
-  color: var(--danger, #ef4444);
+  color: var(--danger-foreground);
   font-size: var(--text-sm);
   margin-bottom: var(--space-3);
 }
 
 /* Privacy danger zone ------------------------------------------------------ */
 .settings-danger-zone {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
   border-color: var(--danger-subtle);
 }
 
@@ -384,6 +402,8 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
+  flex: 1 1 240px;
+  min-width: 0;
 }
 
 .settings-danger-icon {
@@ -395,11 +415,11 @@
   height: 30px;
   border-radius: var(--radius-sm);
   background: var(--danger-subtle);
-  color: var(--danger);
+  color: var(--danger-foreground);
 }
 
 .settings-danger-title {
-  color: var(--danger);
+  color: var(--danger-foreground);
 }
 
 .settings-danger-heading .plan-note {
@@ -409,6 +429,7 @@
 .settings-danger-actions {
   display: flex;
   justify-content: flex-end;
+  flex: 0 0 auto;
 }
 
 .settings-danger-confirm {

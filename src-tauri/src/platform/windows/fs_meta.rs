@@ -28,8 +28,9 @@ mod win {
     use windows::Win32::Foundation::{CloseHandle, GetLastError, ERROR_SUCCESS, HANDLE};
     use windows::Win32::Storage::FileSystem::{
         CreateFileW, GetCompressedFileSizeW, GetDriveTypeW, GetFileInformationByHandle,
-        BY_HANDLE_FILE_INFORMATION, FILE_ATTRIBUTE_REPARSE_POINT, FILE_FLAG_BACKUP_SEMANTICS,
-        FILE_SHARE_DELETE, FILE_SHARE_MODE, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING,
+        BY_HANDLE_FILE_INFORMATION, FILE_ATTRIBUTE_COMPRESSED, FILE_ATTRIBUTE_REPARSE_POINT,
+        FILE_ATTRIBUTE_SPARSE_FILE, FILE_FLAG_BACKUP_SEMANTICS, FILE_SHARE_DELETE, FILE_SHARE_MODE,
+        FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING,
     };
 
     fn wide(path: &Path) -> Vec<u16> {
@@ -84,8 +85,21 @@ mod win {
                 file_index: ((info.nFileIndexHigh as u64) << 32) | info.nFileIndexLow as u64,
             };
             let logical = ((info.nFileSizeHigh as u64) << 32) | info.nFileSizeLow as u64;
+            // Only query `GetCompressedFileSizeW` when NTFS attributes indicate
+            // compression, sparseness, or a transparent reparse point (WOF / Dedup).
+            // Regular files skip a second kernel path lookup per file.
+            let needs_compressed_query = (info.dwFileAttributes
+                & (FILE_ATTRIBUTE_COMPRESSED.0
+                    | FILE_ATTRIBUTE_SPARSE_FILE.0
+                    | FILE_ATTRIBUTE_REPARSE_POINT.0))
+                != 0;
+            let allocated_bytes = if needs_compressed_query {
+                compressed_size(path).unwrap_or(logical)
+            } else {
+                logical
+            };
             Some(FileFacts {
-                allocated_bytes: compressed_size(path).unwrap_or(logical),
+                allocated_bytes,
                 logical_bytes: logical,
                 link_count: info.nNumberOfLinks.max(1),
                 identity,

@@ -157,6 +157,29 @@ pub fn scan_agents(
     limits: ScanLimits,
     exclusions: &[String],
 ) -> AgentScanOutcome {
+    scan_agents_with_deadline(
+        session_id,
+        token,
+        policy,
+        limits,
+        exclusions,
+        Instant::now() + limits.timeout,
+    )
+}
+
+/// Shared-budget variant used by combined/all-drives scans so the agent step
+/// honors the same wall-clock deadline and remaining candidate limit as the
+/// project walk, and skips any built-in provider the user hid in Settings.
+pub fn scan_agents_with_deadline(
+    session_id: &str,
+    token: &CancellationToken,
+    policy: &crate::cleanup::CleanupPolicy,
+    limits: ScanLimits,
+    exclusions: &[String],
+    shared_deadline: Instant,
+) -> AgentScanOutcome {
+    let settings = crate::settings::SettingsRepository::new().load();
+    let hidden = &settings.hidden_builtin_providers;
     let roots = locate_agent_roots();
     let excluded: std::collections::HashSet<String> = exclusions
         .iter()
@@ -169,12 +192,15 @@ pub fn scan_agents(
     let mut warnings = Vec::new();
     let mut entries_scanned = 0u64;
     let mut stop_reason: Option<StopReason> = None;
-    let deadline = Some(Instant::now() + limits.timeout);
+    let deadline = Some(shared_deadline);
 
     let mut provider_active: std::collections::HashMap<(String, PathBuf), ActiveUse> =
         std::collections::HashMap::new();
 
     for root in &roots {
+        if hidden.iter().any(|h| h == root.provider) {
+            continue;
+        }
         // A candidate-limit stop is global, not per root: without this check
         // every remaining root still entered the loop only to break inside the
         // first spec, wasting filesystem checks and deadline bookkeeping.

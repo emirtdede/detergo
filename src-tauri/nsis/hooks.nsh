@@ -106,6 +106,14 @@ FunctionEnd
   File "/oname=$INSTDIR\app.ico" "${INSTALLERICON}"
   WriteRegStr SHCTX "${UNINSTKEY}" "DisplayIcon" "$\"$INSTDIR\app.ico$\""
 
+  ; Add $INSTDIR to per-user PATH via PowerShell (avoids NSIS 1024-char limit
+  ; and passes $INSTDIR via environment variable to avoid quote injection).
+  System::Call 'kernel32::SetEnvironmentVariable(t "DC_INSTDIR", t "$INSTDIR")'
+  nsExec::ExecToStack 'powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$$t = $$env:DC_INSTDIR.TrimEnd([char]92); $$p = [Environment]::GetEnvironmentVariable(\"Path\", \"User\"); $$parts = @(); if ($$p) { $$parts = $$p -split \";\" | Where-Object { $$_.Trim() -ne \"\" } }; if (-not ($$parts | Where-Object { $$_.Trim().TrimEnd([char]92) -ieq $$t })) { $$parts += $$t; [Environment]::SetEnvironmentVariable(\"Path\", ($$parts -join \";\"), \"User\") }"'
+  Pop $0
+  Pop $1
+  System::Call 'user32::SendMessageTimeout(i 0xffff, i 0x001A, i 0, t "Environment", i 2, i 5000, *i .r0)'
+
   ; Invalidate the shell icon/thumbnail cache, then target the surfaces that
   ; users see immediately.
   System::Call 'shell32::SHChangeNotify(i ${DC_SHCNE_ASSOCCHANGED}, i ${DC_SHCNF_FLUSH}, p 0, p 0)'
@@ -116,6 +124,14 @@ FunctionEnd
 
 !macro NSIS_HOOK_POSTUNINSTALL
   Delete "$INSTDIR\app.ico"
+  ; Remove $INSTDIR and any per-user shim bin directory from user PATH.
+  System::Call 'kernel32::SetEnvironmentVariable(t "DC_INSTDIR", t "$INSTDIR")'
+  nsExec::ExecToStack 'powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$$t1 = $$env:DC_INSTDIR.TrimEnd([char]92); $$t2 = (Join-Path $$env:LOCALAPPDATA \"dev-cleaner\bin\").TrimEnd([char]92); $$p = [Environment]::GetEnvironmentVariable(\"Path\", \"User\"); if ($$p) { $$parts = $$p -split \";\" | Where-Object { $$n = $$_.Trim().TrimEnd([char]92); $$n -ne \"\" -and $$n -ine $$t1 -and $$n -ine $$t2 }; [Environment]::SetEnvironmentVariable(\"Path\", ($$parts -join \";\"), \"User\") }"'
+  Pop $0
+  Pop $1
+  Delete "$LOCALAPPDATA\dev-cleaner\bin\dev-cleaner.cmd"
+  RMDir "$LOCALAPPDATA\dev-cleaner\bin"
+  System::Call 'user32::SendMessageTimeout(i 0xffff, i 0x001A, i 0, t "Environment", i 2, i 5000, *i .r0)'
   System::Call 'shell32::SHChangeNotify(i ${DC_SHCNE_ASSOCCHANGED}, i ${DC_SHCNF_FLUSH}, p 0, p 0)'
 
   ; Tauri's template only removes data under the bundle identifier

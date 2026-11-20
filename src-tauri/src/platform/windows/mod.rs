@@ -42,7 +42,7 @@ pub(crate) fn wide_verbatim(path: &std::path::Path) -> Vec<u16> {
 }
 
 pub use drives::{fixed_drive_roots, list_fixed_drives, DriveInfo};
-pub use elevation::{is_elevated, relaunch_elevated};
+pub use elevation::{is_elevated, relaunch_elevated, wait_for_pid_exit};
 pub use instance_guard::force_foreground;
 
 pub use fs_meta::{

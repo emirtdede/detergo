@@ -9,6 +9,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
+import { Checkbox } from "@/components/primitives/Checkbox";
 import { Dialog } from "@/components/primitives/Dialog";
 import { EmptyState } from "@/components/primitives/EmptyState";
 import { PageHeader } from "@/components/primitives/PageHeader";
@@ -601,17 +602,26 @@ export const HistoryView: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {actions.map((action) => (
-                    <tr key={action.id}>
-                      <td>{formatSavedAt(action.timestamp, language)}</td>
-                      <td style={{ fontFamily: "var(--font-mono)", fontSize: 11 }}>
-                        {action.label}
-                      </td>
-                      <td>{action.success ? ui.caches.succeeded : ui.caches.failed}</td>
-                      <td className="num">{formatSignedBytes(action.deltaBytes, language)}</td>
-                      <td className="num">{action.durationMs} ms</td>
-                    </tr>
-                  ))}
+                  {actions.map((action) => {
+                    const normalizedDelta =
+                      action.providerId === "system" &&
+                      action.beforeBytes === 0 &&
+                      action.afterBytes === 0 &&
+                      action.deltaBytes > 0
+                        ? -action.deltaBytes
+                        : action.deltaBytes;
+                    return (
+                      <tr key={action.id}>
+                        <td>{formatSavedAt(action.timestamp, language)}</td>
+                        <td style={{ fontFamily: "var(--font-mono)", fontSize: 11 }}>
+                          {action.label}
+                        </td>
+                        <td>{action.success ? ui.caches.succeeded : ui.caches.failed}</td>
+                        <td className="num">{formatSignedBytes(normalizedDelta, language)}</td>
+                        <td className="num">{action.durationMs} ms</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             ) : (
@@ -625,7 +635,6 @@ export const HistoryView: React.FC = () => {
                     <th className="num">{ui.overview.cleanable}</th>
                     <th className="num">{ui.history.duration}</th>
                     <th>{ui.common.scan}</th>
-                    <th style={{ width: 180, textAlign: "right" }} />
                   </tr>
                 </thead>
                 <tbody>
@@ -678,7 +687,7 @@ export const HistoryView: React.FC = () => {
                               ? `${ui.overview.stopReason}: ${localizeStopReason(scan.stopReason, ui)}`
                               : scan.status === "partial"
                                 ? ui.overview.partial
-                                : undefined
+                                : ui.history.prevScan
                           }
                         >
                           {scan.status === "completed"
@@ -688,11 +697,6 @@ export const HistoryView: React.FC = () => {
                             : scan.status === "partial"
                               ? ui.history.statusPartial
                               : ui.history.statusCancelled}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: "right" }}>
-                        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                          {ui.history.prevScan}
                         </span>
                       </td>
                     </tr>
@@ -732,24 +736,13 @@ export const HistoryView: React.FC = () => {
           </>
         }
       >
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginBottom: 12,
-            color: "var(--text-primary)",
-            fontSize: "var(--text-sm)",
-            cursor: "pointer",
-          }}
-        >
-          <input
-            type="checkbox"
+        <div style={{ marginBottom: 12 }}>
+          <Checkbox
             checked={confirmAll}
-            onChange={(event) => setConfirmAll(event.target.checked)}
+            onChange={(next) => setConfirmAll(next)}
+            label={ui.history.clearAllBtn}
           />
-          {ui.history.clearAllBtn}
-        </label>
+        </div>
         {confirmAll ? (
           // Be explicit: this scope erases all three histories, not just the
           // tab the dialog was opened from.

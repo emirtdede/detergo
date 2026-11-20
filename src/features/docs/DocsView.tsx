@@ -2,7 +2,9 @@ import React, { useCallback, useMemo, useState, useEffect, useRef } from "react"
 import { Search } from "lucide-react";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
-import { useUIText, resolveUiLocale } from "@/lib/ui-text";
+import { useUIText, resolveUiLocale, localizeAppError } from "@/lib/ui-text";
+import { scannerApi } from "@/lib/tauri/scanner-api";
+import { CliEnvironmentStatus } from "@/types";
 import { getDocsTopics, DocTopic } from "./docs-topics";
 import { getDocsBodyIndex } from "./docs-search";
 import { useDocsLocale } from "./docs-i18n";
@@ -90,6 +92,47 @@ export const DocsView: React.FC = () => {
 
   // MCP IDE Switcher State
   const [activeIde, setActiveIde] = useState<McpIdeKey>("cursor");
+  const [cliEnv, setCliEnv] = useState<CliEnvironmentStatus | null>(null);
+  const [cliPathBusy, setCliPathBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    scannerApi
+      .getCliEnvironmentStatus()
+      .then((status) => {
+        if (!cancelled) setCliEnv(status);
+      })
+      .catch(() => {
+        if (!cancelled) setCliEnv(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleRegisterCliPath = useCallback(async () => {
+    setCliPathBusy(true);
+    try {
+      const updated = await scannerApi.registerCliInUserPath();
+      setCliEnv(updated);
+      showToast(
+        isTr
+          ? "dev-cleaner kullanıcı PATH ortam değişkenine eklendi. Yeni bir terminal penceresi açın."
+          : "Added dev-cleaner to your user PATH. Open a new terminal window to use it.",
+        "success",
+        5000,
+      );
+    } catch (err) {
+      showToast(localizeAppError(err, ui), "error", 6000);
+    } finally {
+      setCliPathBusy(false);
+    }
+  }, [isTr, showToast, ui]);
+
+  const mcpCommand =
+    cliEnv && (!cliEnv.inPath || !cliEnv.shimUpToDate) && cliEnv.executablePath
+      ? cliEnv.executablePath
+      : "dev-cleaner";
 
   // Global Keyboard Shortcuts (Ctrl+K or / to search, Esc to clear)
   useEffect(() => {
@@ -258,6 +301,10 @@ export const DocsView: React.FC = () => {
       activeIde,
       setActiveIde,
       generatedCliCommand,
+      cliEnv,
+      cliPathBusy,
+      onRegisterCliPath: handleRegisterCliPath,
+      mcpCommand,
     }),
     [
       activeTopicId,
@@ -274,6 +321,10 @@ export const DocsView: React.FC = () => {
       cliWebhook,
       activeIde,
       generatedCliCommand,
+      cliEnv,
+      cliPathBusy,
+      handleRegisterCliPath,
+      mcpCommand,
     ],
   );
 
@@ -379,8 +430,8 @@ export const DocsView: React.FC = () => {
         </div>
       </aside>
 
-      {/* Content Pane */}
-      <main className="docs-content-pane">
+      {/* Content Pane (shell already wraps the view in <main id="main">) */}
+      <div className="docs-content-pane">
         {!isTr && language && resolveUiLocale(language) !== "en" && (
           <div
             role="note"
@@ -390,8 +441,8 @@ export const DocsView: React.FC = () => {
               padding: "10px 14px",
               border: "1px solid var(--border)",
               borderRadius: 8,
-              background: "var(--surface-2, rgba(127,127,127,0.08))",
-              color: "var(--text-muted, inherit)",
+              background: "var(--surface-alt)",
+              color: "var(--text-secondary)",
               fontSize: 13,
               lineHeight: 1.5,
             }}
@@ -400,7 +451,7 @@ export const DocsView: React.FC = () => {
           </div>
         )}
         {isTr ? <MemoDocsContentTr {...contentProps} /> : <MemoDocsContentEn {...contentProps} />}
-      </main>
+      </div>
     </div>
   );
 };

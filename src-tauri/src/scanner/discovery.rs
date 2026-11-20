@@ -629,13 +629,21 @@ fn entry_allowed(
         return false;
     }
     if name == "packages" || name == "microsoft" {
-        if let Some(p) = entry
-            .path()
-            .parent()
-            .and_then(|p| p.file_name())
-            .map(|f| f.to_string_lossy().to_lowercase())
-        {
-            if p == "local" || p == "appdata" {
+        // Only skip Windows AppData subtrees (`AppData\Local\Packages`,
+        // `AppData\Local\Microsoft`, `AppData\Roaming\Microsoft`, `AppData\Microsoft`).
+        // Never skip a monorepo folder like `<repo>/apps/local/packages`.
+        if let Some(parent) = entry.path().parent() {
+            let parent_name = parent
+                .file_name()
+                .map(|f| f.to_string_lossy().to_lowercase());
+            let grandparent_name = parent
+                .parent()
+                .and_then(|gp| gp.file_name())
+                .map(|f| f.to_string_lossy().to_lowercase());
+            let is_appdata_system_dir = matches!(parent_name.as_deref(), Some("appdata"))
+                || (matches!(parent_name.as_deref(), Some("local" | "roaming"))
+                    && matches!(grandparent_name.as_deref(), Some("appdata")));
+            if is_appdata_system_dir {
                 return false;
             }
         }
@@ -644,10 +652,37 @@ fn entry_allowed(
     if entry.file_type().is_symlink() {
         return false;
     }
-    // Never descend through junctions or cloud reparse points.
-    if crate::platform::is_reparse_point(entry.path()) {
+    // Never descend through junctions or cloud reparse points. Use cached
+    // Windows DirEntry attributes first to avoid an extra GetFileAttributesW
+    // syscall on ordinary directories.
+    if entry_might_be_reparse(entry) && crate::platform::is_reparse_point(entry.path()) {
         return false;
     }
+    true
+}
+
+#[cfg(windows)]
+fn entry_might_be_reparse(entry: &walkdir::DirEntry) -> bool {
+    use std::os::windows::fs::MetadataExt;
+    const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x0400;
+    const FILE_ATTRIBUTE_OFFLINE: u32 = 0x1000;
+    const FILE_ATTRIBUTE_RECALL_ON_OPEN: u32 = 0x0004_0000;
+    const FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS: u32 = 0x0040_0000;
+    match entry.metadata() {
+        Ok(meta) => {
+            (meta.file_attributes()
+                & (FILE_ATTRIBUTE_REPARSE_POINT
+                    | FILE_ATTRIBUTE_OFFLINE
+                    | FILE_ATTRIBUTE_RECALL_ON_OPEN
+                    | FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS))
+                != 0
+        }
+        Err(_) => true,
+    }
+}
+
+#[cfg(not(windows))]
+fn entry_might_be_reparse(_entry: &walkdir::DirEntry) -> bool {
     true
 }
 

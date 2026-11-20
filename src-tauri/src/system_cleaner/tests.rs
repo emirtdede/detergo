@@ -71,6 +71,7 @@ fn delete_contents_keeps_the_root_and_removes_the_tree() {
     assert_eq!(fs::read_dir(&root).expect("read").count(), 0);
     assert_eq!(outcome.deleted_files, 2);
     assert_eq!(outcome.freed_bytes, 6);
+    assert_eq!(outcome.scanned_bytes, 6);
 }
 
 #[cfg(windows)]

@@ -56,6 +56,13 @@ fn agent_measurement_updates(batch: &[CleanupItem]) -> Vec<MeasurementUpdate> {
                 file_count: 0,
                 hardlink_dedup_bytes: 0,
                 status: item.status,
+                selectable: Some(item.selectable),
+                auto_selectable: Some(item.auto_selectable),
+                warning_codes: if item.warning_codes.is_empty() {
+                    None
+                } else {
+                    Some(item.warning_codes.clone())
+                },
             })
         })
         .collect()
@@ -327,10 +334,10 @@ where
         ));
     }
 
-    // A combined scan runs the project walk (when a root is selected) and the
-    // AI agent scan inside one session, so the UI has a single progress stream,
-    // a single cancel and one result set.
-    let combined = request.scope == ScanScope::Combined;
+    // A combined scan (or AllDrives with `include_agents: true`) runs the
+    // project walk and the AI agent scan inside one session, so the UI has a
+    // single progress stream, a single cancel and one result set.
+    let combined = request.scope == ScanScope::Combined || request.include_agents.unwrap_or(false);
 
     if request.scope == ScanScope::Agents {
         let token_agents = token.clone();
@@ -518,6 +525,23 @@ where
             break;
         }
 
+        let remaining_candidates = limits.max_candidates.saturating_sub(items.len() as u64);
+        if remaining_candidates == 0 {
+            stop_reason = Some(StopReason::CandidateLimit);
+            break;
+        }
+        let remaining_timeout = scan_deadline.saturating_duration_since(Instant::now());
+        if remaining_timeout.is_zero() {
+            stop_reason = Some(StopReason::Timeout);
+            break;
+        }
+        let root_limits = ScanLimits {
+            max_depth: limits.max_depth,
+            max_candidates: remaining_candidates,
+            timeout: remaining_timeout,
+            min_size_bytes: limits.min_size_bytes,
+        };
+
         let root_for_discovery = root.clone();
         let exclusions = request.exclusions.clone();
         let protected_paths = request.protected_paths.clone();
@@ -527,14 +551,14 @@ where
         let tx_discovery = tx.clone();
 
         let discovery_task = tokio::task::spawn_blocking(move || {
-            let mut engine = DiscoveryEngine::new(&catalog_discovery, token_discovery, limits);
+            let mut engine = DiscoveryEngine::new(&catalog_discovery, token_discovery, root_limits);
             engine.discover(
                 DiscoveryConfig {
                     root: &root_for_discovery,
                     exclusions: &exclusions,
                     protected_paths: &protected_paths,
                     scan_session_id: &session_id,
-                    limits,
+                    limits: root_limits,
                 },
                 |batch| {
                     let _ = tx_discovery.blocking_send(ScanEvent::Candidates {
@@ -632,15 +656,40 @@ where
             Arc::new(std::sync::Mutex::new(HashMap::new()));
         let measured_writer = measured.clone();
 
+        let min_size_threshold = limits.min_size_bytes;
         let measurement_stop = engine
             .measure_entries(
                 tasks,
                 items.len() as u64,
                 directories_visited,
-                move |updates| {
+                move |mut updates| {
                     let sender = tx_measure.clone();
                     let writer = measured_writer.clone();
                     async move {
+                        // Apply `min_size_bytes` and `NOT_MEASURED` before the
+                        // very first `ScanEvent::Measured` hits the frontend so
+                        // rows arrive blocked immediately without a second IPC
+                        // pass or KPI flicker.
+                        for update in &mut updates {
+                            if update.status == ItemStatus::Error {
+                                update.selectable = Some(false);
+                                update.auto_selectable = Some(false);
+                                let codes = update.warning_codes.get_or_insert_with(Vec::new);
+                                if !codes.iter().any(|c| c == "NOT_MEASURED") {
+                                    codes.push("NOT_MEASURED".to_string());
+                                }
+                            } else if min_size_threshold > 0
+                                && update.estimated_reclaim_bytes < min_size_threshold
+                            {
+                                update.status = ItemStatus::Blocked;
+                                update.selectable = Some(false);
+                                update.auto_selectable = Some(false);
+                                let codes = update.warning_codes.get_or_insert_with(Vec::new);
+                                if !codes.iter().any(|c| c == "BELOW_MIN_SIZE") {
+                                    codes.push("BELOW_MIN_SIZE".to_string());
+                                }
+                            }
+                        }
                         {
                             let mut map = crate::lock!(writer);
                             for update in &updates {
@@ -664,9 +713,7 @@ where
                 stop_reason = Some(StopReason::Cancelled);
             }
             measurement::MeasurementStop::TimedOut => {
-                if stop_reason.is_none() {
-                    stop_reason = Some(StopReason::Timeout);
-                }
+                stop_reason = merge_stop_reason(stop_reason, Some(StopReason::Timeout));
             }
             measurement::MeasurementStop::Completed => {}
         }
@@ -756,21 +803,46 @@ where
         });
     }
 
-    // Combined scans append the AI agent step. It runs after the project walk
-    // so a single progress stream and a single cancel token cover both, and a
-    // failure here is recorded as one section instead of discarding projects.
-    if combined && stop_reason != Some(StopReason::Cancelled) && !token.is_cancelled() {
+    // Combined / AllDrives+Agents scans append the AI agent step. It shares
+    // the scan deadline and remaining candidate budget, and filters duplicates
+    // before emitting events so no ghost duplicate rows reach the frontend.
+    if combined
+        && stop_reason != Some(StopReason::Cancelled)
+        && stop_reason != Some(StopReason::Timeout)
+        && !token.is_cancelled()
+    {
+        let _ = tx
+            .send(ScanEvent::Progress {
+                progress: ScanProgress {
+                    phase: "agents".to_string(),
+                    directories_visited,
+                    entries_found: items.len() as u64,
+                    entries_measured: items.len() as u64,
+                    bytes_measured: cleanable_own_bytes(&items),
+                    current_path: None,
+                    stop_reason: None,
+                },
+            })
+            .await;
+        let remaining_agent_candidates = limits.max_candidates.saturating_sub(items.len() as u64);
+        let agent_limits = ScanLimits {
+            max_depth: limits.max_depth,
+            max_candidates: remaining_agent_candidates.max(1),
+            timeout: scan_deadline.saturating_duration_since(Instant::now()),
+            min_size_bytes: limits.min_size_bytes,
+        };
         let token_agents = token.clone();
         let policy_agents = policy.clone();
         let scan_id_agents = scan_id.clone();
         let exclusions_agents = request.exclusions.clone();
         let agent_result = tokio::task::spawn_blocking(move || {
-            providers::scan_agents(
+            providers::scan_agents_with_deadline(
                 &scan_id_agents,
                 &token_agents,
                 &policy_agents,
-                limits,
+                agent_limits,
                 &exclusions_agents,
+                scan_deadline,
             )
         })
         .await;
@@ -799,8 +871,23 @@ where
                             .await;
                     }
                 }
-                let agent_items = outcome.items;
-                for batch in agent_items.chunks(BATCH_SIZE) {
+                // A target found by both steps must appear once: filter before
+                // emitting events so the frontend never receives duplicate rows.
+                let existing: std::collections::HashSet<String> = items
+                    .iter()
+                    .map(|item| item.display_path.to_lowercase())
+                    .collect();
+                let fresh: Vec<CleanupItem> = outcome
+                    .items
+                    .into_iter()
+                    .filter(|item| !existing.contains(&item.display_path.to_lowercase()))
+                    .collect();
+                let fresh_ids: std::collections::HashSet<String> =
+                    fresh.iter().map(|item| item.id.clone()).collect();
+                let mut agent_targets = outcome.targets;
+                agent_targets.retain(|target| fresh_ids.contains(&target.id));
+
+                for batch in fresh.chunks(BATCH_SIZE) {
                     let _ = tx
                         .send(ScanEvent::Candidates {
                             items: batch.to_vec(),
@@ -811,20 +898,6 @@ where
                         let _ = tx.send(ScanEvent::Measured { updates }).await;
                     }
                 }
-                // A target found by both steps must appear once: the project
-                // walk wins because it carries the project/workspace context.
-                let existing: std::collections::HashSet<String> = items
-                    .iter()
-                    .map(|item| item.display_path.to_lowercase())
-                    .collect();
-                let fresh: Vec<CleanupItem> = agent_items
-                    .into_iter()
-                    .filter(|item| !existing.contains(&item.display_path.to_lowercase()))
-                    .collect();
-                let fresh_ids: std::collections::HashSet<String> =
-                    fresh.iter().map(|item| item.id.clone()).collect();
-                let mut agent_targets = outcome.targets;
-                agent_targets.retain(|target| fresh_ids.contains(&target.id));
 
                 sections.push(ScanSectionResult {
                     scope: ScanScope::Agents,
@@ -937,6 +1010,15 @@ pub fn run_scan_blocking(
         ScanScope::AllDrives => {
             for drive in crate::platform::fixed_drive_roots() {
                 allowed_roots.push(PathBuf::from(drive));
+            }
+            if request.include_agents.unwrap_or(false) {
+                for agent_root in crate::providers::root_locator::locate_agent_roots() {
+                    if agent_root.path.is_dir()
+                        && !allowed_roots.iter().any(|p| p == &agent_root.path)
+                    {
+                        allowed_roots.push(agent_root.path);
+                    }
+                }
             }
         }
         ScanScope::Agents | ScanScope::Combined => {

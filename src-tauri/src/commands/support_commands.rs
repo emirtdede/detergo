@@ -186,7 +186,7 @@ fn create_bundle_in(dir: &Path, request: SupportBundleRequest) -> Result<Support
     }
 
     if let Ok(appdata) = std::env::var("APPDATA") {
-        let log_dir = Path::new(&appdata).join("dev-cleaner");
+        let log_dir = crate::platform::resolve_app_dir(Path::new(&appdata));
         let _ = append_backend_log(
             &mut zip,
             "backend-log.txt",

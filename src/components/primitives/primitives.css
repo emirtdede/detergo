@@ -69,14 +69,14 @@
 .btn-primary {
   background-color: var(--accent);
   color: var(--on-accent);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
   font-weight: 550;
   transition: all var(--duration-fast);
 }
 .btn-primary:hover:not(:disabled) {
   background-color: var(--accent-hover);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-md);
 }
 .btn-primary:active:not(:disabled) {
   background-color: var(--accent-active);
@@ -84,12 +84,12 @@
 
 .btn-secondary {
   background-color: var(--surface-alt);
-  border: 1px solid var(--border-control, rgba(255, 255, 255, 0.14));
+  border: 1px solid var(--border-control);
   color: var(--text-primary);
 }
 .btn-secondary:hover:not(:disabled) {
   background-color: var(--surface-hover);
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: var(--border-strong);
 }
 .btn-secondary:active:not(:disabled) {
   background-color: var(--surface-active);
@@ -690,7 +690,6 @@
   grid-template-columns: repeat(var(--nc-kpi-cols, 4), minmax(0, 1fr));
   gap: var(--space-3);
   width: 100%;
-  margin-bottom: var(--space-4);
 }
 
 .nc-bento-strip--3,

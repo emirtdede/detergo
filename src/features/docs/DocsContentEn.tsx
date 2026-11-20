@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   ShieldCheck,
   HelpCircle,
@@ -14,8 +14,10 @@ import {
   Laptop,
   Terminal,
 } from "lucide-react";
+import { Button } from "@/components/primitives/Button";
+import { Checkbox } from "@/components/primitives/Checkbox";
 import { NumberField } from "@/components/primitives/NumberField";
-import { mcpConfigs, webhookSampleJson } from "./docs-data";
+import { getMcpConfigs, webhookSampleJson } from "./docs-data";
 import { APP_VERSION } from "@/lib/app-version";
 import { McpIdeSelector } from "./McpIdeSelector";
 import { DocsCommandList } from "./DocsCommandList";
@@ -48,9 +50,14 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
   activeIde,
   setActiveIde,
   generatedCliCommand,
+  cliEnv,
+  cliPathBusy,
+  onRegisterCliPath,
+  mcpCommand,
 }) => {
   const t = useDocsT();
   const ui = useUIText();
+  const activeMcpConfigs = useMemo(() => getMcpConfigs(mcpCommand), [mcpCommand]);
 
   /**
    * Copies the localized prompt body (the display translation is keyed with the
@@ -339,8 +346,11 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                 <span>{t("Getting \"Command not found\" for")} <code>{t("dev-cleaner")}</code>  {t("in terminal?")}</span>
               </div>
               <p className="docs-faq-a">
-                  
-                  {t("Dev Cleaner installs to")} <code>{t("%LOCALAPPDATA%\\Microsoft\\WindowsApps\\dev-cleaner.exe")}</code>{t(". If your terminal was open during installation, simply close and restart your terminal window to refresh your PATH environment variable.")}
+                The NSIS installer adds <code>dev-cleaner</code> to your user <code>PATH</code> automatically.
+                When running the portable executable, click <strong>Add CLI to PATH</strong> in the{" "}
+                <strong>Terminal CLI Command Guide</strong> to create{" "}
+                <code>%LOCALAPPDATA%\dev-cleaner\bin\dev-cleaner.cmd</code> and register it on your user PATH.
+                Close and reopen any existing terminal window to pick up the updated PATH.
               </p>
             </div>
 
@@ -391,6 +401,37 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
               
               {t("Dev Cleaner runs as a global command on your Windows PATH. You can invoke it from any terminal at any time:")}
             </p>
+
+            {onRegisterCliPath && (
+              <div className="docs-cli-env-banner">
+                <div className="docs-cli-env-copy">
+                  <strong>
+                    {cliEnv?.inPath && cliEnv?.shimUpToDate
+                      ? "CLI is ready on your user PATH"
+                      : "dev-cleaner is not registered on your user PATH yet"}
+                  </strong>
+                  <span>
+                    {cliEnv?.executablePath ? (
+                      <>
+                        Executable: <code>{cliEnv.executablePath}</code>
+                      </>
+                    ) : (
+                      "Register a shim in %LOCALAPPDATA%\\dev-cleaner\\bin with one click, then open a new terminal."
+                    )}
+                  </span>
+                </div>
+                <Button
+                  variant={cliEnv?.inPath && cliEnv?.shimUpToDate ? "secondary" : "primary"}
+                  size="sm"
+                  disabled={cliPathBusy}
+                  onClick={onRegisterCliPath}
+                >
+                  {cliEnv?.inPath && cliEnv?.shimUpToDate
+                    ? "Update CLI in PATH"
+                    : "Add CLI to PATH"}
+                </Button>
+              </div>
+            )}
 
             {/* Shell Switcher Tabs */}
             <div className="ide-tabs-bar">
@@ -751,34 +792,28 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
               </div>
 
               <div className="cli-builder-checkboxes">
-                <label className="cli-checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={cliAutoClean}
-                    onChange={(e) => setCliAutoClean(e.target.checked)}
-                  />
-                  <span>-c / {t("--auto-clean (Automatically move to Recycle Bin)")}</span>
-                </label>
+                <Checkbox
+                  id="docs-en-cli-autoclean"
+                  checked={cliAutoClean}
+                  onChange={setCliAutoClean}
+                  label={`-c / ${t("--auto-clean (Automatically move to Recycle Bin)")}`}
+                />
 
                 {cliAutoClean && (
-                  <label className="cli-checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={cliDryRun}
-                      onChange={(e) => setCliDryRun(e.target.checked)}
-                    />
-                    <span>-n / {t("--dry-run (Simulation Mode)")}</span>
-                  </label>
+                  <Checkbox
+                    id="docs-en-cli-dryrun"
+                    checked={cliDryRun}
+                    onChange={setCliDryRun}
+                    label={`-n / ${t("--dry-run (Simulation Mode)")}`}
+                  />
                 )}
 
-                <label className="cli-checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={cliJson}
-                    onChange={(e) => setCliJson(e.target.checked)}
-                  />
-                  <span>-j / {t("--json (Machine-readable JSON Output)")}</span>
-                </label>
+                <Checkbox
+                  id="docs-en-cli-json"
+                  checked={cliJson}
+                  onChange={setCliJson}
+                  label={`-j / ${t("--json (Machine-readable JSON Output)")}`}
+                />
               </div>
 
               <div className="docs-code-card" style={{ marginTop: 8 }}>
@@ -903,26 +938,41 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
               onSelect={setActiveIde}
             />
 
+            {onRegisterCliPath && cliEnv && (!cliEnv.inPath || !cliEnv.shimUpToDate) && (
+              <div className="docs-cli-env-banner">
+                <div className="docs-cli-env-copy">
+                  <strong>Using full executable path automatically</strong>
+                  <span>
+                    Because <code>dev-cleaner</code> is not on your PATH yet, the snippet below points
+                    directly to <code>{cliEnv.executablePath}</code>. You can also add it to PATH in one click.
+                  </span>
+                </div>
+                <Button variant="primary" size="sm" disabled={cliPathBusy} onClick={onRegisterCliPath}>
+                  Add CLI to PATH
+                </Button>
+              </div>
+            )}
+
             <div className="docs-code-card">
               <div className="docs-code-header">
-                <span className="docs-code-header-left">{t("Target File:")} {mcpConfigs[activeIde].file}</span>
+                <span className="docs-code-header-left">{t("Target File:")} {activeMcpConfigs[activeIde].file}</span>
                 <button
                   type="button"
                   className="docs-copy-action"
-                  onClick={() => copyToClipboard(mcpConfigs[activeIde].json, `mcp-${activeIde}`)}
+                  onClick={() => copyToClipboard(activeMcpConfigs[activeIde].json, `mcp-${activeIde}`)}
                 >
                   {copiedKey === `mcp-${activeIde}` ? <Check size={13} /> : <Copy size={13} />}
                   {copiedKey === `mcp-${activeIde}`
                     ? ui.docs.copied
-                    : mcpConfigs[activeIde].syntax === "toml"
+                    : activeMcpConfigs[activeIde].syntax === "toml"
                       ? ui.docs.copy
                       : `${ui.docs.copy} JSON`}
                 </button>
               </div>
               <pre className="docs-code-pre">
-                {mcpConfigs[activeIde].syntax === "toml"
-                  ? highlightBash(mcpConfigs[activeIde].json)
-                  : highlightJson(mcpConfigs[activeIde].json)}
+                {activeMcpConfigs[activeIde].syntax === "toml"
+                  ? highlightBash(activeMcpConfigs[activeIde].json)
+                  : highlightJson(activeMcpConfigs[activeIde].json)}
               </pre>
             </div>
           </article>
@@ -1014,8 +1064,8 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             </div>
             <h1 className="docs-title">{t("Dev Cleaner MCP Tools Reference")}</h1>
             <p className="docs-lead">
-              
-              {t("The Dev Cleaner MCP server exposes 8 tools: 6 standard tools plus 2 destructive tools that are hidden unless the server runs with --allow-destructive.")}
+              The Dev Cleaner MCP server exposes 11 tools: 8 read-only / preview tools plus 3 destructive tools
+              that require <code>--allow-destructive</code> and a single-use preview token.
             </p>
 
             <h2 className="docs-h2">{t("1. `devcleaner_scan_workspace`")}</h2>
@@ -1024,23 +1074,32 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             <h2 className="docs-h2">{t("2. `devcleaner_preview_cleanup`")}</h2>
             <p className="docs-p">{t("Builds a cleanup plan, returns a single-use token and never deletes anything.")}</p>
 
-            <h2 className="docs-h2">{t("3. `devcleaner_clean_safe` (deprecated alias)")}</h2>
-            <p className="docs-p">{t("Deprecated alias of devcleaner_preview_cleanup. It only previews a plan and never deletes anything; use preview_cleanup plus execute_cleanup.")}</p>
-
-            <h2 className="docs-h2">{t("4. `devcleaner_list_caches`")}</h2>
+            <h2 className="docs-h2">{t("3. `devcleaner_list_caches`")}</h2>
             <p className="docs-p">{t("Reports cache metrics for 21 developer tools and package managers.")}</p>
 
-            <h2 className="docs-h2">{t("5. `devcleaner_get_history`")}</h2>
+            <h2 className="docs-h2">4. `devcleaner_preview_cache`</h2>
+            <p className="docs-p">Measures and previews an official package manager cache cleanup action and returns a single-use <code>preview_token</code>.</p>
+
+            <h2 className="docs-h2">5. `devcleaner_system_scan`</h2>
+            <p className="docs-p">Measures C: drive system cleanup actions, volume free space, and elevation requirements.</p>
+
+            <h2 className="docs-h2">6. `devcleaner_system_preview`</h2>
+            <p className="docs-p">Builds a single-use preview token for selected C: drive system cleanup actions or a profile.</p>
+
+            <h2 className="docs-h2">{t("7. `devcleaner_get_history`")}</h2>
             <p className="docs-p">{t("Returns historical records of previous cleanup operations.")}</p>
 
-            <h2 className="docs-h2">{t("6. `devcleaner_inspect_target`")}</h2>
+            <h2 className="docs-h2">{t("8. `devcleaner_inspect_target`")}</h2>
             <p className="docs-p">{t("Inspects safety rules and classifications for a specific path.")}</p>
 
-            <h2 className="docs-h2">{t("7. `devcleaner_execute_cleanup` (destructive)")}</h2>
+            <h2 className="docs-h2">{t("9. `devcleaner_execute_cleanup` (destructive)")}</h2>
             <p className="docs-p">{t("Executes a previously previewed plan. Requires confirm:true, a single-use token, --allow-destructive and the MCP destructive setting.")}</p>
 
-            <h2 className="docs-h2">{t("8. `devcleaner_clean_cache` (destructive)")}</h2>
-            <p className="docs-p">{t("Invokes official package manager CLI commands to purge cache. Requires confirm:true, --allow-destructive and the MCP destructive setting.")}</p>
+            <h2 className="docs-h2">{t("10. `devcleaner_clean_cache` (destructive)")}</h2>
+            <p className="docs-p">Executes a previewed package manager cache action using its <code>preview_token</code>. Requires <code>confirm:true</code>, <code>--allow-destructive</code>, and the MCP destructive setting.</p>
+
+            <h2 className="docs-h2">11. `devcleaner_system_execute` (destructive)</h2>
+            <p className="docs-p">Executes a previewed C: drive system cleanup token and records the result in audit history.</p>
           </article>
         )}
 

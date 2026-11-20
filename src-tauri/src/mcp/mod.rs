@@ -96,12 +96,33 @@ struct StoredScan {
     created: Instant,
 }
 
+struct SystemPreviewGrant {
+    ids: Vec<crate::system_cleaner::SystemActionId>,
+    created: Instant,
+}
+
 /// Per-process MCP state. The preview grants live in memory so a token cannot
 /// be replayed across a restart and can only be redeemed once.
 pub struct McpContext {
     options: McpOptions,
     grants: Mutex<HashMap<String, PreviewGrant>>,
     scans: Mutex<HashMap<String, StoredScan>>,
+    cache_registry: crate::cleanup::official_actions::OfficialActionRegistry,
+    system_grants: Mutex<HashMap<String, SystemPreviewGrant>>,
+}
+
+fn make_room_for_system_grant(grants: &mut HashMap<String, SystemPreviewGrant>) {
+    grants.retain(|_, grant| grant.created.elapsed() <= PREVIEW_TTL);
+    if grants.len() < MAX_PENDING_GRANTS {
+        return;
+    }
+    let oldest = grants
+        .iter()
+        .min_by_key(|(_, grant)| grant.created)
+        .map(|(token, _)| token.clone());
+    if let Some(token) = oldest {
+        grants.remove(&token);
+    }
 }
 
 /// Keeps the pending-preview map bounded.
@@ -150,6 +171,8 @@ impl McpContext {
             options,
             grants: Mutex::new(HashMap::new()),
             scans: Mutex::new(HashMap::new()),
+            cache_registry: crate::cleanup::official_actions::OfficialActionRegistry::new(),
+            system_grants: Mutex::new(HashMap::new()),
         }
     }
 
@@ -161,6 +184,12 @@ impl McpContext {
 
     fn scans(&self) -> std::sync::MutexGuard<'_, HashMap<String, StoredScan>> {
         self.scans
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
+    fn system_grants(&self) -> std::sync::MutexGuard<'_, HashMap<String, SystemPreviewGrant>> {
+        self.system_grants
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
@@ -238,16 +267,32 @@ pub fn run_mcp_server_with<R: BufRead, W: Write>(reader: R, mut writer: W, optio
     }
 }
 
+fn tool_annotations(title: &str, read_only: bool, destructive: bool, idempotent: bool) -> Value {
+    json!({
+        "title": title,
+        "readOnlyHint": read_only,
+        "destructiveHint": destructive,
+        "idempotentHint": idempotent,
+        "openWorldHint": false
+    })
+}
+
 fn tool_definitions(allow_destructive: bool) -> Vec<Value> {
     let mut tools = vec![
         json!({
             "name": "devcleaner_scan_workspace",
-            "description": t("Scans projects, AI storage, or caches to report safely cleanable targets (node_modules, target, .venv, etc.)."),
+            "description": t("Scans projects, AI storage, package caches, or C: system cleanup targets and returns measured reclaimable items."),
+            "annotations": tool_annotations("Scan Workspace & Storage", true, false, true),
             "inputSchema": {
                 "type": "object",
                 "properties": {
                     "path": { "type": "string", "description": t("Folder path to scan (default: current directory .)") },
                     "scope": { "type": "string", "enum": ["projects", "agents", "combined", "all"], "default": "projects" },
+                    "targets": {
+                        "type": "array",
+                        "items": { "type": "string", "enum": ["projects", "agents", "caches", "system", "all", "drives"] },
+                        "description": "Optional multi-target selection overriding scope (e.g. ['projects','agents','caches','system'])."
+                    },
                     "min_size_mb": { "type": "number", "description": t("Minimum size threshold (MB)") }
                 }
             }
@@ -255,9 +300,11 @@ fn tool_definitions(allow_destructive: bool) -> Vec<Value> {
         json!({
             "name": "devcleaner_preview_cleanup",
             "description": t("Builds a cleanup plan and returns a single-use token. Never deletes anything."),
+            "annotations": tool_annotations("Preview Workspace Cleanup", true, false, true),
             "inputSchema": {
                 "type": "object",
                 "properties": {
+                    "scan_id": { "type": "string", "description": "Scan session ID returned by devcleaner_scan_workspace." },
                     "target_ids": { "type": "array", "items": { "type": "string" }, "description": t("List of target IDs returned by devcleaner_scan_workspace") },
                     "path": { "type": "string", "description": t("Workspace directory for target verification") }
                 },
@@ -265,25 +312,54 @@ fn tool_definitions(allow_destructive: bool) -> Vec<Value> {
             }
         }),
         json!({
-            "name": "devcleaner_clean_safe",
-            "description": t("DEPRECATED: now behaves exactly like devcleaner_preview_cleanup and never deletes anything. Use devcleaner_preview_cleanup + devcleaner_execute_cleanup."),
+            "name": "devcleaner_list_caches",
+            "description": t("Lists and measures cache status, disk sizes, provider IDs, and official cleanup action IDs for developer tools."),
+            "annotations": tool_annotations("List & Measure Tool Caches", true, false, true),
+            "inputSchema": { "type": "object", "properties": {} }
+        }),
+        json!({
+            "name": "devcleaner_preview_cache",
+            "description": "Measures a developer tool cache before cleanup and returns a single-use preview_token for devcleaner_clean_cache. Never deletes anything.",
+            "annotations": tool_annotations("Preview Tool Cache Cleanup", true, false, true),
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    "target_ids": { "type": "array", "items": { "type": "string" }, "description": t("List of target IDs to clean") },
-                    "path": { "type": "string", "description": t("Workspace directory for target verification") }
+                    "provider_id": { "type": "string", "description": t("Provider ID to clean (e.g. npm, cargo, pip, docker)") },
+                    "action_id": { "type": "string", "description": t("Optional action ID from devcleaner_list_caches; defaults to the first action") }
                 },
-                "required": ["target_ids"]
+                "required": ["provider_id"]
             }
         }),
         json!({
-            "name": "devcleaner_list_caches",
-            "description": t("Lists cache status and sizes for developer tools (Docker, npm, Cargo, pip, Gradle, Go, etc.)."),
+            "name": "devcleaner_system_scan",
+            "description": "Scans Windows C: drive system cleanup categories (temp folders, Prefetch, Windows Update leftovers, Recycle Bin, etc.) and reports measured sizes.",
+            "annotations": tool_annotations("Scan C: System Cleaner", true, false, true),
             "inputSchema": { "type": "object", "properties": {} }
+        }),
+        json!({
+            "name": "devcleaner_system_preview",
+            "description": "Validates selected C: system cleanup action IDs or profile (quick/standard/deep) and returns a single-use token for devcleaner_system_execute. Never deletes anything.",
+            "annotations": tool_annotations("Preview C: System Cleanup", true, false, true),
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "action_ids": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "Action IDs from devcleaner_system_scan (e.g. ['userTemp','windowsUpdate'])."
+                    },
+                    "profile": {
+                        "type": "string",
+                        "enum": ["quick", "standard", "deep"],
+                        "description": "Optional preset profile instead of explicit action_ids."
+                    }
+                }
+            }
         }),
         json!({
             "name": "devcleaner_get_history",
             "description": t("Lists past cleanup and audit records performed by Dev Cleaner."),
+            "annotations": tool_annotations("Read Cleanup History", true, false, true),
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -293,7 +369,8 @@ fn tool_definitions(allow_destructive: bool) -> Vec<Value> {
         }),
         json!({
             "name": "devcleaner_inspect_target",
-            "description": t("Inspects safety class, rule details, and cleanup eligibility for a specific target."),
+            "description": t("Inspects safety class, PathGuard protection, rule details, and cleanup eligibility for a specific target."),
+            "annotations": tool_annotations("Inspect Target Safety", true, false, true),
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -307,20 +384,21 @@ fn tool_definitions(allow_destructive: bool) -> Vec<Value> {
     if allow_destructive {
         tools.push(json!({
             "name": "devcleaner_clean_cache",
-            "description": t("Cleans the cache of a specific tool (npm, pip, cargo, docker, etc.) via official CLI command. Destructive: requires confirm:true, the --allow-destructive flag and the MCP destructive setting."),
+            "description": "Executes a previewed developer tool cache cleanup via official CLI command. Call devcleaner_preview_cache first to obtain preview_token. Destructive: requires preview_token, confirm:true, --allow-destructive and the MCP destructive setting.",
+            "annotations": tool_annotations("Clean Tool Cache", false, true, false),
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    "provider_id": { "type": "string", "description": t("Provider ID to clean (e.g. npm, cargo, pip, docker)") },
-                    "action_id": { "type": "string", "description": t("Optional action ID from devcleaner_list_caches; defaults to the first action") },
+                    "preview_token": { "type": "string", "description": "Single-use preview_token returned by devcleaner_preview_cache." },
                     "confirm": { "type": "boolean", "description": t("Must be true; proves the caller intentionally requests cache deletion") }
                 },
-                "required": ["provider_id", "confirm"]
+                "required": ["preview_token", "confirm"]
             }
         }));
         tools.push(json!({
             "name": "devcleaner_execute_cleanup",
             "description": t("Executes a previously previewed cleanup plan. Requires confirm:true, a single-use token, the --allow-destructive flag and the MCP destructive setting."),
+            "annotations": tool_annotations("Execute Workspace Cleanup", false, true, false),
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -330,9 +408,33 @@ fn tool_definitions(allow_destructive: bool) -> Vec<Value> {
                 "required": ["token", "confirm"]
             }
         }));
+        tools.push(json!({
+            "name": "devcleaner_system_execute",
+            "description": "Executes a previewed C: system cleanup plan. Call devcleaner_system_preview first to obtain a single-use token. Destructive: requires token, confirm:true, --allow-destructive and the MCP destructive setting.",
+            "annotations": tool_annotations("Execute C: System Cleanup", false, true, false),
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "token": { "type": "string", "description": "Single-use token returned by devcleaner_system_preview." },
+                    "confirm": { "type": "boolean", "description": "Must be true; proves the caller saw the preview." }
+                },
+                "required": ["token", "confirm"]
+            }
+        }));
     }
 
     tools
+}
+
+fn negotiate_protocol_version(params: Option<&Value>) -> &'static str {
+    match params
+        .and_then(|p| p.get("protocolVersion"))
+        .and_then(|v| v.as_str())
+    {
+        Some("2024-11-05") => "2024-11-05",
+        Some("2025-03-26") => "2025-03-26",
+        _ => "2025-03-26",
+    }
 }
 
 fn handle_mcp_message(req: &JsonRpcRequest, id_present: bool, ctx: &McpContext) -> Option<Value> {
@@ -357,7 +459,7 @@ fn handle_mcp_message(req: &JsonRpcRequest, id_present: bool, ctx: &McpContext) 
             "jsonrpc": "2.0",
             "id": id,
             "result": {
-                "protocolVersion": "2024-11-05",
+                "protocolVersion": negotiate_protocol_version(req.params.as_ref()),
                 "serverInfo": {
                     "name": "dev-cleaner-mcp",
                     "version": env!("CARGO_PKG_VERSION")
@@ -365,7 +467,7 @@ fn handle_mcp_message(req: &JsonRpcRequest, id_present: bool, ctx: &McpContext) 
                 "capabilities": { "tools": {} }
             }
         })),
-        "notifications/initialized" => None,
+        "notifications/initialized" | "notifications/cancelled" => None,
         "ping" => Some(json!({
             "jsonrpc": "2.0",
             "id": id,
@@ -517,25 +619,12 @@ impl McpContext {
 
     fn execute_tool(&self, name: &str, args: &Value) -> ToolCallOutput {
         match name {
-            "devcleaner_list_caches" => {
-                let providers = crate::cleanup::official_actions::list_cache_providers();
-                let mut summary = tf(
-                    "Dev Cleaner: Status of {} Developer Tool Caches:",
-                    &[&providers.len()],
-                );
-                summary.push('\n');
-                for p in providers {
-                    let status = if p.detected {
-                        t("Installed / Detected")
-                    } else {
-                        t("Not found")
-                    };
-                    let ver = p.version.unwrap_or_else(|| "-".to_string());
-                    summary.push_str(&format!("• {} ({}) -> {}\n", p.name, ver, status));
-                }
-                ToolCallOutput::ok(summary)
-            }
+            "devcleaner_list_caches" => self.list_caches(),
+            "devcleaner_preview_cache" => self.preview_cache(args),
             "devcleaner_clean_cache" => self.clean_cache(args),
+            "devcleaner_system_scan" => self.system_scan(),
+            "devcleaner_system_preview" => self.system_preview(args),
+            "devcleaner_system_execute" => self.system_execute(args),
             "devcleaner_scan_workspace" => self.scan_workspace(args),
             "devcleaner_preview_cleanup" | "devcleaner_clean_safe" => self.preview_cleanup(args),
             "devcleaner_execute_cleanup" => self.execute_cleanup(args),
@@ -550,11 +639,177 @@ impl McpContext {
         }
     }
 
+    fn list_caches(&self) -> ToolCallOutput {
+        let mut providers = crate::cleanup::official_actions::list_cache_providers();
+        let detected_ids: Vec<String> = providers
+            .iter()
+            .filter(|p| p.detected)
+            .map(|p| p.id.clone())
+            .collect();
+        let token = CancellationToken::new();
+        let mut totals: HashMap<String, u64> = HashMap::new();
+        if !detected_ids.is_empty() {
+            crate::cleanup::official_actions::measure_cache_providers(
+                &token,
+                Some(&detected_ids),
+                |event| {
+                    if let crate::cleanup::official_actions::CacheMeasureEvent::ProviderFinished {
+                        provider_id,
+                        total_bytes,
+                    } = event
+                    {
+                        totals.insert(provider_id, total_bytes);
+                    }
+                },
+            );
+        }
+
+        let mut total_measured_bytes = 0u64;
+        let items: Vec<Value> = providers
+            .drain(..)
+            .map(|p| {
+                let measured = totals
+                    .get(&p.id)
+                    .copied()
+                    .or_else(|| p.measured.then_some(p.total_bytes));
+                if let Some(b) = measured {
+                    total_measured_bytes = total_measured_bytes.saturating_add(b);
+                }
+                let actions: Vec<Value> = p
+                    .actions
+                    .iter()
+                    .map(|a| {
+                        let cmd = a.executable.as_deref().map(|exe| {
+                            if a.args.is_empty() {
+                                exe.to_string()
+                            } else {
+                                format!("{} {}", exe, a.args.join(" "))
+                            }
+                        });
+                        json!({
+                            "action_id": a.id,
+                            "label": a.label,
+                            "command": cmd,
+                            "available": a.available,
+                        })
+                    })
+                    .collect();
+                json!({
+                    "provider_id": p.id,
+                    "name": p.name,
+                    "detected": p.detected,
+                    "version": p.version,
+                    "measured_bytes": measured,
+                    "measured_human": measured.map(format_size),
+                    "actions": actions,
+                })
+            })
+            .collect();
+
+        let payload = json!({
+            "provider_count": items.len(),
+            "detected_count": detected_ids.len(),
+            "total_measured_bytes": total_measured_bytes,
+            "total_measured_human": format_size(total_measured_bytes),
+            "providers": items,
+        });
+        ToolCallOutput::ok(serde_json::to_string_pretty(&payload).unwrap_or_default())
+    }
+
+    fn preview_cache(&self, args: &Value) -> ToolCallOutput {
+        let provider_id = args
+            .get("provider_id")
+            .and_then(|p| p.as_str())
+            .unwrap_or("");
+        if provider_id.is_empty() {
+            return ToolCallOutput::error(t(
+                "Error: 'provider_id' parameter is required (e.g. 'npm', 'pip', 'cargo').",
+            ));
+        }
+
+        let providers = crate::cleanup::official_actions::list_cache_providers();
+        let Some(p) = providers
+            .iter()
+            .find(|p| p.id.eq_ignore_ascii_case(provider_id))
+        else {
+            return ToolCallOutput::error(tf(
+                "Unknown provider ID: '{}'. Use 'devcleaner_list_caches' to list available providers.",
+                &[&provider_id],
+            ));
+        };
+        if !p.detected {
+            return ToolCallOutput::error(tf(
+                "Tool cache could not be cleaned: '{}' is not installed.",
+                &[&p.name],
+            ));
+        }
+        if p.actions.is_empty() {
+            return ToolCallOutput::error(tf(
+                "No official CLI cleanup command is defined for '{}'.",
+                &[&p.name],
+            ));
+        }
+
+        let action_id = args.get("action_id").and_then(|a| a.as_str()).unwrap_or("");
+        let action = if action_id.is_empty() {
+            &p.actions[0]
+        } else {
+            match p
+                .actions
+                .iter()
+                .find(|a| a.id.eq_ignore_ascii_case(action_id))
+            {
+                Some(action) => action,
+                None => {
+                    let available = p
+                        .actions
+                        .iter()
+                        .map(|a| a.id.as_str())
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    return ToolCallOutput::error(tf(
+                        "Unknown action '{}' for '{}'. Available actions: {}",
+                        &[&action_id, &p.name, &available],
+                    ));
+                }
+            }
+        };
+
+        let token = CancellationToken::new();
+        match crate::cleanup::official_actions::preview_action(
+            &self.cache_registry,
+            &p.id,
+            &action.id,
+            &token,
+        ) {
+            Ok(preview) => {
+                let command_display = if preview.args.is_empty() {
+                    preview.executable.clone()
+                } else {
+                    format!("{} {}", preview.executable, preview.args.join(" "))
+                };
+                let payload = json!({
+                    "status": "preview",
+                    "preview_token": preview.token,
+                    "provider_id": preview.provider_id,
+                    "action_id": preview.action_id,
+                    "label": action.label,
+                    "command": command_display,
+                    "before_bytes": preview.before_bytes,
+                    "before_human": format_size(preview.before_bytes),
+                    "before_truncated": preview.measurement_truncated,
+                    "expires_in_seconds": PREVIEW_TTL.as_secs(),
+                    "next_step": "Call devcleaner_clean_cache with preview_token and confirm:true."
+                });
+                ToolCallOutput::ok(serde_json::to_string_pretty(&payload).unwrap_or_default())
+            }
+            Err(e) => {
+                ToolCallOutput::error(tf("Failed to create action preview: {}", &[&e.to_string()]))
+            }
+        }
+    }
+
     fn clean_cache(&self, args: &Value) -> ToolCallOutput {
-        // Destructive path: the same gates as `devcleaner_execute_cleanup`.
-        // Previously this tool skipped all of them, so an agent could delete
-        // npm/pip/cargo caches even when the user had disabled destructive MCP
-        // actions in Settings.
         if !self.options.allow_destructive {
             return ToolCallOutput::error(t(
                 "Blocked: the MCP server was not started with --allow-destructive.",
@@ -566,138 +821,213 @@ impl McpContext {
             .unwrap_or(false);
         if !confirm {
             return ToolCallOutput::error(t(
-                "Blocked: 'confirm' must be true. Run devcleaner_list_caches and ask the user first.",
+                "Blocked: 'confirm' must be true. Run devcleaner_preview_cache and ask the user first.",
             ));
         }
         let state = mcp_state();
         if !state.settings.load().mcp_allow_destructive {
             return ToolCallOutput::error(t(
-                "Blocked: MCP destructive actions are disabled in Settings → Automation.",
+                "Blocked: MCP destructive actions are disabled in Settings → Safety & Policy → AI agent policy.",
             ));
         }
 
-        let provider_id = args
-            .get("provider_id")
-            .and_then(|p| p.as_str())
+        let preview_token = args
+            .get("preview_token")
+            .or_else(|| args.get("token"))
+            .and_then(|t| t.as_str())
             .unwrap_or("");
-        if provider_id.is_empty() {
-            return ToolCallOutput::error(t(
-                "Error: 'provider_id' parameter is required (e.g. 'npm', 'pip', 'cargo').",
-            ));
+        if preview_token.is_empty() {
+            return ToolCallOutput::error(
+                "Error: 'preview_token' is required. Call devcleaner_preview_cache first with provider_id (and optional action_id) to obtain a preview_token.",
+            );
         }
 
-        let registry = crate::cleanup::official_actions::OfficialActionRegistry::new();
-        let providers = crate::cleanup::official_actions::list_cache_providers();
-        let found = providers
-            .iter()
-            .find(|p| p.id.eq_ignore_ascii_case(provider_id));
-
-        match found {
-            Some(p) => {
-                if !p.detected {
-                    return ToolCallOutput::error(tf(
-                        "Tool cache could not be cleaned: '{}' is not installed.",
-                        &[&p.name],
-                    ));
-                }
-                if p.actions.is_empty() {
-                    return ToolCallOutput::error(tf(
-                        "No official CLI cleanup command is defined for '{}'.",
-                        &[&p.name],
-                    ));
-                }
-
-                let action_id = args
-                    .get("action_id")
-                    .and_then(|a| a.as_str())
-                    .unwrap_or("");
-                let action = if action_id.is_empty() {
-                    &p.actions[0]
-                } else {
-                    match p
-                        .actions
-                        .iter()
-                        .find(|a| a.id.eq_ignore_ascii_case(action_id))
-                    {
-                        Some(action) => action,
-                        None => {
-                            let available = p
-                                .actions
-                                .iter()
-                                .map(|a| a.id.as_str())
-                                .collect::<Vec<_>>()
-                                .join(", ");
-                            return ToolCallOutput::error(tf(
-                                "Unknown action '{}' for '{}'. Available actions: {}",
-                                &[&action_id, &p.name, &available],
-                            ));
-                        }
+        match crate::cleanup::official_actions::execute_action(&self.cache_registry, preview_token)
+        {
+            Ok(res) => {
+                if state.settings.load().history_enabled {
+                    let record = crate::audit::ActionAuditRecord {
+                        id: format!("a-{}", uuid::Uuid::new_v4().simple()),
+                        timestamp: chrono::Local::now().to_rfc3339(),
+                        provider_id: res.provider_id.clone(),
+                        action_id: res.action_id.clone(),
+                        label: res.label.clone(),
+                        success: res.success,
+                        exit_code: res.exit_code,
+                        before_bytes: res.before_bytes,
+                        after_bytes: res.after_bytes,
+                        delta_bytes: res.delta_bytes,
+                        duration_ms: res.duration_ms,
+                    };
+                    if let Err(err) = state.audit.append_action(&record) {
+                        crate::logging::warn("could not record the MCP cache action audit", err);
                     }
-                };
-                let preview_token = CancellationToken::new();
-                match crate::cleanup::official_actions::preview_action(
-                    &registry,
-                    &p.id,
-                    &action.id,
-                    &preview_token,
-                ) {
-                    Ok(preview) => match crate::cleanup::official_actions::execute_action(
-                        &registry,
-                        &preview.token,
-                    ) {
-                        Ok(res) => {
-                            // The GUI records every official action in the audit
-                            // database; the MCP path skipped it, so an agent
-                            // cleanup left no trace in History.
-                            if state.settings.load().history_enabled {
-                                let record = crate::audit::ActionAuditRecord {
-                                    id: format!("a-{}", uuid::Uuid::new_v4().simple()),
-                                    timestamp: chrono::Local::now().to_rfc3339(),
-                                    provider_id: res.provider_id.clone(),
-                                    action_id: res.action_id.clone(),
-                                    label: res.label.clone(),
-                                    success: res.success,
-                                    exit_code: res.exit_code,
-                                    before_bytes: res.before_bytes,
-                                    after_bytes: res.after_bytes,
-                                    delta_bytes: res.delta_bytes,
-                                    duration_ms: res.duration_ms,
-                                };
-                                if let Err(err) = state.audit.append_action(&record) {
-                                    crate::logging::warn(
-                                        "could not record the MCP cache action audit",
-                                        err,
-                                    );
-                                }
-                            }
-                            let reclaimed = res.before_bytes.saturating_sub(res.after_bytes);
-                            if res.success {
-                                ToolCallOutput::ok(tf(
-                                    "[OK] Success: {} cache cleaned. Reclaimed: {}",
-                                    &[&p.name, &format_size(reclaimed)],
-                                ))
-                            } else {
-                                ToolCallOutput::error(tf(
-                                    "[WARN] {} cleanup failed (Exit code: {})",
-                                    &[&p.name, &res.exit_code.map_or_else(|| "terminated".to_string(), |code| code.to_string())],
-                                ))
-                            }
-                        }
-                        Err(e) => ToolCallOutput::error(tf(
-                            "Error executing cleanup command: {}",
-                            &[&e.to_string()],
-                        )),
-                    },
-                    Err(e) => ToolCallOutput::error(tf(
-                        "Failed to create action preview: {}",
-                        &[&e.to_string()],
-                    )),
+                }
+                let reclaimed = res.before_bytes.saturating_sub(res.after_bytes);
+                let payload = json!({
+                    "status": if res.success { "success" } else { "failed" },
+                    "provider_id": res.provider_id,
+                    "action_id": res.action_id,
+                    "reclaimed_bytes": reclaimed,
+                    "reclaimed_human": format_size(reclaimed),
+                    "before_bytes": res.before_bytes,
+                    "after_bytes": res.after_bytes,
+                    "exit_code": res.exit_code,
+                });
+                let text = serde_json::to_string_pretty(&payload).unwrap_or_default();
+                if res.success {
+                    ToolCallOutput::ok(text)
+                } else {
+                    ToolCallOutput::error(text)
                 }
             }
-            None => ToolCallOutput::error(tf(
-                "Unknown provider ID: '{}'. Use 'devcleaner_list_caches' to list available providers.",
-                &[&provider_id],
-            )),
+            Err(e) => {
+                ToolCallOutput::error(tf("Error executing cleanup command: {}", &[&e.to_string()]))
+            }
+        }
+    }
+
+    fn system_scan(&self) -> ToolCallOutput {
+        let elevated = crate::platform::is_elevated();
+        let token = CancellationToken::new();
+        let outcome = crate::system_cleaner::measure::scan(elevated, &token);
+        let total: u64 = outcome
+            .actions
+            .iter()
+            .filter(|a| a.measured)
+            .fold(0u64, |sum, a| sum.saturating_add(a.bytes));
+        let payload = json!({
+            "elevated": elevated,
+            "total_bytes": total,
+            "total_human": format_size(total),
+            "actions": outcome.actions,
+            "warnings": outcome.warnings,
+        });
+        ToolCallOutput::ok(serde_json::to_string_pretty(&payload).unwrap_or_default())
+    }
+
+    fn system_preview(&self, args: &Value) -> ToolCallOutput {
+        let mut ids: Vec<crate::system_cleaner::SystemActionId> = Vec::new();
+        if let Some(arr) = args.get("action_ids").and_then(|v| v.as_array()) {
+            for entry in arr {
+                let Some(raw) = entry.as_str() else { continue };
+                let Some(parsed) = crate::system_cleaner::SystemActionId::parse(raw) else {
+                    return ToolCallOutput::error(format!("Unknown system action_id '{raw}'."));
+                };
+                if !ids.contains(&parsed) {
+                    ids.push(parsed);
+                }
+            }
+        } else if let Some(profile) = args.get("profile").and_then(|v| v.as_str()) {
+            let lower = profile.to_lowercase();
+            if !matches!(lower.as_str(), "quick" | "standard" | "deep") {
+                return ToolCallOutput::error(format!(
+                    "Unknown system profile '{profile}'; use quick, standard, or deep."
+                ));
+            }
+            ids = crate::system_cleaner::profile_actions(&lower);
+        }
+
+        if ids.is_empty() {
+            return ToolCallOutput::error(
+                "Error: provide 'action_ids' (e.g. ['userTemp']) or 'profile' ('quick'|'standard'|'deep').",
+            );
+        }
+
+        let elevated = crate::platform::is_elevated();
+        let requires_admin = ids
+            .iter()
+            .any(|id| crate::system_cleaner::actions::spec(*id).requires_admin);
+        if requires_admin && !elevated {
+            return ToolCallOutput::error(
+                "Blocked: selected system actions require administrator privileges.",
+            );
+        }
+
+        let token = CancellationToken::new();
+        let actions = crate::system_cleaner::measure::measure_actions(&ids, elevated, &token);
+        let total: u64 = actions
+            .iter()
+            .fold(0u64, |sum, a| sum.saturating_add(a.bytes));
+        let preview_token = format!("sys-{}", uuid::Uuid::new_v4().simple());
+
+        {
+            let mut grants = self.system_grants();
+            make_room_for_system_grant(&mut grants);
+            grants.insert(
+                preview_token.clone(),
+                SystemPreviewGrant {
+                    ids,
+                    created: Instant::now(),
+                },
+            );
+        }
+
+        let payload = json!({
+            "status": "preview",
+            "token": preview_token,
+            "elevated": elevated,
+            "requires_admin": requires_admin,
+            "total_bytes": total,
+            "total_human": format_size(total),
+            "expires_in_seconds": PREVIEW_TTL.as_secs(),
+            "actions": actions,
+            "next_step": "Call devcleaner_system_execute with this token and confirm:true."
+        });
+        ToolCallOutput::ok(serde_json::to_string_pretty(&payload).unwrap_or_default())
+    }
+
+    fn system_execute(&self, args: &Value) -> ToolCallOutput {
+        let confirm = args
+            .get("confirm")
+            .and_then(|c| c.as_bool())
+            .unwrap_or(false);
+        if !confirm {
+            return ToolCallOutput::error(t(
+                "Blocked: 'confirm' must be true. Run devcleaner_system_preview first.",
+            ));
+        }
+        if !self.options.allow_destructive {
+            return ToolCallOutput::error(t(
+                "Blocked: the MCP server was not started with --allow-destructive.",
+            ));
+        }
+        let token = match args.get("token").and_then(|t| t.as_str()) {
+            Some(t) if !t.is_empty() => t.to_string(),
+            _ => return ToolCallOutput::error(t("Error: 'token' is required.")),
+        };
+        let state = mcp_state();
+        let settings = state.settings.load();
+        if !settings.mcp_allow_destructive {
+            return ToolCallOutput::error(t(
+                "Blocked: MCP destructive actions are disabled in Settings → Safety & Policy → AI agent policy.",
+            ));
+        }
+
+        let Some(grant) = self.system_grants().remove(&token) else {
+            return ToolCallOutput::error(t("PlanInvalid: unknown or already used system token."));
+        };
+        if grant.created.elapsed() > PREVIEW_TTL {
+            return ToolCallOutput::error(t(
+                "PlanExpired: the system preview token has expired. Run devcleaner_system_preview again.",
+            ));
+        }
+
+        let elevated = crate::platform::is_elevated();
+        let cancel = CancellationToken::new();
+        let report = crate::system_cleaner::execute::execute(&grant.ids, elevated, &cancel, |_| {});
+        crate::system_cleaner::execute::record_audit(
+            &state.audit,
+            &report,
+            settings.history_enabled,
+        );
+
+        let any_failed = report.results.iter().any(|r| !r.success);
+        let text = serde_json::to_string_pretty(&report).unwrap_or_default();
+        if any_failed {
+            ToolCallOutput::error(text)
+        } else {
+            ToolCallOutput::ok(text)
         }
     }
 
@@ -707,19 +1037,115 @@ impl McpContext {
             .get("min_size_mb")
             .and_then(|m| m.as_u64())
             .unwrap_or(0);
-        let scope_str = args
+
+        let mut want_projects = false;
+        let mut want_agents = false;
+        let mut want_caches = false;
+        let mut want_system = false;
+        let mut want_all_drives = false;
+        let mut scope_label = args
             .get("scope")
             .and_then(|s| s.as_str())
-            .unwrap_or("projects");
-        let scope = match parse_scope(scope_str) {
-            Some(scope) => scope,
-            None => {
-                return ToolCallOutput::error(tf(
-                    "Error: unknown scope '{}'. Use 'projects', 'agents', 'combined' or 'all'.",
-                    &[&scope_str],
-                ))
+            .unwrap_or("projects")
+            .to_string();
+
+        if let Some(arr) = args.get("targets").and_then(|v| v.as_array()) {
+            let mut labels = Vec::new();
+            for item in arr {
+                let Some(tok) = item.as_str() else { continue };
+                match tok.to_lowercase().as_str() {
+                    "p" | "project" | "projects" => {
+                        want_projects = true;
+                        labels.push("projects");
+                    }
+                    "a" | "agent" | "agents" => {
+                        want_agents = true;
+                        labels.push("agents");
+                    }
+                    "c" | "cache" | "caches" => {
+                        want_caches = true;
+                        labels.push("caches");
+                    }
+                    "s" | "sys" | "system" => {
+                        want_system = true;
+                        labels.push("system");
+                    }
+                    "drives" | "all-drives" => {
+                        want_projects = true;
+                        want_all_drives = true;
+                        labels.push("drives");
+                    }
+                    "all" => {
+                        want_projects = true;
+                        want_agents = true;
+                        want_caches = true;
+                        want_system = true;
+                        labels.push("all");
+                    }
+                    other => {
+                        return ToolCallOutput::error(format!(
+                            "Error: unknown target '{other}'. Use 'projects', 'agents', 'caches', 'system', 'drives' or 'all'."
+                        ));
+                    }
+                }
             }
+            if !labels.is_empty() {
+                scope_label = labels.join(",");
+            }
+        } else {
+            match parse_scope(&scope_label) {
+                Some(ScanScope::Project) => want_projects = true,
+                Some(ScanScope::Agents) => want_agents = true,
+                Some(ScanScope::Combined) => {
+                    want_projects = true;
+                    want_agents = true;
+                }
+                Some(ScanScope::AllDrives) => {
+                    want_projects = true;
+                    want_all_drives = true;
+                }
+                _ => {
+                    return ToolCallOutput::error(tf(
+                        "Error: unknown scope '{}'. Use 'projects', 'agents', 'combined' or 'all'.",
+                        &[&scope_label],
+                    ))
+                }
+            }
+        }
+
+        let scanner_scope = if want_all_drives {
+            Some(ScanScope::AllDrives)
+        } else if want_projects && want_agents {
+            Some(ScanScope::Combined)
+        } else if want_projects {
+            Some(ScanScope::Project)
+        } else if want_agents {
+            Some(ScanScope::Agents)
+        } else {
+            None
         };
+
+        let caches_payload = if want_caches {
+            serde_json::from_str::<Value>(&self.list_caches().text).ok()
+        } else {
+            None
+        };
+        let system_payload = if want_system {
+            serde_json::from_str::<Value>(&self.system_scan().text).ok()
+        } else {
+            None
+        };
+
+        let Some(scope) = scanner_scope else {
+            let payload = json!({
+                "path": path_str,
+                "scope": scope_label,
+                "caches": caches_payload,
+                "system": system_payload,
+            });
+            return ToolCallOutput::ok(serde_json::to_string_pretty(&payload).unwrap_or_default());
+        };
+
         // Saturating: `min_size_mb` is untrusted JSON-RPC input, and a value
         // near `u64::MAX` wrapped around to a tiny threshold (in release) or
         // panicked (in debug) instead of meaning "no small rows".
@@ -736,6 +1162,7 @@ impl McpContext {
             root_path: path_str.to_string(),
             exclusions: Vec::new(),
             scope,
+            include_agents: Some(want_agents),
             profile: None,
             max_depth: None,
             max_candidates: None,
@@ -788,7 +1215,6 @@ impl McpContext {
             .iter()
             .map(|it| {
                 json!({
-                    "id": it.id,
                     "target_id": it.id,
                     "name": it.display_name,
                     "path": it.display_path,
@@ -821,19 +1247,26 @@ impl McpContext {
             );
         }
 
-        let payload = json!({
+        let mut payload = json!({
             "scan_id": scan_id,
             "path": path_str,
-            "scope": scope_str,
+            "scope": scope_label,
             "total_targets_found": items.len(),
             "measured_targets": filtered_items.iter().filter(|it| it.logical_bytes.is_some()).count(),
             "total_reclaimable_bytes": total_bytes,
             "total_reclaimable_human": format_size(total_bytes),
             "cleanable_bytes": summary.cleanable_bytes,
             "items_truncated": filtered_items.len() > 25,
-            "top_targets": formatted_targets,
             "items": formatted_targets
         });
+        if let Some(obj) = payload.as_object_mut() {
+            if let Some(caches) = caches_payload {
+                obj.insert("caches".to_string(), caches);
+            }
+            if let Some(system) = system_payload {
+                obj.insert("system".to_string(), system);
+            }
+        }
         ToolCallOutput::ok(serde_json::to_string_pretty(&payload).unwrap_or_default())
     }
 
@@ -891,6 +1324,7 @@ impl McpContext {
                     root_path: path_str.to_string(),
                     exclusions: Vec::new(),
                     scope: ScanScope::Project,
+                    include_agents: None,
                     profile: None,
                     max_depth: None,
                     max_candidates: None,
@@ -1110,12 +1544,39 @@ impl McpContext {
             Ok(idx) => idx,
             Err(e) => return ToolCallOutput::error(format!("Failed to load catalog: {e}")),
         };
+        let settings = state.settings.load();
 
         let exists = target_path.exists();
         let is_symlink = target_path
             .symlink_metadata()
             .map(|m| m.file_type().is_symlink())
             .unwrap_or(false);
+        let is_reparse = exists && crate::platform::is_reparse_point(&target_path);
+
+        let hard_protected = target_path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .is_some_and(crate::safety::is_hard_protected_name);
+
+        let path_guard_verdict: Result<String, String> = if !exists {
+            Err("PathNotFound: target does not exist on disk.".to_string())
+        } else if let Some(parent) = target_path.parent() {
+            let scan_roots = vec![parent.to_path_buf()];
+            let ctx = crate::safety::GuardContext {
+                scan_roots: &scan_roots,
+                protected_paths: &settings.protected_paths,
+            };
+            crate::safety::PathGuard::validate(&target_path, &ctx)
+                .map(|canonical| canonical.to_string_lossy().to_string())
+                .map_err(|err| err.to_string())
+        } else {
+            Err("UnsafeDeleteTarget: drive root cannot be deleted.".to_string())
+        };
+
+        let (protected, block_reason, canonical_path) = match path_guard_verdict {
+            Ok(canonical) => (hard_protected, None, Some(canonical)),
+            Err(reason) => (true, Some(reason), None),
+        };
 
         let matched_rule = catalog.rules().iter().find(|r| {
             if let Some(name) = target_path.file_name().and_then(|n| n.to_str()) {
@@ -1129,8 +1590,14 @@ impl McpContext {
 
         let payload = json!({
             "path": target_path.to_string_lossy(),
+            "canonical_path": canonical_path,
             "exists": exists,
             "is_symlink": is_symlink,
+            "is_reparse_point": is_reparse,
+            "hard_protected": hard_protected,
+            "protected": protected,
+            "eligible": !protected && exists && matched_rule.is_some(),
+            "block_reason": block_reason,
             "matched_rule": matched_rule.map(|r| json!({
                 "id": r.id,
                 "ecosystem": r.ecosystem,
@@ -1437,5 +1904,67 @@ mod tests {
             response["result"]["isError"],
             serde_json::Value::Bool(false)
         );
+        let parsed: Value =
+            serde_json::from_str(response["result"]["content"][0]["text"].as_str().unwrap())
+                .expect("structured JSON cache list");
+        assert!(parsed["providers"].is_array());
+    }
+
+    #[test]
+    fn initialize_negotiates_protocol_version_and_tools_include_annotations() {
+        let r25 = call(
+            McpOptions::default(),
+            r#"{"jsonrpc":"2.0","id":11,"method":"initialize","params":{"protocolVersion":"2025-03-26"}}"#,
+        );
+        assert_eq!(r25["result"]["protocolVersion"], "2025-03-26");
+
+        let r24 = call(
+            McpOptions::default(),
+            r#"{"jsonrpc":"2.0","id":12,"method":"initialize","params":{"protocolVersion":"2024-11-05"}}"#,
+        );
+        assert_eq!(r24["result"]["protocolVersion"], "2024-11-05");
+
+        let list = call(
+            McpOptions {
+                allow_destructive: true,
+            },
+            r#"{"jsonrpc":"2.0","id":13,"method":"tools/list"}"#,
+        );
+        let tools = list["result"]["tools"].as_array().unwrap();
+        assert!(
+            !tools.iter().any(|t| t["name"] == "devcleaner_clean_safe"),
+            "deprecated devcleaner_clean_safe must not appear in tools/list"
+        );
+        assert!(tools
+            .iter()
+            .any(|t| t["name"] == "devcleaner_preview_cache"));
+        assert!(tools.iter().any(|t| t["name"] == "devcleaner_system_scan"));
+        assert!(tools
+            .iter()
+            .any(|t| t["name"] == "devcleaner_system_preview"));
+        assert!(tools
+            .iter()
+            .any(|t| t["name"] == "devcleaner_system_execute"));
+        for tool in tools {
+            assert!(
+                tool["annotations"]["readOnlyHint"].is_boolean(),
+                "tool {} missing readOnlyHint annotation",
+                tool["name"]
+            );
+        }
+    }
+
+    #[test]
+    fn inspect_target_enforces_real_path_guard_on_system_paths() {
+        let response = call(
+            McpOptions::default(),
+            r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"devcleaner_inspect_target","arguments":{"path":"C:\\Windows\\System32"}}}"#,
+        );
+        assert_eq!(response["result"]["isError"], Value::Bool(false));
+        let parsed: Value =
+            serde_json::from_str(response["result"]["content"][0]["text"].as_str().unwrap())
+                .unwrap();
+        assert_eq!(parsed["protected"], Value::Bool(true));
+        assert_eq!(parsed["eligible"], Value::Bool(false));
     }
 }

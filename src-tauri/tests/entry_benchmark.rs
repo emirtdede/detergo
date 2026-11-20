@@ -118,6 +118,7 @@ fn directory_entry_benchmark() {
         root_path: root.to_string_lossy().to_string(),
         exclusions: Vec::new(),
         scope: ScanScope::Project,
+        include_agents: None,
         profile: Some("deep".to_string()),
         max_depth: Some(64),
         max_candidates: Some(100_000),
