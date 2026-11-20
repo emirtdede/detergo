@@ -13,6 +13,7 @@ export type BridgeStatus = "checking" | "ready" | "unavailable";
  */
 export function useBridgeStatus(): { status: BridgeStatus; retry: () => void } {
   const [status, setStatus] = useState<BridgeStatus>("checking");
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -22,11 +23,10 @@ export function useBridgeStatus(): { status: BridgeStatus; retry: () => void } {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [attempt]);
 
   const retry = useCallback(() => {
-    setStatus("checking");
-    void warmUpApi().then((ok) => setStatus(ok ? "ready" : "unavailable"));
+    setAttempt((n) => n + 1);
   }, []);
 
   return { status, retry };

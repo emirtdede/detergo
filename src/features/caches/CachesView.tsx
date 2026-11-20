@@ -55,6 +55,15 @@ export const CachesView: React.FC = () => {
   const [previewLoading, setPreviewLoading] = useState(false);
 
   const previewRequestRef = useRef(0);
+  const unmountedRef = useRef(false);
+
+  useEffect(() => {
+    unmountedRef.current = false;
+    return () => {
+      unmountedRef.current = true;
+      previewRequestRef.current += 1;
+    };
+  }, []);
 
   const [error, setError] = useState<AppErrorDto | null>(null);
 
@@ -178,6 +187,7 @@ export const CachesView: React.FC = () => {
 
     try {
       const next = await scannerApi.executeOfficialAction(preview.token);
+      if (unmountedRef.current) return;
 
       setResult(next);
 
@@ -188,6 +198,7 @@ export const CachesView: React.FC = () => {
 
       void startMeasure([providerId]);
     } catch (err) {
+      if (unmountedRef.current) return;
       setError(toAppError(err));
 
       // The token was consumed by the backend even though the command failed.
@@ -195,7 +206,7 @@ export const CachesView: React.FC = () => {
       // but disable the action so it cannot be retried with a dead token.
       setTokenConsumed(true);
     } finally {
-      setRunning(false);
+      if (!unmountedRef.current) setRunning(false);
     }
   };
 

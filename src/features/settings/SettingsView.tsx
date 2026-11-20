@@ -312,8 +312,9 @@ export const SettingsView: React.FC = () => {
       { id: "navDocs", label: ui.settings.scNavDocs, hint: ui.settings.scNavDocsHint },
       { id: "navHistory", label: ui.settings.scNavHistory, hint: ui.settings.scNavHistoryHint },
       { id: "navSettings", label: ui.settings.scNavSettings, hint: ui.settings.scNavSettingsHint },
+      { id: "navSystem", label: ui.nav.system, hint: ui.system.subtitle },
     ],
-    [ui.settings],
+    [ui.settings, ui.nav.system, ui.system.subtitle],
   );
 
   const updateNotify = (
@@ -447,7 +448,7 @@ export const SettingsView: React.FC = () => {
 
     window.addEventListener("keydown", handleKeyDown, true);
     return () => window.removeEventListener("keydown", handleKeyDown, true);
-  }, [recordingId, prefs.shortcuts, shortcutDefs, ui]);
+  }, [recordingId, prefs.shortcuts, prefs.setShortcut, shortcutDefs, showToast, ui]);
 
   const save = async (patch: Parameters<typeof prefs.updateSettings>[0]) => {
     prefs.updateSettings(patch);
@@ -489,7 +490,10 @@ export const SettingsView: React.FC = () => {
     [sections, ui.settings],
   );
 
-  const flatGroupedSections = useMemo(() => sectionGroups.flatMap((g) => g.items), [sectionGroups]);
+  const flatGroupedSections = useMemo(
+    () => sectionGroups.flatMap((g) => g.items),
+    [sectionGroups],
+  );
 
   const moveGroupedTab = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
     let next = index;
@@ -701,9 +705,7 @@ export const SettingsView: React.FC = () => {
                   <select
                     value={prefs.sidebarMode}
                     onChange={(e) =>
-                      prefs.setSidebarMode(
-                        e.target.value === "collapsed" ? "collapsed" : "expanded",
-                      )
+                      prefs.setSidebarMode(e.target.value === "collapsed" ? "collapsed" : "expanded")
                     }
                   >
                     <option value="expanded">{ui.settings.sidebarExpanded}</option>
@@ -716,9 +718,7 @@ export const SettingsView: React.FC = () => {
                     value={prefs.closeAction}
                     onChange={(e) =>
                       prefs.setCloseAction(
-                        e.target.value === "tray" || e.target.value === "quit"
-                          ? e.target.value
-                          : "ask",
+                        e.target.value === "tray" || e.target.value === "quit" ? e.target.value : "ask",
                       )
                     }
                   >
@@ -906,9 +906,7 @@ export const SettingsView: React.FC = () => {
                   </div>
                   <select
                     value={prefs.notifications?.processLock ?? "in_app"}
-                    onChange={(e) =>
-                      updateNotify("processLock", e.target.value as NotificationChannel)
-                    }
+                    onChange={(e) => updateNotify("processLock", e.target.value as NotificationChannel)}
                   >
                     <option value="both">{ui.settings.chBoth}</option>
                     <option value="in_app">{ui.settings.chInApp}</option>
@@ -998,9 +996,7 @@ export const SettingsView: React.FC = () => {
                           <td style={{ textAlign: "right" }}>
                             <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                               {isRecording ? (
-                                <span className="shortcut-recording-badge">
-                                  {ui.settings.pressKey}
-                                </span>
+                                <span className="shortcut-recording-badge">{ui.settings.pressKey}</span>
                               ) : (
                                 <span className="shortcut-key-badge">{currentShortcut}</span>
                               )}
@@ -1066,9 +1062,7 @@ export const SettingsView: React.FC = () => {
                       display: "inline-flex",
                       alignItems: "center",
                       gap: 6,
-                      color: webhookTestStatus.success
-                        ? "var(--color-success)"
-                        : "var(--color-danger)",
+                      color: webhookTestStatus.success ? "var(--color-success)" : "var(--color-danger)",
                     }}
                   >
                     {webhookTestStatus.success ? <Check size={14} /> : <X size={14} />}
@@ -1131,10 +1125,18 @@ export const SettingsView: React.FC = () => {
                       size="sm"
                       icon={<FolderOpen size={12} />}
                       onClick={async () => {
-                        const selected = await scannerApi.selectFolderDialog(
-                          ui.settings.protectedPaths,
-                        );
-                        if (selected) setProtectedInput(selected);
+                        try {
+                          const selected = await scannerApi.selectFolderDialog(
+                            ui.settings.protectedPaths,
+                          );
+                          if (selected) setProtectedInput(selected);
+                        } catch (err) {
+                          showToast(
+                            `${ui.errors.title}: ${localizeAppError(err, ui)}`,
+                            "error",
+                            6000,
+                          );
+                        }
                       }}
                     >
                       {ui.common.browse}

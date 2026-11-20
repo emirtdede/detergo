@@ -28,10 +28,7 @@ pub async fn measure_cache_providers(
 ) -> Result<(), AppError> {
     let token = CancellationToken::new();
     {
-        let mut current = state
-            .cache_token
-            .lock()
-            .map_err(|_| AppError::Unknown("Cache state lock failure.".to_string()))?;
+        let mut current = crate::lock!(state.cache_token);
         if let Some(old) = current.take() {
             old.cancel();
         }
@@ -47,7 +44,8 @@ pub async fn measure_cache_providers(
     .await
     .map_err(|e| AppError::Unknown(format!("Failed to measure caches: {}", e)));
 
-    if let Ok(mut current) = state.cache_token.lock() {
+    {
+        let mut current = crate::lock!(state.cache_token);
         if current.as_ref().map(|t| t.same(&token)).unwrap_or(false) {
             *current = None;
         }
@@ -58,10 +56,7 @@ pub async fn measure_cache_providers(
 
 #[tauri::command]
 pub fn cancel_cache_measurement(state: State<'_, AppState>) -> Result<(), AppError> {
-    let mut current = state
-        .cache_token
-        .lock()
-        .map_err(|_| AppError::Unknown("Cache state lock failure.".to_string()))?;
+    let mut current = crate::lock!(state.cache_token);
     if let Some(token) = current.take() {
         token.cancel();
     }
@@ -80,10 +75,7 @@ pub async fn preview_official_action(
     let registry = state.official.clone();
     let token = CancellationToken::new();
     {
-        let mut current = state
-            .preview_token
-            .lock()
-            .map_err(|_| AppError::Unknown("Cache preview lock failure.".to_string()))?;
+        let mut current = crate::lock!(state.preview_token);
         if let Some(old) = current.take() {
             old.cancel();
         }
@@ -97,7 +89,8 @@ pub async fn preview_official_action(
     .await
     .map_err(|e| AppError::Unknown(format!("Cache preview failed: {}", e)));
 
-    if let Ok(mut current) = state.preview_token.lock() {
+    {
+        let mut current = crate::lock!(state.preview_token);
         if current.as_ref().map(|t| t.same(&token)).unwrap_or(false) {
             *current = None;
         }
@@ -110,10 +103,7 @@ pub async fn preview_official_action(
 /// spinner left the directory walk running to completion on a large cache.
 #[tauri::command]
 pub fn cancel_cache_preview(state: State<'_, AppState>) -> Result<(), AppError> {
-    let mut current = state
-        .preview_token
-        .lock()
-        .map_err(|_| AppError::Unknown("Cache preview lock failure.".to_string()))?;
+    let mut current = crate::lock!(state.preview_token);
     if let Some(token) = current.take() {
         token.cancel();
     }

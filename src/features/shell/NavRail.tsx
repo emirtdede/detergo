@@ -16,7 +16,7 @@ import {
 import { useAppStore, AppView } from "@/stores/app-store";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
-import { useUIText, UIText } from "@/lib/ui-text";
+import { localizeAppError, useUIText, UIText } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { log } from "@/lib/logging";
 import { BREAKPOINTS, NARROW_RAIL_MEDIA_QUERY } from "@/lib/layout";
@@ -82,7 +82,9 @@ export const NavRail: React.FC = () => {
     // handler). Reported instead of leaving an unhandled rejection.
     scannerApi.openUrl(url).catch((err) => {
       log.warn("Could not open the external link", err);
-      useUiStore.getState().showToast(ui.errors.title, "error");
+      useUiStore
+        .getState()
+        .showToast(`${ui.errors.title}: ${localizeAppError(err, ui)}`, "error", 6000);
     });
   };
 

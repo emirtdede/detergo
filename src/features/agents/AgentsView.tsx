@@ -35,6 +35,7 @@ import { AgentProviderInfo, AppSettings } from "@/types";
 import { ItemTable } from "@/features/items/ItemTable";
 import { maskPath } from "@/lib/format/path";
 import { describeError } from "@/lib/errors/user-message";
+import { ownBytesById } from "@/lib/item-totals";
 
 import { usePreferencesStore } from "@/stores/preferences-store";
 
@@ -219,6 +220,8 @@ export const AgentsView: React.FC = () => {
     [itemIds, itemsById],
   );
 
+  const ownBytes = useMemo(() => ownBytesById(items), [items]);
+
   const providerStats = useMemo(() => {
     const map: Record<string, { protectedBytes: number; cleanableBytes: number; active: boolean }> =
       {};
@@ -226,7 +229,7 @@ export const AgentsView: React.FC = () => {
     for (const item of items) {
       const entry = map[item.provider] ?? { protectedBytes: 0, cleanableBytes: 0, active: false };
 
-      const bytes = item.estimatedReclaimBytes ?? 0;
+      const bytes = ownBytes.get(item.id)?.allocatedBytes ?? item.estimatedReclaimBytes ?? 0;
 
       // Same rule as the page total and the backend summary: a target is only
       // cleanable when it is not protected, not a "keep" safety class and
@@ -244,7 +247,7 @@ export const AgentsView: React.FC = () => {
     }
 
     return map;
-  }, [items]);
+  }, [items, ownBytes]);
 
   const resetAddForm = () => {
     setToolName("");
@@ -350,7 +353,7 @@ export const AgentsView: React.FC = () => {
     for (const item of items) {
       if (item.protected || item.safetyClass === "keep" || !item.selectable) continue;
 
-      const b = item.estimatedReclaimBytes ?? 0;
+      const b = ownBytes.get(item.id)?.allocatedBytes ?? item.estimatedReclaimBytes ?? 0;
 
       cleanable += b;
 
@@ -360,7 +363,7 @@ export const AgentsView: React.FC = () => {
     const detectedCount = providers.filter((p) => p.installed).length;
 
     return { cleanable, safe, detectedCount };
-  }, [items, providers]);
+  }, [items, ownBytes, providers]);
 
   return (
     <div className="page-view agents-page-view">

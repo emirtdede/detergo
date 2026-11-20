@@ -13,6 +13,7 @@ import { usePreferencesStore } from "@/stores/preferences-store";
 import { effectiveSelectedIds } from "@/features/items/selection-helpers";
 import { formatBytes } from "@/lib/formatters";
 import { formatSavedAt } from "@/lib/format/date";
+import { ownBytesById } from "@/lib/item-totals";
 import { DeleteMode } from "@/types";
 import "./results.css";
 
@@ -48,10 +49,13 @@ export const SelectionActionBar: React.FC = () => {
     [effectiveIds, itemsById],
   );
 
-  const totalBytes = useMemo(
-    () => selectedItems.reduce((acc, item) => acc + (item.estimatedReclaimBytes ?? 0), 0),
-    [selectedItems],
-  );
+  const totalBytes = useMemo(() => {
+    const own = ownBytesById(selectedItems);
+    return selectedItems.reduce(
+      (acc, item) => acc + (own.get(item.id)?.allocatedBytes ?? item.estimatedReclaimBytes ?? 0),
+      0,
+    );
+  }, [selectedItems]);
 
   if (selectedIds.size === 0 || effectiveIds.length === 0) return null;
 

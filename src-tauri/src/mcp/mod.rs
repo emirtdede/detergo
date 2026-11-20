@@ -768,10 +768,16 @@ impl McpContext {
             })
             .collect();
 
-        let mut total_bytes = 0u64;
-        for item in &filtered_items {
-            total_bytes += item.estimated_reclaim_bytes.unwrap_or(0);
-        }
+        let filtered_owned: Vec<crate::scanner::models::CleanupItem> =
+            filtered_items.iter().map(|it| (*it).clone()).collect();
+        let own = crate::scanner::own_bytes(&filtered_owned);
+        let total_bytes = filtered_items.iter().fold(0u64, |sum, item| {
+            let bytes = own
+                .get(&item.id)
+                .map(|(_, allocated)| *allocated)
+                .unwrap_or_else(|| item.estimated_reclaim_bytes.unwrap_or(0));
+            sum.saturating_add(bytes)
+        });
 
         // Token bloat protection: detail the top 25, summarize the rest.
         let mut sorted = filtered_items.clone();

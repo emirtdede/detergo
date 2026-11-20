@@ -664,6 +664,7 @@ export const DEFAULT_SHORTCUTS: Record<string, string> = {
   navDocs: "Alt+5",
   navHistory: "Alt+6",
   navSettings: "Alt+7",
+  navSystem: "Alt+8",
 };
 
 export const RESERVED_SHORTCUTS = new Set([

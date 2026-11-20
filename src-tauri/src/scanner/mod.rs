@@ -73,7 +73,7 @@ fn item_allocated(item: &CleanupItem) -> u64 {
 /// and in provider totals. Subtracting the direct children's allocated bytes
 /// telescopes back to one unique total per tree while still letting a nested
 /// child carry its own bytes when the parent is blocked.
-fn own_bytes(items: &[CleanupItem]) -> HashMap<String, (u64, u64)> {
+pub(crate) fn own_bytes(items: &[CleanupItem]) -> HashMap<String, (u64, u64)> {
     let present: std::collections::HashSet<&str> = items.iter().map(|i| i.id.as_str()).collect();
     let mut child_logical: HashMap<&str, u64> = HashMap::new();
     let mut child_allocated: HashMap<&str, u64> = HashMap::new();
@@ -103,6 +103,20 @@ fn own_bytes(items: &[CleanupItem]) -> HashMap<String, (u64, u64)> {
         .collect()
 }
 
+pub(crate) fn is_protected_item(item: &CleanupItem) -> bool {
+    item.protected || !item.selectable || item.safety_class == crate::catalog::SafetyClass::Keep
+}
+
+pub(crate) fn cleanable_own_bytes(items: &[CleanupItem]) -> u64 {
+    let own = own_bytes(items);
+    items
+        .iter()
+        .filter(|i| !is_protected_item(i))
+        .fold(0u64, |sum, i| {
+            sum.saturating_add(own.get(&i.id).map(|(_, allocated)| *allocated).unwrap_or(0))
+        })
+}
+
 fn provider_totals(items: &[CleanupItem], own: &HashMap<String, (u64, u64)>) -> Vec<ProviderTotal> {
     let mut map: HashMap<String, ProviderTotal> = HashMap::new();
     for item in items {
@@ -119,10 +133,10 @@ fn provider_totals(items: &[CleanupItem], own: &HashMap<String, (u64, u64)>) -> 
         // their own slice keeps provider cards from promising extra space.
         let (logical, allocated) = own.get(&item.id).copied().unwrap_or((0, 0));
         entry.item_count += 1;
-        // A non-selectable target can never be cleaned, so it belongs on the
-        // protected side of the ledger. Otherwise the cleanable total promises
-        // space the user cannot reclaim.
-        if item.protected || !item.selectable {
+        // A non-selectable or Keep target can never be cleaned, so it belongs
+        // on the protected side of the ledger. Otherwise the cleanable total
+        // promises space the user cannot reclaim.
+        if is_protected_item(item) {
             entry.protected_bytes = entry.protected_bytes.saturating_add(allocated);
         } else {
             entry.logical_bytes = entry.logical_bytes.saturating_add(logical);
@@ -194,12 +208,12 @@ fn build_summary(
         .sum();
     let protected: u64 = items
         .iter()
-        .filter(|i| i.protected || !i.selectable)
+        .filter(|i| is_protected_item(i))
         .map(|i| own.get(&i.id).map(|(_, allocated)| *allocated).unwrap_or(0))
         .sum();
     let cleanable: u64 = items
         .iter()
-        .filter(|i| !i.protected && i.selectable)
+        .filter(|i| !is_protected_item(i))
         .map(|i| own.get(&i.id).map(|(_, allocated)| *allocated).unwrap_or(0))
         .sum();
     let errors = items
@@ -737,11 +751,7 @@ where
             }
             .to_string(),
             item_count: items.len() as u64,
-            cleanable_bytes: items
-                .iter()
-                .filter(|i| !i.protected && i.selectable)
-                .map(|i| i.allocated_bytes.or(i.logical_bytes).unwrap_or(0))
-                .sum(),
+            cleanable_bytes: cleanable_own_bytes(&items),
             error_code: None,
         });
     }
@@ -825,11 +835,7 @@ where
                     }
                     .to_string(),
                     item_count: fresh.len() as u64,
-                    cleanable_bytes: fresh
-                        .iter()
-                        .filter(|i| !i.protected && i.selectable)
-                        .map(|i| i.allocated_bytes.or(i.logical_bytes).unwrap_or(0))
-                        .sum(),
+                    cleanable_bytes: cleanable_own_bytes(&fresh),
                     error_code: None,
                 });
                 directories_visited += outcome.entries_scanned;

@@ -32,12 +32,7 @@ fn disk_for_system_drive() -> Option<crate::commands::system_commands::DiskSpace
 
 #[tauri::command]
 pub async fn system_scan(state: State<'_, AppState>) -> Result<SystemScanReport, AppError> {
-    if state
-        .system_token
-        .lock()
-        .map(|slot| slot.is_some())
-        .unwrap_or(true)
-    {
+    if crate::lock!(state.system_token).is_some() {
         return Err(AppError::Blocked(
             "A system cleanup is already running.".to_string(),
         ));
@@ -118,10 +113,7 @@ pub async fn system_preview(
     let token_text = format!("sys-{}", uuid::Uuid::new_v4().simple());
 
     {
-        let mut slot = state
-            .system_preview
-            .lock()
-            .map_err(|_| AppError::Unknown("System preview lock failure.".to_string()))?;
+        let mut slot = crate::lock!(state.system_preview);
         *slot = Some(PendingSystemPreview {
             token: token_text.clone(),
             ids,
@@ -146,10 +138,7 @@ pub async fn system_execute(
     state: State<'_, AppState>,
 ) -> Result<SystemCleanReport, AppError> {
     let pending = {
-        let mut slot = state
-            .system_preview
-            .lock()
-            .map_err(|_| AppError::Unknown("System preview lock failure.".to_string()))?;
+        let mut slot = crate::lock!(state.system_preview);
         match slot.take() {
             Some(pending) if pending.token == token => pending,
             _ => {
@@ -167,10 +156,7 @@ pub async fn system_execute(
 
     let worker_token = CancellationToken::new();
     {
-        let mut slot = state
-            .system_token
-            .lock()
-            .map_err(|_| AppError::Unknown("System cleanup lock failure.".to_string()))?;
+        let mut slot = crate::lock!(state.system_token);
         if slot.is_some() {
             return Err(AppError::Blocked(
                 "A system cleanup is already running.".to_string(),
@@ -190,7 +176,8 @@ pub async fn system_execute(
     .await
     .map_err(|e| AppError::Unknown(format!("System cleanup failed: {e}")));
 
-    if let Ok(mut slot) = state.system_token.lock() {
+    {
+        let mut slot = crate::lock!(state.system_token);
         if slot
             .as_ref()
             .map(|t| t.same(&worker_token))
@@ -208,10 +195,7 @@ pub async fn system_execute(
 
 #[tauri::command]
 pub fn system_cancel(state: State<'_, AppState>) -> Result<(), AppError> {
-    let slot = state
-        .system_token
-        .lock()
-        .map_err(|_| AppError::Unknown("System cleanup lock failure.".to_string()))?;
+    let slot = crate::lock!(state.system_token);
     // Signal the running worker without releasing the slot, so a second run is
     // rejected while the old one is still winding down.
     if let Some(token) = slot.as_ref() {

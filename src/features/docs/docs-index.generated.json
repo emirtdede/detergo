@@ -77,9 +77,8 @@
       "Purge a specific tool cache (e.g., npm, pip, cargo, docker)",
       "Preview a full purge without deleting anything",
       "Purge caches for all detected installed tools",
-      "3. `dev-cleaner history`",
       "Lists historical cleanup records and reclaimed bytes audit logs.",
-      ". ). projects | agents | combined | all 0 3. `dev-cleaner system` )}"
+      ". ). projects | agents | combined | all 0 3. `dev-cleaner system` 4. `dev-cleaner history` )}"
     ],
     "cli-headless": [
       "Automation",

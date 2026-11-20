@@ -3,7 +3,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Dialog } from "@/components/primitives/Dialog";
 import { Button } from "@/components/primitives/Button";
 import { Checkbox } from "@/components/primitives/Checkbox";
-import { useUIText } from "@/lib/ui-text";
+import { localizeAppError, useUIText } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { log } from "@/lib/logging";
 import { useUiStore } from "@/stores/ui-store";
@@ -93,7 +93,9 @@ export const CloseGuardDialog: React.FC = () => {
       // The native command failed (no window handle, quit refused). Keep the
       // dialog open and report it instead of leaving an unhandled rejection.
       log.error("Close guard action failed", err);
-      useUiStore.getState().showToast(ui.errors.title, "error", 6000);
+      useUiStore
+        .getState()
+        .showToast(`${ui.errors.title}: ${localizeAppError(err, ui)}`, "error", 6000);
     } finally {
       setBusy(false);
     }

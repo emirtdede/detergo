@@ -40,10 +40,12 @@ pub fn cancel_running_cleanup(slot: &Mutex<Option<CancellationToken>>) {
 #[tauri::command]
 pub async fn quit_app(app: AppHandle, state: State<'_, AppState>) -> Result<(), AppError> {
     cancel_running_cleanup(&state.cleanup_token);
+    cancel_running_cleanup(&state.system_token);
 
     let deadline = Instant::now() + QUIT_CLEANUP_TIMEOUT;
     loop {
-        let idle = crate::lock!(state.cleanup_token).is_none();
+        let idle = crate::lock!(state.cleanup_token).is_none()
+            && crate::lock!(state.system_token).is_none();
         if idle || Instant::now() >= deadline {
             break;
         }

@@ -73,6 +73,8 @@ interface SystemState {
   clearError: () => void;
 }
 
+let scanGeneration = 0;
+
 export const useSystemStore = create<SystemState>((set, get) => ({
   report: null,
   automation: null,
@@ -85,10 +87,16 @@ export const useSystemStore = create<SystemState>((set, get) => ({
   selected: readSelection(),
 
   load: async () => {
-    if (get().running) return;
+    const state = get();
+    if (state.loading || state.running || state.previewing) return;
+    const gen = ++scanGeneration;
     set({ loading: true, error: null });
     try {
       const report = await scannerApi.systemScan();
+      if (gen !== scanGeneration || get().running || get().previewing) {
+        set({ loading: false });
+        return;
+      }
       const selected = get().selected.filter((id) =>
         report.actions.some(
           (action) =>
@@ -98,6 +106,10 @@ export const useSystemStore = create<SystemState>((set, get) => ({
       persistSelection(selected);
       set({ report, loading: false, selected });
     } catch (err) {
+      if (gen !== scanGeneration) {
+        set({ loading: false });
+        return;
+      }
       set({ loading: false, error: toAppError(err) });
     }
   },
@@ -141,7 +153,8 @@ export const useSystemStore = create<SystemState>((set, get) => ({
   run: async (ids) => {
     if (get().running || get().previewing) return;
     if (ids.length === 0) return;
-    set({ previewing: true, error: null });
+    scanGeneration += 1;
+    set({ loading: false, previewing: true, error: null });
     try {
       const preview = await scannerApi.systemPreview(ids);
       set({ previewing: false, running: true, current: null, lastReport: null });
@@ -182,7 +195,10 @@ export const useSystemStore = create<SystemState>((set, get) => ({
       set({ automation, error: null });
       return true;
     } catch (err) {
-      set({ error: toAppError(err), automation: await safeAutomation() });
+      const failure = toAppError(err);
+      set({ error: failure });
+      const automation = await safeAutomation();
+      set({ automation });
       return false;
     }
   },

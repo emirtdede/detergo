@@ -1,8 +1,10 @@
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { useCleanupRunStore } from "@/stores/cleanup-run-store";
+import { useSystemStore } from "@/stores/system-store";
 
 export interface QuitApi {
   cancelCleanup: () => Promise<void>;
+  systemCancel?: () => Promise<void>;
   quitApp: () => Promise<void>;
 }
 
@@ -24,6 +26,13 @@ export async function requestQuit(api: QuitApi = scannerApi): Promise<void> {
     } catch {
       // A failed cancel request must not trap the user in the app. The native
       // quit command still cancels and waits before exiting.
+    }
+  }
+  if (useSystemStore.getState().running) {
+    try {
+      await api.systemCancel?.();
+    } catch {
+      // Backend quit_app cancels and waits for system_token as well.
     }
   }
   await api.quitApp();

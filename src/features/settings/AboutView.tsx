@@ -22,7 +22,7 @@ import { PageHeader } from "@/components/primitives/PageHeader";
 import { VelliumLogo } from "@/components/brand/VelliumLogo";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
-import { useUIText, resolveUiLocale } from "@/lib/ui-text";
+import { useUIText, localizeAppError, resolveUiLocale } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { log } from "@/lib/logging";
 import { APP_VERSION } from "@/lib/app-version";
@@ -162,7 +162,9 @@ export const AboutView: React.FC<AboutViewProps> = ({
     // handler). Reported instead of leaving an unhandled rejection.
     scannerApi.openUrl(url).catch((err) => {
       log.warn("Could not open the external link", err);
-      useUiStore.getState().showToast(ui.errors.title, "error");
+      useUiStore
+        .getState()
+        .showToast(`${ui.errors.title}: ${localizeAppError(err, ui)}`, "error", 6000);
     });
   };
 

@@ -19,101 +19,7 @@
   gap: var(--space-2);
 }
 
-/* 1. Subpage Navigation Tabs (Horizontal Strip) ----------------------------- */
-.settings-tabs {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex-wrap: nowrap;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: var(--space-3);
-  width: 100%;
-}
-
-.settings-tab {
-  flex: 1 1 0px !important;
-  min-width: 0 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 8px !important;
-  text-align: center !important;
-  height: 36px !important;
-  min-height: 36px !important;
-  max-height: 36px !important;
-  padding: 0 var(--space-2) !important;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text-secondary);
-  font-size: var(--text-xs);
-  font-weight: 550;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: all var(--duration-fast) var(--ease-standard);
-  box-sizing: border-box;
-}
-
-.settings-tab:hover {
-  background: var(--surface-hover);
-  border-color: var(--border-strong);
-  color: var(--text-primary);
-}
-
-.settings-tab.is-active {
-  background: var(--accent-subtle);
-  border-color: var(--border-control);
-  color: var(--accent-foreground);
-  font-weight: 600;
-  box-shadow: var(--shadow-sm);
-}
-
-.settings-tab-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: inherit;
-  opacity: 0.9;
-  flex-shrink: 0;
-}
-
-.settings-tab-icon svg {
-  display: block;
-}
-
-.settings-tab-label {
-  display: inline-block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.2;
-}
-
-.settings-tabs-mobile {
-  display: none;
-}
-
-@media (max-width: 600px) {
-  .settings-tabs {
-    display: none;
-  }
-  .settings-tabs-mobile {
-    display: block;
-    width: 100%;
-  }
-  .settings-tabs-mobile select {
-    width: 100%;
-    height: 38px;
-    padding: 0 var(--space-3);
-    border: 1px solid var(--border-control);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    color: var(--text-primary);
-    font-size: var(--text-sm);
-  }
-}
-
-/* 2. Active Section Sub-Header ---------------------------------------------- */
+/* 1. Active Section Sub-Header ---------------------------------------------- */
 .settings-section-header {
   display: flex;
   align-items: center;
@@ -363,15 +269,6 @@
 }
 
 /* Keyboard Shortcuts Tab */
-.shortcuts-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-4);
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-
 .shortcuts-table {
   width: 100%;
   border-collapse: separate;

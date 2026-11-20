@@ -12,6 +12,7 @@ import { usePreferencesStore } from "@/stores/preferences-store";
 import {
   useUIText,
   useBackendLocaleRevision,
+  localizeAppError,
   localizeWarningCode,
   localizeCategory,
   localizeBackendNote,
@@ -451,8 +452,12 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
                         onClick={async () => {
                           try {
                             await scannerApi.openPathInExplorer(item.displayPath);
-                          } catch {
-                            showToast(ui.errors.title, "error");
+                          } catch (err) {
+                            showToast(
+                              `${ui.errors.title}: ${localizeAppError(err, ui)}`,
+                              "error",
+                              6000,
+                            );
                           }
                         }}
                       >

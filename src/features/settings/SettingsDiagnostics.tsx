@@ -13,16 +13,17 @@ import {
 import { Button } from "@/components/primitives/Button";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
-import { useUIText, resolveUiLocale } from "@/lib/ui-text";
+import { useUIText, resolveUiLocale, localizeAppError } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { log } from "@/lib/logging";
-import { BUG_REPORT_TEMPLATE, NEW_ISSUE_URL, SUPPORT_EMAIL } from "@/lib/links";
+import { SUPPORT_EMAIL } from "@/lib/links";
 import {
   clearErrorLog,
   formatErrorLog,
   readErrorLog,
   type ErrorLogEntry,
 } from "@/lib/diagnostics/error-log";
+import { buildIssueUrl, formatDiagnosticTime } from "@/lib/diagnostics/issue-url";
 import {
   clearSystemLog,
   formatSystemLog,
@@ -33,43 +34,6 @@ import type { SupportBundle } from "@/types";
 
 interface SettingsDiagnosticsProps {
   version: string;
-}
-
-/** The issue body is a URL parameter, so it must stay well under 8 KB. */
-const MAX_ISSUE_BODY = 6000;
-
-function buildIssueUrl(entries: readonly ErrorLogEntry[], version: string): string {
-  const body = [
-    "### What happened",
-    "<!-- Describe what you were doing when the problem appeared. -->",
-    "",
-    "### Environment",
-    `- Dev Cleaner: ${version}`,
-    `- Platform: ${navigator.platform || "unknown"}`,
-    "",
-    "### In-app error log",
-    "<!-- Written locally by the app. Paths and URLs are already masked. -->",
-    "```",
-    formatErrorLog(entries).slice(0, MAX_ISSUE_BODY),
-    "```",
-  ].join("\n");
-
-  const params = new URLSearchParams({
-    template: BUG_REPORT_TEMPLATE,
-    title: "[Bug] ",
-    body,
-  });
-  return `${NEW_ISSUE_URL}?${params.toString()}`;
-}
-
-function formatTime(iso: string, locale: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  try {
-    return date.toLocaleString(locale, { dateStyle: "short", timeStyle: "medium" });
-  } catch {
-    return iso;
-  }
 }
 
 /**
@@ -126,7 +90,7 @@ export const SettingsDiagnostics: React.FC<SettingsDiagnosticsProps> = ({ versio
   const report = () => {
     scannerApi.openUrl(buildIssueUrl(errors, version)).catch((err) => {
       log.warn("Could not open the issue form", err);
-      showToast(ui.errors.title, "error");
+      showToast(`${ui.errors.title}: ${localizeAppError(err, ui)}`, "error");
     });
   };
 
@@ -169,7 +133,7 @@ export const SettingsDiagnostics: React.FC<SettingsDiagnosticsProps> = ({ versio
       }
     } catch (err) {
       log.error("Could not create the support bundle", err);
-      showToast(ui.diagnostics.mailFailed, "error");
+      showToast(`${ui.diagnostics.mailFailed}: ${localizeAppError(err, ui)}`, "error");
     } finally {
       setBusy(false);
     }
@@ -179,6 +143,7 @@ export const SettingsDiagnostics: React.FC<SettingsDiagnosticsProps> = ({ versio
     if (!bundle) return;
     scannerApi.openPathInExplorer(bundle.path).catch((err) => {
       log.warn("Could not reveal the support bundle", err);
+      showToast(`${ui.errors.title}: ${localizeAppError(err, ui)}`, "error");
     });
   };
 
@@ -275,7 +240,7 @@ export const SettingsDiagnostics: React.FC<SettingsDiagnosticsProps> = ({ versio
               <li key={entry.id} className="about-diag-row">
                 <div className="about-diag-row-head">
                   <span className="about-diag-source">{entry.source}</span>
-                  <span className="about-diag-time">{formatTime(entry.at, locale)}</span>
+                  <span className="about-diag-time">{formatDiagnosticTime(entry.at, locale)}</span>
                 </div>
                 <p className="about-diag-message">
                   {entry.code && <span className="about-diag-code">{entry.code}</span>}
@@ -310,7 +275,7 @@ export const SettingsDiagnostics: React.FC<SettingsDiagnosticsProps> = ({ versio
                   <span className={`about-diag-source settings-diag-level--${entry.level}`}>
                     {entry.level}
                   </span>
-                  <span className="about-diag-time">{formatTime(entry.at, locale)}</span>
+                  <span className="about-diag-time">{formatDiagnosticTime(entry.at, locale)}</span>
                 </div>
                 <p className="about-diag-message">{entry.message}</p>
               </li>

@@ -234,8 +234,8 @@ export const ScanHeader: React.FC = () => {
       if (selected) {
         requestLocationChange(selected);
       }
-    } catch {
-      showToast(ui.errors.title, "error");
+    } catch (err) {
+      showToast(`${ui.errors.title}: ${localizeAppError(err, ui)}`, "error", 6000);
     } finally {
       isSelectingFolderRef.current = false;
     }

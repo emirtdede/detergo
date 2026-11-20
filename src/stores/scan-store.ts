@@ -224,7 +224,7 @@ function recomputeSummary(summary: ScanSummary, items: CleanupItem[]): ScanSumma
     const allocated = bytes?.allocatedBytes ?? 0;
     totalBytes += logical;
     totalAllocatedBytes += allocated;
-    const protectedItem = item.protected || !item.selectable;
+    const protectedItem = item.protected || item.safetyClass === "keep" || !item.selectable;
     if (protectedItem) protectedBytes += allocated;
     else cleanableTotal += allocated;
     if (item.status === "error") errorsCount += 1;

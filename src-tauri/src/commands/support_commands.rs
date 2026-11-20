@@ -124,9 +124,16 @@ fn append_backend_log<W: Write + std::io::Seek>(
 }
 
 /// Builds the ZIP entirely on this device and returns its path.
+///
+/// Offloaded to a blocking worker thread so reading and compressing multi-MB
+/// logs never stalls the main window event loop.
 #[tauri::command]
-pub fn create_support_bundle(request: SupportBundleRequest) -> Result<SupportBundle, AppError> {
-    create_bundle_in(&bundle_dir(), request)
+pub async fn create_support_bundle(
+    request: SupportBundleRequest,
+) -> Result<SupportBundle, AppError> {
+    tokio::task::spawn_blocking(move || create_bundle_in(&bundle_dir(), request))
+        .await
+        .map_err(|err| AppError::Unknown(format!("Support bundle task failed: {err}")))?
 }
 
 fn create_bundle_in(dir: &Path, request: SupportBundleRequest) -> Result<SupportBundle, AppError> {
@@ -214,7 +221,16 @@ fn create_bundle_in(dir: &Path, request: SupportBundleRequest) -> Result<Support
 /// supports it. Falls back to a `mailto:` draft plus Explorer, never to a silent
 /// send.
 #[tauri::command]
-pub fn compose_support_mail(
+pub async fn compose_support_mail(
+    bundle_path: String,
+    version: String,
+) -> Result<SupportMailResult, AppError> {
+    tokio::task::spawn_blocking(move || compose_support_mail_blocking(bundle_path, version))
+        .await
+        .map_err(|err| AppError::Unknown(format!("Support mail task failed: {err}")))?
+}
+
+fn compose_support_mail_blocking(
     bundle_path: String,
     version: String,
 ) -> Result<SupportMailResult, AppError> {
@@ -281,9 +297,26 @@ pub fn compose_support_mail(
     })
 }
 
-/// `true` only when Outlook created and displayed a draft.
+#[cfg(windows)]
+fn has_registered_outlook_com() -> bool {
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+    std::process::Command::new("reg.exe")
+        .args(["query", r"HKCR\Outlook.Application\CLSID", "/ve"])
+        .creation_flags(CREATE_NO_WINDOW)
+        .output()
+        .map(|out| out.status.success())
+        .unwrap_or(false)
+}
+
+#[cfg(not(windows))]
+fn has_registered_outlook_com() -> bool {
+    false
+}
+
+/// `true` only when Outlook created and displayed a draft within the timeout.
 fn open_outlook_draft(path: &Path, subject: &str, body: &str) -> Result<bool, AppError> {
-    if !cfg!(windows) {
+    if !cfg!(windows) || !has_registered_outlook_com() {
         return Ok(false);
     }
     let script = r#"
@@ -320,10 +353,24 @@ try {
         const CREATE_NO_WINDOW: u32 = 0x0800_0000;
         cmd.creation_flags(CREATE_NO_WINDOW);
     }
-    let status = cmd
-        .status()
+    let mut child = cmd
+        .spawn()
         .map_err(|err| AppError::Unknown(err.to_string()))?;
-    Ok(status.success())
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(8);
+    loop {
+        match child.try_wait() {
+            Ok(Some(status)) => return Ok(status.success()),
+            Ok(None) => {
+                if std::time::Instant::now() >= deadline {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    return Ok(false);
+                }
+                std::thread::sleep(std::time::Duration::from_millis(80));
+            }
+            Err(err) => return Err(AppError::Unknown(err.to_string())),
+        }
+    }
 }
 
 /// Opens a Thunderbird compose window with the support ZIP pre-attached when
@@ -564,6 +611,7 @@ mod tests {
 
     #[test]
     fn bundle_rejects_oversized_fields() {
+        let dir = tempfile::tempdir().expect("temp dir");
         let request = SupportBundleRequest {
             version: "1.0.0".into(),
             locale: "en".into(),
@@ -573,7 +621,7 @@ mod tests {
             settings_summary: "{}".into(),
             system_info: String::new(),
         };
-        assert!(super::create_support_bundle(request).is_err());
+        assert!(super::create_bundle_in(dir.path(), request).is_err());
     }
 
     #[test]

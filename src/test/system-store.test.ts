@@ -179,4 +179,46 @@ describe("system cleanup store", () => {
     expect(useSystemStore.getState().automation).toEqual(automation());
     expect(useSystemStore.getState().error?.code).toBe("Blocked");
   });
+
+  it("drops a stale in-flight load response if a cleanup run starts before load finishes", async () => {
+    let resolveScan: ((value: SystemScanReport) => void) | null = null;
+    systemScan.mockImplementationOnce(
+      () =>
+        new Promise<SystemScanReport>((resolve) => {
+          resolveScan = resolve;
+        }),
+    );
+
+    const loadPromise = useSystemStore.getState().load();
+    expect(useSystemStore.getState().loading).toBe(true);
+
+    // User starts a run while the background load is still in flight.
+    let resolvePreview: ((value: unknown) => void) | null = null;
+    systemPreview.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolvePreview = resolve;
+        }),
+    );
+    useSystemStore.setState({ selected: ["userTemp", "windowsTemp"] });
+    const runPromise = useSystemStore.getState().run(["userTemp"]);
+
+    // The stale non-elevated scan lands while run() is previewing; it must not
+    // overwrite selected or report.
+    resolveScan!(report(false));
+    await loadPromise;
+    expect(useSystemStore.getState().selected).toEqual(["userTemp", "windowsTemp"]);
+
+    systemScan.mockResolvedValueOnce(report(true));
+    systemExecute.mockResolvedValueOnce(cleanReport);
+    resolvePreview!({
+      token: "sys-token-2",
+      actions: [action("userTemp")],
+      totalBytes: 500,
+      expiresMs: 300_000,
+      requiresAdmin: false,
+      elevated: true,
+    });
+    await runPromise;
+  });
 });

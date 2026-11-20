@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Download, RefreshCw, Rocket, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/primitives/Button";
 import { useUiStore } from "@/stores/ui-store";
-import { useUIText } from "@/lib/ui-text";
+import { useUIText, localizeAppError } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { log } from "@/lib/logging";
 import { RELEASES_URL } from "@/lib/links";
@@ -34,6 +34,14 @@ export const UpdatePanel: React.FC<UpdatePanelProps> = ({ version, hideHeader = 
   const ui = useUIText();
   const showToast = useUiStore((s) => s.showToast);
   const [state, setState] = useState<CheckState>({ kind: "idle" });
+  const unmountedRef = useRef(false);
+
+  useEffect(() => {
+    unmountedRef.current = false;
+    return () => {
+      unmountedRef.current = true;
+    };
+  }, []);
 
   const displayVersion = version && version !== "—" ? version : APP_VERSION;
 
@@ -41,17 +49,17 @@ export const UpdatePanel: React.FC<UpdatePanelProps> = ({ version, hideHeader = 
     setState({ kind: "checking" });
     try {
       const info = await scannerApi.checkForUpdates();
-      setState({ kind: "ok", info });
+      if (!unmountedRef.current) setState({ kind: "ok", info });
     } catch (err) {
       log.warn("Update check failed", err);
-      setState({ kind: "error" });
+      if (!unmountedRef.current) setState({ kind: "error" });
     }
   };
 
   const openRelease = (url: string) => {
     scannerApi.openUrl(url).catch((err) => {
       log.warn("Could not open the release page", err);
-      showToast(ui.errors.title, "error");
+      showToast(`${ui.errors.title}: ${localizeAppError(err, ui)}`, "error");
     });
   };
 

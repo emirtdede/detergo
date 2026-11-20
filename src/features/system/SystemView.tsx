@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import {
   CalendarClock,
   Check,
@@ -81,16 +82,46 @@ export const SystemView: React.FC = () => {
     removeAutomation,
     dismissResult,
     clearError,
-  } = useSystemStore();
+  } = useSystemStore(
+    useShallow((state) => ({
+      report: state.report,
+      automation: state.automation,
+      loading: state.loading,
+      running: state.running,
+      previewing: state.previewing,
+      current: state.current,
+      error: state.error,
+      lastReport: state.lastReport,
+      selected: state.selected,
+      load: state.load,
+      loadAutomation: state.loadAutomation,
+      toggle: state.toggle,
+      selectAll: state.selectAll,
+      setSelection: state.setSelection,
+      clear: state.clear,
+      run: state.run,
+      cancel: state.cancel,
+      restartElevated: state.restartElevated,
+      saveAutomation: state.saveAutomation,
+      removeAutomation: state.removeAutomation,
+      dismissResult: state.dismissResult,
+      clearError: state.clearError,
+    })),
+  );
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [expandedLog, setExpandedLog] = useState<SystemActionId | null>(null);
   const [draft, setDraft] = useState<SystemAutomationConfig | null>(null);
   const [savingSchedule, setSavingSchedule] = useState(false);
+  const unmountedRef = useRef(false);
 
   useEffect(() => {
+    unmountedRef.current = false;
     void load();
     void loadAutomation();
+    return () => {
+      unmountedRef.current = true;
+    };
   }, [load, loadAutomation]);
 
   useEffect(() => {
@@ -105,15 +136,22 @@ export const SystemView: React.FC = () => {
     [actions, elevated],
   );
 
-  const selectedActions = actions.filter((action) => selected.includes(action.id));
-  const selectedBytes = selectedActions.reduce(
-    (sum, action) => sum + (action.measured ? action.bytes : 0),
-    0,
+  const selectedActions = useMemo(
+    () => actions.filter((action) => selected.includes(action.id)),
+    [actions, selected],
+  );
+  const selectedBytes = useMemo(
+    () => selectedActions.reduce((sum, action) => sum + (action.measured ? action.bytes : 0), 0),
+    [selectedActions],
   );
 
-  const quickIds = actions
-    .filter((action) => QUICK_ACTIONS.includes(action.id) && isSelectable(action, elevated))
-    .map((action) => action.id);
+  const quickIds = useMemo(
+    () =>
+      actions
+        .filter((action) => QUICK_ACTIONS.includes(action.id) && isSelectable(action, elevated))
+        .map((action) => action.id),
+    [actions, elevated],
+  );
 
   const disk = report?.disk;
   const canRun = !running && !previewing && selectedActions.length > 0;
@@ -121,8 +159,11 @@ export const SystemView: React.FC = () => {
   const onRun = async (ids: SystemActionId[]) => {
     setConfirmOpen(false);
     await run(ids);
-    if (useSystemStore.getState().error) {
-      useUiStore.getState().showToast(ui.errors.title, "error");
+    const failure = useSystemStore.getState().error;
+    if (failure) {
+      useUiStore
+        .getState()
+        .showToast(`${ui.errors.title}: ${localizeAppError(failure, ui)}`, "error", 6000);
     }
   };
 
@@ -137,20 +178,40 @@ export const SystemView: React.FC = () => {
   const onSaveSchedule = async () => {
     if (!draft) return;
     setSavingSchedule(true);
-    const ok = await saveAutomation(draft);
-    setSavingSchedule(false);
-    useUiStore
-      .getState()
-      .showToast(ok ? ui.system.scheduleSaved : ui.errors.title, ok ? "success" : "error");
+    try {
+      const ok = await saveAutomation(draft);
+      const failure = useSystemStore.getState().error;
+      useUiStore
+        .getState()
+        .showToast(
+          ok
+            ? ui.system.scheduleSaved
+            : `${ui.errors.title}: ${failure ? localizeAppError(failure, ui) : ui.errors.unknown}`,
+          ok ? "success" : "error",
+          ok ? 3500 : 6000,
+        );
+    } finally {
+      if (!unmountedRef.current) setSavingSchedule(false);
+    }
   };
 
   const onRemoveSchedule = async () => {
     setSavingSchedule(true);
-    const ok = await removeAutomation();
-    setSavingSchedule(false);
-    useUiStore
-      .getState()
-      .showToast(ok ? ui.system.scheduleRemoved : ui.errors.title, ok ? "success" : "error");
+    try {
+      const ok = await removeAutomation();
+      const failure = useSystemStore.getState().error;
+      useUiStore
+        .getState()
+        .showToast(
+          ok
+            ? ui.system.scheduleRemoved
+            : `${ui.errors.title}: ${failure ? localizeAppError(failure, ui) : ui.errors.unknown}`,
+          ok ? "success" : "error",
+          ok ? 3500 : 6000,
+        );
+    } finally {
+      if (!unmountedRef.current) setSavingSchedule(false);
+    }
   };
 
   const onLaunchCleanmgr = async (mode: "dialog" | "sageset" | "sagerun") => {

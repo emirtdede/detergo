@@ -780,10 +780,14 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
 
     let items = session.items.clone();
     let total_items = items.len();
-    let mut total_bytes = 0u64;
-    for item in &items {
-        total_bytes += item.estimated_reclaim_bytes.unwrap_or(0);
-    }
+    let own = crate::scanner::own_bytes(&items);
+    let total_bytes: u64 = items.iter().fold(0u64, |sum, item| {
+        let bytes = own
+            .get(&item.id)
+            .map(|(_, allocated)| *allocated)
+            .unwrap_or_else(|| item.estimated_reclaim_bytes.unwrap_or(0));
+        sum.saturating_add(bytes)
+    });
 
     // Prepare autonomous cleanup plan (see the saturation note above).
     let min_bytes = min_size_mb.saturating_mul(1024 * 1024);
@@ -841,10 +845,18 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
                     .iter()
                     .map(|&index| candidates[index].id.clone())
                     .collect();
-                matched_bytes = chosen
+                let selected_items: Vec<crate::scanner::models::CleanupItem> = chosen
                     .iter()
-                    .map(|&index| candidates[index].estimated_reclaim_bytes.unwrap_or(0))
-                    .sum();
+                    .map(|&index| candidates[index].clone())
+                    .collect();
+                let selected_own = crate::scanner::own_bytes(&selected_items);
+                matched_bytes = selected_items.iter().fold(0u64, |sum, item| {
+                    let bytes = selected_own
+                        .get(&item.id)
+                        .map(|(_, allocated)| *allocated)
+                        .unwrap_or_else(|| item.estimated_reclaim_bytes.unwrap_or(0));
+                    sum.saturating_add(bytes)
+                });
                 auto_clean = true;
             }
         }
@@ -853,9 +865,16 @@ fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
         // whose name happened to contain "e". A target the scanner marked as
         // unselectable (active/locked/protected) must never enter an
         // autonomous plan even if its safety class is otherwise allowed.
-        for item in &candidates {
+        let candidate_items: Vec<crate::scanner::models::CleanupItem> =
+            candidates.iter().map(|item| (*item).clone()).collect();
+        let candidate_own = crate::scanner::own_bytes(&candidate_items);
+        for item in &candidate_items {
             matched_target_ids.push(item.id.clone());
-            matched_bytes += item.estimated_reclaim_bytes.unwrap_or(0);
+            let bytes = candidate_own
+                .get(&item.id)
+                .map(|(_, allocated)| *allocated)
+                .unwrap_or_else(|| item.estimated_reclaim_bytes.unwrap_or(0));
+            matched_bytes = matched_bytes.saturating_add(bytes);
         }
     }
 
