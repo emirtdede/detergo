@@ -81,8 +81,10 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({ version }) =
       </div>
 
       {entries.length === 0 ? (
-        <div className="about-trust-strip about-diag-empty">
-          <ShieldCheck size={18} className="about-trust-icon" />
+        <div className="about-diag-empty-box">
+          <span className="about-diag-empty-icon" aria-hidden="true">
+            <ShieldCheck size={18} />
+          </span>
           <span>{ui.diagnostics.empty}</span>
         </div>
       ) : (
@@ -102,22 +104,24 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({ version }) =
         </ul>
       )}
 
-      <div className="about-diag-actions">
-        <Button size="sm" variant="secondary" icon={<RefreshCw size={13} />} onClick={refresh}>
-          {ui.common.refresh}
-        </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          icon={<Copy size={13} />}
-          onClick={copyDetails}
-          disabled={entries.length === 0}
-        >
-          {ui.overview.copyDetails}
-        </Button>
-        <Button size="sm" variant="secondary" icon={<ExternalLink size={13} />} onClick={report}>
-          {ui.diagnostics.report}
-        </Button>
+      <div className="about-diag-footer">
+        <div className="about-diag-actions">
+          <Button size="sm" variant="secondary" icon={<RefreshCw size={13} />} onClick={refresh}>
+            {ui.common.refresh}
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            icon={<Copy size={13} />}
+            onClick={copyDetails}
+            disabled={entries.length === 0}
+          >
+            {ui.overview.copyDetails}
+          </Button>
+          <Button size="sm" variant="secondary" icon={<ExternalLink size={13} />} onClick={report}>
+            {ui.diagnostics.report}
+          </Button>
+        </div>
         <Button
           size="sm"
           variant="ghost"

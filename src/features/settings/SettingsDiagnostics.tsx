@@ -149,151 +149,198 @@ export const SettingsDiagnostics: React.FC<SettingsDiagnosticsProps> = ({ versio
 
   return (
     <div className="settings-diagnostics">
-      <section className="settings-card">
-        <div className="settings-diag-head">
-          <span className="settings-diag-icon">
-            <Mail size={15} />
-          </span>
-          <div className="settings-diag-copy">
-            <span className="settings-diag-title">{ui.diagnostics.supportTitle}</span>
-            <span className="settings-diag-hint">{ui.diagnostics.supportHint}</span>
+      <section className="settings-card settings-diag-support-card">
+        <div className="settings-diag-header">
+          <div className="settings-diag-head">
+            <span className="settings-diag-icon" aria-hidden="true">
+              <Mail size={16} />
+            </span>
+            <div className="settings-diag-copy">
+              <span className="settings-diag-title">{ui.diagnostics.supportTitle}</span>
+              <span className="settings-diag-hint">{ui.diagnostics.supportHint}</span>
+            </div>
+          </div>
+
+          <div className="settings-diag-actions">
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<FileArchive size={14} />}
+              onClick={() => void buildBundle()}
+              disabled={busy}
+            >
+              {busy ? ui.diagnostics.creating : ui.diagnostics.createBundle}
+            </Button>
+            {bundle && (
+              <>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={<ExternalLink size={13} />}
+                  onClick={reveal}
+                >
+                  {ui.diagnostics.reveal}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={<Copy size={13} />}
+                  onClick={() => void copy(bundle.path)}
+                >
+                  {ui.diagnostics.copyPath}
+                </Button>
+              </>
+            )}
           </div>
         </div>
-        <div className="settings-diag-actions">
-          <Button
-            variant="primary"
-            size="sm"
-            icon={<FileArchive size={14} />}
-            onClick={() => void buildBundle()}
-            disabled={busy}
-          >
-            {busy ? ui.diagnostics.creating : ui.diagnostics.createBundle}
-          </Button>
-          {bundle && (
-            <>
-              <Button
-                variant="secondary"
-                size="sm"
-                icon={<ExternalLink size={13} />}
-                onClick={reveal}
-              >
-                {ui.diagnostics.reveal}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                icon={<Copy size={13} />}
-                onClick={() => void copy(bundle.path)}
-              >
-                {ui.diagnostics.copyPath}
-              </Button>
-            </>
-          )}
-        </div>
+
+        {bundle && (
+          <p className="settings-diag-bundle">{ui.diagnostics.bundleReady(bundle.path)}</p>
+        )}
+
         <div className="settings-diag-meta">
           <span className="settings-diag-badge">
             <ShieldCheck size={13} />
             {ui.diagnostics.notSent}
           </span>
-          <span>{ui.diagnostics.sendTo(SUPPORT_EMAIL)}</span>
+          <span className="settings-diag-recipient">{ui.diagnostics.sendTo(SUPPORT_EMAIL)}</span>
         </div>
-        {bundle && (
-          <p className="settings-diag-bundle">{ui.diagnostics.bundleReady(bundle.path)}</p>
-        )}
       </section>
 
-      <section className="settings-card">
-        <div className="settings-diag-head">
-          <span className="settings-diag-icon settings-diag-icon--warning">
-            <Bug size={15} />
-          </span>
-          <div className="settings-diag-copy">
-            <span className="settings-diag-title">{ui.diagnostics.errorsTitle}</span>
-            <span className="settings-diag-hint">{ui.diagnostics.hint}</span>
-          </div>
-        </div>
-        <div className="settings-diag-actions">
-          <Button size="sm" variant="secondary" icon={<RefreshCw size={13} />} onClick={refresh}>
-            {ui.common.refresh}
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            icon={<Copy size={13} />}
-            onClick={() => void copy(formatErrorLog(errors))}
-            disabled={errors.length === 0}
-          >
-            {ui.diagnostics.copyAll}
-          </Button>
-          <Button size="sm" variant="secondary" icon={<ExternalLink size={13} />} onClick={report}>
-            {ui.diagnostics.report}
-          </Button>
-        </div>
-        {errors.length === 0 ? (
-          <div className="about-trust-strip about-diag-empty">
-            <ShieldCheck size={18} className="about-trust-icon" />
-            <span>{ui.diagnostics.empty}</span>
-          </div>
-        ) : (
-          <ul className="about-diag-list">
-            {errors.map((entry) => (
-              <li key={entry.id} className="about-diag-row">
-                <div className="about-diag-row-head">
-                  <span className="about-diag-source">{entry.source}</span>
-                  <span className="about-diag-time">{formatDiagnosticTime(entry.at, locale)}</span>
-                </div>
-                <p className="about-diag-message">
-                  {entry.code && <span className="about-diag-code">{entry.code}</span>}
-                  {entry.message}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <div className="settings-diag-grid">
+        <section className="settings-card settings-diag-stream-card">
+          <div className="settings-diag-header">
+            <div className="settings-diag-head">
+              <span className="settings-diag-icon settings-diag-icon--warning" aria-hidden="true">
+                <Bug size={16} />
+              </span>
+              <div className="settings-diag-copy">
+                <span className="settings-diag-title-row">
+                  <span className="settings-diag-title">{ui.diagnostics.errorsTitle}</span>
+                  <span className="settings-diag-count">{errors.length}</span>
+                </span>
+                <span className="settings-diag-hint">{ui.diagnostics.hint}</span>
+              </div>
+            </div>
 
-      <section className="settings-card">
-        <div className="settings-diag-head">
-          <span className="settings-diag-icon">
-            <FileArchive size={15} />
-          </span>
-          <div className="settings-diag-copy">
-            <span className="settings-diag-title">{ui.diagnostics.systemTitle}</span>
-            <span className="settings-diag-hint">{ui.diagnostics.systemHint}</span>
+            <div className="settings-diag-actions">
+              <Button
+                size="sm"
+                variant="secondary"
+                icon={<RefreshCw size={13} />}
+                onClick={refresh}
+              >
+                {ui.common.refresh}
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                icon={<Copy size={13} />}
+                onClick={() => void copy(formatErrorLog(errors))}
+                disabled={errors.length === 0}
+              >
+                {ui.diagnostics.copyAll}
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                icon={<ExternalLink size={13} />}
+                onClick={report}
+              >
+                {ui.diagnostics.report}
+              </Button>
+            </div>
           </div>
-        </div>
-        {system.length === 0 ? (
-          <div className="about-trust-strip about-diag-empty">
-            <ShieldCheck size={18} className="about-trust-icon" />
-            <span>{ui.diagnostics.noSystem}</span>
+
+          {errors.length === 0 ? (
+            <div className="settings-diag-empty">
+              <span className="settings-diag-empty-icon" aria-hidden="true">
+                <ShieldCheck size={18} />
+              </span>
+              <span>{ui.diagnostics.empty}</span>
+            </div>
+          ) : (
+            <ul className="about-diag-list">
+              {errors.map((entry) => (
+                <li key={entry.id} className="about-diag-row">
+                  <div className="about-diag-row-head">
+                    <span className="about-diag-source">{entry.source}</span>
+                    <span className="about-diag-time">
+                      {formatDiagnosticTime(entry.at, locale)}
+                    </span>
+                  </div>
+                  <p className="about-diag-message">
+                    {entry.code && <span className="about-diag-code">{entry.code}</span>}
+                    {entry.message}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="settings-card settings-diag-stream-card">
+          <div className="settings-diag-header">
+            <div className="settings-diag-head">
+              <span className="settings-diag-icon" aria-hidden="true">
+                <FileArchive size={16} />
+              </span>
+              <div className="settings-diag-copy">
+                <span className="settings-diag-title-row">
+                  <span className="settings-diag-title">{ui.diagnostics.systemTitle}</span>
+                  <span className="settings-diag-count">{system.length}</span>
+                </span>
+                <span className="settings-diag-hint">{ui.diagnostics.systemHint}</span>
+              </div>
+            </div>
+
+            <div className="settings-diag-actions">
+              <Button
+                size="sm"
+                variant="secondary"
+                icon={<RefreshCw size={13} />}
+                onClick={refresh}
+              >
+                {ui.common.refresh}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                icon={<Trash2 size={13} />}
+                onClick={clear}
+                disabled={errors.length === 0 && system.length === 0}
+              >
+                {ui.diagnostics.clearAll}
+              </Button>
+            </div>
           </div>
-        ) : (
-          <ul className="about-diag-list">
-            {system.map((entry) => (
-              <li key={entry.id} className="about-diag-row">
-                <div className="about-diag-row-head">
-                  <span className={`about-diag-source settings-diag-level--${entry.level}`}>
-                    {entry.level}
-                  </span>
-                  <span className="about-diag-time">{formatDiagnosticTime(entry.at, locale)}</span>
-                </div>
-                <p className="about-diag-message">{entry.message}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-        <div className="settings-diag-actions">
-          <Button
-            size="sm"
-            variant="ghost"
-            icon={<Trash2 size={13} />}
-            onClick={clear}
-            disabled={errors.length === 0 && system.length === 0}
-          >
-            {ui.diagnostics.clearAll}
-          </Button>
-        </div>
-      </section>
+
+          {system.length === 0 ? (
+            <div className="settings-diag-empty">
+              <span className="settings-diag-empty-icon" aria-hidden="true">
+                <ShieldCheck size={18} />
+              </span>
+              <span>{ui.diagnostics.noSystem}</span>
+            </div>
+          ) : (
+            <ul className="about-diag-list">
+              {system.map((entry) => (
+                <li key={entry.id} className="about-diag-row">
+                  <div className="about-diag-row-head">
+                    <span className={`about-diag-source settings-diag-level--${entry.level}`}>
+                      {entry.level}
+                    </span>
+                    <span className="about-diag-time">
+                      {formatDiagnosticTime(entry.at, locale)}
+                    </span>
+                  </div>
+                  <p className="about-diag-message">{entry.message}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
     </div>
   );
 };

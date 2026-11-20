@@ -67,7 +67,13 @@ export const UpdatePanel: React.FC<UpdatePanelProps> = ({ version, hideHeader = 
   const notes = info?.notes?.trim() ?? "";
 
   return (
-    <section className="about-bento-panel about-update-panel">
+    <section
+      className={
+        hideHeader
+          ? "settings-card about-update-panel about-update-panel--embedded"
+          : "about-bento-panel about-update-panel"
+      }
+    >
       {!hideHeader && (
         <div className="about-panel-header">
           <div className="about-panel-icon about-panel-icon--accent">
@@ -80,22 +86,49 @@ export const UpdatePanel: React.FC<UpdatePanelProps> = ({ version, hideHeader = 
         </div>
       )}
 
-      <div className="about-meta-list">
-        <div className="about-meta-row">
-          <span className="about-meta-label">{ui.about.appVersion}</span>
-          <span className="about-meta-value">v{displayVersion}</span>
-        </div>
-        {info && (
-          <div className="about-meta-row">
-            <span className="about-meta-label">{ui.updates.latestVersion}</span>
-            <span className="about-meta-value">v{info.latestVersion}</span>
+      <div className="about-update-bar">
+        <div className="about-update-versions">
+          <div className="about-update-metric">
+            <span className="about-update-metric-label">{ui.about.appVersion}</span>
+            <span className="about-update-metric-value">v{displayVersion}</span>
           </div>
-        )}
+          {info && (
+            <>
+              <span className="about-update-divider" aria-hidden="true" />
+              <div className="about-update-metric">
+                <span className="about-update-metric-label">{ui.updates.latestVersion}</span>
+                <span className="about-update-metric-value">v{info.latestVersion}</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="about-update-actions">
+          <Button
+            size="sm"
+            variant="secondary"
+            icon={<RefreshCw size={13} />}
+            onClick={check}
+            disabled={state.kind === "checking"}
+          >
+            {state.kind === "checking" ? ui.updates.checking : ui.updates.check}
+          </Button>
+          {info?.available && (
+            <Button
+              size="sm"
+              variant="primary"
+              icon={<Download size={13} />}
+              onClick={() => openRelease(info.releaseUrl || RELEASES_URL)}
+            >
+              {ui.updates.download}
+            </Button>
+          )}
+        </div>
       </div>
 
       {state.kind === "ok" && !info?.available && (
         <div className="about-trust-strip">
-          <ShieldCheck size={18} className="about-trust-icon" />
+          <ShieldCheck size={16} className="about-trust-icon" />
           <span>{ui.updates.upToDate}</span>
         </div>
       )}
@@ -120,29 +153,10 @@ export const UpdatePanel: React.FC<UpdatePanelProps> = ({ version, hideHeader = 
         </div>
       )}
 
-      <div className="about-update-actions">
-        <Button
-          size="sm"
-          variant="secondary"
-          icon={<RefreshCw size={13} />}
-          onClick={check}
-          disabled={state.kind === "checking"}
-        >
-          {state.kind === "checking" ? ui.updates.checking : ui.updates.check}
-        </Button>
-        {info?.available && (
-          <Button
-            size="sm"
-            variant="primary"
-            icon={<Download size={13} />}
-            onClick={() => openRelease(info.releaseUrl || RELEASES_URL)}
-          >
-            {ui.updates.download}
-          </Button>
-        )}
-      </div>
-
-      <p className="about-update-privacy">{ui.updates.privacy}</p>
+      <p className="about-update-privacy">
+        <ShieldCheck size={14} className="about-update-privacy-icon" aria-hidden="true" />
+        <span>{ui.updates.privacy}</span>
+      </p>
     </section>
   );
 };

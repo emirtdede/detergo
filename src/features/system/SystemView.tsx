@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/primitives/Button";
+import { Checkbox } from "@/components/primitives/Checkbox";
 import { Dialog } from "@/components/primitives/Dialog";
 import { PageHeader } from "@/components/primitives/PageHeader";
 import { Switch } from "@/components/primitives/Switch";
@@ -241,13 +242,21 @@ export const SystemView: React.FC = () => {
   const actionLabel = (id: SystemActionId) => ui.system.actions[id];
 
   return (
-    <div className="system-view">
+    <div className="page-view system-view">
       <PageHeader
-        eyebrow={ui.nav.system}
         title={ui.system.title}
         description={ui.system.subtitle}
         actions={
           <>
+            {elevated ? (
+              <span className="system-status system-status--elevated">
+                <ShieldCheck size={13} /> {ui.system.elevated}
+              </span>
+            ) : (
+              <span className="system-status">
+                <ShieldAlert size={13} /> {ui.system.adminBadge}
+              </span>
+            )}
             <Button
               variant="secondary"
               size="sm"
@@ -292,17 +301,6 @@ export const SystemView: React.FC = () => {
               </Button>
             )}
           </>
-        }
-        meta={
-          elevated ? (
-            <span className="system-status system-status--elevated">
-              <ShieldCheck size={13} /> {ui.system.elevated}
-            </span>
-          ) : (
-            <span className="system-status">
-              <ShieldAlert size={13} /> {ui.system.adminBadge}
-            </span>
-          )
         }
       />
 
@@ -369,7 +367,9 @@ export const SystemView: React.FC = () => {
             <span className="nc-kpi-card-sub">
               {disk
                 ? `${ui.system.freeSpace}: ${Math.max(0, 100 - disk.percentUsed).toFixed(1)}% · ${formatBytes(disk.totalBytes, language)}`
-                : ui.system.notMeasured}
+                : loading && !report
+                  ? ui.caches.measuring
+                  : ui.system.notMeasured}
             </span>
           </div>
         </div>
@@ -388,150 +388,216 @@ export const SystemView: React.FC = () => {
         </div>
       </div>
 
-      <div className="system-toolbar">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={selected.length === selectableIds.length ? clear : selectAll}
-          disabled={selectableIds.length === 0 || running}
-        >
-          {selected.length === selectableIds.length
-            ? ui.system.clearSelection
-            : ui.system.selectAll}
-        </Button>
-        {loading && <span className="plan-note">{ui.caches.measuring}</span>}
-        {previewing && <span className="plan-note">{ui.common.loading}</span>}
-        {running && (
-          <span className="plan-note" aria-live="polite">
-            {ui.plan.working}
-            {current ? ` · ${actionLabel(current)}` : ""}
-          </span>
-        )}
-      </div>
-
-      <div className="system-actions">
-        {actions.map((action) => {
-          const selectable = isSelectable(action, elevated);
-          const checked = selected.includes(action.id);
-          return (
-            <label
-              key={action.id}
-              className={[
-                "system-action",
-                checked ? "is-selected" : "",
-                selectable ? "" : "is-locked",
-                current === action.id ? "is-running" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
-              <input
-                type="checkbox"
-                checked={checked}
-                disabled={!selectable || running}
-                onChange={() => toggle(action.id)}
-                aria-label={actionLabel(action.id)}
-              />
-              <span className="system-action-copy">
-                <span className="system-action-title">
-                  {actionLabel(action.id)}
-                  {action.requiresAdmin && (
-                    <span className="chip system-chip">
-                      <Lock size={10} /> {ui.system.adminBadge}
-                    </span>
-                  )}
-                  <span className={`chip system-chip system-chip--${action.safety}`}>
-                    {ui.safety[action.safety]}
+      <section className="system-panel-card system-targets-card">
+        <header className="system-card-header">
+          <div className="system-card-head-left">
+            <span className="system-card-icon system-card-icon--accent" aria-hidden="true">
+              <HardDrive size={16} />
+            </span>
+            <div className="system-card-copy">
+              <h2 className="system-card-title">{ui.system.reclaimable}</h2>
+              <p className="system-card-subtitle">
+                {running ? (
+                  <span aria-live="polite">
+                    {ui.plan.working}
+                    {current ? ` · ${actionLabel(current)}` : ""}
                   </span>
-                </span>
-                {action.path && (
-                  <span className="system-action-path" title={action.path}>
-                    {action.path}
-                  </span>
-                )}
-              </span>
-              <span className="system-action-size">
-                {action.measured ? (
-                  formatBytes(action.bytes, language)
-                ) : action.reason === "windowsReports" ? (
-                  <span className="system-size-muted">{ui.system.windowsReported}</span>
-                ) : action.reason === "needsAdmin" ? (
-                  <span className="system-size-muted">{ui.system.adminBadge}</span>
+                ) : loading ? (
+                  <span aria-live="polite">{ui.caches.measuring}</span>
+                ) : previewing ? (
+                  <span aria-live="polite">{ui.common.loading}</span>
                 ) : (
-                  <span className="system-size-muted">{ui.system.notMeasured}</span>
+                  <span>
+                    {ui.common.items(actions.length)} · {formatBytes(selectedBytes, language)}
+                  </span>
                 )}
-              </span>
-            </label>
-          );
-        })}
-      </div>
+              </p>
+            </div>
+          </div>
 
-      {!loading && !report && (
-        <p className="plan-note">
-          {ui.system.notMeasured} ·{" "}
-          <button type="button" className="link-button" onClick={() => void load()}>
-            {ui.common.refresh}
-          </button>
-        </p>
-      )}
-
-      <section className="system-automation system-cleanmgr-card">
-        <header className="system-automation-header">
-          <div>
-            <h2 className="system-automation-title">
-              <Wrench size={16} /> {ui.system.cleanmgrTitle}
-            </h2>
-            <p className="system-automation-body">{ui.system.cleanmgrBody}</p>
+          <div className="system-card-head-actions">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={selected.length === selectableIds.length ? clear : selectAll}
+              disabled={selectableIds.length === 0 || running}
+            >
+              {selected.length === selectableIds.length
+                ? ui.system.clearSelection
+                : ui.system.selectAll}
+            </Button>
           </div>
         </header>
-        <div className="system-cleanmgr-actions">
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={<HardDrive size={13} />}
-            onClick={() => void onLaunchCleanmgr("dialog")}
-            disabled={running}
-          >
-            {ui.system.cleanmgrOpen}
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={<SlidersHorizontal size={13} />}
-            onClick={() => void onLaunchCleanmgr("sageset")}
-            disabled={running}
-          >
-            {ui.system.cleanmgrConfigure}
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={<Play size={12} />}
-            onClick={() => void onLaunchCleanmgr("sagerun")}
-            disabled={running}
-          >
-            {ui.system.cleanmgrRunProfile}
-          </Button>
+
+        {loading && actions.length === 0 ? (
+          <div className="system-actions" aria-busy="true" aria-label={ui.caches.measuring}>
+            {[0, 1, 2, 3, 4].map((index) => (
+              <div key={index} className="system-action-skeleton">
+                <span className="system-skeleton-box" />
+                <div className="system-skeleton-lines">
+                  <span className="system-skeleton-line system-skeleton-line--title" />
+                  <span className="system-skeleton-line system-skeleton-line--path" />
+                </div>
+                <span className="system-skeleton-line system-skeleton-line--size" />
+              </div>
+            ))}
+          </div>
+        ) : actions.length > 0 ? (
+          <div className="system-actions">
+            {actions.map((action) => {
+              const selectable = isSelectable(action, elevated);
+              const checked = selected.includes(action.id);
+              const inputId = `system-action-${action.id}`;
+              return (
+                <div
+                  key={action.id}
+                  className={[
+                    "system-action",
+                    checked ? "is-selected" : "",
+                    selectable ? "" : "is-locked",
+                    current === action.id ? "is-running" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                >
+                  <Checkbox
+                    id={inputId}
+                    checked={checked}
+                    disabled={!selectable || running}
+                    onChange={() => toggle(action.id)}
+                    aria-label={actionLabel(action.id)}
+                  />
+                  <label htmlFor={inputId} className="system-action-copy">
+                    <span className="system-action-title">
+                      {actionLabel(action.id)}
+                      {action.requiresAdmin && (
+                        <span className="chip system-chip">
+                          <Lock size={10} /> {ui.system.adminBadge}
+                        </span>
+                      )}
+                      <span className={`chip system-chip system-chip--${action.safety}`}>
+                        {ui.safety[action.safety]}
+                      </span>
+                    </span>
+                    {action.path && (
+                      <span className="system-action-path" title={action.path}>
+                        {action.path}
+                      </span>
+                    )}
+                  </label>
+                  <span className="system-action-size">
+                    {action.measured ? (
+                      formatBytes(action.bytes, language)
+                    ) : action.reason === "windowsReports" ? (
+                      <span className="system-size-muted">{ui.system.windowsReported}</span>
+                    ) : action.reason === "needsAdmin" ? (
+                      <span className="system-size-muted">{ui.system.adminBadge}</span>
+                    ) : (
+                      <span className="system-size-muted">{ui.system.notMeasured}</span>
+                    )}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="system-empty-box">
+            <span className="plan-note">{ui.system.notMeasured}</span>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<RefreshCw size={13} />}
+              onClick={() => void load()}
+            >
+              {ui.common.refresh}
+            </Button>
+          </div>
+        )}
+      </section>
+
+      <section className="system-panel-card system-cleanmgr-card">
+        <div className="system-card-header system-cleanmgr-row">
+          <div className="system-card-head-left">
+            <span className="system-card-icon system-card-icon--warning" aria-hidden="true">
+              <Wrench size={16} />
+            </span>
+            <div className="system-card-copy">
+              <h2 className="system-card-title">{ui.system.cleanmgrTitle}</h2>
+              <p className="system-card-subtitle">{ui.system.cleanmgrBody}</p>
+            </div>
+          </div>
+
+          <div className="system-cleanmgr-actions">
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<HardDrive size={13} />}
+              onClick={() => void onLaunchCleanmgr("dialog")}
+              disabled={running}
+            >
+              {ui.system.cleanmgrOpen}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<SlidersHorizontal size={13} />}
+              onClick={() => void onLaunchCleanmgr("sageset")}
+              disabled={running}
+            >
+              {ui.system.cleanmgrConfigure}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Play size={12} />}
+              onClick={() => void onLaunchCleanmgr("sagerun")}
+              disabled={running}
+            >
+              {ui.system.cleanmgrRunProfile}
+            </Button>
+          </div>
         </div>
       </section>
 
-      <section className="system-automation">
-        <header className="system-automation-header">
-          <div>
-            <h2 className="system-automation-title">
-              <CalendarClock size={16} /> {ui.system.automatedTitle}
-            </h2>
-            <p className="system-automation-body">{ui.system.automatedBody}</p>
-          </div>
-          {automation?.installed && (
-            <span className="chip system-chip system-chip--safe">
-              <Check size={10} /> {ui.system.scheduleInstalled}
+      <section className="system-panel-card system-automation-card">
+        <header className="system-card-header">
+          <div className="system-card-head-left">
+            <span className="system-card-icon system-card-icon--success" aria-hidden="true">
+              <CalendarClock size={16} />
             </span>
-          )}
+            <div className="system-card-copy">
+              <h2 className="system-card-title">{ui.system.automatedTitle}</h2>
+              <p className="system-card-subtitle">{ui.system.automatedBody}</p>
+            </div>
+          </div>
+
+          <div className="system-card-head-actions">
+            {automation?.installed && (
+              <span className="chip system-chip system-chip--safe">
+                <Check size={10} /> {ui.system.scheduleInstalled}
+              </span>
+            )}
+            {draft && (
+              <Switch
+                checked={draft.enabled}
+                onLabel={ui.common.on}
+                offLabel={ui.common.off}
+                aria-label={ui.system.automatedTitle}
+                onChange={(enabled) => setDraft({ ...draft, enabled })}
+                disabled={savingSchedule}
+              />
+            )}
+          </div>
         </header>
 
         {draft && (
-          <div className="system-automation-form">
+          <div
+            className={`system-automation-form ${
+              draft.frequency === "weekly"
+                ? "system-automation-form--4"
+                : "system-automation-form--3"
+            }`}
+          >
             <label className="system-field">
               <span>{ui.system.frequency}</span>
               <select
@@ -571,7 +637,7 @@ export const SystemView: React.FC = () => {
               />
             </label>
 
-            <label className="system-field system-field--wide">
+            <label className="system-field">
               <span>{ui.system.scope}</span>
               <select
                 value={draft.profile}
@@ -583,33 +649,29 @@ export const SystemView: React.FC = () => {
                 <option value="deep">{ui.system.scopeDeep}</option>
               </select>
             </label>
+          </div>
+        )}
 
+        {automation?.enabled && !automation.installed && (
+          <p className="items-warning system-warning">{ui.system.scheduleMissing}</p>
+        )}
+
+        <footer className="system-card-footer">
+          <span className="system-last-run">
+            <CalendarClock size={13} aria-hidden="true" />
+            <span>
+              {ui.system.lastRun}:{" "}
+              {automation?.lastRun
+                ? `${new Date(automation.lastRun).toLocaleString(language ?? "en")} · ${formatBytes(
+                    automation.lastFreedBytes ?? 0,
+                    language,
+                  )}`
+                : ui.system.never}
+            </span>
+          </span>
+
+          {draft && (
             <div className="system-automation-actions">
-              <Switch
-                checked={draft.enabled}
-                onLabel={ui.common.on}
-                offLabel={ui.common.off}
-                aria-label={ui.system.automatedTitle}
-                onChange={(enabled) => setDraft({ ...draft, enabled })}
-                disabled={savingSchedule}
-              />
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => void onSaveSchedule()}
-                disabled={savingSchedule}
-              >
-                {ui.system.saveSchedule}
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                icon={<Play size={12} />}
-                onClick={onRunProfileNow}
-                disabled={running || previewing || selectableIds.length === 0}
-              >
-                {ui.system.runNow}
-              </Button>
               {automation?.installed && (
                 <Button
                   variant="danger-outline"
@@ -620,23 +682,26 @@ export const SystemView: React.FC = () => {
                   {ui.system.removeSchedule}
                 </Button>
               )}
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<Play size={12} />}
+                onClick={onRunProfileNow}
+                disabled={running || previewing || selectableIds.length === 0}
+              >
+                {ui.system.runNow}
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => void onSaveSchedule()}
+                disabled={savingSchedule}
+              >
+                {ui.system.saveSchedule}
+              </Button>
             </div>
-          </div>
-        )}
-
-        {automation?.enabled && !automation.installed && (
-          <p className="items-warning system-warning">{ui.system.scheduleMissing}</p>
-        )}
-
-        <p className="plan-note">
-          {ui.system.lastRun}:{" "}
-          {automation?.lastRun
-            ? `${new Date(automation.lastRun).toLocaleString(language ?? "en")} · ${formatBytes(
-                automation.lastFreedBytes ?? 0,
-                language,
-              )}`
-            : ui.system.never}
-        </p>
+          )}
+        </footer>
       </section>
 
       <Dialog

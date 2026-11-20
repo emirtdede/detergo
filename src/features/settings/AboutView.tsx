@@ -203,111 +203,125 @@ export const AboutView: React.FC<AboutViewProps> = ({
       </div>
     ) : (
       <div className="about-content">
+        {/* Shared Bento KPI Strip across all About panes — mirrors Settings 1:1 */}
+        <div className="nc-bento-strip nc-bento-strip--4">
+          <button
+            type="button"
+            className={`nc-kpi-card about-kpi-action ${aboutNav === "health" ? "is-active" : ""}`}
+            onClick={() => setAboutNav("health")}
+          >
+            <div className="nc-kpi-card-header">
+              <span className="nc-kpi-card-label">{ui.about.kpiVersion}</span>
+              <span className="nc-kpi-card-icon nc-kpi-card-icon--accent">
+                <Sparkles size={14} />
+              </span>
+            </div>
+            <div className="nc-kpi-card-body">
+              <span className="nc-kpi-card-value">v{appVersion}</span>
+              <span className="nc-kpi-card-sub">
+                {profileLabel} {ui.settings.buildProfile}
+              </span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            className={`nc-kpi-card about-kpi-action ${aboutNav === "catalog" ? "is-active" : ""}`}
+            onClick={() => setAboutNav("catalog")}
+          >
+            <div className="nc-kpi-card-header">
+              <span className="nc-kpi-card-label">{ui.about.kpiCatalog}</span>
+              <span className="nc-kpi-card-icon nc-kpi-card-icon--success">
+                <Boxes size={14} />
+              </span>
+            </div>
+            <div className="nc-kpi-card-body">
+              <span className="nc-kpi-card-value">
+                {catalogStats.rules} {ui.settings.rules}
+              </span>
+              <span className="nc-kpi-card-sub">{ui.about.kpiRulesSub}</span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            className={`nc-kpi-card about-kpi-action ${aboutNav === "catalog" ? "is-active" : ""}`}
+            onClick={() => setAboutNav("catalog")}
+          >
+            <div className="nc-kpi-card-header">
+              <span className="nc-kpi-card-label">{ui.about.kpiEco}</span>
+              <span className="nc-kpi-card-icon nc-kpi-card-icon--purple">
+                <Layers size={14} />
+              </span>
+            </div>
+            <div className="nc-kpi-card-body">
+              <span className="nc-kpi-card-value">
+                {catalogStats.ecosystems} {ui.settings.ecosystems}
+              </span>
+              <span className="nc-kpi-card-sub">{ui.about.kpiEcoSub}</span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            className={`nc-kpi-card about-kpi-action ${aboutNav === "legal" ? "is-active" : ""}`}
+            onClick={() => setAboutNav("legal")}
+          >
+            <div className="nc-kpi-card-header">
+              <span className="nc-kpi-card-label">{ui.about.kpiLicense}</span>
+              <span className="nc-kpi-card-icon nc-kpi-card-icon--warning">
+                <ScrollText size={14} />
+              </span>
+            </div>
+            <div className="nc-kpi-card-body">
+              <span className="nc-kpi-card-value">{ui.about.kpiLicenseValue}</span>
+              <span className="nc-kpi-card-sub">{ui.about.kpiLicenseSub}</span>
+            </div>
+          </button>
+        </div>
+
         {aboutNav === "overview" && (
-          <>
-            {/* Shared Bento KPI Strip for About View — 100% Width */}
-            <div className="nc-bento-strip nc-bento-strip--4">
-              <div className="nc-kpi-card">
-                <div className="nc-kpi-card-header">
-                  <span className="nc-kpi-card-label">{ui.about.kpiVersion}</span>
-                  <span className="nc-kpi-card-icon nc-kpi-card-icon--accent">
-                    <Sparkles size={14} />
-                  </span>
+          <section className="about-workspace-grid about-workspace-grid--full">
+            <div className="about-bento-panel">
+              <div className="about-panel-header">
+                <div className="about-panel-logo-clean">
+                  <VelliumLogo size={46} color="var(--accent)" />
                 </div>
-                <div className="nc-kpi-card-body">
-                  <span className="nc-kpi-card-value">v{appVersion}</span>
-                  <span className="nc-kpi-card-sub">
-                    {profileLabel} {ui.settings.buildProfile}
-                  </span>
+                <div className="about-panel-title-group">
+                  <h2 className="about-panel-title">{ui.settings.aboutTitleBy}</h2>
+                  <span className="about-panel-desc">{ui.settings.aboutTagline}</span>
                 </div>
               </div>
 
-              <div className="nc-kpi-card">
-                <div className="nc-kpi-card-header">
-                  <span className="nc-kpi-card-label">{ui.about.kpiCatalog}</span>
-                  <span className="nc-kpi-card-icon nc-kpi-card-icon--success">
-                    <Boxes size={14} />
+              <div className="about-meta-list">
+                <div className="about-meta-row">
+                  <span className="about-meta-label">{ui.about.appVersion}</span>
+                  <span className="about-meta-value">v{appVersion}</span>
+                </div>
+                <div className="about-meta-row">
+                  <span className="about-meta-label">{ui.about.gitCommitHash}</span>
+                  <span className="about-meta-value">
+                    {buildInfo ? buildInfo.commitShort : "—"}
                   </span>
                 </div>
-                <div className="nc-kpi-card-body">
-                  <span className="nc-kpi-card-value">
-                    {catalogStats.rules} {ui.settings.rules}
-                  </span>
-                  <span className="nc-kpi-card-sub">{ui.about.kpiRulesSub}</span>
+                <div className="about-meta-row">
+                  <span className="about-meta-label">{ui.settings.buildProfile}</span>
+                  <span className="about-meta-value">{profileLabel}</span>
                 </div>
+                {builtAt && (
+                  <div className="about-meta-row">
+                    <span className="about-meta-label">{ui.about.builtAt}</span>
+                    <span className="about-meta-value">{builtAt}</span>
+                  </div>
+                )}
               </div>
 
-              <div className="nc-kpi-card">
-                <div className="nc-kpi-card-header">
-                  <span className="nc-kpi-card-label">{ui.about.kpiEco}</span>
-                  <span className="nc-kpi-card-icon nc-kpi-card-icon--purple">
-                    <Layers size={14} />
-                  </span>
-                </div>
-                <div className="nc-kpi-card-body">
-                  <span className="nc-kpi-card-value">
-                    {catalogStats.ecosystems} {ui.settings.ecosystems}
-                  </span>
-                  <span className="nc-kpi-card-sub">{ui.about.kpiEcoSub}</span>
-                </div>
-              </div>
-
-              <div className="nc-kpi-card">
-                <div className="nc-kpi-card-header">
-                  <span className="nc-kpi-card-label">{ui.about.kpiLicense}</span>
-                  <span className="nc-kpi-card-icon nc-kpi-card-icon--warning">
-                    <ScrollText size={14} />
-                  </span>
-                </div>
-                <div className="nc-kpi-card-body">
-                  <span className="nc-kpi-card-value">{ui.about.kpiLicenseValue}</span>
-                  <span className="nc-kpi-card-sub">{ui.about.kpiLicenseSub}</span>
-                </div>
+              <div className="about-trust-strip">
+                <ShieldCheck size={18} className="about-trust-icon" />
+                <span>{ui.about.localSafeNote}</span>
               </div>
             </div>
-
-            <section className="about-workspace-grid about-workspace-grid--full">
-              <div className="about-bento-panel">
-                <div className="about-panel-header">
-                  <div className="about-panel-logo-clean">
-                    <VelliumLogo size={46} color="var(--accent)" />
-                  </div>
-                  <div className="about-panel-title-group">
-                    <h2 className="about-panel-title">{ui.settings.aboutTitleBy}</h2>
-                    <span className="about-panel-desc">{ui.settings.aboutTagline}</span>
-                  </div>
-                </div>
-
-                <div className="about-meta-list">
-                  <div className="about-meta-row">
-                    <span className="about-meta-label">{ui.about.appVersion}</span>
-                    <span className="about-meta-value">v{appVersion}</span>
-                  </div>
-                  <div className="about-meta-row">
-                    <span className="about-meta-label">{ui.about.gitCommitHash}</span>
-                    <span className="about-meta-value">
-                      {buildInfo ? buildInfo.commitShort : "—"}
-                    </span>
-                  </div>
-                  <div className="about-meta-row">
-                    <span className="about-meta-label">{ui.settings.buildProfile}</span>
-                    <span className="about-meta-value">{profileLabel}</span>
-                  </div>
-                  {builtAt && (
-                    <div className="about-meta-row">
-                      <span className="about-meta-label">{ui.about.builtAt}</span>
-                      <span className="about-meta-value">{builtAt}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="about-trust-strip">
-                  <ShieldCheck size={18} className="about-trust-icon" />
-                  <span>{ui.about.localSafeNote}</span>
-                </div>
-              </div>
-            </section>
-          </>
+          </section>
         )}
 
         {aboutNav === "catalog" && (
@@ -396,8 +410,10 @@ export const AboutView: React.FC<AboutViewProps> = ({
         {aboutNav === "health" && (
           <>
             <UpdatePanel version={appVersion} />
-            <SystemHealthPanel />
-            <DiagnosticsPanel version={appVersion} />
+            <div className="about-workspace-grid">
+              <SystemHealthPanel />
+              <DiagnosticsPanel version={appVersion} />
+            </div>
           </>
         )}
 
@@ -520,28 +536,48 @@ export const AboutView: React.FC<AboutViewProps> = ({
             </div>
 
             <div className="about-legal-cards-grid">
-              {legalDocs.map((doc) => (
-                <button
-                  key={doc.id}
-                  type="button"
-                  className="about-legal-btn"
-                  data-legal-doc={doc.id}
-                  onClick={() => {
-                    returnFocusDocRef.current = doc.id;
-                    openLegalDoc(doc.id);
-                  }}
-                >
-                  <div className="about-legal-btn-header">
-                    <span className="about-legal-btn-title">{doc.label}</span>
-                    <ChevronRight size={15} className="about-legal-btn-arrow" />
-                  </div>
-                  <p className="about-legal-btn-desc">{doc.hint}</p>
-                  <span className="about-legal-btn-rev">
-                    {ui.settings.aboutLegalRevision}:{" "}
-                    {LEGAL_REVISION[locale === "tr" ? "tr" : "en"]}
-                  </span>
-                </button>
-              ))}
+              {legalDocs.map((doc) => {
+                const iconMeta =
+                  doc.id === "privacy"
+                    ? { icon: <Lock size={16} />, cls: "about-contact-icon--green" }
+                    : doc.id === "thirdParty"
+                      ? { icon: <Boxes size={16} />, cls: "about-contact-icon--purple" }
+                      : { icon: <ScrollText size={16} />, cls: "about-contact-icon--blue" };
+                return (
+                  <button
+                    key={doc.id}
+                    type="button"
+                    className="about-legal-btn"
+                    data-legal-doc={doc.id}
+                    onClick={() => {
+                      returnFocusDocRef.current = doc.id;
+                      openLegalDoc(doc.id);
+                    }}
+                  >
+                    <div className="about-legal-btn-top">
+                      <span className={`about-contact-icon ${iconMeta.cls}`} aria-hidden="true">
+                        {iconMeta.icon}
+                      </span>
+                      <div className="about-legal-btn-header">
+                        <span className="about-legal-btn-title">{doc.label}</span>
+                        <ChevronRight size={15} className="about-legal-btn-arrow" />
+                      </div>
+                    </div>
+                    <p className="about-legal-btn-desc">{doc.hint}</p>
+                    <div className="about-legal-btn-foot">
+                      <span className="about-legal-btn-rev">
+                        {ui.settings.aboutLegalRevision}:{" "}
+                        {LEGAL_REVISION[locale === "tr" ? "tr" : "en"]}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="about-trust-strip">
+              <ShieldCheck size={16} className="about-trust-icon" />
+              <span>{ui.about.localSafeNote}</span>
             </div>
 
             <footer className="about-footer-bar">
