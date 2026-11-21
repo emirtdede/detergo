@@ -6,8 +6,8 @@ use tauri::State;
 
 use crate::audit::{AuditEntry, AuditRecord};
 use crate::cleanup::{
-    build_plan, coordinator::execute_plan_with_hooks, CleanupEvent, CleanupPlan, CleanupReport,
-    DeleteMode,
+    build_plan_with_options, coordinator::execute_plan_with_hooks, CleanupEvent, CleanupPlan,
+    CleanupReport, DeleteMode,
 };
 use crate::commands::AppState;
 use crate::error::AppError;
@@ -18,6 +18,7 @@ pub fn preview_cleanup(
     scan_session_id: String,
     target_ids: Vec<String>,
     mode: DeleteMode,
+    older_than_days: Option<u32>,
     state: State<'_, AppState>,
 ) -> Result<CleanupPlan, AppError> {
     let catalog = state.catalog()?;
@@ -25,7 +26,14 @@ pub fn preview_cleanup(
     let policy = crate::cleanup::CleanupPolicy::from(&settings);
     let handle = state.registry.get_session(&scan_session_id)?;
     let session = crate::lock!(handle);
-    let plan = build_plan(&session, &target_ids, mode, &catalog, &policy)?;
+    let plan = build_plan_with_options(
+        &session,
+        &target_ids,
+        mode,
+        &catalog,
+        &policy,
+        older_than_days,
+    )?;
     drop(session);
     state.registry.insert_plan(plan.clone());
     Ok(plan)
@@ -160,15 +168,41 @@ async fn run_cleanup(
 
     {
         let mut session = crate::lock!(handle);
-        let success_ids: Vec<String> = report
-            .results
-            .iter()
-            .filter(|result| result.success)
-            .map(|result| result.target_id.clone())
-            .collect();
-        // A successful parent also removed every nested row from disk; keeping
-        // them in the session produced ghost targets in the UI.
-        session.apply_successful_deletions(&success_ids);
+        if plan.incremental_older_than_days.is_some() {
+            for res in report.results.iter().filter(|r| r.success) {
+                if let Some(target) = session.targets.get_mut(&res.target_id) {
+                    if let Some(prev) = target.logical_bytes {
+                        target.logical_bytes = Some(prev.saturating_sub(res.measured_bytes));
+                    }
+                    if let Some(prev_alloc) = target.allocated_bytes {
+                        target.allocated_bytes =
+                            Some(prev_alloc.saturating_sub(res.measured_bytes));
+                    }
+                }
+                if let Some(item) = session.items.iter_mut().find(|i| i.id == res.target_id) {
+                    if let Some(prev) = item.logical_bytes {
+                        item.logical_bytes = Some(prev.saturating_sub(res.measured_bytes));
+                    }
+                    if let Some(prev_alloc) = item.allocated_bytes {
+                        item.allocated_bytes = Some(prev_alloc.saturating_sub(res.measured_bytes));
+                    }
+                    if let Some(prev_est) = item.estimated_reclaim_bytes {
+                        item.estimated_reclaim_bytes =
+                            Some(prev_est.saturating_sub(res.measured_bytes));
+                    }
+                }
+            }
+        } else {
+            let success_ids: Vec<String> = report
+                .results
+                .iter()
+                .filter(|result| result.success)
+                .map(|result| result.target_id.clone())
+                .collect();
+            // A successful parent also removed every nested row from disk; keeping
+            // them in the session produced ghost targets in the UI.
+            session.apply_successful_deletions(&success_ids);
+        }
     }
 
     if settings.history_enabled {

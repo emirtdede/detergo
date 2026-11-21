@@ -1207,3 +1207,94 @@ fn volume_free_delta_is_signed() {
     assert_eq!(signed_volume_delta(None, Some(1)), None);
     assert_eq!(signed_volume_delta(Some(1), None), None);
 }
+
+#[test]
+fn incremental_plan_prunes_stale_slices_and_preserves_target_dir() {
+    use crate::cleanup::build_plan_with_options;
+    use filetime::{set_file_mtime, FileTime};
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    let temp = tempfile::tempdir().unwrap();
+    let app = temp.path().join("rust-app");
+    let target_dir = app.join("target");
+    let old_inc = target_dir
+        .join("debug")
+        .join("incremental")
+        .join("app-123")
+        .join("s-old");
+    let fresh_inc = target_dir
+        .join("debug")
+        .join("incremental")
+        .join("app-123")
+        .join("s-fresh");
+    fs::create_dir_all(&old_inc).unwrap();
+    fs::create_dir_all(&fresh_inc).unwrap();
+    fs::write(app.join("Cargo.toml"), "[package]\nname = \"app\"\n").unwrap();
+    fs::write(
+        target_dir.join("CACHEDIR.TAG"),
+        "Signature: 8a477f597d28d172789f06886806bc55",
+    )
+    .unwrap();
+    let old_bin = old_inc.join("dep-graph.bin");
+    let fresh_bin = fresh_inc.join("dep-graph.bin");
+    fs::write(&old_bin, vec![b'a'; 4096]).unwrap();
+    fs::write(&fresh_bin, vec![b'b'; 2048]).unwrap();
+
+    let now_secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64;
+    let old_ft = FileTime::from_unix_time(now_secs - 30 * 86_400, 0);
+    set_file_mtime(&old_bin, old_ft).unwrap();
+    set_file_mtime(&old_inc, old_ft).unwrap();
+
+    let mut rust_target = target(
+        "t-rust",
+        target_dir.clone(),
+        "rs.target",
+        SafetyClass::Regenerate,
+    );
+    rust_target.evidence.marker_hits = vec!["Cargo.toml".into()];
+    rust_target.evidence.content_hits = vec!["CACHEDIR.TAG".into()];
+    let session = make_session(temp.path(), vec![rust_target]);
+
+    let plan = build_plan_with_options(
+        &session,
+        &["t-rust".into()],
+        DeleteMode::Permanent,
+        &catalog(),
+        &policy(),
+        Some(14),
+    )
+    .expect("build incremental plan");
+
+    assert_eq!(plan.incremental_older_than_days, Some(14));
+    assert_eq!(plan.eligible_count, 1);
+    assert_eq!(plan.total_estimated_bytes, 4096);
+    assert_eq!(plan.items[0].incremental_slice_count, Some(1));
+
+    let report = execute_plan_deterministic(
+        &plan,
+        &session,
+        &catalog(),
+        &[],
+        &plan.confirmation_token,
+        true,
+    )
+    .expect("execute incremental plan");
+
+    assert_eq!(report.success_count, 1);
+    assert_eq!(report.reclaim_bytes, 4096);
+    assert!(
+        !old_inc.exists(),
+        "stale incremental session must be pruned"
+    );
+    assert!(
+        fresh_inc.exists(),
+        "recent incremental session must stay warm"
+    );
+    assert!(
+        target_dir.exists(),
+        "parent target/ directory must remain intact"
+    );
+}

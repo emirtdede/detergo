@@ -246,6 +246,7 @@ mod tests {
             eligible_count: 0,
             blocked_count: 0,
             confirmation_token: "token".to_string(),
+            incremental_older_than_days: None,
         }
     }
 

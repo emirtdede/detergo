@@ -369,6 +369,7 @@ export interface PlanItem {
   blockedReason?: string | null;
   regenerateHint?: string | null;
   snapshot: TargetSnapshot;
+  incrementalSliceCount?: number | null;
 }
 
 export interface CleanupPlan {
@@ -383,6 +384,7 @@ export interface CleanupPlan {
   eligibleCount: number;
   blockedCount: number;
   confirmationToken: string;
+  incrementalOlderThanDays?: number | null;
 }
 
 export interface CleanupResultItem {

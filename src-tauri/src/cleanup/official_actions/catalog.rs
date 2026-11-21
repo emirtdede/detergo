@@ -641,6 +641,80 @@ pub(super) const ACTIONS: &[ProviderDef] = &[
             impact: "Installed formulae and casks stay intact; cached downloads are removed.",
         }],
     },
+    ProviderDef {
+        id: "xcode",
+        name: "Xcode DerivedData & Simulators",
+        version_exe: "xcodebuild",
+        read_only: false,
+        opt_in_only: false,
+        note: Some(
+            "Xcode DerivedData build intermediates, module caches, and unavailable CoreSimulator runtimes (macOS).",
+        ),
+        actions: &[
+            ActionDef {
+                id: "xcode.derived_data.recycle",
+                kind: ActionKind::SafeCacheRecycle {
+                    blocked_processes: &["Xcode", "xcodebuild", "Simulator", "swift", "SourceKitService"],
+                },
+                label: "Move Xcode DerivedData & CoreSimulator caches to Trash",
+                description:
+                    "Moves Xcode DerivedData, module caches, and CoreSimulator cache folders to the system Trash.",
+                requires_network: false,
+                impact: "Open Xcode projects re-index and rebuild DerivedData on next build; archives and user code stay intact.",
+            },
+            ActionDef {
+                id: "xcode.simulators.unavailable",
+                kind: ActionKind::Command {
+                    exe: "xcrun",
+                    args: &["simctl", "delete", "unavailable"],
+                },
+                label: "xcrun simctl delete unavailable",
+                description:
+                    "Removes simulator devices for Xcode runtimes that are no longer installed.",
+                requires_network: false,
+                impact: "Active iOS/watchOS/tvOS simulators are preserved; only orphaned simulator devices are removed.",
+            },
+        ],
+    },
+    ProviderDef {
+        id: "cocoapods",
+        name: "CocoaPods",
+        version_exe: "pod",
+        read_only: false,
+        opt_in_only: false,
+        note: Some("Cached CocoaPods specs and downloaded pod archives (macOS/Linux)."),
+        actions: &[ActionDef {
+            id: "cocoapods.cache.clean",
+            kind: ActionKind::Command {
+                exe: "pod",
+                args: &["cache", "clean", "--all"],
+            },
+            label: "pod cache clean --all",
+            description: "Clears the global CocoaPods download cache via the official command.",
+            requires_network: false,
+            impact: "Project Pods/ folders stay intact; future pod install runs may re-download archives.",
+        }],
+    },
+    ProviderDef {
+        id: "ccache",
+        name: "ccache / sccache",
+        version_exe: "ccache",
+        read_only: false,
+        opt_in_only: false,
+        note: Some(
+            "C/C++ and Rust compiler object caches managed by ccache or Mozilla sccache.",
+        ),
+        actions: &[ActionDef {
+            id: "ccache.recycle",
+            kind: ActionKind::SafeCacheRecycle {
+                blocked_processes: &["ccache", "sccache", "clang", "gcc", "cl", "rustc"],
+            },
+            label: "Move ccache / sccache object cache to Recycle Bin",
+            description: "Moves local ccache and sccache compilation object stores to the Recycle Bin.",
+            requires_network: false,
+            impact: "Compiled object files are regenerated during future C/C++ or Rust builds.",
+        }],
+    },
 ];
 
 pub(super) fn provider_def(id: &str) -> Option<(usize, &'static ProviderDef)> {
@@ -998,6 +1072,37 @@ pub(super) fn resolve_provider_paths(def: &ProviderDef) -> Vec<PathBuf> {
                 return vec![p];
             }
             vec![local.join("Homebrew")]
+        }
+        "xcode" => {
+            let dev = home.join("Library").join("Developer");
+            vec![
+                dev.join("Xcode").join("DerivedData"),
+                dev.join("CoreSimulator").join("Caches"),
+                local.join("com.apple.dt.Xcode"),
+                local.join("org.swift.swiftpm"),
+            ]
+        }
+        "cocoapods" => {
+            if let Some(p) = env_dir("CP_CACHE_DIR") {
+                return vec![p];
+            }
+            vec![
+                home.join("Library").join("Caches").join("CocoaPods"),
+                local.join("CocoaPods"),
+            ]
+        }
+        "ccache" => {
+            let mut paths = Vec::new();
+            if let Some(p) = env_dir("CCACHE_DIR") {
+                paths.push(p);
+            }
+            if let Some(p) = env_dir("SCCACHE_DIR") {
+                paths.push(p);
+            }
+            paths.push(local.join("ccache"));
+            paths.push(local.join("sccache"));
+            paths.push(local.join("Mozilla").join("sccache").join("cache"));
+            paths
         }
         _ => Vec::new(),
     }

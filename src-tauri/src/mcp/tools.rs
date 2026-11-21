@@ -44,7 +44,8 @@ pub(super) fn tool_definitions(allow_destructive: bool) -> Vec<Value> {
                 "properties": {
                     "scan_id": { "type": "string", "description": "Scan session ID returned by detergo_scan_workspace." },
                     "target_ids": { "type": "array", "items": { "type": "string" }, "description": t("List of target IDs returned by detergo_scan_workspace") },
-                    "path": { "type": "string", "description": t("Workspace directory for target verification") }
+                    "path": { "type": "string", "description": t("Workspace directory for target verification") },
+                    "incremental_older_than_days": { "type": "number", "description": "Optional cargo-sweep style intra-target age threshold in days (e.g. 7, 14, 30). Prunes only stale incremental build slices older than this many days while keeping recent builds warm." }
                 },
                 "required": ["target_ids"]
             }

@@ -1,4 +1,5 @@
 pub mod coordinator;
+pub mod incremental;
 pub mod official_actions;
 pub mod permanent;
 pub mod plan;
@@ -11,7 +12,8 @@ use serde::{Deserialize, Serialize};
 
 pub use coordinator::{execute_plan, CleanupEvent, CleanupReport, CleanupResultItem};
 pub use plan::{
-    build_plan, verify_snapshot, CleanupPlan, PlanItem, TargetSnapshot, VerificationOutcome,
+    build_plan, build_plan_with_options, verify_snapshot, CleanupPlan, PlanItem, TargetSnapshot,
+    VerificationOutcome,
 };
 pub use recycle_bin::RecycleBinService;
 

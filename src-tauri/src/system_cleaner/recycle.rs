@@ -25,8 +25,46 @@ pub fn size_bytes() -> Option<u64> {
 }
 
 #[cfg(not(windows))]
+fn unix_trash_dirs() -> Vec<std::path::PathBuf> {
+    let Some(home) = std::env::var_os("HOME").map(std::path::PathBuf::from) else {
+        return Vec::new();
+    };
+    #[cfg(target_os = "macos")]
+    {
+        vec![home.join(".Trash")]
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        let data = std::env::var_os("XDG_DATA_HOME")
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|| home.join(".local").join("share"));
+        let trash = data.join("Trash");
+        vec![trash.join("files"), trash.join("info")]
+    }
+}
+
+#[cfg(not(windows))]
 pub fn size_bytes() -> Option<u64> {
-    None
+    let token = crate::scanner::cancellation::CancellationToken::new();
+    let mut total = 0u64;
+    let mut found_any = false;
+    for dir in unix_trash_dirs() {
+        if dir.is_dir() {
+            found_any = true;
+            if let Some(size) = crate::scanner::measurement::measure_path(
+                &dir,
+                crate::catalog::TargetKind::Directory,
+                &token,
+            ) {
+                total = total.saturating_add(size.logical_bytes);
+            }
+        }
+    }
+    if found_any {
+        Some(total)
+    } else {
+        Some(0)
+    }
 }
 
 /// Empties every Recycle Bin on the machine. Returns `Ok(())` when the shell
@@ -50,7 +88,23 @@ pub fn empty() -> Result<(), crate::error::AppError> {
 
 #[cfg(not(windows))]
 pub fn empty() -> Result<(), crate::error::AppError> {
-    Err(crate::error::AppError::PlatformUnsupported(
-        "The Recycle Bin is a Windows feature.".to_string(),
-    ))
+    for dir in unix_trash_dirs() {
+        if !dir.is_dir() || crate::platform::is_reparse_point(&dir) {
+            continue;
+        }
+        let entries = std::fs::read_dir(&dir)
+            .map_err(|e| crate::error::AppError::PermanentDeleteFailed(e.to_string()))?;
+        for entry in entries.flatten() {
+            let path = entry.path();
+            let Ok(meta) = std::fs::symlink_metadata(&path) else {
+                continue;
+            };
+            if meta.is_dir() && !meta.file_type().is_symlink() {
+                let _ = std::fs::remove_dir_all(&path);
+            } else {
+                let _ = std::fs::remove_file(&path);
+            }
+        }
+    }
+    Ok(())
 }

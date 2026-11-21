@@ -63,8 +63,9 @@ Choose and execute the Microsoft Store submission strategy:
 
 ## 6. Cross-Platform Native Installers (macOS & Linux)
 
-Core Rust scanning, AI provider discovery, cache actions, CLI, and MCP already compile and pass unit tests on `ubuntu-latest` and `macos-latest` in CI:
+Core Rust scanning, AI provider discovery, cache actions (30 providers including Xcode DerivedData/CoreSimulator, CocoaPods, and ccache/sccache), cross-platform system/trash cleaner, CLI, and MCP compile and pass unit tests on `ubuntu-latest` and `macos-latest` in CI:
 
-- [ ] Add `macos-latest` (`.dmg`, Apple Silicon + Intel universal binary, Developer ID notarization) and `ubuntu-latest` (`.AppImage`, `.deb`, `.rpm`) Tauri release bundle jobs.
-- [ ] Publish Homebrew Cask (`brew install --cask ...`) alongside WinGet and Scoop.
+- [x] Add `macos-latest` (`.dmg`, `.app`) and `ubuntu-latest` (`.AppImage`, `.deb`, `.rpm`) Tauri release bundle jobs (`release-unix` in `.github/workflows/ci.yml`).
+- [x] Add Homebrew Cask manifest (`packaging/homebrew/detergo.rb`) alongside WinGet and Scoop.
+- [ ] Optional Apple Developer ID notarization once an Apple Developer account is connected.
 - [ ] Conduct native-speaker editorial review passes on priority locales (`de`, `es`, `fr`, `ja`, `ko`, `zh`, `zh-tw`, `ar`, `ru`, `pt`) and invite community translators for long-tail locales.

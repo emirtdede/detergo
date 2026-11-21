@@ -629,6 +629,14 @@ fn write_active_ico_file(
     crate::platform::atomic_replace_file(&temp, &target)
         .map_err(|err| AppError::Unknown(format!("Could not activate app icon file: {err}")))?;
 
+    #[cfg(not(windows))]
+    {
+        let png_target = target.with_extension("png");
+        let png_rgba = render_icon_rgba(256, palette);
+        let png_bytes = encode_png_rgba(256, &png_rgba);
+        let _ = std::fs::write(&png_target, &png_bytes);
+    }
+
     // Prune older generated icons so Explorer uses the fresh filename while
     // keeping %APPDATA%\detergo\icons clean.
     if let Ok(entries) = std::fs::read_dir(&icons_dir) {
@@ -786,8 +794,111 @@ fn update_windows_shortcuts_and_shell(ico_path: &Path) -> u32 {
 }
 
 #[cfg(not(windows))]
-fn update_windows_shortcuts_and_shell(_ico_path: &Path) -> u32 {
-    0
+fn encode_png_rgba(size: u32, rgba: &[u8]) -> Vec<u8> {
+    fn crc32(bytes: &[u8]) -> u32 {
+        let mut crc = 0xFFFF_FFFFu32;
+        for &b in bytes {
+            crc ^= u32::from(b);
+            for _ in 0..8 {
+                let mask = (crc & 1).wrapping_neg();
+                crc = (crc >> 1) ^ (0xEDB8_8320 & mask);
+            }
+        }
+        !crc
+    }
+
+    fn adler32(bytes: &[u8]) -> u32 {
+        let mut a = 1u32;
+        let mut b = 0u32;
+        for &byte in bytes {
+            a = (a + u32::from(byte)) % 65_521;
+            b = (b + a) % 65_521;
+        }
+        (b << 16) | a
+    }
+
+    fn push_chunk(out: &mut Vec<u8>, tag: &[u8; 4], data: &[u8]) {
+        out.extend_from_slice(&(data.len() as u32).to_be_bytes());
+        let start = out.len();
+        out.extend_from_slice(tag);
+        out.extend_from_slice(data);
+        let crc = crc32(&out[start..]);
+        out.extend_from_slice(&crc.to_be_bytes());
+    }
+
+    let row_len = (size as usize) * 4;
+    let mut raw = Vec::with_capacity((row_len + 1) * (size as usize));
+    for y in 0..(size as usize) {
+        raw.push(0); // filter type 0 (None)
+        let start = y * row_len;
+        raw.extend_from_slice(&rgba[start..start + row_len]);
+    }
+
+    // Stored zlib stream (RFC 1950 + RFC 1951 non-compressed blocks)
+    let mut zlib = Vec::with_capacity(raw.len() + (raw.len() / 65_535 + 1) * 5 + 6);
+    zlib.push(0x78);
+    zlib.push(0x01);
+    let chunks: Vec<&[u8]> = raw.chunks(65_535).collect();
+    for (idx, chunk) in chunks.iter().enumerate() {
+        let is_last = idx + 1 == chunks.len();
+        zlib.push(if is_last { 0x01 } else { 0x00 });
+        let len = chunk.len() as u16;
+        zlib.extend_from_slice(&len.to_le_bytes());
+        zlib.extend_from_slice(&(!len).to_le_bytes());
+        zlib.extend_from_slice(chunk);
+    }
+    zlib.extend_from_slice(&adler32(&raw).to_be_bytes());
+
+    let mut png = Vec::with_capacity(64 + zlib.len());
+    png.extend_from_slice(b"\x89PNG\r\n\x1a\n");
+    let mut ihdr = [0u8; 13];
+    ihdr[0..4].copy_from_slice(&size.to_be_bytes());
+    ihdr[4..8].copy_from_slice(&size.to_be_bytes());
+    ihdr[8] = 8; // bit depth
+    ihdr[9] = 6; // color type RGBA
+    push_chunk(&mut png, b"IHDR", &ihdr);
+    push_chunk(&mut png, b"IDAT", &zlib);
+    push_chunk(&mut png, b"IEND", &[]);
+    png
+}
+
+#[cfg(not(windows))]
+fn update_windows_shortcuts_and_shell(ico_path: &Path) -> u32 {
+    // On Linux / FreeDesktop environments, write a companion 256x256 PNG next to
+    // the ICO and update the user's `~/.local/share/applications/detergo.desktop`
+    // Icon= entry when present so application launchers reflect the chosen icon.
+    let png_path = ico_path.with_extension("png");
+    let Some(home) = std::env::var_os("HOME").map(PathBuf::from) else {
+        return 0;
+    };
+    let desktop_entry = std::env::var_os("XDG_DATA_HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| home.join(".local").join("share"))
+        .join("applications")
+        .join("detergo.desktop");
+    if !desktop_entry.is_file() || !png_path.is_file() {
+        return 0;
+    }
+    let Ok(contents) = std::fs::read_to_string(&desktop_entry) else {
+        return 0;
+    };
+    let mut replaced = false;
+    let updated: Vec<String> = contents
+        .lines()
+        .map(|line| {
+            if line.starts_with("Icon=") {
+                replaced = true;
+                format!("Icon={}", png_path.to_string_lossy())
+            } else {
+                line.to_string()
+            }
+        })
+        .collect();
+    if replaced && std::fs::write(&desktop_entry, updated.join("\n") + "\n").is_ok() {
+        1
+    } else {
+        0
+    }
 }
 
 fn target_tray_size(app: &tauri::AppHandle) -> u32 {

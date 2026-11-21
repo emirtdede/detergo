@@ -198,6 +198,9 @@ fn major_disk_hog_providers_expose_clean_actions_while_wsl_stays_read_only() {
         "huggingface",
         "ollama",
         "electron",
+        "xcode",
+        "cocoapods",
+        "ccache",
     ] {
         let def = ACTIONS
             .iter()

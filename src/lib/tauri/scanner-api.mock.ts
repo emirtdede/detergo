@@ -144,6 +144,8 @@ function mockSystemActions(): SystemActionInfo[] {
 // unit tests). This module is imported dynamically only when `import.meta.env.DEV`
 // is true, so none of it ships in a production bundle.
 
+const isCloudHarness = import.meta.env.VITE_DEMO_HARNESS === "true";
+
 let memorySettings: AppSettings = {
   schemaVersion: 5,
   theme: "dark-black",
@@ -151,8 +153,8 @@ let memorySettings: AppSettings = {
   appIcon: "match-theme",
   uiScale: 100,
   highContrast: false,
-  onboardingCompleted: false,
-  language: "tr",
+  onboardingCompleted: isCloudHarness,
+  language: isCloudHarness ? "en" : "tr",
   reduceMotion: false,
   favorites: [
     {
@@ -259,6 +261,263 @@ const mockAuditRecords: AuditRecord[] = [
 ];
 
 let isFolderDialogOpen = false;
+let lastPreviewedPlan: CleanupPlan | null = null;
+
+function buildMockLastScan(): LastScanSnapshot {
+  return {
+    schemaVersion: 1,
+    savedAt: "2026-11-04T22:30:00Z",
+    summary: {
+      scanId: "scan-mock-1",
+      rootPath: "D:\\dev\\projects",
+      scope: "project",
+      totalEntries: 6,
+      totalBytes: 10610000000,
+      totalAllocatedBytes: 10610000000,
+      protectedBytes: 890000000,
+      cleanableBytes: 9720000000,
+      durationMs: 1420,
+      errorsCount: 0,
+      warningsCount: 0,
+      directoriesVisited: 420,
+      partial: false,
+      stopReason: null,
+      providerTotals: [
+        {
+          provider: "Node.js",
+          logicalBytes: 1420000000,
+          allocatedBytes: 1420000000,
+          itemCount: 1,
+          protectedBytes: 0,
+        },
+        {
+          provider: "Rust",
+          logicalBytes: 3840000000,
+          allocatedBytes: 3840000000,
+          itemCount: 1,
+          protectedBytes: 0,
+        },
+        {
+          provider: "Python",
+          logicalBytes: 2150000000,
+          allocatedBytes: 2150000000,
+          itemCount: 1,
+          protectedBytes: 0,
+        },
+        {
+          provider: ".NET",
+          logicalBytes: 890000000,
+          allocatedBytes: 890000000,
+          itemCount: 1,
+          protectedBytes: 890000000,
+        },
+        {
+          provider: "Java/Kotlin",
+          logicalBytes: 1670000000,
+          allocatedBytes: 1670000000,
+          itemCount: 1,
+          protectedBytes: 0,
+        },
+        {
+          provider: "Dart/Flutter",
+          logicalBytes: 640000000,
+          allocatedBytes: 640000000,
+          itemCount: 1,
+          protectedBytes: 0,
+        },
+      ],
+      droppedEvents: 0,
+    },
+    items: [
+      {
+        id: "item-1",
+        scanSessionId: "scan-mock-1",
+        ruleId: "npm-node-modules",
+        provider: "project",
+        ecosystem: "javascript",
+        category: "dependencies",
+        kind: "directory",
+        projectId: "proj-1",
+        projectName: "web-platform",
+        projectRoot: "D:\\dev\\projects\\web-platform",
+        displayName: "node_modules",
+        displayPath: "D:\\dev\\projects\\web-platform\\node_modules",
+        logicalBytes: 1420000000,
+        allocatedBytes: 1420000000,
+        estimatedReclaimBytes: 1420000000,
+        safetyClass: "safe",
+        confidence: "high",
+        activeUse: "no",
+        evidenceCodes: ["NAME_MATCH", "PROJECT_MARKER"],
+        warningCodes: [],
+        cleanupMethod: "trash",
+        regenerateHint: "npm install",
+        protected: false,
+        selectable: true,
+        autoSelectable: true,
+        lastModifiedAt: "2026-11-03T14:00:00Z",
+        status: "ready",
+        parentItemId: null,
+        note: null,
+      },
+      {
+        id: "item-2",
+        scanSessionId: "scan-mock-1",
+        ruleId: "cargo-target",
+        provider: "project",
+        ecosystem: "rust",
+        category: "build-output",
+        kind: "directory",
+        projectId: "proj-2",
+        projectName: "rust-engine",
+        projectRoot: "D:\\dev\\projects\\rust-engine",
+        displayName: "target",
+        displayPath: "D:\\dev\\projects\\rust-engine\\target",
+        logicalBytes: 3840000000,
+        allocatedBytes: 3840000000,
+        estimatedReclaimBytes: 3840000000,
+        safetyClass: "safe",
+        confidence: "high",
+        activeUse: "no",
+        evidenceCodes: ["NAME_MATCH", "PROJECT_MARKER"],
+        warningCodes: [],
+        cleanupMethod: "trash",
+        regenerateHint: "cargo build",
+        protected: false,
+        selectable: true,
+        autoSelectable: true,
+        lastModifiedAt: "2026-11-04T18:00:00Z",
+        status: "ready",
+        parentItemId: null,
+        note: null,
+      },
+      {
+        id: "item-3",
+        scanSessionId: "scan-mock-1",
+        ruleId: "python-venv",
+        provider: "project",
+        ecosystem: "python",
+        category: "environments",
+        kind: "directory",
+        projectId: "proj-3",
+        projectName: "nlp-pipeline",
+        projectRoot: "D:\\dev\\projects\\nlp-pipeline",
+        displayName: ".venv",
+        displayPath: "D:\\dev\\projects\\nlp-pipeline\\.venv",
+        logicalBytes: 2150000000,
+        allocatedBytes: 2150000000,
+        estimatedReclaimBytes: 2150000000,
+        safetyClass: "regenerate",
+        confidence: "high",
+        activeUse: "no",
+        evidenceCodes: ["NAME_MATCH", "PROJECT_MARKER"],
+        warningCodes: [],
+        cleanupMethod: "trash",
+        regenerateHint: "pip install -r requirements.txt",
+        protected: false,
+        selectable: true,
+        autoSelectable: false,
+        lastModifiedAt: "2026-11-05T00:30:00Z",
+        status: "ready",
+        parentItemId: null,
+        note: null,
+      },
+      {
+        id: "item-4",
+        scanSessionId: "scan-mock-1",
+        ruleId: "dotnet-obj",
+        provider: "project",
+        ecosystem: "dotnet",
+        category: "build-output",
+        kind: "directory",
+        projectId: "proj-4",
+        projectName: "enterprise-backend",
+        projectRoot: "D:\\dev\\projects\\enterprise-backend",
+        displayName: "bin / obj",
+        displayPath: "D:\\dev\\projects\\enterprise-backend\\obj",
+        logicalBytes: 890000000,
+        allocatedBytes: 890000000,
+        estimatedReclaimBytes: 890000000,
+        safetyClass: "keep",
+        confidence: "high",
+        activeUse: "yes",
+        evidenceCodes: ["USER_PROTECTED"],
+        warningCodes: ["USER_PROTECTED"],
+        cleanupMethod: "none",
+        regenerateHint: null,
+        protected: true,
+        selectable: false,
+        autoSelectable: false,
+        lastModifiedAt: "2026-10-28T09:00:00Z",
+        status: "ready",
+        parentItemId: null,
+        note: "Protected",
+      },
+      {
+        id: "item-5",
+        scanSessionId: "scan-mock-1",
+        ruleId: "gradle-cache",
+        provider: "project",
+        ecosystem: "java",
+        category: "build-output",
+        kind: "directory",
+        projectId: "proj-5",
+        projectName: "android-app",
+        projectRoot: "D:\\dev\\projects\\android-app",
+        displayName: ".gradle",
+        displayPath: "D:\\dev\\projects\\android-app\\.gradle",
+        logicalBytes: 1670000000,
+        allocatedBytes: 1670000000,
+        estimatedReclaimBytes: 1670000000,
+        safetyClass: "safe",
+        confidence: "high",
+        activeUse: "no",
+        evidenceCodes: ["NAME_MATCH"],
+        warningCodes: [],
+        cleanupMethod: "trash",
+        regenerateHint: "gradle build",
+        protected: false,
+        selectable: true,
+        autoSelectable: true,
+        lastModifiedAt: "2026-11-02T11:20:00Z",
+        status: "ready",
+        parentItemId: null,
+        note: null,
+      },
+      {
+        id: "item-6",
+        scanSessionId: "scan-mock-1",
+        ruleId: "dart-tool",
+        provider: "project",
+        ecosystem: "dart",
+        category: "dependencies",
+        kind: "directory",
+        projectId: "proj-6",
+        projectName: "flutter-app",
+        projectRoot: "D:\\dev\\projects\\flutter-app",
+        displayName: ".dart_tool",
+        displayPath: "D:\\dev\\projects\\flutter-app\\.dart_tool",
+        logicalBytes: 640000000,
+        allocatedBytes: 640000000,
+        estimatedReclaimBytes: 640000000,
+        safetyClass: "safe",
+        confidence: "high",
+        activeUse: "no",
+        evidenceCodes: ["NAME_MATCH"],
+        warningCodes: [],
+        cleanupMethod: "trash",
+        regenerateHint: "flutter pub get",
+        protected: false,
+        selectable: true,
+        autoSelectable: true,
+        lastModifiedAt: "2026-10-31T16:45:00Z",
+        status: "ready",
+        parentItemId: null,
+        note: null,
+      },
+    ],
+  };
+}
 
 /**
  * Returns a fully in-memory `ScannerApi` for browser previews and unit tests.
@@ -267,16 +526,29 @@ let isFolderDialogOpen = false;
 export function createMockScannerApi(): ScannerApi {
   return {
     async startScan(
-      _request: ScanRequest,
-      _onEvent: (event: ScanEvent) => void,
+      request: ScanRequest,
+      onEvent: (event: ScanEvent) => void,
     ): Promise<ScanSummary> {
-      // Tag the error with a stable code so the UI can localize it through
-      // localizeAppError() instead of surfacing this English message.
-      const error = new Error("Scanning is only available in the desktop application.") as Error & {
-        code?: string;
+      const snapshot = buildMockLastScan();
+      const rootPath = request.rootPath || snapshot.summary.rootPath;
+      const summary: ScanSummary = {
+        ...snapshot.summary,
+        rootPath,
+        scope: request.scope || snapshot.summary.scope,
       };
-      error.code = "PlatformUnsupported";
-      throw error;
+      onEvent({
+        type: "started",
+        scanId: summary.scanId,
+      });
+      onEvent({
+        type: "candidates",
+        items: snapshot.items,
+      });
+      onEvent({
+        type: "completed",
+        summary,
+      });
+      return summary;
     },
 
     async cancelScan(): Promise<void> {
@@ -396,37 +668,56 @@ export function createMockScannerApi(): ScannerApi {
       scanSessionId: string,
       targetIds: string[],
       mode: DeleteMode,
+      olderThanDays?: number | null,
     ): Promise<CleanupPlan> {
-      return {
+      const catalogItems = buildMockLastScan().items;
+      const ratio = olderThanDays ? 0.65 : 1;
+      const items = targetIds.map((id) => {
+        const matched = catalogItems.find((entry) => entry.id === id) ?? catalogItems[0];
+        const baseLogical = matched.logicalBytes ?? 0;
+        const baseEst = matched.estimatedReclaimBytes ?? baseLogical;
+        return {
+          targetId: id,
+          displayPath: matched.displayPath,
+          displayName: matched.displayName,
+          ruleId: matched.ruleId,
+          provider: matched.provider,
+          projectName: matched.projectName,
+          safetyClass: matched.safetyClass,
+          cleanupMethod: matched.cleanupMethod,
+          regenerateHint: matched.regenerateHint ?? null,
+          logicalBytes: baseLogical,
+          estimatedReclaimBytes: Math.round(baseEst * ratio),
+          activeUse: matched.activeUse,
+          eligible: !matched.protected,
+          incrementalSliceCount: olderThanDays ? 14 : null,
+          snapshot: {
+            exists: true,
+            logicalBytes: baseLogical,
+          },
+        };
+      });
+      const totalLogicalBytes = items.reduce(
+        (sum, item) => sum + (olderThanDays ? item.estimatedReclaimBytes : item.logicalBytes),
+        0,
+      );
+      const totalEstimatedBytes = items.reduce((sum, item) => sum + item.estimatedReclaimBytes, 0);
+      const plan: CleanupPlan = {
         id: "plan-mock-1",
         sessionId: scanSessionId,
         mode,
         createdMs: Date.now(),
         expiresMs: Date.now() + 600000,
-        totalLogicalBytes: 1420000000,
-        totalEstimatedBytes: 1420000000,
-        eligibleCount: targetIds.length,
-        blockedCount: 0,
+        totalLogicalBytes,
+        totalEstimatedBytes,
+        eligibleCount: items.filter((item) => item.eligible).length,
+        blockedCount: items.filter((item) => !item.eligible).length,
         confirmationToken: "token-mock-xyz",
-        items: targetIds.map((id) => ({
-          targetId: id,
-          displayPath: "D:\\dev\\projects\\web-platform\\node_modules",
-          displayName: "node_modules",
-          ruleId: "npm-node-modules",
-          provider: "project",
-          projectName: "web-platform",
-          safetyClass: "safe",
-          cleanupMethod: "trash",
-          logicalBytes: 1420000000,
-          estimatedReclaimBytes: 1420000000,
-          activeUse: "no",
-          eligible: true,
-          snapshot: {
-            exists: true,
-            logicalBytes: 1420000000,
-          },
-        })),
+        incrementalOlderThanDays: olderThanDays ?? null,
+        items,
       };
+      lastPreviewedPlan = plan;
+      return plan;
     },
 
     async executeCleanup(
@@ -435,46 +726,64 @@ export function createMockScannerApi(): ScannerApi {
       _permanentAcknowledged: boolean,
       onEvent?: (event: CleanupEvent) => void,
     ): Promise<CleanupReport> {
-      onEvent?.({ type: "started", total: 1 });
-      onEvent?.({
-        type: "itemStarted",
-        index: 1,
-        total: 1,
-        displayPath: "D:\\dev\\projects\\web-platform\\node_modules",
+      const planItems = lastPreviewedPlan?.items ?? [
+        {
+          targetId: "item-1",
+          displayPath: "D:\\dev\\projects\\web-platform\\node_modules",
+          displayName: "node_modules",
+          ruleId: "npm-node-modules",
+          provider: "project" as const,
+          projectName: "web-platform",
+          safetyClass: "safe" as const,
+          cleanupMethod: "trash" as const,
+          logicalBytes: 1420000000,
+          estimatedReclaimBytes: 1420000000,
+          activeUse: "no" as const,
+          eligible: true,
+          snapshot: { exists: true, logicalBytes: 1420000000 },
+        },
+      ];
+      onEvent?.({ type: "started", total: planItems.length });
+      planItems.forEach((item, idx) => {
+        onEvent?.({
+          type: "itemStarted",
+          index: idx + 1,
+          total: planItems.length,
+          displayPath: item.displayPath,
+        });
+        onEvent?.({
+          type: "itemFinished",
+          index: idx + 1,
+          total: planItems.length,
+          success: true,
+          errorCode: null,
+        });
       });
-      onEvent?.({
-        type: "itemFinished",
-        index: 1,
-        total: 1,
-        success: true,
-        errorCode: null,
-      });
+      const totalBytes = planItems.reduce((sum, item) => sum + item.estimatedReclaimBytes, 0);
       return {
         planId,
-        mode: "recycleBin",
+        mode: lastPreviewedPlan?.mode ?? "recycleBin",
         startedAt: new Date().toISOString(),
         finishedAt: new Date().toISOString(),
-        successCount: 1,
+        successCount: planItems.length,
         errorCount: 0,
-        estimatedBytes: 1420000000,
-        reclaimBytes: 1420000000,
-        movedBytes: 1420000000,
+        estimatedBytes: totalBytes,
+        reclaimBytes: totalBytes,
+        movedBytes: totalBytes,
         durationMs: 340,
         cancelled: false,
-        processedCount: 1,
+        processedCount: planItems.length,
         skippedCount: 0,
         droppedEvents: 0,
-        results: [
-          {
-            targetId: "item-1",
-            displayPath: "D:\\dev\\projects\\web-platform\\node_modules",
-            ruleId: "npm-node-modules",
-            success: true,
-            verified: true,
-            measuredBytes: 1420000000,
-            reclaimBytes: 1420000000,
-          },
-        ],
+        results: planItems.map((item) => ({
+          targetId: item.targetId,
+          displayPath: item.displayPath,
+          ruleId: item.ruleId,
+          success: true,
+          verified: true,
+          measuredBytes: item.logicalBytes,
+          reclaimBytes: item.estimatedReclaimBytes,
+        })),
       };
     },
 

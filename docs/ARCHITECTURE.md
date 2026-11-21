@@ -29,12 +29,12 @@ flowchart TD
         Discovery["Parallel Work-Stealing Discovery (FindFirstFileExW + Prune)"]
         Measure["Batch Directory Measurement (FileIdBothDirectoryInfo + 16-Shard Hardlink Dedup)"]
         Safety["Safety Layer (PathGuard + Reparse Tag + Process/Lock + Git Guard + Evidence)"]
-        Planner["Cleanup Planner (TargetSnapshot NTFS FileId + Confirmation Token + TTL)"]
+        Planner["Cleanup Planner (TargetSnapshot NTFS FileId + Intra-Target Incremental Age Prune + Token + TTL)"]
         Trash["Warm STA RecycleBinSession (IFileOperation / Finder / gio trash)"]
         Permanent["Bounded Parallel Handle-Verified Permanent Delete"]
-        Actions["Official Cache Actions (27 Providers: CLI + Audited Recycle Bin + WSL VHDX)"]
+        Actions["Official Cache Actions (30 Providers: CLI + Audited Recycle Bin + WSL VHDX)"]
         Agents["AI Tool Storage Inspector (17 Built-in Providers + Custom Roots)"]
-        SysClean["Windows System Cleaner (Audited Roots + DISM + cleanmgr + Task Scheduler)"]
+        SysClean["Cross-Platform System Cleaner (Audited Roots + DISM + cleanmgr + Task Scheduler)"]
         Audit["WAL SQLite Audit & Storage Snapshot Repository"]
     end
 
@@ -86,17 +86,18 @@ flowchart TD
 
 ### 3. Multi-Layer Safety (`safety/` & `cleanup/`)
 - **PathGuard (`safety/path_guard.rs`)**: Canonicalizes paths, verifies containment inside scan roots, blocks drive roots, user profile roots, OS system trees (`Windows`, `Boot`, `Recovery` at drive root; `Program Files`, `ProgramData`, `System32`, `SysWOW64`, `$Recycle.Bin`, etc. at any depth; `AppData\Windows`), and Unix system directories (`/bin`, `/etc`, `/usr`, `/System`, etc.) without false-blocking developer project subdirectories like `flutter-app/windows/build` or `spring-app/boot/target`.
-- **Two-Stage Plan → Execute (`cleanup/plan.rs`, `cleanup/coordinator.rs`)**:
+- **Two-Stage Plan → Execute (`cleanup/plan.rs`, `cleanup/coordinator.rs`, `cleanup/incremental.rs`)**:
   - Captures NTFS `FileId` / `(dev, ino)` `TargetSnapshot` at preview time and verifies identity immediately prior to deletion (eliminating redundant synchronous directory re-walks while preserving TOCTOU protection).
+  - **Intra-Target Age-Based Incremental Pruning (`cleanup/incremental.rs`)**: `cargo-sweep` style age-based pruning inside active build directories (`target/{debug,release,<triple>}/{incremental,deps,build,.fingerprint}`, `.next/cache`, `.gradle`, `.turbo`, `.vite`). Allows pruning only stale compilation slices older than `X` days while preserving `CACHEDIR.TAG`, lockfiles, and recent compilation outputs so active builds stay warm. Available in GUI (`CleanupPlanDialog` age selector), CLI (`-I` / `--incremental-older`), and MCP (`incremental_older_than_days`).
   - **Recycle Bin (`cleanup/recycle_bin.rs`)**: Reuses a single warm STA COM worker (`RecycleBinSession`) across an entire cleanup batch on Windows (`IFileOperation` with `FOFX_RECYCLEONDELETE`, zero silent fallback to permanent delete). Uses Finder AppleScript on macOS and `gio trash` on Linux.
   - **Permanent Delete (`cleanup/permanent.rs`)**: Handle-verified POSIX unlink (`FILE_DISPOSITION_INFO_EX`) with bounded parallel leaf-file deletion (`>= 64` files → up to 8 workers) and bottom-up directory removal.
 
 ### 4. Catalog, AI Providers & Official Tool Caches (`catalog/`, `providers/`, `cleanup/official_actions/`)
 - **Cleanup Catalog (`assets/targets.toml`)**: 82 evidence-backed rules across 18 ecosystems spanning JavaScript/TypeScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart/Flutter, C/C++, Ruby, Elixir, Swift, Godot, Zig, DevOps/IaC, Haskell, Unity, and Unreal.
 - **AI Coding-Agent Providers (`providers/`)**: 17 built-in providers (`antigravity`, `claude-code`, `claude-desktop`, `codex`, `cursor`, `windsurf`, `github-copilot`, `cline`, `roo-code`, `opencode`, `t3-code`, `aider`, `continue`, `zed`, `lm-studio`, `trae`, `kiro`) with cross-platform root resolution, metadata-only scanning, and aggregated storage-growth snapshots.
-- **Tool Cache Providers (`cleanup/official_actions/`)**: 27 providers (`catalog.rs`, `wsl.rs`, `exec.rs`, `mod.rs`):
-  - Native CLI cleanup commands for `npm`, `pnpm`, `yarn`, `bun`, `pip`, `uv`, `poetry`, `conda`, `nuget`, `go` (`go clean -cache` & `go clean -modcache`), `composer`, `flutter`/`pub`, `docker` (`docker builder prune -f`, `docker image prune -f`, `docker container prune -f`), `homebrew`, `playwright` (`npx --no-install`), and `cypress` (`npx --no-install`).
-  - Audited Recycle Bin cache cleanup (`SafeCacheRecycle`, guarded by `PathGuard` + active-process checks) for `cargo` (`registry/cache`, `registry/src`, `git/checkouts`), `gradle`, `maven`, `vcpkg`, `huggingface`, `ollama`, `electron`, `vscode`, `jetbrains` (safely excluding Toolbox), `android`, and Playwright/Cypress browser caches. Opt-in LLM caches (`ollama`, `huggingface`) are excluded from bulk `c all` runs unless explicitly selected.
+- **Tool Cache Providers (`cleanup/official_actions/`)**: 30 providers (`catalog.rs`, `wsl.rs`, `exec.rs`, `mod.rs`):
+  - Native CLI cleanup commands for `npm`, `pnpm`, `yarn`, `bun`, `pip`, `uv`, `poetry`, `conda`, `nuget`, `go` (`go clean -cache` & `go clean -modcache`), `composer`, `flutter`/`pub`, `docker` (`docker builder prune -f`, `docker image prune -f`, `docker container prune -f`), `homebrew`, `xcode` (`xcrun simctl delete unavailable`), `cocoapods` (`pod cache clean --all`), `playwright` (`npx --no-install`), and `cypress` (`npx --no-install`).
+  - Audited Recycle Bin cache cleanup (`SafeCacheRecycle`, guarded by `PathGuard` + active-process checks) for `cargo` (`registry/cache`, `registry/src`, `git/checkouts`), `gradle`, `maven`, `vcpkg`, `huggingface`, `ollama`, `electron`, `vscode`, `jetbrains` (safely excluding Toolbox), `android`, `xcode` (`DerivedData`, `CoreSimulator/Caches`, `com.apple.dt.Xcode`, `org.swift.swiftpm`), `ccache` / `sccache`, and Playwright/Cypress browser caches. Opt-in LLM caches (`ollama`, `huggingface`) are excluded from bulk `c all` runs unless explicitly selected.
   - Real Windows registry WSL VHDX inspection (`HKCU\Software\Microsoft\Windows\CurrentVersion\Lxss\*` + `%LOCALAPPDATA%\wsl\*\ext4.vhdx`, measuring sparse allocated bytes), intentionally read-only.
 
 ### 5. Automation, Webhooks & MCP (`cli/`, `mcp/`, `commands/webhook_commands.rs`)

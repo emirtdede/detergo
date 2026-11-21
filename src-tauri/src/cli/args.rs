@@ -190,6 +190,7 @@ pub(super) struct ScanCliArgs {
     pub(super) dry_run: bool,
     pub(super) min_size_bytes: u64,
     pub(super) older_than_days: Option<u64>,
+    pub(super) incremental_older_than_days: Option<u32>,
     pub(super) safety_levels: Vec<String>,
     pub(super) webhook_url: Option<String>,
     pub(super) top: Option<usize>,
@@ -208,6 +209,7 @@ pub(super) fn parse_scan_args(args: &[String]) -> Result<ScanCliArgs, AppError> 
         dry_run: false,
         min_size_bytes: 0,
         older_than_days: None,
+        incremental_older_than_days: None,
         safety_levels: vec!["safe".to_string(), "regenerate".to_string()],
         webhook_url: None,
         top: None,
@@ -297,6 +299,12 @@ pub(super) fn parse_scan_args(args: &[String]) -> Result<ScanCliArgs, AppError> 
                 let raw = take_value(flag_name)?;
                 let days = crate::format::parse_age_days(&raw).map_err(AppError::InvalidPath)?;
                 parsed.older_than_days = Some(days);
+            }
+            "-I" | "--incremental-older" | "--incremental-days" => {
+                let raw = take_value(flag_name)?;
+                let days = crate::format::parse_age_days(&raw).map_err(AppError::InvalidPath)?;
+                let bounded = u32::try_from(days.clamp(1, 3650)).unwrap_or(3650);
+                parsed.incremental_older_than_days = Some(bounded);
             }
             "-w" | "--webhook" => {
                 let raw = take_value(flag_name)?;

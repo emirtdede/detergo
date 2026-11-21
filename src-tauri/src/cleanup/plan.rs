@@ -154,6 +154,8 @@ pub struct PlanItem {
     pub blocked_reason: Option<String>,
     pub regenerate_hint: Option<String>,
     pub snapshot: TargetSnapshot,
+    #[serde(default)]
+    pub incremental_slice_count: Option<u32>,
 }
 
 #[cfg_attr(feature = "bindings", derive(specta::Type))]
@@ -177,6 +179,8 @@ pub struct CleanupPlan {
     #[cfg_attr(feature = "bindings", specta(type = specta_typescript::Number<u64>))]
     pub blocked_count: u64,
     pub confirmation_token: String,
+    #[serde(default)]
+    pub incremental_older_than_days: Option<u32>,
 }
 
 impl CleanupPlan {
@@ -268,12 +272,24 @@ pub fn build_plan(
     catalog: &CatalogIndex,
     policy: &crate::cleanup::CleanupPolicy,
 ) -> Result<CleanupPlan, AppError> {
+    build_plan_with_options(session, target_ids, mode, catalog, policy, None)
+}
+
+pub fn build_plan_with_options(
+    session: &ScanSession,
+    target_ids: &[String],
+    mode: DeleteMode,
+    catalog: &CatalogIndex,
+    policy: &crate::cleanup::CleanupPolicy,
+    incremental_older_than_days: Option<u32>,
+) -> Result<CleanupPlan, AppError> {
     if target_ids.is_empty() {
         return Err(AppError::PlanInvalid(
             "At least one target must be selected for cleanup.".to_string(),
         ));
     }
 
+    let incremental_days = incremental_older_than_days.filter(|&d| d > 0);
     let session_items: std::collections::HashMap<&str, &crate::scanner::models::CleanupItem> =
         session
             .items
@@ -330,7 +346,7 @@ pub fn build_plan(
             .map(|n| n.to_string_lossy().to_string())
             .unwrap_or_else(|| display_path.clone());
 
-        let (eligible, blocked_code, blocked_reason) =
+        let (mut eligible, mut blocked_code, mut blocked_reason) =
             if let Some(parent_id) = covered.get(&target.id) {
                 (
                     false,
@@ -345,11 +361,40 @@ pub fn build_plan(
             };
 
         let logical = target.logical_bytes.unwrap_or(0);
-        let estimated = target.allocated_bytes.unwrap_or(logical);
+        let mut estimated = target.allocated_bytes.unwrap_or(logical);
+        let mut incremental_slice_count = None;
+
+        if let Some(days) = incremental_days {
+            if eligible {
+                let inc = super::incremental::collect_incremental_slices(
+                    &target.path,
+                    &target.rule_id,
+                    days,
+                );
+                let count = u32::try_from(inc.stale_slices.len()).unwrap_or(u32::MAX);
+                incremental_slice_count = Some(count);
+                if inc.stale_slices.is_empty() {
+                    eligible = false;
+                    blocked_code = Some("NO_STALE_SLICES".to_string());
+                    blocked_reason = Some(format!(
+                        "No incremental build artifacts older than {days} day(s)."
+                    ));
+                    estimated = 0;
+                } else {
+                    estimated = inc.stale_bytes;
+                }
+            } else {
+                incremental_slice_count = Some(0);
+            }
+        }
 
         if eligible {
             eligible_count += 1;
-            total_logical = total_logical.saturating_add(logical);
+            total_logical = total_logical.saturating_add(if incremental_days.is_some() {
+                estimated
+            } else {
+                logical
+            });
             total_estimated = total_estimated.saturating_add(estimated);
         } else {
             blocked_count += 1;
@@ -390,6 +435,7 @@ pub fn build_plan(
             blocked_reason,
             regenerate_hint,
             snapshot: TargetSnapshot::capture(&target.path),
+            incremental_slice_count,
         });
     }
 
@@ -412,5 +458,6 @@ pub fn build_plan(
         eligible_count,
         blocked_count,
         confirmation_token: uuid::Uuid::new_v4().simple().to_string(),
+        incremental_older_than_days: incremental_days,
     })
 }

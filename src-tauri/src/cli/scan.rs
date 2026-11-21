@@ -87,6 +87,7 @@ pub(super) fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
     let dry_run = parsed.dry_run;
     let min_bytes = parsed.min_size_bytes;
     let older_than_days = parsed.older_than_days;
+    let incremental_older_than_days = parsed.incremental_older_than_days;
     let safety_levels = parsed.safety_levels;
     let webhook_url = parsed.webhook_url;
     let top = parsed.top;
@@ -230,6 +231,9 @@ pub(super) fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
         println!("{}", tf("[Detergo] Scope: {}", &[&effective_scope_label]));
         if let Some(days) = older_than_days {
             println!("[Detergo] Age filter: older than {days} day(s)");
+        }
+        if let Some(days) = incremental_older_than_days {
+            println!("[Detergo] Intra-target incremental prune: older than {days} day(s)");
         }
         if auto_clean {
             println!(
@@ -403,8 +407,22 @@ pub(super) fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
 
     if auto_clean && !matched_target_ids.is_empty() {
         if dry_run {
-            cleaned_count = matched_target_ids.len();
-            cleaned_bytes = matched_bytes;
+            if let Some(days) = incremental_older_than_days {
+                if let Ok(plan) = crate::cleanup::build_plan_with_options(
+                    &session,
+                    &matched_target_ids,
+                    DeleteMode::RecycleBin,
+                    &catalog,
+                    &policy,
+                    Some(days),
+                ) {
+                    cleaned_count = plan.eligible_count as usize;
+                    cleaned_bytes = plan.total_estimated_bytes;
+                }
+            } else {
+                cleaned_count = matched_target_ids.len();
+                cleaned_bytes = matched_bytes;
+            }
             if !as_json {
                 println!("\n{}", t("[DRY RUN SIMULATION]"));
                 println!(
@@ -420,12 +438,13 @@ pub(super) fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
                 );
             }
         } else {
-            match crate::cleanup::build_plan(
+            match crate::cleanup::build_plan_with_options(
                 &session,
                 &matched_target_ids,
                 DeleteMode::RecycleBin,
                 &catalog,
                 &policy,
+                incremental_older_than_days,
             ) {
                 Ok(plan) => {
                     let confirmation = plan.confirmation_token.clone();
@@ -579,6 +598,7 @@ pub(super) fn run_scan_cli(args: &[String]) -> Result<(), AppError> {
             "root": root_path.to_string_lossy(),
             "scope": effective_scope_label,
             "older_than_days": older_than_days,
+            "incremental_older_than_days": incremental_older_than_days,
             "target_count": total_items,
             "estimated_reclaim_bytes": combined_total_bytes,
             "estimated_reclaim_human": format_size(combined_total_bytes),

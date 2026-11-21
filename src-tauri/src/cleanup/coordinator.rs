@@ -421,7 +421,83 @@ pub(crate) fn execute_plan_with_hooks(
                 );
             }
 
-            // 7. Execute with the requested method only.
+            // 7. Execute with the requested method only (full target or
+            //    intra-target age-based incremental slices).
+            if let Some(days) = plan.incremental_older_than_days.filter(|&d| d > 0) {
+                let inc = super::incremental::collect_incremental_slices(
+                    &target.path,
+                    &item.rule_id,
+                    days,
+                );
+                if inc.stale_slices.is_empty() {
+                    break 'item (
+                        block(
+                            item,
+                            "NO_STALE_SLICES",
+                            format!("No incremental build artifacts older than {days} day(s)."),
+                        ),
+                        0u64,
+                        0u64,
+                    );
+                }
+
+                let mut pruned_bytes = 0u64;
+                for slice in &inc.stale_slices {
+                    if let Err(err) = validate_target(&slice.path, &guard_ctx) {
+                        break 'item (block(item, "PATH_GUARD", err.to_string()), 0u64, 0u64);
+                    }
+                    let slice_outcome = match plan.mode {
+                        DeleteMode::RecycleBin => match recycle_session.as_mut() {
+                            Some(session) => session.recycle(&slice.path, &guard_ctx),
+                            None => RecycleBinService::new().recycle(&slice.path, &guard_ctx),
+                        },
+                        DeleteMode::Permanent => permanent.delete(&slice.path, &guard_ctx),
+                    };
+                    match slice_outcome {
+                        Ok(_) => {
+                            if slice.path.exists() {
+                                break 'item (
+                                    block(
+                                        item,
+                                        "VERIFY_FAILED",
+                                        "Incremental artifact slice still exists after cleanup."
+                                            .into(),
+                                    ),
+                                    0u64,
+                                    0u64,
+                                );
+                            }
+                            pruned_bytes = pruned_bytes.saturating_add(slice.logical_bytes);
+                        }
+                        Err(err) => {
+                            let code = error_code(&err);
+                            break 'item (block(item, code, err.to_string()), 0u64, 0u64);
+                        }
+                    }
+                }
+
+                let reclaim = if plan.mode == DeleteMode::Permanent {
+                    pruned_bytes
+                } else {
+                    0
+                };
+                break 'item (
+                    CleanupResultItem {
+                        target_id: item.target_id.clone(),
+                        display_path: item.display_path.clone(),
+                        rule_id: item.rule_id.clone(),
+                        success: true,
+                        verified: target.path.exists(),
+                        error_code: None,
+                        error: None,
+                        measured_bytes: pruned_bytes,
+                        reclaim_bytes: reclaim,
+                    },
+                    pruned_bytes,
+                    reclaim,
+                );
+            }
+
             let outcome = match plan.mode {
                 DeleteMode::RecycleBin => match recycle_session.as_mut() {
                     Some(session) => session.recycle(&target.path, &guard_ctx),

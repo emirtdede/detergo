@@ -64,6 +64,7 @@ export interface ScannerApi {
     scanSessionId: string,
     targetIds: string[],
     mode: DeleteMode,
+    olderThanDays?: number | null,
   ): Promise<CleanupPlan>;
   executeCleanup(
     planId: string,
@@ -205,8 +206,14 @@ const realApi: ScannerApi = {
     scanSessionId: string,
     targetIds: string[],
     mode: DeleteMode,
+    olderThanDays?: number | null,
   ): Promise<CleanupPlan> {
-    return await invoke<CleanupPlan>("preview_cleanup", { scanSessionId, targetIds, mode });
+    return await invoke<CleanupPlan>("preview_cleanup", {
+      scanSessionId,
+      targetIds,
+      mode,
+      olderThanDays: olderThanDays ?? null,
+    });
   },
 
   async executeCleanup(
@@ -452,7 +459,7 @@ async function createApi(): Promise<ScannerApi> {
   if (isTauriEnvironment()) {
     return realApi;
   }
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV || import.meta.env.VITE_DEMO_HARNESS === "true") {
     const { createMockScannerApi } = await import("./scanner-api.mock");
     return createMockScannerApi();
   }

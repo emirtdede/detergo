@@ -1,8 +1,26 @@
 import json
 import pathlib
+import shutil
 import subprocess
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
+
+
+def resolve_detergo_bin() -> str:
+    root = pathlib.Path(__file__).resolve().parent.parent
+    candidates = [
+        root / "src-tauri" / "target" / "release" / "detergo.com",
+        root / "src-tauri" / "target" / "release" / "detergo.exe",
+        root / "src-tauri" / "target" / "release" / "detergo-cli.exe",
+        root / "src-tauri" / "target" / "debug" / "detergo-cli.exe",
+        root / "src-tauri" / "target" / "debug" / "detergo_cli.exe",
+        root / "src-tauri" / "target" / "debug" / "detergo.exe",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return str(candidate)
+    found = shutil.which("detergo")
+    return found if found else "detergo"
 
 
 class WebhookReceiver(HTTPServer):
@@ -42,6 +60,7 @@ def test_webhook_automation():
     - When `allowPrivateWebhooks` is enabled in config.json, the local receiver
       gets a valid `scan_completed` JSON payload matching package.json version.
     """
+    binary = resolve_detergo_bin()
     server = WebhookReceiver(("127.0.0.1", 0), WebhookHandler)
     port = server.server_port
     t = threading.Thread(target=server.serve_forever, daemon=True)
@@ -50,9 +69,10 @@ def test_webhook_automation():
     try:
         url = f"http://127.0.0.1:{port}/n8n-webhook"
         res = subprocess.run(
-            ["dev-cleaner", "scan", ".", "--webhook", url],
+            [binary, "scan", ".", "--webhook", url],
             capture_output=True,
             text=True,
+            encoding="utf-8",
         )
         assert res.returncode == 0, f"Scan command failed: {res.stderr}"
         if server.received:

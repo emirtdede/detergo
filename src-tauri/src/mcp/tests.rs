@@ -28,6 +28,7 @@ fn preview_grant(created: Instant, token: &str) -> PreviewGrant {
             eligible_count: 0,
             blocked_count: 0,
             confirmation_token: token.to_string(),
+            incremental_older_than_days: None,
         },
         session: Arc::new(crate::scanner::session::ScanSession {
             id: "s-test".to_string(),

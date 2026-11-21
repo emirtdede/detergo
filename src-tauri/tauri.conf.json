@@ -51,6 +51,18 @@
       "icons/icon.ico",
       "icons/icon.png"
     ],
+    "macOS": {
+      "minimumSystemVersion": "11.0"
+    },
+    "linux": {
+      "deb": {
+        "section": "devel",
+        "priority": "optional"
+      },
+      "appimage": {
+        "bundleMediaFramework": false
+      }
+    },
     "windows": {
       "wix": {
         "language": ["tr-TR", "en-US"],

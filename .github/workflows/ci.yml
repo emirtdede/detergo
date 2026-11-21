@@ -257,3 +257,72 @@ jobs:
             release_output/verify-checksums.bat
           body_path: release_output/RELEASE_NOTES.md
           fail_on_unmatched_files: false
+
+  release-unix:
+    name: Release build (macOS & Linux)
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [frontend, e2e, rust, rust-unix, release]
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            bundles: "dmg,app"
+          - os: ubuntu-latest
+            bundles: "deb,appimage,rpm"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Linux Tauri packaging libraries
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf rpm
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - run: npm ci
+
+      - name: Build Tauri bundles (${{ matrix.os }})
+        run: npx tauri build --bundles ${{ matrix.bundles }}
+
+      - name: Collect macOS/Linux installers & SHA-256 checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          OUT="release_unix_output"
+          mkdir -p "$OUT"
+
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            find src-tauri/target/release/bundle/dmg -maxdepth 1 -name "*.dmg" -exec cp {} "$OUT/Detergo_${VERSION}_macos_universal.dmg" \; || true
+            find src-tauri/target/release/bundle/macos -maxdepth 1 -name "*.app.tar.gz" -exec cp {} "$OUT/Detergo_${VERSION}_macos.app.tar.gz" \; || true
+            cp src-tauri/target/release/detergo "$OUT/detergo-${VERSION}-macos"
+          else
+            find src-tauri/target/release/bundle/deb -maxdepth 1 -name "*.deb" -exec cp {} "$OUT/Detergo_${VERSION}_linux_amd64.deb" \; || true
+            find src-tauri/target/release/bundle/appimage -maxdepth 1 -name "*.AppImage" -exec cp {} "$OUT/Detergo_${VERSION}_linux_amd64.AppImage" \; || true
+            find src-tauri/target/release/bundle/rpm -maxdepth 1 -name "*.rpm" -exec cp {} "$OUT/Detergo_${VERSION}_linux_x86_64.rpm" \; || true
+            cp src-tauri/target/release/detergo "$OUT/detergo-${VERSION}-linux-amd64"
+          fi
+
+          (
+            cd "$OUT"
+            shasum -a 256 * > "SHA256SUMS-${{ matrix.os }}.txt"
+          )
+
+      - name: Upload macOS & Linux release assets
+        uses: softprops/action-gh-release@v3
+        with:
+          files: release_unix_output/*
+          fail_on_unmatched_files: false

@@ -24,6 +24,18 @@ const FORBIDDEN_ROOTS: &[&str] = &[
     r"c:\users",
     r"c:\program files",
     r"c:\program files (x86)",
+    "/",
+    "/system",
+    "/library",
+    "/users",
+    "/applications",
+    "/usr",
+    "/bin",
+    "/sbin",
+    "/etc",
+    "/var",
+    "/home",
+    "/root",
 ];
 
 fn windows_dir() -> PathBuf {
@@ -47,28 +59,82 @@ pub fn user_temp_root() -> Option<PathBuf> {
     if let Some(local) = std::env::var_os("LOCALAPPDATA") {
         return Some(PathBuf::from(local).join("Temp"));
     }
-    std::env::var_os("TEMP").map(PathBuf::from)
+    std::env::var_os("TEMP")
+        .or_else(|| std::env::var_os("TMPDIR"))
+        .map(PathBuf::from)
 }
 
 pub fn error_report_root() -> PathBuf {
+    #[cfg(target_os = "macos")]
+    {
+        if let Some(home) = std::env::var_os("HOME").map(PathBuf::from) {
+            return home.join("Library").join("Logs").join("DiagnosticReports");
+        }
+    }
+    #[cfg(all(not(windows), not(target_os = "macos")))]
+    {
+        return PathBuf::from("/var/crash");
+    }
     program_data().join("Microsoft").join("Windows").join("WER")
 }
 
 /// The root whose *contents* an action deletes, or `None` for the tool-driven
 /// actions that own their own targets.
 pub fn root_for(id: SystemActionId) -> Option<PathBuf> {
-    Some(match id {
-        SystemActionId::UserTemp => user_temp_root()?,
-        SystemActionId::WindowsTemp => windows_dir().join("Temp"),
-        SystemActionId::Prefetch => windows_dir().join("Prefetch"),
-        SystemActionId::WindowsUpdate => {
-            windows_dir().join("SoftwareDistribution").join("Download")
-        }
-        SystemActionId::ErrorReports => error_report_root(),
-        SystemActionId::RecycleBin
-        | SystemActionId::DiskCleanup
-        | SystemActionId::ComponentStore => return None,
-    })
+    #[cfg(windows)]
+    {
+        Some(match id {
+            SystemActionId::UserTemp => user_temp_root()?,
+            SystemActionId::WindowsTemp => windows_dir().join("Temp"),
+            SystemActionId::Prefetch => windows_dir().join("Prefetch"),
+            SystemActionId::WindowsUpdate => {
+                windows_dir().join("SoftwareDistribution").join("Download")
+            }
+            SystemActionId::ErrorReports => error_report_root(),
+            SystemActionId::RecycleBin
+            | SystemActionId::DiskCleanup
+            | SystemActionId::ComponentStore => return None,
+        })
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let home = std::env::var_os("HOME").map(PathBuf::from)?;
+        Some(match id {
+            SystemActionId::UserTemp => user_temp_root()?,
+            SystemActionId::WindowsTemp => PathBuf::from("/Library/Caches"),
+            SystemActionId::Prefetch => home
+                .join("Library")
+                .join("Developer")
+                .join("Xcode")
+                .join("DerivedData"),
+            SystemActionId::WindowsUpdate => home
+                .join("Library")
+                .join("Developer")
+                .join("CoreSimulator")
+                .join("Caches"),
+            SystemActionId::ErrorReports => error_report_root(),
+            SystemActionId::RecycleBin
+            | SystemActionId::DiskCleanup
+            | SystemActionId::ComponentStore => return None,
+        })
+    }
+    #[cfg(all(not(windows), not(target_os = "macos")))]
+    {
+        let home = std::env::var_os("HOME").map(PathBuf::from)?;
+        let xdg_cache = std::env::var_os("XDG_CACHE_HOME")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| home.join(".cache"));
+        Some(match id {
+            SystemActionId::UserTemp => user_temp_root()?,
+            SystemActionId::WindowsTemp => PathBuf::from("/var/tmp"),
+            SystemActionId::Prefetch => xdg_cache.join("thumbnails"),
+            SystemActionId::WindowsUpdate => PathBuf::from("/var/cache/apt/archives"),
+            SystemActionId::ErrorReports => error_report_root(),
+            SystemActionId::RecycleBin
+            | SystemActionId::DiskCleanup
+            | SystemActionId::ComponentStore => return None,
+        })
+    }
 }
 
 fn normalize_for_compare(path: &Path) -> String {

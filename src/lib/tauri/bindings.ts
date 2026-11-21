@@ -482,6 +482,7 @@ export type CleanupPlan_Deserialize = {
 	eligibleCount: number,
 	blockedCount: number,
 	confirmationToken: string,
+	incrementalOlderThanDays?: number | null,
 };
 
 export type CleanupPlan_Serialize = {
@@ -496,6 +497,7 @@ export type CleanupPlan_Serialize = {
 	eligibleCount: number,
 	blockedCount: number,
 	confirmationToken: string,
+	incrementalOlderThanDays: number | null,
 };
 
 export type CleanupReport = CleanupReport_Serialize | CleanupReport_Deserialize;
@@ -925,6 +927,7 @@ export type PlanItem_Deserialize = {
 	blockedReason?: string | null,
 	regenerateHint?: string | null,
 	snapshot: TargetSnapshot_Deserialize,
+	incrementalSliceCount?: number | null,
 };
 
 export type PlanItem_Serialize = {
@@ -944,6 +947,7 @@ export type PlanItem_Serialize = {
 	blockedReason: string | null,
 	regenerateHint: string | null,
 	snapshot: TargetSnapshot_Serialize,
+	incrementalSliceCount: number | null,
 };
 
 export type ProviderTotal = {

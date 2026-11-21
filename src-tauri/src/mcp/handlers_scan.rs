@@ -436,13 +436,19 @@ impl McpContext {
             }
         }
         let session = Arc::new(session);
+        let incremental_older_than_days = args
+            .get("incremental_older_than_days")
+            .and_then(|v| v.as_u64())
+            .filter(|&d| d > 0)
+            .map(|d| u32::try_from(d.min(3650)).unwrap_or(3650));
 
-        match crate::cleanup::build_plan(
+        match crate::cleanup::build_plan_with_options(
             &session,
             &target_ids,
             DeleteMode::RecycleBin,
             &catalog,
             &policy,
+            incremental_older_than_days,
         ) {
             Ok(plan) => {
                 let token = plan.confirmation_token.clone();
@@ -459,6 +465,7 @@ impl McpContext {
                             "blocked_code": item.blocked_code,
                             "bytes": item.estimated_reclaim_bytes,
                             "human": format_size(item.estimated_reclaim_bytes),
+                            "incremental_slice_count": item.incremental_slice_count,
                         })
                     })
                     .collect();
@@ -467,6 +474,7 @@ impl McpContext {
                     "token": token,
                     "plan_id": plan.id,
                     "expires_in_seconds": PREVIEW_TTL.as_secs(),
+                    "incremental_older_than_days": plan.incremental_older_than_days,
                     "eligible_count": plan.eligible_count,
                     "blocked_count": plan.blocked_count,
                     "total_estimated_bytes": plan.total_estimated_bytes,

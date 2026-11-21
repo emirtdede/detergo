@@ -61,6 +61,7 @@ export const CleanupPlanDialog: React.FC = () => {
   const runMarkCancelling = useCleanupRunStore((s) => s.markCancelling);
 
   const [mode, setMode] = useState<DeleteMode>(pendingMode);
+  const [incrementalDays, setIncrementalDays] = useState<number | null>(null);
   const [ack, setAck] = useState(false);
   // `busy` means a cleanup command is actually running. Preview preparation has
   // its own flag: reusing `busy` made the "cancel run" button call
@@ -86,7 +87,7 @@ export const CleanupPlanDialog: React.FC = () => {
   });
 
   const load = useCallback(
-    async (nextMode: DeleteMode, ids: string[]) => {
+    async (nextMode: DeleteMode, ids: string[], olderThanDays?: number | null) => {
       if (!scanId) {
         showToast(ui.errors.blocked, "error");
         closeModal();
@@ -98,7 +99,7 @@ export const CleanupPlanDialog: React.FC = () => {
       setPlan(null);
       setSessionProblem(false);
       try {
-        const next = await scannerApi.previewCleanup(scanId, ids, nextMode);
+        const next = await scannerApi.previewCleanup(scanId, ids, nextMode, olderThanDays);
         if (generation !== loadGenerationRef.current) return;
         setPlan(next);
       } catch (err) {
@@ -142,11 +143,12 @@ export const CleanupPlanDialog: React.FC = () => {
     }
     setAck(false);
     setMode(pendingMode);
+    setIncrementalDays(null);
     setPlan(null);
     setSessionProblem(false);
     const ids = pendingIdsRef.current;
     if (ids.length > 0) {
-      void loadRef.current(pendingMode, ids);
+      void loadRef.current(pendingMode, ids, null);
     }
     return () => {
       // A mode/selection change must not let the previous plan land late.
@@ -160,7 +162,14 @@ export const CleanupPlanDialog: React.FC = () => {
     if (nextMode === mode || busy || previewing) return;
     setMode(nextMode);
     setAck(false);
-    void load(nextMode, pendingIds);
+    void load(nextMode, pendingIds, incrementalDays);
+  };
+
+  const switchIncrementalDays = (nextDays: number | null) => {
+    if (nextDays === incrementalDays || busy || previewing) return;
+    setIncrementalDays(nextDays);
+    setAck(false);
+    void load(mode, pendingIds, nextDays);
   };
 
   const execute = async (runInBackground: boolean) => {
@@ -198,7 +207,7 @@ export const CleanupPlanDialog: React.FC = () => {
       );
 
       const successIds = report.results.filter((r) => r.success).map((r) => r.targetId);
-      if (successIds.length > 0) {
+      if (successIds.length > 0 && !activePlan.incrementalOlderThanDays) {
         markDeleted(successIds);
         // Persist immediately: if the app is closed right after a cleanup the
         // deleted rows must not reappear as cleanable on the next launch.
@@ -423,6 +432,33 @@ export const CleanupPlanDialog: React.FC = () => {
             </label>
           </div>
 
+          <div className="plan-modes" role="group" aria-label={ui.table.ageFilter}>
+            {(
+              [
+                [null, ui.table.allAges],
+                [7, ui.table.olderThan7d],
+                [30, ui.table.olderThan30d],
+                [90, ui.table.olderThan90d],
+                [180, ui.table.olderThan180d],
+              ] as const
+            ).map(([days, label]) => (
+              <label
+                key={days ?? "all"}
+                className={`plan-mode ${incrementalDays === days ? "active" : ""}`}
+              >
+                <input
+                  type="radio"
+                  name="cleanup-incremental-age"
+                  checked={incrementalDays === days}
+                  disabled={previewing || busy}
+                  onChange={() => switchIncrementalDays(days)}
+                />
+                <span className="plan-mode-radio" aria-hidden="true" />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
+
           <p className="plan-note">
             {mode === "permanent" ? ui.plan.permanentNote : ui.plan.trashNote}
           </p>
@@ -478,6 +514,12 @@ export const CleanupPlanDialog: React.FC = () => {
                             {item.projectName && item.projectName !== item.displayName && (
                               <span className="chip plan-row-provider">{item.projectName}</span>
                             )}
+                            {typeof item.incrementalSliceCount === "number" &&
+                              item.incrementalSliceCount > 0 && (
+                                <span className="chip plan-row-provider">
+                                  {ui.common.items(item.incrementalSliceCount)}
+                                </span>
+                              )}
                           </div>
                           <span className="items-path">
                             {maskPaths ? maskPath(item.displayPath) : item.displayPath}

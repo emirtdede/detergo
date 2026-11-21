@@ -35,6 +35,7 @@ pub(super) fn print_help() {
         "  -s, --safety <LEVELS>    safe,regenerate,review (default: safe,regenerate)",
         "  -m, --min <SIZE>         Only include targets >= SIZE (e.g. 50, 500MB, 1.5GB)",
         "  -o, --older <AGE>        Only include stale targets untouched for >= AGE (7d, 30d, 3m, 1y)",
+        "  -I, --incremental-older  Prune only stale incremental build slices >= AGE inside targets",
         "  -i, --interactive        Pick targets by number, then move to Recycle Bin",
         "  -a, --all                List every discovered target (--top N limits rows)",
         "  -j, --json               Emit machine-readable JSON output",
@@ -79,6 +80,7 @@ Options:
   -s, --safety <LEVELS>    safe,regenerate,review,keep (default: safe,regenerate)
   -m, --min <SIZE>         Minimum size threshold (e.g. 50, 500KB, 500MB, 1.5GB)
   -o, --older <AGE>        Minimum staleness age (e.g. 7d, 30d, 2w, 3m, 1y)
+  -I, --incremental-older  Prune only stale incremental slices >= AGE inside build targets
   -i, --interactive        Pick targets by number, then move to Recycle Bin
   -a, --all                List every discovered target (--top N limits rows)
   -j, --json               Emit machine-readable JSON output

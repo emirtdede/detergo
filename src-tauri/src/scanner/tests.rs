@@ -473,6 +473,7 @@ fn plans_are_consumed_exactly_once() {
         eligible_count: 0,
         blocked_count: 0,
         confirmation_token: "token".to_string(),
+        incremental_older_than_days: None,
     };
     registry.insert_plan(plan);
     assert!(registry.consume_plan("plan-test").is_ok());
@@ -498,6 +499,7 @@ fn expired_plans_are_rejected_without_leaving_a_usable_entry() {
         eligible_count: 0,
         blocked_count: 0,
         confirmation_token: "token".to_string(),
+        incremental_older_than_days: None,
     };
     registry.insert_plan(plan);
 
