@@ -37,6 +37,8 @@ interface ItemTableProps {
   items: CleanupItem[];
   showProject?: boolean;
   emptyText?: string;
+  /** Isolates search input per view so Projects and Agents never leak filters. */
+  scopeKey?: "projects" | "agents";
 }
 
 interface SortHeaderProps {
@@ -77,8 +79,8 @@ const SortHeader: React.FC<SortHeaderProps> = ({
         type="button"
         className={`items-sort ${active ? "active" : ""}`}
         onClick={() => onToggle(field)}
-        aria-label={`${label} — ${sortHint}`}
-        title={hint ? `${hint} — ${sortHint}` : sortHint}
+        aria-label={`${label} - ${sortHint}`}
+        title={hint ? `${hint} - ${sortHint}` : sortHint}
       >
         <span>{label}</span>
         {active && (sort.direction === "asc" ? <ChevronUp size={11} /> : <ChevronDown size={11} />)}
@@ -87,13 +89,22 @@ const SortHeader: React.FC<SortHeaderProps> = ({
   );
 };
 
-export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true, emptyText }) => {
+export const ItemTable: React.FC<ItemTableProps> = ({
+  items,
+  showProject = true,
+  emptyText,
+  scopeKey = "projects",
+}) => {
   const ui = useUIText();
-  const searchQuery = useUiStore((s) => s.searchQuery);
-  const setSearchQuery = useUiStore((s) => s.setSearchQuery);
+  const searchQuery = useUiStore((s) => s.searchByScope[scopeKey] ?? "");
+  const setScopeSearchQuery = useUiStore((s) => s.setScopeSearchQuery);
+  const setSearchQuery = (q: string) => setScopeSearchQuery(scopeKey, q);
+  const lastClickedIndexRef = useRef<number | null>(null);
+  const shiftHeldRef = useRef(false);
   const [safetyFilter, setSafetyFilter] = useState<SafetyClass | "all">("all");
   const [projectFilter, setProjectFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [ageFilter, setAgeFilter] = useState<"all" | "7" | "30" | "90" | "180">("all");
   const selectedIds = useSelectionStore((s) => s.selectedIds);
   const itemsById = useScanStore((s) => s.itemsById);
   const toggleSelection = useSelectionStore((s) => s.toggleSelection);
@@ -120,7 +131,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
   // visible category labels are resolved during render, so `backendRevision`
   // (subscribed above) refreshes them without rebuilding these lists. Moving
   // the localization into these memos would require adding `backendRevision`
-  // and `language` to both dependency arrays — see
+  // and `language` to both dependency arrays - see
   // `src/test/table-options.test.ts` for the contract this relies on.
   const projectOptions = useMemo(() => projectOptionsOf(sortableItems), [sortableItems]);
   const categoryOptions = useMemo(() => categoryOptionsOf(sortableItems), [sortableItems]);
@@ -170,10 +181,20 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
   );
 
   const filtered = useMemo(() => {
+    const minAgeCutoffMs = ageFilter === "all" ? null : Date.now() - Number(ageFilter) * 86_400_000;
     const matches = sortableItems.filter((item) => {
       if (safetyFilter !== "all" && item.safetyClass !== safetyFilter) return false;
       if (projectFilter !== "all" && (item.projectName ?? "") !== projectFilter) return false;
       if (categoryFilter !== "all" && item.category !== categoryFilter) return false;
+      if (minAgeCutoffMs !== null) {
+        const mtime =
+          typeof item.lastModifiedMs === "number"
+            ? item.lastModifiedMs
+            : item.lastModifiedAt
+              ? Date.parse(item.lastModifiedAt)
+              : NaN;
+        if (!Number.isFinite(mtime) || mtime > minAgeCutoffMs) return false;
+      }
       if (!hasQuery) return true;
       return searchIndex?.get(item.id)?.includes(normalizedQuery) ?? false;
     });
@@ -188,6 +209,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
     safetyFilter,
     projectFilter,
     categoryFilter,
+    ageFilter,
     sort,
     comparator,
   ]);
@@ -255,6 +277,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
     setSafetyFilter("all");
     setProjectFilter("all");
     setCategoryFilter("all");
+    setAgeFilter("all");
     // `minSizeBytes` is a persisted scan preference, not a table-local filter.
     // Clearing the visible filters must not silently rewrite that setting.
     // The table no longer hides below-minimum rows: the backend marks them
@@ -309,6 +332,18 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
           <option value="review">{ui.safety.review}</option>
           <option value="keep">{ui.safety.keep}</option>
         </select>
+        <select
+          className="items-filter-select"
+          value={ageFilter}
+          onChange={(e) => setAgeFilter(e.target.value as "all" | "7" | "30" | "90" | "180")}
+          aria-label={ui.table.ageFilter}
+        >
+          <option value="all">{ui.table.allAges}</option>
+          <option value="7">{ui.table.olderThan7d}</option>
+          <option value="30">{ui.table.olderThan30d}</option>
+          <option value="90">{ui.table.olderThan90d}</option>
+          <option value="180">{ui.table.olderThan180d}</option>
+        </select>
       </div>
 
       <div className="items-meta">
@@ -327,7 +362,8 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
             (searchQuery.trim() ||
               safetyFilter !== "all" ||
               projectFilter !== "all" ||
-              categoryFilter !== "all") ? (
+              categoryFilter !== "all" ||
+              ageFilter !== "all") ? (
               <button type="button" className="btn btn-secondary btn-sm" onClick={clearFilters}>
                 {ui.table.clearFilters}
               </button>
@@ -407,9 +443,29 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, showProject = true,
                     <div role="cell">
                       <Checkbox
                         checked={isSelected}
+                        onClick={(e) => {
+                          shiftHeldRef.current = e.shiftKey;
+                        }}
                         onChange={() => {
                           if (!isSelectable) return;
-                          toggleSelection(item.id);
+                          const idx = virtualRow.index;
+                          if (shiftHeldRef.current && lastClickedIndexRef.current !== null) {
+                            const start = Math.min(lastClickedIndexRef.current, idx);
+                            const end = Math.max(lastClickedIndexRef.current, idx);
+                            const rangeIds: string[] = [];
+                            for (let r = start; r <= end; r++) {
+                              const candidate = filtered[r];
+                              if (candidate && isEffectiveTarget(candidate)) {
+                                rangeIds.push(candidate.id);
+                              }
+                            }
+                            if (isSelected) deselectMany(rangeIds);
+                            else selectMany(rangeIds);
+                          } else {
+                            toggleSelection(item.id);
+                          }
+                          lastClickedIndexRef.current = idx;
+                          shiftHeldRef.current = false;
                         }}
                         disabled={!isSelectable}
                         aria-label={`${ui.table.selectRow}: ${item.displayName}`}

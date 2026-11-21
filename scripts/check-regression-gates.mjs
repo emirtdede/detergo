@@ -181,7 +181,7 @@ if (!existsSync(bindingsPath)) {
 }
 
 // The browser-preview catalog is generated from the real rule file. If the two
-// diverge, the preview's About page shows a catalog the engine does not apply —
+// diverge, the preview's About page shows a catalog the engine does not apply -
 // which is how it used to report "3 rules" for a 56-rule catalog.
 {
   const tomlFile = "src-tauri/assets/targets.toml";

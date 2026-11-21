@@ -8,9 +8,9 @@ import {
   HardDrive,
   Package,
   Play,
+  SlidersHorizontal,
   Square,
   Star,
-  ChevronDown,
   Check,
   X,
   History,
@@ -19,8 +19,6 @@ import {
 import { Button } from "@/components/primitives/Button";
 import { Checkbox } from "@/components/primitives/Checkbox";
 import { Dialog } from "@/components/primitives/Dialog";
-import { Logo } from "@/components/brand/Logo";
-import { WindowControls } from "@/components/layout/WindowControls";
 import { useScanStore } from "@/stores/scan-store";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
@@ -36,7 +34,11 @@ import { ALL_SCAN_TARGETS, ScanTargetKey, useScanTargetsStore } from "./scan-act
 import { useScanController } from "./useScanController";
 import "./scan.css";
 
-export const ScanHeader: React.FC = () => {
+export interface ScanHeaderProps {
+  collapsed?: boolean;
+}
+
+export const ScanHeader: React.FC<ScanHeaderProps> = ({ collapsed = false }) => {
   const ui = useUIText();
   const currentRootPath = useScanStore((s) => s.currentRootPath);
   const scanScope = useScanStore((s) => s.scope);
@@ -74,10 +76,7 @@ export const ScanHeader: React.FC = () => {
   const showToast = useUiStore((s) => s.showToast);
 
   const [knownLocations, setKnownLocations] = useState<KnownLocation[]>([]);
-  const [isLocationMenuOpen, setIsLocationMenuOpen] = useState(false);
-  // The top bar button covers every scan the app can run; this menu keeps the
-  // single-scope actions reachable for users who do not want a full pass.
-  const [isScanMenuOpen, setIsScanMenuOpen] = useState(false);
+  const [isHubOpen, setIsHubOpen] = useState(false);
   // Changing the folder used to wipe the current results instantly. Ask first
   // when there is something to lose; selecting a new location is not an
   // implicit "reset workspace" command.
@@ -86,10 +85,8 @@ export const ScanHeader: React.FC = () => {
     source?: string;
   } | null>(null);
   const resultCount = useScanStore((s) => s.itemIds.length);
-  const menuContainerRef = useRef<HTMLDivElement>(null);
-  const locationTriggerRef = useRef<HTMLButtonElement>(null);
-  const scanMenuRef = useRef<HTMLDivElement>(null);
-  const scanMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const hubContainerRef = useRef<HTMLDivElement>(null);
+  const hubTriggerRef = useRef<HTMLButtonElement>(null);
   const isSelectingFolderRef = useRef(false);
   // Shared request generation for the known-locations fetches (see below).
   const locationRequestRef = useRef(0);
@@ -153,18 +150,18 @@ export const ScanHeader: React.FC = () => {
   const shownPath = (path: string, maxChars: number) =>
     truncatePath(maskPaths ? maskPath(path) : path, maxChars);
 
-  // Click outside and escape key handler
+  // Click outside and escape key handler for the unified Scan Hub popover
   useEffect(() => {
-    if (!isLocationMenuOpen) return;
+    if (!isHubOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
-      if (menuContainerRef.current && !menuContainerRef.current.contains(e.target as Node)) {
-        setIsLocationMenuOpen(false);
+      if (hubContainerRef.current && !hubContainerRef.current.contains(e.target as Node)) {
+        setIsHubOpen(false);
       }
     };
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setIsLocationMenuOpen(false);
-        locationTriggerRef.current?.focus();
+        setIsHubOpen(false);
+        hubTriggerRef.current?.focus();
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -173,37 +170,13 @@ export const ScanHeader: React.FC = () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isLocationMenuOpen]);
+  }, [isHubOpen]);
 
-  // A running scan owns the location, so the menu must not stay open with
-  // selectable entries that are now inert. The scope menu is equally inert:
-  // both are closed by the same effect so a future menu cannot forget it.
+  // A running scan owns the location and scope, so close the hub popover.
   useEffect(() => {
     if (!isScanning) return;
-    setIsLocationMenuOpen(false);
-    setIsScanMenuOpen(false);
+    setIsHubOpen(false);
   }, [isScanning]);
-
-  useEffect(() => {
-    if (!isScanMenuOpen) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (scanMenuRef.current && !scanMenuRef.current.contains(e.target as Node)) {
-        setIsScanMenuOpen(false);
-      }
-    };
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsScanMenuOpen(false);
-        scanMenuTriggerRef.current?.focus();
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isScanMenuOpen]);
 
   const currentFavorite = currentRootPath
     ? favorites.find((f) => f.path.toLowerCase() === currentRootPath.toLowerCase())
@@ -253,7 +226,7 @@ export const ScanHeader: React.FC = () => {
   const handleSelectFolder = async () => {
     if (isScanning || isSelectingFolderRef.current) return;
     isSelectingFolderRef.current = true;
-    setIsLocationMenuOpen(false);
+    setIsHubOpen(false);
     try {
       const selected = await scannerApi.selectFolderDialog(ui.header.folderNotSelected);
       if (selected) {
@@ -268,7 +241,6 @@ export const ScanHeader: React.FC = () => {
 
   const handleSelectLocation = (path: string, source?: string) => {
     if (isScanning) return;
-    setIsLocationMenuOpen(false);
     requestLocationChange(path, source);
   };
 
@@ -410,7 +382,7 @@ export const ScanHeader: React.FC = () => {
   })();
 
   const handleStartSelectedScan = () => {
-    setIsScanMenuOpen(false);
+    setIsHubOpen(false);
     void startSelectedScan();
   };
 
@@ -418,164 +390,208 @@ export const ScanHeader: React.FC = () => {
     void cancelScan();
   };
 
+  const activeLocationDisplay = isAllDrives
+    ? allDrivesLabel
+    : currentRootPath
+      ? shownPath(currentRootPath, 34)
+      : ui.common.chooseFolder;
+
+  const activeLocationTitle = isAllDrives
+    ? allDrivesLabel
+    : currentRootPath
+      ? maskPaths
+        ? maskPath(currentRootPath)
+        : currentRootPath
+      : ui.header.chooseFolderSub;
+
+  // Exclude Desktop, Documents, and the duplicate All Drives entry (already
+  // represented by the dedicated scope toggle below) so the entire popover fits
+  // cleanly without vertical scrolling.
+  const quickLocations = knownLocations.filter((loc) => {
+    const id = loc.id.toLowerCase();
+    return (
+      loc.source !== "all-drives" &&
+      id !== "loc-all-drives" &&
+      id !== "loc-desktop" &&
+      id !== "desktop" &&
+      id !== "loc-documents" &&
+      id !== "documents"
+    );
+  });
+
   return (
     <>
-      <header
-        className={`top-command-bar ${isScanning ? "is-scanning" : ""}`}
-        data-tauri-drag-region="deep"
+      <div
+        className={`sidebar-scan-dock ${isScanning ? "is-scanning" : ""} ${collapsed ? "is-collapsed" : ""}`}
+        ref={hubContainerRef}
+        data-tauri-drag-region="false"
       >
-        {/* 1. Left: Single Brand Title */}
-        <div className="command-brand" data-tauri-drag-region="false">
-          <Logo size={18} showWordmark={false} />
-          <span className="command-brand-title">Dev Cleaner</span>
-        </div>
-
-        {/* 2. Center: Single Location Dropdown Trigger & Popover Menu */}
-        <div className="command-center">
-          <div
-            className={`location-dropdown-container ${isLocationMenuOpen ? "menu-open" : ""}`}
-            ref={menuContainerRef}
-            data-tauri-drag-region="false"
-          >
-            <div className={`command-location-group ${isScanning ? "is-scanning" : ""}`}>
-              <button
-                ref={locationTriggerRef}
-                type="button"
-                className="command-location-pill"
-                onClick={() => {
-                  if (isScanning) return;
-                  if (!isLocationMenuOpen) refreshKnownLocations();
-                  setIsLocationMenuOpen((prev) => !prev);
-                }}
-                disabled={isScanning}
-                aria-label={ui.header.changeLocation}
-                aria-expanded={isLocationMenuOpen}
-                aria-controls={isLocationMenuOpen ? "location-menu" : undefined}
-                title={
-                  isAllDrives
-                    ? allDrivesLabel
-                    : currentRootPath
-                      ? maskPaths
-                        ? maskPath(currentRootPath)
-                        : currentRootPath
-                      : ui.header.folderNotSelected
-                }
-              >
-                <FolderOpen size={14} className="command-folder-icon" />
-                <span className="command-path-text">
-                  {isAllDrives
-                    ? allDrivesLabel
-                    : currentRootPath
-                      ? shownPath(currentRootPath, 34)
-                      : ui.header.folderNotSelected}
+        {isScanning ? (
+          <div className="scan-hub-btn scan-hub-btn--active">
+            <div
+              className="scan-hub-live"
+              role="status"
+              aria-live="polite"
+              title={`${activeScopeLabel} - ${activeProgressDetail}`}
+            >
+              <span className="command-scan-pulse" aria-hidden="true" />
+              <span className="scan-hub-live-text">
+                <span className="command-scan-scope">{activeScopeLabel}</span>
+                <span className="command-scan-sep" aria-hidden="true">
+                  ·
                 </span>
-
-                {!isScanning && (
-                  <ChevronDown
-                    size={13}
-                    className={`command-chevron-icon ${isLocationMenuOpen ? "open" : ""}`}
-                  />
-                )}
-              </button>
-
-              {currentRootPath && !isScanning && (
-                <button
-                  type="button"
-                  className={`command-star-btn ${isFavorite ? "active" : ""}`}
-                  onClick={toggleFavorite}
-                  aria-pressed={isFavorite}
-                  aria-label={isFavorite ? ui.header.removeFavorite : ui.header.addFavorite}
-                  title={isFavorite ? ui.header.removeFavorite : ui.header.addFavorite}
-                >
-                  <Star
-                    size={12}
-                    fill={isFavorite ? "#FFB800" : "none"}
-                    color={isFavorite ? "#FFB800" : "var(--text-muted)"}
-                  />
-                </button>
-              )}
+                <span className="command-scan-metric">{activeProgressDetail}</span>
+              </span>
             </div>
 
-            {/* Location Dropdown Menu — disclosure, not a menu widget */}
-            {isLocationMenuOpen && !isScanning && (
-              <div
-                id="location-menu"
-                className="location-dropdown-menu"
-                data-tauri-drag-region="false"
+            {canStop && (
+              <button
+                type="button"
+                className={`scan-hub-stop ${stopping ? "is-stopping" : ""}`}
+                onClick={handleCancelScan}
+                disabled={stopping}
+                aria-busy={stopping}
+                aria-label={stopping ? ui.plan.cancelling : ui.common.stop}
+                title={
+                  collapsed
+                    ? `${stopping ? ui.plan.cancelling : ui.common.stop} (${activeScopeLabel} - ${activeProgressDetail})`
+                    : stopping
+                      ? ui.plan.cancelling
+                      : ui.common.stop
+                }
               >
-                {/* 1. First: choose a different location */}
-                <div className="location-menu-section">
+                <Square size={11} fill="currentColor" />
+              </button>
+            )}
+
+            <div
+              className="command-progress-track"
+              role="progressbar"
+              aria-label={activeScopeLabel}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={progressPct ?? undefined}
+            >
+              <div
+                className={`command-progress-bar ${progressPct === null ? "is-indeterminate" : ""}`}
+                style={progressPct !== null ? { width: `${progressPct}%` } : undefined}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className={`scan-hub-btn ${isHubOpen ? "is-open" : ""}`}>
+            <button
+              type="button"
+              className="scan-hub-primary"
+              onClick={handleStartSelectedScan}
+              title={`${primaryScanLabel} · ${activeLocationTitle} (${selectedTargetsSummary})`}
+            >
+              <Play size={12} fill="currentColor" className="scan-hub-play-icon" />
+              <span className="scan-hub-primary-label">{primaryScanLabel}</span>
+            </button>
+
+            <button
+              ref={hubTriggerRef}
+              type="button"
+              className={`scan-hub-config ${isHubOpen ? "is-open" : ""}`}
+              onClick={() => {
+                if (!isHubOpen) refreshKnownLocations();
+                setIsHubOpen((prev) => !prev);
+              }}
+              aria-label={ui.header.changeLocation}
+              aria-expanded={isHubOpen}
+              aria-controls={isHubOpen ? "location-menu" : undefined}
+              title={`${ui.header.changeLocation} · ${activeLocationTitle}`}
+            >
+              <SlidersHorizontal size={13} />
+            </button>
+          </div>
+        )}
+
+        {/* Unified Scan Hub Popover: Directory Selection + Scan Scope */}
+        {isHubOpen && !isScanning && (
+          <div
+            id="location-menu"
+            className="location-dropdown-menu scan-hub-popover"
+            data-tauri-drag-region="false"
+          >
+            {/* Section 1: Single Folder Picker Button + Quick Drives/Locations */}
+            <div className="location-menu-section">
+              <div className="location-menu-section-header">
+                <span>{ui.header.changeLocation}</span>
+              </div>
+
+              <div className="scan-hub-folder-bar">
+                <button
+                  type="button"
+                  className="scan-hub-folder-trigger"
+                  onClick={handleSelectFolder}
+                  title={activeLocationTitle}
+                >
+                  {currentRootPath ? (
+                    <FolderOpen size={14} className="command-folder-icon" />
+                  ) : (
+                    <FolderPlus size={14} className="command-folder-icon" />
+                  )}
+                  <span className="scan-hub-folder-path">{activeLocationDisplay}</span>
+                </button>
+
+                {currentRootPath && (
                   <button
                     type="button"
-                    className="location-menu-item location-menu-action"
-                    onClick={handleSelectFolder}
+                    className={`command-star-btn ${isFavorite ? "active" : ""}`}
+                    onClick={toggleFavorite}
+                    aria-pressed={isFavorite}
+                    aria-label={isFavorite ? ui.header.removeFavorite : ui.header.addFavorite}
+                    title={isFavorite ? ui.header.removeFavorite : ui.header.addFavorite}
                   >
-                    <div className="location-menu-item-icon action-icon">
-                      <FolderPlus size={16} />
-                    </div>
-                    <div className="location-menu-item-info">
-                      <span className="location-menu-item-title">{ui.common.chooseFolder}</span>
-                      <span className="location-menu-item-path">{ui.header.chooseFolderSub}</span>
-                    </div>
+                    <Star
+                      size={12}
+                      fill={isFavorite ? "#FFB800" : "none"}
+                      color={isFavorite ? "#FFB800" : "var(--text-muted)"}
+                    />
                   </button>
-                </div>
+                )}
+              </div>
 
-                <div className="location-menu-divider" />
-
-                {/* 2. Varsayılan Konumlar */}
-                <div className="location-menu-section">
-                  <div className="location-menu-section-header">
-                    <span>{ui.header.defaultLocations}</span>
-                  </div>
-                  {knownLocations.map((loc) => {
-                    const isVirtual = loc.source === "all-drives";
-                    const isSelected = isVirtual
-                      ? isAllDrives
-                      : !isAllDrives &&
-                        Boolean(currentRootPath) &&
-                        currentRootPath?.toLowerCase() === loc.path.toLowerCase();
-                    const label = getKnownLocationLabel(loc, ui);
-                    return (
-                      <button
-                        key={loc.id}
-                        type="button"
-                        className={`location-menu-item ${isSelected ? "is-selected" : ""}`}
-                        onClick={() => handleSelectLocation(loc.path, loc.source)}
-                        title={isVirtual ? label : maskPaths ? maskPath(loc.path) : loc.path}
-                      >
-                        <div className="location-menu-item-icon">
-                          <Folder size={15} />
+              <div className="scan-hub-locations-list">
+                {quickLocations.map((loc) => {
+                  const isSelected =
+                    !isAllDrives &&
+                    Boolean(currentRootPath) &&
+                    currentRootPath?.toLowerCase() === loc.path.toLowerCase();
+                  const label = getKnownLocationLabel(loc, ui);
+                  return (
+                    <button
+                      key={loc.id}
+                      type="button"
+                      className={`location-menu-item scan-hub-loc-item ${isSelected ? "is-selected" : ""}`}
+                      onClick={() => handleSelectLocation(loc.path, loc.source)}
+                      title={maskPaths ? maskPath(loc.path) : loc.path}
+                    >
+                      <div className="location-menu-item-icon">
+                        <Folder size={13} />
+                      </div>
+                      <div className="location-menu-item-info">
+                        <span className="location-menu-item-title">{label}</span>
+                        <span className="location-menu-item-path">{shownPath(loc.path, 34)}</span>
+                      </div>
+                      {isSelected && (
+                        <div className="location-menu-item-check">
+                          <Check size={13} />
                         </div>
-                        <div className="location-menu-item-info">
-                          <span className="location-menu-item-title">{label}</span>
-                          {!isVirtual && (
-                            <span className="location-menu-item-path">
-                              {shownPath(loc.path, 34)}
-                            </span>
-                          )}
-                        </div>
-                        {isSelected && (
-                          <div className="location-menu-item-check">
-                            <Check size={14} />
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+                      )}
+                    </button>
+                  );
+                })}
 
-                {/* 3. Favoriler (Varsa veya Bilgi) */}
-                <div className="location-menu-divider" />
-                <div className="location-menu-section">
-                  <div className="location-menu-section-header">
-                    <span>{ui.header.favorites}</span>
-                    {favorites.length > 0 && (
+                {favorites.length > 0 && (
+                  <>
+                    <div className="location-menu-section-header">
+                      <span>{ui.header.favorites}</span>
                       <span className="location-menu-badge">{favorites.length}</span>
-                    )}
-                  </div>
-
-                  {favorites.length > 0 ? (
-                    favorites.map((fav) => {
+                    </div>
+                    {favorites.slice(0, 3).map((fav) => {
                       const isSelected = currentRootPath?.toLowerCase() === fav.path.toLowerCase();
                       return (
                         <div
@@ -588,7 +604,7 @@ export const ScanHeader: React.FC = () => {
                             onClick={() => handleSelectLocation(fav.path)}
                           >
                             <div className="location-menu-item-icon fav-icon">
-                              <Star size={15} fill="#FFB800" color="#FFB800" />
+                              <Star size={13} fill="#FFB800" color="#FFB800" />
                             </div>
                             <div className="location-menu-item-info">
                               <span className="location-menu-item-title">{fav.label}</span>
@@ -598,7 +614,7 @@ export const ScanHeader: React.FC = () => {
                             </div>
                             {isSelected && (
                               <div className="location-menu-item-check">
-                                <Check size={14} />
+                                <Check size={13} />
                               </div>
                             )}
                           </button>
@@ -613,260 +629,163 @@ export const ScanHeader: React.FC = () => {
                             aria-label={`${ui.header.removeFavorite}: ${fav.label}`}
                             title={ui.header.removeFavorite}
                           >
-                            <X size={13} />
+                            <X size={12} />
                           </button>
                         </div>
                       );
-                    })
-                  ) : (
-                    <div className="location-menu-empty">
-                      <span>{ui.header.noFavorites}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* 4. Son Tarananlar (Varsa) */}
-                {recentLocations.length > 0 && (
-                  <>
-                    <div className="location-menu-divider" />
-                    <div className="location-menu-section">
-                      <div className="location-menu-section-header">
-                        <span>{ui.header.recent}</span>
-                        <button
-                          type="button"
-                          className="location-menu-clear-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            clearRecentLocations();
-                          }}
-                          title={ui.common.clear}
-                        >
-                          <Trash2 size={11} />
-                          <span>{ui.common.clear}</span>
-                        </button>
-                      </div>
-                      {recentLocations.slice(0, 5).map((path) => {
-                        const isSelected = currentRootPath?.toLowerCase() === path.toLowerCase();
-                        const name = path.split(/[/\\]/).filter(Boolean).pop() || path;
-                        return (
-                          <div
-                            key={path}
-                            className={`location-menu-item-row ${isSelected ? "is-selected" : ""}`}
-                          >
-                            <button
-                              type="button"
-                              className="location-menu-item-select"
-                              onClick={() => handleSelectLocation(path)}
-                            >
-                              <div className="location-menu-item-icon recent-icon">
-                                <History size={14} />
-                              </div>
-                              <div className="location-menu-item-info">
-                                <span className="location-menu-item-title">{name}</span>
-                                <span className="location-menu-item-path">
-                                  {shownPath(path, 30)}
-                                </span>
-                              </div>
-                              {isSelected && (
-                                <div className="location-menu-item-check">
-                                  <Check size={14} />
-                                </div>
-                              )}
-                            </button>
-                            <button
-                              type="button"
-                              className="location-menu-item-remove"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeRecentLocation(path);
-                              }}
-                              aria-label={`${ui.common.remove}: ${name}`}
-                              title={ui.common.remove}
-                            >
-                              <X size={13} />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    })}
                   </>
                 )}
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* 3. Right: Actions + Window Controls */}
-        <div className="command-actions" data-tauri-drag-region="false">
-          {isScanning ? (
-            <div className="command-scan-active">
-              <div
-                className="command-scan-status"
-                role="status"
-                aria-live="polite"
-                title={`${activeScopeLabel} — ${activeProgressDetail}`}
-              >
-                <span className="command-scan-pulse" aria-hidden="true" />
-                <span className="command-scan-scope">{activeScopeLabel}</span>
-                <span className="command-scan-sep" aria-hidden="true">
-                  ·
-                </span>
-                <span className="command-scan-metric">{activeProgressDetail}</span>
-              </div>
-
-              {canStop && (
-                <Button
-                  variant="danger-outline"
-                  size="sm"
-                  className={`command-scan-btn is-cancelling ${stopping ? "is-stopping" : ""}`}
-                  icon={<Square size={11} fill="currentColor" />}
-                  onClick={handleCancelScan}
-                  disabled={stopping}
-                  aria-busy={stopping}
-                >
-                  {stopping ? ui.plan.cancelling : ui.common.stop}
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="command-scan-group" ref={scanMenuRef}>
-              <Button
-                variant="primary"
-                size="sm"
-                className="command-scan-btn"
-                icon={<Play size={11} fill="currentColor" />}
-                onClick={handleStartSelectedScan}
-                title={selectedTargetsSummary}
-              >
-                {primaryScanLabel}
-              </Button>
-              <button
-                ref={scanMenuTriggerRef}
-                type="button"
-                className={`command-scan-menu-trigger ${isScanMenuOpen ? "is-open" : ""}`}
-                onClick={() => setIsScanMenuOpen((prev) => !prev)}
-                aria-expanded={isScanMenuOpen}
-                aria-controls={isScanMenuOpen ? "scan-scope-menu" : undefined}
-                aria-label={ui.overview.coverage}
-                title={selectedTargetsSummary}
-              >
-                <ChevronDown size={13} />
-              </button>
-
-              {isScanMenuOpen && (
-                <div
-                  id="scan-scope-menu"
-                  className="command-scan-menu"
-                  role="group"
-                  aria-label={ui.overview.coverage}
-                  data-tauri-drag-region="false"
-                >
-                  <div className="location-menu-section-header">
-                    <span>{ui.overview.coverage}</span>
-                    <span className="location-menu-badge">
-                      {selectedTargets.length}/{ALL_SCAN_TARGETS.length}
-                    </span>
-                  </div>
-
-                  <div className="scan-scope-list">
-                    {ALL_SCAN_TARGETS.map((key) => {
-                      const checked = selectedTargets.includes(key);
-                      const isOnlySelected = checked && selectedTargets.length === 1;
+                {recentLocations.length > 0 && (
+                  <>
+                    <div className="location-menu-section-header">
+                      <span>{ui.header.recent}</span>
+                      <button
+                        type="button"
+                        className="location-menu-clear-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          clearRecentLocations();
+                        }}
+                        title={ui.common.clear}
+                      >
+                        <Trash2 size={11} />
+                        <span>{ui.common.clear}</span>
+                      </button>
+                    </div>
+                    {recentLocations.slice(0, 3).map((path) => {
+                      const isSelected = currentRootPath?.toLowerCase() === path.toLowerCase();
+                      const name = path.split(/[/\\]/).filter(Boolean).pop() || path;
                       return (
                         <div
-                          key={key}
-                          className={`scan-scope-option ${checked ? "is-selected" : ""}`}
+                          key={path}
+                          className={`location-menu-item-row ${isSelected ? "is-selected" : ""}`}
                         >
-                          <Checkbox
-                            id={`scan-target-${key}`}
-                            checked={checked}
-                            disabled={isOnlySelected}
-                            onChange={() => toggleTarget(key)}
-                            label={
-                              <span className="scan-scope-label">
-                                <span className="scan-scope-icon" aria-hidden="true">
-                                  {targetIcon(key)}
-                                </span>
-                                <span className="scan-scope-title">{targetLabel(key)}</span>
-                              </span>
-                            }
-                          />
+                          <button
+                            type="button"
+                            className="location-menu-item-select"
+                            onClick={() => handleSelectLocation(path)}
+                          >
+                            <div className="location-menu-item-icon recent-icon">
+                              <History size={13} />
+                            </div>
+                            <div className="location-menu-item-info">
+                              <span className="location-menu-item-title">{name}</span>
+                              <span className="location-menu-item-path">{shownPath(path, 28)}</span>
+                            </div>
+                            {isSelected && (
+                              <div className="location-menu-item-check">
+                                <Check size={13} />
+                              </div>
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            className="location-menu-item-remove"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeRecentLocation(path);
+                            }}
+                            aria-label={`${ui.common.remove}: ${name}`}
+                            title={ui.common.remove}
+                          >
+                            <X size={12} />
+                          </button>
                         </div>
                       );
                     })}
-                  </div>
-
-                  <div className="location-menu-divider" />
-
-                  <div
-                    className={`scan-scope-option scan-scope-option--subtle ${effectiveAllDrives ? "is-selected" : ""}`}
-                  >
-                    <Checkbox
-                      id="scan-target-all-drives"
-                      checked={effectiveAllDrives}
-                      onChange={(next) => {
-                        setAllDrives(next);
-                        if (!next && isAllDrives) {
-                          useScanStore.setState({
-                            scope: selectedTargets.includes("agents") ? "combined" : "project",
-                          });
-                        }
-                      }}
-                      label={
-                        <span className="scan-scope-label">
-                          <span className="scan-scope-icon" aria-hidden="true">
-                            <HardDrive size={14} />
-                          </span>
-                          <span className="scan-scope-title">{ui.common.allDrives}</span>
-                        </span>
-                      }
-                    />
-                  </div>
-
-                  <div className="location-menu-divider" />
-
-                  <div className="scan-scope-footer">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={selectAllTargets}
-                      disabled={allTargetsSelected}
-                    >
-                      {ui.system.selectAll}
-                    </Button>
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      icon={<Play size={11} fill="currentColor" />}
-                      onClick={handleStartSelectedScan}
-                    >
-                      {ui.common.scan}
-                    </Button>
-                  </div>
-                </div>
-              )}
+                  </>
+                )}
+              </div>
             </div>
-          )}
 
-          <WindowControls />
-        </div>
+            <div className="location-menu-divider" />
 
-        {isScanning && (
-          <div
-            className="command-progress-track"
-            role="progressbar"
-            aria-label={activeScopeLabel}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={progressPct ?? undefined}
-          >
-            <div
-              className={`command-progress-bar ${progressPct === null ? "is-indeterminate" : ""}`}
-              style={progressPct !== null ? { width: `${progressPct}%` } : undefined}
-            />
+            {/* Section 2: Scan Targets (Compact 2x2 Grid + All Drives) */}
+            <div className="location-menu-section">
+              <div className="location-menu-section-header">
+                <span>{ui.overview.coverage}</span>
+                <span className="location-menu-badge">
+                  {selectedTargets.length}/{ALL_SCAN_TARGETS.length}
+                </span>
+              </div>
+
+              <div className="scan-scope-grid">
+                {ALL_SCAN_TARGETS.map((key) => {
+                  const checked = selectedTargets.includes(key);
+                  const isOnlySelected = checked && selectedTargets.length === 1;
+                  return (
+                    <div key={key} className={`scan-scope-option ${checked ? "is-selected" : ""}`}>
+                      <Checkbox
+                        id={`scan-target-${key}`}
+                        checked={checked}
+                        disabled={isOnlySelected}
+                        onChange={() => toggleTarget(key)}
+                        label={
+                          <span className="scan-scope-label">
+                            <span className="scan-scope-icon" aria-hidden="true">
+                              {targetIcon(key)}
+                            </span>
+                            <span className="scan-scope-title">{targetLabel(key)}</span>
+                          </span>
+                        }
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div
+                className={`scan-scope-option scan-scope-option--subtle ${effectiveAllDrives ? "is-selected" : ""}`}
+              >
+                <Checkbox
+                  id="scan-target-all-drives"
+                  checked={effectiveAllDrives}
+                  onChange={(next) => {
+                    setAllDrives(next);
+                    if (!next && isAllDrives) {
+                      useScanStore.setState({
+                        scope: selectedTargets.includes("agents") ? "combined" : "project",
+                      });
+                    }
+                  }}
+                  label={
+                    <span className="scan-scope-label">
+                      <span className="scan-scope-icon" aria-hidden="true">
+                        <HardDrive size={13} />
+                      </span>
+                      <span className="scan-scope-title">{ui.common.allDrives}</span>
+                    </span>
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="location-menu-divider" />
+
+            {/* Footer: Select All + Primary Start Scan */}
+            <div className="scan-scope-footer">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={selectAllTargets}
+                disabled={allTargetsSelected}
+              >
+                {ui.system.selectAll}
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<Play size={11} fill="currentColor" />}
+                onClick={handleStartSelectedScan}
+              >
+                {ui.common.scan}
+              </Button>
+            </div>
           </div>
         )}
-      </header>
+      </div>
 
       <Dialog
         isOpen={pendingLocation !== null}

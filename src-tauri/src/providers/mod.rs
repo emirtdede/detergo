@@ -52,15 +52,19 @@ pub fn list_agent_providers(settings: &AppSettings) -> Vec<AgentProviderInfo> {
     for (id, note) in [
         (
             "codex",
-            Some("Sessions, worktrees, and SQLite diagnostics are displayed read-only."),
+            Some("Sessions, worktrees, and SQLite diagnostics are preserved; plain text diagnostic logs can be reviewed when idle."),
         ),
         (
             "claude-code",
             Some("Conversations and file-history are preserved; only verified cache and task outputs can be cleaned."),
         ),
         (
+            "claude-desktop",
+            Some("MCP config, conversations, and credentials are preserved; Chromium/Electron caches and logs can be cleaned."),
+        ),
+        (
             "antigravity",
-            Some("Brain and conversations are preserved; browser recordings can only be cleaned when recordings stop."),
+            Some("Brain, skills, and conversations are preserved; browser recordings and Electron caches can be cleaned when idle."),
         ),
         (
             "opencode",
@@ -76,23 +80,57 @@ pub fn list_agent_providers(settings: &AppSettings) -> Vec<AgentProviderInfo> {
         ),
         (
             "cursor",
-            Some("Settings and chat history are preserved; GPU, Code Cache, and web caches can be cleaned."),
+            Some("Settings and workspace chat history are preserved; GPU, Code Cache, VSIX, and web caches can be cleaned."),
         ),
         (
             "windsurf",
-            Some("Cascade chat history is preserved; Electron and GPU caches can be cleaned."),
+            Some("Cascade chat history and workspace storage are preserved; Electron, VSIX, and GPU caches can be cleaned."),
+        ),
+        (
+            "copilot",
+            Some("Credentials and config are preserved; Copilot caches and logs can be cleaned."),
+        ),
+        (
+            "cline",
+            Some("Tasks, settings, and checkpoints are preserved; browser and tool caches can be reviewed."),
+        ),
+        (
+            "roo-code",
+            Some("Tasks, settings, and checkpoints are preserved; browser and tool caches can be reviewed."),
+        ),
+        (
+            "aider",
+            Some("Config is preserved; repo-map caches and logs can be cleaned."),
+        ),
+        (
+            "continue",
+            Some("Config and sessions are preserved; index cache and logs can be cleaned."),
+        ),
+        (
+            "zed",
+            Some("Databases, conversations, prompts, and extensions are preserved; language-server and extension runtime caches can be reviewed."),
         ),
         (
             "ollama",
             Some("Downloaded local models and identities are preserved read-only; temporary logs and update remnants can be cleaned."),
         ),
+        (
+            "lm-studio",
+            Some("Local GGUF/MLX models, conversations, and credentials are preserved read-only; temp files, updates, and logs can be cleaned."),
+        ),
     ] {
         if hidden.iter().any(|h| h == id) {
             continue;
         }
-        let provider_roots: Vec<AgentRootInfo> = roots
+        let matching_roots: Vec<&root_locator::AgentRoot> =
+            roots.iter().filter(|r| r.provider == id).collect();
+        let has_cleanable_spec = matching_roots.iter().any(|r| {
+            specs_for(r.kind)
+                .iter()
+                .any(|s| !s.protected && s.cleanup != CleanupMethod::None)
+        });
+        let provider_roots: Vec<AgentRootInfo> = matching_roots
             .iter()
-            .filter(|r| r.provider == id)
             .map(|r| AgentRootInfo {
                 path: r.path.to_string_lossy().to_string(),
                 kind: r.kind.to_string(),
@@ -105,13 +143,13 @@ pub fn list_agent_providers(settings: &AppSettings) -> Vec<AgentProviderInfo> {
             name: provider_display_name(id).to_string(),
             installed: provider_roots.iter().any(|r| r.exists),
             roots: provider_roots,
-            read_only: id == "codex",
+            read_only: !has_cleanable_spec,
             note: note.map(|n| n.to_string()),
         });
     }
 
     // User-defined tools. They are listed and scanned, but every target is
-    // reported as KEEP because Dev Cleaner has no verified rule set for them.
+    // reported as KEEP because Detergo has no verified rule set for them.
     for custom in &settings.custom_agent_providers {
         let provider_roots: Vec<AgentRootInfo> = custom
             .root_paths
@@ -188,7 +226,8 @@ pub fn scan_agents_with_deadline(
         .collect();
     let mut items = Vec::new();
     let mut targets = Vec::new();
-    let mut snapshots = Vec::new();
+    let mut snapshot_totals: std::collections::HashMap<(String, String), (u64, u64)> =
+        std::collections::HashMap::new();
     let mut warnings = Vec::new();
     let mut entries_scanned = 0u64;
     let mut stop_reason: Option<StopReason> = None;
@@ -238,7 +277,10 @@ pub fn scan_agents_with_deadline(
                 stop_reason = Some(StopReason::CandidateLimit);
                 break;
             }
-            let path = root.path.join(spec.rel);
+            let path = spec
+                .rel
+                .split('/')
+                .fold(root.path.clone(), |acc, part| acc.join(part));
             if !path.exists() {
                 continue;
             }
@@ -407,13 +449,11 @@ pub fn scan_agents_with_deadline(
                 protected: spec.protected || user_protected,
             });
 
-            snapshots.push(StorageSnapshot {
-                timestamp: chrono::Local::now().to_rfc3339(),
-                provider: root.provider.to_string(),
-                category: spec.category.to_string(),
-                bytes: allocated.or(logical).unwrap_or(0),
-                item_count: 1,
-            });
+            let agg = snapshot_totals
+                .entry((root.provider.to_string(), spec.category.to_string()))
+                .or_insert((0, 0));
+            agg.0 = agg.0.saturating_add(allocated.or(logical).unwrap_or(0));
+            agg.1 = agg.1.saturating_add(1);
         }
     }
 
@@ -516,19 +556,31 @@ pub fn scan_agents_with_deadline(
                 protected: true,
             });
 
-            snapshots.push(StorageSnapshot {
-                timestamp: chrono::Local::now().to_rfc3339(),
-                provider: provider_id.clone(),
-                category: "custom".to_string(),
-                bytes: allocated.or(logical).unwrap_or(0),
-                item_count: 1,
-            });
+            let agg = snapshot_totals
+                .entry((provider_id.clone(), "custom".to_string()))
+                .or_insert((0, 0));
+            agg.0 = agg.0.saturating_add(allocated.or(logical).unwrap_or(0));
+            agg.1 = agg.1.saturating_add(1);
         }
     }
 
     if stop_reason.is_none() && token.is_cancelled() {
         stop_reason = Some(StopReason::Cancelled);
     }
+
+    let snapshot_ts = chrono::Local::now().to_rfc3339();
+    let snapshots: Vec<StorageSnapshot> = snapshot_totals
+        .into_iter()
+        .map(
+            |((provider, category), (bytes, item_count))| StorageSnapshot {
+                timestamp: snapshot_ts.clone(),
+                provider,
+                category,
+                bytes,
+                item_count,
+            },
+        )
+        .collect();
 
     AgentScanOutcome {
         items,

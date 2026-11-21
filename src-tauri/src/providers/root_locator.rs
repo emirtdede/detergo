@@ -10,7 +10,7 @@ pub struct AgentRoot {
 }
 
 fn home() -> Option<PathBuf> {
-    std::env::var("USERPROFILE").ok().map(PathBuf::from)
+    env_path("USERPROFILE").or_else(|| env_path("HOME"))
 }
 
 fn env_path(key: &str) -> Option<PathBuf> {
@@ -20,21 +20,59 @@ fn env_path(key: &str) -> Option<PathBuf> {
         .map(PathBuf::from)
 }
 
+/// Platform app-config root (`%APPDATA%` on Windows, `~/Library/Application Support`
+/// on macOS, `$XDG_CONFIG_HOME` or `~/.config` on Linux).
+fn app_config_root() -> Option<PathBuf> {
+    #[cfg(windows)]
+    {
+        env_path("APPDATA")
+    }
+    #[cfg(target_os = "macos")]
+    {
+        home().map(|h| h.join("Library").join("Application Support"))
+    }
+    #[cfg(all(not(windows), not(target_os = "macos")))]
+    {
+        env_path("XDG_CONFIG_HOME").or_else(|| home().map(|h| h.join(".config")))
+    }
+}
+
+/// Platform local-data/cache root (`%LOCALAPPDATA%` on Windows, `~/Library/Caches`
+/// on macOS, `$XDG_CACHE_HOME` or `~/.cache` on Linux).
+fn app_local_root() -> Option<PathBuf> {
+    #[cfg(windows)]
+    {
+        env_path("LOCALAPPDATA")
+    }
+    #[cfg(target_os = "macos")]
+    {
+        home().map(|h| h.join("Library").join("Caches"))
+    }
+    #[cfg(all(not(windows), not(target_os = "macos")))]
+    {
+        env_path("XDG_CACHE_HOME").or_else(|| home().map(|h| h.join(".cache")))
+    }
+}
+
+fn xdg_config_home() -> Option<PathBuf> {
+    env_path("XDG_CONFIG_HOME").or_else(|| home().map(|h| h.join(".config")))
+}
+
+fn xdg_data_home() -> Option<PathBuf> {
+    env_path("XDG_DATA_HOME").or_else(|| home().map(|h| h.join(".local").join("share")))
+}
+
 fn normalize(path: &Path) -> String {
-    let mut s = path.to_string_lossy().replace('/', "\\");
-    if let Some(stripped) = s.strip_prefix(r"\\?\") {
-        s = stripped.to_string();
-    }
-    while s.len() > 3 && s.ends_with('\\') {
-        s.pop();
-    }
-    s.to_lowercase()
+    crate::safety::path_guard::normalize_key(path)
 }
 
 /// Discovers agent roots from environment overrides and conventional locations.
 /// WSL and remote file systems are intentionally out of scope.
 pub fn locate_agent_roots() -> Vec<AgentRoot> {
     let mut roots: Vec<AgentRoot> = Vec::new();
+    let user_home = home();
+    let app_cfg = app_config_root();
+    let app_local = app_local_root();
 
     if let Some(codex_home) = env_path("CODEX_HOME") {
         roots.push(AgentRoot {
@@ -43,7 +81,7 @@ pub fn locate_agent_roots() -> Vec<AgentRoot> {
             path: codex_home,
             source: "CODEX_HOME".to_string(),
         });
-    } else if let Some(home) = home() {
+    } else if let Some(ref home) = user_home {
         roots.push(AgentRoot {
             provider: "codex",
             kind: "codex-home",
@@ -59,7 +97,7 @@ pub fn locate_agent_roots() -> Vec<AgentRoot> {
             path: claude_dir,
             source: "CLAUDE_CONFIG_DIR".to_string(),
         });
-    } else if let Some(home) = home() {
+    } else if let Some(ref home) = user_home {
         roots.push(AgentRoot {
             provider: "claude-code",
             kind: "claude-home",
@@ -75,7 +113,10 @@ pub fn locate_agent_roots() -> Vec<AgentRoot> {
             path: tmp,
             source: "CLAUDE_CODE_TMPDIR".to_string(),
         });
-    } else if let Some(temp) = env_path("TEMP") {
+    } else {
+        let temp = env_path("TEMP")
+            .or_else(|| env_path("TMPDIR"))
+            .unwrap_or_else(std::env::temp_dir);
         roots.push(AgentRoot {
             provider: "claude-code",
             kind: "claude-temp",
@@ -84,28 +125,27 @@ pub fn locate_agent_roots() -> Vec<AgentRoot> {
         });
     }
 
-    if let Some(home) = home() {
-        for (dir, kind) in [
-            (".gemini\\antigravity", "antigravity-data"),
-            (".gemini\\antigravity-ide", "antigravity-data"),
-            (".gemini\\antigravity-backup", "antigravity-backup"),
+    if let Some(ref home) = user_home {
+        for (sub, kind) in [
+            ("antigravity", "antigravity-data"),
+            ("antigravity-ide", "antigravity-data"),
+            ("antigravity-backup", "antigravity-backup"),
         ] {
             roots.push(AgentRoot {
                 provider: "antigravity",
                 kind,
-                path: home.join(dir),
+                path: home.join(".gemini").join(sub),
                 source: "default".to_string(),
             });
         }
     }
-    if let Some(appdata) = env_path("APPDATA") {
+    if let Some(ref appdata) = app_cfg {
         roots.push(AgentRoot {
             provider: "antigravity",
             kind: "antigravity-app",
             path: appdata.join("Antigravity"),
             source: "default".to_string(),
         });
-        // The Electron IDE build uses a separate app-data folder name.
         roots.push(AgentRoot {
             provider: "antigravity",
             kind: "antigravity-app",
@@ -113,7 +153,7 @@ pub fn locate_agent_roots() -> Vec<AgentRoot> {
             source: "default".to_string(),
         });
     }
-    if let Some(local) = env_path("LOCALAPPDATA") {
+    if let Some(ref local) = app_local {
         roots.push(AgentRoot {
             provider: "antigravity",
             kind: "antigravity-local",
@@ -129,21 +169,38 @@ pub fn locate_agent_roots() -> Vec<AgentRoot> {
     }
 
     // OpenCode
-    if let Some(home) = home() {
+    if let Some(opencode_cfg) = env_path("OPENCODE_CONFIG") {
+        let dir = if opencode_cfg.is_file() {
+            opencode_cfg
+                .parent()
+                .map(Path::to_path_buf)
+                .unwrap_or(opencode_cfg)
+        } else {
+            opencode_cfg
+        };
         roots.push(AgentRoot {
             provider: "opencode",
             kind: "opencode-config",
-            path: home.join(".config\\opencode"),
-            source: "default".to_string(),
+            path: dir,
+            source: "OPENCODE_CONFIG".to_string(),
         });
+    } else if let Some(xdg) = xdg_config_home() {
         roots.push(AgentRoot {
             provider: "opencode",
-            kind: "opencode-share",
-            path: home.join(".local\\share\\opencode"),
+            kind: "opencode-config",
+            path: xdg.join("opencode"),
             source: "default".to_string(),
         });
     }
-    if let Some(appdata) = env_path("APPDATA") {
+    if let Some(share) = xdg_data_home() {
+        roots.push(AgentRoot {
+            provider: "opencode",
+            kind: "opencode-share",
+            path: share.join("opencode"),
+            source: "default".to_string(),
+        });
+    }
+    if let Some(ref appdata) = app_cfg {
         roots.push(AgentRoot {
             provider: "opencode",
             kind: "opencode-app",
@@ -151,7 +208,7 @@ pub fn locate_agent_roots() -> Vec<AgentRoot> {
             source: "default".to_string(),
         });
     }
-    if let Some(local) = env_path("LOCALAPPDATA") {
+    if let Some(ref local) = app_local {
         roots.push(AgentRoot {
             provider: "opencode",
             kind: "opencode-updater",
@@ -161,7 +218,7 @@ pub fn locate_agent_roots() -> Vec<AgentRoot> {
     }
 
     // T3 Code
-    if let Some(appdata) = env_path("APPDATA") {
+    if let Some(ref appdata) = app_cfg {
         roots.push(AgentRoot {
             provider: "t3code",
             kind: "t3code-app",
@@ -169,7 +226,7 @@ pub fn locate_agent_roots() -> Vec<AgentRoot> {
             source: "default".to_string(),
         });
     }
-    if let Some(local) = env_path("LOCALAPPDATA") {
+    if let Some(ref local) = app_local {
         roots.push(AgentRoot {
             provider: "t3code",
             kind: "t3code-updater",
@@ -179,7 +236,7 @@ pub fn locate_agent_roots() -> Vec<AgentRoot> {
     }
 
     // Bionic
-    if let Some(appdata) = env_path("APPDATA") {
+    if let Some(ref appdata) = app_cfg {
         roots.push(AgentRoot {
             provider: "bionic",
             kind: "bionic-app",
@@ -189,7 +246,7 @@ pub fn locate_agent_roots() -> Vec<AgentRoot> {
     }
 
     // Cursor
-    if let Some(home) = home() {
+    if let Some(ref home) = user_home {
         roots.push(AgentRoot {
             provider: "cursor",
             kind: "cursor-user",
@@ -197,7 +254,7 @@ pub fn locate_agent_roots() -> Vec<AgentRoot> {
             source: "default".to_string(),
         });
     }
-    if let Some(appdata) = env_path("APPDATA") {
+    if let Some(ref appdata) = app_cfg {
         roots.push(AgentRoot {
             provider: "cursor",
             kind: "cursor-app",
@@ -207,11 +264,11 @@ pub fn locate_agent_roots() -> Vec<AgentRoot> {
     }
 
     // Windsurf
-    if let Some(home) = home() {
+    if let Some(ref home) = user_home {
         roots.push(AgentRoot {
             provider: "windsurf",
             kind: "windsurf-codeium",
-            path: home.join(".codeium\\windsurf"),
+            path: home.join(".codeium").join("windsurf"),
             source: "default".to_string(),
         });
         roots.push(AgentRoot {
@@ -221,7 +278,7 @@ pub fn locate_agent_roots() -> Vec<AgentRoot> {
             source: "default".to_string(),
         });
     }
-    if let Some(appdata) = env_path("APPDATA") {
+    if let Some(ref appdata) = app_cfg {
         roots.push(AgentRoot {
             provider: "windsurf",
             kind: "windsurf-app",
@@ -231,7 +288,25 @@ pub fn locate_agent_roots() -> Vec<AgentRoot> {
     }
 
     // Ollama
-    if let Some(home) = home() {
+    if let Some(models_dir) = env_path("OLLAMA_MODELS") {
+        let base = models_dir
+            .parent()
+            .filter(|_| {
+                models_dir
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .is_some_and(|n| n.eq_ignore_ascii_case("models"))
+            })
+            .map(Path::to_path_buf)
+            .unwrap_or(models_dir);
+        roots.push(AgentRoot {
+            provider: "ollama",
+            kind: "ollama-user",
+            path: base,
+            source: "OLLAMA_MODELS".to_string(),
+        });
+    }
+    if let Some(ref home) = user_home {
         roots.push(AgentRoot {
             provider: "ollama",
             kind: "ollama-user",
@@ -239,11 +314,146 @@ pub fn locate_agent_roots() -> Vec<AgentRoot> {
             source: "default".to_string(),
         });
     }
-    if let Some(local) = env_path("LOCALAPPDATA") {
+    if let Some(ref local) = app_local {
         roots.push(AgentRoot {
             provider: "ollama",
             kind: "ollama-local",
             path: local.join("Ollama"),
+            source: "default".to_string(),
+        });
+    }
+
+    // Claude Desktop
+    if let Some(ref appdata) = app_cfg {
+        roots.push(AgentRoot {
+            provider: "claude-desktop",
+            kind: "claude-desktop-app",
+            path: appdata.join("Claude"),
+            source: "default".to_string(),
+        });
+    }
+
+    // GitHub Copilot
+    if let Some(ref home) = user_home {
+        roots.push(AgentRoot {
+            provider: "copilot",
+            kind: "copilot",
+            path: home.join(".copilot"),
+            source: "default".to_string(),
+        });
+    }
+    if let Some(ref local) = app_local {
+        roots.push(AgentRoot {
+            provider: "copilot",
+            kind: "copilot",
+            path: local.join("github-copilot"),
+            source: "default".to_string(),
+        });
+    }
+    if let Some(xdg) = xdg_config_home() {
+        roots.push(AgentRoot {
+            provider: "copilot",
+            kind: "copilot",
+            path: xdg.join("github-copilot"),
+            source: "default".to_string(),
+        });
+    }
+
+    // Cline & Roo Code (VS Code / Cursor / Windsurf globalStorage)
+    if let Some(ref appdata) = app_cfg {
+        for ide in ["Code", "Code - Insiders", "Cursor", "Windsurf"] {
+            let gs = appdata.join(ide).join("User").join("globalStorage");
+            roots.push(AgentRoot {
+                provider: "cline",
+                kind: "cline",
+                path: gs.join("saoudrizwan.claude-dev"),
+                source: format!("{ide} globalStorage"),
+            });
+            roots.push(AgentRoot {
+                provider: "roo-code",
+                kind: "roo-code",
+                path: gs.join("rooveterinaryinc.roo-cline"),
+                source: format!("{ide} globalStorage"),
+            });
+        }
+    }
+
+    // Aider
+    if let Some(ref home) = user_home {
+        roots.push(AgentRoot {
+            provider: "aider",
+            kind: "aider",
+            path: home.join(".aider"),
+            source: "default".to_string(),
+        });
+    }
+    if let Some(ref local) = app_local {
+        roots.push(AgentRoot {
+            provider: "aider",
+            kind: "aider",
+            path: local.join("aider"),
+            source: "default".to_string(),
+        });
+    }
+
+    // Continue
+    if let Some(ref home) = user_home {
+        roots.push(AgentRoot {
+            provider: "continue",
+            kind: "continue",
+            path: home.join(".continue"),
+            source: "default".to_string(),
+        });
+    }
+
+    // Zed
+    #[cfg(windows)]
+    if let Some(ref local) = app_local {
+        roots.push(AgentRoot {
+            provider: "zed",
+            kind: "zed",
+            path: local.join("Zed"),
+            source: "default".to_string(),
+        });
+    }
+    #[cfg(target_os = "macos")]
+    if let Some(ref appdata) = app_cfg {
+        roots.push(AgentRoot {
+            provider: "zed",
+            kind: "zed",
+            path: appdata.join("Zed"),
+            source: "default".to_string(),
+        });
+    }
+    #[cfg(all(not(windows), not(target_os = "macos")))]
+    if let Some(share) = xdg_data_home() {
+        roots.push(AgentRoot {
+            provider: "zed",
+            kind: "zed",
+            path: share.join("zed"),
+            source: "default".to_string(),
+        });
+    }
+
+    // LM Studio
+    if let Some(lm_home) = env_path("LMSTUDIO_HOME") {
+        roots.push(AgentRoot {
+            provider: "lm-studio",
+            kind: "lm-studio",
+            path: lm_home,
+            source: "LMSTUDIO_HOME".to_string(),
+        });
+    } else if let Some(ref home) = user_home {
+        roots.push(AgentRoot {
+            provider: "lm-studio",
+            kind: "lm-studio",
+            path: home.join(".lmstudio"),
+            source: "default".to_string(),
+        });
+        roots.push(AgentRoot {
+            provider: "lm-studio",
+            kind: "lm-studio",
+            path: home.join(".cache").join("lm-studio"),
             source: "default".to_string(),
         });
     }

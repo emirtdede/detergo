@@ -1,6 +1,6 @@
 # Security policy
 
-Dev Cleaner deletes files from disk, so a defect in its path validation, IPC
+Detergo deletes files from disk, so a defect in its path validation, IPC
 surface, or MCP destructive gates can cause data loss. We take reports
 seriously and prefer private disclosure until a fix is available.
 
@@ -46,13 +46,13 @@ ask to remain anonymous.
 ## Out of scope
 
 - Denial of service that requires local administrator rights.
-- Reports about third-party tools whose caches Dev Cleaner can clean.
+- Reports about third-party tools whose caches Detergo can clean.
 - Missing hardening that does not change the security properties above.
 - Social engineering.
 
 ## Our commitments
 
-- Dev Cleaner collects no telemetry and makes no network request unless you
+- Detergo collects no telemetry and makes no network request unless you
   explicitly configure a webhook or use the MCP server.
 - Deletion defaults to the Windows Recycle Bin.
 - Every destructive IPC path is covered by an automated test suite; a fix for a

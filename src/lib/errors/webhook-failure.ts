@@ -4,12 +4,12 @@ import type { UIText } from "@/lib/ui-text";
  * Webhook failures cross three surfaces where the raw backend message must not
  * appear: the settings toast, the OS notification center and the log file.
  *
- * `reqwest` errors embed the full URL — and a Discord/Slack/Teams webhook path
- * *is* the bearer token — plus DNS/TLS details. Only a classified reason is
+ * `reqwest` errors embed the full URL - and a Discord/Slack/Teams webhook path
+ * *is* the bearer token - plus DNS/TLS details. Only a classified reason is
  * allowed to leave the boundary:
  *
- *  - `network`     — the request never reached a server (status 0/unknown)
- *  - `http_<code>` — the server answered with a non-success status
+ *  - `network`     - the request never reached a server (status 0/unknown)
+ *  - `http_<code>` - the server answered with a non-success status
  *
  * `describeWebhookFailure` turns a reason into localized, token-free text. Any
  * unrecognised value falls back to the generic network message, so a legacy or

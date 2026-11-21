@@ -15,7 +15,7 @@ export interface ScanHistoryRecord {
   stopReason?: string | null;
 }
 
-const NEW_STORAGE_KEY = "dev_cleaner_scan_history";
+const NEW_STORAGE_KEY = "detergo_scan_history";
 const LEGACY_STORAGE_KEY = "node_cleaner_scan_history";
 
 /**

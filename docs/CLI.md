@@ -1,228 +1,116 @@
-# Dev Cleaner CLI
+# Detergo - CLI & MCP Reference
 
-The same executable that opens the desktop window is also a fast, concise
-terminal tool. Run it with no arguments to launch the GUI; run it with a short
-command to stay in the terminal.
+The `detergo` desktop executable ships alongside a console-subsystem companion (`detergo.com`) so Windows shells (`cmd.exe`, PowerShell, Git Bash) automatically invoke the synchronous CLI without GUI flash while preserving redirected `stdout`/`stderr` pipes (`| ConvertFrom-Json`, `> report.json`, `> NUL`).
 
-```text
-dev-cleaner                     # open the desktop app
-dev-cleaner s .                 # scan projects under .
-dev-cleaner s . -t p,a          # scan projects + AI tools
-dev-cleaner s . -t all          # scan everything (projects, AI, caches, C: system)
-dev-cleaner s . -i              # pick targets by number, move to Recycle Bin
-dev-cleaner s . -c -n           # dry-run auto-clean preview
-dev-cleaner c npm               # run the official npm cache clean
-dev-cleaner sys                 # list C: system cleaner targets
-dev-cleaner sys quick -y        # run quick C: cleanup
-dev-cleaner hist 15             # show 15 most recent cleanup records
-```
-
-> All long subcommands and flags (`scan`, `caches`, `system`, `history`,
-> `--auto-clean`, `--dry-run`, `--scope`, `--json`, etc.) remain 100% supported
-> for backward compatibility.
->
-> On Windows the installed binary may be on `PATH` as `dev-cleaner`. The
-> portable build is `Dev-Cleaner-1.0.0-Portable.exe`; rename it to
-> `dev-cleaner.exe` to use the examples verbatim.
+---
 
 ## Commands
 
-| Short | Long | Purpose |
-| --- | --- | --- |
-| `s [DIR]` | `scan [DIR]` | Discover projects, AI tools, caches and/or C: system targets; optionally clean. Defaults to `.`. |
-| `c [TOOL\|all]` | `caches` | List the 21 developer-tool caches or clean one/all via official CLI commands (`all` needs `-y`). |
-| `sys [PROFILE]` | `system` | Measure or clean C: drive maintenance targets (`quick`, `standard`, `deep`, or comma-separated IDs). |
-| `h [N]` / `hist [N]` | `history` | Print past cleanup records from the audit database. |
-| `mcp` | `mcp` | Start the Model Context Protocol server on stdio. |
-| `-h` | `help`, `--help` | Print the manual (works after any subcommand too). |
-| `-v` | `version`, `--version` | Print the product and version. |
+| Command | Short | Description |
+| :--- | :--- | :--- |
+| `detergo scan [DIR]` | `s` | Scan projects, AI agents, tool caches, and/or C: system targets |
+| `detergo caches [TOOL\|all]` | `c` | List, measure, preview, or clean 27 developer tool caches (opt-in LLM caches skipped on `all`) |
+| `detergo system [PROFILE\|IDS]` | `sys` | Measure or clean Windows C: system categories |
+| `detergo history [N]` | `h`, `hist` | Show past cleanup and tool-action audit records |
+| `detergo mcp` | `--mcp` | Start the stdio Model Context Protocol (MCP) JSON-RPC server |
 
-## `s` / `scan`
+---
 
-```text
-dev-cleaner s [DIRECTORY] [OPTIONS]
+## Scan Options (`detergo s [DIR] [OPTIONS]`)
+
+| Flag | Description |
+| :--- | :--- |
+| `-t, --targets <LIST>` | Comma-separated subset: `p` (`projects`), `a` (`agents`), `c` (`caches`), `s` (`system`), `drives`, `all` |
+| `-c, --clean`, `--auto-clean` | Move matching selectable targets to the Recycle Bin |
+| `-n, --dry`, `--dry-run` | Preview cleanup counts and sizes without deleting anything |
+| `-s, --safety <LEVELS>` | Allowed classes: `safe,regenerate,review,keep` (default: `safe,regenerate`) |
+| `-m, --min <SIZE>` | Minimum size threshold: bare number = MiB (`50`), or units (`500KB`, `250MB`, `1.5GB`) |
+| `-o, --older <AGE>` | Only include stale targets untouched for at least `<AGE>`: `7d`, `30d`, `2w`, `3m`, `1y` (or bare days) |
+| `-i, --interactive` | Numbered picker (`1,3-5`, `all`, `none`), then move selected targets to Recycle Bin |
+| `-a, --all` / `--top <N>` | Show all rows or top `N` largest targets (default: `20`) |
+| `-j, --json` | Emit one machine-readable JSON document on `stdout` |
+| `-w, --webhook <URL>` | POST canonical JSON report to Slack, Discord, n8n, or custom webhook |
+| `--scope <SCOPE>` | Legacy scope alias: `projects`, `agents`, `combined`, `all` |
+
+### Examples
+
+```bash
+# List the top 20 largest targets in the current workspace
+detergo s .
+
+# Find stale dependencies (> 30 days old, >= 100 MB) across projects and AI tools
+detergo s D:\Projects -t p,a -o 30d -m 100MB
+
+# Dry-run autonomous Recycle Bin cleanup of safe + regenerable targets older than 90 days
+detergo s D:\Projects -o 90d -c -n
+
+# Interactive numbered selection
+detergo s . -i
+
+# Full multi-target JSON report (projects + AI + caches + C: system)
+detergo s D:\Projects -t all -j
+
+# Measure all 27 developer tool caches
+detergo c
+
+# Clean Docker build cache or Cargo registry cache via audited actions
+detergo c docker -n
+detergo c cargo -y
+
+# Preview and run Windows C: quick cleanup
+detergo sys quick -n
+detergo sys quick -y
+
+# Inspect last 15 audit records as JSON
+detergo hist -l 15 -j
 ```
 
-| Short | Long | Meaning |
-| --- | --- | --- |
-| `-t <LIST>` | `--targets`, `--scope` | Comma-separated targets: `p` (projects, default), `a` (AI agents), `c` (caches), `s` (C: system), `drives` (all fixed drives), `combined` (`p,a`), `all` (`p,a,c,s`). |
-| `-m <MB>` | `--min-size <MB>` | Ignore targets smaller than this threshold. |
-| `-s <LEVELS>` | `--safety <LEVELS>` | Comma-separated allow-list: `safe`, `regenerate`, `review`, `keep`. Default `safe,regenerate`. |
-| — | `--top <COUNT>` | Print the `COUNT` largest targets (default 20). |
-| `-a` | `--all` | Print every discovered target. |
-| `-i` | `--interactive` | Number the selectable targets, read a selection, then move it to the Recycle Bin. |
-| `-c` | `--clean`, `--auto-clean` | Move matching targets to the Recycle Bin without prompting. |
-| `-n` | `--dry`, `--dry-run` | With `-c`, report what would happen without deleting. |
-| `-j` | `--json` | Emit one machine-readable JSON document on stdout. |
-| `-w <URL>` | `--webhook <URL>` | POST the run summary to an n8n, Slack or Discord webhook. |
+---
 
-`-i` (`--interactive`) and `-c` (`--auto-clean`) are mutually exclusive, and
-`-i` cannot be combined with `-j` (`--json`).
-
-### Multi-target selection (`-t`)
-
-Matches the checkboxes in the desktop top bar so you can scan any 1–4 subsets in
-one command:
-
-```text
-dev-cleaner s D:\work -t p,a         # projects + AI tools
-dev-cleaner s D:\work -t p,a,c       # projects + AI tools + package caches
-dev-cleaner s D:\work -t all         # projects + AI tools + caches + C: system
-dev-cleaner s -t c,s                 # package caches + C: system only
-dev-cleaner s -t drives              # full scan across all fixed drives
-```
-
-### Interactive selection
-
-```text
-$ dev-cleaner s . -i
-
-Selectable targets (largest first):
-  #        Size  Safety        Target
--------------------------------------------------------------------------------
-  1     1.8 GB  safe          D:\work\shop\node_modules
-  2   740.2 MB  safe          D:\work\api\target
-  3   310.9 MB  regenerate    D:\work\docs\.venv
-
-Select targets (e.g. 1,3-5 / all / none) [none]: 1,3
-```
-
-Accepted input: a single number (`2`), a list (`1,3`), a range (`2-5`),
-whitespace-separated numbers, `all`, or `none`/empty. Out-of-range numbers and
-typos are ignored, never guessed. The selected targets go to the Recycle Bin,
-so they remain restorable.
-
-### Output
-
-Without `-j`, `s` prints a size-ranked table followed by a summary:
-
-```text
-Targets (largest first):
-      Size  Safety        Target
-------------------------------------------------------------------------------
-  1.8 GB  safe          D:\work\shop\node_modules
-740.2 MB  safe          D:\work\api\target
-  ... 17 more; use --all or --top N to list them.
-
-[OK] Scan completed!
-  Found Targets       : 19
-  Reclaimable Space   : 3.4 GB
-```
-
-Targets the safety layer refuses are shown with `[not selectable]` so the
-reason a large folder is missing from the reclaimable total is visible.
-
-## `c` / `caches`
-
-```text
-dev-cleaner c                # table of detected tools
-dev-cleaner c -j             # machine-readable provider list
-dev-cleaner c npm            # clean one tool
-dev-cleaner c all -n         # preview every tool
-dev-cleaner c all -y         # clean every detected tool
-```
-
-Cache cleanup only runs the provider's own official command (for example
-`npm cache clean --force`); Dev Cleaner never deletes a tool's cache directory
-by hand. It is disabled unless **Settings → Automation → Allow cache cleanup**
-is enabled.
-
-## `sys` / `system`
-
-```text
-dev-cleaner sys                  # measure & list all C: system cleaner targets
-dev-cleaner sys quick -n         # preview quick profile without deleting
-dev-cleaner sys quick -y         # clean user temp + Windows Update leftovers
-dev-cleaner sys standard -y      # clean temp, Prefetch, WER (Admin recommended)
-dev-cleaner sys deep -y          # includes Disk Cleanup & DISM WinSxS
-```
-
-Every action resolves paths against a fixed audited list on the native side and
-never touches user projects, Documents, or Downloads.
-
-## `h` / `hist` / `history`
-
-```text
-dev-cleaner hist 10          # last 10 cleanup records
-dev-cleaner hist 50 -j       # JSON export of last 50 records
-```
-
-## Exit codes
-
-These are part of the automation contract.
+## Exit Codes (Automation Contract)
 
 | Code | Meaning |
-| --- | --- |
-| `0` | Success. |
-| `1` | Scan failed. |
-| `2` | Cleanup failed (including partial failures and cache actions). |
-| `3` | Argument or path error (unknown flag value, missing directory). |
-| `4` | Blocked by a safety or policy guard. |
+| :--- | :--- |
+| `0` | Success |
+| `1` | Scan or unexpected runtime failure |
+| `2` | Cleanup or cache action failure (partial or complete) |
+| `3` | Invalid CLI flag, argument, or path not found |
+| `4` | Blocked by safety policy (`PathGuard`, agent policy, or invalid plan) |
 
-A cleanup that reports per-target failures exits `2`, even though the summary
-was printed, so CI and Task Scheduler see the correct status.
+---
 
-## JSON output
+## Webhooks (Public & Self-Hosted LAN)
 
-`s -j` (`scan --json`) prints a single object:
+Webhooks use DNS IP pinning, disallow HTTP redirects, send an `Idempotency-Key` header, and retry transient `429`/`5xx` failures up to 3 times.
 
-```json
-{
-  "product": "Dev Cleaner by Vellium",
-  "status": "success",
-  "root": "D:\\work",
-  "scope": "projects",
-  "target_count": 19,
-  "estimated_reclaim_bytes": 3650722201,
-  "estimated_reclaim_human": "3.4 GB",
-  "items": [
-    {
-      "id": "…",
-      "name": "node_modules",
-      "path": "D:\\work\\shop\\node_modules",
-      "category": "node_modules",
-      "safety": "Safe",
-      "bytes": 1932735283,
-      "human": "1.8 GB"
-    }
-  ]
-}
+- **Default**: Public `http`/`https` endpoints only (Slack, Discord, cloud n8n).
+- **Self-Hosted (e.g. local n8n at `http://localhost:5678/...`)**: Enable **Settings → Automation → Allow local & LAN webhooks (self-hosted)** (`allowPrivateWebhooks: true` in `config.json`). Cloud instance metadata (`169.254.0.0/16`, `fe80::/10`, `metadata.google.internal`), `0.0.0.0`, `::`, and multicast remain permanently blocked.
+
+---
+
+## MCP Server (`detergo mcp`)
+
+Run over stdio for Claude Code, Cursor, Codex, or custom MCP clients:
+
+```bash
+# Safe read-only + preview mode (default)
+detergo mcp
+
+# Enable destructive execution tools (also requires Settings -> Allow MCP destructive actions)
+detergo mcp --allow-destructive
 ```
 
-`c -j` and `hist -j` emit their own documents; see `src-tauri/src/cli/mod.rs`.
+### Exposed Tools
 
-## Webhooks
-
-```text
-dev-cleaner s D:\work -w https://discord.com/api/webhooks/…
-```
-
-Only the origin of the URL is ever logged or printed; the path is treated as a
-bearer credential. Requests are retried with an `Idempotency-Key` header.
-
-## MCP server
-
-```text
-dev-cleaner mcp
-dev-cleaner mcp --allow-destructive
-```
-
-The server speaks the Model Context Protocol over stdio. Destructive MCP tools
-require a preview → confirmation token → execute flow; `--allow-destructive`
-only removes an additional operator opt-in, not the token gate. See
-[`architecture/MCP.md`](architecture/MCP.md).
-
-## Coming from npkill
-
-| npkill | Dev Cleaner |
-| --- | --- |
-| `npx npkill` | `dev-cleaner s .` |
-| Interactive arrow-key selection | `dev-cleaner s . -i` |
-| `npkill -d ~/projects` | `dev-cleaner s ~/projects` |
-| `npkill -x` / exclude | `-s` (`--safety`) and the settings protected-path list |
-| Deletes `node_modules` only | 56-rule catalog: JS, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart, AI-agent storage, caches & C: system |
-| Permanent delete | Recycle Bin by default, with an audit record |
-
-The desktop app is the fully interactive experience (unified top-bar multi-target
-scan hub, virtualised table, monorepo grouping, live progress, preview and
-confirmation); the CLI is the same engine without the window.
+- **Read-only / Preview (always available, protocol `2024-11-05` .. `2025-11-25`)**:
+  - `detergo_scan_workspace` - supports `path`, `scope`, `targets`, `min_size_mb`, `older_than_days`, and opaque cursor pagination (`cursor`, `limit`, `nextCursor`)
+  - `detergo_preview_cleanup` - creates a 5-minute single-use preview token
+  - `detergo_list_caches` - lists and measures all 27 cache providers
+  - `detergo_preview_cache` - measures a provider and returns a single-use `preview_token`
+  - `detergo_system_scan` / `detergo_system_preview` - C: drive system cleaner discovery & token preview
+  - `detergo_get_history` - recent cleanup audit records
+  - `detergo_inspect_target` - checks `PathGuard`, reparse-point status, rule match, and eligibility
+- **Destructive (hidden unless `--allow-destructive` AND `mcpAllowDestructive: true` AND valid single-use token + `confirm: true`)**:
+  - `detergo_execute_cleanup`
+  - `detergo_clean_cache`
+  - `detergo_system_execute`

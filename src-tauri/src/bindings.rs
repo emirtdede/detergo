@@ -26,6 +26,7 @@ use crate::commands::support_commands::{SupportBundle, SupportBundleRequest, Sup
 use crate::commands::system_commands::{CliEnvironmentStatus, DiskSpaceInfo};
 use crate::error::AppError;
 use crate::last_scan::LastScanSnapshot;
+use crate::platform::app_icon::AppIconApplyResult;
 use crate::platform::KnownLocation;
 use crate::providers::growth::GrowthEntry;
 use crate::providers::{AgentProviderInfo, AgentRootInfo};
@@ -34,14 +35,14 @@ use crate::scanner::models::{
     ScanRequest, ScanScope, ScanSummary,
 };
 use crate::settings::{
-    AgentPolicy, AppSettings, CustomAgentProvider, FavoriteItem, NotificationChannel,
-    NotificationPreferences, SortConfig,
+    AgentPolicy, AppSettings, CustomAgentProvider, CustomThemeConfig, FavoriteItem,
+    NotificationChannel, NotificationPreferences, SortConfig,
 };
 use crate::system_cleaner::{
     SystemActionId, SystemActionInfo, SystemActionResult, SystemAutomationConfig,
     SystemCleanReport, SystemEvent, SystemPreview, SystemSafety, SystemScanReport,
 };
-use crate::updates::{UpdateAsset, UpdateInfo};
+use crate::updates::{DownloadedUpdate, InstallChannel, SignatureStatus, UpdateAsset, UpdateInfo};
 
 /// Every type that crosses the IPC boundary, in a stable order.
 pub fn collect() -> Types {
@@ -79,10 +80,14 @@ pub fn collect() -> Types {
         .register::<StorageSnapshot>()
         .register::<DiskSpaceInfo>()
         .register::<CliEnvironmentStatus>()
+        .register::<AppIconApplyResult>()
         .register::<KnownLocation>()
         .register::<BuildInfo>()
+        .register::<InstallChannel>()
+        .register::<SignatureStatus>()
         .register::<UpdateInfo>()
         .register::<UpdateAsset>()
+        .register::<DownloadedUpdate>()
         .register::<SupportBundleRequest>()
         .register::<SupportBundle>()
         .register::<SupportMailResult>()
@@ -97,6 +102,7 @@ pub fn collect() -> Types {
         .register::<SystemAutomationConfig>()
         .register::<LastScanSnapshot>()
         .register::<CustomAgentProvider>()
+        .register::<CustomThemeConfig>()
         .register::<AgentPolicy>()
         .register::<FavoriteItem>()
         .register::<SortConfig>()

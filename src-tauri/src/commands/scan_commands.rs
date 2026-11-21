@@ -204,29 +204,57 @@ pub fn open_path_in_explorer(path: String) -> Result<(), AppError> {
         return Err(AppError::PathNotFound(path));
     }
     // Prefer the canonical path so a path containing traversal segments or a
-    // trailing quote cannot alter the Explorer command line.
-    let safe = std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf());
-    if safe.is_dir() {
-        Command::new("explorer")
-            .arg(&safe)
-            .spawn()
-            .map_err(|e| AppError::Unknown(e.to_string()))?;
-    } else {
-        // `explorer /select,<path>` is single-token syntax: a path containing
-        // a comma or space must be passed as one explicitly quoted raw
-        // argument, otherwise Explorer splits it and opens the wrong folder.
-        let mut command = Command::new("explorer");
-        #[cfg(windows)]
-        {
+    // trailing quote cannot alter the Explorer command line, and strip any
+    // `\\?\` verbatim prefix that Explorer rejects.
+    let canonical = std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf());
+    #[cfg(windows)]
+    {
+        let raw_text = canonical.to_string_lossy().replace('/', "\\");
+        let display = if let Some(unc) = raw_text.strip_prefix(r"\\?\UNC\") {
+            format!(r"\\{unc}")
+        } else if let Some(stripped) = raw_text.strip_prefix(r"\\?\") {
+            stripped.to_string()
+        } else {
+            raw_text
+        };
+        let explorer = std::env::var_os("SystemRoot")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from(r"C:\Windows"))
+            .join("explorer.exe");
+        if canonical.is_dir() {
+            Command::new(&explorer)
+                .arg(&display)
+                .spawn()
+                .map_err(|e| AppError::Unknown(e.to_string()))?;
+        } else {
             use std::os::windows::process::CommandExt;
-            let path = safe.to_string_lossy();
-            command.raw_arg(format!("/select,\"{}\"", path.replace('"', "\"\"")));
+            let mut command = Command::new(&explorer);
+            command.raw_arg(format!("/select,\"{}\"", display.replace('"', "\"\"")));
+            command
+                .spawn()
+                .map_err(|e| AppError::Unknown(e.to_string()))?;
         }
-        #[cfg(not(windows))]
-        {
-            command.arg(format!("/select,\"{}\"", safe.to_string_lossy()));
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let mut command = Command::new("open");
+        if !canonical.is_dir() {
+            command.arg("-R");
         }
         command
+            .arg(&canonical)
+            .spawn()
+            .map_err(|e| AppError::Unknown(e.to_string()))?;
+    }
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        let target = if canonical.is_dir() {
+            canonical.as_path()
+        } else {
+            canonical.parent().unwrap_or(canonical.as_path())
+        };
+        Command::new("xdg-open")
+            .arg(target)
             .spawn()
             .map_err(|e| AppError::Unknown(e.to_string()))?;
     }
@@ -300,13 +328,36 @@ fn validate_open_url(url: &str) -> Result<(), AppError> {
 #[tauri::command]
 pub fn open_url(url: String) -> Result<(), AppError> {
     validate_shell_argument(&url, "URL")?;
+    if url.chars().any(|c| c.is_whitespace() || c.is_control()) {
+        return Err(AppError::Unknown(
+            "Invalid URL: whitespace or control characters are not allowed".to_string(),
+        ));
+    }
     validate_open_url(&url)?;
     #[cfg(target_os = "windows")]
     {
-        Command::new("rundll32")
-            .args(["url.dll,FileProtocolHandler", &url])
-            .spawn()
-            .map_err(|e| AppError::Unknown(e.to_string()))?;
+        use windows::core::PCWSTR;
+        use windows::Win32::UI::Shell::ShellExecuteW;
+        use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+
+        let verb: Vec<u16> = "open\0".encode_utf16().collect();
+        let target: Vec<u16> = url.encode_utf16().chain(std::iter::once(0)).collect();
+        let code = unsafe {
+            ShellExecuteW(
+                None,
+                PCWSTR(verb.as_ptr()),
+                PCWSTR(target.as_ptr()),
+                PCWSTR::null(),
+                PCWSTR::null(),
+                SW_SHOWNORMAL,
+            )
+        };
+        if (code.0 as isize) <= 32 {
+            return Err(AppError::Unknown(format!(
+                "Could not open URL (ShellExecuteW code {})",
+                code.0 as isize
+            )));
+        }
     }
     #[cfg(target_os = "macos")]
     {

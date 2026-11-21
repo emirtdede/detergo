@@ -66,7 +66,11 @@ fn path_guard_rejects_symlinked_directories() {
     fs::create_dir_all(&real).unwrap();
     fs::create_dir_all(&proj).unwrap();
     let link = proj.join("node_modules");
-    if std::os::windows::fs::symlink_dir(&real, &link).is_err() {
+    #[cfg(windows)]
+    let created = std::os::windows::fs::symlink_dir(&real, &link);
+    #[cfg(unix)]
+    let created = std::os::unix::fs::symlink(&real, &link);
+    if created.is_err() {
         // Symlink creation requires developer mode / privileges; skip when the
         // environment cannot create one.
         return;
@@ -210,7 +214,55 @@ fn system_roots_are_rejected_by_path_analysis() {
     use super::path_guard::{normalize_key, validate_system_path};
     let check = |p: &str| validate_system_path(&normalize_key(std::path::Path::new(p)));
     assert!(check("c:/windows/system32/node_modules").is_err());
+    assert!(check("c:/windows/temp/node_modules").is_err());
     assert!(check("c:/program files/app/x/node_modules").is_err());
     assert!(check("c:/programdata/x/node_modules").is_err());
+    assert!(check("c:/boot/target").is_err());
+    assert!(check("c:/recovery/node_modules").is_err());
     assert!(check("d:/work/proj/node_modules").is_ok());
+    // Legitimate developer projects with `windows`, `boot`, or `recovery`
+    // subdirectories (Flutter, React Native, Tauri, Spring Boot) must pass.
+    assert!(check("d:/work/flutter-app/windows/build").is_ok());
+    assert!(check("d:/work/spring-app/boot/target").is_ok());
+    assert!(check("d:/work/recovery/node_modules").is_ok());
+}
+
+#[cfg(windows)]
+#[test]
+fn is_in_use_detects_exclusive_file_locks_and_locked_dir_children() {
+    use std::os::windows::fs::OpenOptionsExt;
+
+    let temp = tempfile::tempdir().unwrap();
+    let dir = temp.path().join("target");
+    fs::create_dir_all(&dir).unwrap();
+    let locked_file = dir.join("app.exe");
+    fs::write(&locked_file, b"binary").unwrap();
+
+    // Unlocked file and directory report not in use.
+    assert_eq!(crate::platform::is_in_use(&locked_file), Some(false));
+    assert_eq!(crate::platform::is_in_use(&dir), Some(false));
+
+    // Hold a file handle without FILE_SHARE_DELETE (typical of running binaries
+    // or active exclusive writers on Windows).
+    let handle = fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .share_mode(1) // FILE_SHARE_READ only - no FILE_SHARE_DELETE
+        .open(&locked_file)
+        .unwrap();
+
+    assert_eq!(
+        crate::platform::is_in_use(&locked_file),
+        Some(true),
+        "exclusively locked file must be detected as in use"
+    );
+    assert_eq!(
+        crate::platform::is_in_use(&dir),
+        Some(true),
+        "directory containing a locked child file must be detected as in use"
+    );
+
+    drop(handle);
+    assert_eq!(crate::platform::is_in_use(&locked_file), Some(false));
+    assert_eq!(crate::platform::is_in_use(&dir), Some(false));
 }

@@ -1,108 +1,40 @@
-# C: Drive Cleaner
+# Detergo - Windows C: Drive System Cleaner
 
-The C: drive cleaner is a first-class page in the app and a CLI subcommand. It
-exists so a non-technical Windows user can reclaim system-drive space without
-typing `cleanmgr`, `del` or `DISM` commands, and without a shell escaping into
-paths the app does not control.
+The **C: Drive System Cleaner** is a dedicated, audited Windows maintenance subsystem (`src-tauri/src/system_cleaner/`) available in the desktop GUI (**System cleaner** tab), CLI (`detergo sys`), and MCP (`detergo_system_scan` / `detergo_system_preview` / `detergo_system_execute`).
 
-## What it cleans
+## Audited Scope
 
-| Action id | What it targets | Safety | Needs admin |
-|---|---|---|---|
-| `userTemp` | `%TEMP%` contents | safe | no |
-| `windowsTemp` | `C:\Windows\Temp` contents | regenerate | yes |
-| `prefetch` | `C:\Windows\Prefetch` contents | regenerate | yes |
-| `windowsUpdate` | `C:\Windows\SoftwareDistribution\Download` contents | regenerate | yes |
-| `errorReports` | Windows Error Reporting queues under `C:\ProgramData` | safe | yes |
-| `recycleBin` | The Windows Recycle Bin (all drives) | review | no |
-| `diskCleanup` | Windows Disk Cleanup profile (`cleanmgr` sageset 1997) | review | yes |
-| `componentStore` | `DISM /Online /Cleanup-Image /StartComponentCleanup` | review | yes |
+Only a fixed, hardcoded allowlist of Windows maintenance targets can ever be inspected or cleaned. The frontend sends **action identifiers only** - never filesystem paths - and the Rust backend resolves and validates every path against audited Windows roots before any file operation:
 
-The roots above are the only paths the system cleaner can touch. Project
-folders, user documents and Downloads are outside every audited root; they
-cannot be selected from the UI and are rejected by the native guard if a
-request names them.
+| Action ID | Target | Elevation Needed | Included in Quick Profile |
+| :--- | :--- | :---: | :---: |
+| `user_temp` | User temporary files (`%TEMP%`) | No | Yes |
+| `windows_temp` | Windows temporary files (`%SystemRoot%\Temp`) | Yes | Yes |
+| `prefetch` | Windows Prefetch (`%SystemRoot%\Prefetch`) | Yes | No (Deep only) |
+| `windows_update` | Windows Update download cache (`SoftwareDistribution\Download`) | Yes | Standard / Deep |
+| `error_reports` | Windows Error Reporting queues (`WER\ReportArchive`, `ReportQueue`) | Yes | Yes |
+| `recycle_bin` | Windows Recycle Bin | No | No (Explicit only) |
+| `disk_cleanup` | Native Windows Disk Cleanup (`cleanmgr.exe` from System32) | Yes | Standard / Deep |
+| `component_store` | DISM Component Store cleanup (`dism.exe /Online /Cleanup-Image /StartComponentCleanup`) | Yes | Deep only |
 
-## How a run works
+Project workspaces, user Documents, Desktop, and Downloads sit strictly outside every audited root and can never be selected or targeted.
 
-1. **Measure.** The page sizes every action. Folder actions are walked by
-   metadata; Windows-reported actions (Disk Cleanup, component store) show
-   "Reported by Windows" because only the tool itself knows their size.
-2. **Select.** The user ticks actions or presses *Quick clean* (user temp plus
-   Windows Update leftovers). Locked rows explain why: needs administrator,
-   not present, or reported by Windows.
-3. **Confirm.** A dialog lists the exact action set and the measured total.
-   Nothing is deleted before this confirmation.
-4. **Execute.** The backend re-resolves each root, re-checks it against the
-   audited list, and then deletes contents with a native walker. Native
-   deletion never follows junctions or symbolic links, skips files held by a
-   running process, clears read-only attributes, and reports skipped samples
-   instead of failing the whole action.
-5. **Audit.** Every action appends a record to the existing local audit
-   history with its byte delta and duration. Nothing is uploaded.
+## Safety & Execution Guarantees
 
-Cancelling stops the run between files and between Windows tool steps; a step
-already handed to `cleanmgr` or `DISM` finishes on its own.
+- **No Symlink / Junction Traversal**: Every candidate path and its ancestors are checked against reparse points (`is_inside_audited_root`) before deletion. Locked files are skipped and reported gracefully.
+- **Hardened Native Process Spawning**: External maintenance utilities (`cleanmgr.exe`, `dism.exe`, `schtasks.exe`) are resolved strictly from `%SystemRoot%\System32` (never via mutable `PATH`), with bounded 256 KiB output ring buffers.
+- **On-Demand Elevation**: Detergo always launches without administrator privileges. If you select an admin-only action, the UI offers a one-click **Restart as administrator** prompt that preserves your current tab and selection.
+- **Audit History**: Every manual and scheduled execution is recorded locally in SQLite (`actions.jsonl` / audit DB). Nothing is uploaded.
 
-## Administrator rights
+## Scheduled Automation
 
-Windows blocks the system folders for standard users, so the app still starts
-unelevated and offers a single *Restart as administrator* button on the page.
-The relaunch uses `ShellExecuteW("runas", ...)` with `--open-view system`; the
-old process exits and the new one reopens the same page. The app never asks for
-elevation on startup and never stores credentials.
+You can configure a daily or weekly Windows Task Scheduler job (`quick` or `standard` profile) directly from the **System cleaner** view. Temporary XML definitions use cryptographically unique UUID filenames and are cleaned up immediately after `schtasks.exe` registers the task. Prefetch, Recycle Bin, and WinSxS are never scheduled automatically.
 
-## Disk Cleanup without `sageset`
+## CLI Usage
 
-The app writes the `StateFlags1997` registry values that Windows Disk Cleanup
-reads, then runs `cleanmgr /sagerun:1997`. The interactive `/sageset` dialogs
-are never shown during automated runs, so the profile is deterministic and the
-user does not have to hunt through checkboxes. For users who also want the
-native Windows Disk Cleanup UI (`cleanmgr /d c:`) or want to configure and run
-their own profile 1 (`cleanmgr /sageset:1` / `cleanmgr /sagerun:1`), the System
-Cleaner page provides one-click launcher buttons backed by an allowlisted
-command (`system_launch_cleanmgr`).
-
-The component-store action runs `DISM /Online /Cleanup-Image
-/StartComponentCleanup` without `/ResetBase`: installed updates remain
-uninstallable.
-
-## Scheduled cleanup
-
-The page can install a Windows scheduled task that runs a profile without any
-prompt:
-
-| Profile | Actions |
-|---|---|
-| `quick` | user temp, Windows Update leftovers |
-| `standard` | quick plus Windows temp, Prefetch and error reports |
-| `deep` | standard plus Disk Cleanup and component store |
-
-The task is generated as XML and registered with `schtasks /Create /XML`,
-running `dev-cleaner system --clean <profile> --yes --scheduled`. It runs with
-the highest rights the account allows. The Recycle Bin is never part of a
-profile. Removing the schedule deletes the task; the configuration itself lives
-in `system-automation.json` next to the other app data, not in `AppSettings`, so
-no settings migration is involved.
-
-## Command line
-
-```powershell
-dev-cleaner system --list
-dev-cleaner system --clean quick --yes
-dev-cleaner system --clean userTemp,windowsTemp --dry-run
-dev-cleaner system --clean standard --yes --scheduled
+```bash
+detergo sys --list                 # Measure all C: drive categories
+detergo sys quick --dry-run        # Preview quick profile (no elevation required)
+detergo sys quick --yes            # Run quick profile
+detergo sys standard --yes         # Run standard profile (requires elevated shell)
 ```
-
-`--dry-run` measures and prints sizes without deleting. `--yes` is mandatory
-before anything is removed. Exit codes follow the same contract as `scan`.
-
-## Failure behavior
-
-| Situation | Result |
-|---|---|
-| A selected action needs administrator rights | Row is locked before execution; the preview rejects the set |
-| A file is held by a running process | Skipped and counted, never forced |
-| A junction or symlink sits inside a root | The link is removed, its target is untouched |
-| A root disappears between preview and execution | That action reports a path error; other actions continue |
-| `cleanmgr` or `DISM` fails | Exit code and the tail of the tool output are kept in the result |

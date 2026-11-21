@@ -119,17 +119,14 @@ export interface UIText {
     showing: (n: number) => string;
     /** Top bar action: one pass over projects, AI storage and caches. */
     scanAll: string;
-    scanAllDesc: string;
   };
   header: {
     changeLocation: string;
     changeLocationConfirmDesc: string;
     folderNotSelected: string;
     chooseFolderSub: string;
-    defaultLocations: string;
     favorites: string;
     recent: string;
-    noFavorites: string;
     addFavorite: string;
     removeFavorite: string;
     favoriteAdded: string;
@@ -157,7 +154,6 @@ export interface UIText {
     topItems: string;
     breakdown: string;
     partial: string;
-    noScan: string;
     startHint: string;
     stopReason: string;
     warnings: string;
@@ -175,7 +171,6 @@ export interface UIText {
     restoreConfirmBtn: string;
     pageTitle: string;
     pageSubtitle: string;
-    statusScanning: string;
     statusReady: string;
     statusIdle: string;
     kpiCleanable: string;
@@ -225,6 +220,8 @@ export interface UIText {
     ecoCache: string;
     ecoOther: string;
     distTotalBadge: (size: string) => string;
+    treemapTitle: string;
+    treemapSubtitle: string;
   };
   table: {
     label: string;
@@ -244,7 +241,6 @@ export interface UIText {
     clearFilters: string;
     searchPlaceholder: string;
     allSafety: string;
-    selectSafe: string;
     clearSelection: string;
     openFolder: string;
     selectRow: string;
@@ -254,11 +250,15 @@ export interface UIText {
     allCategories: string;
     projectFilter: string;
     categoryFilter: string;
+    ageFilter: string;
+    allAges: string;
+    olderThan7d: string;
+    olderThan30d: string;
+    olderThan90d: string;
+    olderThan180d: string;
     sortHint: string;
     officialTool: string;
-    sizeHint: string;
     reclaimHint: string;
-    selectVisible: string;
   };
   stale: {
     bannerTitle: string;
@@ -268,10 +268,7 @@ export interface UIText {
     rescan: string;
     continueAnyway: string;
     dismiss: string;
-    previousComparison: string;
     cleanableDelta: (value: string) => string;
-    itemsDelta: (delta: number) => string;
-    restoredAt: (date: string) => string;
     savedLocally: string;
   };
   closeGuard: {
@@ -300,7 +297,6 @@ export interface UIText {
     confirmTrash: string;
     confirmPermanent: string;
     permanentAck: string;
-    blockedReasons: string;
     coveredByParent: string;
     noMethod: string;
     officialActionRequired: string;
@@ -313,7 +309,6 @@ export interface UIText {
     cancelling: string;
     progress: (processed: number, total: number) => string;
     currentItem: (path: string) => string;
-    alreadyRunning: string;
   };
   result: {
     title: string;
@@ -344,8 +339,6 @@ export interface UIText {
     growth: string;
     noProviders: string;
     notInstalled: string;
-    providerNote: string;
-    growthEmpty: string;
     loadError: string;
     addTool: string;
     addToolHint: string;
@@ -360,7 +353,6 @@ export interface UIText {
     hiddenTools: string;
     customTool: string;
     keepOnly: string;
-    manageTitle: string;
     saveError: string;
     added: string;
     removed: string;
@@ -412,7 +404,6 @@ export interface UIText {
     measured: string;
     notMeasured: string;
     measureHint: string;
-    measureCancelled: string;
     kpiTotal: string;
     kpiMeasured: string;
     kpiActions: string;
@@ -440,7 +431,6 @@ export interface UIText {
     loadError: string;
     moved: string;
     clear: string;
-    clearConfirm: string;
     clearHint: string;
     actions: string;
     actionLabel: string;
@@ -531,9 +521,7 @@ export interface UIText {
     saveError: string;
     about: string;
     version: string;
-    buildCommit: string;
     buildProfile: string;
-    buildDirty: string;
     buildProfileRelease: string;
     buildProfileDev: string;
     buildProfileUnknown: string;
@@ -575,24 +563,42 @@ export interface UIText {
     themeOrange: string;
     themeYellow: string;
     themeTransparent: string;
+    themeCustom: string;
+    customThemeAdd: string;
+    customThemeTitle: string;
+    customThemeHint: string;
+    customThemeBase: string;
+    customThemeColor: string;
+    customThemeInvalidHex: string;
+    customThemeContrastOk: string;
+    appIconTitle: string;
+    appIconHint: string;
+    appIconMatchTheme: string;
+    appIconCustom: string;
+    appIconSurfacesHint: string;
+    tabIcon: string;
+    accessibilityTitle: string;
+    accessibilityHint: string;
+    uiScale: string;
+    uiScaleHint: string;
+    uiScaleReset: string;
+    highContrast: string;
+    highContrastHint: string;
+    welcomeGuideTitle: string;
+    welcomeGuideHint: string;
+    welcomeGuideOpen: string;
     webhookPlaceholder: string;
     webhookUrl: string;
     pathMustBeAbsolute: string;
     excludedNameInvalid: string;
-    legalHint: string;
     aboutTagline: string;
-    aboutMadeBy: string;
     aboutVisit: string;
     aboutTitleBy: string;
-    aboutBuildTitle: string;
-    aboutCatalogTitle: string;
     aboutLegalTitle: string;
     aboutLegalHint: string;
     aboutLocalFirst: string;
     aboutCopyright: string;
-    aboutBuiltAt: string;
     aboutLegalRevision: string;
-    aboutOpenDoc: string;
     scToggleSidebar: string;
     scToggleSidebarHint: string;
     scFocusSearch: string;
@@ -656,6 +662,8 @@ export interface UIText {
     webhookScanDoneHint: string;
     webhookCleanDone: string;
     webhookCleanDoneHint: string;
+    webhookAllowPrivateTitle: string;
+    webhookAllowPrivateHint: string;
     mcpDestructiveTitle: string;
     mcpDestructiveHint: string;
     webhookUrlEmpty: string;
@@ -693,8 +701,6 @@ export interface UIText {
     kpiArtifacts: string;
     kpiSafeReclaim: string;
     kpiSafeReclaimSub: string;
-    kpiDetected: string;
-    kpiDetectedSub: string;
     /** Real "how many targets can I clean" number, not a row count. */
     kpiTargets: string;
     kpiTargetsSub: (count: string) => string;
@@ -714,8 +720,6 @@ export interface UIText {
     kpiLicenseValue: string;
     kpiLicenseSub: string;
     gitCommitHash: string;
-    ecoRustScope: string;
-    ecoCacheScope: string;
     contactPrivacy: string;
     contactSupportDesc: string;
 
@@ -725,8 +729,6 @@ export interface UIText {
     catalogTitle: string;
     ruleAgents: string;
     ruleCaches: string;
-    ruleBuild: string;
-    ruleBuildScope: string;
     schemaVerified: string;
     safetyEngine: string;
     safetyActive: string;
@@ -739,8 +741,6 @@ export interface UIText {
     contactSecurity: string;
     contactSecurityDesc: string;
     contactSupport: string;
-    contactBilling: string;
-    contactBillingDesc: string;
     contactPrivacyDesc: string;
     navTitle: string;
     navOverview: string;
@@ -771,6 +771,50 @@ export interface UIText {
     download: string;
     failed: string;
     privacy: string;
+    channelLabel: string;
+    channelMsixStore: string;
+    channelInstaller: string;
+    channelPortable: string;
+    storeManaged: string;
+    openStore: string;
+    downloadVerify: string;
+    downloading: string;
+    verifiedTitle: string;
+    signatureValid: string;
+    signatureUnsigned: string;
+    signatureUntrusted: string;
+    launchInstaller: string;
+    downloadFailed: string;
+  };
+  onboarding: {
+    title: string;
+    stepOf: (step: number, total: number) => string;
+    skip: string;
+    next: string;
+    finish: string;
+    step1Title: string;
+    step1Body: string;
+    step1Card1Title: string;
+    step1Card1Desc: string;
+    step1Card2Title: string;
+    step1Card2Desc: string;
+    step1Card3Title: string;
+    step1Card3Desc: string;
+    step2Title: string;
+    step2Body: string;
+    step2Item1Title: string;
+    step2Item1Desc: string;
+    step2Item2Title: string;
+    step2Item2Desc: string;
+    step2Item3Title: string;
+    step2Item3Desc: string;
+    step3Title: string;
+    step3Body: string;
+    step4Title: string;
+    step4Body: string;
+    step4Tip1: string;
+    step4Tip2: string;
+    step4Tip3: string;
   };
   diagnostics: {
     title: string;
@@ -806,8 +850,6 @@ export interface UIText {
     noSearchResults: string;
     copy: string;
     copied: string;
-    overviewPill: string;
-    manifestoPill: string;
     englishNotice: string;
   };
   notifications: {

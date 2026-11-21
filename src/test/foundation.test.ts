@@ -42,8 +42,8 @@ describe("WP-1: Foundation & Formatting Utilities", () => {
   });
 
   it("masks the account name in a UNC home path", () => {
-    expect(maskPath("\\\\fileserver\\Users\\alice\\AppData\\dev-cleaner")).toBe(
-      "\\\\fileserver\\Users\\•••\\AppData\\dev-cleaner",
+    expect(maskPath("\\\\fileserver\\Users\\alice\\AppData\\detergo")).toBe(
+      "\\\\fileserver\\Users\\•••\\AppData\\detergo",
     );
     expect(maskPath("C:\\Users\\alice\\AppData")).toBe("C:\\Users\\•••\\AppData");
   });

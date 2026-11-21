@@ -1,6 +1,7 @@
 import {
   ActionAuditRecord,
   AgentProviderInfo,
+  AppIconApplyResult,
   AppSettings,
   AuditRecord,
   BuildInfo,
@@ -14,9 +15,12 @@ import {
   CleanupReport,
   CleanupTotals,
   CliEnvironmentStatus,
+  CustomThemeConfig,
   DeleteMode,
   DiskSpaceInfo,
+  DownloadedUpdate,
   GrowthReport,
+  InstallChannel,
   KnownLocation,
   LastScanSnapshot,
   OfficialActionPreview,
@@ -141,8 +145,13 @@ function mockSystemActions(): SystemActionInfo[] {
 // is true, so none of it ships in a production bundle.
 
 let memorySettings: AppSettings = {
-  schemaVersion: 4,
+  schemaVersion: 5,
   theme: "dark-black",
+  customTheme: { base: "dark", accent: "#3B82F6" },
+  appIcon: "match-theme",
+  uiScale: 100,
+  highContrast: false,
+  onboardingCompleted: false,
   language: "tr",
   reduceMotion: false,
   favorites: [
@@ -161,8 +170,8 @@ let memorySettings: AppSettings = {
       lastUsedAt: "2026-11-04T18:00:00Z",
     },
   ],
-  recentLocations: ["~/dev/dev-cleaner", "~/dev/web-apps", "~/Desktop"],
-  lastScanPath: "~/dev/dev-cleaner",
+  recentLocations: ["~/dev/detergo", "~/dev/web-apps", "~/Desktop"],
+  lastScanPath: "~/dev/detergo",
   sort: { field: "size", direction: "desc" },
   protectedPaths: ["C:\\Windows", "C:\\Program Files"],
   excludedNames: [".git", "node_modules/.bin"],
@@ -190,6 +199,7 @@ let memorySettings: AppSettings = {
   webhookUrl: null,
   webhookOnScan: true,
   webhookOnClean: true,
+  allowPrivateWebhooks: false,
   shortcuts: {
     toggleSidebar: "Ctrl+B",
     focusSearch: "Ctrl+K",
@@ -1080,6 +1090,21 @@ export function createMockScannerApi(): ScannerApi {
       return;
     },
 
+    async applyAppIcon(
+      iconId: string,
+      activeTheme: string,
+      _customTheme: CustomThemeConfig,
+    ): Promise<AppIconApplyResult> {
+      const resolvedId = iconId === "match-theme" ? activeTheme || "dark-black" : iconId;
+      return {
+        resolvedId,
+        windowUpdated: true,
+        trayUpdated: true,
+        shortcutsUpdated: 0,
+        iconPath: null,
+      };
+    },
+
     async getBuildInfo(): Promise<BuildInfo> {
       return {
         version: "1.0.0",
@@ -1093,8 +1118,8 @@ export function createMockScannerApi(): ScannerApi {
 
     async getCliEnvironmentStatus(): Promise<CliEnvironmentStatus> {
       return {
-        executablePath: "C:\\Program Files\\Dev Cleaner\\dev-cleaner.exe",
-        shimDir: "C:\\Users\\demo\\AppData\\Local\\dev-cleaner\\bin",
+        executablePath: "C:\\Program Files\\Detergo\\detergo.exe",
+        shimDir: "C:\\Users\\demo\\AppData\\Local\\detergo\\bin",
         inPath: true,
         shimUpToDate: true,
       };
@@ -1102,11 +1127,15 @@ export function createMockScannerApi(): ScannerApi {
 
     async registerCliInUserPath(): Promise<CliEnvironmentStatus> {
       return {
-        executablePath: "C:\\Program Files\\Dev Cleaner\\dev-cleaner.exe",
-        shimDir: "C:\\Users\\demo\\AppData\\Local\\dev-cleaner\\bin",
+        executablePath: "C:\\Program Files\\Detergo\\detergo.exe",
+        shimDir: "C:\\Users\\demo\\AppData\\Local\\detergo\\bin",
         inPath: true,
         shimUpToDate: true,
       };
+    },
+
+    async getInstallChannel(): Promise<InstallChannel> {
+      return "installer";
     },
 
     // The browser preview has no backend, so the mock reports the same version
@@ -1116,25 +1145,48 @@ export function createMockScannerApi(): ScannerApi {
         currentVersion: "1.0.0",
         latestVersion: "1.0.0",
         available: false,
-        releaseName: "Dev Cleaner 1.0.0",
-        releaseUrl: "https://github.com/emirtdede/dev-cleaner/releases/latest",
+        releaseName: "Detergo 1.0.0",
+        releaseUrl: "https://github.com/emirtdede/detergo/releases/latest",
         notes: "",
         publishedAt: "",
         assets: [],
+        installChannel: "installer",
+        managedByStore: false,
+        recommendedAsset: null,
+        source: "cdn-manifest",
       };
+    },
+
+    async downloadAndVerifyUpdate(
+      _url: string,
+      expectedSha256: string,
+      fileName: string,
+    ): Promise<DownloadedUpdate> {
+      return {
+        path: `C:\\Users\\demo\\AppData\\Local\\Temp\\detergo-updates\\${fileName}`,
+        fileName,
+        bytes: 8_400_000,
+        sha256: expectedSha256.toUpperCase(),
+        signatureStatus: "unsigned",
+      };
+    },
+
+    async launchDownloadedUpdate(_path: string): Promise<void> {
+      return;
     },
 
     async testWebhook(
       _url: string,
       _payload?: Record<string, unknown>,
+      _allowPrivate?: boolean,
     ): Promise<{ ok: boolean; status: number; latencyMs: number; message: string }> {
       return { ok: true, status: 200, latencyMs: 12, message: "Simulated (browser preview)" };
     },
 
     async createSupportBundle(request: SupportBundleRequest): Promise<SupportBundle> {
       return {
-        path: "C:\\Users\\demo\\Downloads\\dev-cleaner-support-demo.zip",
-        fileName: "dev-cleaner-support-demo.zip",
+        path: "C:\\Users\\demo\\Downloads\\detergo-support-demo.zip",
+        fileName: "detergo-support-demo.zip",
         bytes: request.errorLog.length + request.systemLog.length + 512,
         createdAt: new Date().toISOString(),
       };

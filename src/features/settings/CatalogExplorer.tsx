@@ -25,8 +25,12 @@ const ECOSYSTEMS: Record<string, { label: string; color: string }> = {
   unity: { label: "Unity", color: "var(--eco-agent)" },
   unreal: { label: "Unreal Engine", color: "var(--eco-build)" },
   elixir: { label: "Elixir", color: "var(--eco-magenta, #e879f9)" },
-  swift: { label: "Swift", color: "var(--eco-amber, #f59e0b)" },
+  swift: { label: "Swift / iOS", color: "var(--eco-amber, #f59e0b)" },
   godot: { label: "Godot", color: "var(--eco-cache)" },
+  ruby: { label: "Ruby", color: "var(--danger)" },
+  zig: { label: "Zig", color: "var(--warning)" },
+  devops: { label: "DevOps / IaC", color: "var(--eco-build)" },
+  haskell: { label: "Haskell", color: "var(--eco-agent)" },
 };
 
 const FALLBACK_COLOR = "var(--text-muted)";
@@ -66,7 +70,7 @@ interface CatalogExplorerProps {
  * The summary cards above only carry a count per ecosystem; a user cannot tell
  * from `24` what will be deleted. This panel lists every rule of the selected
  * ecosystem with the folder names it matches, its category, its safety class
- * and — when the catalog knows it — the command that regenerates the output.
+ * and - when the catalog knows it - the command that regenerates the output.
  *
  * All of it comes from the live catalog (`getCatalog`), so the panel can never
  * drift from the rules the scanner actually applies.

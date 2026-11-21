@@ -7,6 +7,7 @@ import {
   HardDrive,
   Lock,
   Play,
+  RefreshCw,
   ShieldAlert,
   ShieldCheck,
   SlidersHorizontal,
@@ -23,6 +24,7 @@ import { PageHeader } from "@/components/primitives/PageHeader";
 import { Switch } from "@/components/primitives/Switch";
 
 import { formatBytes } from "@/lib/formatters";
+import { maskPath, maskPathsInText } from "@/lib/format/path";
 import { localizeAppError, useUIText } from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { usePreferencesStore } from "@/stores/preferences-store";
@@ -59,6 +61,7 @@ function isSelectable(
 export const SystemView: React.FC = () => {
   const ui = useUIText();
   const language = usePreferencesStore((state) => state.language);
+  const maskPaths = usePreferencesStore((state) => state.maskPaths);
   const {
     report,
     automation,
@@ -73,7 +76,6 @@ export const SystemView: React.FC = () => {
     loadAutomation,
     toggle,
     selectAll,
-    setSelection,
     clear,
     run,
     cancel,
@@ -97,7 +99,6 @@ export const SystemView: React.FC = () => {
       loadAutomation: state.loadAutomation,
       toggle: state.toggle,
       selectAll: state.selectAll,
-      setSelection: state.setSelection,
       clear: state.clear,
       run: state.run,
       cancel: state.cancel,
@@ -109,7 +110,8 @@ export const SystemView: React.FC = () => {
     })),
   );
 
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmIds, setConfirmIds] = useState<SystemActionId[] | null>(null);
+  const confirmOpen = confirmIds !== null;
   const [expandedLog, setExpandedLog] = useState<SystemActionId | null>(null);
   const [draft, setDraft] = useState<SystemAutomationConfig | null>(null);
   const [savingSchedule, setSavingSchedule] = useState(false);
@@ -157,9 +159,17 @@ export const SystemView: React.FC = () => {
 
   const disk = report?.disk;
   const canRun = !running && !previewing && selectedActions.length > 0;
+  const confirmActions = useMemo(
+    () => (confirmIds ? actions.filter((action) => confirmIds.includes(action.id)) : []),
+    [actions, confirmIds],
+  );
+  const confirmBytes = useMemo(
+    () => confirmActions.reduce((sum, action) => sum + (action.measured ? action.bytes : 0), 0),
+    [confirmActions],
+  );
 
   const onRun = async (ids: SystemActionId[]) => {
-    setConfirmOpen(false);
+    setConfirmIds(null);
     await run(ids);
     const failure = useSystemStore.getState().error;
     if (failure) {
@@ -231,8 +241,7 @@ export const SystemView: React.FC = () => {
       .filter((action) => wanted.includes(action.id) && isSelectable(action, elevated))
       .map((action) => action.id);
     if (ids.length === 0) return;
-    setSelection(ids);
-    setConfirmOpen(true);
+    setConfirmIds(ids);
   };
 
   const weekdayLabel = (index: number) =>
@@ -261,8 +270,17 @@ export const SystemView: React.FC = () => {
             <Button
               variant="secondary"
               size="sm"
+              icon={<RefreshCw size={13} className={loading ? "spin" : ""} />}
+              onClick={() => void load()}
+              disabled={loading || running || previewing}
+            >
+              {ui.common.refresh}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
               icon={<Trash2 size={13} />}
-              onClick={() => setConfirmOpen(true)}
+              onClick={() => setConfirmIds(selected)}
               disabled={!canRun}
             >
               {ui.system.cleanSelected}
@@ -281,12 +299,7 @@ export const SystemView: React.FC = () => {
                 variant="primary"
                 size="sm"
                 icon={<ShieldCheck size={13} />}
-                onClick={() => {
-                  // Quick clean pre-selects the smallest safe set but still
-                  // goes through the same confirmation dialog as any other run.
-                  setSelection(quickIds);
-                  setConfirmOpen(true);
-                }}
+                onClick={() => setConfirmIds(quickIds)}
                 disabled={previewing || quickIds.length === 0}
               >
                 {ui.system.quickClean}
@@ -356,7 +369,7 @@ export const SystemView: React.FC = () => {
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">
-              {disk ? formatBytes(disk.freeBytes, language) : "—"}
+              {disk ? formatBytes(disk.freeBytes, language) : "-"}
             </span>
             <span className="nc-kpi-card-sub">
               {disk
@@ -474,8 +487,11 @@ export const SystemView: React.FC = () => {
                       </span>
                     </span>
                     {action.path && (
-                      <span className="system-action-path" title={action.path}>
-                        {action.path}
+                      <span
+                        className="system-action-path"
+                        title={maskPaths ? maskPath(action.path) : action.path}
+                      >
+                        {maskPaths ? maskPath(action.path) : action.path}
                       </span>
                     )}
                   </label>
@@ -692,21 +708,20 @@ export const SystemView: React.FC = () => {
 
       <Dialog
         isOpen={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
+        onClose={() => setConfirmIds(null)}
         title={ui.system.confirmTitle}
         footer={
           <>
-            <Button variant="ghost" onClick={() => setConfirmOpen(false)}>
+            <Button variant="ghost" onClick={() => setConfirmIds(null)}>
               {ui.common.cancel}
             </Button>
             <Button
               variant="danger"
               icon={<Trash2 size={13} />}
               onClick={() => {
-                const ids = selected.length > 0 ? selected : quickIds;
-                void onRun(ids);
+                if (confirmIds && confirmIds.length > 0) void onRun(confirmIds);
               }}
-              disabled={!canRun}
+              disabled={running || previewing || confirmActions.length === 0}
             >
               {ui.plan.confirmPermanent}
             </Button>
@@ -716,7 +731,7 @@ export const SystemView: React.FC = () => {
         <p>{ui.system.confirmBody}</p>
         <p className="plan-note">{ui.plan.permanentNote}</p>
         <ul className="system-confirm-list">
-          {selectedActions.map((action) => (
+          {confirmActions.map((action) => (
             <li key={action.id}>
               <span>{actionLabel(action.id)}</span>
               <strong>
@@ -726,7 +741,7 @@ export const SystemView: React.FC = () => {
           ))}
         </ul>
         <p className="system-confirm-total">
-          {ui.system.reclaimable}: <strong>{formatBytes(selectedBytes, language)}</strong>
+          {ui.system.reclaimable}: <strong>{formatBytes(confirmBytes, language)}</strong>
         </p>
       </Dialog>
 
@@ -776,7 +791,9 @@ export const SystemView: React.FC = () => {
                     </button>
                   )}
                   {expandedLog === result.id && result.logTail && (
-                    <pre className="system-log">{result.logTail}</pre>
+                    <pre className="system-log">
+                      {maskPaths ? maskPathsInText(result.logTail) : result.logTail}
+                    </pre>
                   )}
                 </li>
               ))}

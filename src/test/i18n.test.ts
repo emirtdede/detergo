@@ -355,36 +355,36 @@ describe("73-Language i18n Engine & Localization Tests", () => {
     );
     const { translateBackendText, loadBackendLocale } = await import("@/lib/ui-text/backend-i18n");
 
-    const sample = "Welcome to Dev Cleaner";
+    const sample = "Welcome to Detergo";
 
-    for (const meta of LANGUAGES_LIST) {
-      if (meta.id === "en" || meta.id === "tr") continue;
+    await Promise.all(
+      LANGUAGES_LIST.filter((meta) => meta.id !== "en" && meta.id !== "tr").map(async (meta) => {
+        await Promise.all([
+          loadDocsLocale(meta.id),
+          loadLegalLocale(meta.id),
+          loadBackendLocale(meta.id),
+        ]);
 
-      await loadDocsLocale(meta.id);
-      await loadLegalLocale(meta.id);
-      // Backend dictionaries are per-language chunks now; the production
-      // consumer joins this load with `useUIText`.
-      await loadBackendLocale(meta.id);
+        expect(hasDocsLocale(meta.id), `${meta.id} docs locale`).toBe(true);
+        const docsText = translateDocs(meta.id, sample);
+        expect(docsText.length, `${meta.id} docs sample`).toBeGreaterThan(0);
+        expect(docsText, `${meta.id} docs translated`).not.toBe(sample);
 
-      expect(hasDocsLocale(meta.id), `${meta.id} docs locale`).toBe(true);
-      const docsText = translateDocs(meta.id, sample);
-      expect(docsText.length, `${meta.id} docs sample`).toBeGreaterThan(0);
-      expect(docsText, `${meta.id} docs translated`).not.toBe(sample);
+        const title = getLegalDocument(meta.id, "eula").title;
+        expect(title.length, `${meta.id} legal title`).toBeGreaterThan(5);
+        expect(title, `${meta.id} legal title translated`).not.toBe("End User License Agreement");
+        expect(isLegalTranslation(meta.id)).toBe(true);
+        expect(getLegalDocMeta(meta.id)[0].label.length).toBeGreaterThan(2);
 
-      const title = getLegalDocument(meta.id, "eula").title;
-      expect(title.length, `${meta.id} legal title`).toBeGreaterThan(5);
-      expect(title, `${meta.id} legal title translated`).not.toBe("End User License Agreement");
-      expect(isLegalTranslation(meta.id)).toBe(true);
-      expect(getLegalDocMeta(meta.id)[0].label.length).toBeGreaterThan(2);
-
-      const note = translateBackendText(
-        "Browser recordings can grow large; can only be cleaned when recording has stopped.",
-        meta.id,
-      );
-      expect(note.length, `${meta.id} backend note`).toBeGreaterThan(0);
-      expect(note, `${meta.id} backend note translated`).not.toBe(
-        "Browser recordings can grow large; can only be cleaned when recording has stopped.",
-      );
-    }
-  });
+        const note = translateBackendText(
+          "Browser recordings can grow large; can only be cleaned when recording has stopped.",
+          meta.id,
+        );
+        expect(note.length, `${meta.id} backend note`).toBeGreaterThan(0);
+        expect(note, `${meta.id} backend note translated`).not.toBe(
+          "Browser recordings can grow large; can only be cleaned when recording has stopped.",
+        );
+      }),
+    );
+  }, 20_000);
 });

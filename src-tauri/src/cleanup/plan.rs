@@ -50,9 +50,9 @@ fn modified_nanos(meta: &std::fs::Metadata) -> Option<u64> {
 
 impl TargetSnapshot {
     pub fn capture(path: &Path) -> Self {
-        let meta = std::fs::metadata(path).ok();
+        let meta = std::fs::symlink_metadata(path).ok();
         Self {
-            exists: path.exists(),
+            exists: meta.is_some(),
             logical_bytes: meta.as_ref().map(|m| m.len()).unwrap_or(0),
             modified_secs: meta
                 .as_ref()
@@ -304,9 +304,11 @@ pub fn build_plan(
         if eligibility_block(target, mode, policy).is_some() {
             continue;
         }
-        let parent = kept
-            .iter()
-            .find(|k| k.path != target.path && target.path.starts_with(&k.path));
+        let target_key = crate::safety::path_guard::normalize_key(&target.path);
+        let parent = kept.iter().find(|k| {
+            let k_key = crate::safety::path_guard::normalize_key(&k.path);
+            k_key != target_key && crate::safety::path_guard::is_within(&target_key, &k_key)
+        });
         if let Some(parent) = parent {
             covered.insert(target.id.clone(), parent.id.clone());
         } else {

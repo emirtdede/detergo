@@ -83,13 +83,16 @@ pub fn revalidate_evidence(
                 )));
             }
         }
-        for signature in &snapshot.content_hits {
-            if !marker_exists(target, signature) {
-                return Err(AppError::UnsafeDeleteTarget(format!(
-                    "Target content changed ({}); plan is invalid.",
-                    signature
-                )));
-            }
+    }
+
+    // Content signatures live inside the target itself and must always be
+    // re-validated even when no project/workspace root was recorded.
+    for signature in &snapshot.content_hits {
+        if !marker_exists(target, signature) {
+            return Err(AppError::UnsafeDeleteTarget(format!(
+                "Target content changed ({}); plan is invalid.",
+                signature
+            )));
         }
     }
 

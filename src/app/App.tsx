@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useEffect, useRef } from "react";
-import { ScanHeader } from "@/features/scan/ScanHeader";
 import { NavRail } from "@/features/shell/NavRail";
+import { WindowControls } from "@/components/layout/WindowControls";
 import { OverviewView } from "@/features/overview/OverviewView";
 import { ProjectsView } from "@/features/items/ProjectsView";
 import { SelectionActionBar } from "@/features/results/SelectionActionBar";
@@ -9,6 +9,7 @@ import { CleanupResultDialog } from "@/features/cleanup/CleanupResultDialog";
 import { CleanupProgressDock } from "@/features/cleanup/CleanupProgressDock";
 import { Toast } from "@/components/primitives/Toast";
 import { CloseGuardDialog } from "@/features/shell/CloseGuardDialog";
+import { OnboardingDialog } from "@/features/onboarding/OnboardingDialog";
 import {
   BridgeUnavailableScreen,
   useBridgeStatus,
@@ -76,6 +77,7 @@ const NAV_MAP: Record<string, AppView> = {
   navDocs: "docs",
   navHistory: "history",
   navSettings: "settings",
+  navAbout: "about",
 };
 
 const AppShell: React.FC = () => {
@@ -271,6 +273,25 @@ const AppShell: React.FC = () => {
       const prefs = usePreferencesStore.getState();
       const shortcuts = prefs.shortcuts ?? DEFAULT_SHORTCUTS;
 
+      // Sync keyboard accessibility zoom (Ctrl + +/-/0) with persisted uiScale.
+      if ((event.ctrlKey || event.metaKey) && !event.altKey) {
+        if (event.key === "+" || event.key === "=" || event.code === "NumpadAdd") {
+          event.preventDefault();
+          prefs.setUiScale((prefs.uiScale ?? 100) + 10);
+          return;
+        }
+        if (event.key === "-" || event.key === "_" || event.code === "NumpadSubtract") {
+          event.preventDefault();
+          prefs.setUiScale((prefs.uiScale ?? 100) - 10);
+          return;
+        }
+        if (event.key === "0" || event.code === "Numpad0") {
+          event.preventDefault();
+          prefs.setUiScale(100);
+          return;
+        }
+      }
+
       if (matchesShortcut(event, shortcuts.toggleSidebar)) {
         event.preventDefault();
         prefs.setSidebarMode(prefs.sidebarMode === "collapsed" ? "expanded" : "collapsed");
@@ -318,40 +339,46 @@ const AppShell: React.FC = () => {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  const isSplitView = view === "docs" || view === "settings" || view === "about";
+
   return (
     <div className="app-container">
       <a className="skip-link" href="#main">
         {ui.common.skipToContent}
       </a>
-      <ScanHeader />
       <div className="app-body">
         <NavRail />
-        <main
-          id="main"
-          tabIndex={-1}
-          className={`view-container ${
-            view === "docs"
-              ? "view-container--docs"
-              : view === "settings" || view === "about"
-                ? "view-container--split"
-                : ""
-          }`}
-        >
-          <PartialScanBanner />
-          <ScanWarningsBanner />
-          <StaleScanBanner />
-          <Suspense fallback={<ViewSkeleton />}>
-            {view === "overview" && <OverviewView />}
-            {view === "projects" && <ProjectsView />}
-            {view === "agents" && <AgentsView />}
-            {view === "caches" && <CachesView />}
-            {view === "system" && <SystemView />}
-            {view === "docs" && <DocsView />}
-            {view === "history" && <HistoryView />}
-            {view === "settings" && <SettingsView />}
-            {view === "about" && <AboutView />}
-          </Suspense>
-        </main>
+        <div className={`app-workspace ${isSplitView ? "app-workspace--split" : ""}`}>
+          <div className="app-titlebar-strip" data-tauri-drag-region="true">
+            <WindowControls />
+          </div>
+          <main
+            id="main"
+            tabIndex={-1}
+            className={`view-container ${
+              view === "docs"
+                ? "view-container--docs"
+                : view === "settings" || view === "about"
+                  ? "view-container--split"
+                  : ""
+            }`}
+          >
+            <PartialScanBanner />
+            <ScanWarningsBanner />
+            <StaleScanBanner />
+            <Suspense fallback={<ViewSkeleton view={view} />}>
+              {view === "overview" && <OverviewView />}
+              {view === "projects" && <ProjectsView />}
+              {view === "agents" && <AgentsView />}
+              {view === "caches" && <CachesView />}
+              {view === "system" && <SystemView />}
+              {view === "docs" && <DocsView />}
+              {view === "history" && <HistoryView />}
+              {view === "settings" && <SettingsView />}
+              {view === "about" && <AboutView />}
+            </Suspense>
+          </main>
+        </div>
       </div>
 
       <SelectionActionBar />
@@ -359,38 +386,14 @@ const AppShell: React.FC = () => {
       <CleanupResultDialog />
       <CleanupProgressDock />
       <CloseGuardDialog />
+      <OnboardingDialog />
       <Toast />
     </div>
   );
 };
 
-/**
- * The concept preview is a development-only harness. Keeping the branch in a
- * hook-free wrapper preserves the rules of hooks, and the `import.meta.env.DEV`
- * guard keeps the bundled harness out of production builds.
- */
-const conceptLoader = import.meta.env.DEV
-  ? () => import("@/features/concepts/ConceptContainer")
-  : null;
-
-const ConceptContainer = conceptLoader
-  ? lazy(() => conceptLoader().then((m) => ({ default: m.ConceptContainer })))
-  : null;
-
 export const App: React.FC = () => {
   const { status, retry } = useBridgeStatus();
-  const showConcept =
-    import.meta.env.DEV &&
-    typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).has("concept");
-
-  if (showConcept && ConceptContainer) {
-    return (
-      <Suspense fallback={null}>
-        <ConceptContainer />
-      </Suspense>
-    );
-  }
   // Render optimistically while the bridge resolves: the proxy queues calls and
   // the app only needs to be replaced when the bridge is definitively missing.
   if (status === "unavailable") {

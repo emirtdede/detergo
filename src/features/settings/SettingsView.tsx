@@ -1,135 +1,73 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
-  FolderOpen,
-  Plus,
-  ShieldCheck,
   Cpu,
-  X,
-  Check,
+  Eye,
+  Minus,
   Palette,
-  Bell,
-  Send,
+  Plus,
   RotateCcw,
-  Globe,
+  Settings,
+  ShieldCheck,
+  Sparkles,
 } from "lucide-react";
-import { notificationService } from "@/lib/notifications/notification-service";
-import { NotificationChannel } from "@/types";
 import { Button } from "@/components/primitives/Button";
 import { Switch } from "@/components/primitives/Switch";
 import { NumberField } from "@/components/primitives/NumberField";
 import { PageHeader } from "@/components/primitives/PageHeader";
-import { Dialog } from "@/components/primitives/Dialog";
-import { usePreferencesStore, SETTING_LIMITS } from "@/stores/preferences-store";
+import {
+  usePreferencesStore,
+  SETTING_LIMITS,
+  UI_SCALE_LIMITS,
+  UI_SCALE_PRESETS,
+} from "@/stores/preferences-store";
+import { CUSTOM_THEME_ID } from "@/lib/theme/custom-theme";
 import { useScanStore } from "@/stores/scan-store";
 import { useShallow } from "zustand/react/shallow";
 import { useUiStore } from "@/stores/ui-store";
-import { useUIText, resolveUiLocale, UIText, localizeAppError, getUIText } from "@/lib/ui-text";
+import { useUIText, resolveUiLocale, localizeAppError, getUIText } from "@/lib/ui-text";
 import { translateBackendText } from "@/lib/ui-text/backend-i18n";
 import { LANGUAGES_LIST } from "@/locales/languages";
 import { scannerApi } from "@/lib/tauri/scanner-api";
-import { countCatalogStats } from "@/lib/catalog-stats";
 import { normalizeWebhookUrl } from "@/lib/validation/webhook-url";
 import { classifyWebhookFailure, describeWebhookFailure } from "@/lib/errors/webhook-failure";
 import {
-  CatalogDto,
   BuildInfo,
-  SupportedLanguage,
-  ThemeMode,
-  THEME_MODES,
+  CatalogDto,
   DEFAULT_SHORTCUTS,
+  NotificationChannel,
+  NotificationPreferences,
+  SupportedLanguage,
 } from "@/types";
 import { comboFromEvent, validateShortcut } from "@/lib/shortcuts";
 import { log } from "@/lib/logging";
 import { APP_VERSION } from "@/lib/app-version";
 import { useSettingsSections } from "./settings-sections";
-import { AboutView } from "./AboutView";
 import { PrivacySection } from "./PrivacySection";
 import { UpdatePanel } from "./UpdatePanel";
 import { SettingsDiagnostics } from "./SettingsDiagnostics";
+import { SettingsNotificationsSection } from "./SettingsNotificationsSection";
+import { SettingsShortcutsSection } from "./SettingsShortcutsSection";
+import { SettingsAutomationSection } from "./SettingsAutomationSection";
+import { SettingsProtectionsSection } from "./SettingsProtectionsSection";
+import {
+  PROFILE_DEFAULTS,
+  PROFILE_KEYS,
+  profileLabel,
+  SettingsDialogs,
+  THEMES,
+  themeLabel,
+} from "./SettingsDialogs";
+import { ThemeQuickStrip } from "./CustomThemeBuilder";
+import { AppIconPicker } from "./AppIconPicker";
 import "../items/items.css";
 import "../shell/shell.css";
 import "./settings.css";
 
-// Shortcuts are dynamically localized inside SettingsView via shortcutDefs
-
-const THEMES: readonly ThemeMode[] = THEME_MODES;
-
-function themeLabel(theme: ThemeMode | string, ui: UIText): string {
-  const t = ui.settings;
-  const isDark = theme.startsWith("dark");
-  const modeLabel = isDark ? t.themeDark || "Dark" : t.themeLight || "Light";
-
-  const nameMap: Record<string, string> = {
-    black: t.themeBlack || "Black",
-    gray: t.themeGray || "Gray",
-    blue: t.themeBlue || "Blue",
-    purple: t.themePurple || "Purple",
-    green: t.themeGreen || "Green",
-    red: t.themeRed || "Red",
-    orange: t.themeOrange || "Orange",
-    yellow: t.themeYellow || "Yellow",
-    white: t.themeWhite || "White",
-    transparent: t.themeTransparent || "Transparent",
-  };
-
-  const suffix = theme.replace(/^(dark|light)-/, "");
-  const colorName = nameMap[suffix] ?? suffix;
-  return `${modeLabel} - ${colorName}`;
-}
-
-const PROFILE_DEFAULTS: Record<
-  string,
-  { maxDepth: number; maxCandidates: number; timeoutMinutes: number }
-> = {
-  fast: { maxDepth: 16, maxCandidates: 10000, timeoutMinutes: 5 },
-  balanced: { maxDepth: 32, maxCandidates: 50000, timeoutMinutes: 15 },
-  full: { maxDepth: 40, maxCandidates: 80000, timeoutMinutes: 20 },
-  thorough: { maxDepth: 48, maxCandidates: 100000, timeoutMinutes: 25 },
-  deep: { maxDepth: 64, maxCandidates: 200000, timeoutMinutes: 30 },
-  maximum: { maxDepth: 128, maxCandidates: 500000, timeoutMinutes: 60 },
-};
-
-/** Ordered list for the profile picker; the defaults above stay the source. */
-const PROFILE_KEYS = ["fast", "balanced", "full", "thorough", "deep", "maximum"] as const;
-
-function profileLabel(profile: string, ui: UIText): string {
-  const labels: Record<string, string> = {
-    fast: ui.settings.profileFast,
-    balanced: ui.settings.profileBalanced,
-    full: ui.settings.profileFull,
-    thorough: ui.settings.profileThorough,
-    deep: ui.settings.profileDeep,
-    maximum: ui.settings.profileMaximum,
-  };
-  return labels[profile] ?? profile;
-}
-
-function profileHint(profile: string, ui: UIText): string {
-  const hints: Record<string, string> = {
-    fast: ui.settings.profileFastHint,
-    balanced: ui.settings.profileBalancedHint,
-    full: ui.settings.profileFullHint,
-    thorough: ui.settings.profileThoroughHint,
-    deep: ui.settings.profileDeepHint,
-    maximum: ui.settings.profileMaximumHint,
-  };
-  return hints[profile] ?? "";
-}
-
-/**
- * Validates a typed webhook draft and writes it through the store.
- *
- * Shared by the draft-flush effect, the explicit save and the test button so
- * all three accept exactly the same values. The write is fire-and-forget (the
- * user may already be leaving the page), but a failure is logged and, when the
- * user is still looking at the form, surfaced as a toast: a URL that silently
- * did not persist made every later webhook look broken.
- */
 function persistWebhookDraft(draft: string, reportFailure = false): boolean {
-  const result = normalizeWebhookUrl(draft);
-  if (!result.ok) return false;
   const store = usePreferencesStore.getState();
+  const result = normalizeWebhookUrl(draft, { allowPrivate: store.allowPrivateWebhooks ?? false });
+  if (!result.ok) return false;
   store.updateSettings({ webhookUrl: result.value });
   void store.persistSettings().catch((err) => {
     log.error("Could not persist the webhook draft", err);
@@ -148,12 +86,13 @@ function persistWebhookDraft(draft: string, reportFailure = false): boolean {
 
 export const SettingsView: React.FC = () => {
   const ui = useUIText();
-  // A no-selector subscription re-rendered the whole Settings page on every
-  // unrelated preference write (the item table's sort, a new recent location,
-  // favorites). Subscribe only to the fields this page reads.
   const prefs = usePreferencesStore(
     useShallow((s) => ({
       theme: s.theme,
+      customTheme: s.customTheme,
+      appIcon: s.appIcon,
+      uiScale: s.uiScale,
+      highContrast: s.highContrast,
       language: s.language,
       reduceMotion: s.reduceMotion,
       sidebarMode: s.sidebarMode,
@@ -174,9 +113,14 @@ export const SettingsView: React.FC = () => {
       webhookUrl: s.webhookUrl,
       webhookOnScan: s.webhookOnScan,
       webhookOnClean: s.webhookOnClean,
+      allowPrivateWebhooks: s.allowPrivateWebhooks,
       agentPolicy: s.agentPolicy,
       updateSettings: s.updateSettings,
       setTheme: s.setTheme,
+      setCustomTheme: s.setCustomTheme,
+      setAppIcon: s.setAppIcon,
+      setUiScale: s.setUiScale,
+      setHighContrast: s.setHighContrast,
       setLanguage: s.setLanguage,
       setReduceMotion: s.setReduceMotion,
       setSidebarMode: s.setSidebarMode,
@@ -189,32 +133,34 @@ export const SettingsView: React.FC = () => {
   const showToast = useUiStore((s) => s.showToast);
   const section = useUiStore((s) => s.settingsSection);
   const setSettingsSection = useUiStore((s) => s.setSettingsSection);
+  const openOnboarding = useUiStore((s) => s.openOnboarding);
   const scanStatus = useScanStore((s) => s.status);
   const scanBusy =
     scanStatus === "scanning" || scanStatus === "measuring" || scanStatus === "cancelling";
-  const [protectedInput, setProtectedInput] = useState("");
-  const [excludedInput, setExcludedInput] = useState("");
+
   const [catalog, setCatalog] = useState<CatalogDto | null>(null);
   const [buildInfo, setBuildInfo] = useState<BuildInfo | null>(null);
   const [appearanceOpen, setAppearanceOpen] = useState(false);
-  const [appearanceTab, setAppearanceTab] = useState<"theme" | "language">("theme");
+  const [appearanceTab, setAppearanceTab] = useState<"theme" | "icon" | "language">("theme");
   const [profileOpen, setProfileOpen] = useState(false);
+  const [testingWebhook, setTestingWebhook] = useState(false);
+  const [webhookTestStatus, setWebhookTestStatus] = useState<{
+    success: boolean;
+    text: string;
+  } | null>(null);
+  const [webhookDraft, setWebhookDraft] = useState<string | null>(null);
+  const [recordingId, setRecordingId] = useState<string | null>(null);
+  const [conflictWarning, setConflictWarning] = useState<string | null>(null);
 
   useEffect(() => {
-    // The catalogue is a large payload; leaving Settings before it lands must
-    // not write state into a component that is already gone (and must not
-    // overwrite a newer load after a fast remount).
     let cancelled = false;
     scannerApi
       .getCatalog()
-      .then((catalog) => {
-        if (!cancelled) setCatalog(catalog);
+      .then((cat) => {
+        if (!cancelled) setCatalog(cat);
       })
       .catch((err) => {
         if (cancelled) return;
-        // Keep the raw error out of the UI: it may contain filesystem paths.
-        // The About card already renders a localized backend note, so a toast
-        // with the localized message is the only place the user needs it.
         log.warn("Catalog could not be loaded", err);
         showToast(
           `${getUIText().errors.title}: ${localizeAppError(err, getUIText())}`,
@@ -242,31 +188,12 @@ export const SettingsView: React.FC = () => {
     };
   }, []);
 
-  const catalogStats = useMemo(() => countCatalogStats(catalog?.rules ?? []), [catalog]);
-
-  const [testingWebhook, setTestingWebhook] = useState(false);
-  const [webhookTestStatus, setWebhookTestStatus] = useState<{
-    success: boolean;
-    text: string;
-  } | null>(null);
-  // The URL is typed, not saved on every keystroke: a half-finished value like
-  // `https://` was written to the settings file and then retried by every
-  // notification. `null` means "follow the persisted value".
-  const [webhookDraft, setWebhookDraft] = useState<string | null>(null);
-  // A draft must survive leaving the settings page; otherwise a typed URL is
-  // silently lost unless the user remembers to press Save.
   const webhookDraftRef = useRef(webhookDraft);
   useEffect(() => {
-    // Written in an effect, not during render: a render-phase ref mutation is
-    // unsafe under StrictMode/concurrent rendering.
     webhookDraftRef.current = webhookDraft;
   }, [webhookDraft]);
+
   useEffect(() => {
-    // A draft must survive leaving the settings page. Committing it on unmount
-    // alone was not enough: the webview can be torn down before an async IPC
-    // round-trip completes, and a rejected write became an unhandled rejection
-    // that lost the URL without telling anyone. Flush on `pagehide` as well and
-    // report failures where the user can still see them.
     const flushDraft = (reportIfInvalid: boolean) => {
       const draft = webhookDraftRef.current;
       if (draft === null) return;
@@ -289,8 +216,6 @@ export const SettingsView: React.FC = () => {
       flushDraft(true);
     };
   }, []);
-  const [recordingId, setRecordingId] = useState<string | null>(null);
-  const [conflictWarning, setConflictWarning] = useState<string | null>(null);
 
   const shortcutDefs = useMemo(
     () => [
@@ -317,82 +242,6 @@ export const SettingsView: React.FC = () => {
     [ui.settings, ui.nav.system, ui.system.subtitle],
   );
 
-  const updateNotify = (
-    key: keyof NonNullable<typeof prefs.notifications>,
-    channel: NotificationChannel | boolean,
-  ) => {
-    const current = prefs.notifications ?? {
-      scanComplete: "both",
-      cleanComplete: "both",
-      diskPressure: "both",
-      processLock: "in_app",
-      automationWebhook: "both",
-      soundEnabled: true,
-    };
-    save({
-      notifications: {
-        ...current,
-        [key]: channel,
-      },
-    });
-  };
-
-  /**
-   * Persists the typed webhook only when it is a usable absolute http(s) URL.
-   * Returns false when the draft is invalid so callers (test button) stop.
-   */
-  const commitWebhook = (): boolean => {
-    if (webhookDraft === null) return true;
-    // The user is still on the form here, so a failed write is worth a toast.
-    if (!persistWebhookDraft(webhookDraft, true)) {
-      showToast(ui.settings.webhookUrlEmpty, "warning");
-      return false;
-    }
-    setWebhookDraft(null);
-    return true;
-  };
-
-  const handleTestWebhook = async () => {
-    if (!commitWebhook()) return;
-    const url = usePreferencesStore.getState().webhookUrl?.trim();
-    if (!url) {
-      showToast(ui.settings.webhookUrlEmpty, "warning");
-      return;
-    }
-    setTestingWebhook(true);
-    setWebhookTestStatus(null);
-    try {
-      const result = await scannerApi.testWebhook(url, {
-        event: "test_ping",
-        timestamp: new Date().toISOString(),
-        product: "Dev Cleaner by Vellium",
-        message: ui.settings.webhookSent,
-      });
-      if (result.ok) {
-        setWebhookTestStatus({ success: true, text: ui.settings.webhookSent });
-        showToast(ui.settings.webhookSent, "success");
-      } else {
-        // `result.message` comes from `reqwest` and can embed the full webhook
-        // URL (whose path is the bearer token) plus DNS/TLS detail. Only a
-        // classified, token-free reason is allowed into the UI.
-        const text = describeWebhookFailure(classifyWebhookFailure(result.status), ui);
-        setWebhookTestStatus({ success: false, text });
-        showToast(`${ui.settings.webhookTitle}: ${text}`, "error");
-        log.debug("Webhook test rejected", { status: result.status });
-      }
-    } catch (err) {
-      setWebhookTestStatus({ success: false, text: localizeAppError(err, ui) });
-      showToast(`${ui.settings.webhookTitle}: ${localizeAppError(err, ui)}`, "error");
-    } finally {
-      setTestingWebhook(false);
-    }
-  };
-
-  const sections = useSettingsSections();
-  const uiLanguages = useMemo(() => LANGUAGES_LIST, []);
-
-  const activeSection = sections.find((s) => s.id === section) ?? sections[0];
-
   useEffect(() => {
     if (!recordingId) return;
 
@@ -407,7 +256,6 @@ export const SettingsView: React.FC = () => {
       }
 
       const combo = comboFromEvent(e);
-      // A bare modifier (`Control`, `Shift`, …) is not a chord yet.
       if (!combo) return;
 
       const validity = validateShortcut(combo);
@@ -434,8 +282,6 @@ export const SettingsView: React.FC = () => {
       setConflictWarning(null);
       prefs.setShortcut(recordingId, combo);
       setRecordingId(null);
-      // Report success only after the write is durable; a failed save used to
-      // show "updated" followed by no persisted shortcut after a restart.
       void (async () => {
         try {
           await usePreferencesStore.getState().persistSettings();
@@ -459,11 +305,76 @@ export const SettingsView: React.FC = () => {
     }
   };
 
-  /** Applies one of the scan-profile presets (depth/candidates/timeout). */
+  const updateNotify = (
+    key: keyof NotificationPreferences,
+    channel: NotificationChannel | boolean,
+  ) => {
+    const current = prefs.notifications ?? {
+      scanComplete: "both",
+      cleanComplete: "both",
+      diskPressure: "both",
+      processLock: "in_app",
+      automationWebhook: "both",
+      soundEnabled: true,
+    };
+    void save({ notifications: { ...current, [key]: channel } });
+  };
+
+  const commitWebhook = (): boolean => {
+    if (webhookDraft === null) return true;
+    if (!persistWebhookDraft(webhookDraft, true)) {
+      showToast(ui.settings.webhookUrlEmpty, "warning");
+      return false;
+    }
+    setWebhookDraft(null);
+    return true;
+  };
+
+  const handleTestWebhook = async () => {
+    if (!commitWebhook()) return;
+    const storeState = usePreferencesStore.getState();
+    const url = storeState.webhookUrl?.trim();
+    if (!url) {
+      showToast(ui.settings.webhookUrlEmpty, "warning");
+      return;
+    }
+    setTestingWebhook(true);
+    setWebhookTestStatus(null);
+    try {
+      const result = await scannerApi.testWebhook(
+        url,
+        {
+          event: "test_ping",
+          timestamp: new Date().toISOString(),
+          product: "Detergo by Vellium",
+          message: ui.settings.webhookSent,
+        },
+        storeState.allowPrivateWebhooks ?? false,
+      );
+      if (result.ok) {
+        setWebhookTestStatus({ success: true, text: ui.settings.webhookSent });
+        showToast(ui.settings.webhookSent, "success");
+      } else {
+        const text = describeWebhookFailure(classifyWebhookFailure(result.status), ui);
+        setWebhookTestStatus({ success: false, text });
+        showToast(`${ui.settings.webhookTitle}: ${text}`, "error");
+        log.debug("Webhook test rejected", { status: result.status });
+      }
+    } catch (err) {
+      setWebhookTestStatus({ success: false, text: localizeAppError(err, ui) });
+      showToast(`${ui.settings.webhookTitle}: ${localizeAppError(err, ui)}`, "error");
+    } finally {
+      setTestingWebhook(false);
+    }
+  };
+
   const setProfile = (profile: string) => {
     const defaults = PROFILE_DEFAULTS[profile] ?? PROFILE_DEFAULTS.balanced;
-    save({ scanProfile: profile, ...defaults });
+    void save({ scanProfile: profile, ...defaults });
   };
+
+  const sections = useSettingsSections();
+  const activeSection = sections.find((s) => s.id === section) ?? sections[0];
 
   const sectionGroups = useMemo(
     () => [
@@ -512,8 +423,8 @@ export const SettingsView: React.FC = () => {
     <div className="split-layout settings-split-layout">
       <aside className="split-sidebar" aria-label={ui.nav.settings}>
         <div className="split-sidebar-header">
+          <Settings size={18} className="split-sidebar-header-icon" aria-hidden="true" />
           <h2 className="split-sidebar-title">{ui.nav.settings}</h2>
-          <p className="split-sidebar-subtitle">{ui.settings.subtitle}</p>
         </div>
 
         <div
@@ -562,17 +473,12 @@ export const SettingsView: React.FC = () => {
               <summary>
                 <AlertTriangle size={13} /> {ui.about.kpiCatalog} · {ui.errors.title}
               </summary>
-              {/* The raw error comes from the backend, so it is translated through
-                  the shared backend dictionary before being shown. */}
               <p style={{ margin: "var(--space-2) 0 0" }}>
                 {translateBackendText(catalog.error ?? "", prefs.language)}
               </p>
             </details>
           )}
 
-          {/* Shared Bento KPI Strip for Settings. Each card is the shortcut to the
-              control it summarises: appearance/language and the scan profile open a
-              focused dialog, security jumps to the protections tab. */}
           <div className="nc-bento-strip nc-bento-strip--3">
             <button
               type="button"
@@ -593,6 +499,7 @@ export const SettingsView: React.FC = () => {
                 <span className="nc-kpi-card-value">{themeLabel(prefs.theme, ui)}</span>
                 <span className="nc-kpi-card-sub">
                   {ui.settings.language}: {resolveUiLocale(prefs.language).toUpperCase()} ·{" "}
+                  {prefs.uiScale}% ·{" "}
                   {prefs.reduceMotion ? ui.settings.reducedMotion : ui.settings.standardMotion}
                 </span>
               </div>
@@ -651,84 +558,205 @@ export const SettingsView: React.FC = () => {
             aria-labelledby={`settings-tab-${activeSection.id}`}
           >
             {activeSection.id === "general" && (
-              <section className="settings-card">
-                <label className="form-row">
-                  <span>{ui.settings.theme}</span>
-                  <select value={prefs.theme} onChange={(e) => prefs.setTheme(e.target.value)}>
-                    {THEMES.map((theme) => (
-                      <option key={theme} value={theme}>
-                        {themeLabel(theme, ui)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="form-row">
-                  <span>{ui.settings.language}</span>
-                  <select
-                    value={resolveUiLocale(prefs.language)}
-                    onChange={(e) => prefs.setLanguage(e.target.value as SupportedLanguage)}
-                  >
-                    {uiLanguages.map((language) => (
-                      <option key={language.id} value={language.id}>
-                        {language.nativeName}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div className="form-row">
-                  <span>{ui.settings.reduceMotion}</span>
-                  <Switch
-                    checked={prefs.reduceMotion}
-                    onLabel={ui.common.on}
-                    offLabel={ui.common.off}
-                    aria-label={ui.settings.reduceMotion}
-                    onChange={(v) => prefs.setReduceMotion(v)}
+              <>
+                <section className="settings-card">
+                  <label className="form-row">
+                    <span>{ui.settings.theme}</span>
+                    <select value={prefs.theme} onChange={(e) => prefs.setTheme(e.target.value)}>
+                      {THEMES.map((theme) => (
+                        <option key={theme} value={theme}>
+                          {themeLabel(theme, ui)}
+                        </option>
+                      ))}
+                      <option value={CUSTOM_THEME_ID}>{ui.settings.themeCustom}</option>
+                    </select>
+                  </label>
+
+                  <ThemeQuickStrip
+                    ui={ui}
+                    theme={prefs.theme}
+                    customTheme={prefs.customTheme}
+                    themes={THEMES}
+                    themeLabelFn={themeLabel}
+                    onSelectTheme={prefs.setTheme}
+                    onChangeCustomTheme={prefs.setCustomTheme}
                   />
-                </div>
-                <label className="form-row">
-                  <span>{ui.settings.sidebar}</span>
-                  <select
-                    value={prefs.sidebarMode}
-                    onChange={(e) =>
-                      prefs.setSidebarMode(
-                        e.target.value === "collapsed" ? "collapsed" : "expanded",
-                      )
-                    }
-                  >
-                    <option value="expanded">{ui.settings.sidebarExpanded}</option>
-                    <option value="collapsed">{ui.settings.sidebarCollapsed}</option>
-                  </select>
-                </label>
-                <label className="form-row">
-                  <span>{ui.settings.closeAction}</span>
-                  <select
-                    value={prefs.closeAction}
-                    onChange={(e) =>
-                      prefs.setCloseAction(
-                        e.target.value === "tray" || e.target.value === "quit"
-                          ? e.target.value
-                          : "ask",
-                      )
-                    }
-                  >
-                    <option value="ask">{ui.settings.closeAsk}</option>
-                    <option value="tray">{ui.settings.closeTray}</option>
-                    <option value="quit">{ui.settings.closeQuit}</option>
-                  </select>
-                </label>
-                <label className="form-row">
-                  <span>{ui.settings.cacheMeasure}</span>
-                  <select
-                    value={prefs.cacheMeasureMode}
-                    onChange={(e) =>
-                      prefs.setCacheMeasureMode(e.target.value === "full" ? "full" : "fast")
-                    }
-                  >
-                    <option value="fast">{ui.settings.cacheMeasureFast}</option>
-                    <option value="full">{ui.settings.cacheMeasureFull}</option>
-                  </select>
-                </label>
-              </section>
+
+                  <label className="form-row">
+                    <span>{ui.settings.language}</span>
+                    <select
+                      value={resolveUiLocale(prefs.language)}
+                      onChange={(e) => prefs.setLanguage(e.target.value as SupportedLanguage)}
+                    >
+                      {LANGUAGES_LIST.map((language) => (
+                        <option key={language.id} value={language.id}>
+                          {language.nativeName}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="form-row">
+                    <span>{ui.settings.sidebar}</span>
+                    <select
+                      value={prefs.sidebarMode}
+                      onChange={(e) =>
+                        prefs.setSidebarMode(
+                          e.target.value === "collapsed" ? "collapsed" : "expanded",
+                        )
+                      }
+                    >
+                      <option value="expanded">{ui.settings.sidebarExpanded}</option>
+                      <option value="collapsed">{ui.settings.sidebarCollapsed}</option>
+                    </select>
+                  </label>
+                  <label className="form-row">
+                    <span>{ui.settings.closeAction}</span>
+                    <select
+                      value={prefs.closeAction}
+                      onChange={(e) =>
+                        prefs.setCloseAction(
+                          e.target.value === "tray" || e.target.value === "quit"
+                            ? e.target.value
+                            : "ask",
+                        )
+                      }
+                    >
+                      <option value="ask">{ui.settings.closeAsk}</option>
+                      <option value="tray">{ui.settings.closeTray}</option>
+                      <option value="quit">{ui.settings.closeQuit}</option>
+                    </select>
+                  </label>
+                  <label className="form-row">
+                    <span>{ui.settings.cacheMeasure}</span>
+                    <select
+                      value={prefs.cacheMeasureMode}
+                      onChange={(e) =>
+                        prefs.setCacheMeasureMode(e.target.value === "full" ? "full" : "fast")
+                      }
+                    >
+                      <option value="fast">{ui.settings.cacheMeasureFast}</option>
+                      <option value="full">{ui.settings.cacheMeasureFull}</option>
+                    </select>
+                  </label>
+                </section>
+
+                <section className="settings-card" aria-label={ui.settings.appIconTitle}>
+                  <AppIconPicker
+                    ui={ui}
+                    appIcon={prefs.appIcon}
+                    activeTheme={prefs.theme}
+                    customTheme={prefs.customTheme}
+                    themes={THEMES}
+                    themeLabelFn={themeLabel}
+                    onSelectAppIcon={prefs.setAppIcon}
+                  />
+                </section>
+
+                <section className="settings-card" aria-label={ui.settings.accessibilityTitle}>
+                  <div className="settings-card-section-head">
+                    <h3 className="settings-group-title">
+                      <Eye size={15} aria-hidden="true" />
+                      <span>{ui.settings.accessibilityTitle}</span>
+                    </h3>
+                    <p className="settings-hint">{ui.settings.accessibilityHint}</p>
+                  </div>
+
+                  <div className="form-row form-row--wrap">
+                    <div className="form-row-copy">
+                      <span className="form-row-label">{ui.settings.uiScale}</span>
+                      <span className="settings-hint">{ui.settings.uiScaleHint}</span>
+                    </div>
+                    <div className="zoom-controls" role="group" aria-label={ui.settings.uiScale}>
+                      <div className="zoom-stepper">
+                        <button
+                          type="button"
+                          className="zoom-step-btn"
+                          aria-label={ui.common.decrease}
+                          disabled={prefs.uiScale <= UI_SCALE_LIMITS.min}
+                          onClick={() => prefs.setUiScale(prefs.uiScale - 10)}
+                        >
+                          <Minus size={14} aria-hidden="true" />
+                        </button>
+                        <span className="zoom-value-badge" data-testid="ui-scale-value">
+                          {prefs.uiScale}%
+                        </span>
+                        <button
+                          type="button"
+                          className="zoom-step-btn"
+                          aria-label={ui.common.increase}
+                          disabled={prefs.uiScale >= UI_SCALE_LIMITS.max}
+                          onClick={() => prefs.setUiScale(prefs.uiScale + 10)}
+                        >
+                          <Plus size={14} aria-hidden="true" />
+                        </button>
+                        {prefs.uiScale !== 100 && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            icon={<RotateCcw size={12} />}
+                            onClick={() => prefs.setUiScale(100)}
+                          >
+                            {ui.settings.uiScaleReset}
+                          </Button>
+                        )}
+                      </div>
+                      <div className="zoom-presets">
+                        {UI_SCALE_PRESETS.map((preset) => (
+                          <button
+                            key={preset}
+                            type="button"
+                            className={`zoom-preset-pill ${prefs.uiScale === preset ? "is-active" : ""}`}
+                            aria-pressed={prefs.uiScale === preset}
+                            onClick={() => prefs.setUiScale(preset)}
+                          >
+                            {preset}%
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-row-copy">
+                      <span className="form-row-label">{ui.settings.highContrast}</span>
+                      <span className="settings-hint">{ui.settings.highContrastHint}</span>
+                    </div>
+                    <Switch
+                      checked={prefs.highContrast}
+                      onLabel={ui.common.on}
+                      offLabel={ui.common.off}
+                      aria-label={ui.settings.highContrast}
+                      onChange={(v) => prefs.setHighContrast(v)}
+                    />
+                  </div>
+
+                  <div className="form-row">
+                    <span className="form-row-label">{ui.settings.reduceMotion}</span>
+                    <Switch
+                      checked={prefs.reduceMotion}
+                      onLabel={ui.common.on}
+                      offLabel={ui.common.off}
+                      aria-label={ui.settings.reduceMotion}
+                      onChange={(v) => prefs.setReduceMotion(v)}
+                    />
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-row-copy">
+                      <span className="form-row-label">{ui.settings.welcomeGuideTitle}</span>
+                      <span className="settings-hint">{ui.settings.welcomeGuideHint}</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      icon={<Sparkles size={13} />}
+                      onClick={openOnboarding}
+                    >
+                      {ui.settings.welcomeGuideOpen}
+                    </Button>
+                  </div>
+                </section>
+              </>
             )}
 
             {activeSection.id === "scan" && (
@@ -755,7 +783,7 @@ export const SettingsView: React.FC = () => {
                     ariaLabel={ui.settings.maxDepth}
                     increaseLabel={ui.common.increase}
                     decreaseLabel={ui.common.decrease}
-                    onCommit={(v) => save({ maxDepth: v })}
+                    onCommit={(v) => void save({ maxDepth: v })}
                   />
                 </div>
                 <div className="form-row">
@@ -768,7 +796,7 @@ export const SettingsView: React.FC = () => {
                     ariaLabel={ui.settings.maxCandidates}
                     increaseLabel={ui.common.increase}
                     decreaseLabel={ui.common.decrease}
-                    onCommit={(v) => save({ maxCandidates: v })}
+                    onCommit={(v) => void save({ maxCandidates: v })}
                   />
                 </div>
                 <div className="form-row">
@@ -780,7 +808,7 @@ export const SettingsView: React.FC = () => {
                     ariaLabel={ui.settings.timeout}
                     increaseLabel={ui.common.increase}
                     decreaseLabel={ui.common.decrease}
-                    onCommit={(v) => save({ timeoutMinutes: v })}
+                    onCommit={(v) => void save({ timeoutMinutes: v })}
                   />
                 </div>
                 <div className="form-row">
@@ -792,462 +820,77 @@ export const SettingsView: React.FC = () => {
                     ariaLabel={ui.settings.minSize}
                     increaseLabel={ui.common.increase}
                     decreaseLabel={ui.common.decrease}
-                    onCommit={(v) => save({ minSizeBytes: v * 1024 * 1024 })}
+                    onCommit={(v) => void save({ minSizeBytes: v * 1024 * 1024 })}
                   />
                 </div>
               </section>
             )}
 
             {activeSection.id === "notifications" && (
-              <section className="settings-card">
-                <div className="settings-card-toolbar">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    icon={<Bell size={13} />}
-                    onClick={() => notificationService.testDesktopNotification()}
-                  >
-                    {ui.settings.testDesktop}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => notificationService.testInAppNotification()}
-                  >
-                    {ui.settings.testInApp}
-                  </Button>
-                </div>
-
-                <div className="form-row">
-                  <div>
-                    <span>{ui.settings.notifSounds}</span>
-                    <p className="settings-hint">{ui.settings.notifSoundsHint}</p>
-                  </div>
-                  <Switch
-                    checked={prefs.notifications?.soundEnabled ?? true}
-                    onChange={(checked) => updateNotify("soundEnabled", checked)}
-                    aria-label={ui.settings.notifSounds}
-                  />
-                </div>
-
-                <h4 className="settings-group-title" style={{ marginTop: 20, marginBottom: 8 }}>
-                  {ui.settings.eventMatrixTitle}
-                </h4>
-
-                <label className="form-row">
-                  <div>
-                    <span>{ui.settings.evScanDone}</span>
-                    <p className="settings-hint">{ui.settings.evScanDoneHint}</p>
-                  </div>
-                  <select
-                    value={prefs.notifications?.scanComplete ?? "both"}
-                    onChange={(e) =>
-                      updateNotify("scanComplete", e.target.value as NotificationChannel)
-                    }
-                  >
-                    <option value="both">{ui.settings.chBoth}</option>
-                    <option value="in_app">{ui.settings.chInApp}</option>
-                    <option value="desktop">{ui.settings.chDesktop}</option>
-                    <option value="none">{ui.settings.chNone}</option>
-                  </select>
-                </label>
-
-                <label className="form-row">
-                  <div>
-                    <span>{ui.settings.evCleanDone}</span>
-                    <p className="settings-hint">{ui.settings.evCleanDoneHint}</p>
-                  </div>
-                  <select
-                    value={prefs.notifications?.cleanComplete ?? "both"}
-                    onChange={(e) =>
-                      updateNotify("cleanComplete", e.target.value as NotificationChannel)
-                    }
-                  >
-                    <option value="both">{ui.settings.chBoth}</option>
-                    <option value="in_app">{ui.settings.chInApp}</option>
-                    <option value="desktop">{ui.settings.chDesktop}</option>
-                    <option value="none">{ui.settings.chNone}</option>
-                  </select>
-                </label>
-
-                <label className="form-row">
-                  <div>
-                    <span>{ui.settings.evDiskAlert}</span>
-                    <p className="settings-hint">{ui.settings.evDiskAlertHint}</p>
-                  </div>
-                  <select
-                    value={prefs.notifications?.diskPressure ?? "both"}
-                    onChange={(e) =>
-                      updateNotify("diskPressure", e.target.value as NotificationChannel)
-                    }
-                  >
-                    <option value="both">{ui.settings.chBoth}</option>
-                    <option value="in_app">{ui.settings.chInApp}</option>
-                    <option value="desktop">{ui.settings.chDesktop}</option>
-                    <option value="none">{ui.settings.chNone}</option>
-                  </select>
-                </label>
-
-                <label className="form-row">
-                  <div>
-                    <span>{ui.settings.evLockConflict}</span>
-                    <p className="settings-hint">{ui.settings.evLockConflictHint}</p>
-                  </div>
-                  <select
-                    value={prefs.notifications?.processLock ?? "in_app"}
-                    onChange={(e) =>
-                      updateNotify("processLock", e.target.value as NotificationChannel)
-                    }
-                  >
-                    <option value="both">{ui.settings.chBoth}</option>
-                    <option value="in_app">{ui.settings.chInApp}</option>
-                    <option value="desktop">{ui.settings.chDesktop}</option>
-                    <option value="none">{ui.settings.chNone}</option>
-                  </select>
-                </label>
-
-                <label className="form-row">
-                  <div>
-                    <span>{ui.settings.evAutomation}</span>
-                    <p className="settings-hint">{ui.settings.evAutomationHint}</p>
-                  </div>
-                  <select
-                    value={prefs.notifications?.automationWebhook ?? "both"}
-                    onChange={(e) =>
-                      updateNotify("automationWebhook", e.target.value as NotificationChannel)
-                    }
-                  >
-                    <option value="both">{ui.settings.chBoth}</option>
-                    <option value="in_app">{ui.settings.chInApp}</option>
-                    <option value="desktop">{ui.settings.chDesktop}</option>
-                    <option value="none">{ui.settings.chNone}</option>
-                  </select>
-                </label>
-              </section>
+              <SettingsNotificationsSection
+                ui={ui}
+                notifications={prefs.notifications}
+                onUpdate={updateNotify}
+              />
             )}
 
             {activeSection.id === "shortcuts" && (
-              <section className="settings-card">
-                <div className="settings-card-toolbar">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      prefs.resetShortcuts();
-                      setConflictWarning(null);
-                      setRecordingId(null);
-                      void (async () => {
-                        try {
-                          await usePreferencesStore.getState().persistSettings();
-                          showToast(ui.settings.toastShortcutsReset, "info", 2000);
-                        } catch (err) {
-                          showToast(
-                            `${ui.settings.saveError}: ${localizeAppError(err, ui)}`,
-                            "error",
-                            6000,
-                          );
-                        }
-                      })();
-                    }}
-                  >
-                    <RotateCcw size={13} style={{ marginRight: 6 }} />
-                    {ui.settings.resetShortcuts}
-                  </Button>
-                </div>
-
-                {conflictWarning && (
-                  <div className="shortcut-conflict-alert" role="alert">
-                    <AlertTriangle size={15} />
-                    <span>{conflictWarning}</span>
-                  </div>
-                )}
-
-                <div className="shortcuts-table-wrap">
-                  <table className="shortcuts-table">
-                    <thead>
-                      <tr>
-                        <th style={{ width: "35%" }}>{ui.settings.thAction}</th>
-                        <th style={{ width: "40%" }}>{ui.settings.thDesc}</th>
-                        <th style={{ width: "25%", textAlign: "right" }}>
-                          {ui.settings.thShortcut}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {shortcutDefs.map((def) => {
-                        const currentShortcut =
-                          (prefs.shortcuts ?? DEFAULT_SHORTCUTS)[def.id] ??
-                          DEFAULT_SHORTCUTS[def.id];
-                        const isRecording = recordingId === def.id;
-
-                        return (
-                          <tr key={def.id}>
-                            <td>
-                              <span className="shortcut-action-name">{def.label}</span>
-                            </td>
-                            <td>
-                              <span className="shortcut-action-hint">{def.hint}</span>
-                            </td>
-                            <td style={{ textAlign: "right" }}>
-                              <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                                {isRecording ? (
-                                  <span className="shortcut-recording-badge">
-                                    {ui.settings.pressKey}
-                                  </span>
-                                ) : (
-                                  <span className="shortcut-key-badge">{currentShortcut}</span>
-                                )}
-
-                                <Button
-                                  variant={isRecording ? "primary" : "secondary"}
-                                  size="sm"
-                                  onClick={() => {
-                                    if (isRecording) {
-                                      setRecordingId(null);
-                                      setConflictWarning(null);
-                                    } else {
-                                      setConflictWarning(null);
-                                      setRecordingId(def.id);
-                                    }
-                                  }}
-                                >
-                                  {isRecording ? ui.common.cancel : ui.settings.changeKey}
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
+              <SettingsShortcutsSection
+                ui={ui}
+                shortcuts={prefs.shortcuts}
+                shortcutDefs={shortcutDefs}
+                recordingId={recordingId}
+                conflictWarning={conflictWarning}
+                onStartStopRecord={(id) => {
+                  setConflictWarning(null);
+                  setRecordingId(id);
+                }}
+                onResetShortcuts={() => {
+                  prefs.resetShortcuts();
+                  setConflictWarning(null);
+                  setRecordingId(null);
+                  void (async () => {
+                    try {
+                      await usePreferencesStore.getState().persistSettings();
+                      showToast(ui.settings.toastShortcutsReset, "info", 2000);
+                    } catch (err) {
+                      showToast(
+                        `${ui.settings.saveError}: ${localizeAppError(err, ui)}`,
+                        "error",
+                        6000,
+                      );
+                    }
+                  })();
+                }}
+              />
             )}
 
             {activeSection.id === "automation" && (
-              <section className="settings-card">
-                <div className="form-row form-row--stretch">
-                  <input
-                    type="url"
-                    placeholder={ui.settings.webhookPlaceholder}
-                    value={webhookDraft ?? prefs.webhookUrl ?? ""}
-                    onChange={(e) => setWebhookDraft(e.target.value)}
-                    onBlur={commitWebhook}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        commitWebhook();
-                      }
-                    }}
-                    aria-label={ui.settings.webhookUrl}
-                  />
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    icon={<Send size={13} />}
-                    onClick={handleTestWebhook}
-                    disabled={testingWebhook || (!prefs.webhookUrl && !webhookDraft?.trim())}
-                  >
-                    {testingWebhook ? ui.settings.webhookSending : ui.settings.webhookTestBtn}
-                  </Button>
-                </div>
-
-                {webhookTestStatus && (
-                  <p
-                    className="plan-note"
-                    style={{
-                      marginTop: 8,
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 6,
-                      color: webhookTestStatus.success
-                        ? "var(--success-text)"
-                        : "var(--danger-foreground)",
-                    }}
-                  >
-                    {webhookTestStatus.success ? <Check size={14} /> : <X size={14} />}
-                    <span>{webhookTestStatus.text}</span>
-                  </p>
-                )}
-
-                <div className="form-row" style={{ marginTop: 16 }}>
-                  <div>
-                    <span>{ui.settings.webhookScanDone}</span>
-                    <p className="settings-hint">{ui.settings.webhookScanDoneHint}</p>
-                  </div>
-                  <Switch
-                    checked={prefs.webhookOnScan ?? true}
-                    onChange={(checked) => save({ webhookOnScan: checked })}
-                    aria-label={ui.settings.webhookScanDone}
-                  />
-                </div>
-
-                <div className="form-row">
-                  <div>
-                    <span>{ui.settings.webhookCleanDone}</span>
-                    <p className="settings-hint">{ui.settings.webhookCleanDoneHint}</p>
-                  </div>
-                  <Switch
-                    checked={prefs.webhookOnClean ?? true}
-                    onChange={(checked) => save({ webhookOnClean: checked })}
-                    aria-label={ui.settings.webhookCleanDone}
-                  />
-                </div>
-
-                <div className="form-row">
-                  <div>
-                    <span>{ui.settings.mcpDestructiveTitle}</span>
-                    <p className="settings-hint">{ui.settings.mcpDestructiveHint}</p>
-                  </div>
-                  <Switch
-                    checked={prefs.mcpAllowDestructive ?? false}
-                    onChange={(checked) => save({ mcpAllowDestructive: checked })}
-                    aria-label={ui.settings.mcpDestructiveTitle}
-                  />
-                </div>
-              </section>
+              <SettingsAutomationSection
+                ui={ui}
+                webhookUrl={prefs.webhookUrl}
+                webhookDraft={webhookDraft}
+                webhookOnScan={prefs.webhookOnScan}
+                webhookOnClean={prefs.webhookOnClean}
+                allowPrivateWebhooks={prefs.allowPrivateWebhooks}
+                mcpAllowDestructive={prefs.mcpAllowDestructive}
+                testingWebhook={testingWebhook}
+                webhookTestStatus={webhookTestStatus}
+                onDraftChange={setWebhookDraft}
+                onCommitWebhook={commitWebhook}
+                onTestWebhook={() => void handleTestWebhook()}
+                onSave={(patch) => void save(patch)}
+              />
             )}
 
             {activeSection.id === "protections" && (
-              <>
-                <section className="settings-card">
-                  <h3 className="settings-group-title">{ui.settings.protectedPaths}</h3>
-                  <div className="form-row form-row--stretch">
-                    <input
-                      type="text"
-                      placeholder={ui.settings.addPath}
-                      value={protectedInput}
-                      aria-label={ui.settings.protectedPaths}
-                      onChange={(e) => setProtectedInput(e.target.value)}
-                    />
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      icon={<FolderOpen size={12} />}
-                      onClick={async () => {
-                        try {
-                          const selected = await scannerApi.selectFolderDialog(
-                            ui.settings.protectedPaths,
-                          );
-                          if (selected) setProtectedInput(selected);
-                        } catch (err) {
-                          showToast(
-                            `${ui.errors.title}: ${localizeAppError(err, ui)}`,
-                            "error",
-                            6000,
-                          );
-                        }
-                      }}
-                    >
-                      {ui.common.browse}
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      icon={<Plus size={12} />}
-                      onClick={() => {
-                        const value = protectedInput.trim();
-                        if (!value) return;
-                        // A relative path never matches a scanned absolute path, so
-                        // the user would believe a folder was protected while it
-                        // was not. Reject it with an explanation instead of storing
-                        // a rule that can never fire.
-                        const isAbsolute = /^[A-Za-z]:\\/.test(value) || value.startsWith("\\\\");
-                        if (!isAbsolute) {
-                          showToast(ui.settings.pathMustBeAbsolute, "warning");
-                          return;
-                        }
-                        const normalized = value.replace(/[\\/]+$/, "");
-                        if (
-                          !prefs.protectedPaths.some(
-                            (p) => p.toLowerCase() === normalized.toLowerCase(),
-                          )
-                        ) {
-                          save({ protectedPaths: [...prefs.protectedPaths, normalized] });
-                        }
-                        setProtectedInput("");
-                      }}
-                    >
-                      {ui.common.add}
-                    </Button>
-                  </div>
-                  <div className="list-editor">
-                    {prefs.protectedPaths.length === 0 && (
-                      <span className="plan-note">{ui.common.none}</span>
-                    )}
-                    {prefs.protectedPaths.map((path) => (
-                      <div key={path} className="list-row">
-                        <span>{path}</span>
-                        <button
-                          type="button"
-                          className="icon-btn icon-btn-sm"
-                          aria-label={`${ui.settings.remove}: ${path}`}
-                          onClick={() =>
-                            save({ protectedPaths: prefs.protectedPaths.filter((p) => p !== path) })
-                          }
-                        >
-                          <X size={12} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-
-                <section className="settings-card">
-                  <h3 className="settings-group-title">{ui.settings.excludedNames}</h3>
-                  <div className="form-row form-row--stretch">
-                    <input
-                      type="text"
-                      placeholder={ui.settings.excludedNames}
-                      value={excludedInput}
-                      aria-label={ui.settings.excludedNames}
-                      onChange={(e) => setExcludedInput(e.target.value)}
-                    />
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      icon={<Plus size={12} />}
-                      onClick={() => {
-                        const value = excludedInput.trim();
-                        if (!value) return;
-                        // Rules are matched against a single path segment; a value
-                        // containing a separator silently never matched.
-                        if (/[\\/]/.test(value)) {
-                          showToast(ui.settings.excludedNameInvalid, "warning");
-                          return;
-                        }
-                        const normalized = value.toLowerCase();
-                        if (!prefs.excludedNames.some((n) => n.toLowerCase() === normalized)) {
-                          save({ excludedNames: [...prefs.excludedNames, value] });
-                        }
-                        setExcludedInput("");
-                      }}
-                    >
-                      {ui.common.add}
-                    </Button>
-                  </div>
-                  <div className="list-editor">
-                    {prefs.excludedNames.length === 0 && (
-                      <span className="plan-note">{ui.common.none}</span>
-                    )}
-                    {prefs.excludedNames.map((name) => (
-                      <div key={name} className="list-row">
-                        <span>{name}</span>
-                        <button
-                          type="button"
-                          className="icon-btn icon-btn-sm"
-                          aria-label={`${ui.settings.remove}: ${name}`}
-                          onClick={() =>
-                            save({ excludedNames: prefs.excludedNames.filter((n) => n !== name) })
-                          }
-                        >
-                          <X size={12} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              </>
+              <SettingsProtectionsSection
+                ui={ui}
+                protectedPaths={prefs.protectedPaths}
+                excludedNames={prefs.excludedNames}
+                onSave={(patch) => void save(patch)}
+                onShowToast={showToast}
+              />
             )}
 
             {activeSection.id === "agents" && (
@@ -1260,7 +903,7 @@ export const SettingsView: React.FC = () => {
                     offLabel={ui.common.off}
                     aria-label={ui.settings.agentCacheCleanup}
                     onChange={(v) =>
-                      save({ agentPolicy: { ...prefs.agentPolicy, allowCacheCleanup: v } })
+                      void save({ agentPolicy: { ...prefs.agentPolicy, allowCacheCleanup: v } })
                     }
                   />
                 </div>
@@ -1272,7 +915,9 @@ export const SettingsView: React.FC = () => {
                     offLabel={ui.common.off}
                     aria-label={ui.settings.browserRecordings}
                     onChange={(v) =>
-                      save({ agentPolicy: { ...prefs.agentPolicy, protectBrowserRecordings: v } })
+                      void save({
+                        agentPolicy: { ...prefs.agentPolicy, protectBrowserRecordings: v },
+                      })
                     }
                   />
                 </div>
@@ -1297,141 +942,31 @@ export const SettingsView: React.FC = () => {
             {activeSection.id === "updates" && <UpdatePanel version={appVersion} hideHeader />}
 
             {activeSection.id === "diagnostics" && <SettingsDiagnostics version={appVersion} />}
-
-            {activeSection.id === "about" && (
-              <AboutView
-                buildInfo={buildInfo}
-                catalog={catalog}
-                catalogStats={catalogStats}
-                isStandalone={false}
-              />
-            )}
           </div>
         </div>
       </div>
 
-      <Dialog
-        isOpen={appearanceOpen}
-        onClose={() => setAppearanceOpen(false)}
-        title={ui.settings.kpiAppearance}
-        maxWidth="640px"
-        footer={
-          <Button variant="secondary" size="sm" onClick={() => setAppearanceOpen(false)}>
-            {ui.common.close}
-          </Button>
-        }
-      >
-        <div className="settings-dialog-tabs" role="tablist" aria-label={ui.settings.kpiAppearance}>
-          {(
-            [
-              ["theme", ui.settings.theme, <Palette key="t" size={14} />],
-              ["language", ui.settings.language, <Globe key="l" size={14} />],
-            ] as const
-          ).map(([id, label, icon]) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={appearanceTab === id}
-              className={`settings-dialog-tab ${appearanceTab === id ? "is-active" : ""}`}
-              onClick={() => setAppearanceTab(id)}
-            >
-              {icon}
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {appearanceTab === "theme" ? (
-          <div className="settings-theme-grid" role="tabpanel">
-            {THEMES.map((theme) => (
-              <button
-                key={theme}
-                type="button"
-                className={`settings-theme-option ${prefs.theme === theme ? "is-active" : ""}`}
-                aria-pressed={prefs.theme === theme}
-                onClick={() => prefs.setTheme(theme)}
-              >
-                <span>{themeLabel(theme, ui)}</span>
-                {prefs.theme === theme && <Check size={14} />}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div role="tabpanel" className="settings-language-panel">
-            <label className="form-row">
-              <span>{ui.settings.language}</span>
-              <select
-                value={resolveUiLocale(prefs.language)}
-                onChange={(e) => prefs.setLanguage(e.target.value as SupportedLanguage)}
-              >
-                {uiLanguages.map((language) => (
-                  <option key={language.id} value={language.id}>
-                    {language.nativeName}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="form-row">
-              <span>{ui.settings.reduceMotion}</span>
-              <Switch
-                checked={prefs.reduceMotion}
-                onLabel={ui.common.on}
-                offLabel={ui.common.off}
-                aria-label={ui.settings.reduceMotion}
-                onChange={(v) => prefs.setReduceMotion(v)}
-              />
-            </div>
-          </div>
-        )}
-      </Dialog>
-
-      <Dialog
-        isOpen={profileOpen}
-        onClose={() => setProfileOpen(false)}
-        title={ui.settings.scanProfile}
-        maxWidth="620px"
-        footer={
-          <Button variant="secondary" size="sm" onClick={() => setProfileOpen(false)}>
-            {ui.common.close}
-          </Button>
-        }
-      >
-        <p className="settings-dialog-hint">{ui.settings.profileDialogHint}</p>
-        <div className="settings-profile-list">
-          {PROFILE_KEYS.map((key) => {
-            const active = (prefs.scanProfile || "balanced") === key;
-            return (
-              <button
-                key={key}
-                type="button"
-                className={`settings-profile-option ${active ? "is-active" : ""}`}
-                aria-pressed={active}
-                onClick={() => {
-                  setProfile(key);
-                  setProfileOpen(false);
-                }}
-              >
-                <span className="settings-profile-name">
-                  {profileLabel(key, ui)}
-                  {key === "balanced" && (
-                    <span className="settings-profile-default">
-                      {ui.settings.profileDefaultBadge}
-                    </span>
-                  )}
-                </span>
-                <span className="settings-profile-hint">{profileHint(key, ui)}</span>
-                <span className="settings-profile-limits">
-                  {ui.settings.maxDepth} {PROFILE_DEFAULTS[key].maxDepth} ·{" "}
-                  {ui.settings.maxCandidates} {PROFILE_DEFAULTS[key].maxCandidates / 1000}k ·{" "}
-                  {ui.settings.timeout} {PROFILE_DEFAULTS[key].timeoutMinutes}
-                </span>
-                {active && <Check size={16} className="settings-profile-check" />}
-              </button>
-            );
-          })}
-        </div>
-      </Dialog>
+      <SettingsDialogs
+        ui={ui}
+        theme={prefs.theme}
+        customTheme={prefs.customTheme}
+        appIcon={prefs.appIcon}
+        language={prefs.language}
+        reduceMotion={prefs.reduceMotion}
+        scanProfile={prefs.scanProfile}
+        appearanceOpen={appearanceOpen}
+        appearanceTab={appearanceTab}
+        profileOpen={profileOpen}
+        onCloseAppearance={() => setAppearanceOpen(false)}
+        onChangeAppearanceTab={setAppearanceTab}
+        onCloseProfile={() => setProfileOpen(false)}
+        onSelectTheme={(t) => prefs.setTheme(t)}
+        onChangeCustomTheme={(patch) => prefs.setCustomTheme(patch)}
+        onSelectAppIcon={(id) => prefs.setAppIcon(id)}
+        onSelectLanguage={(l) => prefs.setLanguage(l)}
+        onToggleReduceMotion={(v) => prefs.setReduceMotion(v)}
+        onSelectProfile={setProfile}
+      />
     </div>
   );
 };

@@ -15,8 +15,8 @@
 
 use std::fs;
 
-use dev_cleaner_lib::cleanup::RecycleBinService;
-use dev_cleaner_lib::safety::{validate_target, GuardContext};
+use detergo_lib::cleanup::RecycleBinService;
+use detergo_lib::safety::{validate_target, GuardContext};
 
 #[test]
 #[ignore = "touches the real Windows Recycle Bin; run explicitly"]

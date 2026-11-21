@@ -2,111 +2,450 @@
   display: flex;
   flex: 1;
   min-height: 0;
+  height: 100vh;
 }
 
-.nav-rail {
-  width: 208px;
+/* ==========================================================================
+   POWER PILOT SIDEBAR ARCHITECTURE (Frameless Shell - Zero Top Bar)
+   ========================================================================== */
+
+.nav-rail.pp-sidebar {
+  width: 248px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: var(--space-3);
+  gap: 0;
+  padding: 0;
   border-right: 1px solid var(--border);
-  background: var(--surface-alt);
-  transition: width var(--duration-fast) var(--ease-standard);
+  background: var(--surface);
+  color: var(--text-primary);
+  user-select: none;
+  transition: width 150ms cubic-bezier(0.2, 0, 0, 1);
+  position: relative;
+  z-index: 30;
 }
 
+/* 1. Brand Header (56px / 3.5rem - pixel-aligned with nav icon axis) */
+.sidebar-brand {
+  height: 56px;
+  padding-inline-start: 18px;
+  padding-inline-end: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-brand-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--text-primary);
+}
+
+.sidebar-brand .brand-text {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-brand-title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-brand-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.pp-sidebar-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition:
+    background-color 110ms cubic-bezier(0.2, 0, 0, 1),
+    color 110ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.pp-sidebar-icon-btn:hover {
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+/* 2. Navigation List */
 .nav-rail-items {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
+  padding: 10px 12px;
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: thin;
 }
 
-.nav-rail.collapsed {
-  width: 56px;
-  padding: var(--space-2);
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 110ms cubic-bezier(0.2, 0, 0, 1),
+    color 110ms cubic-bezier(0.2, 0, 0, 1);
 }
 
-.nav-rail.collapsed .nav-item {
+.nav-item-icon {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  padding-left: 0;
-  padding-right: 0;
+  width: 24px;
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  transition: color 110ms cubic-bezier(0.2, 0, 0, 1);
 }
 
-.nav-rail.collapsed .nav-item-label {
+.nav-item:hover {
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.nav-item:hover .nav-item-icon {
+  color: var(--text-secondary);
+}
+
+.nav-item.active {
+  background-color: var(--accent-subtle);
+  color: var(--text-primary);
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.nav-item.active .nav-item-icon {
+  color: var(--accent);
+}
+
+.nav-item-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 3. Power Pilot Footer: Side-by-side GitHub + Sponsor pills */
+.nav-rail-links.sidebar-footer {
+  margin-top: auto;
+  padding: 12px;
+  border-top: none;
+  flex-shrink: 0;
+}
+
+.sidebar-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.sidebar-link-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background-color: var(--surface-alt);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 110ms cubic-bezier(0.2, 0, 0, 1),
+    background-color 110ms cubic-bezier(0.2, 0, 0, 1),
+    color 110ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.sidebar-link-btn:hover {
+  border-color: var(--border-strong);
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+/* 4. Collapsed Sidebar State (Power Pilot 4.25rem = 68px rail) */
+.nav-rail.pp-sidebar.collapsed {
+  width: 68px;
+  padding: 0;
+}
+
+@media (max-width: 600px) {
+  .nav-rail.pp-sidebar.collapsed {
+    width: 56px;
+  }
+}
+
+.nav-rail.pp-sidebar.collapsed .sidebar-brand {
+  height: auto;
+  padding: 12px 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.nav-rail.pp-sidebar.collapsed .brand-text,
+.nav-rail.pp-sidebar.collapsed .nav-item-label,
+.nav-rail.pp-sidebar.collapsed .sidebar-link-label {
   display: none;
 }
 
-.nav-collapse-toggle {
-  margin-top: auto;
+.nav-rail.pp-sidebar.collapsed .nav-rail-items {
+  padding: 8px;
+  align-items: center;
 }
 
-/* Repository and sponsorship links sit under the navigation, above the
-   collapse control, and keep the rail's icon-only shape when folded. */
-.nav-rail-links {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-top: var(--space-2);
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--border);
+.nav-rail.pp-sidebar.collapsed .nav-item {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  justify-content: center;
+}
+
+.nav-rail.pp-sidebar.collapsed .nav-rail-links.sidebar-footer {
+  padding: 8px;
+}
+
+.nav-rail.pp-sidebar.collapsed .sidebar-links {
+  grid-template-columns: 1fr;
+  gap: 4px;
+  justify-items: center;
+}
+
+.nav-rail.pp-sidebar.collapsed .sidebar-link-btn {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+}
+
+.nav-rail.pp-sidebar.collapsed .sidebar-link-btn:hover {
+  background-color: var(--surface-hover);
 }
 
 /* The rail folds itself below the `narrowRail` breakpoint in `src/lib/layout.ts`
-   (900px; keep the two in sync — CSS cannot import the TypeScript constant).
+   (900px; keep the two in sync - CSS cannot import the TypeScript constant).
    While it does, the manual expand control would fight the automatic behaviour,
    so it is hidden. */
 .nav-rail.is-narrow .nav-collapse-toggle {
   display: none;
 }
 
-.nav-item {
+.app-workspace {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  background-color: var(--app-bg);
+}
+
+/* Seamless borderless drag strip holding the top-right window controls so they
+   never overlap page content or the vertical scrollbar. */
+.app-titlebar-strip {
+  height: 36px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  min-height: 40px;
-  padding: 10px var(--space-3);
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  text-align: left;
-  cursor: pointer;
-  transition:
-    background var(--duration-fast) var(--ease-standard),
-    color var(--duration-fast) var(--ease-standard);
+  justify-content: flex-end;
+  padding: 0 8px;
+  background-color: var(--app-bg);
+  user-select: none;
 }
 
-.nav-item:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
-}
-
-.nav-item.active {
-  background: var(--accent-subtle);
-  color: var(--text-primary);
-  font-weight: 600;
+/* On split views (Settings, About, Docs), the second sidebar runs full-height
+   from y=0 flush with the primary sidebar, while the 36px window control strip
+   spans only over the right content pane. */
+.app-workspace--split .app-titlebar-strip {
+  position: absolute;
+  top: 0;
+  left: 240px;
+  right: 0;
+  z-index: 40;
 }
 
 .view-container {
+  position: relative;
   flex: 1;
   min-width: 0;
   min-height: 0;
   overflow: auto;
-  padding: var(--space-6);
+  padding: var(--space-3) var(--space-6) var(--space-6);
 }
 
 /* Narrower windows get tighter gutters so the content column keeps its
    breathing room instead of being eaten by page padding. */
 @media (max-width: 760px) {
   .view-container {
-    padding: var(--space-4);
+    padding: var(--space-2) var(--space-4) var(--space-4);
+  }
+}
+
+/* 1:1 Layout-Matched View Skeletons */
+.view-skeleton-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  min-width: 0;
+}
+
+.view-skeleton-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.view-skeleton-block {
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  animation: viewSkeletonPulse 1.4s ease-in-out infinite;
+}
+
+.view-skeleton-title {
+  height: 26px;
+  width: 220px;
+  max-width: 55%;
+  border-radius: var(--radius-sm);
+}
+
+.view-skeleton-sub {
+  height: 14px;
+  width: 340px;
+  max-width: 80%;
+  border-radius: var(--radius-xs);
+}
+
+.view-skeleton-title-sm {
+  height: 16px;
+  width: 110px;
+  border-radius: var(--radius-xs);
+}
+
+.view-skeleton-sub-sm {
+  height: 12px;
+  width: 170px;
+  margin-top: 4px;
+  border-radius: var(--radius-xs);
+}
+
+.view-skeleton-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.view-skeleton-nav-row {
+  height: 34px;
+  width: 100%;
+  border-radius: var(--radius-sm);
+}
+
+.view-skeleton-kpi {
+  height: 92px;
+  width: 100%;
+}
+
+.view-skeleton-panel {
+  height: 260px;
+  width: 100%;
+}
+
+.view-skeleton-search {
+  height: 34px;
+  width: 100%;
+  border-radius: var(--radius-sm);
+}
+
+.view-skeleton-pill {
+  height: 22px;
+  width: 108px;
+  border-radius: var(--radius-full);
+}
+
+.view-skeleton-callout {
+  height: 68px;
+  width: 100%;
+}
+
+.view-skeleton-card {
+  height: 220px;
+  width: 100%;
+}
+
+.view-skeleton-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.view-skeleton-tab {
+  height: 32px;
+  width: 128px;
+  border-radius: var(--radius-full);
+}
+
+@keyframes viewSkeletonPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view-skeleton-block {
+    animation: none;
   }
 }
 
@@ -200,10 +539,12 @@
   color: var(--success-text);
   border-color: var(--success);
 }
+
 .chip.warn {
   color: var(--warning-text);
   border-color: var(--warning);
 }
+
 .chip.danger {
   color: var(--danger-foreground);
   border-color: var(--danger);
@@ -337,7 +678,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  border: 1px solid var(--border-control);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-full);
   background: transparent;
   color: var(--text-secondary);
@@ -427,7 +768,7 @@
   height: 32px;
   padding: 0 var(--space-2);
   border-radius: var(--radius-xs);
-  border: 1px solid var(--border-control);
+  border: 1px solid var(--border-strong);
   background: var(--surface-alt);
   color: var(--text-primary);
   font-size: var(--text-sm);
@@ -553,11 +894,13 @@
   gap: 2px;
   cursor: pointer;
 }
+
 .close-guard-remember small {
   color: var(--text-muted);
   font-size: var(--text-xs);
   line-height: 1.4;
 }
+
 /* ==========================================================================
    PRECISION CACHE PROVIDER CARDS & HISTORY RESPONSIVE EMPTY STATE
    ========================================================================== */
@@ -623,7 +966,8 @@
   justify-content: flex-start;
   gap: 3px;
   min-width: 0;
-  overflow: hidden !important; /* Absolute zero scrollbar guarantee */
+  overflow: hidden !important;
+  /* Absolute zero scrollbar guarantee */
   scrollbar-width: none !important;
 }
 
@@ -690,7 +1034,7 @@
 
 .provider-card-footer .provider-actions .btn {
   background: var(--surface-alt) !important;
-  border: 1px solid var(--border-control) !important;
+  border: 1px solid var(--border-strong) !important;
   color: var(--text-secondary) !important;
   font-family: var(--font-mono) !important;
   font-size: 11px !important;
@@ -794,7 +1138,7 @@
 }
 
 /* ==========================================================================
-   FULL-BLEED SECOND SIDEBAR LAYOUT (Settings & About — matches Docs 1:1)
+   FULL-BLEED SECOND SIDEBAR LAYOUT (Settings & About - matches Docs 1:1)
    ========================================================================== */
 .view-container--split {
   padding: 0 !important;
@@ -817,9 +1161,9 @@
 }
 
 .split-sidebar {
-  width: 260px;
-  min-width: 260px;
-  max-width: 260px;
+  width: 240px;
+  min-width: 240px;
+  max-width: 240px;
   height: 100%;
   min-height: 0;
   display: flex;
@@ -831,26 +1175,33 @@
 }
 
 .split-sidebar-header {
-  padding: 16px 16px 14px;
+  height: 56px;
+  min-height: 56px;
+  padding: 0 16px;
   border-bottom: 1px solid var(--border);
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.split-sidebar-header-icon {
+  flex-shrink: 0;
+  color: var(--text-primary);
 }
 
 .split-sidebar-title {
   margin: 0;
-  font-size: 14px;
-  font-weight: 650;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
   color: var(--text-primary);
-  letter-spacing: -0.01em;
-}
-
-.split-sidebar-subtitle {
-  margin: 0;
-  font-size: 11.5px;
-  line-height: 1.4;
-  color: var(--text-muted);
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .split-sidebar-scroll {
@@ -946,11 +1297,21 @@
   flex: 1;
   min-width: 0;
   min-height: 0;
-  height: 100%;
+  margin-top: 36px;
+  height: calc(100% - 36px);
   overflow-y: auto;
-  padding: var(--space-6);
+  padding: var(--space-3) var(--space-6) var(--space-6);
   background-color: var(--app-bg);
   user-select: text;
+}
+
+.split-content-pane .nc-bento-strip--3,
+.split-content-pane .nc-bento-strip--4 {
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+}
+
+.split-content-pane .nc-kpi-card-value {
+  font-size: clamp(15px, 1.35vw, 19px);
 }
 
 .split-content-inner {
@@ -963,6 +1324,13 @@
 }
 
 @media (max-width: 860px) {
+  .app-workspace--split .app-titlebar-strip {
+    position: static;
+    left: auto;
+    right: auto;
+    width: 100%;
+  }
+
   .split-layout {
     flex-direction: column;
   }
@@ -972,7 +1340,7 @@
     min-width: 100%;
     max-width: 100%;
     height: auto;
-    max-height: 220px;
+    max-height: 200px;
     border-right: none;
     border-bottom: 1px solid var(--border);
   }
@@ -982,6 +1350,8 @@
   }
 
   .split-content-pane {
+    margin-top: 0;
+    height: auto;
     padding: var(--space-4);
   }
 }

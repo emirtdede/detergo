@@ -6,6 +6,7 @@ export interface CheckboxProps {
   checked: boolean;
   indeterminate?: boolean;
   onChange: (checked: boolean) => void;
+  onClick?: (event: React.MouseEvent<HTMLInputElement>) => void;
   disabled?: boolean;
   /**
    * Visible text rendered inside the same `<label>` as the input, so clicking
@@ -21,6 +22,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   checked,
   indeterminate = false,
   onChange,
+  onClick,
   disabled = false,
   label,
   "aria-label": ariaLabel,
@@ -52,6 +54,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
         disabled={disabled}
         aria-label={ariaLabel}
         aria-checked={indeterminate ? "mixed" : checked}
+        onClick={onClick}
         onChange={(e) => onChange(e.target.checked)}
       />
       <div className="checkbox-box">

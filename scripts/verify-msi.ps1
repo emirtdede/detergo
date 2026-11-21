@@ -36,7 +36,7 @@ function Test-MsiSuccess {
 }
 
 $version = Get-ReleaseVersion -Root $root
-$msi = Join-Path $ReleaseDir "Dev-Cleaner-$version-x64.msi"
+$msi = Join-Path $ReleaseDir "Detergo-$version-x64.msi"
 
 if (-not (Test-IsElevated)) {
     Write-Host "[ABORT] The MSI is per-machine. Run this script from an elevated PowerShell session."
@@ -54,15 +54,15 @@ try {
         Record-InstallerResult "M-04" "MSI silent uninstall" "SKIP" "artifact missing"
     }
     else {
-        $logPath = Join-Path $env:TEMP "dev-cleaner-msi-install.log"
+        $logPath = Join-Path $env:TEMP "detergo-msi-install.log"
         if (Test-Path $logPath) { Remove-Item $logPath -Force -ErrorAction SilentlyContinue }
 
         $installArgs = @("/i", "`"$msi`"", "/qn", "/norestart", "/l*v", "`"$logPath`"")
         $proc = Start-Process -FilePath "msiexec.exe" -ArgumentList $installArgs -Wait -PassThru
-        Wait-Until { @(Get-DevCleanerUninstallEntries).Count -gt 0 } 120 | Out-Null
+        Wait-Until { @(Get-DetergoUninstallEntries).Count -gt 0 } 120 | Out-Null
         Stop-InstalledApp
 
-        $entries = @(Get-DevCleanerUninstallEntries)
+        $entries = @(Get-DetergoUninstallEntries)
         $ok = (Test-MsiSuccess $proc.ExitCode) -and ($entries.Count -gt 0)
         $diag = ""
         if (-not $ok -and (Test-Path $logPath)) {
@@ -101,8 +101,8 @@ try {
             $uninstallArgs = @("/x", "`"$msi`"", "/qn", "/norestart", "/l*v", "`"$logPath`"")
             $uninstallProc = Start-Process -FilePath "msiexec.exe" -ArgumentList $uninstallArgs -Wait -PassThru
             $gone = Wait-Until {
-                @(Get-DevCleanerUninstallEntries).Count -eq 0 -and
-                @(Get-DevCleanerInstallDirs).Count -eq 0
+                @(Get-DetergoUninstallEntries).Count -eq 0 -and
+                @(Get-DetergoInstallDirs).Count -eq 0
             } 120
             Record-InstallerResult "M-04" "MSI silent uninstall" `
                 ($(if ((Test-MsiSuccess $uninstallProc.ExitCode) -and $gone) { "PASS" } else { "FAIL" })) `
@@ -116,15 +116,15 @@ try {
         }
     }
 
-    $leftDirs = @(Get-DevCleanerInstallDirs)
-    $leftEntries = @(Get-DevCleanerUninstallEntries)
+    $leftDirs = @(Get-DetergoInstallDirs)
+    $leftEntries = @(Get-DetergoUninstallEntries)
     $clean = ($leftDirs.Count -eq 0) -and ($leftEntries.Count -eq 0)
     Record-InstallerResult "M-05" "no leftovers after uninstall" ($(if ($clean) { "PASS" } else { "FAIL" })) `
         ("dirs=$($leftDirs -join ',') entries=$($leftEntries.DisplayName -join ',')")
 }
 finally {
     Stop-InstalledApp
-    Remove-DevCleanerLeftovers
+    Remove-DetergoLeftovers
 }
 
 exit (Complete-InstallerRun -Title "MSI installer checks")

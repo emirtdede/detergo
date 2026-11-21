@@ -1,0 +1,31 @@
+{
+  "version": "1.0.0",
+  "description": "Detergo by Vellium - fast, local-first multi-ecosystem developer artifact, AI agent storage, and package cache cleaner (GUI + CLI + MCP).",
+  "homepage": "https://github.com/emirtdede/detergo",
+  "license": "MIT",
+  "architecture": {
+    "64bit": {
+      "url": [
+        "https://github.com/emirtdede/detergo/releases/download/v1.0.0/Detergo-1.0.0-Portable.exe#/detergo.exe",
+        "https://github.com/emirtdede/detergo/releases/download/v1.0.0/detergo.com#/detergo.com"
+      ],
+      "hash": ["REPLACE_WITH_PORTABLE_EXE_SHA256", "REPLACE_WITH_CLI_COM_SHA256"]
+    }
+  },
+  "bin": ["detergo.com", "detergo.exe"],
+  "shortcuts": [["detergo.exe", "Detergo"]],
+  "checkver": "github",
+  "autoupdate": {
+    "architecture": {
+      "64bit": {
+        "url": [
+          "https://github.com/emirtdede/detergo/releases/download/v$version/Detergo-$version-Portable.exe#/detergo.exe",
+          "https://github.com/emirtdede/detergo/releases/download/v$version/detergo.com#/detergo.com"
+        ],
+        "hash": {
+          "url": "$baseurl/SHA256SUMS.txt"
+        }
+      }
+    }
+  }
+}

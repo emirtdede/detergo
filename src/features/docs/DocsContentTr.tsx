@@ -66,17 +66,17 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
               <span className="docs-category-pill">Genel Bakış</span>
               <span className="docs-version-pill">v{APP_VERSION}</span>
             </div>
-            <h1 className="docs-title">Dev Cleaner'a Hoş Geldiniz</h1>
+            <h1 className="docs-title">Detergo'a Hoş Geldiniz</h1>
             <p className="docs-lead">
-              Dev Cleaner, yazılım geliştiricilerin çalışma ortamlarındaki ağır bağımlılıkları (node_modules, target, .venv, build),
-              yapay zeka ajan depolarını (Claude Code, Cursor, Codex) ve 21 küresel araç önbelleğini sıfır veri kaybı garantisiyle
+              Detergo, yazılım geliştiricilerin çalışma ortamlarındaki ağır bağımlılıkları (node_modules, target, .venv, build),
+              yapay zeka ajan depolarını (Claude Code, Cursor, Codex ve 14 diğer araç) ve 27 küresel araç önbelleğini sıfır veri kaybı garantisiyle
               temizleyen profesyonel bir ekosistemdir.
             </p>
 
             <div className="docs-callout docs-callout--success">
               <ShieldCheck className="docs-callout-icon" size={18} />
               <div>
-                <strong>Sıfır Veri Kaybı Prensibi:</strong> Dev Cleaner ile temizlenen tüm proje ve AI artıkları doğrudan
+                <strong>Sıfır Veri Kaybı Prensibi:</strong> Detergo ile temizlenen tüm proje ve AI artıkları doğrudan
                 <strong> Windows Geri Dönüşüm Kutusuna</strong> taşınır. Yanlışlıkla silinen hiçbir şey kalıcı olarak yok olmaz.
               </div>
             </div>
@@ -86,15 +86,15 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
               <div>
                 <strong>Tek Merkezli Üst Tarama Çubuğu:</strong> Tüm taramalar yalnızca en üst komut çubuğundaki
                 tarama menüsünden başlatılır. İster tek tıkla <strong>Tümünü tara</strong> (Projeler, AI Araçları,
-                Araç Önbellekleri ve Sistem Temizleyici — terminalde <code>-t all</code>) çalıştırın, ister onay
-                kutularıyla yalnızca istediğiniz 1–2 kapsamı seçin. Tarama sürerken üst çubuk aktif kapsamı ve canlı
+                Araç Önbellekleri ve Sistem Temizleyici - terminalde <code>-t all</code>) çalıştırın, ister onay
+                kutularıyla yalnızca istediğiniz 1-2 kapsamı seçin. Tarama sürerken üst çubuk aktif kapsamı ve canlı
                 ilerlemeyi gösterir.
               </div>
             </div>
 
             <h2 className="docs-h2">4 Temel Çalışma Modu</h2>
             <p className="docs-p">
-              Dev Cleaner, geliştirici alışkanlıklarınıza ve iş akışınıza tam uyum sağlayan 4 farklı çalışma paradigması sunar:
+              Detergo, geliştirici alışkanlıklarınıza ve iş akışınıza tam uyum sağlayan 4 farklı çalışma paradigması sunar:
             </p>
 
             <div className="docs-modes-grid">
@@ -128,7 +128,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                   </div>
                 </div>
                 <p className="docs-mode-desc">
-                  PowerShell, CMD ve Bash üzerinden doğrudan <code>dev-cleaner</code> komutuyla yüksek hızlı tarama, <code>--dry-run</code> simülasyonu ve script otomasyonu.
+                  PowerShell, CMD ve Bash üzerinden doğrudan <code>detergo</code> komutuyla yüksek hızlı tarama, <code>--dry-run</code> simülasyonu ve script otomasyonu.
                 </p>
                 <div className="docs-mode-target">
                   <Target size={13} className="docs-mode-target-icon" />
@@ -186,17 +186,17 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                 {
                   id: "qs-cli",
                   label: "Projeleri ve AI araçlarını simülasyon (dry-run) modunda tara",
-                  command: 'dev-cleaner s "D:\\projeler" -t p,a -c -n',
+                  command: 'detergo s "D:\\projeler" -t p,a -c -n',
                 },
                 {
                   id: "qs-combined",
                   label: "Tüm hedefleri (Projeler + AI + Önbellekler + Sistem) tek komutla tara",
-                  command: 'dev-cleaner s "D:\\projeler" -t all',
+                  command: 'detergo s "D:\\projeler" -t all',
                 },
                 {
                   id: "qs-system",
                   label: "C: sürücüsü sistem temizliği kalemlerini ölç",
-                  command: "dev-cleaner sys",
+                  command: "detergo sys",
                 },
               ]}
             />
@@ -212,7 +212,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
             <h1 className="docs-title">Sıfır Veri Kaybı &amp; Güvenlik Manifestosu</h1>
             <p className="docs-lead">
               Bir temizlik aracının en önemli özelliği disk boşaltması değil, geliştiricinin hiçbir kaynak koduna veya kişisel
-              verisine asla zarar vermemesidir. Dev Cleaner şu katı kurallarla çalışır:
+              verisine asla zarar vermemesidir. Detergo şu katı kurallarla çalışır:
             </p>
 
             <div className="docs-callout">
@@ -236,7 +236,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
               <ShieldCheck className="docs-callout-icon" size={18} />
               <div>
                 <strong>3. Süreç Kilidi Koruması:</strong> Aktif olarak çalışan bir Node.js veya Cargo süreci hedef klasörü
-                kullanıyorsa, Dev Cleaner dosyayı zorla silmeye çalışmaz; atlar ve raporda durumu bildirir.
+                kullanıyorsa, Detergo dosyayı zorla silmeye çalışmaz; atlar ve raporda durumu bildirir.
               </div>
             </div>
           </article>
@@ -251,7 +251,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
             </div>
             <h1 className="docs-title">Yanlışlıkla Silinen Bir Dosyayı Geri Yükleme</h1>
             <p className="docs-lead">
-              Dev Cleaner ile temizlenen hiçbir dosya anında kalıcı olarak silinmez. Tüm dosyalarınız Windows Geri Dönüşüm
+              Detergo ile temizlenen hiçbir dosya anında kalıcı olarak silinmez. Tüm dosyalarınız Windows Geri Dönüşüm
               Kutusunda orijinal yolları ve meta verileriyle saklanır. Yanlışlıkla sildiğiniz bir projeyi saniyeler içinde kurtarabilirsiniz:
             </p>
 
@@ -287,7 +287,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
             <div className="docs-callout">
               <ShieldCheck className="docs-callout-icon" size={18} />
               <div>
-                <strong>Git Repoları Asla Zarar Görmez:</strong> Dev Cleaner çekirdek seviyesinde <code>.git</code> dizinlerini,
+                <strong>Git Repoları Asla Zarar Görmez:</strong> Detergo çekirdek seviyesinde <code>.git</code> dizinlerini,
                 <code>.env</code> dosyalarını ve kaynak kod uzantılarını asla hedeflemez. Kodunuz her durumda güvendedir.
               </div>
             </div>
@@ -303,7 +303,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
             </div>
             <h1 className="docs-title">Geliştirici Sıkça Sorulan Sorular (FAQ)</h1>
             <p className="docs-lead">
-              Dev Cleaner kullanımı ve temizlik mantığı hakkında geliştiricilerin en sık sorduğu soruların yanıtları:
+              Detergo kullanımı ve temizlik mantığı hakkında geliştiricilerin en sık sorduğu soruların yanıtları:
             </p>
 
             <div className="docs-faq-card">
@@ -324,7 +324,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                 <span>Docker önbelleğini temizlemek çalışan konteynerlarımı durdurur mu?</span>
               </div>
               <p className="docs-faq-a">
-                Hayır. Dev Cleaner resmi <code>docker builder prune -f</code> komutunu çağırır. Çalışan konteynerlar, aktif veritabanı
+                Hayır. Detergo resmi <code>docker builder prune -f</code> komutunu çağırır. Çalışan konteynerlar, aktif veritabanı
                 volume'ları ve adlandırılmış imajlar asla silinmez; yalnızca atıl ara derleme katmanları temizlenir.
               </p>
             </div>
@@ -332,13 +332,13 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
             <div className="docs-faq-card">
               <div className="docs-faq-q">
                 <HelpCircle size={16} className="text-accent" />
-                <span>Terminalde <code>dev-cleaner</code> komutu bulunamadı (Command not found) hatası alıyorum?</span>
+                <span>Terminalde <code>detergo</code> komutu bulunamadı (Command not found) hatası alıyorum?</span>
               </div>
               <p className="docs-faq-a">
-                NSIS kurulumu <code>dev-cleaner</code> komutunu kullanıcı <code>PATH</code> ortam değişkenine otomatik olarak
+                NSIS kurulumu <code>detergo</code> komutunu kullanıcı <code>PATH</code> ortam değişkenine otomatik olarak
                 ekler. Taşınabilir (.exe) sürümü kullanıyorsanız <strong>Terminal CLI Komut Kılavuzu</strong> sekmesindeki{" "}
                 <strong>CLI&apos;yi PATH&apos;e Ekle</strong> düğmesi{" "}
-                <code>%LOCALAPPDATA%\dev-cleaner\bin\dev-cleaner.cmd</code> köprüsünü oluşturup PATH&apos;e kaydeder.
+                <code>%LOCALAPPDATA%\detergo\bin\detergo.cmd</code> köprüsünü oluşturup PATH&apos;e kaydeder.
                 Değişikliğin etkili olması için açık terminal penceresini kapatıp yeniden açmanız yeterlidir.
               </p>
             </div>
@@ -388,7 +388,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
             </div>
             <h1 className="docs-title">Terminal CLI Komut Kılavuzu</h1>
             <p className="docs-lead">
-              Dev Cleaner, Windows PATH üzerinde genel bir komut olarak çalışır. Terminalinizden dilediğiniz zaman çağırabilirsiniz:
+              Detergo, Windows PATH üzerinde genel bir komut olarak çalışır. Terminalinizden dilediğiniz zaman çağırabilirsiniz:
             </p>
 
             {onRegisterCliPath && (
@@ -397,7 +397,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                   <strong>
                     {cliEnv?.inPath && cliEnv?.shimUpToDate
                       ? "CLI kullanıcı PATH ortam değişkeninde hazır"
-                      : "dev-cleaner komutu kullanıcı PATH içinde değil veya güncellenmeli"}
+                      : "detergo komutu kullanıcı PATH içinde değil veya güncellenmeli"}
                   </strong>
                   <span>
                     {cliEnv?.executablePath ? (
@@ -405,7 +405,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                         Çalıştırılabilir dosya: <code>{cliEnv.executablePath}</code>
                       </>
                     ) : (
-                      "Tek tıkla kullanıcı PATH kaydını oluşturun ve yeni terminalde dev-cleaner komutunu kullanın."
+                      "Tek tıkla kullanıcı PATH kaydını oluşturun ve yeni terminalde detergo komutunu kullanın."
                     )}
                   </span>
                 </div>
@@ -447,7 +447,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
               </button>
             </div>
 
-            <h2 className="docs-h2">1. `dev-cleaner s` (`scan`)</h2>
+            <h2 className="docs-h2">1. `detergo s` (`scan`)</h2>
             <p className="docs-p">
               Kısa ve öz terminal söz dizimiyle istediğiniz 1 veya birden fazla hedefi (<code>-t p,a,c,s</code>)
               tarar veya otonom temizler. Uzun bayraklar (<code>scan</code>, <code>--auto-clean</code>, <code>--dry-run</code>)
@@ -466,64 +466,64 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                       {
                         id: "cli-scan-std",
                         label: "Standart proje taraması",
-                        command: 'dev-cleaner s "/d/projeler"',
+                        command: 'detergo s "/d/projeler"',
                       },
                       {
                         id: "cli-scan-targets",
                         label: "Seçili hedefler (Projeler + AI Araçları + Önbellekler)",
-                        command: 'dev-cleaner s "/d/projeler" -t p,a,c',
+                        command: 'detergo s "/d/projeler" -t p,a,c',
                       },
                       {
                         id: "cli-scan-all",
                         label: "Tüm hedefleri tek seferde tara (Projeler + AI + Önbellek + Sistem)",
-                        command: 'dev-cleaner s "/d/projeler" -t all',
+                        command: 'detergo s "/d/projeler" -t all',
                       },
                       {
                         id: "cli-scan-auto",
                         label: "Otonom temizlik (safe ve regenerate hedefleri Geri Dönüşüm'e taşır)",
-                        command: 'dev-cleaner s "/d/projeler" -c',
+                        command: 'detergo s "/d/projeler" -c',
                       },
                       {
                         id: "cli-scan-dry",
                         label: "Simülasyon modu (hiçbir dosyayı silmeden önizler)",
-                        command: 'dev-cleaner s "/d/projeler" -c -n',
+                        command: 'detergo s "/d/projeler" -c -n',
                       },
                       {
                         id: "cli-scan-json",
                         label: "JSON çıktısı ile CI/CD entegrasyonu",
-                        command: 'dev-cleaner s "/d/projeler" -j',
+                        command: 'detergo s "/d/projeler" -j',
                       },
                     ]
                   : [
                       {
                         id: "cli-scan-std",
                         label: "Standart proje taraması",
-                        command: 'dev-cleaner s "D:\\projeler"',
+                        command: 'detergo s "D:\\projeler"',
                       },
                       {
                         id: "cli-scan-targets",
                         label: "Seçili hedefler (Projeler + AI Araçları + Önbellekler)",
-                        command: 'dev-cleaner s "D:\\projeler" -t p,a,c',
+                        command: 'detergo s "D:\\projeler" -t p,a,c',
                       },
                       {
                         id: "cli-scan-all",
                         label: "Tüm hedefleri tek seferde tara (Projeler + AI + Önbellek + Sistem)",
-                        command: 'dev-cleaner s "D:\\projeler" -t all',
+                        command: 'detergo s "D:\\projeler" -t all',
                       },
                       {
                         id: "cli-scan-auto",
                         label: "Otonom temizlik (safe ve regenerate hedefleri Geri Dönüşüm'e taşır)",
-                        command: 'dev-cleaner s "D:\\projeler" -c',
+                        command: 'detergo s "D:\\projeler" -c',
                       },
                       {
                         id: "cli-scan-dry",
                         label: "Simülasyon modu (hiçbir dosyayı silmeden önizler)",
-                        command: 'dev-cleaner s "D:\\projeler" -c -n',
+                        command: 'detergo s "D:\\projeler" -c -n',
                       },
                       {
                         id: "cli-scan-json",
                         label: "JSON çıktısı ile CI/CD entegrasyonu",
-                        command: 'dev-cleaner s "D:\\projeler" -j',
+                        command: 'detergo s "D:\\projeler" -j',
                       },
                     ]
               }
@@ -598,8 +598,8 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
               </table>
             </div>
 
-            <h2 className="docs-h2">2. `dev-cleaner c` (`caches`)</h2>
-            <p className="docs-p">21 geliştirici aracının paket önbelleklerini listeler veya resmî komutla temizler.</p>
+            <h2 className="docs-h2">2. `detergo c` (`caches`)</h2>
+            <p className="docs-p">27 geliştirici aracının paket önbelleklerini listeler veya resmî komutla temizler.</p>
             <DocsCommandList
               title="Önbellek Komutları"
               copiedKey={copiedKey}
@@ -611,27 +611,27 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                 {
                   id: "cli-cache-list",
                   label: "Tüm önbellek durumunu listele",
-                  command: "dev-cleaner c",
+                  command: "detergo c",
                 },
                 {
                   id: "cli-cache-npm",
                   label: "Belirli bir aracın önbelleğini temizle (npm, pip, cargo, docker)",
-                  command: "dev-cleaner c npm",
+                  command: "detergo c npm",
                 },
                 {
                   id: "cli-cache-dry",
                   label: "Hiçbir şey silmeden tam temizliği önizle",
-                  command: "dev-cleaner c all -n",
+                  command: "detergo c all -n",
                 },
                 {
                   id: "cli-cache-all",
                   label: "Tüm yüklü araçların önbelleklerini onaylayarak temizle",
-                  command: "dev-cleaner c all -y",
+                  command: "detergo c all -y",
                 },
               ]}
             />
 
-            <h2 className="docs-h2">3. `dev-cleaner sys` (`system`)</h2>
+            <h2 className="docs-h2">3. `detergo sys` (`system`)</h2>
             <p className="docs-p">C: sürücüsündeki Windows geçici dosyalarını, Prefetch, Windows Update artıkları ve WinSxS bileşen deposunu yönetir.</p>
             <DocsCommandList
               title="C: Sürücüsü Sistem Temizliği Komutları"
@@ -644,27 +644,27 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                 {
                   id: "cli-sys-list",
                   label: "Tüm sistem temizliği kalemlerini ve boyutlarını ölç",
-                  command: "dev-cleaner sys",
+                  command: "detergo sys",
                 },
                 {
                   id: "cli-sys-dry",
                   label: "Hızlı profili silmeden önizle (dry-run)",
-                  command: "dev-cleaner sys quick -n",
+                  command: "detergo sys quick -n",
                 },
                 {
                   id: "cli-sys-quick",
                   label: "Hızlı sistem temizliğini onaylayarak çalıştır",
-                  command: "dev-cleaner sys quick -y",
+                  command: "detergo sys quick -y",
                 },
                 {
                   id: "cli-sys-std",
                   label: "Standart sistem temizliğini çalıştır (Yönetici önerilir)",
-                  command: "dev-cleaner sys standard -y",
+                  command: "detergo sys standard -y",
                 },
               ]}
             />
 
-            <h2 className="docs-h2">4. `dev-cleaner hist` (`history`)</h2>
+            <h2 className="docs-h2">4. `detergo hist` (`history`)</h2>
             <p className="docs-p">Geçmiş temizlik denetim kayıtlarını listeler.</p>
             <DocsCommandList
               title="Denetim Geçmişi Komutları"
@@ -677,12 +677,12 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                 {
                   id: "cli-history",
                   label: "Son 15 temizlik kaydını göster",
-                  command: "dev-cleaner hist 15",
+                  command: "detergo hist 15",
                 },
                 {
                   id: "cli-history-json",
                   label: "Geçmişi JSON olarak dışa aktar",
-                  command: "dev-cleaner hist 50 -j",
+                  command: "detergo hist 50 -j",
                 },
               ]}
             />
@@ -697,7 +697,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
             </div>
             <h1 className="docs-title">İnteraktif CLI Komut Oluşturucu</h1>
             <p className="docs-lead">
-              Aşağıdaki seçenekleri yapılandırın; Dev Cleaner sizin için kopyalanmaya hazır terminal komutunu dinamik olarak oluştursun:
+              Aşağıdaki seçenekleri yapılandırın; Detergo sizin için kopyalanmaya hazır terminal komutunu dinamik olarak oluştursun:
             </p>
 
             <div className="cli-builder-card">
@@ -819,7 +819,7 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
             </div>
             <h1 className="docs-title">Headless Cron &amp; CI/CD Pipeline Entegrasyonu</h1>
             <p className="docs-lead">
-              Dev Cleaner, Windows Görev Zamanlayıcısı (Task Scheduler) veya GitHub Actions / GitLab CI runner'larında
+              Detergo, Windows Görev Zamanlayıcısı (Task Scheduler) veya GitHub Actions / GitLab CI runner'larında
               arayüzsüz (headless) çalışarak disk doluluğunu periyodik olarak temizleyebilir.
             </p>
 
@@ -831,9 +831,9 @@ export const DocsContentTr: React.FC<DocsContentProps> = ({
                   type="button"
                   className="docs-copy-action"
                   onClick={() => copyToClipboard(
-`$Action = New-ScheduledTaskAction -Execute "dev-cleaner.exe" -Argument "s C:\\dev -c -m 100 -w https://n8n.sirket.com/cleanup"
+`$Action = New-ScheduledTaskAction -Execute "detergo.exe" -Argument "s C:\\dev -c -m 100 -w https://n8n.sirket.com/cleanup"
 $Trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At 3am
-Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWeekly" -Description "Haftalık güvenli bağımlılık temizliği"`,
+Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DetergoWeekly" -Description "Haftalık güvenli bağımlılık temizliği"`,
                     "cron-task"
                   )}
                 >
@@ -844,9 +844,9 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
               <pre className="docs-code-pre">
                 {highlightBash(
 `# PowerShell ile Pazar günleri 03:00'da çalışan otonom görev tanımlama
-$Action = New-ScheduledTaskAction -Execute "dev-cleaner.exe" -Argument "s C:\\dev -c -m 100 -w https://n8n.sirket.com/cleanup"
+$Action = New-ScheduledTaskAction -Execute "detergo.exe" -Argument "s C:\\dev -c -m 100 -w https://n8n.sirket.com/cleanup"
 $Trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At 3am
-Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWeekly" -Description "Haftalık güvenli bağımlılık temizliği"`
+Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DetergoWeekly" -Description "Haftalık güvenli bağımlılık temizliği"`
                 )}
               </pre>
             </div>
@@ -862,7 +862,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             </div>
             <h1 className="docs-title">Model Context Protocol (MCP) Sunucusu</h1>
             <p className="docs-lead">
-              Dev Cleaner, Anthropic ve Linux Foundation tarafından desteklenen <strong>Model Context Protocol (MCP)</strong>
+              Detergo, Anthropic ve Linux Foundation tarafından desteklenen <strong>Model Context Protocol (MCP)</strong>
               standart sunucusunu yerel olarak barındırır. Bu sayede Cursor, Windsurf veya Claude Code gibi AI ajanları doğrudan
               çalışma alanınızdaki disk yükünü sorgulayabilir ve onayınızla güvenli temizlik yapabilir.
             </p>
@@ -888,12 +888,12 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
                 {
                   id: "mcp-start",
                   label: "Standart modda (salt okunur + önizleme) başlat",
-                  command: "dev-cleaner mcp",
+                  command: "detergo mcp",
                 },
                 {
                   id: "mcp-start-destructive",
                   label: "Yıkıcı araçlara izin vererek başlat (Ayarlar'da da açık olmalıdır)",
-                  command: "dev-cleaner mcp --allow-destructive",
+                  command: "detergo mcp --allow-destructive",
                 },
               ]}
             />
@@ -922,7 +922,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
                 <div className="docs-cli-env-copy">
                   <strong>Tam dosya yolu otomatik eklendi</strong>
                   <span>
-                    <code>dev-cleaner</code> henüz PATH içinde olmadığı için aşağıdaki şablon doğrudan{" "}
+                    <code>detergo</code> henüz PATH içinde olmadığı için aşağıdaki şablon doğrudan{" "}
                     <code>{cliEnv.executablePath}</code> yolunu kullanır. İsterseniz tek tıkla PATH&apos;e ekleyebilirsiniz.
                   </span>
                 </div>
@@ -966,7 +966,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             </div>
             <h1 className="docs-title">Cursor &amp; Claude Code Hazır İstem Kütüphanesi</h1>
             <p className="docs-lead">
-              Dev Cleaner MCP sunucusunu IDE'nize bağladıktan sonra, AI asistanınızla konuşurken kullanabileceğiniz
+              Detergo MCP sunucusunu IDE'nize bağladıktan sonra, AI asistanınızla konuşurken kullanabileceğiniz
               yüksek verimli, doğrudan sonuç üreten hazır istem kartları:
             </p>
 
@@ -979,14 +979,14 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
                 <button
                   type="button"
                   className="docs-copy-action"
-                  onClick={() => copyToClipboard('Dev Cleaner MCP sunucusunu kullanarak çalışma alanımdaki projeleri tara. 100 MB\'tan büyük node_modules, target ve derleme artıklarını listele; onayımı alarak güvenle Geri Dönüşüm Kutusuna taşı.', 'pr-1')}
+                  onClick={() => copyToClipboard('Detergo MCP sunucusunu kullanarak çalışma alanımdaki projeleri tara. 100 MB\'tan büyük node_modules, target ve derleme artıklarını listele; onayımı alarak güvenle Geri Dönüşüm Kutusuna taşı.', 'pr-1')}
                 >
                   {copiedKey === 'pr-1' ? <Check size={13} /> : <Copy size={13} />}
                   {copiedKey === 'pr-1' ? 'İstem Kopyalandı!' : 'İstemi Kopyala'}
                 </button>
               </div>
               <div className="docs-prompt-body">
-                "Dev Cleaner MCP sunucusunu kullanarak çalışma alanımdaki projeleri tara. 100 MB'tan büyük node_modules, target ve derleme artıklarını listele; onayımı alarak güvenle Geri Dönüşüm Kutusuna taşı."
+                "Detergo MCP sunucusunu kullanarak çalışma alanımdaki projeleri tara. 100 MB'tan büyük node_modules, target ve derleme artıklarını listele; onayımı alarak güvenle Geri Dönüşüm Kutusuna taşı."
               </div>
             </div>
 
@@ -999,14 +999,14 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
                 <button
                   type="button"
                   className="docs-copy-action"
-                  onClick={() => copyToClipboard('devcleaner_list_caches aracını çağır. npm, pip, cargo ve docker önbelleklerimin ne kadar disk alanı kapladığını incele ve bana bir temizlik özeti çıkar.', 'pr-2')}
+                  onClick={() => copyToClipboard('detergo_list_caches aracını çağır. npm, pip, cargo ve docker önbelleklerimin ne kadar disk alanı kapladığını incele ve bana bir temizlik özeti çıkar.', 'pr-2')}
                 >
                   {copiedKey === 'pr-2' ? <Check size={13} /> : <Copy size={13} />}
                   {copiedKey === 'pr-2' ? 'İstem Kopyalandı!' : 'İstemi Kopyala'}
                 </button>
               </div>
               <div className="docs-prompt-body">
-                "devcleaner_list_caches aracını çağır. npm, pip, cargo ve docker önbelleklerimin ne kadar disk alanı kapladığını incele ve bana bir temizlik özeti çıkar."
+                "detergo_list_caches aracını çağır. npm, pip, cargo ve docker önbelleklerimin ne kadar disk alanı kapladığını incele ve bana bir temizlik özeti çıkar."
               </div>
             </div>
 
@@ -1038,43 +1038,43 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             <div className="docs-badge-row">
               <span className="docs-category-pill">MCP Araçları</span>
             </div>
-            <h1 className="docs-title">Dev Cleaner MCP Araçları Referansı</h1>
+            <h1 className="docs-title">Detergo MCP Araçları Referansı</h1>
             <p className="docs-lead">
-              Dev Cleaner MCP sunucusu 11 araç sunar: 8 salt-okunur / önizleme aracı ve yalnızca
+              Detergo MCP sunucusu 11 araç sunar: 8 salt-okunur / önizleme aracı ve yalnızca
               <code>--allow-destructive</code> ile açılan 3 yıkıcı araç (tümü tek kullanımlık önizleme token&apos;ı ile korunur).
             </p>
 
-            <h2 className="docs-h2">1. `devcleaner_scan_workspace`</h2>
+            <h2 className="docs-h2">1. `detergo_scan_workspace`</h2>
             <p className="docs-p">Çalışma alanını tarayarak temizlenebilir hedefleri (<code>targets</code>) ve <code>scan_id</code> değerini yapılandırılmış JSON olarak sunar.</p>
 
-            <h2 className="docs-h2">2. `devcleaner_preview_cleanup`</h2>
+            <h2 className="docs-h2">2. `detergo_preview_cleanup`</h2>
             <p className="docs-p">Temizlik planı oluşturur, tek kullanımlık <code>preview_token</code> döner ve hiçbir şeyi silmez.</p>
 
-            <h2 className="docs-h2">3. `devcleaner_list_caches`</h2>
-            <p className="docs-p">21 geliştirici aracının ölçülmüş paket önbellek boyutlarını ve mevcut temizlik aksiyonlarını JSON olarak raporlar.</p>
+            <h2 className="docs-h2">3. `detergo_list_caches`</h2>
+            <p className="docs-p">27 geliştirici aracının ölçülmüş paket önbellek boyutlarını ve mevcut temizlik aksiyonlarını JSON olarak raporlar.</p>
 
-            <h2 className="docs-h2">4. `devcleaner_preview_cache`</h2>
+            <h2 className="docs-h2">4. `detergo_preview_cache`</h2>
             <p className="docs-p">Seçilen paket önbelleği aksiyonunu önizler ve tek kullanımlık <code>preview_token</code> üretir.</p>
 
-            <h2 className="docs-h2">5. `devcleaner_system_scan`</h2>
+            <h2 className="docs-h2">5. `detergo_system_scan`</h2>
             <p className="docs-p">C: sürücüsü sistem temizliği kalemlerini, disk alanını ve yönetici gereksinimlerini ölçer.</p>
 
-            <h2 className="docs-h2">6. `devcleaner_system_preview`</h2>
+            <h2 className="docs-h2">6. `detergo_system_preview`</h2>
             <p className="docs-p">Seçilen sistem temizliği aksiyonlarını (veya profilini) önizleyip tek kullanımlık token üretir.</p>
 
-            <h2 className="docs-h2">7. `devcleaner_get_history`</h2>
+            <h2 className="docs-h2">7. `detergo_get_history`</h2>
             <p className="docs-p">Geçmiş temizlik ve resmi aksiyon denetim kayıtlarını döner.</p>
 
-            <h2 className="docs-h2">8. `devcleaner_inspect_target`</h2>
+            <h2 className="docs-h2">8. `detergo_inspect_target`</h2>
             <p className="docs-p">Belirli bir dosya yolunun güvenlik sınıfını, kurallarını ve <code>PathGuard</code> durumunu inceler.</p>
 
-            <h2 className="docs-h2">9. `devcleaner_execute_cleanup` (yıkıcı)</h2>
+            <h2 className="docs-h2">9. `detergo_execute_cleanup` (yıkıcı)</h2>
             <p className="docs-p">Önizlenen proje planını yürütür. <code>confirm:true</code>, tek kullanımlık token, <code>--allow-destructive</code> ve Ayarlar&apos;daki MCP yıkıcı işlem izni gerekir.</p>
 
-            <h2 className="docs-h2">10. `devcleaner_clean_cache` (yıkıcı)</h2>
+            <h2 className="docs-h2">10. `detergo_clean_cache` (yıkıcı)</h2>
             <p className="docs-p">Önizlenen paket yöneticisi önbellek komutunu yürütür. <code>preview_token</code>, <code>confirm:true</code>, <code>--allow-destructive</code> ve Ayarlar izni gerekir.</p>
 
-            <h2 className="docs-h2">11. `devcleaner_system_execute` (yıkıcı)</h2>
+            <h2 className="docs-h2">11. `detergo_system_execute` (yıkıcı)</h2>
             <p className="docs-p">Önizlenen C: sürücüsü sistem temizliği token&apos;ını yürütür ve denetim geçmişine yazar.</p>
           </article>
         )}
@@ -1087,7 +1087,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             </div>
             <h1 className="docs-title">Evrensel Webhook &amp; Otomasyon Mimarisi</h1>
             <p className="docs-lead">
-              Dev Cleaner, ister masaüstü arayüzünden ister CLI üzerinden başlatılsın; tarama veya temizlik bittiğinde
+              Detergo, ister masaüstü arayüzünden ister CLI üzerinden başlatılsın; tarama veya temizlik bittiğinde
               yapılandırılmış Webhook adresine HTTP POST ile canlı bildirim iletir.
             </p>
 
@@ -1166,7 +1166,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             </div>
             <h1 className="docs-title">TOCTOU &amp; Süreç Kilidi Savunması</h1>
             <p className="docs-lead">
-              Time-of-Check to Time-of-Use (TOCTOU) yarış durumlarına karşı Dev Cleaner'ın uyguladığı endüstri standardı
+              Time-of-Check to Time-of-Use (TOCTOU) yarış durumlarına karşı Detergo'ın uyguladığı endüstri standardı
               savunma mekanizmaları:
             </p>
 
@@ -1237,12 +1237,12 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
               zaman kaldırabilirsiniz. Prefetch, Geri Dönüşüm Kutusu ve bileşen deposu asla otomatik seçilmez.
             </p>
 
-            <h2 className="docs-h2">Komut satırı (Dev Cleaner CLI)</h2>
+            <h2 className="docs-h2">Komut satırı (Detergo CLI)</h2>
             <p className="docs-p">
               Aynı işlemler betikler ve CI için başsız (headless) olarak da kullanılabilir:
             </p>
             <DocsCommandList
-              title="Dev Cleaner Sistem Temizleyici CLI"
+              title="Detergo Sistem Temizleyici CLI"
               copiedKey={copiedKey}
               onCopy={copyToClipboard}
               copyLabel="Kopyala"
@@ -1252,34 +1252,34 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
                 {
                   id: "sys-cli-list",
                   label: "Tüm sistem hedeflerini ve ölçülebilir boyutları listele",
-                  command: "dev-cleaner sys",
+                  command: "detergo sys",
                 },
                 {
                   id: "sys-cli-dry",
                   label: "Hiçbir şey silmeden hızlı profili önizle",
-                  command: "dev-cleaner sys quick -n",
+                  command: "detergo sys quick -n",
                 },
                 {
                   id: "sys-cli-quick",
                   label: "Hızlı profili çalıştır (kullanıcı temp + Windows Update artıkları)",
-                  command: "dev-cleaner sys quick -y",
+                  command: "detergo sys quick -y",
                 },
                 {
                   id: "sys-cli-standard",
                   label: "Standart profili çalıştır (Yönetici haklarıyla temp, Prefetch, hata raporları)",
-                  command: "dev-cleaner sys standard -y",
+                  command: "detergo sys standard -y",
                 },
                 {
                   id: "sys-cli-deep",
                   label: "Derin profili çalıştır (Disk Temizleme ve DISM WinSxS dâhil)",
-                  command: "dev-cleaner sys deep -y",
+                  command: "detergo sys deep -y",
                 },
               ]}
             />
 
             <h2 className="docs-h2">Windows CMD Referans Komutları (Yönetici)</h2>
             <p className="docs-p">
-              Dev Cleaner bu işlemleri arayüzden tek tıkla yürütür. Manuel çalıştırmak isterseniz
+              Detergo bu işlemleri arayüzden tek tıkla yürütür. Manuel çalıştırmak isterseniz
               Komut İstemi&apos;ni <strong>Yönetici olarak</strong> açıp aşağıdaki komutları tek tek kopyalayabilirsiniz:
             </p>
             <DocsCommandList
@@ -1349,7 +1349,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             </div>
             <h1 className="docs-title">Sorun Giderme &amp; Hata Kodları Sözlüğü</h1>
             <p className="docs-lead">
-              Tarama veya temizleme işlemi sırasında Dev Cleaner koruma mekanizmaları devreye girdiğinde karşılaşabileceğiniz
+              Tarama veya temizleme işlemi sırasında Detergo koruma mekanizmaları devreye girdiğinde karşılaşabileceğiniz
               uyarı kodları ve çözüm adımları:
             </p>
 
@@ -1358,16 +1358,16 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
               <Info className="docs-callout-icon" size={18} />
               <div>
                 <p>
-                  <strong>Atlandı</strong> — Sistem tarafından korunan konumlar atlandı. Yapılacak bir şey yok.
+                  <strong>Atlandı</strong> - Sistem tarafından korunan konumlar atlandı. Yapılacak bir şey yok.
                 </p>
                 <p>
-                  <strong>Uyarı</strong> — Bazı konumlar okunamadı; sonuçlar eksik olabilir.
+                  <strong>Uyarı</strong> - Bazı konumlar okunamadı; sonuçlar eksik olabilir.
                 </p>
                 <p>
-                  <strong>Hata</strong> — Kök klasör seçilmedi veya tarama engellendi.
+                  <strong>Hata</strong> - Kök klasör seçilmedi veya tarama engellendi.
                 </p>
                 <p>
-                  <strong>Eksik</strong> — Tarama erken durdu. Temizlemeden önce durma nedenine
+                  <strong>Eksik</strong> - Tarama erken durdu. Temizlemeden önce durma nedenine
                   (<code>stop_reason</code>) bakın.
                 </p>
               </div>
@@ -1393,7 +1393,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
               <p className="docs-faq-a">
                 <strong>Neden Oldu?</strong> <code>build</code>, <code>dist</code> veya <code>out</code> isimli bir klasör tespit edildi;
                 ancak kök dizinde <code>package.json</code>, <code>Cargo.toml</code> veya <code>pom.xml</code> bulunamadı.<br />
-                <strong>Güvenlik Garantisi:</strong> Dev Cleaner kullanıcının kişisel fotoğraflarını veya belgelerini "build"
+                <strong>Güvenlik Garantisi:</strong> Detergo kullanıcının kişisel fotoğraflarını veya belgelerini "build"
                 adıyla kaydetmiş olabileceği ihtimaline karşı proje kanıtı olmayan hedefleri asla temizlemez.
               </p>
             </div>

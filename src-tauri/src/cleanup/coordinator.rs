@@ -228,7 +228,11 @@ pub(crate) fn execute_plan_with_hooks(
 
     let started = Instant::now();
     let started_at = chrono::Local::now().to_rfc3339();
-    let recycle = RecycleBinService::new();
+    let mut recycle_session = if plan.mode == DeleteMode::RecycleBin {
+        Some(crate::cleanup::recycle_bin::RecycleBinSession::new())
+    } else {
+        None
+    };
     let permanent = PermanentDeleteService::new();
 
     let before_free = sample_volume_free(&session.allowed_roots);
@@ -299,19 +303,19 @@ pub(crate) fn execute_plan_with_hooks(
             }
 
             // 1. The plan must still describe the same object. Directories are
-            //    identified by NTFS object id; files additionally verify size
-            //    and nanosecond mtime. Anything unverifiable fails closed.
-            //
-            //    The measurement shares the run token: a fresh token here could
-            //    never be cancelled, so cancelling during a multi-GB directory
-            //    kept the cleanup blocked until the walk finished.
-            let measured_size = measure_path(&target.path, target.kind, token);
-            if measured_size.is_none() && token.is_cancelled() {
-                // The item is not reported at all: it was never processed, so
-                // the outer loop stops and the summary counts it as skipped.
-                stopped_early = true;
-                break 'run;
-            }
+            //    verified in O(1) by NTFS object id without re-walking tens of
+            //    thousands of child files right before deleting them; files
+            //    still perform an O(1) stat + identity + nanosecond mtime check.
+            let measured_size = if target.kind == crate::catalog::TargetKind::Directory {
+                None
+            } else {
+                let s = measure_path(&target.path, target.kind, token);
+                if s.is_none() && token.is_cancelled() {
+                    stopped_early = true;
+                    break 'run;
+                }
+                s
+            };
             let measured_logical = measured_size.as_ref().map(|s| s.logical_bytes);
             let current_snapshot = TargetSnapshot::capture(&target.path);
             match verify_snapshot(
@@ -394,11 +398,17 @@ pub(crate) fn execute_plan_with_hooks(
                 );
             }
 
-            // 6. Bytes reported after execution come from the fresh measurement.
+            // 6. Bytes reported after execution come from the fresh file
+            //    measurement (or the validated session measurement for dirs).
             let measured = measured_size
                 .as_ref()
                 .map(|s| s.allocated_bytes.unwrap_or(s.logical_bytes))
-                .unwrap_or(0);
+                .unwrap_or_else(|| {
+                    target
+                        .allocated_bytes
+                        .or(target.logical_bytes)
+                        .unwrap_or(item.estimated_reclaim_bytes)
+                });
             if policy.min_size_bytes > 0 && measured < policy.min_size_bytes {
                 break 'item (
                     block(
@@ -413,7 +423,10 @@ pub(crate) fn execute_plan_with_hooks(
 
             // 7. Execute with the requested method only.
             let outcome = match plan.mode {
-                DeleteMode::RecycleBin => recycle.recycle(&target.path, &guard_ctx),
+                DeleteMode::RecycleBin => match recycle_session.as_mut() {
+                    Some(session) => session.recycle(&target.path, &guard_ctx),
+                    None => RecycleBinService::new().recycle(&target.path, &guard_ctx),
+                },
                 DeleteMode::Permanent => permanent.delete(&target.path, &guard_ctx),
             };
 
@@ -543,13 +556,21 @@ fn validate_agent_target(target: &crate::scanner::models::StoredTarget) -> Resul
     let prefix = match target.provider.as_str() {
         "codex" => "codex.",
         "claude-code" => "claude.",
+        "claude-desktop" => "claude_desktop.",
         "antigravity" => "antigravity.",
         "opencode" => "opencode.",
         "t3code" => "t3code.",
         "bionic" => "bionic.",
         "cursor" => "cursor.",
         "windsurf" => "windsurf.",
+        "copilot" => "copilot.",
+        "cline" => "cline.",
+        "roo-code" => "roo_code.",
+        "aider" => "aider.",
+        "continue" => "continue.",
+        "zed" => "zed.",
         "ollama" => "ollama.",
+        "lm-studio" => "lm_studio.",
         _ => return Err("Unknown provider target.".to_string()),
     };
     if !target.rule_id.starts_with(prefix) {
@@ -584,11 +605,8 @@ pub fn signed_volume_delta(before: Option<u64>, after: Option<u64>) -> Option<i6
 /// Stable key for the volume that contains `path` (`C:\` on Windows, `/` on
 /// Unix-like systems). Two roots on the same volume must be sampled once.
 fn volume_key(path: &Path) -> String {
-    path.ancestors()
-        .last()
-        .unwrap_or(path)
-        .to_string_lossy()
-        .to_string()
+    let root = path.ancestors().last().unwrap_or(path);
+    crate::safety::path_guard::normalize_key(root)
 }
 
 /// Samples free space for every unique local volume behind the scan roots. A

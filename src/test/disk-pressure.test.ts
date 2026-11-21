@@ -22,14 +22,14 @@ vi.mock("@/lib/notifications/notification-service", () => ({
 import { checkDiskPressure, resetDiskPressureCooldown } from "@/lib/notifications/lifecycle";
 import { usePreferencesStore } from "@/stores/preferences-store";
 
-const COOLDOWN_KEY = "dev-cleaner.disk-pressure-cooldown.v1";
+const COOLDOWN_KEY = "detergo.disk-pressure-cooldown.v1";
 const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
 
 /**
  * jsdom in this Node build leaves `window.localStorage` undefined (the global
  * `localStorage` belongs to Node's experimental implementation, which needs a
- * `--localstorage-file`). Install a real `Storage` so the cooldown path — which
- * correctly degrades to memory when storage is missing — is actually exercised.
+ * `--localstorage-file`). Install a real `Storage` so the cooldown path - which
+ * correctly degrades to memory when storage is missing - is actually exercised.
  */
 class MemoryStorage implements Storage {
   private data = new Map<string, string>();

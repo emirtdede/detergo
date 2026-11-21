@@ -5,18 +5,18 @@
  * Every translation surface is audited for two classes of defect that fallback
  * cannot hide because the string is present but wrong:
  *
- *   1. Cross-script contamination — a string written in the locale's own
+ *   1. Cross-script contamination - a string written in the locale's own
  *      script that contains letters from another writing system (for example
  *      Arabic "جاري" inside a Kannada string). Shared punctuation such as the
  *      danda (U+0964) is ignored so Bengali/Gurmukhi are not false-flagged.
- *   2. Mojibake — Windows-1251 bytes decoded as Latin-1, which turns Russian
+ *   2. Mojibake - Windows-1251 bytes decoded as Latin-1, which turns Russian
  *      text into strings like "Àëåêñàíäð".
- *   3. Han variant mixing — Simplified characters inside zh-tw (Traditional)
+ *   3. Han variant mixing - Simplified characters inside zh-tw (Traditional)
  *      strings and Traditional characters inside zh (Simplified) strings.
  *      Only unambiguous variant characters are checked so that shared forms
  *      (台, 后, 里, 面, 云, 干, 么, 游, …) are never flagged.
  *
- * Latin is always allowed because brand names and technical terms (Dev Cleaner,
+ * Latin is always allowed because brand names and technical terms (Detergo,
  * Windows, AI) legitimately stay in Latin across every locale.
  *
  * Run with: npm run check:i18n

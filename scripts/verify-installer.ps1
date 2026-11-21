@@ -33,7 +33,7 @@ if (-not (Test-Path $ReleaseDir)) {
 }
 
 $version = Get-ReleaseVersion -Root $root
-$nsis = Join-Path $ReleaseDir "Dev-Cleaner-$version-x64-Setup.exe"
+$nsis = Join-Path $ReleaseDir "Detergo-$version-x64-Setup.exe"
 $sourceIco = Join-Path $root "src-tauri\icons\icon.ico"
 
 Reset-InstallerResults
@@ -105,7 +105,7 @@ try {
             } 60
             $runOnce = Get-QueuedInstallDirCleanup
             $pendingCleanup = (-not (Test-Path $installDir)) -or (-not [string]::IsNullOrEmpty($runOnce))
-            $registryGone = @(Get-DevCleanerUninstallEntries).Count -eq 0
+            $registryGone = @(Get-DetergoUninstallEntries).Count -eq 0
             Record-InstallerResult "I-06" "NSIS silent uninstall" `
                 ($(if ($filesGone -and $pendingCleanup -and $registryGone) { "PASS" } else { "FAIL" })) `
                 ("exit=$($up.ExitCode) filesGone=$filesGone dirPending=$pendingCleanup registryGone=$registryGone")
@@ -122,15 +122,15 @@ try {
         }
     }
 
-    $leftDirs = @(Get-DevCleanerInstallDirs)
-    $leftEntries = @(Get-DevCleanerUninstallEntries)
+    $leftDirs = @(Get-DetergoInstallDirs)
+    $leftEntries = @(Get-DetergoUninstallEntries)
     $clean = ($leftDirs.Count -eq 0) -and ($leftEntries.Count -eq 0)
     Record-InstallerResult "I-07" "no leftovers after uninstall" ($(if ($clean) { "PASS" } else { "FAIL" })) `
         ("dirs=$($leftDirs -join ',') entries=$($leftEntries.DisplayName -join ',')")
 }
 finally {
     Stop-InstalledApp
-    Remove-DevCleanerLeftovers
+    Remove-DetergoLeftovers
 }
 
 exit (Complete-InstallerRun -Title "NSIS installer checks")

@@ -20,12 +20,12 @@ use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
-use dev_cleaner_lib::catalog::CatalogIndex;
-use dev_cleaner_lib::cleanup::CleanupPolicy;
-use dev_cleaner_lib::scanner::cancellation::CancellationToken;
-use dev_cleaner_lib::scanner::models::{ScanRequest, ScanScope};
-use dev_cleaner_lib::scanner::run_scan;
-use dev_cleaner_lib::scanner::ScanRegistry;
+use detergo_lib::catalog::CatalogIndex;
+use detergo_lib::cleanup::CleanupPolicy;
+use detergo_lib::scanner::cancellation::CancellationToken;
+use detergo_lib::scanner::models::{ScanRequest, ScanScope};
+use detergo_lib::scanner::run_scan;
+use detergo_lib::scanner::ScanRegistry;
 
 fn synthetic_tree(root: &Path, projects: usize, files_per_project: usize) -> u64 {
     let mut entries = 0u64;

@@ -7,7 +7,7 @@ import { useCacheStore } from "@/stores/cache-store";
  * made the caches page read "not measured" for the whole scan, so the top-bar
  * action looked like it had never included caches at all. It also created a
  * worse failure mode: the pending step kept waiting for the scan promise, so a
- * user "Stop" resolved the walk and *then* started a fresh measurement —
+ * user "Stop" resolved the walk and *then* started a fresh measurement -
  * pressing stop appeared to begin the cache scan.
  *
  * The measurement owns a separate backend session and cancel token, so running

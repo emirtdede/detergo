@@ -152,7 +152,7 @@ for (const entry of projectLanguages()) {
   // 3a. No English button word may survive inside a translated sentence. The
   // sentence strings name the buttons ("Click Next to continue.", "click I
   // Agree"), and machine translation happily keeps those words in Latin script
-  // while the button itself is translated — a half-English wizard. The three
+  // while the button itself is translated - a half-English wizard. The three
   // files of a language share their button labels, so compare across all of
   // them: `.nlf` defines Next/Install/Uninstall/Agree, `.nsh` defines Finish,
   // and the Tauri pack is the one that says "click Next to continue".
@@ -269,6 +269,19 @@ if (!fs.existsSync(pickerFile)) {
       fail(`hooks.nsh must point ${define} at a DcPicker LangString`);
     }
   }
+  if (!/!define\s+MUI_LANGDLL_ALLLANGUAGES\b/.test(pickerHooks)) {
+    fail(
+      "hooks.nsh must define MUI_LANGDLL_ALLLANGUAGES so all 73 languages appear regardless of system codepage",
+    );
+  }
+  if (!/!define\s+MUI_LANGDLL_ALWAYSSHOW\b/.test(pickerHooks)) {
+    fail(
+      "hooks.nsh must define MUI_LANGDLL_ALWAYSSHOW so setup.exe always presents the language selector",
+    );
+  }
+  if (!/!insertmacro\s+MUI_LANGDLL_SAVELANGUAGE\b/.test(pickerHooks)) {
+    fail("hooks.nsh must invoke MUI_LANGDLL_SAVELANGUAGE in NSIS_HOOK_POSTINSTALL");
+  }
 }
 
 // 4. Config must declare every language in the documented order, and map the
@@ -277,6 +290,11 @@ const config = readJson("src-tauri/tauri.conf.json");
 const nsis = config.bundle?.windows?.nsis ?? {};
 const expected = buildInstallerLanguageOrder();
 const actual = nsis.languages ?? [];
+if (actual[0] !== "English") {
+  fail(
+    "tauri.conf.json NSIS languages[0] must be English so unsupported Windows UI locales fall back to English",
+  );
+}
 
 if (JSON.stringify(actual) !== JSON.stringify(expected)) {
   const missing = expected.filter((name) => !actual.includes(name));
@@ -378,7 +396,7 @@ if (errors.length) {
 }
 
 console.log(
-  `[check-installer-languages] PASS — ${appLocales.length} app locales; ` +
+  `[check-installer-languages] PASS - ${appLocales.length} app locales; ` +
     `${expected.length} installer languages ` +
     `(${projectLanguages().length} project-supplied NSIS packs, ` +
     `${projectTauriLanguages().length} project-supplied message packs); ` +

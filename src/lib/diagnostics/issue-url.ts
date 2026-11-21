@@ -11,7 +11,7 @@ export function buildIssueUrl(entries: readonly ErrorLogEntry[], version: string
     "<!-- Describe what you were doing when the problem appeared. -->",
     "",
     "### Environment",
-    `- Dev Cleaner: ${version}`,
+    `- Detergo: ${version}`,
     `- Platform: ${navigator.platform || "unknown"}`,
     "",
     "### In-app error log",

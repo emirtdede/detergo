@@ -52,20 +52,20 @@ fn remaining_targets(root: &Path) -> usize {
 
 fn child_main() {
     let root = PathBuf::from(std::env::var("NC_CRASH_FIXTURE").expect("fixture env"));
-    let catalog = Arc::new(dev_cleaner_lib::catalog::CatalogIndex::embedded().expect("catalog"));
-    let policy = dev_cleaner_lib::cleanup::CleanupPolicy::default();
-    let registry = dev_cleaner_lib::scanner::ScanRegistry::new();
+    let catalog = Arc::new(detergo_lib::catalog::CatalogIndex::embedded().expect("catalog"));
+    let policy = detergo_lib::cleanup::CleanupPolicy::default();
+    let registry = detergo_lib::scanner::ScanRegistry::new();
     let roots = vec![root.clone()];
     let session = registry.create_session(
-        dev_cleaner_lib::scanner::models::ScanScope::Project,
+        detergo_lib::scanner::models::ScanScope::Project,
         root.clone(),
         roots,
     );
 
-    let request = dev_cleaner_lib::scanner::models::ScanRequest {
+    let request = detergo_lib::scanner::models::ScanRequest {
         root_path: root.to_string_lossy().to_string(),
         exclusions: Vec::new(),
-        scope: dev_cleaner_lib::scanner::models::ScanScope::Project,
+        scope: detergo_lib::scanner::models::ScanScope::Project,
         include_agents: None,
         profile: Some("balanced".to_string()),
         max_depth: Some(16),
@@ -82,10 +82,10 @@ fn child_main() {
         .expect("runtime");
 
     runtime
-        .block_on(dev_cleaner_lib::scanner::run_scan(
+        .block_on(detergo_lib::scanner::run_scan(
             request,
             session.clone(),
-            dev_cleaner_lib::scanner::cancellation::CancellationToken::new(),
+            detergo_lib::scanner::cancellation::CancellationToken::new(),
             catalog.clone(),
             &policy,
             |_| {},
@@ -95,35 +95,35 @@ fn child_main() {
     let handle = session.lock().unwrap();
     let ids: Vec<String> = handle.targets.keys().cloned().collect();
     assert_eq!(ids.len(), PROJECTS, "expected one target per project");
-    let plan = dev_cleaner_lib::cleanup::build_plan(
+    let plan = detergo_lib::cleanup::build_plan(
         &handle,
         &ids,
-        dev_cleaner_lib::cleanup::DeleteMode::Permanent,
+        detergo_lib::cleanup::DeleteMode::Permanent,
         &catalog,
         &policy,
     )
     .expect("plan");
 
-    let report = dev_cleaner_lib::cleanup::execute_plan(
+    let report = detergo_lib::cleanup::execute_plan(
         &plan,
         &handle,
         &catalog,
         &policy,
         &plan.confirmation_token,
         true,
-        &dev_cleaner_lib::scanner::cancellation::CancellationToken::new(),
+        &detergo_lib::scanner::cancellation::CancellationToken::new(),
     )
     .expect("execute");
     drop(handle);
 
     // Only a completed run is recorded — this is the line the crash must skip.
-    let repo = dev_cleaner_lib::audit::AuditRepository::new();
-    let record = dev_cleaner_lib::audit::AuditRecord {
+    let repo = detergo_lib::audit::AuditRepository::new();
+    let record = detergo_lib::audit::AuditRecord {
         id: "h-child".to_string(),
         timestamp: "2026-11-01T00:00:00Z".to_string(),
         session_id: plan.session_id.clone(),
         plan_id: plan.id.clone(),
-        mode: dev_cleaner_lib::cleanup::DeleteMode::Permanent,
+        mode: detergo_lib::cleanup::DeleteMode::Permanent,
         success_count: report.success_count,
         error_count: report.error_count,
         reclaim_bytes: report.reclaim_bytes,
@@ -204,7 +204,7 @@ fn crash_during_permanent_delete_writes_no_audit_record() {
     );
 
     // No history file, or an empty one: the interrupted run was never recorded.
-    let history = appdata.join("dev-cleaner").join("history.jsonl");
+    let history = appdata.join("detergo").join("history.jsonl");
     let recorded = fs::read_to_string(&history).unwrap_or_default();
     assert!(
         recorded.trim().is_empty(),

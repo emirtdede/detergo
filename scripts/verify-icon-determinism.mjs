@@ -25,8 +25,8 @@ const second = fs.readFileSync(manifestPath, "utf8");
 
 if (first !== second) {
   console.error(
-    "[verify-icon-determinism] FAIL — two generator runs produced different manifests.",
+    "[verify-icon-determinism] FAIL - two generator runs produced different manifests.",
   );
   process.exit(1);
 }
-console.log("[verify-icon-determinism] PASS — two consecutive runs are byte-identical.");
+console.log("[verify-icon-determinism] PASS - two consecutive runs are byte-identical.");

@@ -59,7 +59,7 @@ function parseValue(raw) {
 const rules = parseRules(fs.readFileSync(TOML, "utf8"));
 
 const lines = [];
-lines.push(`// GENERATED FILE — do not edit by hand.`);
+lines.push(`// GENERATED FILE - do not edit by hand.`);
 lines.push(`//`);
 lines.push(`// Source: src-tauri/assets/targets.toml`);
 lines.push(`// Regenerate: node scripts/generate-mock-catalog.mjs`);

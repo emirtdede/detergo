@@ -12,7 +12,7 @@
  *
  * The warm-up therefore builds one throwaway English-only installer with
  * Tauri's own downloader. The toolset it installs is the exact one the real
- * bundle uses — nothing is pinned or re-implemented here — and the real build
+ * bundle uses - nothing is pinned or re-implemented here - and the real build
  * then reuses the already-compiled app binary, so the only extra cost is the
  * installer compile.
  */
@@ -46,7 +46,7 @@ console.log("[ensure-nsis-toolset] NSIS is missing; warming it with a minimal bu
 // real build packages a moment later (Cargo skips the second compile).
 run(["build", "--no-bundle"]);
 
-const dir = mkdtempSync(join(tmpdir(), "dev-cleaner-nsis-"));
+const dir = mkdtempSync(join(tmpdir(), "detergo-nsis-"));
 const configPath = join(dir, "warmup.json");
 writeFileSync(
   configPath,

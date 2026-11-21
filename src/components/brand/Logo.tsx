@@ -8,7 +8,7 @@ export interface LogoProps {
 
 /**
  * Canonical glyph-only mark. The path data is hand-maintained and mirrored
- * exactly in `assets/brand/dev-cleaner-icon.svg`; `npm run check:brand` fails
+ * exactly in `assets/brand/detergo-icon.svg`; `npm run check:brand` fails
  * when the two drift apart.
  */
 export const Logo: React.FC<LogoProps> = ({ size = 22, className = "", showWordmark = false }) => {
@@ -29,7 +29,7 @@ export const Logo: React.FC<LogoProps> = ({ size = 22, className = "", showWordm
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         role="img"
-        aria-label="Dev Cleaner"
+        aria-label="Detergo"
       >
         <g stroke="currentColor" fill="none">
           <path
@@ -62,7 +62,7 @@ export const Logo: React.FC<LogoProps> = ({ size = 22, className = "", showWordm
             color: "var(--text-primary)",
           }}
         >
-          Dev Cleaner
+          Detergo
         </span>
       )}
     </div>

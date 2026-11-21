@@ -14,9 +14,9 @@ use std::fs;
 use std::path::Path;
 use std::time::Instant;
 
-use dev_cleaner_lib::catalog::model::TargetKind;
-use dev_cleaner_lib::scanner::cancellation::CancellationToken;
-use dev_cleaner_lib::scanner::measurement::measure_path;
+use detergo_lib::catalog::model::TargetKind;
+use detergo_lib::scanner::cancellation::CancellationToken;
+use detergo_lib::scanner::measurement::measure_path;
 
 #[cfg(windows)]
 fn peak_working_set_bytes() -> Option<u64> {

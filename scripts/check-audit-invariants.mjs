@@ -52,24 +52,67 @@ const RULES = [
   },
 ];
 
+const LONG_DASH_RULE = {
+  id: "no-long-dash",
+  pattern: /[\u2013\u2014\u2015]/,
+  reason: "Long dashes (U+2013, U+2014, U+2015) are permanently banned; use ASCII hyphen `-`.",
+};
+
 const ROOTS = ["src", "scripts", "src-tauri/src"];
 const EXTENSIONS = new Set([".ts", ".tsx", ".js", ".mjs", ".rs"]);
+const LONG_DASH_ROOTS = [
+  "src",
+  "src-tauri/src",
+  "src-tauri/assets",
+  "src-tauri/nsis/languages",
+  "scripts",
+  "e2e",
+  "docs",
+  "packaging",
+  ".github",
+  "README.md",
+  "index.html",
+];
+const LONG_DASH_EXTENSIONS = new Set([
+  ".ts",
+  ".tsx",
+  ".js",
+  ".mjs",
+  ".cjs",
+  ".rs",
+  ".css",
+  ".json",
+  ".toml",
+  ".md",
+  ".html",
+  ".yml",
+  ".yaml",
+  ".nsh",
+  ".nsi",
+  ".ps1",
+  ".py",
+]);
 const SKIP_DIRS = new Set(["node_modules", "target", "dist", ".git"]);
 
-function* walk(dir) {
-  for (const entry of readdirSync(dir)) {
+function* walk(target, extensions) {
+  const stat = statSync(target);
+  if (stat.isFile()) {
+    if (extensions.has(extname(target).toLowerCase())) yield target;
+    return;
+  }
+  for (const entry of readdirSync(target)) {
     if (SKIP_DIRS.has(entry)) continue;
-    const full = join(dir, entry);
-    const stat = statSync(full);
-    if (stat.isDirectory()) yield* walk(full);
-    else if (EXTENSIONS.has(extname(entry))) yield full;
+    const full = join(target, entry);
+    const childStat = statSync(full);
+    if (childStat.isDirectory()) yield* walk(full, extensions);
+    else if (extensions.has(extname(entry).toLowerCase())) yield full;
   }
 }
 
 const violations = [];
 for (const relRoot of ROOTS) {
   const absRoot = join(root, relRoot);
-  for (const file of walk(absRoot)) {
+  for (const file of walk(absRoot, EXTENSIONS)) {
     const rel = relative(root, file).replaceAll("\\", "/");
     if (rel === SELF) continue;
     const lines = readFileSync(file, "utf8").split(/\r?\n/);
@@ -89,8 +132,27 @@ for (const relRoot of ROOTS) {
   }
 }
 
+for (const relRoot of LONG_DASH_ROOTS) {
+  const absRoot = join(root, relRoot);
+  for (const file of walk(absRoot, LONG_DASH_EXTENSIONS)) {
+    const rel = relative(root, file).replaceAll("\\", "/");
+    if (rel === SELF) continue;
+    const lines = readFileSync(file, "utf8").split(/\r?\n/);
+    lines.forEach((line, index) => {
+      if (!LONG_DASH_RULE.pattern.test(line)) return;
+      violations.push({
+        rule: LONG_DASH_RULE.id,
+        file: rel,
+        line: index + 1,
+        text: line.trim().slice(0, 140),
+        reason: LONG_DASH_RULE.reason,
+      });
+    });
+  }
+}
+
 if (violations.length === 0) {
-  console.log(`Audit invariant gate passed: ${RULES.length} rules, no violations.`);
+  console.log(`Audit invariant gate passed: ${RULES.length + 1} rules, no violations.`);
   process.exit(0);
 }
 

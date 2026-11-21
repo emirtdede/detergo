@@ -92,10 +92,12 @@ pub fn run(token: &CancellationToken) -> Result<CleanMgrOutcome, AppError> {
     let mut enabled = 0usize;
     let mut failures: Vec<String> = Vec::new();
 
+    let reg_bin = exe("reg.exe");
+    let reg_str = reg_bin.to_string_lossy();
     for handler in HANDLERS {
         let key = format!(r"{VOLUME_CACHES}\{handler}");
         let outcome = super::process::run(
-            "reg.exe",
+            &reg_str,
             &[
                 "add",
                 &key,

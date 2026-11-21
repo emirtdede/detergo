@@ -9,6 +9,7 @@ import { ItemTable } from "./ItemTable";
 import { maskPath, truncatePath } from "@/lib/format/path";
 import { formatBytes } from "@/lib/formatters";
 import { ownBytesById } from "@/lib/item-totals";
+import { useThrottledValue, SCAN_AGGREGATE_THROTTLE_MS } from "@/lib/hooks/use-throttled-value";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import "./items.css";
 
@@ -36,15 +37,21 @@ export const ProjectsView: React.FC = () => {
     [projectItems],
   );
 
+  const aggregateProjectItems = useThrottledValue(projectItems, SCAN_AGGREGATE_THROTTLE_MS);
+  const aggregateItems = useMemo(
+    () => aggregateProjectItems.filter((item) => item.status !== "deleted"),
+    [aggregateProjectItems],
+  );
+
   const projectTotals = useMemo(() => {
     // Nested project targets (for example `.next` and `.next/cache`) are
     // measured recursively; summing the raw rows promised the same bytes twice.
-    const own = ownBytesById(projectItems);
+    const own = ownBytesById(aggregateProjectItems);
     let cleanable = 0;
     let safe = 0;
     let cleanableTargets = 0;
     const projectRoots = new Set<string>();
-    for (const item of items) {
+    for (const item of aggregateItems) {
       // Fallback rows (a stray `node_modules` outside any manifest) carry a
       // synthetic project id. Counting those was what turned 12 projects into
       // "1059 projects"; they are cleanable but not projects.
@@ -58,7 +65,7 @@ export const ProjectsView: React.FC = () => {
       if (item.safetyClass === "safe") safe += b;
     }
     return { cleanable, safe, cleanableTargets, projectRoots: projectRoots.size };
-  }, [items, projectItems]);
+  }, [aggregateItems, aggregateProjectItems]);
 
   // A snapshot written before `detectedProjectCount` existed cannot distinguish
   // real roots from fallback rows, so it must not show a number at all.
@@ -110,7 +117,7 @@ export const ProjectsView: React.FC = () => {
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">
-              {items.length > 0 ? formatBytes(projectTotals.cleanable, language) : "—"}
+              {items.length > 0 ? formatBytes(projectTotals.cleanable, language) : "-"}
             </span>
             <span className="nc-kpi-card-sub">{ui.common.showing(items.length)}</span>
           </div>
@@ -125,7 +132,7 @@ export const ProjectsView: React.FC = () => {
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">
-              {items.length > 0 ? formatBytes(projectTotals.safe, language) : "—"}
+              {items.length > 0 ? formatBytes(projectTotals.safe, language) : "-"}
             </span>
             <span className="nc-kpi-card-sub">{ui.projects.kpiSafeReclaimSub}</span>
           </div>
@@ -161,7 +168,7 @@ export const ProjectsView: React.FC = () => {
           description={emptyDescription}
         />
       ) : (
-        <ItemTable items={items} />
+        <ItemTable items={items} scopeKey="projects" />
       )}
     </div>
   );

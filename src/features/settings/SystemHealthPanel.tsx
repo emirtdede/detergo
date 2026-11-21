@@ -92,25 +92,25 @@ export const SystemHealthPanel: React.FC = () => {
         <div className="about-meta-row">
           <span className="about-meta-label">{ui.history.totalRuns}</span>
           <span className="about-meta-value">
-            {state ? (state.totals?.runs ?? 0).toLocaleString(locale) : "—"}
+            {state ? (state.totals?.runs ?? 0).toLocaleString(locale) : "-"}
           </span>
         </div>
         <div className="about-meta-row">
           <span className="about-meta-label">{ui.history.errors}</span>
           <span className="about-meta-value">
-            {state ? (state.totals?.errorCount ?? 0).toLocaleString(locale) : "—"}
+            {state ? (state.totals?.errorCount ?? 0).toLocaleString(locale) : "-"}
           </span>
         </div>
         <div className="about-meta-row">
           <span className="about-meta-label">{ui.history.totalReclaimed}</span>
           <span className="about-meta-value">
-            {state ? formatBytes(state.totals?.reclaimedBytes ?? 0, locale) : "—"}
+            {state ? formatBytes(state.totals?.reclaimedBytes ?? 0, locale) : "-"}
           </span>
         </div>
         <div className="about-meta-row">
           <span className="about-meta-label">{ui.stale.bannerTitle}</span>
           <span className="about-meta-value">
-            {formattedLastScan ?? (state ? ui.common.none : "—")}
+            {formattedLastScan ?? (state ? ui.common.none : "-")}
           </span>
         </div>
         <div className="about-meta-row">

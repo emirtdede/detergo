@@ -43,13 +43,13 @@ describe("legal documents", () => {
       expect(LEGAL_DOCUMENTS[language].eula.clauses.length).toBeGreaterThanOrEqual(10);
       expect(LEGAL_DOCUMENTS[language].privacy.clauses.length).toBeGreaterThanOrEqual(10);
     }
-    // The obligations a EULA is expected to cover.
+    // The obligations an MIT-consistent EULA is expected to cover.
     const headings = LEGAL_DOCUMENTS.en.eula.clauses
       .map((clause) => clause.heading.toLowerCase())
       .join(" ");
     for (const keyword of [
       "license grant",
-      "restrictions",
+      "trademarks",
       "warranty",
       "liability",
       "governing law",
@@ -114,8 +114,9 @@ describe("legal documents", () => {
 
     ui.openLegalDoc("thirdParty");
     expect(useUiStore.getState().legalDoc).toBe("thirdParty");
-    expect(useUiStore.getState().settingsSection).toBe("about");
     expect(useUiStore.getState().aboutPane).toBe("legal");
+    // Opening a legal doc inside About must not clobber the user's remembered Settings section.
+    expect(useUiStore.getState().settingsSection).toBe("general");
 
     // Merely switching tabs must not yank the user out of another section.
     useUiStore.getState().setSettingsSection("about");

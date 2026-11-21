@@ -1,5 +1,5 @@
 /* ==========================================================================
-   VELLIUM DEV CLEANER — OVERVIEW VIEW
+   VELLIUM DETERGO - OVERVIEW VIEW
    100% Responsive, Full-Width, High-Precision Desktop Bento Grid.
    ========================================================================== */
 
@@ -595,7 +595,7 @@
   border-radius: var(--radius-md);
   background: var(--accent-subtle);
   color: var(--accent);
-  border: 1px solid var(--border-control);
+  border: 1px solid var(--border-strong);
 }
 
 .overview-zero-heading {
@@ -784,4 +784,81 @@
 .overview-coverage-reason,
 .overview-coverage-meta {
   color: var(--text-muted);
+}
+
+/* Interactive Squarified Disk Space Treemap ------------------------------- */
+.overview-treemap-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: clamp(16px, 1.8vw, 24px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  width: 100%;
+}
+
+.overview-treemap-canvas {
+  position: relative;
+  width: 100%;
+  height: clamp(180px, 24vh, 260px);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+}
+
+.overview-treemap-tile {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 6px 8px 6px 10px;
+  box-sizing: border-box;
+  border: 1px solid var(--surface);
+  border-inline-start: 3px solid var(--tile-color);
+  background: color-mix(in srgb, var(--tile-color) 12%, var(--surface-alt));
+  color: var(--text-primary);
+  text-align: start;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.overview-treemap-tile:hover {
+  background: color-mix(in srgb, var(--tile-color) 20%, var(--surface-alt));
+  border-color: var(--tile-color);
+  z-index: 2;
+}
+
+.overview-treemap-tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  z-index: 3;
+}
+
+.overview-treemap-name {
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overview-treemap-size {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-primary);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

@@ -1,8 +1,9 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use std::time::Instant;
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
+use std::time::{Duration, Instant};
 
-use walkdir::WalkDir;
+use crossbeam_channel as channel;
 
 use crate::catalog::matcher::{classify, collect_evidence, GitState};
 use crate::catalog::model::TargetKind;
@@ -25,16 +26,11 @@ const DEFAULT_EXCLUSIONS: &[&str] = &[
 ];
 
 /// Upper bound on retained walk notices.
-///
-/// `max_candidates` bounds matched items, not errors: a full-drive scan over a
-/// tree with hundreds of thousands of unreadable directories accumulated one
-/// owned notice per failure for the whole run. Past the cap the list is closed
-/// with a single synthetic notice so the user still learns that something was
-/// skipped without the buffer growing with the filesystem.
 const MAX_SCAN_NOTICES: usize = 1_000;
 
-/// Excluded only at the first level below the scan root, so a legitimate
-/// project folder named e.g. "windows" is still scanned.
+/// Excluded only at the first level below a drive/filesystem root, so a
+/// legitimate project folder named e.g. `windows` or `recovery` is still scanned.
+#[cfg(windows)]
 const SYSTEM_EXCLUSIONS: &[&str] = &[
     "windows",
     "program files",
@@ -50,6 +46,29 @@ const SYSTEM_EXCLUSIONS: &[&str] = &[
     "intel",
     "amd",
     "microsoft",
+];
+
+#[cfg(not(windows))]
+const SYSTEM_EXCLUSIONS: &[&str] = &[
+    "proc",
+    "sys",
+    "dev",
+    "run",
+    "usr",
+    "bin",
+    "sbin",
+    "lib",
+    "lib64",
+    "etc",
+    "boot",
+    "root",
+    "system",
+    "library",
+    "applications",
+    "volumes",
+    "cores",
+    "private",
+    "net",
 ];
 
 const BATCH_SIZE: usize = 100;
@@ -70,13 +89,77 @@ pub struct DiscoveryOutcome {
     pub warnings: Vec<crate::scanner::notices::ScanNotice>,
 }
 
+struct DirJob {
+    path: PathBuf,
+    depth: usize,
+    active_ancestor: Option<(String, String)>,
+}
+
+enum WorkerMsg {
+    Discovered {
+        item: Box<CleanupItem>,
+        target: Box<StoredTarget>,
+    },
+    Warning(crate::scanner::notices::ScanNotice),
+    ProgressPath(String),
+}
+
+struct PortableEntry {
+    name: std::ffi::OsString,
+    is_dir: bool,
+    is_file: bool,
+    is_redirecting_reparse: bool,
+    modified_ms: Option<i64>,
+}
+
+#[cfg(windows)]
+fn read_dir_entries(dir: &Path) -> std::io::Result<Vec<PortableEntry>> {
+    crate::platform::windows::fast_walk::read_dir_fast(dir).map(|entries| {
+        entries
+            .into_iter()
+            .map(|e| PortableEntry {
+                name: e.name,
+                is_dir: e.is_dir,
+                is_file: e.is_file,
+                is_redirecting_reparse: e.is_redirecting_reparse,
+                modified_ms: e.modified_ms,
+            })
+            .collect()
+    })
+}
+
+#[cfg(not(windows))]
+fn read_dir_entries(dir: &Path) -> std::io::Result<Vec<PortableEntry>> {
+    let mut out = Vec::new();
+    for entry in std::fs::read_dir(dir)? {
+        let Ok(entry) = entry else { continue };
+        let Ok(ft) = entry.file_type() else { continue };
+        let is_symlink = ft.is_symlink();
+        let modified_ms = if is_symlink {
+            None
+        } else {
+            entry
+                .metadata()
+                .ok()
+                .and_then(|m| m.modified().ok())
+                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                .map(|d| d.as_millis() as i64)
+        };
+        out.push(PortableEntry {
+            name: entry.file_name(),
+            is_dir: !is_symlink && ft.is_dir(),
+            is_file: !is_symlink && ft.is_file(),
+            is_redirecting_reparse: is_symlink,
+            modified_ms,
+        });
+    }
+    Ok(out)
+}
+
 pub struct DiscoveryEngine<'a> {
     catalog: &'a CatalogIndex,
     token: CancellationToken,
     budget: ScanBudget,
-    resolver: ProjectResolver,
-    active: HashMap<PathBuf, (String, String)>,
-    git_repo_cache: HashMap<PathBuf, Option<PathBuf>>,
 }
 
 impl<'a> DiscoveryEngine<'a> {
@@ -85,21 +168,7 @@ impl<'a> DiscoveryEngine<'a> {
             catalog,
             token,
             budget: ScanBudget::new(limits),
-            resolver: ProjectResolver::new(catalog.project_markers()),
-            active: HashMap::new(),
-            git_repo_cache: HashMap::new(),
         }
-    }
-
-    /// Single gate for the candidate budget: atomically checks the limit and
-    /// increments the counter. Splitting the check and the increment lets a
-    /// candidate slip through after the limit was reached.
-    fn try_add_candidate(&mut self) -> bool {
-        if self.budget.candidates() >= self.budget.limits().max_candidates {
-            return false;
-        }
-        self.budget.note_candidate();
-        true
     }
 
     pub fn discover<B, P>(
@@ -128,9 +197,26 @@ impl<'a> DiscoveryEngine<'a> {
             ));
         }
 
-        let mut exclusions: HashSet<String> = HashSet::new();
-        self.resolver.set_boundary(config.root);
+        if self.token.is_cancelled() {
+            on_progress(ScanProgress {
+                phase: "discovering".to_string(),
+                directories_visited: 0,
+                entries_found: 0,
+                entries_measured: 0,
+                bytes_measured: 0,
+                current_path: None,
+                stop_reason: Some(StopReason::Cancelled.code().to_string()),
+            });
+            return Ok(DiscoveryOutcome {
+                items: Vec::new(),
+                targets: Vec::new(),
+                directories_visited: 0,
+                stop_reason: Some(StopReason::Cancelled),
+                warnings: Vec::new(),
+            });
+        }
 
+        let mut exclusions: HashSet<String> = HashSet::new();
         for ex in DEFAULT_EXCLUSIONS {
             exclusions.insert(ex.to_string());
         }
@@ -144,418 +230,564 @@ impl<'a> DiscoveryEngine<'a> {
             .filter(|p| !p.is_empty())
             .collect();
 
+        let is_drive_root = is_drive_root_path(config.root);
+        let root_label = config.root.to_string_lossy().to_string();
+        let limits = self.budget.limits().to_owned();
+        let started = Instant::now();
+
+        let worker_count = std::thread::available_parallelism()
+            .map(|n| n.get().clamp(2, 8))
+            .unwrap_or(4);
+
+        let (job_tx, job_rx) = channel::unbounded::<DirJob>();
+        let (msg_tx, msg_rx) = channel::unbounded::<WorkerMsg>();
+
+        let in_flight = AtomicUsize::new(1);
+        let directories_visited = AtomicU64::new(0);
+        let candidates_count = AtomicU64::new(0);
+        let depth_hit = AtomicBool::new(false);
+        let candidate_limit_hit = AtomicBool::new(false);
+        let timeout_hit = AtomicBool::new(false);
+        let warning_count = AtomicUsize::new(0);
+
+        // Precompute rule index ordering once so tie-breaking stays deterministic.
+        let rule_order: HashMap<&str, usize> = self
+            .catalog
+            .rules()
+            .iter()
+            .enumerate()
+            .map(|(idx, r)| (r.id.as_str(), idx))
+            .collect();
+
+        let _ = job_tx.send(DirJob {
+            path: config.root.to_path_buf(),
+            depth: 0,
+            active_ancestor: None,
+        });
+
         let mut items: Vec<CleanupItem> = Vec::new();
         let mut targets: Vec<StoredTarget> = Vec::new();
         let mut warnings: Vec<crate::scanner::notices::ScanNotice> = Vec::new();
-        let mut directories_visited = 0u64;
         let mut batch: Vec<CleanupItem> = Vec::new();
         let mut last_progress = Instant::now();
-        let mut stop_reason: Option<StopReason> = None;
+        let mut last_path: Option<String> = None;
 
-        let is_drive_root = is_drive_root_path(config.root);
-        let walker = WalkDir::new(config.root)
-            .follow_links(false)
-            .same_file_system(true)
-            .into_iter()
-            .filter_entry(move |entry| entry_allowed(entry, &exclusions, is_drive_root));
+        let catalog = self.catalog;
+        let token = &self.token;
+        let scan_root = config.root;
+        let session_id = config.scan_session_id;
 
-        let mut it = walker;
-        while let Some(result) = it.next() {
-            if self.token.is_cancelled() {
-                stop_reason = Some(StopReason::Cancelled);
-                break;
-            }
-            if let Some(reason) = self.budget.exceeded() {
-                stop_reason = Some(reason);
-                break;
-            }
+        std::thread::scope(|scope| {
+            for _ in 0..worker_count {
+                let job_tx = job_tx.clone();
+                let job_rx = job_rx.clone();
+                let msg_tx = msg_tx.clone();
+                let exclusions = &exclusions;
+                let protected_keys = &protected_keys;
+                let root_label = &root_label;
+                let in_flight = &in_flight;
+                let directories_visited = &directories_visited;
+                let candidates_count = &candidates_count;
+                let depth_hit = &depth_hit;
+                let candidate_limit_hit = &candidate_limit_hit;
+                let timeout_hit = &timeout_hit;
+                let warning_count = &warning_count;
+                let rule_order = &rule_order;
 
-            let entry = match result {
-                Ok(e) => e,
-                Err(err) => {
-                    let path = err.path().map(|p| p.to_string_lossy().to_string());
-                    let code = if err
-                        .io_error()
-                        .map(|e| e.kind() == std::io::ErrorKind::PermissionDenied)
-                        .unwrap_or(false)
-                    {
-                        "ACCESS_DENIED"
-                    } else {
-                        "WALK_ERROR"
-                    };
-                    let root_label = config.root.to_string_lossy().to_string();
-                    if warnings.len() < MAX_SCAN_NOTICES {
-                        warnings.push(crate::scanner::notices::ScanNotice {
-                            code: code.to_string(),
-                            severity: crate::scanner::notices::classify(
-                                code,
-                                path.as_deref(),
-                                Some(&root_label),
-                            ),
-                            path,
-                            root: Some(root_label),
-                        });
-                    } else if warnings.len() == MAX_SCAN_NOTICES {
-                        warnings.push(crate::scanner::notices::ScanNotice {
-                            code: "WARNINGS_TRUNCATED".to_string(),
-                            severity: crate::scanner::notices::ScanNoticeSeverity::Info,
-                            path: None,
-                            root: Some(root_label),
-                        });
+                scope.spawn(move || {
+                    let mut resolver = ProjectResolver::new(catalog.project_markers());
+                    resolver.set_boundary(scan_root);
+                    let mut git_repo_cache: HashMap<PathBuf, Option<PathBuf>> = HashMap::new();
+                    let mut last_ping = Instant::now();
+
+                    loop {
+                        if token.is_cancelled()
+                            || candidate_limit_hit.load(Ordering::Relaxed)
+                            || timeout_hit.load(Ordering::Relaxed)
+                        {
+                            return;
+                        }
+                        if started.elapsed() >= limits.timeout {
+                            timeout_hit.store(true, Ordering::Relaxed);
+                            return;
+                        }
+
+                        let job = match job_rx.recv_timeout(Duration::from_millis(4)) {
+                            Ok(j) => j,
+                            Err(channel::RecvTimeoutError::Timeout) => {
+                                if in_flight.load(Ordering::Acquire) == 0 {
+                                    return;
+                                }
+                                continue;
+                            }
+                            Err(channel::RecvTimeoutError::Disconnected) => return,
+                        };
+
+                        directories_visited.fetch_add(1, Ordering::Relaxed);
+
+                        if last_ping.elapsed() >= Duration::from_millis(120) {
+                            let _ = msg_tx.send(WorkerMsg::ProgressPath(
+                                job.path.to_string_lossy().to_string(),
+                            ));
+                            last_ping = Instant::now();
+                        }
+
+                        let entries = match read_dir_entries(&job.path) {
+                            Ok(e) => e,
+                            Err(err) => {
+                                let prev = warning_count.fetch_add(1, Ordering::Relaxed);
+                                if prev < MAX_SCAN_NOTICES {
+                                    let code = if err.kind() == std::io::ErrorKind::PermissionDenied
+                                    {
+                                        "ACCESS_DENIED"
+                                    } else {
+                                        "WALK_ERROR"
+                                    };
+                                    let p = job.path.to_string_lossy().to_string();
+                                    let _ = msg_tx.send(WorkerMsg::Warning(
+                                        crate::scanner::notices::ScanNotice {
+                                            code: code.to_string(),
+                                            severity: crate::scanner::notices::classify(
+                                                code,
+                                                Some(&p),
+                                                Some(root_label),
+                                            ),
+                                            path: Some(p),
+                                            root: Some(root_label.clone()),
+                                        },
+                                    ));
+                                } else if prev == MAX_SCAN_NOTICES {
+                                    let _ = msg_tx.send(WorkerMsg::Warning(
+                                        crate::scanner::notices::ScanNotice {
+                                            code: "WARNINGS_TRUNCATED".to_string(),
+                                            severity:
+                                                crate::scanner::notices::ScanNoticeSeverity::Info,
+                                            path: None,
+                                            root: Some(root_label.clone()),
+                                        },
+                                    ));
+                                }
+                                if in_flight.fetch_sub(1, Ordering::AcqRel) == 1 {
+                                    return;
+                                }
+                                continue;
+                            }
+                        };
+
+                        // Resolve project context once for all children of `job.path`.
+                        let mut resolved_project_loaded = false;
+                        let mut resolved_project: Option<ProjectInfo> = None;
+
+                        let child_depth = job.depth + 1;
+                        let mut child_jobs: Vec<DirJob> = Vec::new();
+
+                        for entry in entries {
+                            if token.is_cancelled()
+                                || candidate_limit_hit.load(Ordering::Relaxed)
+                                || timeout_hit.load(Ordering::Relaxed)
+                            {
+                                break;
+                            }
+                            if started.elapsed() >= limits.timeout {
+                                timeout_hit.store(true, Ordering::Relaxed);
+                                break;
+                            }
+
+                            let name = entry.name.to_string_lossy().to_string();
+                            let name_lower = name.to_lowercase();
+                            if !entry_allowed_fast(
+                                &name_lower,
+                                &job.path,
+                                child_depth,
+                                entry.is_redirecting_reparse,
+                                exclusions,
+                                is_drive_root,
+                            ) {
+                                continue;
+                            }
+
+                            let path = job.path.join(&entry.name);
+                            let depth_limited = entry.is_dir && child_depth >= limits.max_depth;
+                            if depth_limited {
+                                depth_hit.store(true, Ordering::Relaxed);
+                                directories_visited.fetch_add(1, Ordering::Relaxed);
+                            }
+
+                            let candidates = catalog.rules_for_name(&name);
+                            if candidates.is_empty() {
+                                if entry.is_dir && !depth_limited {
+                                    child_jobs.push(DirJob {
+                                        path,
+                                        depth: child_depth,
+                                        active_ancestor: job.active_ancestor.clone(),
+                                    });
+                                }
+                                continue;
+                            }
+
+                            if !resolved_project_loaded {
+                                resolved_project = resolver.resolve(&job.path);
+                                resolved_project_loaded = true;
+                            }
+                            let project_root = resolved_project
+                                .as_ref()
+                                .map(|p| PathBuf::from(&p.project_root));
+                            let workspace_root = resolved_project
+                                .as_ref()
+                                .map(|p| PathBuf::from(&p.root_project_root));
+                            let inside_source_subtree = is_inside_source_subtree(
+                                &job.path,
+                                project_root.as_deref().unwrap_or(scan_root),
+                            );
+
+                            let mut matched_rule = None;
+                            let mut matched_evidence = None;
+                            let mut best_key = (0usize, 0usize, 0usize, usize::MAX);
+
+                            for rule in candidates {
+                                if !rule.nested_in.is_empty() {
+                                    let Some((parent_rule_id, _)) = &job.active_ancestor else {
+                                        continue;
+                                    };
+                                    if !rule.nested_in.iter().any(|p| p == parent_rule_id) {
+                                        continue;
+                                    }
+                                }
+                                match rule.kind {
+                                    TargetKind::Directory if !entry.is_dir => continue,
+                                    TargetKind::File | TargetKind::FileGroup if !entry.is_file => {
+                                        continue
+                                    }
+                                    _ => {}
+                                }
+                                if let Some(rule_max_depth) = rule.max_depth {
+                                    if child_depth > rule_max_depth {
+                                        continue;
+                                    }
+                                }
+                                if rule.generic_name && inside_source_subtree {
+                                    continue;
+                                }
+
+                                let evidence = collect_evidence(
+                                    rule,
+                                    &path,
+                                    project_root.as_deref(),
+                                    workspace_root.as_deref(),
+                                    None,
+                                );
+
+                                if !rule.markers.is_empty()
+                                    && evidence.marker_hits.is_empty()
+                                    && evidence.content_hits.is_empty()
+                                {
+                                    if rule.is_protected() {
+                                        continue;
+                                    }
+                                    let conflicting_project = resolved_project.is_some();
+                                    let allow_unverified_generic =
+                                        rule.id == "js.build" && !conflicting_project;
+                                    if rule.generic_name && !allow_unverified_generic {
+                                        continue;
+                                    }
+                                    if !rule.generic_name
+                                        && matches!(
+                                            rule.id.as_str(),
+                                            "unreal.intermediate"
+                                                | "unreal.ddc"
+                                                | "dotnet.testresults"
+                                                | "elixir.build"
+                                                | "swift.build"
+                                                | "godot.imported"
+                                                | "zig.cache"
+                                                | "zig.out"
+                                                | "ruby.yardoc"
+                                        )
+                                    {
+                                        continue;
+                                    }
+                                }
+
+                                let key = (
+                                    evidence.marker_hits.len(),
+                                    evidence.content_hits.len(),
+                                    if rule.generic_name { 0 } else { 1 },
+                                );
+                                let rule_index = rule_order
+                                    .get(rule.id.as_str())
+                                    .copied()
+                                    .unwrap_or(usize::MAX);
+                                let cmp = (key.0, key.1, key.2, usize::MAX - rule_index);
+                                if matched_rule.is_none() || cmp > best_key {
+                                    best_key = cmp;
+                                    matched_rule = Some(rule);
+                                    matched_evidence = Some(evidence);
+                                }
+                            }
+
+                            let (Some(rule), Some(mut evidence)) = (matched_rule, matched_evidence)
+                            else {
+                                if entry.is_dir && !depth_limited {
+                                    child_jobs.push(DirJob {
+                                        path,
+                                        depth: child_depth,
+                                        active_ancestor: job.active_ancestor.clone(),
+                                    });
+                                }
+                                continue;
+                            };
+
+                            if rule.git_policy == crate::catalog::GitPolicy::DenyTracked
+                                && !evidence.marker_hits.is_empty()
+                            {
+                                let state = git_guard::fast_git_state(&path, &mut git_repo_cache);
+                                evidence.git_repo = state != GitState::NotRepository;
+                                evidence.git_state = Some(state);
+                            }
+
+                            let project = resolved_project
+                                .clone()
+                                .unwrap_or_else(|| fallback_project(&job.path));
+                            let classification = classify(rule, &evidence);
+
+                            let path_key = crate::safety::path_guard::normalize_key(&path);
+                            let user_protected = protected_keys.iter().any(|key| {
+                                path_key == *key
+                                    || crate::safety::path_guard::is_within(&path_key, key)
+                                    || crate::safety::path_guard::is_within(key, &path_key)
+                            });
+
+                            let mut warnings_for_item = classification.warnings.clone();
+                            let active_use = crate::safety::is_target_in_use(&path);
+                            let mut selectable = classification.selectable;
+
+                            let system_blocked =
+                                crate::safety::path_guard::validate_system_path(&path_key).is_err();
+
+                            if user_protected {
+                                warnings_for_item.push("USER_PROTECTED".to_string());
+                                selectable = false;
+                            }
+                            if system_blocked {
+                                warnings_for_item.push("PATH_GUARD".to_string());
+                                selectable = false;
+                            }
+                            if active_use.blocks_deletion() {
+                                warnings_for_item.push("TARGET_ACTIVE".to_string());
+                                selectable = false;
+                            }
+                            if rule.requires_idle && active_use != ActiveUse::No {
+                                selectable = false;
+                            }
+
+                            // Atomic candidate budget reservation: never overshoot `max_candidates`.
+                            let reserved = loop {
+                                let curr = candidates_count.load(Ordering::Acquire);
+                                if curr >= limits.max_candidates {
+                                    break false;
+                                }
+                                if candidates_count
+                                    .compare_exchange_weak(
+                                        curr,
+                                        curr + 1,
+                                        Ordering::AcqRel,
+                                        Ordering::Acquire,
+                                    )
+                                    .is_ok()
+                                {
+                                    break true;
+                                }
+                            };
+                            if !reserved {
+                                candidate_limit_hit.store(true, Ordering::Relaxed);
+                                break;
+                            }
+
+                            let item_id =
+                                format!("t{}", &uuid::Uuid::new_v4().simple().to_string()[..24]);
+                            let parent_item_id =
+                                job.active_ancestor.as_ref().map(|(_, id)| id.clone());
+                            let last_modified_ms = entry.modified_ms;
+                            let modified_at = last_modified_ms.map(unix_ms_to_iso);
+
+                            let evidence_snapshot = EvidenceSnapshot {
+                                rule_id: rule.id.clone(),
+                                target_name: name.clone(),
+                                project_root: Some(project.project_root.clone()),
+                                workspace_root: Some(project.root_project_root.clone()),
+                                marker_hits: evidence.marker_hits.clone(),
+                                content_hits: evidence.content_hits.clone(),
+                            };
+
+                            let item = CleanupItem {
+                                id: item_id.clone(),
+                                scan_session_id: session_id.to_string(),
+                                rule_id: rule.id.clone(),
+                                provider: "project".to_string(),
+                                ecosystem: rule.ecosystem.clone(),
+                                category: rule.category.clone(),
+                                kind: rule.kind,
+                                project_id: Some(project.project_id.clone()),
+                                project_name: Some(project.project_name.clone()),
+                                project_root: Some(project.project_root.clone()),
+                                project_detected: project.detected,
+                                display_name: name,
+                                display_path: path.to_string_lossy().to_string(),
+                                logical_bytes: None,
+                                allocated_bytes: None,
+                                estimated_reclaim_bytes: None,
+                                safety_class: classification.safety_class,
+                                confidence: classification.confidence,
+                                active_use,
+                                evidence_codes: evidence.codes(),
+                                warning_codes: warnings_for_item,
+                                cleanup_method: rule.cleanup,
+                                regenerate_hint: rule.regenerate.clone(),
+                                protected: user_protected
+                                    || classification.safety_class
+                                        == crate::catalog::SafetyClass::Keep,
+                                selectable,
+                                auto_selectable: selectable
+                                    && classification.safety_class
+                                        == crate::catalog::SafetyClass::Safe
+                                    && classification.confidence
+                                        == crate::catalog::Confidence::High
+                                    && !rule.requires_idle,
+                                last_modified_at: modified_at.clone(),
+                                last_modified_ms,
+                                status: if selectable {
+                                    ItemStatus::Discovered
+                                } else {
+                                    ItemStatus::Blocked
+                                },
+                                parent_item_id: parent_item_id.clone(),
+                                note: rule.note.clone(),
+                            };
+
+                            let stored = StoredTarget {
+                                id: item_id.clone(),
+                                path: path.clone(),
+                                rule_id: rule.id.clone(),
+                                provider: "project".to_string(),
+                                category: rule.category.clone(),
+                                kind: rule.kind,
+                                safety_class: classification.safety_class,
+                                cleanup_method: rule.cleanup,
+                                project_root: Some(project.project_root.clone()),
+                                evidence: evidence_snapshot,
+                                logical_bytes: None,
+                                allocated_bytes: None,
+                                modified_at,
+                                active_use,
+                                parent_id: parent_item_id,
+                                protected: user_protected
+                                    || classification.safety_class
+                                        == crate::catalog::SafetyClass::Keep,
+                            };
+
+                            let _ = msg_tx.send(WorkerMsg::Discovered {
+                                item: Box::new(item),
+                                target: Box::new(stored),
+                            });
+
+                            if entry.is_dir && !depth_limited {
+                                let unverified_generic = rule.generic_name
+                                    && evidence.marker_hits.is_empty()
+                                    && evidence.content_hits.is_empty();
+                                if catalog.has_child_rules(&rule.id) {
+                                    child_jobs.push(DirJob {
+                                        path,
+                                        depth: child_depth,
+                                        active_ancestor: Some((rule.id.clone(), item_id)),
+                                    });
+                                } else if unverified_generic {
+                                    child_jobs.push(DirJob {
+                                        path,
+                                        depth: child_depth,
+                                        active_ancestor: job.active_ancestor.clone(),
+                                    });
+                                }
+                            }
+                        }
+
+                        if !child_jobs.is_empty()
+                            && !token.is_cancelled()
+                            && !candidate_limit_hit.load(Ordering::Relaxed)
+                            && !timeout_hit.load(Ordering::Relaxed)
+                        {
+                            in_flight.fetch_add(child_jobs.len(), Ordering::AcqRel);
+                            for child in child_jobs {
+                                let _ = job_tx.send(child);
+                            }
+                        }
+
+                        if in_flight.fetch_sub(1, Ordering::AcqRel) == 1 {
+                            return;
+                        }
                     }
-                    continue;
-                }
-            };
-
-            let depth = entry.depth();
-            // A directory at the boundary is still evaluated (it may itself be
-            // a target, e.g. `<root>/node_modules` with maxDepth 1) but must
-            // never be descended into. Pruning before the rule match made that
-            // directory invisible and reported a depth-limit partial result.
-            let depth_limited =
-                entry.file_type().is_dir() && depth >= self.budget.limits().max_depth;
-            if entry.file_type().is_dir() {
-                directories_visited += 1;
-                if depth_limited {
-                    self.budget.note_depth_exceeded();
-                }
-            }
-
-            let name = entry.file_name().to_string_lossy().to_string();
-            let path = entry.path().to_path_buf();
-
-            // The walk is depth-first: once we move to a sibling or back up, the
-            // directories recorded before can no longer be ancestors of the
-            // current entry. Without pruning the map kept every matched ancestor
-            // for the whole scan and grew with the tree, not with its depth.
-            self.active.retain(|dir, _| path.starts_with(dir));
-
-            let ancestor = self.nearest_active(&path);
-            let candidates = self.catalog.rules_for_name(&name);
-            if candidates.is_empty() {
-                if depth_limited {
-                    it.skip_current_dir();
-                }
-                continue;
-            }
-
-            let parent = path.parent().unwrap_or(config.root);
-            let resolved_project = self.resolver.resolve(parent);
-            let project_root = resolved_project
-                .as_ref()
-                .map(|p| PathBuf::from(&p.project_root));
-            let workspace_root = resolved_project
-                .as_ref()
-                .map(|p| PathBuf::from(&p.root_project_root));
-            let inside_source_subtree =
-                is_inside_source_subtree(parent, project_root.as_deref().unwrap_or(config.root));
-
-            let mut matched_rule = None;
-            let mut matched_evidence = None;
-            let mut best_key = (0usize, 0usize, 0usize, usize::MAX);
-
-            for rule in candidates {
-                // A rule that declares `nested_in` is only valid inside one of
-                // those parent rules. The previous guard skipped the check when
-                // no active ancestor existed, so a plain `cache` folder in a
-                // Next.js/Nx project matched the nested `safe` rule and became
-                // auto-selectable outside `.next`/`.nx`.
-                if !rule.nested_in.is_empty() {
-                    let Some((parent_rule_id, _)) = &ancestor else {
-                        continue;
-                    };
-                    if !rule.nested_in.iter().any(|p| p == parent_rule_id) {
-                        continue;
-                    }
-                }
-                match rule.kind {
-                    TargetKind::Directory if !entry.file_type().is_dir() => continue,
-                    TargetKind::File | TargetKind::FileGroup if !entry.file_type().is_file() => {
-                        continue
-                    }
-                    _ => {}
-                }
-                if let Some(max_depth) = rule.max_depth {
-                    if depth > max_depth {
-                        continue;
-                    }
-                }
-
-                // Generic names (`bin`, `build`, `dist`, `Library`, `vendor`,
-                // `target`, ...) inside source/asset trees (`src/`, `wwwroot/`,
-                // `public/`) are almost always authored code or vendored web
-                // assets, not build output.
-                if rule.generic_name && inside_source_subtree {
-                    continue;
-                }
-
-                let evidence = collect_evidence(
-                    rule,
-                    &path,
-                    project_root.as_deref(),
-                    workspace_root.as_deref(),
-                    None,
-                );
-
-                // Eliminate ecosystem-mismatched false positives:
-                // 1) Protected ecosystem folders (e.g. Unreal `Saved`) must
-                //    only match when their ecosystem marker actually exists;
-                //    otherwise `src/app/.../saved` in a web app gets flagged.
-                // 2) Ecosystem-specific generic folders (`dotnet.bin`,
-                //    `unity.library`, `go.vendor`, `rs.target`, ...) must not
-                //    fire inside a different ecosystem or without their marker.
-                // 3) Generic JS `build` without any project at all stays
-                //    discoverable as `review` (`NO_PROJECT_MARKER`) for
-                //    transparency, without pruning its subtree below.
-                if !rule.markers.is_empty()
-                    && evidence.marker_hits.is_empty()
-                    && evidence.content_hits.is_empty()
-                {
-                    if rule.is_protected() {
-                        continue;
-                    }
-                    let conflicting_project = resolved_project.is_some();
-                    let allow_unverified_generic = rule.id == "js.build" && !conflicting_project;
-                    if rule.generic_name && !allow_unverified_generic {
-                        continue;
-                    }
-                    if !rule.generic_name
-                        && matches!(
-                            rule.id.as_str(),
-                            "unreal.intermediate"
-                                | "unreal.ddc"
-                                | "dotnet.testresults"
-                                | "elixir.build"
-                                | "swift.build"
-                                | "godot.imported"
-                        )
-                    {
-                        continue;
-                    }
-                }
-
-                let key = (
-                    evidence.marker_hits.len(),
-                    evidence.content_hits.len(),
-                    if rule.generic_name { 0 } else { 1 },
-                );
-                let rule_index = self
-                    .catalog
-                    .rules()
-                    .iter()
-                    .position(|r| r.id == rule.id)
-                    .unwrap_or(usize::MAX);
-                let cmp = (key.0, key.1, key.2, usize::MAX - rule_index);
-                if matched_rule.is_none() || cmp > best_key {
-                    best_key = cmp;
-                    matched_rule = Some(rule.clone());
-                    matched_evidence = Some(evidence);
-                }
-            }
-
-            let (Some(rule), Some(mut evidence)) = (matched_rule, matched_evidence) else {
-                if depth_limited {
-                    it.skip_current_dir();
-                }
-                continue;
-            };
-
-            // Run Git inspection once for the winning rule only when needed,
-            // instead of spawning multiple `git` processes per candidate rule.
-            if rule.git_policy == crate::catalog::GitPolicy::DenyTracked
-                && !evidence.marker_hits.is_empty()
-            {
-                let state = git_guard::fast_git_state(&path, &mut self.git_repo_cache);
-                evidence.git_repo = state != GitState::NotRepository;
-                evidence.git_state = Some(state);
-            }
-
-            let project = resolved_project.unwrap_or_else(|| fallback_project(parent));
-            let classification = classify(&rule, &evidence);
-
-            let path_key = crate::safety::path_guard::normalize_key(&path);
-            // Both directions: the delete guard rejects a target that *contains*
-            // a protected folder as well, so checking only "target inside
-            // protected" let `<root>/node_modules` be planned around a protected
-            // `<root>/node_modules/keep` and fail every row at execution.
-            let user_protected = protected_keys.iter().any(|key| {
-                path_key == *key
-                    || crate::safety::path_guard::is_within(&path_key, key)
-                    || crate::safety::path_guard::is_within(key, &path_key)
-            });
-
-            let mut warnings_for_item = classification.warnings.clone();
-            // Project targets are checked against the live filesystem. A target
-            // that is locked or whose lock state cannot be determined is
-            // reported as active and cannot be selected.
-            let active_use = crate::safety::is_target_in_use(&path);
-            let mut selectable = classification.selectable;
-
-            // The cleanup guard rejects a system component (recovery, boot,
-            // programdata, ...) at *any* depth, while discovery only filtered
-            // those names directly below the scan root. Such an item was
-            // offered as cleanable and then failed every preview/execute with
-            // PATH_GUARD. Keep the row visible but block it up front so the
-            // scanner and the guard agree.
-            let system_blocked =
-                crate::safety::path_guard::validate_system_path(&path_key).is_err();
-
-            if user_protected {
-                warnings_for_item.push("USER_PROTECTED".to_string());
-                selectable = false;
-            }
-            if system_blocked {
-                warnings_for_item.push("PATH_GUARD".to_string());
-                selectable = false;
-            }
-            if active_use.blocks_deletion() {
-                warnings_for_item.push("TARGET_ACTIVE".to_string());
-                selectable = false;
-            }
-            if rule.requires_idle && active_use != ActiveUse::No {
-                selectable = false;
-            }
-
-            if !self.try_add_candidate() {
-                stop_reason = Some(StopReason::CandidateLimit);
-                break;
-            }
-
-            let item_id = format!("t{}", &uuid::Uuid::new_v4().simple().to_string()[..24]);
-            let parent_item_id = ancestor.as_ref().map(|(_, id)| id.clone());
-            let sys_modified = std::fs::metadata(&path)
-                .ok()
-                .and_then(|m| m.modified().ok());
-            let modified_at = sys_modified.map(system_time_to_iso);
-            let last_modified_ms = sys_modified
-                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-                .map(|d| d.as_millis() as i64);
-
-            let evidence_snapshot = EvidenceSnapshot {
-                rule_id: rule.id.clone(),
-                target_name: name.clone(),
-                project_root: Some(project.project_root.clone()),
-                workspace_root: Some(project.root_project_root.clone()),
-                marker_hits: evidence.marker_hits.clone(),
-                content_hits: evidence.content_hits.clone(),
-            };
-
-            let item = CleanupItem {
-                id: item_id.clone(),
-                scan_session_id: config.scan_session_id.to_string(),
-                rule_id: rule.id.clone(),
-                provider: "project".to_string(),
-                ecosystem: rule.ecosystem.clone(),
-                category: rule.category.clone(),
-                kind: rule.kind,
-                project_id: Some(project.project_id.clone()),
-                project_name: Some(project.project_name.clone()),
-                project_root: Some(project.project_root.clone()),
-                project_detected: project.detected,
-                display_name: name.clone(),
-                display_path: path.to_string_lossy().to_string(),
-                logical_bytes: None,
-                allocated_bytes: None,
-                estimated_reclaim_bytes: None,
-                safety_class: classification.safety_class,
-                confidence: classification.confidence,
-                active_use,
-                evidence_codes: evidence.codes(),
-                warning_codes: warnings_for_item.clone(),
-                cleanup_method: rule.cleanup,
-                regenerate_hint: rule.regenerate.clone(),
-                protected: user_protected
-                    || classification.safety_class == crate::catalog::SafetyClass::Keep,
-                selectable,
-                auto_selectable: selectable
-                    && classification.safety_class == crate::catalog::SafetyClass::Safe
-                    && classification.confidence == crate::catalog::Confidence::High
-                    && !rule.requires_idle,
-                last_modified_at: modified_at.clone(),
-                last_modified_ms,
-                status: if selectable {
-                    ItemStatus::Discovered
-                } else {
-                    ItemStatus::Blocked
-                },
-                parent_item_id: parent_item_id.clone(),
-                note: rule.note.clone(),
-            };
-
-            targets.push(StoredTarget {
-                id: item_id.clone(),
-                path: path.clone(),
-                rule_id: rule.id.clone(),
-                provider: "project".to_string(),
-                category: rule.category.clone(),
-                kind: rule.kind,
-                safety_class: classification.safety_class,
-                cleanup_method: rule.cleanup,
-                project_root: Some(project.project_root.clone()),
-                evidence: evidence_snapshot,
-                logical_bytes: None,
-                allocated_bytes: None,
-                modified_at,
-                active_use,
-                parent_id: parent_item_id,
-                protected: user_protected
-                    || classification.safety_class == crate::catalog::SafetyClass::Keep,
-            });
-
-            if entry.file_type().is_dir() {
-                // Never prune the subtree of an unverified generic directory:
-                // a workspace container named `build` or `Temp` without project
-                // markers can still hold real projects with `node_modules`
-                // inside it.
-                let unverified_generic = rule.generic_name
-                    && evidence.marker_hits.is_empty()
-                    && evidence.content_hits.is_empty();
-                if depth_limited {
-                    // The rule match above still ran, so the boundary directory
-                    // itself could be reported; its contents were not scanned.
-                    it.skip_current_dir();
-                } else if self.catalog.has_child_rules(&rule.id) {
-                    self.active
-                        .insert(path.clone(), (rule.id.clone(), item_id.clone()));
-                } else if !unverified_generic {
-                    it.skip_current_dir();
-                }
-            }
-
-            items.push(item.clone());
-            batch.push(item);
-            if batch.len() >= BATCH_SIZE {
-                on_batch(&batch);
-                batch.clear();
-            }
-
-            if last_progress.elapsed().as_millis() >= 100 {
-                on_progress(ScanProgress {
-                    phase: "discovering".to_string(),
-                    directories_visited,
-                    entries_found: items.len() as u64,
-                    entries_measured: 0,
-                    bytes_measured: 0,
-                    current_path: Some(path.to_string_lossy().to_string()),
-                    stop_reason: stop_reason.map(|r| r.code().to_string()),
                 });
-                last_progress = Instant::now();
             }
-        }
+
+            // Drop the coordinator's sender clones so `msg_rx` closes as soon
+            // as all workers finish.
+            drop(job_tx);
+            drop(msg_tx);
+
+            for msg in msg_rx {
+                match msg {
+                    WorkerMsg::Discovered { item, target } => {
+                        let item = *item;
+                        items.push(item.clone());
+                        targets.push(*target);
+                        batch.push(item);
+                        if batch.len() >= BATCH_SIZE {
+                            on_batch(&batch);
+                            batch.clear();
+                        }
+                    }
+                    WorkerMsg::Warning(notice) => {
+                        warnings.push(notice);
+                    }
+                    WorkerMsg::ProgressPath(path) => {
+                        last_path = Some(path);
+                    }
+                }
+
+                if last_progress.elapsed().as_millis() >= 100 {
+                    on_progress(ScanProgress {
+                        phase: "discovering".to_string(),
+                        directories_visited: directories_visited.load(Ordering::Relaxed),
+                        entries_found: items.len() as u64,
+                        entries_measured: 0,
+                        bytes_measured: 0,
+                        current_path: last_path.clone(),
+                        stop_reason: None,
+                    });
+                    last_progress = Instant::now();
+                }
+            }
+        });
 
         if !batch.is_empty() {
             on_batch(&batch);
         }
 
-        // A depth cut prunes only the affected branch: the walk completed, but
-        // the result is still incomplete, so report it as a partial scan.
-        if stop_reason.is_none() && self.budget.depth_limited() {
-            stop_reason = Some(StopReason::DepthLimit);
-        }
+        let stop_reason = if self.token.is_cancelled() {
+            Some(StopReason::Cancelled)
+        } else if candidate_limit_hit.load(Ordering::Relaxed) {
+            Some(StopReason::CandidateLimit)
+        } else if timeout_hit.load(Ordering::Relaxed) {
+            Some(StopReason::Timeout)
+        } else if depth_hit.load(Ordering::Relaxed) {
+            Some(StopReason::DepthLimit)
+        } else {
+            None
+        };
 
+        let dirs_visited = directories_visited.load(Ordering::Relaxed);
         on_progress(ScanProgress {
             phase: "discovering".to_string(),
-            directories_visited,
+            directories_visited: dirs_visited,
             entries_found: items.len() as u64,
             entries_measured: 0,
             bytes_measured: 0,
@@ -566,27 +798,19 @@ impl<'a> DiscoveryEngine<'a> {
         Ok(DiscoveryOutcome {
             items,
             targets,
-            directories_visited,
+            directories_visited: dirs_visited,
             stop_reason,
             warnings,
         })
-    }
-
-    fn nearest_active(&self, path: &Path) -> Option<(String, String)> {
-        let mut current = path.parent();
-        while let Some(dir) = current {
-            if let Some(found) = self.active.get(dir) {
-                return Some(found.clone());
-            }
-            current = dir.parent();
-        }
-        None
     }
 }
 
 fn is_drive_root_path(path: &Path) -> bool {
     let s = path.to_string_lossy();
     let stripped = s.strip_prefix(r"\\?\").unwrap_or(&s);
+    if stripped == "/" {
+        return true;
+    }
     let bytes = stripped.as_bytes();
     (bytes.len() == 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':')
         || (bytes.len() == 3
@@ -610,80 +834,36 @@ fn is_inside_source_subtree(parent: &Path, boundary: &Path) -> bool {
     })
 }
 
-fn entry_allowed(
-    entry: &walkdir::DirEntry,
+fn entry_allowed_fast(
+    name_lower: &str,
+    parent: &Path,
+    child_depth: usize,
+    is_redirecting_reparse: bool,
     exclusions: &HashSet<String>,
     is_drive_root: bool,
 ) -> bool {
-    if entry.depth() == 0 {
-        return true;
-    }
-    let name = entry.file_name().to_string_lossy().to_lowercase();
-    if exclusions.contains(&name) {
+    if exclusions.contains(name_lower) {
         return false;
     }
-    // System directory exclusions belong only to drive roots (`C:\`, `D:\`).
-    // Applying them to user project folders skipped legitimate sub-apps like
-    // `<monorepo>/windows/` in Flutter, React Native and Tauri workspaces.
-    if is_drive_root && entry.depth() == 1 && SYSTEM_EXCLUSIONS.iter().any(|s| *s == name) {
+    if is_drive_root && child_depth == 1 && SYSTEM_EXCLUSIONS.contains(&name_lower) {
         return false;
     }
-    if name == "packages" || name == "microsoft" {
-        // Only skip Windows AppData subtrees (`AppData\Local\Packages`,
-        // `AppData\Local\Microsoft`, `AppData\Roaming\Microsoft`, `AppData\Microsoft`).
-        // Never skip a monorepo folder like `<repo>/apps/local/packages`.
-        if let Some(parent) = entry.path().parent() {
-            let parent_name = parent
-                .file_name()
-                .map(|f| f.to_string_lossy().to_lowercase());
-            let grandparent_name = parent
-                .parent()
-                .and_then(|gp| gp.file_name())
-                .map(|f| f.to_string_lossy().to_lowercase());
-            let is_appdata_system_dir = matches!(parent_name.as_deref(), Some("appdata"))
-                || (matches!(parent_name.as_deref(), Some("local" | "roaming"))
-                    && matches!(grandparent_name.as_deref(), Some("appdata")));
-            if is_appdata_system_dir {
-                return false;
-            }
+    if name_lower == "packages" || name_lower == "microsoft" {
+        let parent_name = parent
+            .file_name()
+            .map(|f| f.to_string_lossy().to_lowercase());
+        let grandparent_name = parent
+            .parent()
+            .and_then(|gp| gp.file_name())
+            .map(|f| f.to_string_lossy().to_lowercase());
+        let is_appdata_system_dir = matches!(parent_name.as_deref(), Some("appdata"))
+            || (matches!(parent_name.as_deref(), Some("local" | "roaming"))
+                && matches!(grandparent_name.as_deref(), Some("appdata")));
+        if is_appdata_system_dir {
+            return false;
         }
     }
-    // Fast zero-syscall check: if DirEntry is known symlink, prune immediately!
-    if entry.file_type().is_symlink() {
-        return false;
-    }
-    // Never descend through junctions or cloud reparse points. Use cached
-    // Windows DirEntry attributes first to avoid an extra GetFileAttributesW
-    // syscall on ordinary directories.
-    if entry_might_be_reparse(entry) && crate::platform::is_reparse_point(entry.path()) {
-        return false;
-    }
-    true
-}
-
-#[cfg(windows)]
-fn entry_might_be_reparse(entry: &walkdir::DirEntry) -> bool {
-    use std::os::windows::fs::MetadataExt;
-    const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x0400;
-    const FILE_ATTRIBUTE_OFFLINE: u32 = 0x1000;
-    const FILE_ATTRIBUTE_RECALL_ON_OPEN: u32 = 0x0004_0000;
-    const FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS: u32 = 0x0040_0000;
-    match entry.metadata() {
-        Ok(meta) => {
-            (meta.file_attributes()
-                & (FILE_ATTRIBUTE_REPARSE_POINT
-                    | FILE_ATTRIBUTE_OFFLINE
-                    | FILE_ATTRIBUTE_RECALL_ON_OPEN
-                    | FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS))
-                != 0
-        }
-        Err(_) => true,
-    }
-}
-
-#[cfg(not(windows))]
-fn entry_might_be_reparse(_entry: &walkdir::DirEntry) -> bool {
-    true
+    !is_redirecting_reparse
 }
 
 fn fallback_project(parent: &Path) -> ProjectInfo {
@@ -703,21 +883,16 @@ fn fallback_project(parent: &Path) -> ProjectInfo {
     }
 }
 
-fn system_time_to_iso(time: std::time::SystemTime) -> String {
-    match time.duration_since(std::time::UNIX_EPOCH) {
-        Ok(dur) => {
-            let secs = dur.as_secs() as i64;
-            chrono::DateTime::from_timestamp(secs, 0)
-                .map(|dt| dt.format("%Y-%m-%dT%H:%M:%SZ").to_string())
-                .unwrap_or_else(|| "1970-01-01T00:00:00Z".to_string())
-        }
-        Err(_) => "1970-01-01T00:00:00Z".to_string(),
-    }
+fn unix_ms_to_iso(ms: i64) -> String {
+    let secs = ms.div_euclid(1000);
+    chrono::DateTime::from_timestamp(secs, 0)
+        .map(|dt| dt.format("%Y-%m-%dT%H:%M:%SZ").to_string())
+        .unwrap_or_else(|| "1970-01-01T00:00:00Z".to_string())
 }
 
 /// Evaluates a single path against the catalog rules and project markers
 /// without running a full directory walk. Shared by unit tests and MCP
-/// `devcleaner_inspect_target`.
+/// `detergo_inspect_target`.
 pub fn evaluate_path(
     catalog: &CatalogIndex,
     path: &Path,
@@ -733,9 +908,9 @@ pub fn evaluate_path(
     let inside_source_subtree = project_root
         .as_deref()
         .is_some_and(|root| is_inside_source_subtree(parent, root));
-    let git_state = Some(GitState::Unknown);
     let is_dir = path.is_dir();
     let is_file = path.is_file();
+    let mut git_repo_cache: HashMap<PathBuf, Option<PathBuf>> = HashMap::new();
 
     let mut best: Option<(
         usize,
@@ -754,18 +929,25 @@ pub fn evaluate_path(
         if rule.generic_name && inside_source_subtree {
             continue;
         }
-        let evidence = collect_evidence(
+        let mut evidence = collect_evidence(
             rule,
             path,
             project_root.as_deref(),
             workspace_root.as_deref(),
-            git_state,
+            None,
         );
         if !rule.markers.is_empty()
             && evidence.marker_hits.is_empty()
             && evidence.content_hits.is_empty()
         {
             continue;
+        }
+        if rule.git_policy == crate::catalog::GitPolicy::DenyTracked
+            && !evidence.marker_hits.is_empty()
+        {
+            let state = git_guard::fast_git_state(path, &mut git_repo_cache);
+            evidence.git_repo = state != GitState::NotRepository;
+            evidence.git_state = Some(state);
         }
         let c = classify(rule, &evidence);
         let key = (

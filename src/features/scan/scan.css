@@ -1,147 +1,290 @@
 /* ==========================================================================
-   DEV CLEANER — TOP COMMAND BAR & UNBOXED HERO STYLES
+   DETERGO - SINGLE MINIMAL SIDEBAR SCAN HUB
    ========================================================================== */
 
-/* 1. Docked Desktop Top Command Bar */
-.top-command-bar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
+.sidebar-scan-dock {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 52px;
-  padding: 0 16px;
+  flex-direction: column;
+  padding: 10px 12px 6px;
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-}
-
-/* Brand Section */
-.command-brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px;
-  border-radius: var(--radius-sm);
-  flex-shrink: 0;
-  z-index: 2;
-}
-
-.command-brand-title {
-  font-size: 13.5px;
-  font-weight: 650;
-  letter-spacing: -0.01em;
-  color: var(--text-primary);
-  white-space: nowrap;
-}
-
-.command-version-chip {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 1px 6px;
-  border-radius: var(--radius-full);
-  background: var(--accent-subtle);
-  color: var(--accent-foreground);
-  border: 1px solid var(--accent);
-  flex-shrink: 0;
-}
-
-/* Command Center - 100% Mathematically Viewport Centered */
-.command-center {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  z-index: 10;
-}
-
-.command-center > * {
-  pointer-events: auto;
-}
-
-.location-dropdown-container {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  z-index: 40;
 }
 
-/* The pill is a group: the disclosure trigger and the favorite toggle are
-   siblings, never a button inside a button. */
-.command-location-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  height: 32px;
-  padding-right: 6px;
-  background: var(--surface-strong);
-  border: 1px solid var(--border-control);
-  border-radius: var(--radius-full);
-  transition:
-    background var(--duration-fast) var(--ease-standard),
-    border-color var(--duration-fast) var(--ease-standard);
-  max-width: 380px;
-  min-width: 0;
+/* Single unified primary scan + configure split button */
+.scan-hub-btn {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+  transition: background var(--duration-fast) var(--ease-standard);
 }
 
-.command-location-group:hover {
-  background: var(--surface-hover);
-  border-color: var(--border-strong);
+.scan-hub-btn:hover {
+  background: var(--accent-hover);
 }
 
-.location-dropdown-container.menu-open .command-location-group {
-  background: var(--surface-hover);
-  border-color: var(--accent);
+.scan-hub-btn.is-open {
+  background: var(--accent-hover);
   box-shadow: 0 0 0 2px var(--accent-subtle);
 }
 
-.command-location-group.is-scanning {
-  border-color: rgba(10, 132, 255, 0.35);
-  background: rgba(10, 132, 255, 0.08);
-}
-
-.command-location-pill {
+.scan-hub-primary {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  height: 100%;
+  justify-content: center;
+  gap: 7px;
+  flex: 1 1 auto;
   min-width: 0;
-  padding: 0 12px;
-  background: transparent;
+  height: 100%;
+  padding: 0 10px;
   border: none;
-  border-radius: inherit;
+  border-radius: 7px 0 0 7px;
+  background: transparent;
+  color: var(--on-accent);
+  font-size: 12.5px;
+  font-weight: 600;
   cursor: pointer;
-  transition: color var(--duration-fast) var(--ease-standard);
   user-select: none;
-  color: var(--text-primary);
 }
 
-.command-location-pill:disabled {
-  cursor: default;
+.scan-hub-play-icon {
+  flex-shrink: 0;
+}
+
+.scan-hub-primary-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scan-hub-config {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 100%;
+  flex-shrink: 0;
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0 7px 7px 0;
+  background: transparent;
+  color: var(--on-accent);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.scan-hub-config:hover,
+.scan-hub-config.is-open {
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.scan-hub-primary:focus-visible,
+.scan-hub-config:focus-visible {
+  outline: 2px solid var(--on-accent);
+  outline-offset: -3px;
+}
+
+/* Active scanning single-button state */
+.scan-hub-btn--active {
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent);
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.scan-hub-btn--active:hover {
+  background: var(--accent-subtle);
+}
+
+.scan-hub-live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0 8px 0 10px;
+  font-size: 11.5px;
+}
+
+.scan-hub-live-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.scan-hub-stop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 100%;
+  flex-shrink: 0;
+  border: none;
+  border-left: 1px solid color-mix(in srgb, var(--danger) 28%, transparent);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger-foreground);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.scan-hub-stop:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 24%, transparent);
+}
+
+.scan-hub-stop.is-stopping {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* Collapsed sidebar single 36x36 button */
+.sidebar-scan-dock.is-collapsed {
+  padding: 8px 8px 4px;
+  align-items: center;
+}
+
+.sidebar-scan-dock.is-collapsed .scan-hub-btn {
+  width: 36px;
+  height: 36px;
+  justify-content: center;
+}
+
+.sidebar-scan-dock.is-collapsed .scan-hub-primary {
+  width: 36px;
+  padding: 0;
+  border-radius: 7px;
+}
+
+.sidebar-scan-dock.is-collapsed .scan-hub-primary-label,
+.sidebar-scan-dock.is-collapsed .scan-hub-config,
+.sidebar-scan-dock.is-collapsed .scan-hub-live {
+  display: none;
+}
+
+.sidebar-scan-dock.is-collapsed .scan-hub-stop {
+  width: 36px;
+  border-left: none;
+}
+
+/* Unified Scan Hub Popover - full visibility, zero scrollbar */
+.scan-hub-popover.location-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 12px;
+  width: 388px;
+  max-width: calc(100vw - 24px);
+  max-height: none;
+  overflow: visible;
+  background: var(--surface-strong);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 0 1px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  z-index: 1000;
+  animation: locationDropdownEnter var(--duration-fast) var(--ease-standard);
+}
+
+.sidebar-scan-dock.is-collapsed .scan-hub-popover.location-dropdown-menu {
+  top: 8px;
+  left: calc(100% + 6px);
+}
+
+.scan-hub-folder-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  padding-right: 4px;
+  min-width: 0;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.scan-hub-folder-bar:hover {
+  background: var(--surface-hover);
+  border-color: var(--text-muted);
+}
+
+.scan-hub-folder-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+
+.scan-hub-folder-path {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scan-hub-locations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scan-hub-loc-item {
+  padding: 4px 8px !important;
+}
+
+.scan-scope-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  margin: 2px 0 4px;
+}
+
+.scan-scope-grid .scan-scope-option {
+  padding: 5px 7px;
+}
+
+.scan-scope-grid .checkbox-container {
+  gap: 7px;
+}
+
+.scan-scope-grid .scan-scope-icon {
+  width: 18px;
+  height: 18px;
+  background: transparent;
+}
+
+.scan-scope-grid .scan-scope-title {
+  font-size: 12px;
 }
 
 .command-folder-icon {
   color: var(--accent);
   flex-shrink: 0;
-}
-
-.command-path-text {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-primary);
-  /* The pill shrinks with the window instead of holding a hard 240px, so the
-     centered command area never reaches the action cluster on small screens. */
-  max-width: clamp(110px, 22vw, 240px);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .command-star-btn {
@@ -151,8 +294,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   border-radius: var(--radius-full);
   color: var(--text-muted);
@@ -169,50 +312,14 @@
   color: #ffb800;
 }
 
-.command-chevron-icon {
-  color: var(--text-muted);
-  flex-shrink: 0;
-  transition:
-    transform var(--duration-fast) var(--ease-standard),
-    color var(--duration-fast);
-}
-.command-chevron-icon.open {
-  transform: rotate(180deg);
-  color: var(--accent);
-}
-
-/* ==========================================================================
-   LOCATION DROPDOWN POPOVER MENU (Theme Adaptive)
-   ========================================================================== */
-.location-dropdown-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 360px;
-  max-height: 400px;
-  overflow-y: auto;
-  background: var(--surface-strong);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg);
-  box-shadow:
-    var(--shadow-lg),
-    0 0 0 1px rgba(0, 0, 0, 0.15);
-  padding: 6px;
-  z-index: 1000;
-  animation: locationDropdownEnter var(--duration-fast) var(--ease-standard);
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-strong) transparent;
-}
-
 @keyframes locationDropdownEnter {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(-6px) scale(0.98);
+    transform: translateY(-6px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -328,15 +435,15 @@
 .location-menu-item.is-selected,
 .location-menu-item-row.is-selected {
   background: var(--accent-subtle);
-  border-color: rgba(59, 130, 246, 0.3);
+  border-color: color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
 .location-menu-action {
-  background: rgba(59, 130, 246, 0.08);
-  border-color: rgba(59, 130, 246, 0.2);
+  background: var(--accent-subtle);
+  border-color: color-mix(in srgb, var(--accent) 20%, transparent);
 }
 .location-menu-action:hover {
-  background: rgba(59, 130, 246, 0.16);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
   border-color: var(--accent);
 }
 
@@ -440,38 +547,44 @@
   text-align: center;
 }
 
-/* Actions Section */
+/* Actions Section inside Sidebar Dock */
 .command-actions {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  width: 100%;
   flex-shrink: 0;
   z-index: 2;
 }
 
 .command-scan-btn {
-  border-radius: var(--radius-md) !important;
+  border-radius: 8px !important;
   font-weight: 600 !important;
-  font-size: 12px !important;
-  height: 32px !important;
-  padding: 0 14px !important;
+  font-size: 12.5px !important;
+  height: 34px !important;
+  padding: 0 12px !important;
+  width: 100%;
+  justify-content: center;
 }
 
-/* Split control: the primary action scans everything, the chevron exposes the
-   single-scope scans that used to be the only option. The two segments share one
-   surface so the control reads as a single button with a disclosure, not as two
-   unrelated pills. */
+.command-scan-btn-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Split control: full-width inside the sidebar dock */
 .command-scan-group {
   position: relative;
-  display: inline-flex;
+  display: flex;
   align-items: stretch;
+  width: 100%;
   gap: 0;
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   background: var(--accent);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  /* No `overflow: hidden`: it would clip the scope menu, which is positioned
-     below the control. The segments carry the corner radii instead. */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
   transition: background var(--duration-fast) var(--ease-standard);
 }
 
@@ -483,19 +596,16 @@
   background: var(--accent-active);
 }
 
-/* Both segments are transparent: the group owns the fill so a hover never
-   paints two slightly different blues across the seam. Only the outer corners
-   are rounded so the two halves still read as one control. */
 .command-scan-group .command-scan-btn,
 .command-scan-group .command-scan-btn:hover:not(:disabled),
 .command-scan-group .command-scan-btn:active:not(:disabled) {
-  height: 32px !important;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 34px !important;
   border: none !important;
-  border-radius: calc(var(--radius-md) - 1px) 0 0 calc(var(--radius-md) - 1px) !important;
+  border-radius: 7px 0 0 7px !important;
   background: transparent !important;
   box-shadow: none !important;
-  /* The primitive's press-scale would shrink one half inside the shared
-     surface and expose a seam; the group handles the pressed state. */
   transform: none !important;
 }
 
@@ -509,11 +619,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 32px;
+  width: 32px;
+  height: 34px;
+  flex-shrink: 0;
   border: none;
   border-left: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 0 calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px) 0;
+  border-radius: 0 7px 7px 0;
   background: transparent;
   color: var(--on-accent);
   cursor: pointer;
@@ -535,9 +646,9 @@
 
 .command-scan-menu {
   position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  width: 312px;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 296px;
   max-width: calc(100vw - 24px);
   padding: 8px;
   background: var(--surface-strong);
@@ -626,45 +737,87 @@
   padding: 4px 2px 2px;
 }
 
-/* Active live scan indicator inside the top command bar */
-.top-command-bar.is-scanning {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 12px;
-}
-
-.top-command-bar.is-scanning .command-center {
-  position: static;
-  transform: none;
-  justify-content: center;
-  min-width: 0;
-}
-
-.top-command-bar.is-scanning .location-dropdown-container {
-  max-width: 100%;
-  min-width: 0;
-}
-
+/* Active live scan indicator inside the sidebar dock */
 .command-scan-active {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  width: 100%;
   min-width: 0;
 }
 
 .command-scan-status {
-  display: inline-flex;
+  position: relative;
+  display: flex;
   align-items: center;
-  gap: 7px;
-  height: 30px;
-  padding: 0 11px;
-  border-radius: var(--radius-full);
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
   background: var(--accent-subtle);
   border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
   color: var(--text-primary);
-  font-size: 11.5px;
-  max-width: 300px;
+  font-size: 11px;
+  width: 100%;
   min-width: 0;
+  overflow: hidden;
+}
+
+/* Collapsed sidebar scan dock (icon-only track) */
+.sidebar-scan-dock.is-collapsed {
+  padding: 8px;
+  align-items: center;
+}
+
+.sidebar-scan-dock.is-collapsed .location-dropdown-container,
+.sidebar-scan-dock.is-collapsed .command-actions {
+  width: auto;
+  align-items: center;
+}
+
+.sidebar-scan-dock.is-collapsed .command-location-group {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  justify-content: center;
+}
+
+.sidebar-scan-dock.is-collapsed .command-location-pill {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  justify-content: center;
+}
+
+.sidebar-scan-dock.is-collapsed .command-path-text,
+.sidebar-scan-dock.is-collapsed .command-chevron-icon,
+.sidebar-scan-dock.is-collapsed .command-star-btn,
+.sidebar-scan-dock.is-collapsed .command-scan-btn-label,
+.sidebar-scan-dock.is-collapsed .command-scan-menu-trigger,
+.sidebar-scan-dock.is-collapsed .command-scan-status {
+  display: none;
+}
+
+.sidebar-scan-dock.is-collapsed .command-scan-group {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+}
+
+.sidebar-scan-dock.is-collapsed .command-scan-group .command-scan-btn,
+.sidebar-scan-dock.is-collapsed .command-scan-btn {
+  width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  border-radius: 8px !important;
+  justify-content: center;
+}
+
+.sidebar-scan-dock.is-collapsed .location-dropdown-menu {
+  top: 0;
+  left: calc(100% + 8px);
 }
 
 .command-scan-pulse {
@@ -755,10 +908,10 @@
   background: var(--surface-hover) !important;
 }
 
-/* Pinned Progress Bar under Command Bar */
+/* Pinned Progress Bar inside Active Scan Status Card */
 .command-progress-track {
   position: absolute;
-  bottom: -1px;
+  bottom: 0;
   left: 0;
   right: 0;
   height: 2px;
@@ -896,109 +1049,9 @@
   font-size: 12px !important;
 }
 
-/* ==========================================================================
-   RESPONSIVE COMMAND BAR
-   On narrow windows the mathematically viewport-centered pill runs underneath
-   the action cluster, because brand + actions take more than half the width.
-   Below 900px the bar becomes a three-track grid: brand and actions keep their
-   intrinsic size and the location pill takes whatever is left, ellipsizing its
-   path instead of colliding.
-   ========================================================================== */
+/* Responsive popover clamping when the window is narrow */
 @media (max-width: 900px) {
-  .top-command-bar {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: 10px;
-    padding: 0 12px;
-  }
-
-  .command-center {
-    position: static;
-    transform: none;
-    justify-content: stretch;
-    min-width: 0;
-  }
-
-  .location-dropdown-container {
-    width: 100%;
-    min-width: 0;
-  }
-
-  .command-location-group {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-  }
-
-  .command-location-pill {
-    flex: 1 1 auto;
-    width: 100%;
-    max-width: none;
-    min-width: 0;
-  }
-
-  .command-path-text {
-    flex: 1 1 auto;
-    max-width: none;
-  }
-
-  .command-star-btn,
-  .command-chevron-icon,
-  .command-folder-icon {
-    flex: 0 0 auto;
-  }
-
-  .command-actions {
-    gap: 6px;
-  }
-
-  /* The popover must stay inside the viewport even when the pill is narrow. */
   .location-dropdown-menu {
-    width: min(360px, calc(100vw - 40px));
-  }
-}
-
-@media (max-width: 720px) {
-  .top-command-bar {
-    gap: 8px;
-    padding: 0 8px;
-  }
-
-  .command-brand {
-    gap: 0;
-  }
-
-  .command-brand-title {
-    display: none;
-  }
-
-  .command-actions {
-    gap: 4px;
-  }
-
-  .command-scan-btn {
-    padding: 0 10px !important;
-  }
-
-  .command-scan-status {
-    max-width: 170px;
-    padding: 0 8px;
-  }
-
-  .command-scan-sep,
-  .command-scan-metric {
-    display: none;
-  }
-}
-
-/* Very narrow: the scan CTA keeps its icon and loses its label so the header
-   stays on one line. Text stays in the DOM for assistive tech. */
-@media (max-width: 600px) {
-  .command-scan-btn > span:not(.btn-icon) {
-    display: none;
-  }
-
-  .command-scan-status {
-    display: none;
+    width: min(340px, calc(100vw - 76px));
   }
 }

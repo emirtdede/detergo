@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/primitives/PageHeader";
 
 import {
   useUIText,
+  useBackendLocaleRevision,
   localizeBackendNote,
   localizeActionDescription,
   localizeUnavailableReason,
@@ -30,7 +31,7 @@ import { AppErrorDto, OfficialActionPreview, OfficialActionResult } from "@/type
 
 import { useCacheStore } from "@/stores/cache-store";
 
-import { maskPath } from "@/lib/format/path";
+import { maskPath, maskPathsInText } from "@/lib/format/path";
 import { toAppError } from "@/lib/errors/app-error";
 import { log } from "@/lib/logging";
 
@@ -40,6 +41,7 @@ import "../shell/shell.css";
 
 export const CachesView: React.FC = () => {
   const ui = useUIText();
+  useBackendLocaleRevision();
 
   const language = usePreferencesStore((s) => s.language);
 
@@ -246,6 +248,16 @@ export const CachesView: React.FC = () => {
                 {ui.common.cancel}
               </Button>
             )}
+
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Gauge size={13} />}
+              onClick={() => void startMeasure()}
+              disabled={loading || measuring || providers.length === 0}
+            >
+              {measuring ? ui.caches.measuring : ui.caches.measure}
+            </Button>
 
             <Button
               variant="secondary"
@@ -493,7 +505,7 @@ export const CachesView: React.FC = () => {
                 <span>{ui.caches.executable}</span>
 
                 <strong style={{ fontFamily: "var(--font-mono)", fontSize: 11 }}>
-                  {preview.executable}
+                  {maskPaths ? maskPath(preview.executable) : preview.executable}
                 </strong>
               </div>
             </div>
@@ -532,8 +544,11 @@ export const CachesView: React.FC = () => {
 
               <div className="cache-terminal-body">
                 <div className="cache-terminal-command">
-                  <span className="cache-terminal-prompt">$</span> {preview.executable}{" "}
-                  {preview.args.join(" ")}
+                  <span className="cache-terminal-prompt">$</span>{" "}
+                  {maskPaths ? maskPath(preview.executable) : preview.executable}{" "}
+                  {(maskPaths ? preview.args.map((a) => maskPathsInText(a)) : preview.args).join(
+                    " ",
+                  )}
                 </div>
 
                 {running && (
@@ -541,11 +556,15 @@ export const CachesView: React.FC = () => {
                 )}
 
                 {result?.stdoutTail && (
-                  <pre className="cache-terminal-stdout">{result.stdoutTail}</pre>
+                  <pre className="cache-terminal-stdout">
+                    {maskPaths ? maskPathsInText(result.stdoutTail) : result.stdoutTail}
+                  </pre>
                 )}
 
                 {result?.stderrTail && (
-                  <pre className="cache-terminal-stderr">{result.stderrTail}</pre>
+                  <pre className="cache-terminal-stderr">
+                    {maskPaths ? maskPathsInText(result.stderrTail) : result.stderrTail}
+                  </pre>
                 )}
 
                 {result && (

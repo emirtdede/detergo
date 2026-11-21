@@ -10,11 +10,22 @@ export type WebhookUrlValidation =
   | { ok: true; value: string | null }
   | { ok: false; reason: "invalid" };
 
-// The backend refuses loopback/private webhook targets and pins DNS answers
-// before connecting. The settings form mirrors the literal-host part of that
-// policy so a user gets immediate feedback instead of saving a URL that every
-// delivery will reject. DNS-dependent checks stay on the backend, which is the
-// only place they can be enforced safely.
+export interface WebhookUrlOptions {
+  /**
+   * When true, loopback and RFC1918/ULA LAN hosts (such as a self-hosted local
+   * n8n instance) are accepted while cloud metadata (`169.254.0.0/16`,
+   * `fe80::/10`, `metadata.google.internal`), unspecified (`0.0.0.0`, `::`),
+   * multicast and non-HTTP schemes remain rejected.
+   */
+  allowPrivate?: boolean;
+}
+
+// The backend refuses loopback/private webhook targets by default and pins DNS
+// answers before connecting. The settings form mirrors the literal-host part of
+// that policy (including the opt-in `allowPrivate` setting) so a user gets
+// immediate feedback instead of saving a URL that every delivery will reject.
+// DNS-dependent checks stay on the backend, which is the only place they can be
+// enforced safely.
 const LOCAL_HOST_SUFFIXES = [".localhost", ".local", ".internal", ".home.arpa"];
 
 function parseIPv4(host: string): number[] | null {
@@ -30,22 +41,28 @@ function parseIPv4(host: string): number[] | null {
   return octets;
 }
 
-function isForbiddenIPv4(octets: number[]): boolean {
+function isForbiddenIPv4(octets: number[], allowPrivate: boolean): boolean {
   const [a, b, c] = octets;
-  return (
+  // Always blocked even with allowPrivate: unspecified, link-local / cloud
+  // metadata (169.254.0.0/16), IETF protocol assignment, docs, benchmarking,
+  // multicast and broadcast.
+  const alwaysForbidden =
     a === 0 ||
-    a === 10 ||
-    a === 127 ||
-    (a === 100 && b >= 64 && b <= 127) ||
     (a === 169 && b === 254) ||
-    (a === 172 && b >= 16 && b <= 31) ||
     (a === 192 && b === 0 && c === 0) ||
     (a === 192 && b === 0 && c === 2) ||
-    (a === 192 && b === 168) ||
     (a === 198 && (b === 18 || b === 19)) ||
     (a === 198 && b === 51 && c === 100) ||
     (a === 203 && b === 0 && c === 113) ||
-    a >= 224
+    a >= 224;
+  if (alwaysForbidden) return true;
+  if (allowPrivate) return false;
+  return (
+    a === 10 ||
+    a === 127 ||
+    (a === 100 && b >= 64 && b <= 127) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168)
   );
 }
 
@@ -93,18 +110,18 @@ function parseIPv6(host: string): number[] | null {
   return [...left, ...new Array(8 - known).fill(0), ...right];
 }
 
-function isForbiddenIPv6(groups: number[]): boolean {
+function isForbiddenIPv6(groups: number[], allowPrivate: boolean): boolean {
   const [a, b, c, d, e, f, g, h] = groups;
   if (groups.every((group) => group === 0)) return true; // ::
+  // Check ::1 BEFORE IPv4-compatible mapping, which would otherwise map ::1 to 0.0.0.1.
   if (a === 0 && b === 0 && c === 0 && d === 0 && e === 0 && f === 0 && g === 0 && h === 1) {
-    return true; // ::1
+    return !allowPrivate; // ::1
   }
-  if ((a & 0xfe00) === 0xfc00) return true; // unique local (fc00::/7)
   if ((a & 0xffc0) === 0xfe80) return true; // link-local (fe80::/10)
   if ((a & 0xff00) === 0xff00) return true; // multicast (ff00::/8)
 
   const embedded = (high: number, low: number) =>
-    isForbiddenIPv4([(high >> 8) & 0xff, high & 0xff, (low >> 8) & 0xff, low & 0xff]);
+    isForbiddenIPv4([(high >> 8) & 0xff, high & 0xff, (low >> 8) & 0xff, low & 0xff], allowPrivate);
 
   // IPv4-mapped/compatible literals inherit the IPv4 policy.
   if (a === 0 && b === 0 && c === 0 && d === 0 && e === 0 && (f === 0 || f === 0xffff)) {
@@ -114,27 +131,41 @@ function isForbiddenIPv6(groups: number[]): boolean {
   if (a === 0x2002) return embedded(b, c);
   // Teredo embeds the client IPv4 address XORed with 0xffffffff.
   if (a === 0x2001 && b === 0) {
-    return isForbiddenIPv4([(~g >> 8) & 0xff, ~g & 0xff, (~h >> 8) & 0xff, ~h & 0xff]);
+    return isForbiddenIPv4(
+      [(~g >> 8) & 0xff, ~g & 0xff, (~h >> 8) & 0xff, ~h & 0xff],
+      allowPrivate,
+    );
   }
+  if (allowPrivate) return false;
+  if ((a & 0xfe00) === 0xfc00) return true; // unique local (fc00::/7)
   return false;
 }
 
-function isForbiddenHostname(hostname: string): boolean {
+function isForbiddenHostname(hostname: string, allowPrivate: boolean): boolean {
   const host = hostname
     .replace(/^\[|\]$/g, "")
     .toLowerCase()
     .replace(/\.$/, "");
-  if (host === "localhost" || LOCAL_HOST_SUFFIXES.some((suffix) => host.endsWith(suffix))) {
+  if (host === "metadata.google.internal" || host === "metadata") {
+    return true;
+  }
+  if (
+    !allowPrivate &&
+    (host === "localhost" || LOCAL_HOST_SUFFIXES.some((suffix) => host.endsWith(suffix)))
+  ) {
     return true;
   }
   const v4 = parseIPv4(host);
-  if (v4) return isForbiddenIPv4(v4);
+  if (v4) return isForbiddenIPv4(v4, allowPrivate);
   const v6 = parseIPv6(host);
-  if (v6) return isForbiddenIPv6(v6);
+  if (v6) return isForbiddenIPv6(v6, allowPrivate);
   return false;
 }
 
-export function normalizeWebhookUrl(raw: unknown): WebhookUrlValidation {
+export function normalizeWebhookUrl(
+  raw: unknown,
+  options?: WebhookUrlOptions,
+): WebhookUrlValidation {
   if (raw === null || raw === undefined) return { ok: true, value: null };
   if (typeof raw !== "string") return { ok: false, reason: "invalid" };
 
@@ -154,9 +185,7 @@ export function normalizeWebhookUrl(raw: unknown): WebhookUrlValidation {
     return { ok: false, reason: "invalid" };
   }
   if (!parsed.hostname) return { ok: false, reason: "invalid" };
-  // A webhook is delivered by the backend, so a loopback destination would let
-  // a remote config turn the app into a local network proxy (SSRF).
-  if (isForbiddenHostname(parsed.hostname)) {
+  if (isForbiddenHostname(parsed.hostname, Boolean(options?.allowPrivate))) {
     return { ok: false, reason: "invalid" };
   }
 
@@ -164,6 +193,6 @@ export function normalizeWebhookUrl(raw: unknown): WebhookUrlValidation {
 }
 
 /** Convenience predicate for callers that only need a yes/no answer. */
-export function isValidWebhookUrl(raw: unknown): boolean {
-  return normalizeWebhookUrl(raw).ok;
+export function isValidWebhookUrl(raw: unknown, options?: WebhookUrlOptions): boolean {
+  return normalizeWebhookUrl(raw, options).ok;
 }

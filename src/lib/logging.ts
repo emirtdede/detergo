@@ -29,7 +29,7 @@ const isDev = (() => {
   }
 })();
 
-const PREFIX = "[dev-cleaner]";
+const PREFIX = "[detergo]";
 
 /** Keeps the scheme/host of a URL but drops the path, query and fragment. */
 function redactUrl(value: string): string {

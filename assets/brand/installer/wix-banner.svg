@@ -34,8 +34,8 @@
     <rect x="353" width="140" height="58" fill="url(#wb-panel)"/>
     <rect x="353" width="1" height="58" fill="#000000" fill-opacity="0.16"/>
 
-    <use href="#wb-icon" transform="translate(375 15) scale(0.054688) translate(-32 -32)"/>
-    <text x="404" y="34" font-family="Segoe UI, Segoe UI Semibold, Arial, sans-serif" font-size="9.5" font-weight="700" letter-spacing="0.6" fill="#FFFFFF">DEV CLEANER</text>
+    <use href="#wb-icon" transform="translate(370 15) scale(0.054688) translate(-32 -32)"/>
+    <text x="403" y="34" font-family="Segoe UI, Segoe UI Semibold, Arial, sans-serif" font-size="10.5" font-weight="700" letter-spacing="1.8" fill="#FFFFFF">DETERGO</text>
 
     <rect x="0" y="57" width="493" height="1" fill="#000000" fill-opacity="0.10"/>
 </svg>

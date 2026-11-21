@@ -10,31 +10,74 @@ impl RecycleBinService {
         Self
     }
 
-    /// Moves a validated target to the Windows Recycle Bin.
+    /// Moves a validated target to the OS Trash / Recycle Bin.
     ///
     /// There is deliberately no permanent fallback: if the recycle operation
     /// fails the caller receives an error and nothing is deleted.
-    ///
-    /// The move is performed by the shell's `IFileOperation` with
-    /// `FOFX_RECYCLEONDELETE`, which guarantees the target is recycled even
-    /// when the Recycle Bin is disabled for the volume. The previous
-    /// `trash` crate call could surface a native "delete permanently?" warning
-    /// or block while waiting for UI.
     pub fn recycle(&self, raw_path: &Path, ctx: &GuardContext<'_>) -> Result<PathBuf, AppError> {
         let canonical = validate_target(raw_path, ctx)?;
 
         recycle_via_shell(&canonical)?;
 
-        // The shell reports success once the item is queued for recycling.
-        // Re-check the filesystem so a silently ignored operation is never
-        // reported as a successful cleanup. The shell can still be releasing
-        // the handle when PerformOperations returns, so poll briefly instead
-        // of failing on the first, racy `exists()` check.
         if !wait_until_removed(&canonical) {
             return Err(AppError::RecycleBinFailed(canonical.display().to_string()));
         }
 
         Ok(canonical)
+    }
+}
+
+/// Reusable multi-item Recycle Bin session.
+///
+/// On Windows, keeps a single warm STA COM thread alive across an entire
+/// cleanup batch instead of spawning a new OS thread and re-initializing COM
+/// for every target, while preserving exact per-item error isolation and
+/// zero fallback to permanent deletion.
+pub struct RecycleBinSession {
+    #[cfg(windows)]
+    worker: Option<StaRecycleWorker>,
+}
+
+impl RecycleBinSession {
+    pub fn new() -> Self {
+        Self {
+            #[cfg(windows)]
+            worker: None,
+        }
+    }
+
+    pub fn recycle(
+        &mut self,
+        raw_path: &Path,
+        ctx: &GuardContext<'_>,
+    ) -> Result<PathBuf, AppError> {
+        let canonical = validate_target(raw_path, ctx)?;
+
+        #[cfg(windows)]
+        {
+            if self.worker.is_none() {
+                self.worker = Some(StaRecycleWorker::spawn()?);
+            }
+            if let Some(worker) = &self.worker {
+                worker.recycle(&canonical)?;
+            }
+        }
+        #[cfg(not(windows))]
+        {
+            recycle_via_shell(&canonical)?;
+        }
+
+        if !wait_until_removed(&canonical) {
+            return Err(AppError::RecycleBinFailed(canonical.display().to_string()));
+        }
+
+        Ok(canonical)
+    }
+}
+
+impl Default for RecycleBinSession {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -95,11 +138,86 @@ fn path_too_long(path: &Path) -> bool {
 }
 
 #[cfg(windows)]
-fn recycle_via_shell(canonical: &Path) -> Result<(), AppError> {
+type RecycleRequest = (PathBuf, std::sync::mpsc::Sender<Result<(), AppError>>);
+
+#[cfg(windows)]
+struct StaRecycleWorker {
+    tx: Option<std::sync::mpsc::Sender<RecycleRequest>>,
+    handle: Option<std::thread::JoinHandle<()>>,
+}
+
+#[cfg(windows)]
+impl StaRecycleWorker {
+    fn spawn() -> Result<Self, AppError> {
+        use windows::Win32::System::Com::{
+            CoInitializeEx, CoUninitialize, COINIT_APARTMENTTHREADED,
+        };
+
+        let (tx, rx) = std::sync::mpsc::channel::<RecycleRequest>();
+        let (init_tx, init_rx) = std::sync::mpsc::channel::<Result<(), AppError>>();
+
+        let handle = std::thread::Builder::new()
+            .name("recycle-bin-sta".into())
+            .spawn(move || {
+                let init = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED) };
+                if init.is_err() {
+                    let _ = init_tx.send(Err(AppError::RecycleBinComFailed(format!(
+                        "COM 0x{:08X}",
+                        init.0 as u32
+                    ))));
+                    return;
+                }
+                let _ = init_tx.send(Ok(()));
+                while let Ok((target, reply)) = rx.recv() {
+                    let _ = reply.send(perform_win32_recycle(&target));
+                }
+                unsafe { CoUninitialize() };
+            })
+            .map_err(|e| {
+                let detail = e
+                    .raw_os_error()
+                    .map(|code| format!("OS error {}", code))
+                    .unwrap_or_else(|| "worker-thread".to_string());
+                AppError::RecycleBinComFailed(detail)
+            })?;
+
+        init_rx
+            .recv()
+            .map_err(|_| AppError::RecycleBinComFailed("sta-init-failed".to_string()))??;
+
+        Ok(Self {
+            tx: Some(tx),
+            handle: Some(handle),
+        })
+    }
+
+    fn recycle(&self, target: &Path) -> Result<(), AppError> {
+        let Some(tx) = &self.tx else {
+            return Err(AppError::RecycleBinComFailed("worker-closed".to_string()));
+        };
+        let (reply_tx, reply_rx) = std::sync::mpsc::channel();
+        tx.send((target.to_path_buf(), reply_tx))
+            .map_err(|_| AppError::RecycleBinComFailed("worker-disconnected".to_string()))?;
+        reply_rx
+            .recv()
+            .map_err(|_| AppError::RecycleBinComFailed(target.display().to_string()))?
+    }
+}
+
+#[cfg(windows)]
+impl Drop for StaRecycleWorker {
+    fn drop(&mut self) {
+        self.tx.take();
+        if let Some(handle) = self.handle.take() {
+            let _ = handle.join();
+        }
+    }
+}
+
+#[cfg(windows)]
+fn perform_win32_recycle(target: &Path) -> Result<(), AppError> {
     use windows::core::{GUID, PCWSTR};
-    use windows::Win32::System::Com::{
-        CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_ALL, COINIT_APARTMENTTHREADED,
-    };
+    use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
     use windows::Win32::UI::Shell::{
         IFileOperation, IShellItem, SHCreateItemFromParsingName, FOFX_RECYCLEONDELETE, FOF_NO_UI,
     };
@@ -110,123 +228,124 @@ fn recycle_via_shell(canonical: &Path) -> Result<(), AppError> {
 
     fn map_hresult(err: windows::core::Error, display: &str) -> AppError {
         let code = err.code().0 as u32;
-        // The payload is machine-readable technical context only. The localized
-        // explanation comes from the frontend `AppError` code, so progress and
-        // error messages never carry English prose into the UI.
         let context = format!("{} (HRESULT 0x{:08X})", display, code);
         match code {
-            // ERROR_DISK_FULL / ERROR_HANDLE_DISK_FULL: the bin cannot grow
-            // enough to accept the target.
-            0x8007_0070 | 0x8007_0027 => AppError::RecycleBinTooSmall(context),
-            // ERROR_ACCESS_DENIED, ERROR_PRIVILEGE_NOT_HELD
+            // Win32 disk/quota full + Shell COPYENGINE_E_RECYCLE_SIZE_TOO_BIG
+            // (0x80270037) and COPYENGINE_E_RECYCLE_FORCE_NUKE (0x80270036).
+            0x8007_0070 | 0x8007_0027 | 0x8027_0037 | 0x8027_0036 => {
+                AppError::RecycleBinTooSmall(context)
+            }
             0x8007_0005 | 0x8007_0522 => AppError::RecycleBinAccessDenied(context),
-            // ERROR_FILE_NOT_FOUND, ERROR_PATH_NOT_FOUND, ERROR_NOT_FOUND
             0x8007_0002 | 0x8007_0003 | 0x8007_0490 => AppError::RecycleBinNotFound(context),
-            // ERROR_SHARING_VIOLATION, ERROR_LOCK_VIOLATION
             0x8007_0020 | 0x8007_0021 => AppError::RecycleBinSharingViolation(context),
-            // ERROR_FILENAME_EXCED_RANGE, ERROR_INVALID_NAME
-            0x8007_00CE | 0x8007_00A1 => AppError::RecycleBinPathTooLong(context),
-            // ERROR_CANCELLED, ERROR_REQUEST_ABORTED
-            0x8007_04C7 | 0x8007_04B5 => AppError::RecycleBinAborted(context),
-            // ERROR_NOT_SUPPORTED: the volume cannot host a Recycle Bin.
-            0x8007_0032 => AppError::RecycleBinDisabled(context),
+            // Win32 filename too long + Shell COPYENGINE_E_RECYCLE_PATH_TOO_LONG (0x80270038).
+            0x8007_00CE | 0x8007_00A1 | 0x8027_0038 => AppError::RecycleBinPathTooLong(context),
+            // Win32 cancelled + Shell COPYENGINE_E_USER_CANCELLED (0x80270000).
+            0x8007_04C7 | 0x8007_04B5 | 0x8027_0000 => AppError::RecycleBinAborted(context),
+            // Win32 not supported + Shell COPYENGINE_E_RECYCLE_BIN_NOT_FOUND (0x8027003A).
+            0x8007_0032 | 0x8027_003A => AppError::RecycleBinDisabled(context),
+            // Shell COPYENGINE_E_RECYCLE_UNKNOWN_ERROR (0x80270035) & others.
             _ => AppError::RecycleBinComFailed(context),
         }
     }
 
-    fn perform(target: &Path) -> Result<(), AppError> {
-        let display = target.display().to_string();
-        let shell_target = shell_path(target);
-        let wide: Vec<u16> = shell_target
-            .encode_utf16()
-            .chain(std::iter::once(0))
-            .collect();
+    let display = target.display().to_string();
+    let shell_target = shell_path(target);
+    let wide: Vec<u16> = shell_target
+        .encode_utf16()
+        .chain(std::iter::once(0))
+        .collect();
 
-        let item: IShellItem = unsafe { SHCreateItemFromParsingName(PCWSTR(wide.as_ptr()), None) }
-            .map_err(|err| {
-                if path_too_long(target) {
-                    AppError::RecycleBinPathTooLong(format!(
-                        "{} ({} UTF-16 units)",
-                        display,
-                        utf16_len(target)
-                    ))
-                } else {
-                    AppError::RecycleBinComFailed(format!(
-                        "{} (HRESULT 0x{:08X})",
-                        display,
-                        err.code().0 as u32
-                    ))
-                }
-            })?;
-
-        let operation: IFileOperation =
-            unsafe { CoCreateInstance(&CLSID_FILE_OPERATION, None, CLSCTX_ALL) }.map_err(|e| {
-                AppError::RecycleBinComFailed(format!("HRESULT 0x{:08X}", e.code().0 as u32))
-            })?;
-
-        unsafe {
-            operation
-                .SetOperationFlags(FOF_NO_UI | FOFX_RECYCLEONDELETE)
-                .map_err(|e| {
-                    AppError::RecycleBinComFailed(format!("HRESULT 0x{:08X}", e.code().0 as u32))
-                })?;
-            operation.DeleteItem(&item, None).map_err(|e| {
+    let item: IShellItem = unsafe { SHCreateItemFromParsingName(PCWSTR(wide.as_ptr()), None) }
+        .map_err(|err| {
+            if path_too_long(target) {
+                AppError::RecycleBinPathTooLong(format!(
+                    "{} ({} UTF-16 units)",
+                    display,
+                    utf16_len(target)
+                ))
+            } else {
                 AppError::RecycleBinComFailed(format!(
                     "{} (HRESULT 0x{:08X})",
                     display,
-                    e.code().0 as u32
+                    err.code().0 as u32
                 ))
-            })?;
-            operation
-                .PerformOperations()
-                .map_err(|e| map_hresult(e, &display))?;
-
-            let aborted = operation.GetAnyOperationsAborted().map_err(|e| {
-                AppError::RecycleBinComFailed(format!("HRESULT 0x{:08X}", e.code().0 as u32))
-            })?;
-            if aborted.as_bool() {
-                return Err(AppError::RecycleBinAborted(display.to_string()));
             }
-        }
-
-        Ok(())
-    }
-
-    let target = canonical.to_path_buf();
-    let display = target.display().to_string();
-
-    let worker = std::thread::Builder::new()
-        .name("recycle-bin-sta".into())
-        .spawn(move || -> Result<(), AppError> {
-            // Each item gets its own short-lived STA so the COM apartment is
-            // deterministic and never shared with Tauri's message loop.
-            let init = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED) };
-            if init.is_err() {
-                return Err(AppError::RecycleBinComFailed(format!(
-                    "COM 0x{:08X}",
-                    init.0 as u32
-                )));
-            }
-            let result = perform(&target);
-            unsafe { CoUninitialize() };
-            result
-        })
-        .map_err(|e| {
-            let detail = e
-                .raw_os_error()
-                .map(|code| format!("OS error {}", code))
-                .unwrap_or_else(|| "worker-thread".to_string());
-            AppError::RecycleBinComFailed(detail)
         })?;
 
-    worker
-        .join()
-        .map_err(|_| AppError::RecycleBinComFailed(display.clone()))?
+    let operation: IFileOperation = unsafe {
+        CoCreateInstance(&CLSID_FILE_OPERATION, None, CLSCTX_ALL)
+    }
+    .map_err(|e| AppError::RecycleBinComFailed(format!("HRESULT 0x{:08X}", e.code().0 as u32)))?;
+
+    unsafe {
+        operation
+            .SetOperationFlags(FOF_NO_UI | FOFX_RECYCLEONDELETE)
+            .map_err(|e| {
+                AppError::RecycleBinComFailed(format!("HRESULT 0x{:08X}", e.code().0 as u32))
+            })?;
+        operation.DeleteItem(&item, None).map_err(|e| {
+            AppError::RecycleBinComFailed(format!(
+                "{} (HRESULT 0x{:08X})",
+                display,
+                e.code().0 as u32
+            ))
+        })?;
+        operation
+            .PerformOperations()
+            .map_err(|e| map_hresult(e, &display))?;
+
+        let aborted = operation.GetAnyOperationsAborted().map_err(|e| {
+            AppError::RecycleBinComFailed(format!("HRESULT 0x{:08X}", e.code().0 as u32))
+        })?;
+        if aborted.as_bool() {
+            return Err(AppError::RecycleBinAborted(display));
+        }
+    }
+
+    Ok(())
 }
 
-#[cfg(not(windows))]
-fn recycle_via_shell(_canonical: &Path) -> Result<(), AppError> {
-    Err(AppError::RecycleBinComFailed("windows-only".to_string()))
+#[cfg(windows)]
+fn recycle_via_shell(canonical: &Path) -> Result<(), AppError> {
+    let worker = StaRecycleWorker::spawn()?;
+    worker.recycle(canonical)
+}
+
+#[cfg(target_os = "macos")]
+fn recycle_via_shell(canonical: &Path) -> Result<(), AppError> {
+    use std::process::Command;
+    // Pass the path via argv (`on run argv`), never string-interpolated into AppleScript.
+    let status = Command::new("osascript")
+        .args([
+            "-e",
+            "on run argv\nset p to POSIX file (item 1 of argv)\ntell application \"Finder\" to delete p\nend run",
+            "--",
+        ])
+        .arg(canonical)
+        .status()
+        .map_err(|e| AppError::RecycleBinFailed(e.to_string()))?;
+    if status.success() {
+        Ok(())
+    } else {
+        Err(AppError::RecycleBinFailed(canonical.display().to_string()))
+    }
+}
+
+#[cfg(all(unix, not(target_os = "macos")))]
+fn recycle_via_shell(canonical: &Path) -> Result<(), AppError> {
+    use std::process::Command;
+    let status = Command::new("gio")
+        .arg("trash")
+        .arg("--")
+        .arg(canonical)
+        .status()
+        .map_err(|e| AppError::RecycleBinFailed(format!("gio trash unavailable: {e}")))?;
+    if status.success() {
+        Ok(())
+    } else {
+        Err(AppError::RecycleBinFailed(canonical.display().to_string()))
+    }
 }
 
 #[cfg(test)]

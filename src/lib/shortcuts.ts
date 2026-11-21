@@ -1,9 +1,9 @@
 /**
  * Single source of truth for keyboard shortcut parsing, validation and matching.
  *
- * The rules used to live in three places — the recorder in `SettingsView`, the
+ * The rules used to live in three places - the recorder in `SettingsView`, the
  * persisted-settings normaliser in `preferences-store` and the runtime matcher in
- * `App` — and they drifted: the recorder accepted a bare `A` or `Tab`, the
+ * `App` - and they drifted: the recorder accepted a bare `A` or `Tab`, the
  * normaliser only rejected modifier-only chords, and the matcher happily fired
  * on a single letter. Sharing one parser keeps all three in agreement.
  */

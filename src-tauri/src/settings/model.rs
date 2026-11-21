@@ -34,7 +34,7 @@ fn default_sort_direction() -> String {
     "desc".to_string()
 }
 
-/// A user-defined AI tool. Dev Cleaner never invents cleanup rules for these
+/// A user-defined AI tool. Detergo never invents cleanup rules for these
 /// roots: every discovered target is reported as `KEEP`.
 #[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -75,6 +75,10 @@ fn default_theme() -> String {
     "dark-black".to_string()
 }
 
+fn default_app_icon() -> String {
+    crate::platform::app_icon::APP_ICON_MATCH_THEME.to_string()
+}
+
 fn default_sort() -> SortConfig {
     SortConfig {
         field: "size".to_string(),
@@ -82,8 +86,57 @@ fn default_sort() -> SortConfig {
     }
 }
 
+/// User-created custom accent theme (dark or light base + arbitrary `#RRGGBB` hex).
+#[cfg_attr(feature = "bindings", derive(specta::Type))]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct CustomThemeConfig {
+    #[serde(default = "default_custom_theme_base")]
+    pub base: String,
+    #[serde(default = "default_custom_theme_accent")]
+    pub accent: String,
+}
+
+fn default_custom_theme_base() -> String {
+    "dark".to_string()
+}
+
+fn default_custom_theme_accent() -> String {
+    "#3B82F6".to_string()
+}
+
+impl Default for CustomThemeConfig {
+    fn default() -> Self {
+        Self {
+            base: default_custom_theme_base(),
+            accent: default_custom_theme_accent(),
+        }
+    }
+}
+
+fn normalize_hex_color(raw: &str) -> String {
+    let trimmed = raw.trim().trim_start_matches('#');
+    let expanded = if trimmed.len() == 3 && trimmed.bytes().all(|b| b.is_ascii_hexdigit()) {
+        let mut s = String::with_capacity(6);
+        for ch in trimmed.chars() {
+            s.push(ch);
+            s.push(ch);
+        }
+        s
+    } else if trimmed.len() == 6 && trimmed.bytes().all(|b| b.is_ascii_hexdigit()) {
+        trimmed.to_string()
+    } else {
+        return default_custom_theme_accent();
+    };
+    format!("#{}", expanded.to_ascii_uppercase())
+}
+
+fn default_ui_scale() -> u16 {
+    100
+}
+
 fn default_schema_version() -> u32 {
-    4
+    5
 }
 
 fn default_sidebar_mode() -> String {
@@ -166,6 +219,16 @@ pub struct AppSettings {
     pub schema_version: u32,
     #[serde(default = "default_theme")]
     pub theme: String,
+    #[serde(default = "default_app_icon")]
+    pub app_icon: String,
+    #[serde(default)]
+    pub custom_theme: CustomThemeConfig,
+    #[serde(default = "default_ui_scale")]
+    pub ui_scale: u16,
+    #[serde(default)]
+    pub high_contrast: bool,
+    #[serde(default)]
+    pub onboarding_completed: bool,
     #[serde(default)]
     pub reduce_motion: bool,
     #[serde(default)]
@@ -220,6 +283,11 @@ pub struct AppSettings {
     pub webhook_on_scan: bool,
     #[serde(default = "default_true")]
     pub webhook_on_clean: bool,
+    /// Explicit opt-in allowing webhooks to target loopback or private LAN
+    /// hosts (e.g. self-hosted n8n on localhost or 192.168.x.x). Off by
+    /// default so strict SSRF protection remains enforced out of the box.
+    #[serde(default)]
+    pub allow_private_webhooks: bool,
     #[serde(default)]
     pub shortcuts: Option<std::collections::HashMap<String, String>>,
     /// Allows the MCP `execute` tool to run at all. Off by default: an agent
@@ -240,8 +308,13 @@ fn default_true() -> bool {
 impl Default for AppSettings {
     fn default() -> Self {
         Self {
-            schema_version: 4,
+            schema_version: 5,
             theme: "dark-black".to_string(),
+            app_icon: default_app_icon(),
+            custom_theme: CustomThemeConfig::default(),
+            ui_scale: default_ui_scale(),
+            high_contrast: false,
+            onboarding_completed: false,
             reduce_motion: false,
             favorites: Vec::new(),
             recent_locations: Vec::new(),
@@ -270,6 +343,7 @@ impl Default for AppSettings {
             webhook_url: None,
             webhook_on_scan: true,
             webhook_on_clean: true,
+            allow_private_webhooks: false,
             shortcuts: None,
             mcp_allow_destructive: false,
             recovered_from_corrupt: false,
@@ -287,10 +361,22 @@ impl AppSettings {
             // New in 4: MCP destructive actions are opt-in.
             self.schema_version = 4;
         }
+        if self.schema_version < 5 {
+            // New in 5: custom hex theme, UI zoom scale, high contrast & onboarding.
+            self.schema_version = 5;
+        }
         self.normalize();
     }
 
     pub fn normalize(&mut self) {
+        self.app_icon = crate::platform::app_icon::normalize_app_icon(&self.app_icon);
+        self.custom_theme.base = if self.custom_theme.base.eq_ignore_ascii_case("light") {
+            "light".to_string()
+        } else {
+            "dark".to_string()
+        };
+        self.custom_theme.accent = normalize_hex_color(&self.custom_theme.accent);
+        self.ui_scale = self.ui_scale.clamp(80, 150);
         self.max_depth = self.max_depth.clamp(1, 128);
         self.max_candidates = self.max_candidates.clamp(1_000, 500_000);
         self.timeout_minutes = self.timeout_minutes.clamp(1, 120);
@@ -311,9 +397,12 @@ impl AppSettings {
             if trimmed.is_empty() {
                 return None;
             }
-            crate::commands::webhook_commands::validate_webhook_url(trimmed)
-                .ok()
-                .map(|parsed| parsed.to_string())
+            crate::commands::webhook_commands::validate_webhook_url_with_policy(
+                trimmed,
+                self.allow_private_webhooks,
+            )
+            .ok()
+            .map(|parsed| parsed.to_string())
         });
 
         // Protected paths are stored in a canonical, absolute form. Otherwise

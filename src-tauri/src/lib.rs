@@ -76,7 +76,7 @@ pub fn run() {
             if windows.is_empty() {
                 let win =
                     tauri::WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::default())
-                        .title("Dev Cleaner")
+                        .title("Detergo")
                         .inner_size(1180.0, 760.0)
                         .min_inner_size(980.0, 640.0)
                         .center()
@@ -86,6 +86,25 @@ pub fn run() {
             }
 
             setup_tray(app)?;
+
+            // Apply the persisted dynamic Detergo icon to window/taskbar & tray
+            // on launch whenever the user chose a non-default icon or theme.
+            let startup_settings = settings::SettingsRepository::new().load();
+            let resolved_startup_icon = platform::app_icon::resolve_icon_id(
+                &startup_settings.app_icon,
+                &startup_settings.theme,
+            );
+            if resolved_startup_icon != "dark-black" {
+                let handle = app.handle().clone();
+                let icon_id = startup_settings.app_icon.clone();
+                let theme = startup_settings.theme.clone();
+                let custom = startup_settings.custom_theme.clone();
+                std::thread::spawn(move || {
+                    let _ = platform::app_icon::apply_app_icon_native(
+                        &handle, &icon_id, &theme, &custom,
+                    );
+                });
+            }
             Ok(())
         })
         .manage(AppState::new())
@@ -135,7 +154,10 @@ pub fn run() {
             save_app_settings,
             reset_app_data,
             get_build_info,
+            get_install_channel,
             check_for_updates,
+            download_and_verify_update,
+            launch_downloaded_update,
             create_support_bundle,
             compose_support_mail,
             test_webhook,
@@ -144,7 +166,8 @@ pub fn run() {
             save_last_scan,
             clear_last_scan,
             hide_to_tray,
-            quit_app
+            quit_app,
+            apply_app_icon
         ])
         .run(tauri::generate_context!())
         .unwrap_or_else(|err| {
@@ -270,7 +293,7 @@ fn setup_tray(app: &mut tauri::App) -> tauri::Result<()> {
     let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
 
     let mut builder = TrayIconBuilder::with_id("main-tray")
-        .tooltip("Dev Cleaner")
+        .tooltip("Detergo")
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id.as_ref() {

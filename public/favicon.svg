@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none" data-brand="canvas" data-safe="32" role="img" aria-labelledby="dc-title">
-    <title id="dc-title">Dev Cleaner</title>
+    <title id="dc-title">Detergo</title>
     <defs>
         <linearGradient id="dc-bg" x1="256" y1="32" x2="256" y2="480" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stop-color="#1C1C21"/>

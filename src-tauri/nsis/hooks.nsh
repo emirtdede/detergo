@@ -1,5 +1,5 @@
 ; ============================================================
-; Dev Cleaner NSIS installer / uninstaller hooks
+; Detergo NSIS installer / uninstaller hooks
 ;
 ; Content is ASCII-only on purpose except the !include line: NSIS reads this
 ; file with the system code page, so non-ASCII comments turn into mojibake. The
@@ -13,14 +13,18 @@
 ; come from the two defines below, so we point them at generated LangStrings:
 ; the dialog speaks whatever language MUI just resolved.
 ;
-; Its OK/Cancel captions are compiled into LangDLL.dll and cannot be overridden
-; (checked: only MUI_LANGDLL_WINDOWTITLE/INFO are parameters). Everything the
-; dialog can say is localized; those two stock buttons stay as Windows draws
-; them for the plugin.
+; English (1033) is index 0 in tauri.conf.json, so NSIS preselects the user's
+; Windows UI language (GetUserDefaultUILanguage) when supported and falls back
+; to English when Windows uses a language outside the 73 shipped locales.
 !include "${__FILEDIR__}\languages\picker.nsh"
 
 !define MUI_LANGDLL_WINDOWTITLE "$(DcPickerTitle)"
 !define MUI_LANGDLL_INFO "$(DcPickerInfo)"
+
+; Show ALL 73 languages in the picker regardless of the Windows non-Unicode
+; system codepage (without this, MUI filters out languages whose codepage
+; differs from the current machine's ANSI codepage).
+!define MUI_LANGDLL_ALLLANGUAGES
 
 ; Show the picker on every run, not only on the first install. The saved choice
 ; is still preselected because MUI reads the registry first.
@@ -101,6 +105,10 @@ FunctionEnd
 !define DC_SHCNF_PATHW_FLUSH   0x1005
 
 !macro NSIS_HOOK_POSTINSTALL
+  ; Persist the chosen installer language so subsequent runs and the
+  ; uninstaller remember the user's selection.
+  !insertmacro MUI_LANGDLL_SAVELANGUAGE
+
   ; One 15-frame ICO is shipped and copied verbatim; NSIS embeds every frame of
   ; ${INSTALLERICON}. Do not generate a second, lower-resolution fallback icon.
   File "/oname=$INSTDIR\app.ico" "${INSTALLERICON}"
@@ -126,23 +134,25 @@ FunctionEnd
   Delete "$INSTDIR\app.ico"
   ; Remove $INSTDIR and any per-user shim bin directory from user PATH.
   System::Call 'kernel32::SetEnvironmentVariable(t "DC_INSTDIR", t "$INSTDIR")'
-  nsExec::ExecToStack 'powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$$t1 = $$env:DC_INSTDIR.TrimEnd([char]92); $$t2 = (Join-Path $$env:LOCALAPPDATA \"dev-cleaner\bin\").TrimEnd([char]92); $$p = [Environment]::GetEnvironmentVariable(\"Path\", \"User\"); if ($$p) { $$parts = $$p -split \";\" | Where-Object { $$n = $$_.Trim().TrimEnd([char]92); $$n -ne \"\" -and $$n -ine $$t1 -and $$n -ine $$t2 }; [Environment]::SetEnvironmentVariable(\"Path\", ($$parts -join \";\"), \"User\") }"'
+  nsExec::ExecToStack 'powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$$t1 = $$env:DC_INSTDIR.TrimEnd([char]92); $$t2 = (Join-Path $$env:LOCALAPPDATA \"detergo\bin\").TrimEnd([char]92); $$t3 = (Join-Path $$env:LOCALAPPDATA \"lustra\bin\").TrimEnd([char]92); $$t4 = (Join-Path $$env:LOCALAPPDATA \"dev-cleaner\bin\").TrimEnd([char]92); $$p = [Environment]::GetEnvironmentVariable(\"Path\", \"User\"); if ($$p) { $$parts = $$p -split \";\" | Where-Object { $$n = $$_.Trim().TrimEnd([char]92); $$n -ne \"\" -and $$n -ine $$t1 -and $$n -ine $$t2 -and $$n -ine $$t3 -and $$n -ine $$t4 }; [Environment]::SetEnvironmentVariable(\"Path\", ($$parts -join \";\"), \"User\") }"'
   Pop $0
   Pop $1
+  Delete "$LOCALAPPDATA\detergo\bin\detergo.cmd"
+  RMDir "$LOCALAPPDATA\detergo\bin"
+  Delete "$LOCALAPPDATA\lustra\bin\lustra.cmd"
+  Delete "$LOCALAPPDATA\lustra\bin\dev-cleaner.cmd"
+  RMDir "$LOCALAPPDATA\lustra\bin"
   Delete "$LOCALAPPDATA\dev-cleaner\bin\dev-cleaner.cmd"
   RMDir "$LOCALAPPDATA\dev-cleaner\bin"
   System::Call 'user32::SendMessageTimeout(i 0xffff, i 0x001A, i 0, t "Environment", i 2, i 5000, *i .r0)'
   System::Call 'shell32::SHChangeNotify(i ${DC_SHCNE_ASSOCCHANGED}, i ${DC_SHCNF_FLUSH}, p 0, p 0)'
 
-  ; Tauri's template only removes data under the bundle identifier
-  ; (`$APPDATA\com.vellium.devcleaner`), but the Rust backend stores settings,
-  ; history and the last-scan snapshot in `$APPDATA\dev-cleaner`
-  ; (see platform::resolve_app_dir). Without this block the "Delete app data"
-  ; checkbox left everything behind. The legacy folder is removed too so an
-  ; old installation cannot resurface its data after a reinstall. Updates never
-  ; take this path; they must keep the user's data.
+  ; Remove Detergo and any migrated legacy folders when requested on uninstall.
+  ; Updates never take this path; they must keep the user's data.
   ${If} $DeleteAppDataCheckboxState = 1
   ${AndIf} $UpdateMode <> 1
+    RmDir /r "$APPDATA\detergo"
+    RmDir /r "$APPDATA\lustra"
     RmDir /r "$APPDATA\dev-cleaner"
     RmDir /r "$APPDATA\node-cleaner"
   ${EndIf}
@@ -152,5 +162,5 @@ FunctionEnd
   ; folder behind. Queue an empty-only removal for the next logon, which is the
   ; earliest moment the folder can really go away.
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\RunOnce" \
-    "DevCleanerRemoveInstallDir" 'cmd.exe /c rmdir /q "$INSTDIR"'
+    "DetergoRemoveInstallDir" 'cmd.exe /c rmdir /q "$INSTDIR"'
 !macroend

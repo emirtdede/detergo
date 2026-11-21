@@ -31,8 +31,8 @@ if (process.platform !== "win32" && !allowNonWindows) {
   process.exit(1);
 }
 
-const masterPath = path.join(root, "assets", "brand", "dev-cleaner-icon.svg");
-const glyphPath = path.join(root, "assets", "brand", "dev-cleaner-glyph.svg");
+const masterPath = path.join(root, "assets", "brand", "detergo-icon.svg");
+const glyphPath = path.join(root, "assets", "brand", "detergo-glyph.svg");
 const socialPath = path.join(root, "assets", "brand", "github", "social-preview.svg");
 const installerDir = path.join(root, "assets", "brand", "installer");
 const iconsDir = path.join(root, "src-tauri", "icons");
@@ -120,9 +120,9 @@ const simpleBase = await renderBase(simpleSvg);
 
 // 1024 master for tauri icon and GitHub.
 const icon1024 = await resizePng(masterBase, 1024);
-write("assets/brand/dev-cleaner-icon-1024.png", icon1024);
-write("assets/brand/dev-cleaner-icon-256.png", await resizePng(masterBase, 256));
-write("docs/brand/dev-cleaner-icon.png", await resizePng(masterBase, 512));
+write("assets/brand/detergo-icon-1024.png", icon1024);
+write("assets/brand/detergo-icon-256.png", await resizePng(masterBase, 256));
+write("docs/brand/detergo-icon.png", await resizePng(masterBase, 512));
 
 // Standard Tauri set. Wipe the directory so no legacy identity can survive.
 if (!skipTauriIcons) {
@@ -131,7 +131,7 @@ if (!skipTauriIcons) {
     fs.rmSync(iconsDir, { recursive: true, force: true });
     fs.mkdirSync(iconsDir, { recursive: true });
     execSync(
-      `npx tauri icon "${path.join(root, "assets", "brand", "dev-cleaner-icon-1024.png")}" --output "${iconsDir}"`,
+      `npx tauri icon "${path.join(root, "assets", "brand", "detergo-icon-1024.png")}" --output "${iconsDir}"`,
       { cwd: root, stdio: "inherit" },
     );
     // Desktop-only product: drop the mobile sets tauri icon creates.
@@ -199,7 +199,7 @@ const manifest = {
   libvips: sharp.versions.vips,
   platform: process.platform,
   arch: process.arch,
-  master: "assets/brand/dev-cleaner-icon.svg",
+  master: "assets/brand/detergo-icon.svg",
   masterSha256: sha256(masterSvg),
   icoSizes: ICO_SIZES,
   traySizes: TRAY_SIZES,

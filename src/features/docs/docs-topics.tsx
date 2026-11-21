@@ -116,7 +116,7 @@ export function getDocsTopics(locale = "en"): DocTopic[] {
       title: "MCP Tools Reference",
       category: "mcp",
       icon: <BookOpen size={14} />,
-      keywords: ["tools", "reference", "devcleaner_scan_workspace", "devcleaner_clean_safe"],
+      keywords: ["tools", "reference", "detergo_scan_workspace", "detergo_clean_safe"],
     },
 
     // 4. Webhook

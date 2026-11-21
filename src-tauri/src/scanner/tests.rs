@@ -845,13 +845,13 @@ fn source_subtrees_and_mismatched_ecosystems_do_not_produce_false_positives() {
     let temp = tempfile::tempdir().unwrap();
     let root = temp.path();
 
-    // Rust project with `src/bin` — must never match .NET `bin`.
+    // Rust project with `src/bin` - must never match .NET `bin`.
     fs::create_dir_all(root.join("rust-app")).unwrap();
     fs::write(root.join("rust-app/Cargo.toml"), "[package]\nname=\"r\"").unwrap();
     write(&root.join("rust-app/src/bin/cli.rs"), 64);
 
     // JS/Next.js project with `src/features/library`, `src/app/api/saved`,
-    // `src/vendor`, and `public/dist` — none of these are Unity/Unreal/Go/JS artifacts.
+    // `src/vendor`, and `public/dist` - none of these are Unity/Unreal/Go/JS artifacts.
     fs::create_dir_all(root.join("web-app")).unwrap();
     fs::write(root.join("web-app/package.json"), "{\"name\":\"web\"}").unwrap();
     write(&root.join("web-app/src/features/library/index.ts"), 64);
@@ -859,7 +859,7 @@ fn source_subtrees_and_mismatched_ecosystems_do_not_produce_false_positives() {
     write(&root.join("web-app/src/vendor/adapter.ts"), 64);
     write(&root.join("web-app/public/dist/bundle.js"), 64);
 
-    // .NET project with `wwwroot/lib/bootstrap/dist` — must never match JS `dist`.
+    // .NET project with `wwwroot/lib/bootstrap/dist` - must never match JS `dist`.
     fs::create_dir_all(root.join("dotnet-app")).unwrap();
     fs::write(root.join("dotnet-app/App.csproj"), "<Project />").unwrap();
     write(
@@ -945,7 +945,7 @@ fn monorepo_apps_local_packages_is_not_excluded_as_windows_appdata() {
     let root = temp.path();
 
     // A monorepo with `apps/local/packages/ui/node_modules` contains `local/packages`
-    // without `appdata/local/packages` — it must NOT be skipped by the Windows UWP guard.
+    // without `appdata/local/packages` - it must NOT be skipped by the Windows UWP guard.
     let pkg_dir = root.join("apps/local/packages/ui");
     fs::create_dir_all(pkg_dir.join("node_modules/react")).unwrap();
     fs::write(pkg_dir.join("package.json"), "{\"name\":\"ui\"}").unwrap();

@@ -30,7 +30,7 @@ const DISK_PRESSURE_COOLDOWN_MS = 6 * 60 * 60 * 1000;
  * the retired `node-cleaner.` prefix; that entry is migrated on read and removed
  * so the old identity cannot reappear in a WebView2 profile dump.
  */
-const DISK_COOLDOWN_STORAGE_KEY = "dev-cleaner.disk-pressure-cooldown.v1";
+const DISK_COOLDOWN_STORAGE_KEY = "detergo.disk-pressure-cooldown.v1";
 const LEGACY_DISK_COOLDOWN_STORAGE_KEY = "node-cleaner.disk-pressure-cooldown.v1";
 
 /**

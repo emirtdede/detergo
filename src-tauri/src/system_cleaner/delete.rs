@@ -74,9 +74,21 @@ pub fn delete_contents(root: &Path, token: &CancellationToken) -> Result<DeleteO
             }
         };
 
+        if !super::guard::is_inside_audited_root(&path) {
+            outcome.skip(&path);
+            continue;
+        }
+
         if meta.file_type().is_symlink() || is_reparse_point(&path) {
-            match remove_link_only(&path) {
-                Ok(()) => outcome.deleted_dirs = outcome.deleted_dirs.saturating_add(1),
+            let is_dir_link = meta.is_dir();
+            match remove_link_only(&path, is_dir_link) {
+                Ok(()) => {
+                    if is_dir_link {
+                        outcome.deleted_dirs = outcome.deleted_dirs.saturating_add(1);
+                    } else {
+                        outcome.deleted_files = outcome.deleted_files.saturating_add(1);
+                    }
+                }
                 Err(_) => outcome.skip(&path),
             }
             continue;
@@ -136,12 +148,15 @@ fn remove_file_portable(path: &Path) -> Result<(), ()> {
         return Ok(());
     }
     // A read-only leftover (common in Temp) needs the attribute cleared first.
-    if let Ok(metadata) = fs::metadata(path) {
-        let mut permissions = metadata.permissions();
-        if permissions.readonly() {
-            #[allow(clippy::permissions_set_readonly_false)]
-            permissions.set_readonly(false);
-            let _ = fs::set_permissions(path, permissions);
+    // Use `symlink_metadata` so we never follow a link.
+    if let Ok(metadata) = fs::symlink_metadata(path) {
+        if !metadata.file_type().is_symlink() {
+            let mut permissions = metadata.permissions();
+            if permissions.readonly() {
+                #[allow(clippy::permissions_set_readonly_false)]
+                permissions.set_readonly(false);
+                let _ = fs::set_permissions(path, permissions);
+            }
         }
     }
     fs::remove_file(path).map_err(|_| ())
@@ -151,16 +166,13 @@ fn remove_dir(path: &Path) -> Result<(), ()> {
     match delete_by_handle(path, None) {
         Ok(()) => Ok(()),
         Err(err) if err.is_unsupported() => fs::remove_dir(path).map_err(|_| ()),
-        Err(_) => fs::remove_dir(path).map_err(|_| ()),
+        Err(_) => Err(()),
     }
 }
 
 /// Removes the link itself, never its target.
-fn remove_link_only(path: &Path) -> Result<(), ()> {
-    // `symlink_metadata` reports a directory link as a file, so the *target's*
-    // metadata decides which removal call is correct.
-    let link_is_dir = fs::metadata(path).map(|m| m.is_dir()).unwrap_or(false);
-    if link_is_dir {
+fn remove_link_only(path: &Path, is_dir_link: bool) -> Result<(), ()> {
+    if is_dir_link {
         fs::remove_dir(path)
             .or_else(|_| fs::remove_file(path))
             .map_err(|_| ())

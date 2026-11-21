@@ -1,16 +1,30 @@
 import { create } from "zustand";
 import {
+  AppIconMode,
   AppSettings,
   CacheMeasureMode,
   CloseAction,
+  CustomThemeConfig,
   FavoriteLocation,
+  SelectableTheme,
   SidebarMode,
   SortOption,
   SupportedLanguage,
   DEFAULT_SHORTCUTS,
   THEME_MODES,
-  ThemeMode,
 } from "@/types";
+import {
+  applyCustomThemeTokens,
+  clearCustomThemeTokens,
+  CUSTOM_THEME_ID,
+  DEFAULT_CUSTOM_THEME,
+  normalizeHexColor,
+} from "@/lib/theme/custom-theme";
+import {
+  APP_ICON_CUSTOM,
+  APP_ICON_MATCH_THEME,
+  resolveAppIconId,
+} from "@/components/brand/AppIconPreview";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { useUiStore } from "@/stores/ui-store";
 import { detectSystemLanguage, LANGUAGES_LIST } from "@/locales/languages";
@@ -23,7 +37,17 @@ import { isAppDataResetting } from "@/lib/app-data-reset";
 
 interface PreferencesState extends AppSettings {
   isLoaded: boolean;
-  setTheme: (theme: ThemeMode | string) => void;
+  customTheme: CustomThemeConfig;
+  appIcon: AppIconMode;
+  uiScale: number;
+  highContrast: boolean;
+  onboardingCompleted: boolean;
+  setTheme: (theme: SelectableTheme | string) => void;
+  setCustomTheme: (config: Partial<CustomThemeConfig>) => void;
+  setAppIcon: (icon: AppIconMode | string) => void;
+  setUiScale: (scale: number) => void;
+  setHighContrast: (enabled: boolean) => void;
+  setOnboardingCompleted: (completed: boolean) => void;
   setLanguage: (language: SupportedLanguage) => void;
   setReduceMotion: (reduce: boolean) => void;
   setSort: (sort: SortOption) => void;
@@ -46,9 +70,20 @@ interface PreferencesState extends AppSettings {
   applyProviderSettings: (prefs: Partial<AppSettings>) => void;
 }
 
-const DEFAULT_SETTINGS: AppSettings = {
-  schemaVersion: 4,
+const DEFAULT_SETTINGS: AppSettings & {
+  customTheme: CustomThemeConfig;
+  appIcon: AppIconMode;
+  uiScale: number;
+  highContrast: boolean;
+  onboardingCompleted: boolean;
+} = {
+  schemaVersion: 5,
   theme: "dark-black",
+  customTheme: { ...DEFAULT_CUSTOM_THEME },
+  appIcon: APP_ICON_MATCH_THEME,
+  uiScale: 100,
+  highContrast: false,
+  onboardingCompleted: false,
   language: resolveUiLocale(detectSystemLanguage()),
   reduceMotion: false,
   favorites: [],
@@ -81,6 +116,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   webhookUrl: null,
   webhookOnScan: true,
   webhookOnClean: true,
+  allowPrivateWebhooks: false,
   shortcuts: { ...DEFAULT_SHORTCUTS },
   mcpAllowDestructive: false,
 };
@@ -94,29 +130,107 @@ const LEGACY_THEME_MAP: Record<string, string> = {
   "light-transparent": "light-white",
 };
 
-const VERIFIED_THEMES: ReadonlySet<string> = new Set<string>(THEME_MODES);
+const VERIFIED_THEMES: ReadonlySet<string> = new Set<string>([...THEME_MODES, CUSTOM_THEME_ID]);
+const VERIFIED_APP_ICONS: ReadonlySet<string> = new Set<string>([
+  APP_ICON_MATCH_THEME,
+  APP_ICON_CUSTOM,
+  ...THEME_MODES,
+]);
 
-export function normalizeTheme(theme: string): ThemeMode {
+export function normalizeTheme(theme: string): SelectableTheme {
   const mapped = LEGACY_THEME_MAP[theme] ?? theme;
-  return (VERIFIED_THEMES.has(mapped) ? mapped : "dark-black") as ThemeMode;
+  return (VERIFIED_THEMES.has(mapped) ? mapped : "dark-black") as SelectableTheme;
 }
 
-const THEME_CACHE_KEY = "dev_cleaner_theme";
-const LANG_CACHE_KEY = "dev_cleaner_lang";
+export function normalizeAppIcon(icon: string | null | undefined): AppIconMode {
+  const trimmed = icon?.trim() ?? "";
+  return (VERIFIED_APP_ICONS.has(trimmed) ? trimmed : APP_ICON_MATCH_THEME) as AppIconMode;
+}
+
+export function normalizeCustomTheme(
+  value: Partial<CustomThemeConfig> | null | undefined,
+): CustomThemeConfig {
+  const base = value?.base === "light" ? "light" : "dark";
+  const accent = normalizeHexColor(value?.accent) ?? DEFAULT_CUSTOM_THEME.accent;
+  return { base, accent };
+}
+
+export const UI_SCALE_LIMITS = { min: 80, max: 150 } as const;
+export const UI_SCALE_PRESETS = [80, 90, 100, 110, 125, 150] as const;
+
+export function normalizeUiScale(scale: number | undefined): number {
+  if (typeof scale !== "number" || !Number.isFinite(scale)) return 100;
+  return Math.min(UI_SCALE_LIMITS.max, Math.max(UI_SCALE_LIMITS.min, Math.round(scale)));
+}
+
+const THEME_CACHE_KEY = "detergo_theme";
+const LEGACY_THEME_CACHE_KEY = "dev_cleaner_theme";
+const CUSTOM_THEME_CACHE_KEY = "detergo_custom_theme";
+const UI_SCALE_CACHE_KEY = "detergo_ui_scale";
+const HIGH_CONTRAST_CACHE_KEY = "detergo_high_contrast";
+const LANG_CACHE_KEY = "detergo_lang";
+const LEGACY_LANG_CACHE_KEY = "dev_cleaner_lang";
+
+function applyAppIconToRuntime(
+  iconId: AppIconMode,
+  activeTheme: string,
+  customTheme: CustomThemeConfig,
+) {
+  const resolved = resolveAppIconId(iconId, activeTheme);
+  if (typeof document !== "undefined") {
+    document.documentElement.setAttribute("data-app-icon", resolved);
+  }
+  void scannerApi.applyAppIcon(iconId, activeTheme, customTheme).catch(() => {
+    // Non-fatal in browser previews or restricted sandboxes.
+  });
+}
 
 /**
  * Mirrors the theme into `localStorage` so `public/theme-boot.js` can apply it
  * before the first paint. This is a cache only: the Rust settings file stays
  * authoritative and is re-applied by `loadPreferences`.
  */
-function applyThemeToDom(theme: string) {
+function applyThemeToDom(theme: string, customTheme?: CustomThemeConfig) {
+  const normalized = normalizeTheme(theme);
+  const custom = normalizeCustomTheme(customTheme);
   if (typeof document !== "undefined") {
-    document.documentElement.setAttribute("data-theme", normalizeTheme(theme));
+    document.documentElement.setAttribute("data-theme", normalized);
+    if (normalized === CUSTOM_THEME_ID) {
+      applyCustomThemeTokens(document.documentElement, custom);
+    } else {
+      clearCustomThemeTokens(document.documentElement);
+    }
   }
   try {
-    localStorage.setItem(THEME_CACHE_KEY, normalizeTheme(theme));
+    localStorage.setItem(THEME_CACHE_KEY, normalized);
+    localStorage.setItem(LEGACY_THEME_CACHE_KEY, normalized);
+    localStorage.setItem(CUSTOM_THEME_CACHE_KEY, JSON.stringify(custom));
   } catch {
     // Storage can be disabled or full; the Rust setting still drives the app.
+  }
+}
+
+function applyUiScaleToDom(scale: number) {
+  const normalized = normalizeUiScale(scale);
+  if (typeof document !== "undefined") {
+    document.documentElement.style.zoom = normalized === 100 ? "" : `${normalized}%`;
+    document.documentElement.setAttribute("data-ui-scale", String(normalized));
+  }
+  try {
+    localStorage.setItem(UI_SCALE_CACHE_KEY, String(normalized));
+  } catch {
+    // Best-effort cache.
+  }
+}
+
+function applyHighContrastToDom(enabled: boolean) {
+  if (typeof document !== "undefined") {
+    document.documentElement.setAttribute("data-high-contrast", String(Boolean(enabled)));
+  }
+  try {
+    localStorage.setItem(HIGH_CONTRAST_CACHE_KEY, String(Boolean(enabled)));
+  } catch {
+    // Best-effort cache.
   }
 }
 
@@ -132,6 +246,7 @@ function applyLanguageToDom(language: SupportedLanguage) {
     document.documentElement.dir = meta?.rtl ? "rtl" : "ltr";
     try {
       localStorage.setItem(LANG_CACHE_KEY, uiLanguage);
+      localStorage.setItem(LEGACY_LANG_CACHE_KEY, uiLanguage);
     } catch {
       // See applyThemeToDom: the cache is best effort.
     }
@@ -228,7 +343,16 @@ export const SETTING_LIMITS = {
  * Settings that require a matching `apply*ToDom` call. `updateSettings` rejects
  * them so a caller cannot change the value without updating the document.
  */
-const DOM_BOUND_KEYS = new Set<string>(["theme", "language", "reduceMotion", "sidebarMode"]);
+const DOM_BOUND_KEYS = new Set<string>([
+  "theme",
+  "customTheme",
+  "appIcon",
+  "uiScale",
+  "highContrast",
+  "language",
+  "reduceMotion",
+  "sidebarMode",
+]);
 
 function clampSetting(
   value: number | undefined,
@@ -281,11 +405,17 @@ function normalizeSort(sort?: SortOption): SortOption {
 }
 
 function toSettings(state: PreferencesState): AppSettings {
-  const webhook = normalizeWebhookUrl(state.webhookUrl);
+  const allowPrivateWebhooks = state.allowPrivateWebhooks ?? false;
+  const webhook = normalizeWebhookUrl(state.webhookUrl, { allowPrivate: allowPrivateWebhooks });
   return {
     // Single source of truth: the default settings carry the schema version.
     schemaVersion: DEFAULT_SETTINGS.schemaVersion,
     theme: state.theme,
+    customTheme: normalizeCustomTheme(state.customTheme),
+    appIcon: normalizeAppIcon(state.appIcon),
+    uiScale: normalizeUiScale(state.uiScale),
+    highContrast: Boolean(state.highContrast),
+    onboardingCompleted: Boolean(state.onboardingCompleted),
     language: state.language ?? "en",
     reduceMotion: state.reduceMotion,
     favorites: state.favorites,
@@ -323,6 +453,7 @@ function toSettings(state: PreferencesState): AppSettings {
     webhookUrl: webhook.ok ? webhook.value : null,
     webhookOnScan: state.webhookOnScan ?? true,
     webhookOnClean: state.webhookOnClean ?? true,
+    allowPrivateWebhooks,
     shortcuts: state.shortcuts ?? DEFAULT_SHORTCUTS,
     mcpAllowDestructive: state.mcpAllowDestructive ?? false,
   };
@@ -408,12 +539,53 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   ...DEFAULT_SETTINGS,
   isLoaded: false,
 
-  setTheme: (theme: ThemeMode | string) => {
+  setTheme: (theme: SelectableTheme | string) => {
     // Single validation gate: an unknown value (old config, hand-edited file)
     // falls back to the default instead of writing an invalid `data-theme`.
     const normalized = normalizeTheme(theme);
-    applyThemeToDom(normalized);
+    const current = get();
+    applyThemeToDom(normalized, current.customTheme);
     set({ theme: normalized });
+    if (current.appIcon === APP_ICON_MATCH_THEME) {
+      applyAppIconToRuntime(current.appIcon, normalized, current.customTheme);
+    }
+    syncPreferences(get());
+  },
+
+  setCustomTheme: (patch: Partial<CustomThemeConfig>) => {
+    const current = get();
+    const next = normalizeCustomTheme({ ...current.customTheme, ...patch });
+    applyThemeToDom(CUSTOM_THEME_ID, next);
+    set({ theme: CUSTOM_THEME_ID, customTheme: next });
+    if (current.appIcon === APP_ICON_MATCH_THEME || current.appIcon === APP_ICON_CUSTOM) {
+      applyAppIconToRuntime(current.appIcon, CUSTOM_THEME_ID, next);
+    }
+    syncPreferences(get());
+  },
+
+  setAppIcon: (icon: AppIconMode | string) => {
+    const normalized = normalizeAppIcon(icon);
+    const current = get();
+    set({ appIcon: normalized });
+    applyAppIconToRuntime(normalized, current.theme, current.customTheme);
+    syncPreferences(get());
+  },
+
+  setUiScale: (scale: number) => {
+    const normalized = normalizeUiScale(scale);
+    applyUiScaleToDom(normalized);
+    set({ uiScale: normalized });
+    syncPreferences(get());
+  },
+
+  setHighContrast: (highContrast: boolean) => {
+    applyHighContrastToDom(highContrast);
+    set({ highContrast: Boolean(highContrast) });
+    syncPreferences(get());
+  },
+
+  setOnboardingCompleted: (onboardingCompleted: boolean) => {
+    set({ onboardingCompleted: Boolean(onboardingCompleted) });
     syncPreferences(get());
   },
 
@@ -562,12 +734,32 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
     const resolvedLanguage = resolveUiLocale(
       (prefs.language as SupportedLanguage) || detectSystemLanguage(),
     ) as SupportedLanguage;
-    const webhook = normalizeWebhookUrl(prefs.webhookUrl);
+    const allowPrivateWebhooks = normalizeBoolean(
+      prefs.allowPrivateWebhooks,
+      DEFAULT_SETTINGS.allowPrivateWebhooks ?? false,
+    );
+    const webhook = normalizeWebhookUrl(prefs.webhookUrl, { allowPrivate: allowPrivateWebhooks });
     const agentPolicy = prefs.agentPolicy ?? DEFAULT_SETTINGS.agentPolicy;
-    const merged: AppSettings = {
+    const customTheme = normalizeCustomTheme(prefs.customTheme);
+    const appIcon = normalizeAppIcon(prefs.appIcon);
+    const uiScale = normalizeUiScale(prefs.uiScale);
+    const highContrast = normalizeBoolean(prefs.highContrast, false);
+    const onboardingCompleted = normalizeBoolean(prefs.onboardingCompleted, false);
+    const merged: AppSettings & {
+      customTheme: CustomThemeConfig;
+      appIcon: AppIconMode;
+      uiScale: number;
+      highContrast: boolean;
+      onboardingCompleted: boolean;
+    } = {
       ...DEFAULT_SETTINGS,
       ...prefs,
       theme: normalizeTheme(prefs.theme || DEFAULT_SETTINGS.theme),
+      customTheme,
+      appIcon,
+      uiScale,
+      highContrast,
+      onboardingCompleted,
       language: resolvedLanguage,
       favorites: prefs.favorites ?? [],
       recentLocations: prefs.recentLocations ?? [],
@@ -615,10 +807,14 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
         prefs.webhookOnClean,
         DEFAULT_SETTINGS.webhookOnClean ?? true,
       ),
+      allowPrivateWebhooks,
       shortcuts: normalizeShortcuts(prefs.shortcuts),
       mcpAllowDestructive: prefs.mcpAllowDestructive ?? false,
     };
-    applyThemeToDom(merged.theme);
+    applyThemeToDom(merged.theme, merged.customTheme);
+    applyAppIconToRuntime(merged.appIcon, merged.theme, merged.customTheme);
+    applyUiScaleToDom(merged.uiScale);
+    applyHighContrastToDom(merged.highContrast);
     applyLanguageToDom(resolvedLanguage);
     applyReduceMotionToDom(merged.reduceMotion);
     // L12: a corrupt stored URL used to be dropped silently. Tell the user once

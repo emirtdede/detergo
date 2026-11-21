@@ -3,7 +3,7 @@
 //! The application never requires elevation to start. The System Cleanup view
 //! offers a single "restart as administrator" action; the elevated instance is
 //! the same executable with `--open-view system --wait-pid <old_pid>`, so UAC
-//! displays "Dev Cleaner" (never `cmd.exe`), there is no second binary, and the
+//! displays "Detergo" (never `cmd.exe`), there is no second binary, and the
 //! elevated instance waits on the old PID handle before acquiring the
 //! single-instance mutex.
 

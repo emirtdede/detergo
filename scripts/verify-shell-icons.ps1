@@ -68,7 +68,7 @@ function Test-IconInsideInstallDir {
 }
 
 $version = Get-ReleaseVersion -Root $root
-$nsis = Join-Path $ReleaseDir "Dev-Cleaner-$version-x64-Setup.exe"
+$nsis = Join-Path $ReleaseDir "Detergo-$version-x64-Setup.exe"
 $sourceIco = Join-Path $root "src-tauri\icons\icon.ico"
 
 Reset-InstallerResults
@@ -118,7 +118,7 @@ try {
                 Record-InstallerResult "S-04" "uninstaller carries the 15-frame ICO" "FAIL" "uninstaller not found"
             }
 
-            $entry = @(Get-DevCleanerUninstallEntries) | Select-Object -First 1
+            $entry = @(Get-DetergoUninstallEntries) | Select-Object -First 1
             if ($null -ne $entry -and -not [string]::IsNullOrWhiteSpace($entry.DisplayIcon)) {
                 $displayIcon = [Environment]::ExpandEnvironmentVariables($entry.DisplayIcon.Trim('"'))
                 Record-InstallerResult "S-05" "DisplayIcon resolves" `
@@ -128,7 +128,7 @@ try {
                 Record-InstallerResult "S-05" "DisplayIcon resolves" "FAIL" "registry value missing"
             }
 
-            $desktopShortcut = Join-Path ([Environment]::GetFolderPath("Desktop")) "Dev Cleaner.lnk"
+            $desktopShortcut = Join-Path ([Environment]::GetFolderPath("Desktop")) "Detergo.lnk"
             if (Test-Path $desktopShortcut) {
                 $info = Get-ShortcutIconInfo -Path $desktopShortcut
                 $inside = Test-IconInsideInstallDir -IconPath $info.IconPath -InstallDir $installDir
@@ -147,7 +147,7 @@ try {
             ) | Where-Object { Test-Path $_ }
             $startShortcut = $null
             foreach ($menuRoot in $startMenuRoots) {
-                $startShortcut = Get-ChildItem -Path $menuRoot -Filter "Dev Cleaner.lnk" -Recurse `
+                $startShortcut = Get-ChildItem -Path $menuRoot -Filter "Detergo.lnk" -Recurse `
                     -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
                 if ($null -ne $startShortcut) { break }
             }
@@ -170,7 +170,7 @@ try {
                     -not (Test-Path $installDir) -or
                     ((Get-ChildItem $installDir -Force -ErrorAction SilentlyContinue).Count -eq 0)
                 } 60
-                $registryGone = Wait-Until { @(Get-DevCleanerUninstallEntries).Count -eq 0 } 60
+                $registryGone = Wait-Until { @(Get-DetergoUninstallEntries).Count -eq 0 } 60
                 Record-InstallerResult "S-08" "shell-check uninstall" `
                     ($(if ($filesGone -and $registryGone) { "PASS" } else { "FAIL" })) `
                     ("exit=$($uninstallProc.ExitCode) filesGone=$filesGone registryGone=$registryGone")
@@ -183,7 +183,7 @@ try {
 }
 finally {
     Stop-InstalledApp
-    Remove-DevCleanerLeftovers
+    Remove-DetergoLeftovers
     # The NSIS hook queues an empty-only directory removal for the next logon.
     Invoke-QueuedInstallDirCleanup | Out-Null
 }

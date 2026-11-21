@@ -6,7 +6,7 @@
 #
 #   * builds a throwaway project containing an obvious fake secret,
 #   * launches the real binary and records every TCP/UDP endpoint it owns,
-#   * verifies no scan/history/settings file under %APPDATA%\dev-cleaner
+#   * verifies no scan/history/settings file under %APPDATA%\detergo
 #     contains the fake secret or file *contents* from the scanned project.
 #
 # It never touches real user data: the project lives in the temp folder and the
@@ -25,11 +25,11 @@ if (-not $AppPath) {
     # Always test the newest packaged build; the release artefact carries the
     # version in its name, so a hard-coded 2.0.0 path silently went stale.
     $portable = Get-ChildItem -Path (Join-Path $repoRoot "release_output") `
-        -Filter "Dev-Cleaner-*-Portable.exe" -ErrorAction SilentlyContinue |
+        -Filter "Detergo-*-Portable.exe" -ErrorAction SilentlyContinue |
         Sort-Object LastWriteTime -Descending | Select-Object -First 1
     $candidates = @(
         $(if ($portable) { $portable.FullName }),
-        (Join-Path $repoRoot "src-tauri\target\release\dev-cleaner.exe")
+        (Join-Path $repoRoot "src-tauri\target\release\detergo.exe")
     )
     $AppPath = $candidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
 }
@@ -51,7 +51,7 @@ Set-Content -Path (Join-Path $modules "index.js") -Value "export const key = '$s
 Write-Host "Fixture: $fixture (contains the canary in .env and node_modules content)"
 
 # Snapshot of files the app may create.
-$appData = Join-Path $env:APPDATA "dev-cleaner"
+$appData = Join-Path $env:APPDATA "detergo"
 $beforeFiles = @{}
 if (Test-Path $appData) {
     Get-ChildItem -Path $appData -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
@@ -100,7 +100,7 @@ if (Test-Path $appData) {
         catch { $false }
     })
 }
-Write-Host "  Files containing the canary under %APPDATA%\dev-cleaner: $($hits.Count)"
+Write-Host "  Files containing the canary under %APPDATA%\detergo: $($hits.Count)"
 foreach ($h in $hits) { Write-Host "    LEAK: $($h.FullName)" }
 
 # The scanner must also never copy project file contents into its stores.
@@ -130,6 +130,6 @@ if ($fail.Count -gt 0) {
 Write-Host "RESULT: PASS"
 Write-Host "  - No outbound network connections during a 15 s session"
 Write-Host "  - No non-loopback listeners or UDP endpoints"
-Write-Host "  - Fake secret never persisted into %APPDATA%\dev-cleaner"
+Write-Host "  - Fake secret never persisted into %APPDATA%\detergo"
 Write-Host "  - No project file contents copied into app storage"
 exit 0

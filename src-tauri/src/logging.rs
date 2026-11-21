@@ -7,7 +7,7 @@
 //! bypassed the path-masking policy the frontend applies to its own logs.
 //!
 //! This module is the single sink for backend warnings:
-//! - the message is written to `dev-cleaner.log` next to the app data,
+//! - the message is written to `detergo.log` next to the app data,
 //! - the account segment of any path is masked before it is written,
 //! - in debug builds the line is also echoed to stderr for `cargo run`.
 //!
@@ -21,7 +21,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::OnceLock;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-/// Above this size the log is rotated once to `dev-cleaner.log.1`.
+/// Above this size the log is rotated once to `detergo.log.1`.
 const MAX_LOG_BYTES: u64 = 4 * 1024 * 1024;
 
 /// Rotate checks run once per this many lines.
@@ -50,13 +50,17 @@ fn resolve_log_path() -> Option<PathBuf> {
     }
     let base = std::env::var("APPDATA")
         .map(PathBuf::from)
-        .or_else(|_| std::env::var("USERPROFILE").map(|p| PathBuf::from(p).join(".config")))
+        .or_else(|_| {
+            std::env::var("USERPROFILE")
+                .or_else(|_| std::env::var("HOME"))
+                .map(|p| PathBuf::from(p).join(".config"))
+        })
         .ok()?;
     // Deliberately *not* `platform::resolve_app_dir`: that function logs its own
     // failures through this module, so calling it here would recurse forever on
     // a machine where the app directory cannot be created. Mirroring the last
-    // path segment is enough — the directory is created on first write anyway.
-    Some(base.join("dev-cleaner").join("dev-cleaner.log"))
+    // path segment is enough - the directory is created on first write anyway.
+    Some(base.join("detergo").join("detergo.log"))
 }
 
 /// Masks the account name in Windows/POSIX home paths.
@@ -102,8 +106,14 @@ pub fn mask_path(value: &str) -> String {
             Some(len) => {
                 masked.extend(chars[index..index + len].iter());
                 index += len;
-                // Skip the account segment up to the next separator.
-                while index < chars.len() && chars[index] != '\\' && chars[index] != '/' {
+                // Skip the account segment up to the next path separator or delimiter
+                // (whitespace, quotes, newline) so trailing prose is preserved.
+                while index < chars.len()
+                    && !matches!(
+                        chars[index],
+                        '\\' | '/' | ' ' | '\t' | '\r' | '\n' | '"' | '\'' | ',' | ';' | ')'
+                    )
+                {
                     index += 1;
                 }
                 masked.push_str("•••");
@@ -139,7 +149,11 @@ fn rotate_if_needed(path: &Path) {
         return;
     }
     let backup = path.with_extension("log.1");
-    let _ = std::fs::rename(path, backup);
+    let _ = crate::platform::atomic_replace_file(path, &backup);
+}
+
+fn sanitize_single_line(text: &str) -> String {
+    text.replace(['\r', '\n'], " ")
 }
 
 /// Builds one fully sanitized log line.
@@ -149,8 +163,8 @@ fn rotate_if_needed(path: &Path) {
 /// not only in the error detail. Masking only `detail` published
 /// `C:\Users\<account>\...` into a file that users attach to support tickets.
 fn format_line(level: &str, message: &str, detail: &str) -> String {
-    let message = mask_path(message);
-    let detail = mask_path(detail);
+    let message = sanitize_single_line(&mask_path(message));
+    let detail = sanitize_single_line(&mask_path(detail));
     if detail.is_empty() {
         format!("{} [{level}] {message}\n", timestamp())
     } else {
@@ -200,12 +214,12 @@ mod tests {
     #[test]
     fn masks_windows_and_posix_home_segments() {
         assert_eq!(
-            mask_path(r"C:\Users\alice\AppData\Roaming\dev-cleaner\audit.sqlite3"),
-            r"C:\Users\•••\AppData\Roaming\dev-cleaner\audit.sqlite3"
+            mask_path(r"C:\Users\alice\AppData\Roaming\detergo\audit.sqlite3"),
+            r"C:\Users\•••\AppData\Roaming\detergo\audit.sqlite3"
         );
         assert_eq!(
-            mask_path("/home/bob/.config/dev-cleaner"),
-            "/home/•••/.config/dev-cleaner"
+            mask_path("/home/bob/.config/detergo"),
+            "/home/•••/.config/detergo"
         );
         assert_eq!(mask_path("/Users/carol/Library"), "/Users/•••/Library");
     }
@@ -243,7 +257,7 @@ mod tests {
         // the log file attached to bug reports.
         let line = format_line(
             "warn",
-            r"could not archive C:\Users\alice\AppData\Roaming\dev-cleaner\history.jsonl",
+            r"could not archive C:\Users\alice\AppData\Roaming\detergo\history.jsonl",
             "access denied",
         );
         assert!(!line.contains("alice"), "account name leaked: {line}");
@@ -256,7 +270,7 @@ mod tests {
 
     #[test]
     fn an_info_line_is_masked_as_well() {
-        let line = format_line("info", "/home/bob/.config/dev-cleaner", "");
+        let line = format_line("info", "/home/bob/.config/detergo", "");
         assert!(!line.contains("bob"));
         assert!(line.contains("/home/•••/"));
     }

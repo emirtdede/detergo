@@ -40,6 +40,7 @@ interface UiState {
    */
   dialogDepth: number;
   searchQuery: string;
+  searchByScope: Record<"projects" | "agents", string>;
   toast: ToastMessage | null;
   /**
    * Pending auto-dismiss timer for the visible toast. Kept in state instead of
@@ -58,9 +59,12 @@ interface UiState {
   aboutPane: AboutPane;
   historyTab: HistoryTab;
   legalDoc: LegalDoc;
+  onboardingForcedOpen: boolean;
 
   openModal: (modal: ModalType) => void;
   closeModal: () => void;
+  openOnboarding: () => void;
+  closeOnboarding: () => void;
   /** Registers a mounted dialog so global shortcuts stay disabled. */
   pushDialog: () => void;
   popDialog: () => void;
@@ -69,6 +73,7 @@ interface UiState {
   /** Clears plan/report state without touching the active modal. */
   clearPlanState: () => void;
   setSearchQuery: (query: string) => void;
+  setScopeSearchQuery: (scope: "projects" | "agents", query: string) => void;
   setSettingsSection: (section: SettingsSection) => void;
   setAboutPane: (pane: AboutPane) => void;
   setHistoryTab: (tab: HistoryTab) => void;
@@ -126,6 +131,7 @@ export const useUiStore = create<UiState>((set, get) => ({
   activeModal: null,
   dialogDepth: 0,
   searchQuery: "",
+  searchByScope: { projects: "", agents: "" },
   toast: null,
   toastTimerId: null,
   toastQueue: [],
@@ -137,13 +143,23 @@ export const useUiStore = create<UiState>((set, get) => ({
   aboutPane: "overview",
   historyTab: "cleanups",
   legalDoc: "eula",
+  onboardingForcedOpen: false,
 
   openModal: (modal) => set({ activeModal: modal }),
+  openOnboarding: () => set({ onboardingForcedOpen: true }),
+  closeOnboarding: () => set({ onboardingForcedOpen: false }),
 
   // Same contract as `clearPlanState`: a closed dialog must not leave a report
   // or a delete mode behind. `CleanupPlanDialog` seeds its local mode from
   // `pendingMode`, so a stale value showed the previous mode for a frame.
-  closeModal: () => set({ activeModal: null, pendingDeletionIds: [], plan: null, report: null }),
+  closeModal: () =>
+    set({
+      activeModal: null,
+      pendingDeletionIds: [],
+      pendingMode: "recycleBin",
+      plan: null,
+      report: null,
+    }),
 
   pushDialog: () => set((state) => ({ dialogDepth: state.dialogDepth + 1 })),
 
@@ -153,7 +169,17 @@ export const useUiStore = create<UiState>((set, get) => ({
 
   clearPlanState: () => set({ plan: null, report: null, pendingDeletionIds: [] }),
 
-  setSearchQuery: (query) => set({ searchQuery: query }),
+  setSearchQuery: (query) =>
+    set((state) => ({
+      searchQuery: query,
+      searchByScope: { ...state.searchByScope, projects: query },
+    })),
+
+  setScopeSearchQuery: (scope, query) =>
+    set((state) => ({
+      searchQuery: scope === "projects" ? query : state.searchQuery,
+      searchByScope: { ...state.searchByScope, [scope]: query },
+    })),
 
   setSettingsSection: (section) =>
     set({
@@ -165,7 +191,7 @@ export const useUiStore = create<UiState>((set, get) => ({
 
   setHistoryTab: (tab) => set({ historyTab: tab }),
 
-  openLegalDoc: (doc) => set({ legalDoc: doc, settingsSection: "about", aboutPane: "legal" }),
+  openLegalDoc: (doc) => set({ legalDoc: doc, aboutPane: "legal" }),
 
   closeLegalDoc: () => set({ aboutPane: "overview" }),
 

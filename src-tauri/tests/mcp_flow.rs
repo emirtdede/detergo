@@ -11,9 +11,9 @@ use std::time::Duration;
 use serde_json::{json, Value};
 use tempfile::tempdir;
 
-use dev_cleaner_lib::mcp::{McpContext, McpOptions};
-use dev_cleaner_lib::settings::model::AppSettings;
-use dev_cleaner_lib::settings::SettingsRepository;
+use detergo_lib::mcp::{McpContext, McpOptions};
+use detergo_lib::settings::model::AppSettings;
+use detergo_lib::settings::SettingsRepository;
 
 fn parse(text: &str) -> Value {
     serde_json::from_str(text).unwrap_or_else(|_| json!({ "raw": text }))
@@ -56,13 +56,13 @@ fn preview_execute_replay_and_disabled_setting() {
     });
 
     let scan = parse(&ctx.call_tool(
-        "devcleaner_scan_workspace",
+        "detergo_scan_workspace",
         &json!({ "path": root, "scope": "projects" }),
     ));
     let target_id = first_target_id(&scan);
 
     let preview = parse(&ctx.call_tool(
-        "devcleaner_preview_cleanup",
+        "detergo_preview_cleanup",
         &json!({ "target_ids": [target_id], "path": root }),
     ));
     let token = preview["token"]
@@ -73,7 +73,7 @@ fn preview_execute_replay_and_disabled_setting() {
 
     // Settings default to disabled: execute must refuse even with a valid token.
     let blocked = ctx.call_tool(
-        "devcleaner_execute_cleanup",
+        "detergo_execute_cleanup",
         &json!({ "token": token, "confirm": true }),
     );
     assert!(!blocked.contains("success"), "unexpected: {blocked}");
@@ -83,26 +83,26 @@ fn preview_execute_replay_and_disabled_setting() {
         mcp_allow_destructive: true,
         ..Default::default()
     };
-    SettingsRepository::with_path(temp.path().join("dev-cleaner").join("config.json"))
+    SettingsRepository::with_path(temp.path().join("detergo").join("config.json"))
         .save(&settings)
         .unwrap();
 
     let executed = parse(&ctx.call_tool(
-        "devcleaner_execute_cleanup",
+        "detergo_execute_cleanup",
         &json!({ "token": token, "confirm": true }),
     ));
     assert_eq!(executed["status"], "success", "unexpected: {executed}");
 
     // The token is single-use: the same grant cannot run twice.
     let replay = ctx.call_tool(
-        "devcleaner_execute_cleanup",
+        "detergo_execute_cleanup",
         &json!({ "token": token, "confirm": true }),
     );
     assert!(!replay.contains("success"), "unexpected: {replay}");
 
     // A fresh grant that ages past the TTL is rejected as expired.
     let scan_again = parse(&ctx.call_tool(
-        "devcleaner_scan_workspace",
+        "detergo_scan_workspace",
         &json!({ "path": root, "scope": "projects" }),
     ));
     // The first target was recycled; there may be nothing left to preview.
@@ -112,7 +112,7 @@ fn preview_execute_replay_and_disabled_setting() {
         .and_then(|item| item["target_id"].as_str())
     {
         let preview2 = parse(&ctx.call_tool(
-            "devcleaner_preview_cleanup",
+            "detergo_preview_cleanup",
             &json!({ "target_ids": [next_id], "path": root }),
         ));
         let token2 = preview2["token"]
@@ -121,7 +121,7 @@ fn preview_execute_replay_and_disabled_setting() {
             .to_string();
         ctx.age_grants_for_test(Duration::from_secs(10 * 60));
         let expired = ctx.call_tool(
-            "devcleaner_execute_cleanup",
+            "detergo_execute_cleanup",
             &json!({ "token": token2, "confirm": true }),
         );
         assert!(!expired.contains("success"), "unexpected: {expired}");
@@ -136,23 +136,23 @@ fn context() -> McpContext {
 
 #[test]
 fn unknown_tool_is_reported_not_panicked() {
-    let text = context().call_tool("devcleaner_does_not_exist", &json!({}));
+    let text = context().call_tool("detergo_does_not_exist", &json!({}));
     assert!(
-        text.contains("devcleaner_does_not_exist"),
+        text.contains("detergo_does_not_exist"),
         "unexpected: {text}"
     );
 }
 
 #[test]
 fn preview_requires_at_least_one_target() {
-    let text = context().call_tool("devcleaner_preview_cleanup", &json!({ "target_ids": [] }));
+    let text = context().call_tool("detergo_preview_cleanup", &json!({ "target_ids": [] }));
     assert!(text.contains("target_id"), "unexpected: {text}");
 }
 
 #[test]
 fn clean_safe_is_preview_only_and_needs_targets() {
     // The deprecated alias must behave like preview, never delete.
-    let text = context().call_tool("devcleaner_clean_safe", &json!({ "target_ids": [] }));
+    let text = context().call_tool("detergo_clean_safe", &json!({ "target_ids": [] }));
     assert!(text.contains("target_id"), "unexpected: {text}");
 }
 
@@ -161,7 +161,7 @@ fn clean_cache_requires_destructive_flag_before_provider_lookup() {
     // H2: the destructive tool is gated before it looks at the provider list,
     // so an agent cannot probe or clean caches without the flag.
     let text = context().call_tool(
-        "devcleaner_clean_cache",
+        "detergo_clean_cache",
         &json!({ "provider_id": "definitely-not-a-provider" }),
     );
     assert!(text.contains("confirm"), "unexpected: {text}");
@@ -169,7 +169,7 @@ fn clean_cache_requires_destructive_flag_before_provider_lookup() {
     // Without the flag the destructive path is refused even earlier.
     let gated = McpContext::new(McpOptions::default());
     let text = gated.call_tool(
-        "devcleaner_clean_cache",
+        "detergo_clean_cache",
         &json!({ "provider_id": "definitely-not-a-provider", "confirm": true }),
     );
     assert!(text.contains("allow-destructive"), "unexpected: {text}");
@@ -178,7 +178,7 @@ fn clean_cache_requires_destructive_flag_before_provider_lookup() {
 #[test]
 fn scan_rejects_unknown_scope_before_touching_disk() {
     let text = context().call_tool(
-        "devcleaner_scan_workspace",
+        "detergo_scan_workspace",
         &json!({ "path": ".", "scope": "everything" }),
     );
     assert!(text.contains("everything"), "unexpected: {text}");
@@ -187,7 +187,7 @@ fn scan_rejects_unknown_scope_before_touching_disk() {
 #[test]
 fn execute_requires_confirm_even_with_flag() {
     let text = context().call_tool(
-        "devcleaner_execute_cleanup",
+        "detergo_execute_cleanup",
         &json!({ "token": "anything", "confirm": false }),
     );
     assert!(text.contains("confirm"), "unexpected: {text}");
@@ -198,17 +198,17 @@ fn tool_errors_are_structured() {
     // MCP 2025-06-18: blocked or unknown tools must set `isError`, not return
     // a plain text result that a client can mistake for success.
     let ctx = context();
-    let unknown = ctx.call_tool_output("devcleaner_does_not_exist", &json!({}));
+    let unknown = ctx.call_tool_output("detergo_does_not_exist", &json!({}));
     assert!(unknown.is_error);
-    assert!(unknown.text.contains("devcleaner_does_not_exist"));
+    assert!(unknown.text.contains("detergo_does_not_exist"));
 
     let blocked = ctx.call_tool_output(
-        "devcleaner_execute_cleanup",
+        "detergo_execute_cleanup",
         &json!({ "token": "anything", "confirm": false }),
     );
     assert!(blocked.is_error);
 
-    let listing = ctx.call_tool_output("devcleaner_list_caches", &json!({}));
+    let listing = ctx.call_tool_output("detergo_list_caches", &json!({}));
     assert!(!listing.is_error);
 }
 
@@ -216,7 +216,7 @@ fn tool_errors_are_structured() {
 fn execute_without_flag_is_blocked_before_token_lookup() {
     let locked = McpContext::new(McpOptions::default());
     let text = locked.call_tool(
-        "devcleaner_execute_cleanup",
+        "detergo_execute_cleanup",
         &json!({ "token": "anything", "confirm": true }),
     );
     assert!(text.contains("allow-destructive"), "unexpected: {text}");

@@ -2,11 +2,31 @@ use super::agent_spec::*;
 use crate::catalog::model::{CleanupMethod, SafetyClass};
 
 #[test]
-fn codex_targets_are_all_protected() {
+fn codex_sensitive_targets_are_protected_and_logs_are_review() {
     for spec in CODEX_TARGETS {
-        assert!(spec.protected, "{} must be protected", spec.rule_id);
-        assert_eq!(spec.cleanup, CleanupMethod::None);
+        if spec.rel == "log" {
+            assert_eq!(spec.safety, SafetyClass::Review);
+            assert!(!spec.protected);
+            assert_eq!(spec.cleanup, CleanupMethod::Trash);
+        } else {
+            assert!(spec.protected, "{} must be protected", spec.rule_id);
+            assert_eq!(spec.cleanup, CleanupMethod::None);
+        }
     }
+}
+
+#[test]
+fn antigravity_skills_are_protected_and_app_caches_exposed() {
+    let skills = ANTIGRAVITY_DATA_TARGETS
+        .iter()
+        .find(|s| s.rel == "skills")
+        .unwrap();
+    assert_eq!(skills.safety, SafetyClass::Keep);
+    assert!(skills.protected);
+    assert!(ANTIGRAVITY_APP_TARGETS.iter().any(|s| s.rel == "Cache"));
+    assert!(CURSOR_APP_TARGETS
+        .iter()
+        .any(|s| s.rel == "User/workspaceStorage" && s.protected));
 }
 
 #[test]

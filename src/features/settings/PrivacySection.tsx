@@ -81,12 +81,12 @@ export const PrivacySection: React.FC<PrivacySectionProps> = ({
         clearScanHistory();
         // `theme-boot.js` reads these before React mounts; leaving them would
         // paint the old theme and language for a frame after the reset.
-        localStorage.removeItem("dev_cleaner_theme");
-        localStorage.removeItem("dev_cleaner_lang");
-        localStorage.removeItem("dev_cleaner_language");
+        localStorage.removeItem("detergo_theme");
+        localStorage.removeItem("detergo_lang");
+        localStorage.removeItem("detergo_language");
         localStorage.removeItem("node_cleaner_language");
-        localStorage.removeItem("dev-cleaner.scan-targets.v1");
-        localStorage.removeItem("dev-cleaner.system-selection.v1");
+        localStorage.removeItem("detergo.scan-targets.v1");
+        localStorage.removeItem("detergo.system-selection.v1");
       } catch (err) {
         log.warn("Could not clear local caches during the application reset", err);
       }

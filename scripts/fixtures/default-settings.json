@@ -1,6 +1,14 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "theme": "dark-black",
+  "appIcon": "match-theme",
+  "customTheme": {
+    "base": "dark",
+    "accent": "#3B82F6"
+  },
+  "uiScale": 100,
+  "highContrast": false,
+  "onboardingCompleted": false,
   "reduceMotion": false,
   "favorites": [],
   "recentLocations": [],
@@ -39,6 +47,8 @@
   "webhookUrl": null,
   "webhookOnScan": true,
   "webhookOnClean": true,
+  "allowPrivateWebhooks": false,
   "shortcuts": null,
-  "mcpAllowDestructive": false
+  "mcpAllowDestructive": false,
+  "recoveredFromCorrupt": false
 }

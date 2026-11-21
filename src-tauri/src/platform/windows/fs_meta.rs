@@ -29,8 +29,8 @@ mod win {
     use windows::Win32::Storage::FileSystem::{
         CreateFileW, GetCompressedFileSizeW, GetDriveTypeW, GetFileInformationByHandle,
         BY_HANDLE_FILE_INFORMATION, FILE_ATTRIBUTE_COMPRESSED, FILE_ATTRIBUTE_REPARSE_POINT,
-        FILE_ATTRIBUTE_SPARSE_FILE, FILE_FLAG_BACKUP_SEMANTICS, FILE_SHARE_DELETE, FILE_SHARE_MODE,
-        FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING,
+        FILE_ATTRIBUTE_SPARSE_FILE, FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT,
+        FILE_SHARE_DELETE, FILE_SHARE_MODE, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING,
     };
 
     fn wide(path: &Path) -> Vec<u16> {
@@ -43,6 +43,7 @@ mod win {
     fn open_for_query(path: &Path) -> Option<HANDLE> {
         // Long paths need the verbatim prefix; measured targets can exceed
         // MAX_PATH even though the drive-root probe above must not use one.
+        // Never follow reparse points when capturing file identity/facts.
         let w = super::super::wide_verbatim(path);
         unsafe {
             CreateFileW(
@@ -51,7 +52,7 @@ mod win {
                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                 None,
                 OPEN_EXISTING,
-                FILE_FLAG_BACKUP_SEMANTICS,
+                FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
                 None,
             )
             .ok()
@@ -118,7 +119,7 @@ mod win {
     /// - `IO_REPARSE_TAG_DEDUP` (0x80000013): NTFS Data Deduplication.
     /// - `IO_REPARSE_TAG_CLOUD*` (0x9000_X01A): Cloud Files (OneDrive / iCloud)
     ///   when hydrated locally (offline/recall attributes are checked separately).
-    fn is_transparent_reparse_tag(tag: u32) -> bool {
+    pub(crate) fn is_transparent_reparse_tag(tag: u32) -> bool {
         const IO_REPARSE_TAG_DEDUP: u32 = 0x8000_0013;
         const IO_REPARSE_TAG_WOF: u32 = 0x8000_0017;
         const IO_REPARSE_TAG_CLOUD_MASK: u32 = 0xFFFF_0FFF;
@@ -234,19 +235,26 @@ mod win {
         drive_type == 4 || drive_type == 1
     }
 
-    /// `Some(true)` means a process holds the target with an incompatible
-    /// sharing mode, `Some(false)` means it is not locked, and `None` means the
-    /// state could not be determined (access denied, unsupported volume, …).
-    pub fn is_in_use(path: &Path) -> Option<bool> {
+    /// Probes whether a single file or directory handle is locked by another
+    /// process using `DELETE` access with `FILE_SHARE_MODE(0)`.
+    ///
+    /// Unlike `dwDesiredAccess = 0` (which only queries metadata and bypasses
+    /// Win32 sharing checks), requesting `DELETE` forces NTFS to enforce active
+    /// sharing modes - catching exclusive locks and processes holding open
+    /// handles without `FILE_SHARE_DELETE`, while still succeeding on unlocked
+    /// read-only files.
+    fn probe_handle_in_use(path: &Path) -> Option<bool> {
+        use windows::Win32::Storage::FileSystem::{DELETE, FILE_FLAG_OPEN_REPARSE_POINT};
+
         let w = super::super::wide_verbatim(path);
         unsafe {
             match CreateFileW(
                 PCWSTR(w.as_ptr()),
-                0,
+                DELETE.0,
                 FILE_SHARE_MODE(0),
                 None,
                 OPEN_EXISTING,
-                FILE_FLAG_BACKUP_SEMANTICS,
+                FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
                 None,
             ) {
                 Ok(h) => {
@@ -269,11 +277,75 @@ mod win {
         }
     }
 
+    /// `Some(true)` means a process holds the target (or an active child file
+    /// inside a directory) with an incompatible sharing mode, `Some(false)`
+    /// means no lock was observed, and `None` means the state could not be
+    /// determined (access denied, unsupported volume, …).
+    pub fn is_in_use(path: &Path) -> Option<bool> {
+        match probe_handle_in_use(path) {
+            Some(true) => return Some(true),
+            None => return None,
+            Some(false) => {}
+        }
+
+        // For directories, NTFS lets us open the directory itself even when a
+        // process holds an open file inside it (e.g. a running Node binary,
+        // active build artifact, or SQLite lock). Probe a bounded sample of
+        // child files up to depth 2 so active lock conflicts are caught early
+        // without walking 150,000 files.
+        let Ok(meta) = std::fs::symlink_metadata(path) else {
+            return Some(false);
+        };
+        if !meta.is_dir() {
+            return Some(false);
+        }
+
+        const MAX_PROBED_FILES: usize = 64;
+        const MAX_PROBE_DEPTH: u8 = 4;
+        const MAX_QUEUED_DIRS: usize = 32;
+        let mut probed = 0usize;
+        let mut queue: std::collections::VecDeque<(PathBuf, u8)> =
+            std::collections::VecDeque::from([(path.to_path_buf(), 0)]);
+        while let Some((dir, depth)) = queue.pop_front() {
+            let Ok(entries) = super::super::fast_walk::read_dir_fast(&dir) else {
+                return None;
+            };
+            for entry in entries {
+                if entry.is_redirecting_reparse {
+                    continue;
+                }
+                let child = dir.join(&entry.name);
+                if entry.is_dir {
+                    if depth < MAX_PROBE_DEPTH && queue.len() < MAX_QUEUED_DIRS {
+                        queue.push_back((child, depth + 1));
+                    }
+                    continue;
+                }
+                probed += 1;
+                match probe_handle_in_use(&child) {
+                    Some(true) => return Some(true),
+                    None => return None,
+                    Some(false) => {}
+                }
+                if probed >= MAX_PROBED_FILES {
+                    return Some(false);
+                }
+            }
+        }
+        Some(false)
+    }
+
     pub fn volume_free_bytes(path: &Path) -> Option<u64> {
         use windows::Win32::Storage::FileSystem::GetDiskFreeSpaceExW;
         let mut free: u64 = 0;
-        let w = wide(path);
+        let w = super::super::wide_verbatim(path);
         let ok = unsafe { GetDiskFreeSpaceExW(PCWSTR(w.as_ptr()), Some(&mut free), None, None) };
+        if ok.is_ok() {
+            return Some(free);
+        }
+        let fallback = wide(path);
+        let ok =
+            unsafe { GetDiskFreeSpaceExW(PCWSTR(fallback.as_ptr()), Some(&mut free), None, None) };
         if ok.is_ok() {
             Some(free)
         } else {
@@ -286,9 +358,21 @@ mod win {
         use windows::Win32::Storage::FileSystem::GetDiskFreeSpaceExW;
         let mut free: u64 = 0;
         let mut total: u64 = 0;
-        let w = wide(path);
+        let w = super::super::wide_verbatim(path);
         let ok = unsafe {
             GetDiskFreeSpaceExW(PCWSTR(w.as_ptr()), Some(&mut free), Some(&mut total), None)
+        };
+        if ok.is_ok() && total > 0 {
+            return Some((free, total));
+        }
+        let fallback = wide(path);
+        let ok = unsafe {
+            GetDiskFreeSpaceExW(
+                PCWSTR(fallback.as_ptr()),
+                Some(&mut free),
+                Some(&mut total),
+                None,
+            )
         };
         if ok.is_ok() && total > 0 {
             Some((free, total))
@@ -301,30 +385,90 @@ mod win {
 #[cfg(not(windows))]
 mod win {
     use super::*;
-    pub fn facts(_path: &Path) -> Option<FileFacts> {
-        None
+    use std::os::unix::fs::MetadataExt;
+
+    pub fn facts(path: &Path) -> Option<FileFacts> {
+        let meta = std::fs::symlink_metadata(path).ok()?;
+        let logical = meta.len();
+        let allocated = meta.blocks().saturating_mul(512);
+        Some(FileFacts {
+            allocated_bytes: if allocated > 0 || logical == 0 {
+                allocated
+            } else {
+                logical
+            },
+            logical_bytes: logical,
+            link_count: meta.nlink().min(u32::MAX as u64).max(1) as u32,
+            identity: FileIdentity {
+                volume_serial: meta.dev(),
+                file_index: meta.ino(),
+            },
+        })
     }
-    pub fn identity(_path: &Path) -> Option<FileIdentity> {
-        None
+
+    pub fn identity(path: &Path) -> Option<FileIdentity> {
+        facts(path).map(|f| f.identity)
     }
+
     pub fn is_reparse_point(path: &Path) -> bool {
         std::fs::symlink_metadata(path)
             .map(|m| m.file_type().is_symlink())
             .unwrap_or(true)
     }
-    pub fn is_remote_path(_path: &Path) -> bool {
-        true
+
+    pub fn is_remote_path(path: &Path) -> bool {
+        let s = path.to_string_lossy();
+        s.starts_with("//")
+            || s.starts_with("/Volumes/smb")
+            || s.starts_with("/net/")
+            || s.contains("/gvfs/")
     }
-    pub fn is_in_use(_path: &Path) -> Option<bool> {
-        None
+
+    pub fn is_in_use(path: &Path) -> Option<bool> {
+        // POSIX allows unlinking open files safely; return `Some(false)` when
+        // the path is stat-able and `None` on permission errors.
+        match std::fs::symlink_metadata(path) {
+            Ok(_) => Some(false),
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => Some(false),
+            Err(_) => None,
+        }
     }
-    pub fn volume_free_bytes(_path: &Path) -> Option<u64> {
-        None
+
+    pub fn volume_free_bytes(path: &Path) -> Option<u64> {
+        volume_space(path).map(|(free, _)| free)
     }
-    pub fn volume_space(_path: &Path) -> Option<(u64, u64)> {
-        None
+
+    pub fn volume_space(path: &Path) -> Option<(u64, u64)> {
+        // Portable POSIX `df -kP` returns 1024-byte blocks (total, used, avail)
+        // on both Linux and macOS without requiring an extra `libc` dependency.
+        let out = std::process::Command::new("df")
+            .args(["-kP", "--"])
+            .arg(path)
+            .output()
+            .ok()?;
+        if !out.status.success() {
+            return None;
+        }
+        let stdout = String::from_utf8_lossy(&out.stdout);
+        let data_line = stdout.lines().nth(1)?;
+        let cols: Vec<&str> = data_line.split_whitespace().collect();
+        if cols.len() < 4 {
+            return None;
+        }
+        let total_kib = cols[1].parse::<u64>().ok()?;
+        let avail_kib = cols[3].parse::<u64>().ok()?;
+        if total_kib == 0 {
+            return None;
+        }
+        Some((
+            avail_kib.saturating_mul(1024),
+            total_kib.saturating_mul(1024),
+        ))
     }
 }
+
+#[cfg(windows)]
+pub(crate) use win::is_transparent_reparse_tag;
 
 pub use win::{
     facts, identity, is_in_use, is_remote_path, is_reparse_point, volume_free_bytes, volume_space,
@@ -372,6 +516,10 @@ fn fetch_running_processes_raw() -> Vec<(String, Option<PathBuf>)> {
                 ..Default::default()
             };
 
+            // Reuse a single path buffer across all processes instead of
+            // allocating 64 KiB per process inside the mutex.
+            let mut buf = vec![0u16; 4096];
+
             if Process32FirstW(snapshot, &mut entry).is_ok() {
                 loop {
                     let len = entry
@@ -390,7 +538,6 @@ fn fetch_running_processes_raw() -> Vec<(String, Option<PathBuf>)> {
                         false,
                         entry.th32ProcessID,
                     ) {
-                        let mut buf = vec![0u16; 32768];
                         let mut size = buf.len() as u32;
                         if QueryFullProcessImageNameW(
                             process,
@@ -416,30 +563,62 @@ fn fetch_running_processes_raw() -> Vec<(String, Option<PathBuf>)> {
         }
         out
     }
-    #[cfg(not(windows))]
+    #[cfg(target_os = "linux")]
     {
-        Vec::new()
+        let mut out = Vec::new();
+        if let Ok(entries) = std::fs::read_dir("/proc") {
+            for entry in entries.flatten() {
+                let name = entry.file_name();
+                if !name.to_string_lossy().chars().all(|c| c.is_ascii_digit()) {
+                    continue;
+                }
+                let comm_path = entry.path().join("comm");
+                if let Ok(comm) = std::fs::read_to_string(comm_path) {
+                    let stem = comm.trim().to_lowercase();
+                    if !stem.is_empty() {
+                        let exe = std::fs::read_link(entry.path().join("exe")).ok();
+                        out.push((stem, exe));
+                    }
+                }
+            }
+        }
+        out
+    }
+    #[cfg(all(unix, not(target_os = "linux")))]
+    {
+        let mut out = Vec::new();
+        if let Ok(output) = std::process::Command::new("ps")
+            .args(["-axo", "comm="])
+            .output()
+        {
+            if output.status.success() {
+                let text = String::from_utf8_lossy(&output.stdout);
+                for line in text.lines() {
+                    let raw = line.trim();
+                    if raw.is_empty() {
+                        continue;
+                    }
+                    let path = PathBuf::from(raw);
+                    let stem = path
+                        .file_name()
+                        .map(|n| n.to_string_lossy().to_lowercase())
+                        .unwrap_or_else(|| raw.to_lowercase());
+                    out.push((stem, Some(path)));
+                }
+            }
+        }
+        out
     }
 }
 
 /// Enumerates running processes whose executable file name matches one of the
 /// given names (case-insensitive, without `.exe`).
 pub fn running_process_names(names: &[&str]) -> Vec<(String, Option<PathBuf>)> {
-    #[cfg(windows)]
-    {
-        let all_processes = {
-            let mut lock = PROCESS_CACHE.lock().unwrap_or_else(|e| e.into_inner());
-            if let Some(entry) = &*lock {
-                if entry.timestamp.elapsed() < PROCESS_CACHE_TTL {
-                    entry.entries.clone()
-                } else {
-                    let fresh = fetch_running_processes_raw();
-                    *lock = Some(ProcessSnapshot {
-                        timestamp: Instant::now(),
-                        entries: fresh.clone(),
-                    });
-                    fresh
-                }
+    let all_processes = {
+        let mut lock = PROCESS_CACHE.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(entry) = &*lock {
+            if entry.timestamp.elapsed() < PROCESS_CACHE_TTL {
+                entry.entries.clone()
             } else {
                 let fresh = fetch_running_processes_raw();
                 *lock = Some(ProcessSnapshot {
@@ -448,22 +627,25 @@ pub fn running_process_names(names: &[&str]) -> Vec<(String, Option<PathBuf>)> {
                 });
                 fresh
             }
-        };
+        } else {
+            let fresh = fetch_running_processes_raw();
+            *lock = Some(ProcessSnapshot {
+                timestamp: Instant::now(),
+                entries: fresh.clone(),
+            });
+            fresh
+        }
+    };
 
-        all_processes
-            .into_iter()
-            .filter(|(stem, _)| {
-                names.iter().any(|n| {
-                    stem == *n
-                        || (stem.starts_with(n)
-                            && stem.as_bytes().get(n.len()).copied() == Some(b'-'))
-                })
+    all_processes
+        .into_iter()
+        .filter(|(stem, _)| {
+            names.iter().any(|n| {
+                let target = n.to_lowercase();
+                stem == &target
+                    || (stem.starts_with(&target)
+                        && stem.as_bytes().get(target.len()).copied() == Some(b'-'))
             })
-            .collect()
-    }
-    #[cfg(not(windows))]
-    {
-        let _ = names;
-        Vec::new()
-    }
+        })
+        .collect()
 }

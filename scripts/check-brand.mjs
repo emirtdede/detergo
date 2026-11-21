@@ -34,7 +34,7 @@ function exists(relativePath) {
   return true;
 }
 
-const master = readText("assets/brand/dev-cleaner-icon.svg");
+const master = readText("assets/brand/detergo-icon.svg");
 if (master) {
   for (const marker of [
     'data-brand="canvas"',
@@ -138,12 +138,38 @@ function walk(absolute, files) {
 const files = [];
 for (const relativePath of scanRoots) walk(path.join(root, relativePath), files);
 
-const forbidden = ["app-icon.svg", "logo-master.svg", "concept-logos", "setup.ico"];
+const forbidden = [
+  "app-icon.svg",
+  "logo-master.svg",
+  "concept-logos",
+  "setup.ico",
+  "dev-cleaner-icon",
+  "dev-cleaner-glyph",
+];
+// Legacy brand names are strictly forbidden on shipping surfaces; only explicit
+// migration/compatibility layers may reference them.
+const LEGACY_BRAND_ALLOWED = new Set([
+  "src-tauri/src/platform/mod.rs",
+  "src-tauri/src/updates/mod.rs",
+  "src-tauri/src/mcp/mod.rs",
+  "src-tauri/src/commands/system_commands.rs",
+  "src-tauri/src/commands/support_commands.rs",
+  "src-tauri/nsis/hooks.nsh",
+  "public/theme-boot.js",
+  "src/stores/preferences-store.ts",
+  "scripts/build-release.js",
+  "docs/brand/TRADEMARK_CLEARANCE.md",
+]);
+const forbiddenBrandRegex = /\b(Dev Cleaner|DevCleaner|Lustra|lustra)\b/;
 for (const file of files) {
   const text = fs.readFileSync(file, "utf8");
   const relative = path.relative(root, file).replaceAll("\\", "/");
   for (const token of forbidden) {
     if (text.includes(token)) fail(`${relative} references the retired asset "${token}"`);
+  }
+  if (!LEGACY_BRAND_ALLOWED.has(relative) && forbiddenBrandRegex.test(text)) {
+    const match = text.match(forbiddenBrandRegex);
+    fail(`${relative} leaks retired brand name "${match?.[0]}" (must be Detergo)`);
   }
   if (
     (relative.startsWith("src-tauri/") || relative.startsWith("scripts/")) &&
@@ -226,7 +252,7 @@ if (hooks) {
   if (hooks.includes("FLUSHNOWAIT")) fail("hooks.nsh must not use SHCNF_FLUSHNOWAIT");
 }
 
-// Scope-claim guard. Dev Cleaner is multi-ecosystem (56 rules across 14
+// Scope-claim guard. Detergo is multi-ecosystem (82 rules across 18
 // ecosystems in src-tauri/assets/targets.toml), so no shipping surface may
 // describe the product as a cleaner for a single ecosystem. The retired claim
 // was "NODE_MODULES CLEANER" on the installer art and in the legacy `tagline`
@@ -266,12 +292,12 @@ for (const file of [
 const indexHtml = readText("index.html");
 if (!indexHtml.includes("/favicon.svg")) fail("index.html must link /favicon.svg");
 const readme = readText("README.md");
-if (readme && !readme.includes("assets/brand/dev-cleaner-icon-256.png")) {
-  fail("README must use assets/brand/dev-cleaner-icon-256.png");
+if (readme && !readme.includes("assets/brand/detergo-icon-256.png")) {
+  fail("README must use assets/brand/detergo-icon-256.png");
 }
 if (exists("docs/brand/preview.html")) {
   const preview = readText("docs/brand/preview.html");
-  if (!preview.includes("../../assets/brand/dev-cleaner-icon.svg")) {
+  if (!preview.includes("../../assets/brand/detergo-icon.svg")) {
     fail("docs/brand/preview.html must reference the canonical master");
   }
 }
@@ -285,5 +311,5 @@ if (errors.length > 0) {
   process.exit(1);
 }
 console.log(
-  "[check-brand] PASS — canonical master, glyph sync, no retired references, installer art and config wired.",
+  "[check-brand] PASS - canonical master, glyph sync, no retired references, installer art and config wired.",
 );

@@ -6,13 +6,13 @@ import {
   Copyright,
   ExternalLink,
   Globe,
+  Info,
   ScrollText,
   ShieldCheck,
   Sparkles,
   Layers,
   Code2,
   Mail,
-  CreditCard,
   Lock,
   Headphones,
   ShieldAlert,
@@ -203,7 +203,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
       </div>
     ) : (
       <div className="about-content">
-        {/* Shared Bento KPI Strip across all About panes — mirrors Settings 1:1 */}
+        {/* Shared Bento KPI Strip across all About panes - mirrors Settings 1:1 */}
         <div className="nc-bento-strip nc-bento-strip--4">
           <button
             type="button"
@@ -304,7 +304,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
                 <div className="about-meta-row">
                   <span className="about-meta-label">{ui.about.gitCommitHash}</span>
                   <span className="about-meta-value">
-                    {buildInfo ? buildInfo.commitShort : "—"}
+                    {buildInfo ? buildInfo.commitShort : "-"}
                   </span>
                 </div>
                 <div className="about-meta-row">
@@ -437,6 +437,10 @@ export const AboutView: React.FC<AboutViewProps> = ({
                 href="mailto:contact@vellium.dev"
                 className="about-contact-card"
                 title="contact@vellium.dev"
+                onClick={(e) => {
+                  e.preventDefault();
+                  openUrl("mailto:contact@vellium.dev");
+                }}
               >
                 <div className="about-contact-icon about-contact-icon--blue">
                   <Mail size={16} />
@@ -449,24 +453,13 @@ export const AboutView: React.FC<AboutViewProps> = ({
               </a>
 
               <a
-                href="mailto:billing@vellium.dev"
-                className="about-contact-card"
-                title="billing@vellium.dev"
-              >
-                <div className="about-contact-icon about-contact-icon--purple">
-                  <CreditCard size={16} />
-                </div>
-                <div className="about-contact-info">
-                  <span className="about-contact-label">{ui.about.contactBilling}</span>
-                  <strong className="about-contact-email">billing@vellium.dev</strong>
-                  <span className="about-contact-desc">{ui.about.contactBillingDesc}</span>
-                </div>
-              </a>
-
-              <a
                 href="mailto:legal@vellium.dev"
                 className="about-contact-card"
                 title="legal@vellium.dev"
+                onClick={(e) => {
+                  e.preventDefault();
+                  openUrl("mailto:legal@vellium.dev");
+                }}
               >
                 <div className="about-contact-icon about-contact-icon--warning">
                   <ScrollText size={16} />
@@ -482,6 +475,10 @@ export const AboutView: React.FC<AboutViewProps> = ({
                 href="mailto:privacy@vellium.dev"
                 className="about-contact-card"
                 title="privacy@vellium.dev"
+                onClick={(e) => {
+                  e.preventDefault();
+                  openUrl("mailto:privacy@vellium.dev");
+                }}
               >
                 <div className="about-contact-icon about-contact-icon--green">
                   <Lock size={16} />
@@ -497,6 +494,10 @@ export const AboutView: React.FC<AboutViewProps> = ({
                 href="mailto:security@vellium.dev"
                 className="about-contact-card"
                 title="security@vellium.dev"
+                onClick={(e) => {
+                  e.preventDefault();
+                  openUrl("mailto:security@vellium.dev");
+                }}
               >
                 <div className="about-contact-icon about-contact-icon--red">
                   <ShieldAlert size={16} />
@@ -512,6 +513,10 @@ export const AboutView: React.FC<AboutViewProps> = ({
                 href="mailto:support@vellium.dev"
                 className="about-contact-card"
                 title="support@vellium.dev"
+                onClick={(e) => {
+                  e.preventDefault();
+                  openUrl("mailto:support@vellium.dev");
+                }}
               >
                 <div className="about-contact-icon about-contact-icon--accent">
                   <Headphones size={16} />
@@ -606,8 +611,8 @@ export const AboutView: React.FC<AboutViewProps> = ({
     <div className="split-layout about-split-layout">
       <aside className="split-sidebar" aria-label={ui.about.navTitle}>
         <div className="split-sidebar-header">
+          <Info size={18} className="split-sidebar-header-icon" aria-hidden="true" />
           <h2 className="split-sidebar-title">{ui.nav.about}</h2>
-          <p className="split-sidebar-subtitle">{ui.settings.aboutHint}</p>
         </div>
 
         <div className="split-sidebar-scroll">

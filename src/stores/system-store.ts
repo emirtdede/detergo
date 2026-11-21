@@ -10,7 +10,7 @@ import {
   SystemScanReport,
 } from "@/types";
 
-const SELECTION_KEY = "dev-cleaner.system-selection.v1";
+const SELECTION_KEY = "detergo.system-selection.v1";
 
 /**
  * The elevated restart creates a new process, so the ticked actions only

@@ -56,11 +56,15 @@ describe("ecosystem metadata", () => {
   it("labels the ecosystems the catalog ships", () => {
     expect(ecosystemMeta("javascript").label).toBe("JavaScript / TypeScript");
     expect(ecosystemMeta("rust").label).toBe("Rust");
+    expect(ecosystemMeta("ruby").label).toBe("Ruby");
+    expect(ecosystemMeta("zig").label).toBe("Zig");
+    expect(ecosystemMeta("devops").label).toBe("DevOps / IaC");
+    expect(ecosystemMeta("haskell").label).toBe("Haskell");
   });
 
   it("falls back to the raw id instead of hiding an unknown ecosystem", () => {
-    const meta = ecosystemMeta("zig");
-    expect(meta.label).toBe("zig");
+    const meta = ecosystemMeta("cobol");
+    expect(meta.label).toBe("cobol");
     expect(meta.color).toBeTruthy();
   });
 });

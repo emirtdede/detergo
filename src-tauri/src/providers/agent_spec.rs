@@ -81,7 +81,12 @@ pub const CODEX_TARGETS: &[AgentTargetSpec] = &[
         "worktrees",
         Some("Git worktrees; cannot be removed directly from the file system."),
     ),
-    keep("log", "codex.logs", "diagnostics", Some("Diagnostic logs.")),
+    review(
+        "log",
+        "codex.logs",
+        "diagnostics",
+        Some("Diagnostic logs; safe to review and clean when Codex is idle."),
+    ),
     keep(
         "logs_2.sqlite",
         "codex.log_db",
@@ -161,7 +166,12 @@ pub const ANTIGRAVITY_DATA_TARGETS: &[AgentTargetSpec] = &[
             "Browser recordings can grow large; can only be cleaned when recording has stopped.",
         ),
     },
-    review("skills", "antigravity.skills", "configuration", None),
+    keep(
+        "skills",
+        "antigravity.skills",
+        "configuration",
+        Some("User-installed agent skills; preserved by default."),
+    ),
 ];
 
 pub const ANTIGRAVITY_BACKUP_TARGETS: &[AgentTargetSpec] = &[
@@ -192,6 +202,18 @@ pub const ANTIGRAVITY_APP_TARGETS: &[AgentTargetSpec] = &[
         "configuration",
         None,
     ),
+    safe("Cache", "antigravity.app_cache", "cache"),
+    safe("Code Cache", "antigravity.app_code_cache", "cache"),
+    safe("GPUCache", "antigravity.app_gpu_cache", "cache"),
+    safe("CachedData", "antigravity.app_cached_data", "cache"),
+    safe(
+        "DawnGraphiteCache",
+        "antigravity.app_graphite_cache",
+        "cache",
+    ),
+    safe("DawnWebGPUCache", "antigravity.app_webgpu_cache", "cache"),
+    review("Crashpad", "antigravity.app_crashpad", "diagnostics", None),
+    review("logs", "antigravity.app_logs", "diagnostics", None),
 ];
 
 pub const ANTIGRAVITY_LOCAL_TARGETS: &[AgentTargetSpec] = &[
@@ -348,7 +370,7 @@ pub const CURSOR_APP_TARGETS: &[AgentTargetSpec] = &[
         Some("User settings, keybindings, and extensions."),
     ),
     keep(
-        "workspaceStorage",
+        "User/workspaceStorage",
         "cursor.workspace_storage",
         "sessions",
         Some("Workspace sessions and chat histories."),
@@ -357,6 +379,10 @@ pub const CURSOR_APP_TARGETS: &[AgentTargetSpec] = &[
     safe("Code Cache", "cursor.code_cache", "cache"),
     safe("GPUCache", "cursor.gpu_cache", "cache"),
     safe("CachedData", "cursor.cached_data", "cache"),
+    safe("CachedExtensionVSIXs", "cursor.cached_vsix", "cache"),
+    safe("CachedProfilesData", "cursor.cached_profiles", "cache"),
+    safe("DawnGraphiteCache", "cursor.graphite_cache", "cache"),
+    safe("DawnWebGPUCache", "cursor.webgpu_cache", "cache"),
     review("Crashpad", "cursor.crashpad", "diagnostics", None),
     review("logs", "cursor.app_logs", "diagnostics", None),
 ];
@@ -386,15 +412,19 @@ pub const WINDSURF_APP_TARGETS: &[AgentTargetSpec] = &[
         Some("User settings and workspace data."),
     ),
     keep(
-        "workspaceStorage",
+        "User/workspaceStorage",
         "windsurf.workspace_storage",
         "sessions",
-        None,
+        Some("Workspace sessions and chat histories."),
     ),
     safe("Cache", "windsurf.cache", "cache"),
     safe("Code Cache", "windsurf.code_cache", "cache"),
     safe("GPUCache", "windsurf.gpu_cache", "cache"),
     safe("CachedData", "windsurf.cached_data", "cache"),
+    safe("CachedExtensionVSIXs", "windsurf.cached_vsix", "cache"),
+    safe("CachedProfilesData", "windsurf.cached_profiles", "cache"),
+    safe("DawnGraphiteCache", "windsurf.graphite_cache", "cache"),
+    safe("DawnWebGPUCache", "windsurf.webgpu_cache", "cache"),
     review("Crashpad", "windsurf.crashpad", "diagnostics", None),
     review("logs", "windsurf.app_logs", "diagnostics", None),
 ];
@@ -422,6 +452,144 @@ pub const OLLAMA_LOCAL_TARGETS: &[AgentTargetSpec] = &[
     safe("updates", "ollama.updates", "cache"),
 ];
 
+pub const CLAUDE_DESKTOP_APP_TARGETS: &[AgentTargetSpec] = &[
+    keep(
+        "claude_desktop_config.json",
+        "claude_desktop.config",
+        "configuration",
+        Some("MCP servers and desktop preferences."),
+    ),
+    keep(
+        "Local Storage",
+        "claude_desktop.local_storage",
+        "configuration",
+        None,
+    ),
+    keep("IndexedDB", "claude_desktop.indexed_db", "sessions", None),
+    keep("Network", "claude_desktop.network", "credentials", None),
+    safe("Cache", "claude_desktop.cache", "cache"),
+    safe("Code Cache", "claude_desktop.code_cache", "cache"),
+    safe("GPUCache", "claude_desktop.gpu_cache", "cache"),
+    safe(
+        "DawnGraphiteCache",
+        "claude_desktop.graphite_cache",
+        "cache",
+    ),
+    safe("DawnWebGPUCache", "claude_desktop.webgpu_cache", "cache"),
+    review("Crashpad", "claude_desktop.crashpad", "diagnostics", None),
+    review("logs", "claude_desktop.logs", "diagnostics", None),
+];
+
+pub const COPILOT_TARGETS: &[AgentTargetSpec] = &[
+    keep("hosts.json", "copilot.hosts", "credentials", None),
+    keep("apps.json", "copilot.apps", "credentials", None),
+    keep("config.json", "copilot.config", "configuration", None),
+    keep("versions.json", "copilot.versions", "configuration", None),
+    review("logs", "copilot.logs", "diagnostics", None),
+    safe("cache", "copilot.cache", "cache"),
+];
+
+pub const CLINE_TARGETS: &[AgentTargetSpec] = &[
+    keep(
+        "tasks",
+        "cline.tasks",
+        "conversations",
+        Some("Cline task history and conversation logs."),
+    ),
+    keep("settings", "cline.settings", "configuration", None),
+    keep("checkpoints", "cline.checkpoints", "checkpoints", None),
+    review("cache", "cline.cache", "cache", None),
+    review(
+        "puppeteer",
+        "cline.puppeteer",
+        "cache",
+        Some("Downloaded Chromium browser for headless tool use."),
+    ),
+];
+
+pub const ROO_CODE_TARGETS: &[AgentTargetSpec] = &[
+    keep(
+        "tasks",
+        "roo_code.tasks",
+        "conversations",
+        Some("Roo Code task history and conversation logs."),
+    ),
+    keep("settings", "roo_code.settings", "configuration", None),
+    keep("checkpoints", "roo_code.checkpoints", "checkpoints", None),
+    review("cache", "roo_code.cache", "cache", None),
+    review(
+        "puppeteer",
+        "roo_code.puppeteer",
+        "cache",
+        Some("Downloaded Chromium browser for headless tool use."),
+    ),
+];
+
+pub const AIDER_TARGETS: &[AgentTargetSpec] = &[
+    keep("config", "aider.config", "configuration", None),
+    review("caches", "aider.caches", "cache", None),
+    review("logs", "aider.logs", "diagnostics", None),
+    safe("repomap.cache.v1", "aider.repomap_cache", "cache"),
+];
+
+pub const CONTINUE_TARGETS: &[AgentTargetSpec] = &[
+    keep("config.json", "continue.config_json", "configuration", None),
+    keep("config.yaml", "continue.config_yaml", "configuration", None),
+    keep("sessions", "continue.sessions", "sessions", None),
+    safe("index", "continue.index", "cache"),
+    review("dev_data", "continue.dev_data", "diagnostics", None),
+    review("logs", "continue.logs", "diagnostics", None),
+];
+
+pub const ZED_TARGETS: &[AgentTargetSpec] = &[
+    keep(
+        "db",
+        "zed.db",
+        "sessions",
+        Some("Workspace and thread databases."),
+    ),
+    keep("conversations", "zed.conversations", "conversations", None),
+    keep("prompts", "zed.prompts", "configuration", None),
+    keep("extensions", "zed.extensions", "configuration", None),
+    review(
+        "languages",
+        "zed.languages",
+        "cache",
+        Some("Auto-downloaded language servers."),
+    ),
+    review("copilot", "zed.copilot", "cache", None),
+    review("supermaven", "zed.supermaven", "cache", None),
+    review(
+        "node",
+        "zed.node",
+        "cache",
+        Some("Managed Node runtime for extensions."),
+    ),
+    review("logs", "zed.logs", "diagnostics", None),
+];
+
+pub const LM_STUDIO_TARGETS: &[AgentTargetSpec] = &[
+    keep(
+        "models",
+        "lm_studio.models",
+        "models",
+        Some("Downloaded GGUF/MLX local model weights; preserved read-only."),
+    ),
+    keep(
+        "conversations",
+        "lm_studio.conversations",
+        "conversations",
+        None,
+    ),
+    keep("settings.json", "lm_studio.settings", "configuration", None),
+    keep("credentials", "lm_studio.credentials", "credentials", None),
+    keep("extensions", "lm_studio.extensions", "configuration", None),
+    safe("temp", "lm_studio.temp", "cache"),
+    safe("updates", "lm_studio.updates", "cache"),
+    review("logs", "lm_studio.logs", "diagnostics", None),
+    review("server-logs", "lm_studio.server_logs", "diagnostics", None),
+];
+
 pub fn specs_for(kind: &str) -> &'static [AgentTargetSpec] {
     match kind {
         "codex-home" => CODEX_TARGETS,
@@ -445,6 +613,14 @@ pub fn specs_for(kind: &str) -> &'static [AgentTargetSpec] {
         "windsurf-app" => WINDSURF_APP_TARGETS,
         "ollama-user" => OLLAMA_USER_TARGETS,
         "ollama-local" => OLLAMA_LOCAL_TARGETS,
+        "claude-desktop-app" => CLAUDE_DESKTOP_APP_TARGETS,
+        "copilot" => COPILOT_TARGETS,
+        "cline" => CLINE_TARGETS,
+        "roo-code" => ROO_CODE_TARGETS,
+        "aider" => AIDER_TARGETS,
+        "continue" => CONTINUE_TARGETS,
+        "zed" => ZED_TARGETS,
+        "lm-studio" => LM_STUDIO_TARGETS,
         _ => &[],
     }
 }
@@ -460,6 +636,14 @@ pub fn provider_display_name(provider: &str) -> &'static str {
         "cursor" => "Cursor",
         "windsurf" => "Windsurf",
         "ollama" => "Ollama",
+        "claude-desktop" => "Claude Desktop",
+        "copilot" => "GitHub Copilot",
+        "cline" => "Cline",
+        "roo-code" => "Roo Code",
+        "aider" => "Aider",
+        "continue" => "Continue",
+        "zed" => "Zed",
+        "lm-studio" => "LM Studio",
         _ => "Unknown provider",
     }
 }

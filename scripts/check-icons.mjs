@@ -152,8 +152,8 @@ const standardPngs = {
   "src-tauri/icons/128x128.png": 128,
   "src-tauri/icons/128x128@2x.png": 256,
   "src-tauri/icons/icon.png": 512,
-  "assets/brand/dev-cleaner-icon-256.png": 256,
-  "assets/brand/dev-cleaner-icon-1024.png": 1024,
+  "assets/brand/detergo-icon-256.png": 256,
+  "assets/brand/detergo-icon-1024.png": 1024,
   "assets/brand/github/avatar-1024.png": 1024,
   "assets/brand/github/social-preview.png": null,
   "public/icons/notification.png": 256,
@@ -206,5 +206,5 @@ if (errors.length > 0) {
   process.exit(1);
 }
 console.log(
-  `[check-icons] PASS — 15-frame ICO, ${TRAY_SIZES.length} tray PNGs, 5 BMPs, manifest hashes.`,
+  `[check-icons] PASS - 15-frame ICO, ${TRAY_SIZES.length} tray PNGs, 5 BMPs, manifest hashes.`,
 );

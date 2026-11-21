@@ -81,6 +81,19 @@ pub fn measure_path_with_deadline(
     token: &CancellationToken,
     deadline: Option<Instant>,
 ) -> Option<PathSize> {
+    let workers = std::thread::available_parallelism()
+        .map(|n| n.get().clamp(2, 4))
+        .unwrap_or(2);
+    measure_path_inner(path, kind, token, deadline, workers)
+}
+
+fn measure_path_inner(
+    path: &Path,
+    kind: TargetKind,
+    token: &CancellationToken,
+    deadline: Option<Instant>,
+    max_workers: usize,
+) -> Option<PathSize> {
     if !path.exists() {
         return None;
     }
@@ -105,6 +118,24 @@ pub fn measure_path_with_deadline(
             hardlink_dedup_bytes: 0,
         });
     }
+
+    // Fast path on Windows NTFS/ReFS: batch-enumerate directories with
+    // `GetFileInformationByHandleEx(FileIdBothDirectoryInfo)` so files are
+    // measured and hardlink-deduplicated without opening a handle per file.
+    #[cfg(windows)]
+    {
+        use crate::platform::windows::fast_walk::{measure_dir_fast, FastMeasureError};
+        match measure_dir_fast(path, token, deadline, max_workers) {
+            Ok(size) => return Some(size),
+            Err(FastMeasureError::CancelledOrExpired) => return None,
+            Err(FastMeasureError::Unsupported) => {
+                // Fall back to portable WalkDir + facts on filesystems that do
+                // not implement FileIdBothDirectoryInfo (e.g. FAT32/network).
+            }
+        }
+    }
+    #[cfg(not(windows))]
+    let _ = max_workers;
 
     let mut logical: u64 = 0;
     let mut allocated: u64 = 0;
@@ -195,7 +226,7 @@ impl MeasurementEngine {
     /// queue, which is bounded. A synchronous `try_send` would silently drop a
     /// batch when the WebView stalls (rows would never get their measured
     /// size); awaiting the send applies backpressure to the measurement loop
-    /// instead, so the queue — not memory — absorbs a slow consumer.
+    /// instead, so the queue - not memory - absorbs a slow consumer.
     pub async fn measure_entries<M, MF, P, PF>(
         &self,
         entries: Vec<(String, PathBuf, TargetKind)>,
@@ -231,7 +262,10 @@ impl MeasurementEngine {
                 if tok.is_cancelled() || past_deadline(deadline) {
                     return None;
                 }
-                let measured = measure_path_with_deadline(&path, kind, &tok, deadline);
+                // MeasurementEngine already runs targets in parallel across
+                // `concurrency` blocking tasks, so keep each target's fast walk
+                // single-threaded to avoid nested thread oversubscription.
+                let measured = measure_path_inner(&path, kind, &tok, deadline, 1);
                 if tok.is_cancelled() || past_deadline(deadline) {
                     return None;
                 }

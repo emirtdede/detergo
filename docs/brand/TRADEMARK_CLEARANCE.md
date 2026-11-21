@@ -1,10 +1,10 @@
-# Trademark Clearance Record — DEV CLEANER
+# Trademark Clearance Record - DETERGO
 
-**Status:** DRAFT — release gate G0 is not satisfied until counsel signs this
+**Status:** DRAFT - release gate G0 is not satisfied until counsel signs this
 document.
 **Owner:** Vellium
 **Started:** 2026-11-10
-**Release blocked by:** G0 (see `docs/release/RELEASE_CHECKLIST.md` §9)
+**Release gate:** Trademark clearance (referenced by `docs/brand/BRAND_GUIDELINES.md` §10)
 
 This is a record of the clearance work, not legal advice. Do not claim
 exclusivity or use the ® symbol until counsel has approved the mark.
@@ -13,12 +13,12 @@ exclusivity or use the ® symbol until counsel has approved the mark.
 
 | Field | Value |
 |---|---|
-| Word mark | DEV CLEANER |
+| Word mark | DETERGO |
 | Figurative mark | `</>` + four-point spark inside an obsidian squircle |
-| Composite lockup | "Dev Cleaner by Vellium" |
+| Composite lockup | "Detergo by Vellium" |
 | Nice classes to search | 9 (software), 42 (SaaS / software development services) |
 | Jurisdictions | US (USPTO), EU (EUIPO), WIPO Global Brand Database, TR (TÜRKPATENT) |
-| Search terms | `dev cleaner`, `devcleaner`, `developer cleaner`, `dev clean` |
+| Search terms | `dev cleaner`, `detergo`, `developer cleaner`, `dev clean` |
 
 ## Known third-party uses
 
@@ -27,13 +27,13 @@ list is not exhaustive and is not a legal conclusion.
 
 | Source | Type | Notes |
 |---|---|---|
-| `github.com/jemishavasoya/dev-cleaner` | Open-source CLI | MIT, PowerShell script |
-| `github.com/Tolsion/DevCleaner` | Open-source desktop app | Developer workspace cleaner |
-| `github.com/Mahmoud0808/DevCleaner` | Open-source project | Found in GitHub search |
-| `github.com/wookat/DevCleaner` | Open-source project | Found in GitHub search |
-| macOS "DevCleaner" / "Sweep: Dev Cleaner" | Commercial apps | Mac App Store listings |
+| `github.com/jemishavasoya/detergo` | Open-source CLI | MIT, PowerShell script |
+| `github.com/Tolsion/Detergo` | Open-source desktop app | Developer workspace cleaner |
+| `github.com/Mahmoud0808/Detergo` | Open-source project | Found in GitHub search |
+| `github.com/wookat/Detergo` | Open-source project | Found in GitHub search |
+| macOS "Detergo" / "Sweep: Detergo" | Commercial apps | Mac App Store listings |
 
-"Dev Cleaner" is a descriptive, crowded name. This plan does not assert
+"Detergo" is a descriptive, crowded name. This plan does not assert
 exclusivity. The distinguishing element is the Vellium house mark and the
 specific `</>` + spark figurative mark.
 
@@ -41,7 +41,7 @@ specific `</>` + spark figurative mark.
 
 | Date | Database | Query | Result | Screenshot / reference |
 |---|---|---|---|---|
-| 2026-11-10 | GitHub | `Dev Cleaner` | Multiple active projects (see above) | pending |
+| 2026-11-10 | GitHub | `Detergo` | Multiple active projects (see above) | pending |
 | | USPTO TESS | | pending | |
 | | EUIPO eSearch | | pending | |
 | | WIPO Global Brand DB | | pending | |

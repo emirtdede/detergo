@@ -14,7 +14,7 @@ pub struct KnownLocation {
 pub fn get_known_dev_locations() -> Vec<KnownLocation> {
     let mut locations = Vec::new();
 
-    let user_profile = match std::env::var("USERPROFILE") {
+    let user_profile = match std::env::var("USERPROFILE").or_else(|_| std::env::var("HOME")) {
         Ok(p) => PathBuf::from(p),
         Err(_) => return locations,
     };
@@ -72,7 +72,10 @@ pub fn get_known_dev_locations() -> Vec<KnownLocation> {
     ];
 
     for (subpath, label) in &candidates {
-        let full = user_profile.join(subpath);
+        let mut full = user_profile.clone();
+        for segment in subpath.split('\\') {
+            full.push(segment);
+        }
         if full.is_dir() {
             locations.push(KnownLocation {
                 id: format!("loc-{}", subpath.replace('\\', "-")),

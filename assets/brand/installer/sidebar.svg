@@ -43,8 +43,7 @@
     <use href="#sb-icon" transform="translate(46 34) scale(0.160714) translate(-32 -32)"/>
 
     <!-- Wordmark -->
-    <text x="82" y="147" text-anchor="middle" font-family="Segoe UI, Segoe UI Semibold, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="4.6" fill="url(#sb-word)">DEV</text>
-    <text x="82" y="172" text-anchor="middle" font-family="Segoe UI, Segoe UI Semibold, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="1.7" fill="url(#sb-word)">CLEANER</text>
+    <text x="82" y="160" text-anchor="middle" font-family="Segoe UI, Segoe UI Semibold, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="3.2" fill="url(#sb-word)">DETERGO</text>
 
     <!-- Tagline: names the whole product scope, not one ecosystem. Same wording
          as the GitHub social card (scripts/build-social-preview.mjs). The 7.4 px

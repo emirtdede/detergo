@@ -1,43 +1,50 @@
-/* Windows Controls (Frameless Titlebar Action Buttons) */
-.window-controls {
-  display: flex;
+/* Frameless top-right Windows Controls (Docked cleanly in .app-titlebar-strip) */
+.window-controls.pp-window-controls {
+  display: inline-flex;
   align-items: center;
-  height: 100%;
-  margin-left: 8px;
+  gap: 2px;
+  padding: 2px;
+  height: auto;
+  margin-left: auto;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  flex-shrink: 0;
   -webkit-app-region: no-drag;
 }
 
-.win-btn {
-  display: flex;
+.win-btn.pp-win-btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 38px;
+  width: 32px;
+  height: 28px;
+  border-radius: 6px;
   background: transparent;
   border: none;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   cursor: pointer;
   transition:
-    background-color 0.12s ease,
-    color 0.12s ease;
+    background-color 110ms cubic-bezier(0.2, 0, 0, 1),
+    color 110ms cubic-bezier(0.2, 0, 0, 1);
   user-select: none;
 }
 
-.win-btn:hover {
+.win-btn.pp-win-btn:hover {
   background-color: var(--surface-hover);
   color: var(--text-primary);
 }
 
-.win-btn:active {
-  background-color: var(--surface-active);
+.win-btn.pp-win-btn:active {
+  background-color: var(--border);
 }
 
-.win-close:hover {
-  background-color: #e81123 !important;
+.win-btn.pp-win-close:hover {
+  background-color: #c42b1c !important;
   color: #ffffff !important;
 }
 
-.win-close:active {
-  background-color: #bf0f1d !important;
+.win-btn.pp-win-close:active {
+  background-color: #a62216 !important;
   color: #ffffff !important;
 }

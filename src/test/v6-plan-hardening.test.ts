@@ -105,14 +105,14 @@ describe("v6.0 hardening contracts", () => {
   });
 
   it("generates dynamic MCP configs for JSON IDEs and Codex TOML", () => {
-    const exePath = "C:\\Users\\dev\\Desktop\\Dev-Cleaner-1.0.0-Portable.exe";
+    const exePath = "C:\\Users\\dev\\Desktop\\Detergo-1.0.0-Portable.exe";
     const configs = getMcpConfigs(exePath);
 
     const cursorParsed = JSON.parse(configs.cursor.json) as {
-      mcpServers: { "dev-cleaner": { command: string; args: string[] } };
+      mcpServers: { detergo: { command: string; args: string[] } };
     };
-    expect(cursorParsed.mcpServers["dev-cleaner"].command).toBe(exePath);
-    expect(cursorParsed.mcpServers["dev-cleaner"].args).toEqual(["mcp"]);
+    expect(cursorParsed.mcpServers["detergo"].command).toBe(exePath);
+    expect(cursorParsed.mcpServers["detergo"].args).toEqual(["mcp"]);
 
     const zedParsed = JSON.parse(configs.zed.json) as {
       context_servers: Array<{ command: { path: string; args: string[] } }>;
@@ -120,7 +120,7 @@ describe("v6.0 hardening contracts", () => {
     expect(zedParsed.context_servers[0].command.path).toBe(exePath);
 
     expect(configs.codex.syntax).toBe("toml");
-    expect(configs.codex.json).toContain("[mcp_servers.dev-cleaner]");
+    expect(configs.codex.json).toContain("[mcp_servers.detergo]");
     expect(configs.codex.json).toContain(`command = ${JSON.stringify(exePath)}`);
 
     expect(getMcpConfigList().length).toBeGreaterThanOrEqual(14);

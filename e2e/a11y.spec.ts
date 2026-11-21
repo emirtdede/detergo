@@ -9,6 +9,7 @@ const VIEWS: Array<{ nav: string; view: string }> = [
   { nav: "AI Tools", view: "agents" },
   { nav: "Tool Caches", view: "caches" },
   { nav: "System cleaner", view: "system" },
+  { nav: "Docs", view: "docs" },
   { nav: "History", view: "history" },
   { nav: "Settings", view: "settings" },
 ];
@@ -70,6 +71,7 @@ test.beforeEach(async ({ page }) => {
       await new Promise((r) => setTimeout(r, 20));
     }
     usePreferencesStore.getState().setLanguage("en");
+    usePreferencesStore.getState().setOnboardingCompleted(true);
   });
   await expect(navButton(page, "AI Tools")).toBeVisible();
 });
@@ -467,4 +469,116 @@ test("320 CSS px reflow keeps every page inside the viewport", async ({ page }) 
 
   await goToView(page, "Settings");
   await expect(page.locator(".settings-split-layout .split-sidebar")).toBeVisible();
+});
+
+test("RTL Arabic locale sets dir=rtl and passes axe without horizontal overflow", async ({
+  page,
+}) => {
+  await page.evaluate(async () => {
+    const { usePreferencesStore } = await import("/src/stores/preferences-store.ts");
+    usePreferencesStore.getState().setLanguage("ar");
+  });
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  await expectNoViolations(page, "overview / rtl / ar");
+
+  const overflow = await page.evaluate(() => ({
+    root: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  }));
+  expect(overflow.root, "RTL overview horizontal overflow").toBeLessThanOrEqual(1);
+});
+
+test("first-launch onboarding dialog completes all 4 steps and passes axe", async ({ page }) => {
+  await page.evaluate(async () => {
+    const { usePreferencesStore } = await import("/src/stores/preferences-store.ts");
+    const { useUiStore } = await import("/src/stores/ui-store.ts");
+    usePreferencesStore.getState().setOnboardingCompleted(false);
+    useUiStore.getState().openOnboarding();
+  });
+
+  const dialog = page.getByRole("dialog", { name: "Welcome to Detergo" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText("Meet Detergo by Vellium");
+  await expectNoViolations(page, "onboarding step 1");
+
+  await dialog.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(dialog).toContainText("Engineered for Zero Data Loss");
+
+  await dialog.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(dialog).toContainText("Personalize Your Workspace");
+  await expectNoViolations(page, "onboarding step 3");
+
+  await dialog.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(dialog).toContainText("You Are Ready to Reclaim Space");
+
+  await dialog.getByRole("button", { name: "Start using Detergo", exact: true }).click();
+  await expect(dialog).toBeHidden();
+
+  // Settings -> General replay button reopens the Welcome guide on demand.
+  await goToView(page, "Settings");
+  await page.getByRole("button", { name: "Open guide", exact: true }).click();
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Skip", exact: true }).click();
+  await expect(dialog).toBeHidden();
+});
+
+test("custom hex theme studio and dynamic app icon picker pass axe", async ({ page }) => {
+  await goToView(page, "Settings");
+
+  // Click the empty '+' custom theme swatch to open Custom Theme Studio.
+  await page.getByTestId("custom-theme-add-btn").click();
+  const hexInput = page.locator(".custom-theme-hex-input").first();
+  await expect(hexInput).toBeVisible();
+  await hexInput.fill("#10B981");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "custom");
+  await expect(page.locator(".custom-theme-contrast-badge").first()).toBeVisible();
+  await expectNoViolations(page, "settings / custom dark #10B981");
+
+  // Switch to light base with a bright accent and verify WCAG AA auto-adjustment.
+  await page.locator(".custom-theme-base-btn").nth(1).click();
+  await hexInput.fill("#EC4899");
+  await expect(page.locator("html")).toHaveAttribute("data-theme-base", "light");
+  await expectNoViolations(page, "settings / custom light #EC4899");
+
+  // Dynamic application icon picker updates data-app-icon on <html>.
+  const iconSection = page.locator("section[aria-label='Application icon']");
+  await expect(iconSection).toBeVisible();
+  await iconSection.getByTestId("app-icon-dark-blue").click();
+  await expect(page.locator("html")).toHaveAttribute("data-app-icon", "dark-blue");
+
+  await iconSection.getByTestId("app-icon-custom").click();
+  await expect(page.locator("html")).toHaveAttribute("data-app-icon", "custom");
+
+  await iconSection.getByTestId("app-icon-match-theme").click();
+  await expect(page.locator("html")).toHaveAttribute("data-app-icon", "custom");
+  await expectNoViolations(page, "settings / app icon picker");
+});
+
+test("interface zoom (80%-150%) and high contrast mode pass axe without overflow", async ({
+  page,
+}) => {
+  await goToView(page, "Settings");
+
+  const zoomGroup = page.locator("section[aria-label='Accessibility & display']");
+  await expect(zoomGroup).toBeVisible();
+
+  await zoomGroup.getByRole("button", { name: "125%", exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-ui-scale", "125");
+
+  const overflow125 = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow125, "125% zoom horizontal overflow").toBeLessThanOrEqual(1);
+
+  await zoomGroup.getByRole("button", { name: "150%", exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-ui-scale", "150");
+  await expectNoViolations(page, "settings / 150% zoom");
+
+  await zoomGroup.getByRole("button", { name: "Reset", exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-ui-scale", "100");
+
+  // Toggle high contrast borders & text.
+  const hcSwitch = zoomGroup.getByRole("switch").first();
+  await hcSwitch.click();
+  await expect(page.locator("html")).toHaveAttribute("data-high-contrast", "true");
+  await expectNoViolations(page, "settings / high contrast");
 });

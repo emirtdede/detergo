@@ -5,7 +5,9 @@ use tauri::{AppHandle, Manager, State, WebviewWindow};
 
 use crate::commands::AppState;
 use crate::error::AppError;
+use crate::platform::app_icon::{apply_app_icon_native, AppIconApplyResult};
 use crate::scanner::cancellation::CancellationToken;
+use crate::settings::CustomThemeConfig;
 
 /// How long a quit waits for the running cleanup to acknowledge cancellation.
 /// Cleanup cancellation is checked between targets, so one very large target can
@@ -57,6 +59,23 @@ pub async fn quit_app(app: AppHandle, state: State<'_, AppState>) -> Result<(), 
 
     app.exit(0);
     Ok(())
+}
+
+/// Applies the chosen Detergo application icon across the window/taskbar,
+/// system tray, and (outside MSIX) Desktop / Start Menu / Pinned Taskbar
+/// shortcuts.
+#[tauri::command]
+pub async fn apply_app_icon(
+    app: AppHandle,
+    icon_id: String,
+    active_theme: String,
+    custom_theme: CustomThemeConfig,
+) -> Result<AppIconApplyResult, AppError> {
+    tokio::task::spawn_blocking(move || {
+        apply_app_icon_native(&app, &icon_id, &active_theme, &custom_theme)
+    })
+    .await
+    .map_err(|err| AppError::Unknown(format!("App icon task failed: {err}")))?
 }
 
 /// Brings the window back from the tray and focuses it.

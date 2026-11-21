@@ -360,8 +360,8 @@ describe("WP-3..6: Feature & workflow unit tests", () => {
       // reads TOML; handing it JSON is silently ignored.
       if (found!.syntax === "toml") {
         expect(found!.file.endsWith(".toml")).toBe(true);
-        expect(found!.json).toContain("[mcp_servers.dev-cleaner]");
-        expect(found!.json).toContain('command = "dev-cleaner"');
+        expect(found!.json).toContain("[mcp_servers.detergo]");
+        expect(found!.json).toContain('command = "detergo"');
         expect(found!.json).toContain('args = ["mcp"]');
       } else {
         expect(() => JSON.parse(found!.json)).not.toThrow();

@@ -1,9 +1,9 @@
 @echo off
-title Dev Cleaner - One-Click Release Builder
+title Detergo - One-Click Release Builder
 color 0A
 
 echo =========================================================
-echo       DEV CLEANER - TEK TIKLA RELEASE VE HASH URETICI
+echo       DETERGO - TEK TIKLA RELEASE VE HASH URETICI
 echo =========================================================
 echo.
 

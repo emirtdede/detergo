@@ -59,6 +59,52 @@ jobs:
           npm run check:icons
           npm run check:brand
 
+  e2e:
+    name: E2E & Accessibility (Playwright + axe)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright E2E and WCAG 2.2 AA axe suite
+        run: npm run test:a11y
+
+  rust-unix:
+    name: Rust cross-platform check (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Linux Tauri system libraries
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Cross-platform cargo check
+        run: cargo check --locked --manifest-path src-tauri/Cargo.toml --all-targets
+
+      - name: Cross-platform unit tests
+        run: cargo test --locked --manifest-path src-tauri/Cargo.toml --lib
+
   rust:
     name: Rust gates (Windows)
     runs-on: windows-latest
@@ -96,7 +142,7 @@ jobs:
   release:
     name: Release build
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [frontend, rust]
+    needs: [frontend, e2e, rust, rust-unix]
     runs-on: windows-latest
     permissions:
       contents: write
@@ -121,12 +167,91 @@ jobs:
       - name: Verify provenance
         run: npm run check:build-info
 
+      - name: Upload unsigned release binaries for SignPath
+        id: upload-unsigned
+        if: ${{ secrets.SIGNPATH_API_TOKEN != '' && vars.SIGNPATH_ORGANIZATION_ID != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: detergo-unsigned-${{ github.ref_name }}
+          path: |
+            release_output/*.exe
+            release_output/*.msi
+            release_output/*.com
+
+      - name: Sign release binaries via SignPath Foundation
+        if: ${{ secrets.SIGNPATH_API_TOKEN != '' && vars.SIGNPATH_ORGANIZATION_ID != '' }}
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'detergo' }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG || 'release-signing' }}
+          github-artifact-id: ${{ steps.upload-unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: release_output_signed
+
+      - name: Apply signed binaries, verify Authenticode signatures and recompute checksums
+        if: ${{ secrets.SIGNPATH_API_TOKEN != '' && vars.SIGNPATH_ORGANIZATION_ID != '' }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $stage = 'release_output_signed_unpacked'
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          Get-ChildItem release_output_signed -Filter *.zip | ForEach-Object {
+            Expand-Archive -Path $_.FullName -DestinationPath $stage -Force
+          }
+          Get-ChildItem release_output_signed -File | Where-Object { $_.Extension -in '.exe', '.msi', '.com' } | ForEach-Object {
+            Copy-Item $_.FullName (Join-Path $stage $_.Name) -Force
+          }
+          $signedFiles = Get-ChildItem $stage -Recurse -File | Where-Object { $_.Extension -in '.exe', '.msi', '.com' }
+          if ($signedFiles.Count -eq 0) {
+            throw 'SignPath output contained no signed .exe/.msi/.com files.'
+          }
+          foreach ($f in $signedFiles) {
+            $sig = Get-AuthenticodeSignature -FilePath $f.FullName
+            if ($sig.Status -ne 'Valid') {
+              throw "Invalid Authenticode signature on $($f.Name): $($sig.Status)"
+            }
+            Copy-Item $f.FullName (Join-Path release_output $f.Name) -Force
+          }
+          $infoPath = Join-Path release_output 'BUILD_INFO.json'
+          $info = Get-Content $infoPath -Raw | ConvertFrom-Json
+          $info | Add-Member -NotePropertyName 'signed' -NotePropertyValue $true -Force
+          $manifestPath = Join-Path release_output 'latest-release.json'
+          $manifest = if (Test-Path $manifestPath) { Get-Content $manifestPath -Raw | ConvertFrom-Json } else { $null }
+          $lines = @()
+          foreach ($art in $info.artifacts) {
+            $p = Join-Path release_output $art.name
+            $hash = (Get-FileHash -Path $p -Algorithm SHA256).Hash.ToUpperInvariant()
+            $len = (Get-Item $p).Length
+            $art.bytes = $len
+            $art.sha256 = $hash
+            $lines += "$hash  $($art.name)"
+            if ($manifest) {
+              foreach ($m in $manifest.assets) {
+                if ($m.name -eq $art.name) {
+                  $m.size = $len
+                  $m.sha256 = $hash
+                }
+              }
+            }
+          }
+          Set-Content -Path (Join-Path release_output 'SHA256SUMS.txt') -Value ($lines -join "`n") -Encoding utf8
+          Set-Content -Path $infoPath -Value ($info | ConvertTo-Json -Depth 5) -Encoding utf8
+          if ($manifest) {
+            $manifest.signed = $true
+            Set-Content -Path $manifestPath -Value ($manifest | ConvertTo-Json -Depth 5) -Encoding utf8
+          }
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           files: |
             release_output/*.exe
+            release_output/*.com
             release_output/*.msi
+            release_output/*.msix
+            release_output/latest-release.json
             release_output/SHA256SUMS.txt
             release_output/BUILD_INFO.json
             release_output/verify-checksums.bat

@@ -1,20 +1,34 @@
 [package]
-name = "dev-cleaner"
+name = "detergo"
 version = "1.0.0"
-description = "Dev Cleaner by Vellium - multi-ecosystem developer artifact and AI agent storage cleaner"
+description = "Detergo by Vellium - multi-ecosystem developer artifact and AI agent storage cleaner"
 authors = ["Vellium"]
+license = "MIT"
+repository = "https://github.com/emirtdede/detergo"
 edition = "2021"
-default-run = "dev-cleaner"
+rust-version = "1.88"
+default-run = "detergo"
 
 [lib]
-name = "dev_cleaner_lib"
+name = "detergo_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "detergo"
+path = "src/main.rs"
 
 [features]
 default = []
 # T-37: generated TypeScript contract. Kept opt-in because tauri-specta is a
 # release candidate; a release build never links it.
 bindings = ["dep:specta", "dep:specta-typescript", "dep:tauri-specta", "tauri/specta"]
+
+# Console-subsystem companion binary (`detergo.com` on Windows, `devenv.com`
+# pattern) for synchronous CLI/MCP terminal I/O without flashing a console when
+# launching the GUI executable.
+[[bin]]
+name = "detergo-cli"
+path = "src/bin/detergo_cli.rs"
 
 # Only built for the T-37 contract: `npm run generate:bindings` / `check:bindings`.
 # `required-features` keeps `cargo test`/`cargo build` from compiling it against
@@ -35,7 +49,7 @@ tauri-plugin-single-instance = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 chrono = { version = "0.4.44", features = ["serde"] }
-tokio = { version = "1.49.0", features = ["full"] }
+tokio = { version = "1.49.0", features = ["rt-multi-thread", "sync", "time", "net", "macros"] }
 walkdir = "2"
 toml = "0.8"
 uuid = { version = "1", features = ["v4"] }
@@ -62,6 +76,13 @@ incremental = false
 [profile.test]
 codegen-units = 1
 incremental = false
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+panic = "abort"
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.58", features = [

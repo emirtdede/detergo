@@ -28,11 +28,11 @@ pub fn roots_from_mask(mask: u32) -> Vec<String> {
 }
 
 pub fn drive_letter(root: &str) -> String {
-    root.trim_end_matches(['\\', '/'])
-        .chars()
-        .take(2)
-        .collect::<String>()
-        .to_uppercase()
+    let trimmed = root.trim_end_matches(['\\', '/']);
+    if trimmed.is_empty() && root.starts_with('/') {
+        return "/".to_string();
+    }
+    trimmed.chars().take(2).collect::<String>().to_uppercase()
 }
 
 #[cfg(windows)]
@@ -104,7 +104,7 @@ pub fn list_fixed_drives() -> Vec<DriveInfo> {
                 kind,
             }
         })
-        .filter(|drive| drive.kind != "remote")
+        .filter(|drive| drive.kind == "fixed" || drive.kind == "removable")
         .collect();
 
     drives.sort_by(|a, b| a.label.cmp(&b.label));

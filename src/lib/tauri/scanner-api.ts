@@ -3,6 +3,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import {
   ActionAuditRecord,
   AgentProviderInfo,
+  AppIconApplyResult,
   AppSettings,
   AuditRecord,
   BuildInfo,
@@ -13,6 +14,7 @@ import {
   CleanupPlan,
   CleanupReport,
   CliEnvironmentStatus,
+  CustomThemeConfig,
   DeleteMode,
   GrowthReport,
   KnownLocation,
@@ -24,6 +26,8 @@ import {
   ScanSummary,
   CleanupTotals,
   DiskSpaceInfo,
+  DownloadedUpdate,
+  InstallChannel,
   UpdateInfo,
   SupportBundle,
   SupportBundleRequest,
@@ -109,15 +113,28 @@ export interface ScannerApi {
   clearLastScan(): Promise<void>;
   hideToTray(): Promise<void>;
   quitApp(): Promise<void>;
+  applyAppIcon(
+    iconId: string,
+    activeTheme: string,
+    customTheme: CustomThemeConfig,
+  ): Promise<AppIconApplyResult>;
   getBuildInfo(): Promise<BuildInfo>;
   getCliEnvironmentStatus(): Promise<CliEnvironmentStatus>;
   registerCliInUserPath(): Promise<CliEnvironmentStatus>;
+  getInstallChannel(): Promise<InstallChannel>;
   checkForUpdates(): Promise<UpdateInfo>;
+  downloadAndVerifyUpdate(
+    url: string,
+    expectedSha256: string,
+    fileName: string,
+  ): Promise<DownloadedUpdate>;
+  launchDownloadedUpdate(path: string): Promise<void>;
   createSupportBundle(request: SupportBundleRequest): Promise<SupportBundle>;
   composeSupportMail(bundlePath: string, version: string): Promise<SupportMailResult>;
   testWebhook(
     url: string,
     payload?: Record<string, unknown>,
+    allowPrivate?: boolean,
   ): Promise<{ ok: boolean; status: number; latencyMs: number; message: string }>;
   dispatchWebhook(
     event: "scan" | "clean",
@@ -355,6 +372,18 @@ const realApi: ScannerApi = {
     await invoke("quit_app");
   },
 
+  async applyAppIcon(
+    iconId: string,
+    activeTheme: string,
+    customTheme: CustomThemeConfig,
+  ): Promise<AppIconApplyResult> {
+    return await invoke<AppIconApplyResult>("apply_app_icon", {
+      iconId,
+      activeTheme,
+      customTheme,
+    });
+  },
+
   async getBuildInfo(): Promise<BuildInfo> {
     return await invoke<BuildInfo>("get_build_info");
   },
@@ -367,8 +396,28 @@ const realApi: ScannerApi = {
     return await invoke<CliEnvironmentStatus>("register_cli_in_user_path");
   },
 
+  async getInstallChannel(): Promise<InstallChannel> {
+    return await invoke<InstallChannel>("get_install_channel");
+  },
+
   async checkForUpdates(): Promise<UpdateInfo> {
     return await invoke<UpdateInfo>("check_for_updates");
+  },
+
+  async downloadAndVerifyUpdate(
+    url: string,
+    expectedSha256: string,
+    fileName: string,
+  ): Promise<DownloadedUpdate> {
+    return await invoke<DownloadedUpdate>("download_and_verify_update", {
+      url,
+      expectedSha256,
+      fileName,
+    });
+  },
+
+  async launchDownloadedUpdate(path: string): Promise<void> {
+    await invoke("launch_downloaded_update", { path });
   },
 
   async createSupportBundle(request: SupportBundleRequest): Promise<SupportBundle> {
@@ -382,8 +431,13 @@ const realApi: ScannerApi = {
   async testWebhook(
     url: string,
     payload?: Record<string, unknown>,
+    allowPrivate?: boolean,
   ): Promise<{ ok: boolean; status: number; latencyMs: number; message: string }> {
-    return await invoke("test_webhook", { url, payload: payload ?? null });
+    return await invoke("test_webhook", {
+      url,
+      payload: payload ?? null,
+      allowPrivate: allowPrivate ?? null,
+    });
   },
 
   async dispatchWebhook(

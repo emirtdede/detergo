@@ -529,7 +529,7 @@ describe("Permanent fixes", () => {
   });
 
   it("persists the disk-pressure cooldown across sessions", async () => {
-    const key = "dev-cleaner.disk-pressure-cooldown.v1";
+    const key = "detergo.disk-pressure-cooldown.v1";
     const legacyKey = "node-cleaner.disk-pressure-cooldown.v1";
     const storage = window.localStorage;
     storage.removeItem(key);
@@ -561,7 +561,7 @@ describe("Permanent fixes", () => {
   });
 
   it("migrates the disk-pressure cooldown written under the retired product name", async () => {
-    const key = "dev-cleaner.disk-pressure-cooldown.v1";
+    const key = "detergo.disk-pressure-cooldown.v1";
     const legacyKey = "node-cleaner.disk-pressure-cooldown.v1";
     const storage = window.localStorage;
     resetDiskPressureCooldown();

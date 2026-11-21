@@ -34,13 +34,13 @@ const NSIS_DIR = join(
   "NSIS",
 );
 const LANG_DIR = join(NSIS_DIR, "Contrib", "Language files");
-const CACHE_PATH = join(process.env.TEMP ?? "/tmp", "dev-cleaner-mt-cache.json");
+const CACHE_PATH = join(process.env.TEMP ?? "/tmp", "detergo-mt-cache.json");
 
 const BOM = "\uFEFF";
 
 /** Placeholders that must survive translation untouched. */
 const PROTECT = [
-  ["Dev Cleaner", "ZXQ0QXZ"],
+  ["Detergo", "ZXQ0QXZ"],
   ["{{product_name}}", "ZXQ1QXZ"],
   ["${PRODUCTNAME}", "ZXQ2QXZ"],
   ["${VERSION}", "ZXQ3QXZ"],
@@ -100,7 +100,7 @@ function applyMnemonic(text, marked) {
  * Sentence strings name the buttons: "Click Next to continue.", "Click
  * Install to start the installation.", "click I Agree", "Click Finish to close
  * Setup." Machine translation happily keeps those words in Latin script, which
- * then contradicts the fully translated button right below them — that is how
+ * then contradicts the fully translated button right below them - that is how
  * `Next`, `Install`, `Uninstall` and `I Agree` survived in otherwise translated
  * wizards. `buttonLabelPairs`/`substituteButtonLabels` (shared with the gate)
  * replace every literal occurrence of the English label with the localized one.
@@ -220,7 +220,7 @@ function parseNlf(text) {
 function shouldTranslate(key, value) {
   if (["Branding"].includes(key)) return false;
   if (!value) return false;
-  if (/^["']?[\s.,:;\-–—]*["']?$/.test(value)) return false;
+  if (/^["']?[\s.,:;\---]*["']?$/.test(value)) return false;
   return /[A-Za-z]/.test(value.replace(/\$\([^)]*\)|\$[A-Za-z0-9_]+|%s/g, ""));
 }
 

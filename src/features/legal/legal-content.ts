@@ -42,33 +42,29 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
     title: "Son Kullanıcı Lisans Sözleşmesi",
     updated: UPDATED_TR,
     summary:
-      "Dev Cleaner'ı indirerek, kurarak veya kullanarak bu sözleşmenin tamamını kabul etmiş olursunuz.",
+      "Detergo, MIT Lisansı altında açık kaynak olarak sunulur; bu belge lisans haklarınızı, marka sınırlarını ve güvenlik sorumluluklarını açıklar.",
     clauses: [
       {
         heading: "1. Taraflar ve kapsam",
         paragraphs: [
-          'Bu Son Kullanıcı Lisans Sözleşmesi ("Sözleşme"), Vellium ("Vellium", "biz") ile Dev Cleaner yazılımını kullanan gerçek veya tüzel kişi ("siz", "Kullanıcı") arasında kurulur. Sözleşme; Dev Cleaner\'ın kurulum paketini, yürütülebilir dosyalarını, arayüzünü, yerleşik kataloğunu ve beraberinde sunulan belgeleri (birlikte "Yazılım") kapsar.',
-          "Yazılımı kurmadan önce bu Sözleşmeyi okumanız gerekir. Kurulum, çalıştırma veya herhangi bir biçimde kullanım, bu Sözleşmenin tüm hükümlerini kabul ettiğiniz anlamına gelir. Koşulları kabul etmiyorsanız Yazılımı kullanmayın ve kurulu kopyayı kaldırın.",
-          "Yazılımı bir kuruluş adına kullanıyorsanız, bu Sözleşmeyi o kuruluş adına kabul etmeye yetkili olduğunuzu beyan edersiniz.",
+          'Bu belge ("Koşullar"), Vellium ("Vellium", "biz") tarafından geliştirilen Detergo yazılımını kullanan gerçek veya tüzel kişiler ("siz", "Kullanıcı") için geçerlidir. Koşullar; Detergo\'ın kaynak kodunu, kurulum paketini, yürütülebilir dosyalarını, arayüzünü, yerleşik kataloğunu ve beraberinde sunulan belgeleri (birlikte "Yazılım") kapsar.',
+          "Yazılımı kullanmadan önce bu belgeyi ve beraberindeki MIT Lisansını incelemeniz önerilir. Yazılımı bir kuruluş adına kullanıyorsanız, bu koşulları o kuruluş adına kabul etmeye yetkili olduğunuzu beyan edersiniz.",
         ],
       },
       {
-        heading: "2. Lisans verilmesi",
+        heading: "2. Lisans verilmesi (MIT Lisansı)",
         paragraphs: [
-          "Vellium, size Yazılımı kişisel ve ticari projelerinizin bakımı amacıyla, sahip olduğunuz veya kullanma yetkiniz bulunan cihazlarda kurmak, çalıştırmak ve kullanmak üzere dünya çapında, münhasır olmayan, devredilemez, alt lisansı verilemez ve geri alınabilir sınırlı bir lisans verir.",
-          "Bu lisans, Yazılımın mülkiyetini devretmez; yalnızca kullanım hakkı tanır. Yazılım satılmaz, lisanslanır.",
-          "Kurumsal kullanımda, Yazılımı kuran her cihaz için ayrı bir kurulum esas alınır. Yazılımı kendi altyapınızda, kendi çalışanlarınız veya yüklenicileriniz için çalıştırabilirsiniz; üçüncü kişilere hizmet olarak sunamazsınız.",
+          "Detergo, MIT Lisansı altında özgür ve açık kaynak yazılım olarak lisanslanır. Telif hakkı bildiriminin ve MIT lisans metninin yazılımın tüm kopyalarında veya önemli bölümlerinde korunması koşuluyla; Yazılımı kişisel ve ticari amaçlarla ücretsiz olarak kullanabilir, kopyalayabilir, değiştirebilir, birleştirebilir, yayımlayabilir, dağıtabilir, alt lisanslayabilir ve satabilirsiniz.",
+          "Resmî kaynak kodu ve MIT lisans metninin tamamı https://github.com/emirtdede/detergo deposunda yayımlanmaktadır.",
         ],
       },
       {
-        heading: "3. Kullanım sınırlamaları",
-        paragraphs: ["Açıkça izin verilen hâller ve emredici hukuk kuralları dışında:"],
+        heading: "3. Marka ve sorumlu kullanım",
+        paragraphs: ["MIT Lisansı kapsamındaki açık kaynak haklarınız saklı kalmak üzere:"],
         bullets: [
-          "Yazılımı kopyalayamaz, satamaz, kiralayamaz, dağıtamaz veya alt lisans veremezsiniz.",
-          "Yazılımı tersine mühendislik, kaynak koda dönüştürme veya parçalara ayırma işlemlerine tabi tutamazsınız; ancak yürürlükteki hukukun bu tür kısıtlamalara izin verdiği ölçüde bunu yapabilirsiniz.",
-          "Lisans, kopya koruma veya güvenlik denetimlerini kaldıramaz, atlatamaz veya devre dışı bırakamazsınız.",
-          "Yazılımı, Vellium'un yazılı izni olmadan Vellium veya Dev Cleaner adını, logosunu ya da markasını taşıyan türev bir ürün oluşturmak için kullanamazsınız.",
-          "Yazılımı yasa dışı amaçlarla, üçüncü kişilerin sistemlerine izinsiz erişmek için veya kullanma yetkiniz bulunmayan dosya ve klasörlere işlem yapmak için kullanamazsınız.",
+          "MIT Lisansı, Vellium'un veya Detergo'ın ticari marka, logo ya da ad haklarını devretmez. Vellium'un yazılı izni olmadan değiştirilmiş bir türev ürünü resmî Vellium veya Detergo sürümü gibi sunamazsınız.",
+          "Yazılımı yasa dışı amaçlarla, üçüncü kişilerin sistemlerine izinsiz erişmek için veya kullanma yetkiniz bulunmayan dosya ve klasörlere işlem yapmak için kullanmamalısınız.",
+          "Yazılımın kaynak kodunda değişiklik yapıp dağıttığınızda, güvenlik korumalarının veya sorumluluk bildirimlerinin durumunu kendi kullanıcılarınıza açıkça belirtmek sizin sorumluluğunuzdadır.",
         ],
       },
       {
@@ -114,10 +110,10 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         ],
       },
       {
-        heading: "10. Fesih",
+        heading: "10. Yürürlük",
         paragraphs: [
-          "Bu Sözleşme, Yazılımı kullandığınız sürece yürürlükte kalır. Sözleşmeyi dilediğiniz zaman, Yazılımı kaldırarak ve tüm kopyalarını silerek sona erdirebilirsiniz.",
-          "Sözleşme hükümlerini ihlal etmeniz hâlinde lisans kendiliğinden ve bildirimsiz olarak sona erer. Bu durumda Yazılımın tüm kopyalarını silmeniz gerekir. Fesih, tahakkuk etmiş yükümlülükleri ve niteliği gereği ayakta kalması gereken hükümleri (sorumluluk sınırlaması, mülkiyet, uygulanacak hukuk dâhil) etkilemez.",
+          "MIT Lisansı kapsamındaki haklarınız, lisans metnindeki telif hakkı ve izin bildirimini koruduğunuz sürece geçerlidir. Yazılımı dilediğiniz zaman kaldırarak ve yerel veri klasörünü silerek kullanımınızı sonlandırabilirsiniz.",
+          "Garanti reddi, sorumluluğun sınırlandırılması ve marka hükümleri niteliği gereği ayakta kalmaya devam eder.",
         ],
       },
       {
@@ -146,12 +142,12 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
     title: "Gizlilik Politikası",
     updated: UPDATED_TR,
     summary:
-      "Dev Cleaner verilerinizi cihazınızda tutar. Hesap, telemetri, reklam ve bulut senkronizasyonu yoktur.",
+      "Detergo verilerinizi cihazınızda tutar. Hesap, telemetri, reklam ve bulut senkronizasyonu yoktur.",
     clauses: [
       {
         heading: "1. Kısa özet",
         paragraphs: [
-          "Dev Cleaner yerel öncelikli bir masaüstü uygulamasıdır. Çalışması için hesap açmanız, oturum açmanız veya internet bağlantısı kurmanız gerekmez. Vellium'un işlettiği bir sunucu yoktur; uygulama hiçbir kullanım verisini bize otomatik olarak göndermez.",
+          "Detergo yerel öncelikli bir masaüstü uygulamasıdır. Çalışması için hesap açmanız, oturum açmanız veya internet bağlantısı kurmanız gerekmez. Vellium'un işlettiği bir sunucu yoktur; uygulama hiçbir kullanım verisini bize otomatik olarak göndermez.",
           "Bu politika; hangi bilgilerin okunduğunu, nerede saklandığını, ne kadar süre tutulduğunu ve bunlar üzerinde hangi haklara sahip olduğunuzu açıklar. Yürürlükteki sürüm her zaman uygulama içindeki bu sayfadır.",
         ],
       },
@@ -173,13 +169,13 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
           "Tüm kalıcı veriler kendi bilgisayarınızda, Windows kullanıcı profilinizin içinde tutulur:",
         ],
         bullets: [
-          "%APPDATA%\\dev-cleaner\\config.json — uygulama tercihleri.",
-          "%APPDATA%\\dev-cleaner\\last-scan.json — son tamamlanan veya iptal edilen taramanın aday listesi (yol, boyut, sınıflandırma) ve özeti. Tek bir anlık görüntü tutulur, geçmiş biriktirilmez; 64 MB sınırı aşılırsa dosya yazılmaz. Bir sonraki tarama dosyanın üzerine yazar; kalıcı olarak kaldırmak için bu dosyayı silebilirsiniz.",
-          "%APPDATA%\\dev-cleaner\\history.jsonl — temizlik geçmişi.",
-          "%APPDATA%\\dev-cleaner\\snapshots.jsonl ve actions.jsonl — sürücü doluluk anlık görüntüleri ve resmî araç kayıtları.",
-          "%APPDATA%\\dev-cleaner\\system-automation.json ve logs\\dev-cleaner.log — isteğe bağlı zamanlanmış C: temizlik profili ve yerel hata/yaşam döngüsü günlüğü.",
-          "%USERPROFILE%\\Downloads\\dev-cleaner-support-*.zip — yalnızca Ayarlar > Hata günlüğü bölümünden siz tetiklediğinizde oluşturulan maskelenmiş yerel destek arşivi.",
-          "Windows Geri Dönüşüm Kutusu — varsayılan silme yönteminde taşınan dosyalar.",
+          "%APPDATA%\\detergo\\config.json - uygulama tercihleri.",
+          "%APPDATA%\\detergo\\last-scan.json - son tamamlanan veya iptal edilen taramanın aday listesi (yol, boyut, sınıflandırma) ve özeti. Tek bir anlık görüntü tutulur, geçmiş biriktirilmez; 64 MB sınırı aşılırsa dosya yazılmaz. Bir sonraki tarama dosyanın üzerine yazar; kalıcı olarak kaldırmak için bu dosyayı silebilirsiniz.",
+          "%APPDATA%\\detergo\\history.jsonl - temizlik geçmişi.",
+          "%APPDATA%\\detergo\\snapshots.jsonl ve actions.jsonl - sürücü doluluk anlık görüntüleri ve resmî araç kayıtları.",
+          "%APPDATA%\\detergo\\system-automation.json ve logs\\detergo.log - isteğe bağlı zamanlanmış C: temizlik profili ve yerel hata/yaşam döngüsü günlüğü.",
+          "%USERPROFILE%\\Downloads\\detergo-support-*.zip - yalnızca Ayarlar > Hata günlüğü bölümünden siz tetiklediğinizde oluşturulan maskelenmiş yerel destek arşivi.",
+          "Windows Geri Dönüşüm Kutusu - varsayılan silme yönteminde taşınan dosyalar.",
         ],
       },
       {
@@ -250,7 +246,7 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
     title: "Üçüncü Taraf Lisanslar",
     updated: UPDATED_TR,
     summary:
-      "Dev Cleaner, açık kaynak topluluğunun ürettiği bileşenler üzerine kuruludur. Bu sayfa kullanılan her bileşeni ve lisansını listeler.",
+      "Detergo, açık kaynak topluluğunun ürettiği bileşenler üzerine kuruludur. Bu sayfa kullanılan her bileşeni ve lisansını listeler.",
     clauses: [
       {
         heading: "1. Bu liste nasıl üretilir?",
@@ -262,7 +258,7 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: "2. Lisans yükümlülükleri",
         paragraphs: [
-          "Kullanılan lisansların tamamı, ticari kapalı kaynak bir uygulamada kullanıma izin verir. Yerine getirdiğimiz başlıca yükümlülükler:",
+          "Kullanılan üçüncü taraf lisanslarının tamamı, Detergo'ın MIT açık kaynak dağıtımıyla uyumludur. Yerine getirdiğimiz başlıca yükümlülükler:",
         ],
         bullets: [
           "MIT, ISC, BSD ve Apache-2.0: telif bildirimlerinin ve lisans metinlerinin korunması. Bildirimler bu sayfada ve paketlenmiş bileşenlerin kendi dosyalarında yer alır.",
@@ -274,7 +270,7 @@ const TR_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: "3. Garanti ve sorumluluk",
         paragraphs: [
-          "Üçüncü taraf bileşenleri, kendi lisanslarında belirtildiği şekilde \"olduğu gibi\" sunulur. Bileşenlerin yazarları, bu uygulamadaki kullanımlarından doğan zararlardan sorumlu değildir. Bu bileşenlerin listelenmesi, ilgili projelerin Vellium'u veya Dev Cleaner'ı onayladığı anlamına gelmez.",
+          "Üçüncü taraf bileşenleri, kendi lisanslarında belirtildiği şekilde \"olduğu gibi\" sunulur. Bileşenlerin yazarları, bu uygulamadaki kullanımlarından doğan zararlardan sorumlu değildir. Bu bileşenlerin listelenmesi, ilgili projelerin Vellium'u veya Detergo'ı onayladığı anlamına gelmez.",
         ],
       },
       {
@@ -291,33 +287,30 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
   eula: {
     title: "End User License Agreement",
     updated: UPDATED_EN,
-    summary: "By downloading, installing or using Dev Cleaner you accept this agreement in full.",
+    summary:
+      "Detergo is open-source software under the MIT License; this notice explains your license rights, trademark boundaries, and safety disclaimers.",
     clauses: [
       {
         heading: "1. Parties and scope",
         paragraphs: [
-          'This End User License Agreement ("Agreement") is entered into between Vellium ("Vellium", "we") and the natural or legal person using the Dev Cleaner software ("you", "User"). The Agreement covers the installer, the executable files, the user interface, the built-in catalog and the accompanying documentation (together, the "Software").',
-          "You must read this Agreement before installing the Software. Installing, running or otherwise using the Software means you accept all of its terms. If you do not accept them, do not use the Software and remove any installed copy.",
-          "If you use the Software on behalf of an organisation, you represent that you are authorised to accept this Agreement for that organisation.",
+          'This notice ("Terms") applies to the natural or legal person ("you", "User") using Detergo, developed by Vellium ("Vellium", "we"). It covers the source code, installer, executable files, user interface, built-in catalog and accompanying documentation (together, the "Software").',
+          "Please read these Terms alongside the MIT License before using the Software. If you use the Software on behalf of an organisation, you represent that you are authorised to accept these Terms for that organisation.",
         ],
       },
       {
-        heading: "2. License grant",
+        heading: "2. License grant (MIT License)",
         paragraphs: [
-          "Vellium grants you a worldwide, non-exclusive, non-transferable, non-sublicensable and revocable limited license to install, run and use the Software on devices you own or are authorised to use, for the maintenance of your personal and commercial projects.",
-          "This license does not transfer ownership of the Software; it grants a right of use only. The Software is licensed, not sold.",
-          "In organisational use, each device on which the Software is installed counts as a separate installation. You may run the Software within your own infrastructure for your employees and contractors, but you may not offer it to third parties as a service.",
+          "Detergo is licensed as free and open-source software under the MIT License. Subject to retaining the copyright notice and MIT permission notice in all copies or substantial portions of the Software, you are free to use, copy, modify, merge, publish, distribute, sublicense, and sell copies of the Software for both personal and commercial purposes.",
+          "The official source code and full MIT License text are published at https://github.com/emirtdede/detergo.",
         ],
       },
       {
-        heading: "3. Restrictions",
-        paragraphs: ["Except where expressly permitted below or required by mandatory law:"],
+        heading: "3. Trademarks and responsible use",
+        paragraphs: ["Without limiting any rights granted to you under the MIT License:"],
         bullets: [
-          "You may not copy, sell, rent, distribute or sublicense the Software.",
-          "You may not reverse engineer, decompile or disassemble the Software, except to the extent applicable law permits despite this restriction.",
-          "You may not remove, bypass or disable license, copy-protection or security checks.",
-          "You may not use the Software to create a derivative product bearing the Vellium or Dev Cleaner name, logo or trademarks without written permission from Vellium.",
-          "You may not use the Software for unlawful purposes, to gain unauthorised access to third-party systems, or to act on files and folders you are not authorised to modify.",
+          "The MIT License does not grant rights to Vellium's or Detergo's trademarks, logos, or brand names. You may not present a modified derivative as an official Vellium or Detergo release without written permission from Vellium.",
+          "You should not use the Software for unlawful purposes, to gain unauthorised access to third-party systems, or to act on files and folders you are not authorised to modify.",
+          "If you redistribute a modified version of the Software, you are responsible for informing your users about any changes made to safety checks or disclaimers.",
         ],
       },
       {
@@ -363,10 +356,10 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         ],
       },
       {
-        heading: "10. Termination",
+        heading: "10. Effect and survival",
         paragraphs: [
-          "This Agreement remains in force for as long as you use the Software. You may terminate it at any time by uninstalling the Software and deleting all copies.",
-          "If you breach these terms, the license terminates automatically and without notice. You must then delete all copies of the Software. Termination does not affect accrued obligations or provisions that by their nature survive, including ownership, limitation of liability and governing law.",
+          "Your rights under the MIT License remain in effect so long as you preserve the copyright and permission notices required by the MIT License. You may stop using the Software at any time by uninstalling it and removing its local data folder.",
+          "The warranty disclaimer, limitation of liability, and trademark provisions survive regardless of how you stop using the Software.",
         ],
       },
       {
@@ -395,12 +388,12 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
     title: "Privacy Policy",
     updated: UPDATED_EN,
     summary:
-      "Dev Cleaner keeps your data on your device. No accounts, no telemetry, no advertising, no cloud sync.",
+      "Detergo keeps your data on your device. No accounts, no telemetry, no advertising, no cloud sync.",
     clauses: [
       {
         heading: "1. Summary",
         paragraphs: [
-          "Dev Cleaner is a local-first desktop application. It needs no account, no sign-in and no internet connection to work. Vellium operates no server for it, and the application never automatically transmits usage data to us.",
+          "Detergo is a local-first desktop application. It needs no account, no sign-in and no internet connection to work. Vellium operates no server for it, and the application never automatically transmits usage data to us.",
           "This policy explains what information is read, where it is stored, how long it is kept and what rights you have. The version published inside the application is always the current one.",
         ],
       },
@@ -422,13 +415,13 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
           "All persistent data stays on your own computer, inside your Windows user profile:",
         ],
         bullets: [
-          "%APPDATA%\\dev-cleaner\\config.json — application preferences.",
-          "%APPDATA%\\dev-cleaner\\last-scan.json — the candidate list (path, size, classification) and summary of the last completed or cancelled scan. Only one snapshot is kept, never a history; writes over 64 MB are refused. Your next scan replaces the file; delete it to remove it permanently.",
-          "%APPDATA%\\dev-cleaner\\history.jsonl — cleanup history.",
-          "%APPDATA%\\dev-cleaner\\snapshots.jsonl and actions.jsonl — drive-usage snapshots and official tool records.",
-          "%APPDATA%\\dev-cleaner\\system-automation.json and logs\\dev-cleaner.log — optional scheduled C: cleanup profile and local error/lifecycle log.",
-          "%USERPROFILE%\\Downloads\\dev-cleaner-support-*.zip — masked local support archive created only when you explicitly click the button under Settings > Error log.",
-          "The Windows Recycle Bin — files moved there by the default deletion method.",
+          "%APPDATA%\\detergo\\config.json - application preferences.",
+          "%APPDATA%\\detergo\\last-scan.json - the candidate list (path, size, classification) and summary of the last completed or cancelled scan. Only one snapshot is kept, never a history; writes over 64 MB are refused. Your next scan replaces the file; delete it to remove it permanently.",
+          "%APPDATA%\\detergo\\history.jsonl - cleanup history.",
+          "%APPDATA%\\detergo\\snapshots.jsonl and actions.jsonl - drive-usage snapshots and official tool records.",
+          "%APPDATA%\\detergo\\system-automation.json and logs\\detergo.log - optional scheduled C: cleanup profile and local error/lifecycle log.",
+          "%USERPROFILE%\\Downloads\\detergo-support-*.zip - masked local support archive created only when you explicitly click the button under Settings > Error log.",
+          "The Windows Recycle Bin - files moved there by the default deletion method.",
         ],
       },
       {
@@ -475,7 +468,7 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: "10. Security",
         paragraphs: [
-          "Apart from the optional update check or webhook you initiate yourself — where the update check uses HTTPS and reads only public release metadata — the application exchanges no data over the network. Local files are protected by the access permissions of your Windows user profile. By default the application launches and operates without administrator rights; UAC elevation is requested only if you explicitly choose to restart elevated for administrator-only C: System Cleaner maintenance actions.",
+          "Apart from the optional update check or webhook you initiate yourself - where the update check uses HTTPS and reads only public release metadata - the application exchanges no data over the network. Local files are protected by the access permissions of your Windows user profile. By default the application launches and operates without administrator rights; UAC elevation is requested only if you explicitly choose to restart elevated for administrator-only C: System Cleaner maintenance actions.",
           "If you share your computer, remember that other users may be able to read the local history files under %APPDATA%; the path-masking option affects the interface only and does not change file contents.",
         ],
       },
@@ -499,7 +492,7 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
     title: "Third-Party Licenses",
     updated: UPDATED_EN,
     summary:
-      "Dev Cleaner is built on components produced by the open-source community. This page lists every component and its license.",
+      "Detergo is built on components produced by the open-source community. This page lists every component and its license.",
     clauses: [
       {
         heading: "1. How this list is produced",
@@ -511,7 +504,7 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: "2. License obligations",
         paragraphs: [
-          "Every license in use permits use inside a commercial, closed-source application. The main obligations we meet:",
+          "Every third-party license in use is compatible with Detergo's MIT open-source distribution. The main obligations we meet:",
         ],
         bullets: [
           "MIT, ISC, BSD and Apache-2.0: retain copyright notices and license texts. Notices appear on this page and inside the bundled components' own files.",
@@ -523,7 +516,7 @@ const EN_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: "3. Warranty and liability",
         paragraphs: [
-          'Third-party components are provided "as is" under their own licenses. Their authors are not liable for damages arising from their use in this application. Listing these components does not imply that their projects endorse Vellium or Dev Cleaner.',
+          'Third-party components are provided "as is" under their own licenses. Their authors are not liable for damages arising from their use in this application. Listing these components does not imply that their projects endorse Vellium or Detergo.',
         ],
       },
       {

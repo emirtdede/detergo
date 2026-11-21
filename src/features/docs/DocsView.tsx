@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState, useEffect, useRef } from "react";
-import { Search } from "lucide-react";
+import { BookOpen, Search } from "lucide-react";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
 import { useUIText, resolveUiLocale, localizeAppError } from "@/lib/ui-text";
@@ -7,7 +7,7 @@ import { scannerApi } from "@/lib/tauri/scanner-api";
 import { CliEnvironmentStatus } from "@/types";
 import { getDocsTopics, DocTopic } from "./docs-topics";
 import { getDocsBodyIndex } from "./docs-search";
-import { useDocsLocale } from "./docs-i18n";
+import { hasDocsLocale, useDocsLocale } from "./docs-i18n";
 import { McpIdeKey } from "./docs-data";
 import { normalizeSearchText } from "@/lib/search";
 import { DocsContentEn } from "./DocsContentEn";
@@ -115,13 +115,7 @@ export const DocsView: React.FC = () => {
     try {
       const updated = await scannerApi.registerCliInUserPath();
       setCliEnv(updated);
-      showToast(
-        isTr
-          ? "dev-cleaner kullanıcı PATH ortam değişkenine eklendi. Yeni bir terminal penceresi açın."
-          : "Added dev-cleaner to your user PATH. Open a new terminal window to use it.",
-        "success",
-        5000,
-      );
+      showToast(ui.settings.saved, "success", 5000);
     } catch (err) {
       showToast(localizeAppError(err, ui), "error", 6000);
     } finally {
@@ -132,7 +126,7 @@ export const DocsView: React.FC = () => {
   const mcpCommand =
     cliEnv && (!cliEnv.inPath || !cliEnv.shimUpToDate) && cliEnv.executablePath
       ? cliEnv.executablePath
-      : "dev-cleaner";
+      : "detergo";
 
   // Global Keyboard Shortcuts (Ctrl+K or / to search, Esc to clear)
   useEffect(() => {
@@ -242,7 +236,7 @@ export const DocsView: React.FC = () => {
 
   // Dynamic CLI Command Generation (short & concise syntax)
   const generatedCliCommand = useMemo(() => {
-    const parts = ["dev-cleaner", "s"];
+    const parts = ["detergo", "s"];
     if (cliPath.trim() && cliScope !== "agents" && cliScope !== "drives") {
       parts.push(quoteCliArg(cliPath.trim(), cliShell));
     }
@@ -333,6 +327,11 @@ export const DocsView: React.FC = () => {
       {/* Sidebar */}
       <aside className="docs-sidebar">
         <div className="docs-sidebar-header">
+          <BookOpen size={18} className="docs-sidebar-header-icon" aria-hidden="true" />
+          <h2 className="docs-sidebar-title">{ui.nav.docs}</h2>
+        </div>
+
+        <div className="docs-search-wrap">
           <div className="docs-search-box">
             <Search size={14} />
             <input
@@ -348,91 +347,44 @@ export const DocsView: React.FC = () => {
         </div>
 
         <div className="docs-sidebar-scroll">
-          {/* 1. Guides */}
-          <div className="docs-nav-group">
-            <span className="docs-nav-group-title">{ui.docs.catGuide}</span>
-            {groupedTopics.guide.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={`docs-nav-link ${activeTopicId === t.id ? "active" : ""}`}
-                  onClick={() => setActiveTopicId(t.id)}
-                >
-                  {t.icon}
-                  <span>{t.title}</span>
-                </button>
-              ))}
-          </div>
-
-          {/* 2. CLI */}
-          <div className="docs-nav-group">
-            <span className="docs-nav-group-title">{ui.docs.catCli}</span>
-            {groupedTopics.cli.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={`docs-nav-link ${activeTopicId === t.id ? "active" : ""}`}
-                  onClick={() => setActiveTopicId(t.id)}
-                >
-                  {t.icon}
-                  <span>{t.title}</span>
-                </button>
-              ))}
-          </div>
-
-          {/* 3. MCP */}
-          <div className="docs-nav-group">
-            <span className="docs-nav-group-title">{ui.docs.catMcp}</span>
-            {groupedTopics.mcp.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={`docs-nav-link ${activeTopicId === t.id ? "active" : ""}`}
-                  onClick={() => setActiveTopicId(t.id)}
-                >
-                  {t.icon}
-                  <span>{t.title}</span>
-                </button>
-              ))}
-          </div>
-
-          {/* 4. Webhook */}
-          <div className="docs-nav-group">
-            <span className="docs-nav-group-title">{ui.docs.catWebhook}</span>
-            {groupedTopics.webhook.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={`docs-nav-link ${activeTopicId === t.id ? "active" : ""}`}
-                  onClick={() => setActiveTopicId(t.id)}
-                >
-                  {t.icon}
-                  <span>{t.title}</span>
-                </button>
-              ))}
-          </div>
-
-          {/* 5. Safety */}
-          <div className="docs-nav-group">
-            <span className="docs-nav-group-title">{ui.docs.catSafety}</span>
-            {groupedTopics.safety.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={`docs-nav-link ${activeTopicId === t.id ? "active" : ""}`}
-                  onClick={() => setActiveTopicId(t.id)}
-                >
-                  {t.icon}
-                  <span>{t.title}</span>
-                </button>
-              ))}
-          </div>
+          {filteredTopics.length === 0 ? (
+            <p className="plan-note" style={{ padding: "12px 14px" }}>
+              {ui.docs.noSearchResults}
+            </p>
+          ) : (
+            (
+              [
+                { key: "guide" as const, title: ui.docs.catGuide },
+                { key: "cli" as const, title: ui.docs.catCli },
+                { key: "mcp" as const, title: ui.docs.catMcp },
+                { key: "webhook" as const, title: ui.docs.catWebhook },
+                { key: "safety" as const, title: ui.docs.catSafety },
+              ] as const
+            )
+              .filter((group) => groupedTopics[group.key].length > 0)
+              .map((group) => (
+                <div key={group.key} className="docs-nav-group">
+                  <span className="docs-nav-group-title">{group.title}</span>
+                  {groupedTopics[group.key].map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      className={`docs-nav-link ${activeTopicId === t.id ? "active" : ""}`}
+                      onClick={() => setActiveTopicId(t.id)}
+                    >
+                      {t.icon}
+                      <span>{t.title}</span>
+                    </button>
+                  ))}
+                </div>
+              ))
+          )}
         </div>
       </aside>
 
       {/* Content Pane (shell already wraps the view in <main id="main">) */}
       <div className="docs-content-pane">
-        {!isTr && language && resolveUiLocale(language) !== "en" && (
+        {!isTr && language && resolveUiLocale(language) !== "en" && !hasDocsLocale(language) && (
           <div
             role="note"
             className="docs-english-notice"

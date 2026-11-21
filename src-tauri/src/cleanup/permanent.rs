@@ -2,7 +2,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::error::AppError;
-use crate::platform::windows::delete::{delete_by_handle, HandleDeleteError};
+use crate::platform::windows::delete::{
+    delete_by_handle, verify_identity_no_follow, HandleDeleteError,
+};
 use crate::platform::{identity, is_reparse_point, FileIdentity};
 use crate::safety::path_guard::validate_ancestors;
 use crate::safety::{validate_target, GuardContext};
@@ -66,60 +68,161 @@ impl Default for PermanentDeleteService {
     }
 }
 
+/// Threshold above which leaf files in a directory are unlinked in parallel.
+const PARALLEL_DELETE_THRESHOLD: usize = 64;
+
 /// Deletes `root` and its contents without ever following a reparse point.
 ///
-/// Iterative post-order: children are pushed above their parent so the parent
-/// is only deleted once the directory is empty (required by the kernel's
-/// delete-on-close for directories), and deep trees cannot exhaust the stack.
+/// Post-order directory traversal with bounded parallel leaf unlinking:
+/// - Symlinks/junctions inside the tree are unlinked directly without ever
+///   descending into their target.
+/// - Regular files inside large directories are unlinked across a bounded
+///   worker pool via handle-based POSIX delete (`FileDispositionInfoEx`).
+/// - Directories are removed strictly bottom-up after their children complete,
+///   preserving root `FileIdentity` verification.
 fn delete_tree(root: &Path, expected: Option<FileIdentity>) -> Result<(), AppError> {
-    let mut stack: Vec<(PathBuf, Option<FileIdentity>, bool)> =
-        vec![(root.to_path_buf(), expected, false)];
-
-    while let Some((path, expected, visited)) = stack.pop() {
-        let meta = fs::symlink_metadata(&path)
-            .map_err(|e| AppError::PermanentDeleteFailed(e.to_string()))?;
-
-        if is_reparse_point(&path) {
-            // A link or junction inside the tree is removed itself, never its
-            // target. The validated root is already known not to be one.
-            if path == root {
+    if is_reparse_point(root) {
+        return Err(AppError::UnsafeDeleteTarget(
+            "Reparse point target cannot be deleted.".to_string(),
+        ));
+    }
+    // Verify the root object's identity *before* descending into any children
+    // (as well as when unlinking `root` itself at the end). This closes the
+    // TOCTOU window where swapping `root` for a junction before traversal could
+    // otherwise delete children inside a different directory.
+    if let Some(expected_id) = expected {
+        match verify_identity_no_follow(root, expected_id) {
+            Ok(()) => {}
+            Err(HandleDeleteError::IdentityChanged) => {
                 return Err(AppError::UnsafeDeleteTarget(
-                    "Reparse point target cannot be deleted.".to_string(),
+                    "Target changed between validation and deletion.".to_string(),
                 ));
             }
-            remove_link_only(&path)?;
-            continue;
-        }
-
-        if meta.is_dir() && !visited {
-            stack.push((path.clone(), expected, true));
-            let entries =
-                fs::read_dir(&path).map_err(|e| AppError::PermanentDeleteFailed(e.to_string()))?;
-            for entry in entries {
-                let child = entry
-                    .map_err(|e| AppError::PermanentDeleteFailed(e.to_string()))?
-                    .path();
-                stack.push((child, None, false));
+            Err(HandleDeleteError::InUse) => {
+                return Err(AppError::PermanentDeleteFailed(
+                    "Target is in use by another process.".to_string(),
+                ));
             }
-            continue;
+            Err(err) => {
+                return Err(AppError::PermanentDeleteFailed(format!(
+                    "Could not verify target identity before deletion (error {}).",
+                    err.code().unwrap_or(0)
+                )));
+            }
         }
+    }
+    let root_meta =
+        fs::symlink_metadata(root).map_err(|e| AppError::PermanentDeleteFailed(e.to_string()))?;
+    if !root_meta.is_dir() {
+        return delete_one(root, expected, false);
+    }
 
-        delete_one(&path, expected, meta.is_dir())?;
+    // Collect directory levels top-down while deleting links immediately and
+    // batching regular files for parallel unlinking.
+    let mut dir_order: Vec<PathBuf> = vec![root.to_path_buf()];
+    let mut files_to_delete: Vec<PathBuf> = Vec::new();
+    let mut cursor = 0usize;
+
+    while cursor < dir_order.len() {
+        let dir = dir_order[cursor].clone();
+        cursor += 1;
+
+        #[cfg(windows)]
+        {
+            let entries = crate::platform::windows::fast_walk::read_dir_fast(&dir)
+                .map_err(|e| AppError::PermanentDeleteFailed(e.to_string()))?;
+            for entry in entries {
+                let child = dir.join(&entry.name);
+                if entry.is_redirecting_reparse {
+                    remove_link_only(&child, entry.is_dir)?;
+                } else if entry.is_dir {
+                    dir_order.push(child);
+                } else {
+                    files_to_delete.push(child);
+                }
+            }
+        }
+        #[cfg(not(windows))]
+        {
+            let entries =
+                fs::read_dir(&dir).map_err(|e| AppError::PermanentDeleteFailed(e.to_string()))?;
+            for entry in entries {
+                let entry = entry.map_err(|e| AppError::PermanentDeleteFailed(e.to_string()))?;
+                let child = entry.path();
+                let ft = entry
+                    .file_type()
+                    .map_err(|e| AppError::PermanentDeleteFailed(e.to_string()))?;
+                if ft.is_symlink() {
+                    remove_link_only(&child, false)?;
+                } else if ft.is_dir() {
+                    dir_order.push(child);
+                } else {
+                    files_to_delete.push(child);
+                }
+            }
+        }
+    }
+
+    if files_to_delete.len() < PARALLEL_DELETE_THRESHOLD {
+        for file in &files_to_delete {
+            delete_one(file, None, false)?;
+        }
+    } else {
+        use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+        use std::sync::Mutex;
+
+        let workers = std::thread::available_parallelism()
+            .map(|n| n.get().clamp(2, 8))
+            .unwrap_or(4);
+        let next_idx = AtomicUsize::new(0);
+        let failed = AtomicBool::new(false);
+        let first_err: Mutex<Option<AppError>> = Mutex::new(None);
+
+        std::thread::scope(|scope| {
+            for _ in 0..workers {
+                let files = &files_to_delete;
+                let next_idx = &next_idx;
+                let failed = &failed;
+                let first_err = &first_err;
+                scope.spawn(move || loop {
+                    if failed.load(Ordering::Relaxed) {
+                        return;
+                    }
+                    let idx = next_idx.fetch_add(1, Ordering::Relaxed);
+                    let Some(file) = files.get(idx) else {
+                        return;
+                    };
+                    if let Err(err) = delete_one(file, None, false) {
+                        failed.store(true, Ordering::Relaxed);
+                        let mut slot = first_err.lock().unwrap_or_else(|e| e.into_inner());
+                        if slot.is_none() {
+                            *slot = Some(err);
+                        }
+                        return;
+                    }
+                });
+            }
+        });
+
+        if let Some(err) = first_err.into_inner().unwrap_or_else(|e| e.into_inner()) {
+            return Err(err);
+        }
+    }
+
+    // Remove emptied directories strictly bottom-up; verify root identity last.
+    for dir in dir_order.iter().rev() {
+        let dir_expected = if dir == root { expected } else { None };
+        delete_one(dir, dir_expected, true)?;
     }
 
     Ok(())
 }
 
-fn remove_link_only(path: &Path) -> Result<(), AppError> {
-    // `symlink_metadata` reports a directory symlink as a file, so `is_dir()`
-    // on it is always false. Asking the target's metadata (which follows the
-    // link) picks the correct removal call: `remove_file` on a directory link
-    // fails with "Access is denied" on Windows.
-    let link_is_dir = fs::metadata(path)
-        .map(|meta| meta.is_dir())
-        .unwrap_or(false);
-    let result = if link_is_dir {
-        fs::remove_dir(path)
+/// Removes a symlink, junction, or reparse placeholder without ever following
+/// the link target (avoids SMB stalls and cloud hydration).
+fn remove_link_only(path: &Path, is_dir_entry: bool) -> Result<(), AppError> {
+    let result = if is_dir_entry {
+        fs::remove_dir(path).or_else(|_| fs::remove_file(path))
     } else {
         fs::remove_file(path).or_else(|_| fs::remove_dir(path))
     };
@@ -129,10 +232,28 @@ fn remove_link_only(path: &Path) -> Result<(), AppError> {
 fn delete_one(path: &Path, expected: Option<FileIdentity>, is_dir: bool) -> Result<(), AppError> {
     match delete_by_handle(path, expected) {
         Ok(()) => Ok(()),
-        // Windows before 10 1709 and some non-NTFS volumes do not implement
-        // FileDispositionInfoEx. Only in that case fall back to the portable
-        // path-based removal; every other failure stays an error.
+        // Windows before 10 1709 and some non-NTFS volumes (plus Unix) do not
+        // implement FileDispositionInfoEx. Only in that case fall back to the
+        // portable path-based removal; every other failure stays an error.
         Err(err) if err.is_unsupported() => {
+            // Clear read-only permissions on Unix/non-NTFS fallback so
+            // read-only caches like `go/pkg/mod` can be removed cleanly.
+            if let Ok(meta) = fs::symlink_metadata(path) {
+                let mut perms = meta.permissions();
+                if perms.readonly() {
+                    #[cfg(unix)]
+                    {
+                        use std::os::unix::fs::PermissionsExt;
+                        perms.set_mode(perms.mode() | 0o200);
+                    }
+                    #[cfg(not(unix))]
+                    {
+                        #[allow(clippy::permissions_set_readonly_false)]
+                        perms.set_readonly(false);
+                    }
+                    let _ = fs::set_permissions(path, perms);
+                }
+            }
             let result = if is_dir {
                 fs::remove_dir(path)
             } else {

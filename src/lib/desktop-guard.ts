@@ -1,21 +1,45 @@
+import { DEFAULT_SHORTCUTS } from "@/types";
+import { matchesShortcut } from "@/lib/shortcuts";
+import { usePreferencesStore } from "@/stores/preferences-store";
+
 /**
  * Desktop Guard & Shell Hardening
  *
  * Prevents Microsoft Edge WebView2 from leaking browser behaviors into the
  * native desktop application:
  * 1. Blocks native browser shortcuts (Ctrl+J Downloads flyout, Ctrl+P Print,
- *    Ctrl+U View Source, Ctrl+S Save Page, Ctrl+H History, Ctrl+D Bookmarks, etc.).
- * 2. Neutralizes accidental viewport zooming via Ctrl + MouseWheel or Ctrl + +/-/0.
- * 3. Prevents accidental file drag-and-drop from navigating away from the React SPA.
- * 4. Eliminates the browser right-click context menu ("Back", "Reload", "Print",
- *    "Inspect") on application chrome, keeping it strictly on editable inputs.
- * 5. Disables mouse side-buttons (Back/Forward) and Alt+Arrow navigation from
+ *    Ctrl+U View Source, Ctrl+S Save Page, Ctrl+H History, Ctrl+D Bookmarks, etc.)
+ *    while preserving user-configured application shortcuts (such as Ctrl+F for
+ *    in-app search) and WCAG 1.4.4 viewport zoom shortcuts.
+ * 2. Prevents accidental file drag-and-drop from navigating away from the React SPA.
+ * 3. Eliminates the browser right-click context menu ("Back", "Reload", "Print",
+ *    "Inspect") on non-selectable chrome, keeping it on editable inputs, active
+ *    text selections, code blocks, and file paths.
+ * 4. Disables mouse side-buttons (Back/Forward) and Alt+Arrow navigation from
  *    unloading the current view.
  */
 
 export interface DesktopGuardOptions {
   /** If true, developer tools and refresh shortcuts remain accessible (default: false in prod). */
   isDev?: boolean;
+}
+
+/**
+ * Returns true when the keyboard event matches one of the user's configured
+ * in-app shortcuts so the desktop guard never swallows shortcuts handled by
+ * `AppShell` (e.g. `Ctrl+F` bound to `focusSearch`).
+ */
+export function isAppConfiguredShortcut(
+  e: KeyboardEvent,
+  shortcuts?: Record<string, string> | null,
+): boolean {
+  const active = shortcuts ?? usePreferencesStore.getState().shortcuts ?? DEFAULT_SHORTCUTS;
+  for (const combo of Object.values(active)) {
+    if (combo && matchesShortcut(e, combo)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
@@ -26,6 +50,11 @@ export function isBrowserShortcutToBlock(e: KeyboardEvent, isDev: boolean = fals
   const ctrlOrMeta = e.ctrlKey || e.metaKey;
   const key = e.key.toLowerCase();
   const code = e.code;
+
+  // Never block shortcuts actively bound to Detergo actions.
+  if (isAppConfiguredShortcut(e)) {
+    return false;
+  }
 
   // 1. Edge Downloads flyout (the exact bug: Ctrl + J)
   if (ctrlOrMeta && key === "j" && !e.shiftKey && !e.altKey) {
@@ -58,8 +87,9 @@ export function isBrowserShortcutToBlock(e: KeyboardEvent, isDev: boolean = fals
   }
 
   // 7. Browser Find in Page (Ctrl + F, Ctrl + G, F3, Shift + F3).
-  //    Ctrl+F is the actual WebView2 accelerator; leaving it unblocked let the
-  //    native find overlay open on top of the SPA.
+  //    If the user keeps Ctrl+F bound to in-app `focusSearch`, the check above
+  //    allows it to reach AppShell (which calls preventDefault). If unbound,
+  //    suppress WebView2's native browser find overlay here.
   if (ctrlOrMeta && key === "f" && !e.shiftKey && !e.altKey) {
     return true;
   }
@@ -113,26 +143,15 @@ export function isBrowserShortcutToBlock(e: KeyboardEvent, isDev: boolean = fals
     return true;
   }
 
-  // 15. Viewport Zoom Shortcuts: Ctrl + '+', Ctrl + '-', Ctrl + '=', Ctrl + '_', Ctrl + '0'
-  if (
-    ctrlOrMeta &&
-    (key === "=" ||
-      key === "+" ||
-      key === "-" ||
-      key === "_" ||
-      key === "0" ||
-      code === "NumpadAdd" ||
-      code === "NumpadSubtract")
-  ) {
-    return true;
-  }
+  // Viewport zoom shortcuts (Ctrl + +/-/0) are intentionally allowed so
+  // low-vision users can zoom up to 200% (WCAG 1.4.4 Resize Text).
 
-  // 16. Browser History Back/Forward shortcuts: Alt + ArrowLeft, Alt + ArrowRight
+  // 15. Browser History Back/Forward shortcuts: Alt + ArrowLeft, Alt + ArrowRight
   if (e.altKey && (key === "arrowleft" || key === "arrowright")) {
     return true;
   }
 
-  // 17. Backspace outside text inputs (prevents accidental page back navigation)
+  // 16. Backspace outside text inputs (prevents accidental page back navigation)
   if (key === "backspace") {
     const target = e.target as HTMLElement | null;
     const isInput =
@@ -168,14 +187,7 @@ export function installDesktopGuard(options?: DesktopGuardOptions): () => void {
     }
   };
 
-  // 2. Prevent Ctrl + MouseWheel Zooming
-  const onWheel = (e: WheelEvent) => {
-    if (e.ctrlKey) {
-      e.preventDefault();
-    }
-  };
-
-  // 3. Prevent external file drop from navigating the window away
+  // 2. Prevent external file drop from navigating the window away
   const onDragOver = (e: DragEvent) => {
     e.preventDefault();
   };
@@ -184,8 +196,8 @@ export function installDesktopGuard(options?: DesktopGuardOptions): () => void {
     e.preventDefault();
   };
 
-  // 4. Eliminate native browser context menu on general app chrome
-  // Allows native menu only on text inputs / textareas for cut, copy, paste
+  // 3. Eliminate native browser context menu on general app chrome while
+  // preserving copy/paste on editable inputs, selected text, code blocks, and paths.
   const onContextMenu = (e: MouseEvent) => {
     const target = e.target as HTMLElement | null;
     const isEditable =
@@ -194,13 +206,19 @@ export function installDesktopGuard(options?: DesktopGuardOptions): () => void {
         target.tagName === "TEXTAREA" ||
         target.isContentEditable ||
         target.getAttribute("role") === "textbox");
+    const isCopyableContent = Boolean(
+      target?.closest(
+        "code, pre, .items-path, .system-action-path, .system-log, .cache-terminal, .provider-paths",
+      ),
+    );
+    const hasTextSelection = Boolean(window.getSelection()?.toString().trim());
 
-    if (!isEditable) {
+    if (!isEditable && !isCopyableContent && !hasTextSelection) {
       e.preventDefault();
     }
   };
 
-  // 5. Prevent mouse side buttons (Back / Forward) from navigating WebView history
+  // 4. Prevent mouse side buttons (Back / Forward) from navigating WebView history
   const onPointerDown = (e: MouseEvent) => {
     if (e.button === 3 || e.button === 4) {
       e.preventDefault();
@@ -209,7 +227,6 @@ export function installDesktopGuard(options?: DesktopGuardOptions): () => void {
   };
 
   window.addEventListener("keydown", onKeyDown, { capture: true });
-  window.addEventListener("wheel", onWheel, { passive: false, capture: true });
   window.addEventListener("dragover", onDragOver, { capture: true });
   window.addEventListener("drop", onDrop, { capture: true });
   window.addEventListener("contextmenu", onContextMenu, { capture: true });
@@ -217,7 +234,6 @@ export function installDesktopGuard(options?: DesktopGuardOptions): () => void {
 
   return () => {
     window.removeEventListener("keydown", onKeyDown, { capture: true });
-    window.removeEventListener("wheel", onWheel, { capture: true });
     window.removeEventListener("dragover", onDragOver, { capture: true });
     window.removeEventListener("drop", onDrop, { capture: true });
     window.removeEventListener("contextmenu", onContextMenu, { capture: true });

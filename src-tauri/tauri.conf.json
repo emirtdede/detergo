@@ -1,9 +1,9 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Dev Cleaner",
+  "productName": "Detergo",
   "version": "1.0.0",
-  "identifier": "com.vellium.devcleaner",
-  "mainBinaryName": "dev-cleaner",
+  "identifier": "com.vellium.detergo",
+  "mainBinaryName": "detergo",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1425",
@@ -14,7 +14,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Dev Cleaner",
+        "title": "Detergo",
         "url": "index.html",
         "width": 1180,
         "height": 760,
@@ -39,11 +39,11 @@
     "targets": "all",
     "publisher": "Vellium",
     "homepage": "https://vellium.dev",
-    "license": "Proprietary",
+    "license": "MIT",
     "category": "DeveloperTool",
     "copyright": "© 2026 Vellium",
     "shortDescription": "Safely analyze and clean developer artifacts and AI agent storage.",
-    "longDescription": "Dev Cleaner is a local Windows application that analyzes, in one place, the reproducible dependency, build and cache outputs of ecosystems such as Node.js/Python/Rust/.NET/Java/Go, together with the local storage of AI coding agents such as Codex, Claude Code and Antigravity. Only verified and explicitly selected targets are moved to the Windows Recycle Bin; permanent deletion requires a separate confirmation. The application runs fully offline and sends no telemetry.",
+    "longDescription": "Detergo is a local-first open-source application by Vellium that analyzes, in one place, reproducible dependency, build and cache outputs across 18 developer ecosystems (82 rules), 27 developer tool cache providers, and 17 AI coding agents, plus Windows C: drive maintenance. Only verified and explicitly selected targets are moved to the Recycle Bin; permanent deletion requires separate confirmation. The application runs fully offline and sends no telemetry.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

@@ -26,6 +26,21 @@ export const THEME_MODES = [
 ] as const;
 
 export type ThemeMode = (typeof THEME_MODES)[number];
+export type SelectableTheme = ThemeMode | "custom";
+export type AppIconMode = "match-theme" | "custom" | ThemeMode;
+
+export interface CustomThemeConfig {
+  base: "dark" | "light";
+  accent: string;
+}
+
+export interface AppIconApplyResult {
+  resolvedId: string;
+  windowUpdated: boolean;
+  trayUpdated: boolean;
+  shortcutsUpdated: number;
+  iconPath?: string | null;
+}
 
 export type SupportedLanguage =
   | "tr"
@@ -634,6 +649,11 @@ export interface NotificationPreferences {
 export interface AppSettings {
   schemaVersion: number;
   theme: string;
+  customTheme?: CustomThemeConfig;
+  appIcon?: string;
+  uiScale?: number;
+  highContrast?: boolean;
+  onboardingCompleted?: boolean;
   reduceMotion: boolean;
   favorites: FavoriteLocation[];
   recentLocations: string[];
@@ -659,6 +679,7 @@ export interface AppSettings {
   webhookUrl?: string | null;
   webhookOnScan?: boolean;
   webhookOnClean?: boolean;
+  allowPrivateWebhooks?: boolean;
   shortcuts?: Record<string, string>;
   mcpAllowDestructive?: boolean;
   /** Backend recovered fields from a malformed config; not persisted. */
@@ -718,11 +739,16 @@ export interface BuildInfo {
   builtAt: string;
 }
 
+export type InstallChannel = "msixStore" | "installer" | "portable";
+export type SignatureStatus = "valid" | "unsigned" | "untrusted" | "unavailable";
+
 /** One downloadable file attached to a published release. */
 export interface UpdateAsset {
   name: string;
   size: number;
   downloadUrl: string;
+  sha256?: string | null;
+  channel?: string | null;
 }
 
 /**
@@ -740,6 +766,19 @@ export interface UpdateInfo {
   notes: string;
   publishedAt: string;
   assets: UpdateAsset[];
+  installChannel: InstallChannel;
+  managedByStore: boolean;
+  recommendedAsset?: UpdateAsset | null;
+  source: string;
+}
+
+/** Result of a SHA-256 verified update download staged in `%TEMP%\detergo-updates`. */
+export interface DownloadedUpdate {
+  path: string;
+  fileName: string;
+  bytes: number;
+  sha256: string;
+  signatureStatus: SignatureStatus;
 }
 
 /** Input for the on-device support ZIP. Every field is already sanitized. */

@@ -1,698 +1,134 @@
 <div align="center">
 
-# Dev Cleaner — Hızlı, Güvenli ve Çoklu Ekosistem Geliştirici Temizlik Aracı
+<img src="assets/brand/detergo-icon-256.png" alt="Detergo Logo" width="110" height="110" />
 
-</div>
+# Detergo - Fast, Safe Multi-Ecosystem Developer & AI Agent Cleaner
 
----
-
-<div align="center">
-
-[![](https://img.shields.io/badge/Language-English-blue?style=for-the-badge&logo=google-translate)](#english-version)
-&nbsp;&nbsp;&nbsp;&nbsp;
-[![](https://img.shields.io/badge/Dil-T%C3%BCrk%C3%A7e-red?style=for-the-badge&logo=google-translate)](#turkish-version)
-
-</div>
-
----
-
-<div align="center">
-
-![Tauri](https://img.shields.io/badge/Tauri-2.2+-24C8D8?style=for-the-badge&logo=tauri&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+![Tauri](https://img.shields.io/badge/Tauri-2.12-24C8D8?style=for-the-badge&logo=tauri&logoColor=white)
 ![Rust](https://img.shields.io/badge/Rust-2021-DEA584?style=for-the-badge&logo=rust&logoColor=black)
-![React](https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-6.2-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-![Zustand](https://img.shields.io/badge/Zustand-5.0-4338CA?style=for-the-badge)
-![TanStack Virtual](https://img.shields.io/badge/TanStack-Virtual_3-FF4154?style=for-the-badge)
-![Windows](https://img.shields.io/badge/Platform-Windows%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-![Languages](https://img.shields.io/badge/Languages-73%20Supported-success?style=for-the-badge&logo=google-translate)
-![Safety](https://img.shields.io/badge/Safety-Recycle%20Bin%20%7C%20Zero%20Data%20Loss-brightgreen?style=for-the-badge&logo=windows)
-![MCP](https://img.shields.io/badge/MCP-Server%20Builtin-blueviolet?style=for-the-badge)
-![CI](https://img.shields.io/github/actions/workflow/status/emirtdede/dev-cleaner/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI)
+![Platform](https://img.shields.io/badge/Platform-Windows%2011%20x64-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+![Languages](https://img.shields.io/badge/Languages-73%20Locales-success?style=for-the-badge)
+![MCP](https://img.shields.io/badge/MCP-Stdio%20Server-blueviolet?style=for-the-badge)
+
+[English](#english) · [Türkçe](#turkce) · [Architecture](docs/ARCHITECTURE.md) · [CLI & MCP Reference](docs/CLI.md) · [Roadmap](docs/ROADMAP.md) · [Changelog](docs/CHANGELOG.md)
 
 </div>
 
 ---
 
-## Release status (1.0.0 — Dev Cleaner)
+<a id="english"></a>
 
-Dev Cleaner is a catalog-driven, multi-ecosystem developer-artifact and
-AI-agent storage reclaimer for Windows 11 x64. Version 1.0.0 was the first
-open-source release: 73 languages, a 56-rule cleanup catalog, 21 supported
-developer-tool caches, a built-in MCP server, an interactive CLI and a
-reversible Recycle Bin deletion path guarded by the Rust safety layer.
+## English
 
-Version 1.0.0 ships the complete experience: a clickable catalog explorer, a
-user-initiated update check against the public GitHub release feed, a local
-error log, and a Settings > Diagnostics pane that zips the logs, build details
-and a settings summary into one file and opens a ready mail draft addressed to
-support. Nothing is uploaded automatically; you press Send in your own mail app.
+**Detergo** is an open-source (MIT) desktop application, terminal CLI, and Model Context Protocol (MCP) server built with **Tauri 2 (Rust)** and **React 19 (TypeScript)** for safely reclaiming developer build artifacts, AI coding-agent storage, global package-manager caches, and Windows C: system leftovers.
 
-Settings now uses the same full-bleed second side menu as Documentation and About,
-and provides clickable summary cards: appearance and language open a two-tab dialog,
-the scan-profile card offers Fast / Balanced (default) / Full / Thorough / Deep /
-Maximum, and the security card jumps straight to the protections section. Every
-individual command in Documentation has its own one-click copy button, and the
-dedicated C: drive System Cleaner tab automates Windows temporary files, Prefetch,
-Windows Update leftovers, Disk Cleanup (`cleanmgr`), DISM WinSxS cleanup and Task
-Scheduler profiles without requiring manual CMD commands. See
-[`docs/CHANGELOG.md`](docs/CHANGELOG.md).
+All scanning, measurement, safety enforcement, and deletion execute natively in Rust (`src-tauri/src/`). The React frontend holds only backend-issued target IDs and renders virtualized views. Detergo runs **100% locally** with zero telemetry and makes no background network calls unless you explicitly press **Check for updates** or configure a webhook.
 
-Source quality gates pass: 262 frontend tests, 278 Rust library tests plus the
-integration suites, zero Clippy warnings and the full accessibility suite
-(16 Playwright/axe checks). See `docs/release/TEST_MATRIX.md` for the recorded
-run.
+### Verified Performance Benchmarks (Windows 11 x64, `--release`)
 
-The installers attached to the tagged release are the supported downloads.
-Items tracked in `docs/release/RELEASE_CHECKLIST.md` that need a human
-sign-off — legal clearance, the elevated MSI run on a clean VM and design
-approval — are listed there rather than hidden.
+Measured on Windows 11 x64 NTFS using the reproducible synthetic harness included in this repository (`npm run bench:measure` and `npm run bench:scale` - synthetic directory trees with deterministic sizes; real-world timings depend on SSD/HDD hardware, antivirus scanning, and OS cache warmth):
 
-- `docs/README.md` — documentation index and reading order
-- `docs/CLI.md` — terminal reference and npkill migration
-- `docs/CHANGELOG.md` — release history
-- `docs/release/RELEASE_CHECKLIST.md` — gates and remaining items
-- `docs/release/BUILD_PROVENANCE.md` — how a binary is tied to a commit
-- `docs/security/FINAL_SECURITY_AUDIT.md` — executed evidence
-- `docs/release/TEST_MATRIX.md` — test results
-- `docs/MASTER_SPEC.md` — normative product specification
+| Benchmark                                                               | Previous Engine (`WalkDir`) | Current Engine (Win32 Batch + Parallel) | Speedup / Notes                                                                |
+| :---------------------------------------------------------------------- | :-------------------------: | :-------------------------------------: | :----------------------------------------------------------------------------- |
+| **300,000-file directory measurement** (`NC_RECORDINGS=300000`)         |           47.7 s            |          **0.78 s (`781 ms`)**          | **61.1× faster**, `10.6 MB` peak RSS, exact byte match (`307,200,000 B`)       |
+| **10,000-project full scan** (`NC_BENCH_CANDIDATES=10000`, 70k entries) |           24.5 s            |         **9.41 s (`9,411 ms`)**         | **2.6× faster**, `77.5 MB` peak RSS, full manifest + safety + size measurement |
+| **Cancellation latency** (`NC_CANCEL_CANDIDATES=20000`)                 |              -              |               **`21 ms`**               | Instant abort with clean partial summary                                       |
 
-Dev Cleaner is free software under the MIT License. Contributions are welcome;
-start with [`CONTRIBUTING.md`](.github/CONTRIBUTING.md) and report vulnerabilities
-privately as described in [`SECURITY.md`](.github/SECURITY.md).
+### What Makes Detergo Different
 
----
+- **Native Win32 Batch I/O**: Directory measurement uses `GetFileInformationByHandleEx(FileIdBothDirectoryInfo)` with 64 KiB buffers, accurate NTFS `AllocationSize`, and 16-shard 64-bit NTFS `FileId` hardlink deduplication; discovery runs a parallel work-stealing walker over `FindFirstFileExW(FindExInfoBasic, FIND_FIRST_EX_LARGE_FETCH)` with transparent `WalkDir` fallback on non-NTFS volumes.
+- **Zero-Trust Multi-Layer Safety**:
+  - `PathGuard` validates both raw and canonical ancestor chains against symlink/junction traversal, enforces canonical scan-root containment, blocks OS/system roots (without false-blocking project folders like `flutter-app/windows/build` or `spring/boot/target`), and never follows symlinks, junctions, or unhydrated cloud stubs.
+  - Real Win32 lock detection (`DELETE` access + `FILE_SHARE_MODE(0)` + BFS child probe) prevents colliding with active builds/IDEs.
+  - Two-stage **Preview → Plan Token → Execute** verifies NTFS `FileId` / `(dev, ino)` (`TargetSnapshot`) before deletion and logs every run to local WAL-mode SQLite audit history.
+  - Reversible deletion uses a warm STA COM `RecycleBinSession` (`IFileOperation`, zero silent fallback to permanent delete) on Windows, Finder on macOS, and `gio trash` on Linux; permanent deletion uses handle-verified parallel POSIX unlinking with explicit double confirmation.
+- **82 Evidence-Backed Catalog Rules across 18 Ecosystems**: Covers JavaScript/TypeScript (30 rules, including `.expo`, `.wrangler`, `.open-next`, `.docusaurus`, `playwright-report`, `test-results`), Python (12 rules, including `*.egg-info`, `.ipynb_checkpoints`, `.hypothesis`), Rust, .NET, Java/Kotlin (including Android `.cxx`), Go, PHP, Dart/Flutter, C/C++ (including `.vs`, `vcpkg_installed`), Ruby, Elixir, Swift (including `Pods`, `Carthage`), Godot (including `.import`), Zig, DevOps/IaC (`.terraform`, `.terragrunt-cache`, `cdk.out`, `.aws-sam`, `.serverless`), Haskell (`.stack-work`, `dist-newstyle`), Unity, and Unreal (`src-tauri/assets/targets.toml`).
+- **27 Developer Tool Cache Providers (26 Cleanable + WSL Inspection)**: Native official CLI actions for `npm`, `pnpm`, `yarn`, `bun`, `pip`, `uv`, `poetry`, `conda`, `nuget`, `go` (`-cache` & `-modcache`), `composer`, `flutter`/`pub`, `docker` (`builder`, `image`, and `container prune`), `homebrew`, `playwright`/`cypress` (`npx --no-install`), plus audited Recycle Bin cleanup (`SafeCacheRecycle`) for `cargo` (`registry/cache`, `registry/src`, `git/checkouts`), `gradle`, `maven`, `vcpkg`, `huggingface`, `ollama`, `electron`, `vscode`, `jetbrains` (excluding Toolbox), and `android`, plus real registry-backed sparse `ext4.vhdx` measurement for **WSL** (read-only). Opt-in LLM caches (`ollama`, `huggingface`) are skipped during `c all` unless explicitly targeted.
+- **17 Built-in AI Coding-Agent Providers**: Metadata-only inspection (never reads prompt/file contents) for **Antigravity**, **Claude Code**, **Claude Desktop**, **Codex**, **Cursor**, **Windsurf**, **GitHub Copilot**, **Cline**, **Roo Code**, **OpenCode**, **T3 Code**, **Aider**, **Continue**, **Zed**, **LM Studio**, **Trae**, **Kiro**, plus user-defined custom agent roots.
+- **Visual Disk Space Treemap & Staleness Filters**:
+  - Interactive squarified 2D treemap on the Overview page with real aspect-ratio measurement and a `"+N Other"` roll-up so percentages always sum to 100% of cleanable space.
+  - Filter stale artifacts by age across GUI (`>7d`, `>30d`, `>90d`, `>180d`), CLI (`-o 30d` / `--older 3m`), and MCP (`older_than_days`).
+- **Windows C: Drive Cleaner & Automation**: Built-in system temp, Prefetch, Windows Update leftovers, error reports, Recycle Bin, `cleanmgr`, DISM component store cleanup, and scheduled Task Scheduler automation with on-demand elevation. See [`docs/SYSTEM_CLEANER.md`](docs/SYSTEM_CLEANER.md).
+- **CLI + Console Companion + MCP 2025-11-25 Server + Webhooks**:
+  - Concise CLI (`detergo s`, `c`, `sys`, `hist`) plus a dedicated console companion (`detergo.com`) for synchronous terminal stdout/stderr, `-j` JSON output, and strict exit codes (`0`..`4`).
+  - Built-in stdio MCP server (`detergo mcp`) supporting protocol versions `2024-11-05` through `2025-11-25`, cursor pagination, concurrent `notifications/cancelled` handling, and 3-gate destructive control (`--allow-destructive` + app setting + single-use preview token + `confirm: true`).
+  - SSRF-protected webhooks with DNS IP pinning, IPv4/IPv6/NAT64 filtering, no-proxy enforcement, idempotency keys, retries, and an opt-in **Allow local & LAN webhooks** toggle for self-hosted n8n (`http://localhost:5678`) while permanently blocking cloud metadata (`169.254.0.0/16`, `fe80::/10`, `metadata.google.internal`).
+- **73 Fully Translated Languages & 16 WCAG 2.2 AA Themes**: Zero untranslated English leaks across all 73 UI, docs, legal, and CLI locales, full RTL support (`ar`, `he`, `fa`, `ur`), localized NSIS installer, and automated contrast verification across all 16 themes.
 
-<a id="english-version"></a>
-
-# English Version
-
-<div align="center">
-  <img src="assets/brand/dev-cleaner-icon-256.png" alt="Dev Cleaner Logo" width="130" height="130" />
-  <h3>Dev Cleaner — High-Performance Multi-Ecosystem Developer Artifact & AI Agent Cleaner</h3>
-  <p><em>Ultra-Fast Discovery, Monorepo Hierarchy Grouping & Safe Deletion for JavaScript & TypeScript Workspaces</em></p>
-  <p><strong>Developed & Published by <a href="https://vellium.dev">Vellium</a></strong></p>
-</div>
-
-<br>
-
-## Project Overview
-
-**Dev Cleaner** is a Windows desktop application built with **Tauri 2 (Rust)** and **React 19 (TypeScript)**. Version 1.0.0 discovers reproducible developer artifacts across JavaScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart and other ecosystems, analyses AI coding-agent storage (Codex, Claude Code, Antigravity) without reading file contents, and safely cleans selected targets. Every scan, measurement, classification and deletion runs in the Rust backend; the frontend only presents and selects backend-owned target IDs.
-
-Traditional filesystem scanners freeze system I/O by recursing deep into nested dependency subfolders. **Dev Cleaner** solves this with an **Optimized Pruning Directory Traversal Engine**: as soon as a `node_modules` directory is discovered, deep recursive traversal is bypassed, and size calculation is offloaded to asynchronous worker pools.
-
-With strict **Multi-Layer Safety Verification (`SEC-DEL`)**, protected system folders (like `C:\Windows`, `Program Files`, and user profile roots) cannot be selected or deleted. Dev Cleaner supports both reversible **Windows Recycle Bin** soft deletion (`IFileOperation` / `SHFileOperationW`) and lightning-fast **Permanent** deletion with interactive confirmations.
-
-Dev Cleaner operates **100% locally** with zero telemetry and zero analytics. It starts no network
-request on its own; the only outbound calls are ones you trigger (an optional webhook, the
-"Check for updates" button, and opening a link in your browser).
-
----
-
-## Key Features
-
-- **One catalog, many ecosystems**: 56 evidence-backed rules cover JavaScript/TypeScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart, package-manager caches and AI coding-agent storage, each with a safety class and a regeneration hint.
-- **Unified top-bar scan hub**: all scanning runs from the single command-bar menu — select any 1–4 targets (Projects, AI Tools, Package Caches, C: System) or scan everything in one click, with active scope and live progress right in the top bar.
-- **C: drive cleaner**: a dedicated tab clears Windows temp, Prefetch, Update leftovers and error reports, empties the Recycle Bin, drives Disk Cleanup and DISM component cleanup, and can schedule a prompt-free weekly or daily run. Every action is measured first and confirmed by the user; elevation is requested only when a selected action needs it. See the [system cleaner guide](docs/SYSTEM_CLEANER.md).
-- **Short, concise terminal CLI**: `dev-cleaner s .` lists the largest targets, `-t p,a,c,s` selects any subset (or `-t all`), `-i` turns it into a numbered picker, `-c -n` previews auto-clean, `dev-cleaner c npm` cleans package caches, and `dev-cleaner sys` manages C: cleanup. See [`docs/CLI.md`](docs/CLI.md).
-- **Built-in MCP server**: coding agents can discover and preview cleanups over the Model Context Protocol, with a mandatory preview → token → execute gate.
-- **Blazing-Fast Discovery Engine**: Traverses massive disk trees with millisecond response times, instantly skipping nested sub-directory recursion inside `node_modules` to find hundreds of projects without UI stutter.
-- **Multi-Layer Safety Guard (`SEC-DEL`)**: Hardened path boundary checks prevent deletion of Windows system directories, user root folders, non-`node_modules` targets, or drive roots (`C:\`).
-- **Monorepo & Workspace Hierarchy Detection**: Intelligently groups nested package folders under their respective monorepo root workspaces (`pnpm-workspace`, `Turbo`, `Lerna`, `Nx`, `Yarn Workspaces`, `Bun`).
-- **Two-Stage Safe Deletion**:
-  - **Recycle Bin (Reversible)**: Native Win32 Shell API integration (`IFileOperation`) allowing instant recovery from Windows Recycle Bin.
-  - **Permanent Deletion**: Asynchronous high-throughput directory purge with double confirmation dialogs.
-- **60 FPS Virtualized Grid**: TanStack Virtualizer powers buttery-smooth 60 FPS scrolling and rendering even across 10,000+ discovered project entries with zero DOM overhead.
-- **Global Localization (73 Languages)**: Full native support for 73 languages with zero translation leakage via robust proxy fallbacks. RTL (Right-to-Left) dynamic mirroring for Arabic, Hebrew, Persian, and Urdu. The Windows NSIS installer speaks all 73 languages: the picker opens on every run (preselecting the remembered language) and the 21 languages NSIS does not ship are generated from English templates, including Tauri's installer messages.
-- **Modern Dark-Transparent Glassmorphism UI**: Custom frameless window styling with curated dark aesthetic design tokens, smooth animations, and responsive layouts.
-- **Real-Time Search & Sorting**: Filter projects by name, filesystem path, or package manager (`npm`, `pnpm`, `yarn`, `bun`), and sort by largest disk size or oldest modified date.
-- **100% Offline & Private**: Zero telemetry, zero analytics, no background network requests.
-
----
-
-## Tech Stack
-
-<div align="center">
-
-![Tauri](https://img.shields.io/badge/Tauri_2.2-24C8D8?style=for-the-badge&logo=tauri&logoColor=white)
-![Rust](https://img.shields.io/badge/Rust_2021-DEA584?style=for-the-badge&logo=rust&logoColor=black)
-![React](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript_5.7-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite_6.2-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-![Zustand](https://img.shields.io/badge/Zustand_5-443E3B?style=for-the-badge)
-![TanStack Virtual](https://img.shields.io/badge/TanStack_Virtual_3-FF4154?style=for-the-badge)
-
-</div>
-
-### Backend & Core Engine (Rust)
-
-- **Tauri 2.2**: Native Windows runtime integration, frameless window styling, and secure IPC bridge
-- **WalkDir 2.5**: Optimized directory traversal with custom pruning logic
-- **Trash 5.2**: Native Windows Recycle Bin COM integration
-- **Tokio 1.49**: Asynchronous multi-threaded background disk scanning and task management
-- **Windows API (`windows-rs` 0.58)**: Native Win32 Shell (`IFileOperation`), UI, and COM subsystem bindings
-- **Single Instance Plugin**: `tauri-plugin-single-instance` for single-process mutex enforcement
-
-### Frontend & User Interface (React & TypeScript)
-
-- **React 19 & TypeScript 5.7**: Component-driven reactive user interface with strict typing
-- **TanStack React Virtual 3.13**: Window-level DOM virtualization for high-density tabular data
-- **Zustand 5.0**: Reactive state management (`useScannerStore`, `useSettingsStore`)
-- **Lucide React**: Clean, modern SVG icon set
-- **Custom CSS Design Tokens**: Zero-framework vanilla CSS with CSS variables, HSL color system, glassmorphism, and responsive layouts
-
----
-
-## Project Structure
-
-```tree
-dev-cleaner/
-├── assets/                         # Vector brand assets & master logo
-│   └── brand/                      # dev-cleaner-icon.svg, installer/, github/
-├── docs/                           # All project documentation (see docs/README.md)
-│   ├── README.md                   # Documentation index & reading order
-│   ├── CHANGELOG.md                # Release history
-│   ├── CLI.md                      # Terminal reference
-│   ├── MASTER_SPEC.md              # Normative product specification
-│   ├── architecture/               # ARCHITECTURE, CLEANUP_CATALOG, AGENT_PROVIDERS
-│   ├── security/                   # SECURITY_MODEL, FINAL_SECURITY_AUDIT
-│   ├── release/                    # TEST_MATRIX, RELEASE_CHECKLIST, BUILD_PROVENANCE
-│   ├── audit/                      # Final pre-deployment QA audit
-│   └── brand/                      # Brand guidelines and trademark clearance
-├── public/                         # Public static web assets
-│   ├── favicon.svg / favicon.ico   # Simplified brand mark
-│   ├── icons/notification.png      # Dev-browser notification icon
-│   └── vellium.svg                 # Publisher logo
-├── release_output/                 # Production builds (git-ignored, regenerated)
-│   ├── Dev-Cleaner-1.0.0-x64-Setup.exe    # NSIS per-user installer
-│   ├── Dev-Cleaner-1.0.0-x64.msi          # MSI per-machine installer
-│   ├── Dev-Cleaner-1.0.0-Portable.exe     # Standalone portable binary
-│   ├── BUILD_INFO.json                    # Commit, dirty flag and per-artifact hashes
-│   ├── SHA256SUMS.txt                     # Cryptographic SHA-256 checksums
-│   └── verify-checksums.bat               # 1-Click SHA-256 verification tool
-├── scripts/                        # Automated build & verification tools
-│   ├── build-release.js            # Release builder (provenance gate -> Build -> Package -> Hash)
-│   ├── check-version.js            # Cross-file version consistency validator
-│   ├── verify-ipc.mjs              # CSP + IPC + build-provenance probe on the packaged app
-│   ├── verify-offline.ps1          # No-telemetry / no-secret-persistence check
-│   ├── verify-recycle-bin.ps1      # Real Recycle Bin round-trip
-│   ├── verify-installer.ps1        # NSIS install -> launch -> icons -> uninstall
-│   ├── verify-msi.ps1              # Per-machine MSI install -> launch -> uninstall
-│   ├── verify-upgrade.ps1          # In-place upgrade test
-│   ├── verify-shell-icons.ps1      # Explorer, shortcut and DisplayIcon shell check
-│   └── verify-checksums.bat        # Windows batch checksum verifier
-├── src/                            # Frontend application source (React 19 + TS)
-│   ├── app/                        # App shell & layout orchestration
-│   ├── components/                 # UI primitives, layout, brand and error boundary
-│   ├── features/                   # Domain modules
-│   │   ├── agents/                 # AI agent storage view
-│   │   ├── caches/                 # Global cache / official tool actions
-│   │   ├── cleanup/                # Cleanup plan & result dialogs
-│   │   ├── history/                # Deletion history and official-action audit
-│   │   ├── items/                  # Virtualized item table & project view
-│   │   ├── overview/               # Summary / dashboard view
-│   │   ├── results/                # Selection action bar
-│   │   ├── scan/                   # Scan header, quick locations, controller
-│   │   ├── settings/               # Backend-owned settings editor
-│   │   └── shell/                  # Navigation rail
-│   ├── lib/                        # Tauri IPC client, formatters, i18n, UI text
-│   │   └── ui-text/                # 73-language UI text and backend locale catalogues
-│   ├── stores/                     # Zustand stores (scan, selection, prefs, ui, app)
-│   ├── styles/                     # Design tokens & global CSS
-│   ├── test/                       # Vitest suites
-│   ├── types/                      # Shared IPC DTOs
-│   ├── App.tsx                     # Main layout & orchestrator
-│   └── main.tsx                    # React DOM entry point
-├── src-tauri/                      # Rust backend & platform engine
-│   ├── assets/targets.toml         # Embedded 56-rule cleanup catalog
-│   ├── icons/                      # 15-frame ICO, 8 tray PNGs, ICNS & Store assets
-│   ├── nsis/                       # NSIS installer bitmaps & shell-refresh hooks
-│   ├── wix/                        # WiX banner/dialog bitmaps
-│   ├── src/
-│   │   ├── audit/                  # Cleanup history & official-action JSONL audit
-│   │   ├── catalog/                # Rule model, matcher, project resolver
-│   │   ├── cleanup/                # Planner, coordinator, Recycle Bin, permanent, actions
-│   │   ├── commands/               # Tauri IPC command handlers
-│   │   ├── error/                  # Domain error types
-│   │   ├── platform/               # Win32 file identity, locking, known folders
-│   │   ├── providers/              # Agent specs, root locator, growth analysis
-│   │   ├── safety/                 # Path, process, Git and evidence guards
-│   │   ├── scanner/                # Discovery, measurement, limits, sessions
-│   │   ├── settings/               # Settings model & atomic persistence
-│   │   ├── lib.rs                  # Plugin registry & command router
-│   │   └── main.rs                 # Native entry point
-│   ├── Cargo.toml                  # Rust dependencies & package configuration
-│   └── tauri.conf.json             # Tauri window, security (CSP) & bundle metadata
-├── build-release.bat               # One-click Windows release wrapper
-├── package.json                    # Node dependencies & npm scripts
-├── tsconfig.json                   # TypeScript compiler configuration
-├── vite.config.ts                  # Vite build & bundler configuration
-└── README.md                       # Project overview & quick start
-```
-
----
-
-## Scanning & Safe Deletion Architecture
-
-```mermaid
-flowchart TD
-    subgraph Frontend["Frontend UI (React 19 & Virtualizer)"]
-        UI_Scan["Directory Picker / Scan Trigger"]
-        UI_Table["TanStack Virtualized Grid (60 FPS)"]
-        UI_Action["Action Bar: Recycle Bin / Delete"]
-    end
-
-    subgraph Backend["Rust Core Engine"]
-        SCANNER["Parallel Tree Traversal (WalkDir)"]
-        PRUNE{"Is node_modules?"}
-        CALC["Async Size Computation Pool"]
-        SEC_DEL{"SEC-DEL Verification"}
-        TRASH["Win32 Shell IFileOperation (Recycle Bin)"]
-        PURGE["std::fs::remove_dir_all (Permanent)"]
-    end
-
-    UI_Scan -->|IPC Invoke| SCANNER
-    SCANNER --> PRUNE
-    PRUNE -->|Yes: Prune Recursion| CALC
-    PRUNE -->|No: Traverse Subtree| SCANNER
-    CALC -->|Streaming Events| UI_Table
-    UI_Action -->|Selected Paths| SEC_DEL
-    SEC_DEL -->|Safe: Soft Delete| TRASH
-    SEC_DEL -->|Safe: Hard Delete| PURGE
-    SEC_DEL -->|Forbidden: System Path| UI_Action
-```
-
-### Safety & Deletion Specifications
-
-| Feature                    | Mechanism                         | Description                                                                                      |
-| :------------------------- | :-------------------------------- | :----------------------------------------------------------------------------------------------- |
-| **Directory Pruning**      | `walkdir::IntoIter::filter_entry` | Skips deep traversal inside `node_modules`, saving millions of redundant I/O calls               |
-| **Path Guard (`SEC-DEL`)** | Strict Canonical Verification     | Blocks deletion if path is root (`C:\`), Windows OS folder, Program Files, or non-`node_modules` |
-| **Recycle Bin Deletion**   | Win32 `IFileOperation`            | Safely moves folders to Windows Recycle Bin with full restoration support                        |
-| **Permanent Deletion**     | Asynchronous Rayon Pool           | High-throughput direct disk unlinking for massive multi-gigabyte dependency trees                |
-
----
-
-## Installation & Usage
-
-### Prerequisites
-
-- **Node.js**: Version 18.0.0 or higher
-- **Rust & Cargo**: Version 1.75.0 or higher
-- **Windows**: Windows 11 (64-bit x64), verified. Windows 10 is not verified for
-  1.0.0 and is not advertised as supported.
-- **WebView2**: Included by default in Windows 11
-
-### Step-by-Step Developer Setup
-
-1. **Clone the Repository:**
-
-   ```bash
-   git clone https://github.com/emirtdede/dev-cleaner.git
-   cd dev-cleaner
-   ```
-
-2. **Install Node Dependencies:**
-
-   ```bash
-   npm install
-   ```
-
-3. **Run Automated Test Suites:**
-
-   ```bash
-   # Run Frontend Unit & Virtualization Tests (Vitest)
-   npm test
-
-   # Run Rust Backend & Safety Tests (Cargo)
-   cd src-tauri
-   cargo test
-   cd ..
-   ```
-
-4. **Start Local Development Mode:**
-
-   ```bash
-   npm run tauri dev
-   ```
-
-5. **Build Production Release Artifacts:**
-   ```bash
-   # Automated release pipeline (Version Check -> Tauri Build -> Package -> SHA-256)
-   npm run build:release
-   ```
-
-### Command line
-
-The installed binary doubles as a terminal tool:
+### Quick Start (CLI)
 
 ```bash
-dev-cleaner s .                 # list the largest reclaimable targets under .
-dev-cleaner s . -t p,a          # scan projects + AI tools
-dev-cleaner s . -t all          # scan projects + AI + caches + C: system
-dev-cleaner s . -i              # pick targets by number, move them to the Recycle Bin
-dev-cleaner s . -j              # one machine-readable JSON document
-dev-cleaner c npm               # run the official npm cache clean
-dev-cleaner sys                 # list C: system cleaner targets
-dev-cleaner hist 15             # past cleanup records
+detergo s .                         # Top 20 largest cleanable targets
+detergo s D:\Projects -o 30d -m 50M # Stale targets (>30 days, >=50 MB)
+detergo s D:\Projects -t all -j     # Projects + AI + Caches + C: System as JSON
+detergo s . -i                      # Interactive numbered Recycle Bin picker
+detergo c                           # Measure all 27 developer tool caches
+detergo c docker -y                 # Run audited Docker builder/image/container prune
+detergo sys quick -n                # Preview Windows C: quick cleanup
+detergo mcp                         # Start read-only/preview MCP stdio server
 ```
 
-Full reference, JSON schema and npkill migration table:
-[`docs/CLI.md`](docs/CLI.md). Exit codes are part of the automation contract
-(`0` success, `1` scan failure, `2` cleanup failure, `3` argument error,
-`4` blocked).
+See [`docs/CLI.md`](docs/CLI.md) for the complete CLI/MCP reference, [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for technical internals, [`docs/SYSTEM_CLEANER.md`](docs/SYSTEM_CLEANER.md) for Windows C: drive maintenance, and [`docs/SIGNING_AND_DISTRIBUTION.md`](docs/SIGNING_AND_DISTRIBUTION.md) for WinGet/Scoop packaging and code signing.
 
----
-
-## Pre-Compiled Distribution Packages
-
-Ready-to-use production packages are generated into the `release_output/` directory (git-ignored; run `npm run build:release`):
-
-- **NSIS Setup Installer**: `Dev-Cleaner-1.0.0-x64-Setup.exe` _(Per-user installer with desktop/start menu shortcuts)_
-- **MSI Enterprise Installer**: `Dev-Cleaner-1.0.0-x64.msi` _(Per-machine enterprise & GPO silent deployment)_
-- **Standalone Portable**: `Dev-Cleaner-1.0.0-Portable.exe` _(Zero installation, run standalone from USB or any folder)_
-- **Integrity Verification**: `verify-checksums.bat` & `SHA256SUMS.txt`
-
-> **Do not install the NSIS and MSI builds on the same machine.** They use
-> different install scopes (`currentUser` vs `perMachine`) and intentionally
-> produce separate Apps & Features entries. Pick one per machine.
->
-> Brand assets are generated from `assets/brand/dev-cleaner-icon.svg`; see
-> `docs/brand/BRAND_GUIDELINES.md` before changing an icon.
-
----
-
-## Contributing
-
-Dev Cleaner is open source under the MIT License and welcomes contributions of
-all sizes: bug reports, new catalog rules, translations, documentation and
-code. Read [`CONTRIBUTING.md`](.github/CONTRIBUTING.md) for the local setup and the
-quality gates, and [`CODE_OF_CONDUCT.md`](.github/CODE_OF_CONDUCT.md) for the
-community rules. Security problems must be reported privately following
-[`SECURITY.md`](.github/SECURITY.md).
-
----
-
-## License
-
-Distributed under the **MIT License**. Copyright &copy; 2026 Vellium.
-
-See [`LICENSE`](LICENSE) for the full text.
-
-**Official Website**: [Vellium.dev](https://vellium.dev) &bull; **Publisher**: Vellium
-
----
-
-<br>
-
----
-
-<a id="turkish-version"></a>
-
-# Türkçe Versiyon
-
-<div align="center">
-  <img src="assets/brand/dev-cleaner-icon-256.png" alt="Dev Cleaner Logo" width="130" height="130" />
-  <h3>Dev Cleaner — Yüksek Performanslı Çoklu Ekosistem Geliştirici Artığı ve AI Ajanı Temizleme Aracı</h3>
-  <p><em>JavaScript ve TypeScript Projeleri İçin Ultra Hızlı Tarama, Monorepo Hiyerarşi Gruplama ve Güvenli Silme</em></p>
-  <p><strong>Geliştirici ve Yayıncı: <a href="https://vellium.dev">Vellium</a></strong></p>
-</div>
-
-<br>
-
-## Project Overview (Proje Genel Bakışı)
-
-**Dev Cleaner**, **Tauri 2 (Rust)** ve **React 19 (TypeScript)** ile geliştirilmiş bir Windows masaüstü uygulamasıdır. 1.0.0 sürümü JavaScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart ve diğer ekosistemlerdeki yeniden üretilebilir geliştirici artıklarını bulur; Codex, Claude Code ve Antigravity gibi AI kodlama ajanlarının depolamasını dosya içeriğini okumadan analiz eder ve seçilen hedefleri güvenle temizler. Tarama, ölçüm, sınıflandırma ve silme tamamen Rust arka ucunda çalışır; ön yüz yalnızca arka ucun ürettiği hedef kimliklerini gösterir ve seçer.
-
-Geleneksel dosya tarayıcıları iç içe geçmiş bağımlılık ağaçlarında takılarak sistemi kilitler. **Dev Cleaner**, geliştirdiği **Budamalı Dizin Tarama Motoru** ile `node_modules` klasörüne ulaştığı anda derin özyinelemeli taramayı durdurarak boyutu arka plan iş parçacığı havuzlarına devreder ve yüzlerce projeyi saniyeler içinde listeler.
-
-Gelişmiş **Çok Katmanlı Güvenlik Mekanizması (`SEC-DEL`)** sayesinde Windows sistem dizinleri (`C:\Windows`, `Program Files` vb.) ve kullanıcı ana klasörleri kesinlikle silinemez. Dev Cleaner hem geri alınabilir **Windows Çöp Kutusu** (`IFileOperation`) hem de kalıcı silme seçeneklerini çift onaylı koruma ile sunar.
-
-Uygulama **%100 yerel ve çevrimdışı** çalışır; kendiliğinden hiçbir ağ isteği başlatmaz, telemetri veya analitik verisi toplamaz. Dış bağlantı yalnızca sizin tetiklediğiniz işlemlerde kurulur (isteğe bağlı webhook, "Güncellemeleri denetle" düğmesi ve tarayıcıda açılan bağlantı).
-
----
-
-## Key Features (Önemli Özellikler)
-
-- **Tek katalog, çoklu ekosistem**: 56 kanıta dayalı kural JavaScript/TypeScript, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart, paket yöneticisi önbellekleri ve AI kodlama ajanı depolamasını kapsar; her kuralın bir güvenlik sınıfı ve yeniden üretim ipucu vardır.
-- **Tek merkezli üst tarama çubuğu**: tüm taramalar en üst komut çubuğundan yönetilir; Projeler, AI Araçları, Araç Önbellekleri ve C: Sistem kapsamlarından dilediğiniz 1–4 tanesini seçip tek seferde tarayabilir, aktif kapsam ve ilerlemeyi üst çubukta canlı izleyebilirsiniz.
-- **C: sürücüsü temizleyici**: ayrı bir yan menü sekmesi Windows geçici dosyalarını (`%TEMP%`, `C:\Windows\Temp`), Prefetch verilerini, Windows Update artıklarını, hata raporlarını, Geri Dönüşüm Kutusunu, Windows Disk Temizleme (`cleanmgr`) ve DISM WinSxS bileşen deposu temizliğini tek tıkla ölçüp yürütür; günlük/haftalık zamanlanmış görevlerle otomatikleştirilebilir. Ayrıntı: [`docs/SYSTEM_CLEANER.md`](docs/SYSTEM_CLEANER.md).
-- **Kısa ve öz terminal aracı**: `dev-cleaner s .` hedefleri sıralar, `-t p,a,c,s` (veya `-t all`) çoklu kapsam seçer, `-i` numaralı seçim modunu açar, `dev-cleaner c npm` önbellek temizler ve `dev-cleaner sys` C: bakımını yönetir. Ayrıntı: [`docs/CLI.md`](docs/CLI.md).
-- **Yerleşik MCP sunucusu**: kodlama ajanları Model Context Protocol üzerinden temizlik keşfedip önizleyebilir; yıkıcı işlem zorunlu önizleme → token → çalıştırma kapısından geçer.
-- **Işık Hızında Tarama Motoru**: Milyonlarca dosya içeren disk ağaçlarını tararken `node_modules` alt dizinlerine gereksiz girmeyerek taramayı budar ve sistemi dondurmadan yüzlerce projeyi saniyeler içinde bulur.
-- **Çok Katmanlı Güvenlik Kalkanı (`SEC-DEL`)**: Windows sistem kökü (`C:\`), `Windows`, `Program Files`, kullanıcı profil dizinleri veya `node_modules` dışındaki klasörlerin yanlışlıkla silinmesini kesin olarak engeller.
-- **Monorepo ve Çalışma Alanı Gruplama**: İç içe geçmiş paketleri bağlı oldukları monorepo kök dizini altında akıllıca gruplar (`pnpm-workspace`, `Turbo`, `Lerna`, `Nx`, `Yarn Workspaces`, `Bun`).
-- **İki Aşamalı Güvenli Silme**:
-  - **Çöp Kutusu (Geri Alınabilir)**: Yerel Win32 Shell API (`IFileOperation`) entegrasyonu ile klasörleri Windows Çöp Kutusu'na taşır.
-  - **Kalıcı Silme**: Asenkron yüksek hızlı doğrudan disk temizliği (çift onaylı modal ile).
-- **60 FPS Sanallaştırılmış Liste**: TanStack Virtualizer mimarisi ile 10.000+ proje listelense bile DOM şişmesi yaşanmaz, 60 FPS akıcı kaydırma sağlanır.
-- **Küresel Yerelleştirme (73 Dil)**: Güçlü vekil (proxy fallback) mimarisi sayesinde sıfır dil sızıntısı ile 73 dilde eksiksiz çalışma. Arapça, İbranice, Farsça ve Urduca için dinamik RTL desteği. Windows NSIS kurulum sihirbazı 73 dilin tamamını konuşur: dil seçici her çalıştırmada açılır (hatırlanan dili önseçili getirir) ve NSIS'in kendi dil dosyası bulunmayan 21 dil, Tauri kurulum mesajları dâhil İngilizce şablonlardan üretilir.
-- **Modern Karanlık Cam Efektli (Glassmorphism) Arayüz**: Özel çerçevesiz pencere tasarımı, estetik karanlık renk paleti ve akıcı mikro animasyonlar.
-- **Gerçek Zamanlı Arama ve Sıralama**: Proje adı veya dosya yoluna göre anında filtreleme; en büyük boyuta veya en eski değiştirilme tarihine göre sıralama.
-- **Tamamen Çevrimdışı ve Gizli**: Sıfır telemetri, sıfır analiz, arka planda dış ağ bağlantısı yok.
-
----
-
-## Tech Stack (Teknoloji Yığını)
-
-<div align="center">
-
-![Tauri](https://img.shields.io/badge/Tauri_2.2-24C8D8?style=for-the-badge&logo=tauri&logoColor=white)
-![Rust](https://img.shields.io/badge/Rust_2021-DEA584?style=for-the-badge&logo=rust&logoColor=black)
-![React](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript_5.7-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite_6.2-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-![Zustand](https://img.shields.io/badge/Zustand_5-443E3B?style=for-the-badge)
-![TanStack Virtual](https://img.shields.io/badge/TanStack_Virtual_3-FF4154?style=for-the-badge)
-
-</div>
-
-### Arka Uç ve Çekirdek Motor (Rust)
-
-- **Tauri 2.2**: Windows yerel platform entegrasyonu, çerçevesiz pencere yönetimi ve güvenli IPC köprüsü
-- **WalkDir 2.5**: Özel budama mantığına sahip yüksek hızlı dosya sistemi tarayıcısı
-- **Trash 5.2**: Windows Çöp Kutusu COM alt sistemi entegrasyonu
-- **Tokio 1.49**: Asenkron çok iş parçacıklı arka plan disk tarama ve görev yönetimi
-- **Windows API (`windows-rs` 0.58)**: Win32 Shell (`IFileOperation`), UI ve COM sistem bağlayıcıları
-- **Tekil Süreç Eklentisi**: `tauri-plugin-single-instance` ile tekil process kilidi
-
-### Ön Yüz ve Kullanıcı Arayüzü (React & TypeScript)
-
-- **React 19 & TypeScript 5.7**: Bileşen odaklı, tip güvenli reaktif kullanıcı arayüzü
-- **TanStack React Virtual 3.13**: Yüksek yoğunluklu veriler için pencereleme ve DOM sanallaştırma motoru
-- **Zustand 5.0**: Reaktif durum yönetimi (`useScannerStore`, `useSettingsStore`)
-- **Lucide React**: Tutarlı ve modern SVG ikon seti
-- **Özel CSS Tasarım Sistemi**: CSS Değişkenleri, HSL renk sistemi, cam efektleri ve akıcı mikro animasyonlar
-
----
-
-## Project Structure (Proje Klasör Yapısı)
-
-```tree
-dev-cleaner/
-├── assets/                         # Vektörel marka varlıkları ve master logo
-│   └── brand/                      # dev-cleaner-icon.svg, installer/, github/
-├── docs/                           # Tüm proje dokümantasyonu (bkz. docs/README.md)
-│   ├── README.md                   # Doküman indeksi ve okuma sırası
-│   ├── MASTER_SPEC.md              # Normatif 2.0 spesifikasyonu
-│   ├── architecture/               # ARCHITECTURE, CLEANUP_CATALOG, AGENT_PROVIDERS
-│   ├── security/                   # SECURITY_MODEL, FINAL_SECURITY_AUDIT
-│   ├── release/                    # TEST_MATRIX, RELEASE_CHECKLIST, release raporu
-│   ├── audit/                      # Değişiklik öncesi baseline denetimi ve test sonuçları
-│   └── archive/                    # Tarihsel plan ve araştırmalar (güncel doğru değil)
-├── public/                         # Genel statik web varlıkları
-│   ├── favicon.svg / favicon.ico   # Sadeleştirilmiş marka işareti
-│   ├── icons/notification.png      # Geliştirme tarayıcısı bildirim ikonu
-│   └── vellium.svg                 # Yayıncı logosu
-├── release_output/                 # Üretim paketleri (git-ignored, yeniden üretilir)
-│   ├── Dev-Cleaner-1.0.0-x64-Setup.exe    # NSIS kullanıcı bazlı kurulum
-│   ├── Dev-Cleaner-1.0.0-x64.msi          # MSI makine bazlı kurulum
-│   ├── Dev-Cleaner-1.0.0-Portable.exe     # Taşınabilir tekil exe
-│   ├── BUILD_INFO.json                    # Commit, dirty bayrağı ve artefakt hash'leri
-│   ├── SHA256SUMS.txt                     # Kriptografik SHA-256 sağlama özetleri
-│   └── verify-checksums.bat               # Tek tıkla hash doğrulama aracı
-├── scripts/                        # Otomatik derleme ve doğrulama scriptleri
-│   ├── build-release.js            # Release derleyici (köken kapısı -> Derleme -> Paket -> Hash)
-│   ├── check-version.js            # Sürüm tutarlılık kontrol scripti
-│   ├── verify-ipc.mjs              # Paketlenmiş uygulamada CSP + IPC + derleme kökeni kontrolü
-│   ├── verify-offline.ps1          # Telemetri yok / sır sızıntısı yok kontrolü
-│   ├── verify-recycle-bin.ps1      # Gerçek Geri Dönüşüm Kutusu gidiş-dönüşü
-│   ├── verify-installer.ps1        # NSIS kur -> çalıştır -> ikonlar -> kaldır
-│   ├── verify-msi.ps1              # Makine bazlı MSI kur -> çalıştır -> kaldır
-│   ├── verify-upgrade.ps1          # Yerinde yükseltme testi
-│   ├── verify-shell-icons.ps1      # Explorer, kısayol ve DisplayIcon kabuk kontrolü
-│   └── verify-checksums.bat        # Windows batch checksum doğrulayıcı
-├── src/                            # Ön yüz kaynak kodları (React 19 + TypeScript)
-│   ├── app/                        # Uygulama kabuğu ve düzen orkestrasyonu
-│   ├── components/                 # UI bileşenleri, layout, marka ve hata sınırı
-│   ├── features/                   # Özellik modülleri
-│   │   ├── agents/                 # AI ajan depolama görünümü
-│   │   ├── caches/                 # Global önbellek / resmi araç işlemleri
-│   │   ├── cleanup/                # Temizlik planı ve sonuç diyalogları
-│   │   ├── history/                # Silme geçmişi ve resmi işlem denetimi
-│   │   ├── items/                  # Sanallaştırılmış öğe tablosu ve proje görünümü
-│   │   ├── overview/               # Özet / kontrol paneli görünümü
-│   │   ├── results/                # Seçim işlem çubuğu
-│   │   ├── scan/                   # Tarama başlığı, hızlı konumlar, denetleyici
-│   │   ├── settings/               # Arka uç sahipli ayar editörü
-│   │   └── shell/                  # Navigasyon rayı
-│   ├── lib/                        # Tauri IPC istemcisi, biçimlendiriciler, i18n, UI metinleri
-│   │   └── ui-text/                # 73 dilli UI metinleri ve arka uç yerel katalogları
-│   ├── stores/                     # Zustand depoları (scan, selection, prefs, ui, app)
-│   ├── styles/                     # Tasarım token'ları ve global CSS
-│   ├── test/                       # Vitest test paketleri
-│   ├── types/                      # Paylaşılan IPC DTO'ları
-│   ├── App.tsx                     # Ana arayüz düzeni ve orkestrasyon
-│   └── main.tsx                    # React DOM giriş noktası
-├── src-tauri/                      # Rust arka uç ve platform çekirdeği
-│   ├── assets/targets.toml         # Gömülü 56 kurallı temizlik kataloğu
-│   ├── icons/                      # 15 kareli ICO, 8 tray PNG'si, ICNS ve Store varlıkları
-│   ├── nsis/                       # NSIS kurulum görselleri ve shell yenileme hook'ları
-│   ├── wix/                        # WiX banner/dialog görselleri
-│   ├── src/
-│   │   ├── audit/                  # Temizlik geçmişi ve resmi işlem JSONL denetimi
-│   │   ├── catalog/                # Kural modeli, eşleştirici, proje çözümleyici
-│   │   ├── cleanup/                # Planlayıcı, koordinatör, Çöp Kutusu, kalıcı silme
-│   │   ├── commands/               # Tauri IPC komut işleyicileri
-│   │   ├── error/                  # Domain hata tipleri
-│   │   ├── platform/               # Win32 dosya kimliği, kilitleme, bilinen klasörler
-│   │   ├── providers/              # Ajan tanımları, kök bulucu, büyüme analizi
-│   │   ├── safety/                 # Yol, süreç, Git ve kanıt koruyucuları
-│   │   ├── scanner/                # Keşif, ölçüm, limitler, oturumlar
-│   │   ├── settings/               # Ayar modeli ve atomik kalıcılık
-│   │   ├── lib.rs                  # Eklenti kaydı ve komut yönlendirici
-│   │   └── main.rs                 # Yerel yürütülebilir dosya giriş noktası
-│   ├── Cargo.toml                  # Rust bağımlılıkları ve paket yapılandırması
-│   └── tauri.conf.json             # Tauri pencere, güvenlik (CSP) ve bundle ayarları
-├── build-release.bat               # Tek tıkla Windows release sarmalayıcısı
-├── package.json                    # Node bağımlılıkları ve npm scriptleri
-├── tsconfig.json                   # TypeScript derleyici yapılandırması
-├── vite.config.ts                  # Vite derleyici yapılandırması
-└── README.md                       # Proje genel bakış ve hızlı başlangıç
-```
-
----
-
-## Mimari ve Güvenlik Mekanizması
-
-| Özellik                       | Kullanılan Mekanizma              | Açıklama                                                                                                  |
-| :---------------------------- | :-------------------------------- | :-------------------------------------------------------------------------------------------------------- |
-| **Dizin Budama (Pruning)**    | `walkdir::IntoIter::filter_entry` | `node_modules` içine derinlemesine girilmesini engelleyerek milyonlarca gereksiz I/O çağrısını önler      |
-| **Yol Güvenliği (`SEC-DEL`)** | Kanonik Yol Doğrulaması           | Sürücü kökü (`C:\`), Windows dizini, Program Files ve `node_modules` harici yolların silinmesini engeller |
-| **Çöp Kutusu ile Silme**      | Win32 `IFileOperation`            | Klasörleri güvenle Windows Çöp Kutusu'na taşır, gerektiğinde geri kurtarılabilmesini sağlar               |
-| **Kalıcı Silme**              | Asenkron Rayon / Tokio Havuzu     | Gigabaytlarca veriyi arka planda yüksek I/O verimiyle doğrudan diskten siler                              |
-
----
-
-## Installation & Usage (Kurulum ve Kullanım)
-
-### Gereksinimler
-
-- **Node.js**: Sürüm 18.0.0 veya üzeri
-- **Rust & Cargo**: Sürüm 1.75.0 veya üzeri
-- **İşletim Sistemi**: Windows 11 (64-bit x64), doğrulandı. Windows 10, 1.0.0
-  için doğrulanmadı ve desteklenen sistem olarak sunulmuyor.
-- **WebView2 Çalışma Zamanı**: Windows 11'de varsayılan olarak yerleşiktir
-
-### Adım Adım Geliştirici Kurulumu
-
-1. **Depoyu Klonlayın:**
-
-   ```bash
-   git clone https://github.com/emirtdede/dev-cleaner.git
-   cd dev-cleaner
-   ```
-
-2. **Node Bağımlılıklarını Yükleyin:**
-
-   ```bash
-   npm install
-   ```
-
-3. **Otomatik Testleri Çalıştırın:**
-
-   ```bash
-   # Frontend Birim ve Sanallaştırma Testlerini Çalıştırın (Vitest)
-   npm test
-
-   # Rust Arka Uç ve Güvenlik Testlerini Çalıştırın (Cargo)
-   cd src-tauri
-   cargo test
-   cd ..
-   ```
-
-4. **Geliştirici Modunda Başlatın:**
-
-   ```bash
-   npm run tauri dev
-   ```
-
-5. **Production Release Paketlerini Derleyin:**
-   ```bash
-   # Otomatik derleme scripti (Sürüm Kontrolü -> Tauri Derleme -> Paketleme -> SHA-256)
-   npm run build:release
-   ```
-
-### Terminal kullanımı
-
-Kurulu uygulama aynı zamanda bir terminal aracıdır:
+### Development & Verification
 
 ```bash
-dev-cleaner s .                 # . altındaki en büyük hedefleri listeler
-dev-cleaner s . -t p,a          # projeler + AI araçları taraması
-dev-cleaner s . -t all          # projeler + AI + önbellek + C: sistem taraması
-dev-cleaner s . -i              # numarayla seç, Çöp Kutusu'na taşı
-dev-cleaner s . -j              # tek makine-okunur JSON belge
-dev-cleaner c npm               # resmî npm önbellek temizliğini çalıştırır
-dev-cleaner sys                 # C: sistem temizliği hedeflerini listeler
-dev-cleaner hist 15             # son 15 temizlik kaydı
+npm install
+npm run tauri dev          # Desktop development mode
+
+# Full verification gates (328 Rust tests + 271 frontend tests + Playwright E2E + CI gates)
+cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+cargo test --manifest-path src-tauri/Cargo.toml
+npm run typecheck
+npm test
+npm run check:bindings
+npm run check:audit
+npm run check:brand
+npm run check:contrast
+npm run check:i18n
+npm run build
+npm run check:gates
+npm run test:a11y
 ```
 
-Komut referansı, JSON şeması ve npkill geçiş tablosu:
-[`docs/CLI.md`](docs/CLI.md). Çıkış kodları otomasyon sözleşmesinin parçasıdır
-(`0` başarı, `1` tarama hatası, `2` temizlik hatası, `3` argüman hatası,
-`4` güvenlik nedeniyle engellendi).
+### Platform Support & Transparent Status
+
+- **Windows 11 x64 (Full Support)**: Native NTFS batch I/O, STA COM Recycle Bin, C: System Cleaner (`cleanmgr`/DISM/Task Scheduler), dual `detergo.exe` + `detergo.com` console companion, NSIS/MSI/Portable packages, and WinGet/Scoop manifests (`packaging/`).
+- **macOS & Linux (Cross-Platform Core Verified in CI)**: Core Rust engine (project scanner, 17 AI tools, cross-platform cache providers including Homebrew/VS Code/JetBrains/Android, CLI, MCP, Finder/`gio trash`, POSIX process/drive inspection) is continuously verified via `cargo check` and unit tests on `ubuntu-latest` and `macos-latest` in GitHub Actions; native `.dmg`/`.AppImage` installers are planned next.
+- **Code Signing Policy**: Release builds are ready for free open-source Authenticode signing via **SignPath Foundation** (`signpath/github-action-submit-signing-request@v3` wired in `.github/workflows/ci.yml`, activated automatically once `SIGNPATH_API_TOKEN` is configured). Read our public [Code Signing Policy & Distribution Guide](docs/SIGNING_AND_DISTRIBUTION.md#1-code-signing-policy-signpath-foundation).
+- **Release Updates**: Update checking (`Settings → Updates`) is user-initiated, verifies release URLs strictly against this GitHub repository, compares SemVer 2.0.0 pre-release tags accurately, and opens the release page without silent background downloads.
 
 ---
 
-## Dağıtım Paketleri
+<a id="turkce"></a>
 
-Hazır derlenmiş resmi release paketleri `release_output/` klasörüne üretilir (git-ignored; `npm run build:release`):
+## Türkçe
 
-- **NSIS Kurulum Sihirbazı**: `Dev-Cleaner-1.0.0-x64-Setup.exe` _(Kullanıcı bazlı kurulum, masaüstü ve başlat menüsü kısayolları)_
-- **MSI Kurumsal Installer**: `Dev-Cleaner-1.0.0-x64.msi` _(Makine bazlı kurulum, sessiz kurulum ve GPO dağıtımı)_
-- **Standalone Taşınabilir Sürüm**: `Dev-Cleaner-1.0.0-Portable.exe` _(Kurulumsuz, doğrudan çalışır)_
-- **Bütünlük Doğrulama**: `verify-checksums.bat` ve `SHA256SUMS.txt`
+**Detergo**, **Tauri 2 (Rust)** ve **React 19 (TypeScript)** ile geliştirilmiş, açık kaynaklı (MIT) bir masaüstü uygulaması, terminal CLI aracı ve yerleşik MCP sunucusudur. Geliştirici derleme artıklarını, yapay zekâ kodlama ajanı depolamalarını, global paket yöneticisi önbelleklerini ve Windows C: sistem kalıntılarını güvenli ve doğrulanabilir şekilde temizler.
 
-> **NSIS ve MSI sürümlerini aynı makinede kurmayın.** Kurulum kapsamları
-> farklıdır (`currentUser` ve `perMachine`) ve bilinçli olarak iki ayrı
-> "Uygulamalar ve özellikler" kaydı oluştururlar. Makine başına bir tanesini
-> seçin.
->
-> Marka varlıkları `assets/brand/dev-cleaner-icon.svg` dosyasından üretilir;
-> ikon değiştirmeden önce `docs/brand/BRAND_GUIDELINES.md` dosyasını okuyun.
+Tüm tarama, boyut ölçümü, güvenlik denetimi ve silme işlemleri doğrudan Rust çekirdeğinde (`src-tauri/src/`) yürütülür. **%100 yerel** çalışır; telemetri veya analitik toplamaz, siz açıkça tetiklemediğiniz sürece dış ağ bağlantısı kurmaz.
 
----
+### Doğrulanmış Performans Ölçümleri (Windows 11 x64, `--release`)
 
-## Katkı
+| Benchmark                                                                | Eski Motor (`WalkDir`) | Yeni Motor (Win32 Batch + Paralel) | Hızlanma / Not                                                                  |
+| :----------------------------------------------------------------------- | :--------------------: | :--------------------------------: | :------------------------------------------------------------------------------ |
+| **300.000 dosyalık dizin ölçümü** (`NC_RECORDINGS=300000`)               |        47,7 sn         |       **0,78 sn (`781 ms`)**       | **61,1× daha hızlı**, `10,6 MB` tepe RAM, birebir bayt eşleşmesi                |
+| **10.000 projelik tam tarama** (`NC_BENCH_CANDIDATES=10000`, 70 bin öğe) |        24,5 sn         |      **9,41 sn (`9.411 ms`)**      | **2,6× daha hızlı**, `77,5 MB` tepe RAM, tam manifest + güvenlik + boyut ölçümü |
+| **İptal tepki süresi** (`NC_CANCEL_CANDIDATES=20000`)                    |           -            |            **`21 ms`**             | Anında durdurma ve temiz kısmi özet                                             |
 
-Dev Cleaner MIT lisanslı açık kaynak bir projedir; hata bildirimi, yeni katalog
-kuralı, çeviri, dokümantasyon ve kod katkılarının her boyutu memnuniyetle
-karşılanır. Yerel kurulum ve kalite kapıları için
-[`CONTRIBUTING.md`](.github/CONTRIBUTING.md), topluluk kuralları için
-[`CODE_OF_CONDUCT.md`](.github/CODE_OF_CONDUCT.md) dosyasını okuyun. Güvenlik
-sorunları [`SECURITY.md`](.github/SECURITY.md) içindeki özel bildirim yolundan
-iletilmelidir.
+### Öne Çıkan Mimari Özellikler
 
----
+- **Yerel Win32 Toplu I/O**: Dizin ölçümü 64 KiB tamponlu `GetFileInformationByHandleEx(FileIdBothDirectoryInfo)` + 16 parçalı 64-bit NTFS `FileId` hardlink tekilleştirmesi kullanır; keşif aşaması `FindFirstFileExW(FindExInfoBasic, FIND_FIRST_EX_LARGE_FETCH)` üzerinde paralel iş-paylaşım (work-stealing) havuzuyla çalışır.
+- **Çok Katmanlı Güvenlik**: `PathGuard` kanonik kök sınır denetimi (`flutter-app/windows/build` gibi proje alt dizinlerini yanlış engellemeden OS köklerini korur), gerçek Win32 dosya kilidi tespiti (`DELETE` + `FILE_SHARE_MODE(0)`), NTFS `FileId` anlık görüntü doğrulaması, sıcak STA COM `RecycleBinSession` ile geri alınabilir Çöp Kutusu silimi ve yerel SQLite denetim günlüğü.
+- **82 Kanıta Dayalı Kural, 18 Ekosistem, 27 Araç Önbelleği ve 17 Yapay Zekâ Aracı**: JS/TS, Python, Rust, .NET, Java/Kotlin, Go, PHP, Dart/Flutter, C/C++, Ruby, Elixir, Swift, Godot, Zig, DevOps/IaC (Terraform, Terragrunt, AWS CDK/SAM, Serverless), Haskell, Unity ve Unreal kuralları; `docker`, `cargo`, `gradle`, `maven`, `vcpkg`, `huggingface`, `ollama`, `electron`, `vscode`, `jetbrains`, `android`, `homebrew`, `go`, `npm`/`pnpm`/`yarn`/`bun`, `pip`/`uv`/`poetry`/`conda`, `nuget`, `composer`, `flutter`/`pub`, `playwright`/`cypress` için gerçek temizleme aksiyonları; 17 yerleşik AI kodlama aracı taraması (Antigravity, Claude Code/Desktop, Codex, Cursor, Windsurf, Copilot, Cline, Roo Code, OpenCode, T3 Code, Aider, Continue, Zed, LM Studio, Trae, Kiro) ve WSL `ext4.vhdx` ölçümü.
+- **Görsel Disk Treemap ve Yaş (Staleness) Filtresi**: Genel Bakış sayfasında gerçek en-boy oranlı 2D Treemap haritası ve `+N Diğer` dilimi; arayüzde (`>7g`, `>30g`, `>90g`, `>180g`), CLI'da (`-o 30d` / `--older 3m`) ve MCP'de (`older_than_days`) kullanılmayan eski artıkları filtreleme.
+- **CLI (`detergo.com`), MCP 2025-11-25 Sunucusu ve Self-Hosted Webhook**: `detergo mcp` için protokol müzakeresi, cursor sayfalama, gerçek zamanlı iptal ve 3 bağımsız yıkıcı işlem kapısı; yerel n8n (`http://localhost:5678`) için isteğe bağlı LAN webhook izni (bulut metadata IP'leri, NAT64 ve IPv6 eşlemeleri daima engelli).
+- **73 Tam Çevrilmiş Dil, 16 WCAG 2.2 AA Tema ve Otomatik Kalite Kapıları**: 328 Rust testi, 271 frontend testi, Playwright + axe E2E doğrulaması, sıfır Clippy uyarısı, sıfır çevrilmemiş İngilizce sızıntısı ve Linux/macOS çapraz platform CI derlemesi.
 
-## License (Lisans)
+### Lisans
 
-Bu proje **MIT Lisansı** ile dağıtılır. Telif Hakkı &copy; 2026 Vellium.
-
-Tam metin için [`LICENSE`](LICENSE) dosyasına bakın.
-
-**Resmi Web Sitesi**: [Vellium.dev](https://vellium.dev) &bull; **Yayıncı**: Vellium
+MIT Lisansı - Telif Hakkı &copy; 2026 Vellium. Ayrıntılar için [`LICENSE`](LICENSE) dosyasına bakın.

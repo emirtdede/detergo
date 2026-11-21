@@ -57,6 +57,11 @@ fn parse_http_url(url: &str) -> Result<reqwest::Url, AppError> {
     }
     let parsed = reqwest::Url::parse(trimmed)
         .map_err(|err| AppError::InvalidPath(format!("Invalid webhook URL: {err}")))?;
+    if !parsed.username().is_empty() || parsed.password().is_some() {
+        return Err(AppError::InvalidPath(
+            "Webhook URL must not contain embedded user credentials.".to_string(),
+        ));
+    }
     match parsed.scheme() {
         "http" | "https" => Ok(parsed),
         other => Err(AppError::InvalidPath(format!(
@@ -65,68 +70,132 @@ fn parse_http_url(url: &str) -> Result<reqwest::Url, AppError> {
     }
 }
 
-fn private_target_error() -> AppError {
-    AppError::InvalidPath(
-        "Webhook URL must point to a public address; loopback, private, link-local and \
-         multicast targets are not allowed."
-            .to_string(),
-    )
+fn private_target_error(allow_private: bool) -> AppError {
+    if allow_private {
+        AppError::InvalidPath(
+            "Webhook URL targets a restricted address (cloud metadata, link-local, unspecified, \
+             or multicast targets are always blocked even when private webhooks are enabled)."
+                .to_string(),
+        )
+    } else {
+        AppError::InvalidPath(
+            "Webhook URL must point to a public address; loopback, private, link-local and \
+             multicast targets are not allowed. Enable 'Allow local/LAN webhooks' in Settings \
+             for self-hosted endpoints such as local n8n."
+                .to_string(),
+        )
+    }
 }
 
-fn forbidden_ipv4(ip: Ipv4Addr) -> bool {
+fn forbidden_ipv4_with_policy(ip: Ipv4Addr, allow_private: bool) -> bool {
     let octets = ip.octets();
-    ip.is_loopback()
-        || ip.is_private()
-        || ip.is_link_local()
+    // Always blocked regardless of user opt-in: cloud instance metadata
+    // (AWS/GCP/Azure 169.254.0.0/16, Alibaba Cloud 100.100.100.200),
+    // unspecified (0.0.0.0/8), reserved (240.0.0.0/4), multicast, broadcast,
+    // documentation, IETF protocol-assignment, and benchmarking.
+    let always_forbidden = ip.is_link_local()
         || ip.is_multicast()
         || ip.is_unspecified()
         || ip.is_broadcast()
         || ip.is_documentation()
-        // Carrier-grade NAT (100.64.0.0/10) is reachable inside a provider
-        // network but is not a public webhook destination.
-        || (octets[0] == 100 && (64..=127).contains(&octets[1]))
-        // "This network" and the IETF protocol-assignment block.
         || octets[0] == 0
+        || octets[0] >= 240
+        || octets == [100, 100, 100, 200]
         || (octets[0] == 192 && octets[1] == 0 && octets[2] == 0)
-        // Benchmarking range (198.18.0.0/15).
-        || (octets[0] == 198 && (octets[1] == 18 || octets[1] == 19))
+        || (octets[0] == 198 && (octets[1] == 18 || octets[1] == 19));
+    if always_forbidden {
+        return true;
+    }
+    if allow_private {
+        return false;
+    }
+    ip.is_loopback()
+        || ip.is_private()
+        // Carrier-grade NAT (100.64.0.0/10, e.g. Tailscale / ISP CGNAT) is not
+        // a public webhook destination unless private webhooks are opted in.
+        || (octets[0] == 100 && (64..=127).contains(&octets[1]))
 }
 
-fn forbidden_ipv6(ip: Ipv6Addr) -> bool {
+fn forbidden_ipv6_with_policy(ip: Ipv6Addr, allow_private: bool) -> bool {
+    // Check loopback (`::1`) BEFORE `to_ipv4()`: Rust treats `::1` as an
+    // IPv4-compatible `0.0.0.1` in `to_ipv4()`, which would otherwise hit the
+    // `octets[0] == 0` guard even when `allow_private` is enabled.
+    if ip.is_loopback() {
+        return !allow_private;
+    }
     let segments = ip.segments();
-    ip.is_loopback()
-        || ip.is_unspecified()
+    let embedded_tail_v4 = Ipv4Addr::new(
+        (segments[6] >> 8) as u8,
+        (segments[6] & 0xff) as u8,
+        (segments[7] >> 8) as u8,
+        (segments[7] & 0xff) as u8,
+    );
+    let always_forbidden = ip.is_unspecified()
         || ip.is_multicast()
-        // Unique local addresses (fc00::/7).
-        || (segments[0] & 0xfe00) == 0xfc00
-        // Link-local unicast (fe80::/10).
+        // Link-local unicast (fe80::/10) and deprecated site-local (fec0::/10).
         || (segments[0] & 0xffc0) == 0xfe80
-        // IPv4-mapped/compatible forms must inherit the IPv4 policy.
-        || ip.to_ipv4().map(forbidden_ipv4).unwrap_or(false)
+        || (segments[0] & 0xffc0) == 0xfec0
+        // AWS EC2 IPv6 IMDS (`fd00:ec2::254`) is always blocked even when LAN webhooks are enabled.
+        || segments == [0xfd00, 0x0ec2, 0, 0, 0, 0, 0, 0x0254]
+        // Discard-only (`100::/64`) and documentation (`2001:db8::/32`).
+        || (segments[0] == 0x0100 && segments[1] == 0 && segments[2] == 0 && segments[3] == 0)
+        || (segments[0] == 0x2001 && segments[1] == 0x0db8)
+        // IPv4-mapped/compatible forms inherit the IPv4 policy.
+        || ip
+            .to_ipv4()
+            .map(|v4| forbidden_ipv4_with_policy(v4, allow_private))
+            .unwrap_or(false)
+        // IPv4-translated (`::ffff:0:0/96`) and NAT64 well-known (`64:ff9b::/96`)
+        // & local (`64:ff9b:1::/48`) prefixes embed an IPv4 address in segments 6..7.
+        || (segments[0..6] == [0, 0, 0, 0, 0xffff, 0]
+            && forbidden_ipv4_with_policy(embedded_tail_v4, allow_private))
+        || (segments[0] == 0x0064
+            && segments[1] == 0xff9b
+            && (segments[2..6] == [0, 0, 0, 0] || segments[2] == 1)
+            && forbidden_ipv4_with_policy(embedded_tail_v4, allow_private))
         // 6to4 embeds an IPv4 address in segments 1 and 2.
         || (segments[0] == 0x2002
-            && forbidden_ipv4(Ipv4Addr::new(
-                (segments[1] >> 8) as u8,
-                (segments[1] & 0xff) as u8,
-                (segments[2] >> 8) as u8,
-                (segments[2] & 0xff) as u8,
-            )))
+            && forbidden_ipv4_with_policy(
+                Ipv4Addr::new(
+                    (segments[1] >> 8) as u8,
+                    (segments[1] & 0xff) as u8,
+                    (segments[2] >> 8) as u8,
+                    (segments[2] & 0xff) as u8,
+                ),
+                allow_private,
+            ))
         // Teredo embeds the client IPv4 address XORed with 0xffffffff.
         || (segments[0] == 0x2001
             && segments[1] == 0
-            && forbidden_ipv4(Ipv4Addr::new(
-                !(segments[6] >> 8) as u8,
-                !(segments[6] & 0xff) as u8,
-                !(segments[7] >> 8) as u8,
-                !(segments[7] & 0xff) as u8,
-            )))
+            && forbidden_ipv4_with_policy(
+                Ipv4Addr::new(
+                    !(segments[6] >> 8) as u8,
+                    !(segments[6] & 0xff) as u8,
+                    !(segments[7] >> 8) as u8,
+                    !(segments[7] & 0xff) as u8,
+                ),
+                allow_private,
+            ));
+    if always_forbidden {
+        return true;
+    }
+    if allow_private {
+        return false;
+    }
+    // Unique local addresses (fc00::/7).
+    (segments[0] & 0xfe00) == 0xfc00
 }
 
-fn is_forbidden_ip(ip: IpAddr) -> bool {
+fn is_forbidden_ip_with_policy(ip: IpAddr, allow_private: bool) -> bool {
     match ip {
-        IpAddr::V4(ipv4) => forbidden_ipv4(ipv4),
-        IpAddr::V6(ipv6) => forbidden_ipv6(ipv6),
+        IpAddr::V4(ipv4) => forbidden_ipv4_with_policy(ipv4, allow_private),
+        IpAddr::V6(ipv6) => forbidden_ipv6_with_policy(ipv6, allow_private),
     }
+}
+
+#[cfg(test)]
+fn is_forbidden_ip(ip: IpAddr) -> bool {
+    is_forbidden_ip_with_policy(ip, false)
 }
 
 fn normalized_host(parsed: &reqwest::Url) -> Result<String, AppError> {
@@ -141,68 +210,116 @@ fn normalized_host(parsed: &reqwest::Url) -> Result<String, AppError> {
         .ok_or_else(|| AppError::InvalidPath("Webhook URL has no host.".to_string()))
 }
 
-/// Rejects hostnames that always resolve locally before any DNS lookup.
-fn validate_hostname_policy(host: &str) -> Result<(), AppError> {
-    if host == "localhost"
-        || host.ends_with(".localhost")
-        || host.ends_with(".local")
-        || host.ends_with(".internal")
-        || host.ends_with(".home.arpa")
+/// Rejects hostnames forbidden by the active policy before any DNS lookup.
+///
+/// Cloud metadata hostnames are always blocked even when `allow_private` is
+/// enabled for self-hosted n8n / LAN automation servers.
+fn validate_hostname_policy(host: &str, allow_private: bool) -> Result<(), AppError> {
+    if host == "metadata.google.internal" || host == "metadata" {
+        return Err(private_target_error(allow_private));
+    }
+    if !allow_private
+        && (host == "localhost"
+            || host.ends_with(".localhost")
+            || host.ends_with(".local")
+            || host.ends_with(".internal")
+            || host.ends_with(".home.arpa"))
     {
-        return Err(private_target_error());
+        return Err(private_target_error(false));
     }
     if let Ok(ip) = host.parse::<IpAddr>() {
-        if is_forbidden_ip(ip) {
-            return Err(private_target_error());
+        if is_forbidden_ip_with_policy(ip, allow_private) {
+            return Err(private_target_error(allow_private));
         }
     }
     Ok(())
 }
 
-/// Validates the scheme and literal-host policy. DNS-dependent checks happen in
-/// `prepare_webhook_client` / `prepare_blocking_client`, where the resolved IP
-/// can also be pinned for the actual request.
+/// Validates the scheme and literal-host policy under the strict public-only
+/// default. DNS-dependent checks happen in `prepare_webhook_client_*`, where
+/// every resolved IP is also pinned for the actual request.
 pub fn validate_webhook_url(url: &str) -> Result<reqwest::Url, AppError> {
+    validate_webhook_url_with_policy(url, false)
+}
+
+/// Validates the scheme and literal-host policy with an explicit
+/// `allow_private` toggle. When `allow_private` is `true`, loopback and
+/// RFC1918/ULA LAN hosts (such as a local or home-lab n8n instance) are
+/// permitted while cloud metadata (`169.254.0.0/16`, `fe80::/10`,
+/// `metadata.google.internal`), unspecified (`0.0.0.0`/`::`), multicast, and
+/// non-HTTP schemes remain blocked.
+pub fn validate_webhook_url_with_policy(
+    url: &str,
+    allow_private: bool,
+) -> Result<reqwest::Url, AppError> {
     let parsed = parse_http_url(url)?;
     let host = normalized_host(&parsed)?;
-    validate_hostname_policy(&host)?;
+    validate_hostname_policy(&host, allow_private)?;
     Ok(parsed)
 }
 
 fn client_builder() -> reqwest::ClientBuilder {
     reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(WEBHOOK_TIMEOUT_SECS))
+        // Ignore environment/system proxies so DNS pinning and SSRF policy can
+        // never be bypassed by an HTTP(S)_PROXY forwarding to internal targets.
+        .no_proxy()
         // The endpoint is supplied by the user. Following redirects would let a
         // public URL bounce the request to a loopback/private address the user
         // never approved. Webhook receivers answer directly, so no redirects.
         .redirect(reqwest::redirect::Policy::none())
-        .user_agent(concat!("DevCleaner/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("Detergo/", env!("CARGO_PKG_VERSION")))
 }
 
 fn blocking_client_builder() -> reqwest::blocking::ClientBuilder {
     reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(WEBHOOK_TIMEOUT_SECS))
+        .no_proxy()
         .redirect(reqwest::redirect::Policy::none())
-        .user_agent(concat!("DevCleaner/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("Detergo/", env!("CARGO_PKG_VERSION")))
 }
 
-fn ensure_public_addrs(addrs: &[SocketAddr]) -> Result<(), AppError> {
+fn ensure_allowed_addrs(addrs: &[SocketAddr], allow_private: bool) -> Result<(), AppError> {
     if addrs.is_empty() {
         return Err(AppError::InvalidPath(
             "Webhook host did not resolve to any address.".to_string(),
         ));
     }
-    if addrs.iter().any(|addr| is_forbidden_ip(addr.ip())) {
-        return Err(private_target_error());
+    if addrs
+        .iter()
+        .any(|addr| is_forbidden_ip_with_policy(addr.ip(), allow_private))
+    {
+        return Err(private_target_error(allow_private));
+    }
+    Ok(())
+}
+
+/// Canonicalizes a parsed URL's hostname (stripping trailing FQDN dots) so
+/// `reqwest`'s DNS pin map always matches the exact request host.
+fn canonicalize_request_host(parsed: &mut reqwest::Url, host: &str) -> Result<(), AppError> {
+    if parsed
+        .host_str()
+        .is_some_and(|raw| raw.ends_with('.') || raw.chars().any(|c| c.is_ascii_uppercase()))
+    {
+        let host_for_url = if host.contains(':') {
+            format!("[{host}]")
+        } else {
+            host.to_string()
+        };
+        parsed
+            .set_host(Some(&host_for_url))
+            .map_err(|err| AppError::InvalidPath(format!("Invalid webhook host: {err}")))?;
     }
     Ok(())
 }
 
 async fn prepare_webhook_client_async(
     url: &str,
+    allow_private: bool,
 ) -> Result<(reqwest::Client, reqwest::Url), AppError> {
-    let parsed = validate_webhook_url(url)?;
+    let mut parsed = validate_webhook_url_with_policy(url, allow_private)?;
     let host = normalized_host(&parsed)?;
+    canonicalize_request_host(&mut parsed, &host)?;
     let port = parsed.port_or_known_default().unwrap_or(443);
     let addrs: Vec<SocketAddr> = if let Ok(ip) = host.parse::<IpAddr>() {
         vec![SocketAddr::new(ip, port)]
@@ -214,25 +331,24 @@ async fn prepare_webhook_client_async(
             })?
             .collect()
     };
-    ensure_public_addrs(&addrs)?;
+    ensure_allowed_addrs(&addrs, allow_private)?;
 
-    let mut builder = client_builder();
-    // Pin every resolved address. Without this a second DNS answer could swap
-    // a public IP for a loopback address between validation and connect.
-    for addr in &addrs {
-        builder = builder.resolve(&host, *addr);
-    }
-    let client = builder
+    // Pin all validated addresses via `resolve_to_addrs` (a loop of `.resolve()`
+    // overwrote previous entries with only the last IP).
+    let client = client_builder()
+        .resolve_to_addrs(&host, &addrs)
         .build()
-        .map_err(|err| AppError::Network(err.to_string()))?;
+        .map_err(|err| AppError::Network(err.without_url().to_string()))?;
     Ok((client, parsed))
 }
 
 fn prepare_webhook_client_blocking(
     url: &str,
+    allow_private: bool,
 ) -> Result<(reqwest::blocking::Client, reqwest::Url), AppError> {
-    let parsed = validate_webhook_url(url)?;
+    let mut parsed = validate_webhook_url_with_policy(url, allow_private)?;
     let host = normalized_host(&parsed)?;
+    canonicalize_request_host(&mut parsed, &host)?;
     let port = parsed.port_or_known_default().unwrap_or(443);
     let addrs: Vec<SocketAddr> = if let Ok(ip) = host.parse::<IpAddr>() {
         vec![SocketAddr::new(ip, port)]
@@ -244,15 +360,12 @@ fn prepare_webhook_client_blocking(
             })?
             .collect()
     };
-    ensure_public_addrs(&addrs)?;
+    ensure_allowed_addrs(&addrs, allow_private)?;
 
-    let mut builder = blocking_client_builder();
-    for addr in &addrs {
-        builder = builder.resolve(&host, *addr);
-    }
-    let client = builder
+    let client = blocking_client_builder()
+        .resolve_to_addrs(&host, &addrs)
         .build()
-        .map_err(|err| AppError::Network(err.to_string()))?;
+        .map_err(|err| AppError::Network(err.without_url().to_string()))?;
     Ok((client, parsed))
 }
 
@@ -293,7 +406,7 @@ async fn post_json(
                     tokio::time::sleep(std::time::Duration::from_millis(*delay)).await;
                     continue;
                 }
-                return Err(AppError::Network(err.to_string()));
+                return Err(AppError::Network(err.without_url().to_string()));
             }
         };
 
@@ -335,12 +448,16 @@ async fn post_json(
 pub async fn test_webhook(
     url: String,
     payload: Option<serde_json::Value>,
+    allow_private: Option<bool>,
+    state: tauri::State<'_, crate::commands::AppState>,
 ) -> Result<WebhookTestResult, AppError> {
-    let (client, parsed) = prepare_webhook_client_async(&url).await?;
+    let allow_private =
+        allow_private.unwrap_or_else(|| state.settings.load().allow_private_webhooks);
+    let (client, parsed) = prepare_webhook_client_async(&url, allow_private).await?;
     let body = payload.unwrap_or_else(|| {
         serde_json::json!({
             "event": "webhook_test",
-            "product": "Dev Cleaner by Vellium",
+            "product": "Detergo by Vellium",
             "version": env!("CARGO_PKG_VERSION"),
             "timestamp": chrono::Utc::now().to_rfc3339(),
         })
@@ -350,7 +467,7 @@ pub async fn test_webhook(
 
 /// Renames the camelCase keys the GUI used to send on the wire to the
 /// snake_case names the CLI payload and the documentation use. One consumer
-/// must be able to parse every Dev Cleaner event with one schema.
+/// must be able to parse every Detergo event with one schema.
 const LEGACY_KEY_MAP: &[(&str, &str)] = &[
     ("scanId", "scan_id"),
     ("rootPath", "root_path"),
@@ -388,7 +505,7 @@ pub fn canonicalize_webhook_payload(event: &str, payload: Value) -> Value {
     );
     out.insert(
         "product".to_string(),
-        Value::String("Dev Cleaner by Vellium".to_string()),
+        Value::String("Detergo by Vellium".to_string()),
     );
     out.insert(
         "version".to_string(),
@@ -466,7 +583,8 @@ pub async fn dispatch_webhook(
         .clone()
         .filter(|value| !value.trim().is_empty())
         .ok_or_else(|| AppError::InvalidPath("Webhook URL is not configured.".to_string()))?;
-    let (client, parsed) = prepare_webhook_client_async(&url).await?;
+    let (client, parsed) =
+        prepare_webhook_client_async(&url, settings.allow_private_webhooks).await?;
     let body = canonicalize_webhook_payload(canonical_event, payload);
     post_json(client, parsed, &body).await
 }
@@ -477,7 +595,17 @@ pub fn post_webhook_blocking(
     url: &str,
     payload: &serde_json::Value,
 ) -> Result<WebhookTestResult, AppError> {
-    let (client, parsed) = prepare_webhook_client_blocking(url)?;
+    post_webhook_blocking_with_policy(url, payload, false)
+}
+
+/// Blocking variant with an explicit `allow_private` flag mirroring the saved
+/// `allow_private_webhooks` setting for self-hosted n8n / LAN endpoints.
+pub fn post_webhook_blocking_with_policy(
+    url: &str,
+    payload: &serde_json::Value,
+    allow_private: bool,
+) -> Result<WebhookTestResult, AppError> {
+    let (client, parsed) = prepare_webhook_client_blocking(url, allow_private)?;
     post_blocking_json(client, parsed, payload)
 }
 
@@ -525,7 +653,7 @@ fn post_blocking_json(
                     std::thread::sleep(std::time::Duration::from_millis(*delay));
                     continue;
                 }
-                return Err(AppError::Network(err.to_string()));
+                return Err(AppError::Network(err.without_url().to_string()));
             }
         };
 
@@ -620,6 +748,37 @@ mod tests {
     }
 
     #[test]
+    fn allow_private_policy_permits_self_hosted_lan_and_blocks_cloud_metadata() {
+        for allowed in [
+            "http://localhost:5678/webhook/detergo",
+            "http://127.0.0.1:5678/webhook/detergo",
+            "http://[::1]:5678/webhook/detergo",
+            "http://192.168.1.42:5678/webhook/detergo",
+            "http://10.0.0.15:5678/webhook/detergo",
+            "http://100.64.0.12:5678/webhook/detergo",
+            "http://n8n.local:5678/webhook/detergo",
+        ] {
+            assert!(
+                validate_webhook_url_with_policy(allowed, true).is_ok(),
+                "{allowed} should be accepted when allow_private=true"
+            );
+        }
+        for still_blocked in [
+            "http://169.254.169.254/latest/meta-data/",
+            "http://[fe80::1]/hook",
+            "http://0.0.0.0/hook",
+            "http://[::]/hook",
+            "http://metadata.google.internal/computeMetadata/v1/",
+            "file:///C:/Windows/win.ini",
+        ] {
+            assert!(
+                validate_webhook_url_with_policy(still_blocked, true).is_err(),
+                "{still_blocked} must remain blocked even when allow_private=true"
+            );
+        }
+    }
+
+    #[test]
     fn canonical_payload_renames_gui_fields_and_fills_the_envelope() {
         let body = canonicalize_webhook_payload(
             "scan",
@@ -642,7 +801,7 @@ mod tests {
         assert_eq!(body["duration_ms"].as_u64(), Some(900));
         assert_eq!(body["root_path"], "D:\\work");
         assert_eq!(body["status"], "success");
-        assert_eq!(body["product"], "Dev Cleaner by Vellium");
+        assert_eq!(body["product"], "Detergo by Vellium");
         assert_eq!(body["version"], env!("CARGO_PKG_VERSION"));
         assert!(body["timestamp"].as_str().is_some_and(|ts| !ts.is_empty()));
         // The legacy name must not survive next to its canonical twin.
@@ -672,7 +831,7 @@ mod tests {
         let cli = serde_json::json!({
             "event": "clean",
             "timestamp": "2026-11-17T10:00:00Z",
-            "product": "Dev Cleaner by Vellium",
+            "product": "Detergo by Vellium",
             "version": "1.0.0",
             "scope": "projects",
             "target_count": 24,

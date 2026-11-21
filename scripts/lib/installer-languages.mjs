@@ -6,8 +6,8 @@
  * `.nsh` (Modern UI strings) and Tauri custom-message `.nsh` files from the
  * English originals, so the setup wizard never falls back to English.
  *
- * `source: "nsis"`   — shipped by NSIS in Contrib\Language files.
- * `source: "project"` — generated into src-tauri/nsis/languages and synced into
+ * `source: "nsis"`   - shipped by NSIS in Contrib\Language files.
+ * `source: "project"` - generated into src-tauri/nsis/languages and synced into
  *                       the NSIS language directory before bundling.
  */
 export const INSTALLER_LANGUAGES = [

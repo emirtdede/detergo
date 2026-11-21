@@ -1,6 +1,6 @@
-# Contributing to Dev Cleaner
+# Contributing to Detergo
 
-Thanks for taking the time to improve Dev Cleaner. This guide covers the local
+Thanks for taking the time to improve Detergo. This guide covers the local
 setup, the quality gates every change must pass, and the conventions the
 codebase follows. If something here is unclear, open a discussion or an issue.
 
@@ -10,11 +10,11 @@ Security problems must be reported privately as described in
 
 ## What the project is
 
-Dev Cleaner is a Windows desktop application built with **Tauri 2 (Rust)** and
+Detergo is a Windows desktop application built with **Tauri 2 (Rust)** and
 **React 19 (TypeScript)**. It discovers reproducible developer artifacts (for
 example `node_modules`, Python virtual environments, Rust `target` folders, AI
 coding-agent storage and package-manager caches), shows their real disk usage,
-and deletes the targets you select — by default to the Windows Recycle Bin.
+and deletes the targets you select - by default to the Windows Recycle Bin.
 
 Two rules shape almost every review:
 
@@ -38,8 +38,8 @@ Two rules shape almost every review:
 ## Local setup
 
 ```bash
-git clone https://github.com/emirtdede/dev-cleaner.git
-cd dev-cleaner
+git clone https://github.com/emirtdede/detergo.git
+cd detergo
 npm ci
 ```
 
@@ -101,7 +101,7 @@ scripts/              build, verification and gate scripts
 e2e/                  Playwright accessibility and smoke tests
 ```
 
-Read [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md)
+Read [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md)
 before changing a layer boundary.
 
 ## Making a change
@@ -118,21 +118,25 @@ before changing a layer boundary.
    that is a `#[test]` next to the code; for a frontend fix, a Vitest case in
    `src/test/`.
 5. **Update documentation** when behaviour, flags, or invariants change.
-   `docs/MASTER_SPEC.md` is normative; if your change contradicts it, update the
-   specification in the same pull request.
+   Keep `docs/ARCHITECTURE.md` and `docs/CLI.md` aligned in the same pull
+   request.
 6. **Open a pull request** using the template. Describe the user-visible effect,
    the tests you ran, and any risk you considered.
 
 ## Localisation
 
-The UI ships 73 languages. User-visible strings live in `src/locales/` and in
-the generated UI-text catalogues; never hard-code English in a component. Add a
-key to English and the fallback chain handles the rest, but run
-`npm run check:i18n` — it rejects missing keys, orphaned keys, mojibake and
+The UI ships 73 languages. User-visible strings live in `src/lib/ui-text/`
+(`en.ts`, `tr.ts`, and `locales/*.json`); never hard-code English in a
+component. Add a key to English, Turkish, and every locale JSON, then run
+`npm run check:i18n` - it rejects missing keys, orphaned keys, mojibake and
 untranslated leaves that are not allowlisted.
 
 Chinese, Japanese, Korean and other non-Latin scripts must not be used as
 decoration in code or comments; the script audit checks for that.
+
+Long dashes (`U+2013`, `U+2014`, `U+2015`) are permanently prohibited across
+all source files, translations, scripts, and documentation; always use the
+standard ASCII hyphen (`-`). This is enforced in CI by `npm run check:audit`.
 
 ## Safety-sensitive changes
 
@@ -148,14 +152,14 @@ destructive gates must answer:
 `npm run check:audit` enforces five structural invariants (single deletion
 chokepoint, mandatory confirmation token, audit-before-report, no raw
 `remove_dir_all` outside the cleanup module, and no unprotected IPC delete
-command). Read `scripts/check-audit-invariants.mjs` before working around it —
+command). Read `scripts/check-audit-invariants.mjs` before working around it -
 the workaround is almost always the bug.
 
 ## Reporting bugs
 
 Use the bug report template and include:
 
-- Dev Cleaner version (`dev-cleaner --version` or the About screen).
+- Detergo version (`detergo --version` or the About screen).
 - Windows version and architecture.
 - Exact steps, expected result and actual result.
 - Relevant log lines with personal paths redacted.
@@ -164,4 +168,4 @@ Use the bug report template and include:
 ## License
 
 By contributing you agree that your contribution is licensed under the
-[MIT License](LICENSE), the same license as the project.
+[MIT License](../LICENSE), the same license as the project.

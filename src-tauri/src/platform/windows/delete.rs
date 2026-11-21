@@ -53,8 +53,8 @@ mod imp {
         BY_HANDLE_FILE_INFORMATION, DELETE, FILE_DISPOSITION_FLAG_DELETE,
         FILE_DISPOSITION_FLAG_IGNORE_READONLY_ATTRIBUTE, FILE_DISPOSITION_FLAG_POSIX_SEMANTICS,
         FILE_DISPOSITION_INFO_EX, FILE_DISPOSITION_INFO_EX_FLAGS, FILE_FLAG_BACKUP_SEMANTICS,
-        FILE_FLAG_OPEN_REPARSE_POINT, FILE_SHARE_DELETE, FILE_SHARE_READ, FILE_SHARE_WRITE,
-        OPEN_EXISTING,
+        FILE_FLAG_OPEN_REPARSE_POINT, FILE_READ_ATTRIBUTES, FILE_SHARE_DELETE, FILE_SHARE_READ,
+        FILE_SHARE_WRITE, OPEN_EXISTING,
     };
 
     /// `ERROR_INVALID_FUNCTION`, `ERROR_NOT_SUPPORTED`, `ERROR_INVALID_PARAMETER`.
@@ -86,6 +86,39 @@ mod imp {
         err.code().0 as u32 & 0xFFFF
     }
 
+    /// Verifies the identity of `path` without following reparse points.
+    pub fn verify_identity_no_follow(
+        path: &Path,
+        expected: FileIdentity,
+    ) -> Result<(), HandleDeleteError> {
+        let wide = super::super::wide_verbatim(path);
+        let handle = unsafe {
+            CreateFileW(
+                PCWSTR(wide.as_ptr()),
+                FILE_READ_ATTRIBUTES.0,
+                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                None,
+                OPEN_EXISTING,
+                FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS,
+                None,
+            )
+        }
+        .map(HandleGuard)
+        .map_err(|err| classify(win32_code(err)))?;
+
+        let mut info = BY_HANDLE_FILE_INFORMATION::default();
+        unsafe { GetFileInformationByHandle(handle.0, &mut info) }
+            .map_err(|err| classify(win32_code(err)))?;
+        let actual = FileIdentity {
+            volume_serial: info.dwVolumeSerialNumber as u64,
+            file_index: ((info.nFileIndexHigh as u64) << 32) | info.nFileIndexLow as u64,
+        };
+        if actual != expected {
+            return Err(HandleDeleteError::IdentityChanged);
+        }
+        Ok(())
+    }
+
     /// Opens `path` (never following a reparse point), verifies its identity
     /// when `expected` is supplied, and marks the opened handle for deletion.
     pub fn delete_by_handle(
@@ -96,7 +129,7 @@ mod imp {
         let handle = unsafe {
             CreateFileW(
                 PCWSTR(wide.as_ptr()),
-                DELETE.0,
+                DELETE.0 | FILE_READ_ATTRIBUTES.0,
                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                 None,
                 OPEN_EXISTING,
@@ -152,6 +185,17 @@ mod imp {
     use super::*;
     use std::path::Path;
 
+    pub fn verify_identity_no_follow(
+        path: &Path,
+        expected: FileIdentity,
+    ) -> Result<(), HandleDeleteError> {
+        match crate::platform::identity(path) {
+            Some(actual) if actual == expected => Ok(()),
+            Some(_) => Err(HandleDeleteError::IdentityChanged),
+            None => Err(HandleDeleteError::Failed(0)),
+        }
+    }
+
     pub fn delete_by_handle(
         _path: &Path,
         _expected: Option<FileIdentity>,
@@ -161,7 +205,7 @@ mod imp {
     }
 }
 
-pub use imp::delete_by_handle;
+pub use imp::{delete_by_handle, verify_identity_no_follow};
 
 #[cfg(all(test, windows))]
 mod tests {

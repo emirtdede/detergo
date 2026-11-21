@@ -104,7 +104,7 @@ describe("fourth audit round", () => {
   describe("scan history healing", () => {
     it("rewrites a stored record whose only problem is an unmasked path", () => {
       storageMap.set(
-        "dev_cleaner_scan_history",
+        "detergo_scan_history",
         JSON.stringify([
           {
             id: "scan-1",
@@ -123,7 +123,7 @@ describe("fourth audit round", () => {
       expect(read.records[0].rootPath).not.toContain("alice");
 
       // The repaired list must also be persisted, not only returned.
-      const stored = JSON.parse(storageMap.get("dev_cleaner_scan_history") ?? "[]");
+      const stored = JSON.parse(storageMap.get("detergo_scan_history") ?? "[]");
       expect(stored[0].rootPath).not.toContain("alice");
     });
 
@@ -139,10 +139,10 @@ describe("fourth audit round", () => {
         status: "completed",
       };
       const original = JSON.stringify([record]);
-      storageMap.set("dev_cleaner_scan_history", original);
+      storageMap.set("detergo_scan_history", original);
 
       readScanHistory();
-      expect(storageMap.get("dev_cleaner_scan_history")).toBe(original);
+      expect(storageMap.get("detergo_scan_history")).toBe(original);
     });
   });
 });

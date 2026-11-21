@@ -78,16 +78,16 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
               <span className="docs-category-pill">{t("Overview")}</span>
               <span className="docs-version-pill">v{APP_VERSION}</span>
             </div>
-            <h1 className="docs-title">{t("Welcome to Dev Cleaner")}</h1>
+            <h1 className="docs-title">{t("Welcome to Detergo")}</h1>
             <p className="docs-lead">
               
-              {t("Dev Cleaner is a high-performance desktop utility designed to purge heavy dependencies (node_modules, target, .venv, build), AI coding agent caches (Claude Code, Cursor, Codex), and 21 global package caches with zero data loss guarantee.")}
+              {t("Detergo is a high-performance desktop utility designed to purge heavy dependencies (node_modules, target, .venv, build), AI coding agent caches (Claude Code, Cursor, Codex), and 21 global package caches with zero data loss guarantee.")}
             </p>
 
             <div className="docs-callout docs-callout--success">
               <ShieldCheck className="docs-callout-icon" size={18} />
               <div>
-              <strong>{t("Zero Data Loss Principle:")}</strong>  {t("All project and AI artifacts cleaned by Dev Cleaner are moved directly to the")} <strong>{t("Windows Recycle Bin")}</strong>{t(". Nothing is permanently destroyed by accident.")}
+              <strong>{t("Zero Data Loss Principle:")}</strong>  {t("All project and AI artifacts cleaned by Detergo are moved directly to the")} <strong>{t("Windows Recycle Bin")}</strong>{t(". Nothing is permanently destroyed by accident.")}
               </div>
             </div>
 
@@ -96,8 +96,8 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
               <div>
                 <strong>Unified Top Command Bar:</strong> All scans start from the single scan hub
                 in the top bar. Run <strong>{ui.common.scanAll}</strong> (Projects, AI Tools,
-                Package Caches and System Cleaner — CLI <code>-t all</code>) in one click, or pick
-                any 1–3 targets via checkboxes. While running, the header shows the active scope and
+                Package Caches and System Cleaner - CLI <code>-t all</code>) in one click, or pick
+                any 1-3 targets via checkboxes. While running, the header shows the active scope and
                 live progress alongside Stop.
               </div>
             </div>
@@ -105,7 +105,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
             <h2 className="docs-h2">{t("4 Core Operating Modes")}</h2>
             <p className="docs-p">
               
-              {t("Dev Cleaner adapts seamlessly to your developer workflow through 4 distinct operating paradigms:")}
+              {t("Detergo adapts seamlessly to your developer workflow through 4 distinct operating paradigms:")}
             </p>
 
             <div className="docs-modes-grid">
@@ -140,7 +140,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                 </div>
                 <p className="docs-mode-desc">
                   
-                  {t("High-speed terminal operations via")} <code>{t("dev-cleaner")}</code>  {t("across PowerShell, CMD, and Bash with")} <code>{t("--dry-run")}</code>  {t("simulations and headless automation.")}
+                  {t("High-speed terminal operations via")} <code>{t("detergo")}</code>  {t("across PowerShell, CMD, and Bash with")} <code>{t("--dry-run")}</code>  {t("simulations and headless automation.")}
                 </p>
                 <div className="docs-mode-target">
                   <span className="docs-mode-target-label">{t("🎯 Best For:")}</span>  {t("Fast keyboard-centric workflows, scripts, and terminal power users")}
@@ -197,17 +197,17 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                 {
                   id: "qs-cli",
                   label: t("Simulation mode (dry-run without modifying or removing any files)"),
-                  command: 'dev-cleaner s "D:\\projects" -t p,a -c -n',
+                  command: 'detergo s "D:\\projects" -t p,a -c -n',
                 },
                 {
                   id: "qs-combined",
                   label: `${ui.common.scanAll} (Projects + AI + Caches + System)`,
-                  command: 'dev-cleaner s "D:\\projects" -t all',
+                  command: 'detergo s "D:\\projects" -t all',
                 },
                 {
                   id: "qs-system",
                   label: ui.system.title,
-                  command: "dev-cleaner sys",
+                  command: "detergo sys",
                 },
               ]}
             />
@@ -223,7 +223,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
             <h1 className="docs-title">{t("Zero Data Loss & Safety Manifesto")}</h1>
             <p className="docs-lead">
               
-              {t("The primary virtue of a cleaning tool is not simply freeing disk space, but ensuring no developer source code or personal data is ever damaged. Dev Cleaner adheres strictly to these rules:")}
+              {t("The primary virtue of a cleaning tool is not simply freeing disk space, but ensuring no developer source code or personal data is ever damaged. Detergo adheres strictly to these rules:")}
             </p>
 
             <div className="docs-callout">
@@ -243,7 +243,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
             <div className="docs-callout docs-callout--success">
               <ShieldCheck className="docs-callout-icon" size={18} />
               <div>
-                <strong>{t("3. Process Lock Protection:")}</strong>  {t("If an active Node.js, Cargo, or IDE process holds a lock on a target folder, Dev Cleaner never forces deletion; it safely skips the target and reports it in the summary.")}
+                <strong>{t("3. Process Lock Protection:")}</strong>  {t("If an active Node.js, Cargo, or IDE process holds a lock on a target folder, Detergo never forces deletion; it safely skips the target and reports it in the summary.")}
               </div>
             </div>
           </article>
@@ -259,7 +259,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
             <h1 className="docs-title">{t("Restoring Accidentally Removed Targets")}</h1>
             <p className="docs-lead">
               
-              {t("No file cleaned with Dev Cleaner is ever permanently deleted immediately. All items reside safely in the Windows Recycle Bin preserving original metadata and paths. You can restore an accidentally cleaned folder in seconds:")}
+              {t("No file cleaned with Detergo is ever permanently deleted immediately. All items reside safely in the Windows Recycle Bin preserving original metadata and paths. You can restore an accidentally cleaned folder in seconds:")}
             </p>
 
             <h2 className="docs-h2">{t("Method 1: One-Click Restoration from Windows Desktop")}</h2>
@@ -294,7 +294,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
             <div className="docs-callout">
               <ShieldCheck className="docs-callout-icon" size={18} />
               <div>
-                <strong>{t("Git Repositories Are Always Immune:")}</strong>  {t("Dev Cleaner kernel-level rules strictly prohibit targeting")} <code>{t(".git")}</code>  {t("folders,")}
+                <strong>{t("Git Repositories Are Always Immune:")}</strong>  {t("Detergo kernel-level rules strictly prohibit targeting")} <code>{t(".git")}</code>  {t("folders,")}
                 <code>{t(".env")}</code>  {t("files, and source code. Your work and git histories are 100% safe.")}
               </div>
             </div>
@@ -311,7 +311,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
             <h1 className="docs-title">{t("Developer Frequently Asked Questions (FAQ)")}</h1>
             <p className="docs-lead">
               
-              {t("Answers to the most frequently asked technical questions regarding Dev Cleaner logic:")}
+              {t("Answers to the most frequently asked technical questions regarding Detergo logic:")}
             </p>
 
             <div className="docs-faq-card">
@@ -335,7 +335,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
               </div>
               <p className="docs-faq-a">
                   
-                  {t("Dev Cleaner does not stop running containers; it executes the official command")} <code>{t("docker builder prune -f")}</code>.{" "}
+                  {t("Detergo does not stop running containers; it executes the official command")} <code>{t("docker builder prune -f")}</code>.{" "}
                   {t("Active containers, database volumes, and tagged images are untouched; only stale intermediate build stages are removed.")}
               </p>
             </div>
@@ -343,13 +343,13 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
             <div className="docs-faq-card">
               <div className="docs-faq-q">
                 <HelpCircle size={16} className="text-accent" />
-                <span>{t("Getting \"Command not found\" for")} <code>{t("dev-cleaner")}</code>  {t("in terminal?")}</span>
+                <span>{t("Getting \"Command not found\" for")} <code>{t("detergo")}</code>  {t("in terminal?")}</span>
               </div>
               <p className="docs-faq-a">
-                The NSIS installer adds <code>dev-cleaner</code> to your user <code>PATH</code> automatically.
+                The NSIS installer adds <code>detergo</code> to your user <code>PATH</code> automatically.
                 When running the portable executable, click <strong>Add CLI to PATH</strong> in the{" "}
                 <strong>Terminal CLI Command Guide</strong> to create{" "}
-                <code>%LOCALAPPDATA%\dev-cleaner\bin\dev-cleaner.cmd</code> and register it on your user PATH.
+                <code>%LOCALAPPDATA%\detergo\bin\detergo.cmd</code> and register it on your user PATH.
                 Close and reopen any existing terminal window to pick up the updated PATH.
               </p>
             </div>
@@ -399,7 +399,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
             <h1 className="docs-title">{t("Terminal CLI Command Guide")}</h1>
             <p className="docs-lead">
               
-              {t("Dev Cleaner runs as a global command on your Windows PATH. You can invoke it from any terminal at any time:")}
+              {t("Detergo runs as a global command on your Windows PATH. You can invoke it from any terminal at any time:")}
             </p>
 
             {onRegisterCliPath && (
@@ -408,7 +408,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                   <strong>
                     {cliEnv?.inPath && cliEnv?.shimUpToDate
                       ? "CLI is ready on your user PATH"
-                      : "dev-cleaner is not registered on your user PATH yet"}
+                      : "detergo is not registered on your user PATH yet"}
                   </strong>
                   <span>
                     {cliEnv?.executablePath ? (
@@ -416,7 +416,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                         Executable: <code>{cliEnv.executablePath}</code>
                       </>
                     ) : (
-                      "Register a shim in %LOCALAPPDATA%\\dev-cleaner\\bin with one click, then open a new terminal."
+                      "Register a shim in %LOCALAPPDATA%\\detergo\\bin with one click, then open a new terminal."
                     )}
                   </span>
                 </div>
@@ -461,7 +461,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
               </button>
             </div>
 
-            <h2 className="docs-h2">1. `dev-cleaner s` (`scan`)</h2>
+            <h2 className="docs-h2">1. `detergo s` (`scan`)</h2>
             <p className="docs-p">
               Short, concise CLI syntax with multi-target selection (<code>-t p,a,c,s</code>). All
               long flags (<code>scan</code>, <code>--auto-clean</code>, <code>--dry-run</code>)
@@ -480,72 +480,72 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                       {
                         id: "cli-scan-std",
                         label: t("Standard scan with human-readable console summary"),
-                        command: 'dev-cleaner s "/d/projects"',
+                        command: 'detergo s "/d/projects"',
                       },
                       {
                         id: "cli-scan-targets",
                         label: "Selected targets (Projects + AI Tools + Package Caches)",
-                        command: 'dev-cleaner s "/d/projects" -t p,a,c',
+                        command: 'detergo s "/d/projects" -t p,a,c',
                       },
                       {
                         id: "cli-scan-all",
                         label: "All targets in one command (Projects + AI + Caches + System)",
-                        command: 'dev-cleaner s "/d/projects" -t all',
+                        command: 'detergo s "/d/projects" -t all',
                       },
                       {
                         id: "cli-scan-auto",
                         label: t(
                           "Autonomous cleanup (moves only safe and regenerate targets to Recycle Bin)",
                         ),
-                        command: 'dev-cleaner s "/d/projects" -c',
+                        command: 'detergo s "/d/projects" -c',
                       },
                       {
                         id: "cli-scan-dry",
                         label: t(
                           "Simulation mode (dry-run without modifying or removing any files)",
                         ),
-                        command: 'dev-cleaner s "/d/projects" -c -n',
+                        command: 'detergo s "/d/projects" -c -n',
                       },
                       {
                         id: "cli-scan-json",
                         label: t("Structured JSON output for CI/CD and script automation"),
-                        command: 'dev-cleaner s "/d/projects" -j',
+                        command: 'detergo s "/d/projects" -j',
                       },
                     ]
                   : [
                       {
                         id: "cli-scan-std",
                         label: t("Standard scan with human-readable console summary"),
-                        command: 'dev-cleaner s "D:\\projects"',
+                        command: 'detergo s "D:\\projects"',
                       },
                       {
                         id: "cli-scan-targets",
                         label: "Selected targets (Projects + AI Tools + Package Caches)",
-                        command: 'dev-cleaner s "D:\\projects" -t p,a,c',
+                        command: 'detergo s "D:\\projects" -t p,a,c',
                       },
                       {
                         id: "cli-scan-all",
                         label: "All targets in one command (Projects + AI + Caches + System)",
-                        command: 'dev-cleaner s "D:\\projects" -t all',
+                        command: 'detergo s "D:\\projects" -t all',
                       },
                       {
                         id: "cli-scan-auto",
                         label: t(
                           "Autonomous cleanup (moves only safe and regenerate targets to Recycle Bin)",
                         ),
-                        command: 'dev-cleaner s "D:\\projects" -c',
+                        command: 'detergo s "D:\\projects" -c',
                       },
                       {
                         id: "cli-scan-dry",
                         label: t(
                           "Simulation mode (dry-run without modifying or removing any files)",
                         ),
-                        command: 'dev-cleaner s "D:\\projects" -c -n',
+                        command: 'detergo s "D:\\projects" -c -n',
                       },
                       {
                         id: "cli-scan-json",
                         label: t("Structured JSON output for CI/CD and script automation"),
-                        command: 'dev-cleaner s "D:\\projects" -j',
+                        command: 'detergo s "D:\\projects" -j',
                       },
                     ]
               }
@@ -620,7 +620,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
               </table>
             </div>
 
-            <h2 className="docs-h2">2. `dev-cleaner c` (`caches`)</h2>
+            <h2 className="docs-h2">2. `detergo c` (`caches`)</h2>
             <p className="docs-p">{t("Queries package caches for 21 developer tools or purges them via official CLI commands.")}</p>
             <DocsCommandList
               title={t("Cache Commands")}
@@ -633,27 +633,27 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                 {
                   id: "cli-cache-list",
                   label: t("List metrics for all supported package caches"),
-                  command: "dev-cleaner c",
+                  command: "detergo c",
                 },
                 {
                   id: "cli-cache-npm",
                   label: t("Purge a specific tool cache (e.g., npm, pip, cargo, docker)"),
-                  command: "dev-cleaner c npm",
+                  command: "detergo c npm",
                 },
                 {
                   id: "cli-cache-dry",
                   label: t("Preview a full purge without deleting anything"),
-                  command: "dev-cleaner c all -n",
+                  command: "detergo c all -n",
                 },
                 {
                   id: "cli-cache-all",
                   label: t("Purge caches for all detected installed tools"),
-                  command: "dev-cleaner c all -y",
+                  command: "detergo c all -y",
                 },
               ]}
             />
 
-            <h2 className="docs-h2">3. `dev-cleaner sys` (`system`)</h2>
+            <h2 className="docs-h2">3. `detergo sys` (`system`)</h2>
             <p className="docs-p">{ui.system.subtitle}</p>
             <DocsCommandList
               title={ui.system.title}
@@ -666,27 +666,27 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                 {
                   id: "cli-sys-list",
                   label: "List all C: drive cleanup actions and measured sizes",
-                  command: "dev-cleaner sys",
+                  command: "detergo sys",
                 },
                 {
                   id: "cli-sys-dry",
                   label: "Preview quick cleanup without deleting anything",
-                  command: "dev-cleaner sys quick -n",
+                  command: "detergo sys quick -n",
                 },
                 {
                   id: "cli-sys-quick",
                   label: "Run quick system cleanup (user temp + Windows Update leftovers)",
-                  command: "dev-cleaner sys quick -y",
+                  command: "detergo sys quick -y",
                 },
                 {
                   id: "cli-sys-std",
                   label: "Run standard system cleanup (Administrator recommended)",
-                  command: "dev-cleaner sys standard -y",
+                  command: "detergo sys standard -y",
                 },
               ]}
             />
 
-            <h2 className="docs-h2">4. `dev-cleaner hist` (`history`)</h2>
+            <h2 className="docs-h2">4. `detergo hist` (`history`)</h2>
             <p className="docs-p">{t("Lists historical cleanup records and reclaimed bytes audit logs.")}</p>
             <DocsCommandList
               title="Audit History Commands"
@@ -699,12 +699,12 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                 {
                   id: "cli-history",
                   label: "Show the 15 most recent cleanup records",
-                  command: "dev-cleaner hist 15",
+                  command: "detergo hist 15",
                 },
                 {
                   id: "cli-history-json",
                   label: "Export cleanup history as JSON",
-                  command: "dev-cleaner hist 50 -j",
+                  command: "detergo hist 50 -j",
                 },
               ]}
             />
@@ -720,7 +720,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
             <h1 className="docs-title">{t("Interactive CLI Command Builder")}</h1>
             <p className="docs-lead">
               
-              {t("Configure the options below; Dev Cleaner dynamically generates a ready-to-run terminal command for you:")}
+              {t("Configure the options below; Detergo dynamically generates a ready-to-run terminal command for you:")}
             </p>
 
             <div className="cli-builder-card">
@@ -843,7 +843,7 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
             <h1 className="docs-title">{t("Headless Cron & CI/CD Pipeline Integration")}</h1>
             <p className="docs-lead">
               
-              {t("Dev Cleaner can execute in headless mode via Windows Task Scheduler or CI/CD runners to maintain disk headroom periodically.")}
+              {t("Detergo can execute in headless mode via Windows Task Scheduler or CI/CD runners to maintain disk headroom periodically.")}
             </p>
 
             <h2 className="docs-h2">{t("Weekly Automation with Windows Task Scheduler")}</h2>
@@ -854,9 +854,9 @@ export const DocsContentEn: React.FC<DocsContentProps> = ({
                   type="button"
                   className="docs-copy-action"
                   onClick={() => copyToClipboard(
-`$Action = New-ScheduledTaskAction -Execute "dev-cleaner.exe" -Argument "s C:\\dev -c -m 100 -w https://n8n.company.com/cleanup"
+`$Action = New-ScheduledTaskAction -Execute "detergo.exe" -Argument "s C:\\dev -c -m 100 -w https://n8n.company.com/cleanup"
 $Trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At 3am
-Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWeekly" -Description \"${t("Weekly automated safe dependency cleanup")}\"`,
+Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DetergoWeekly" -Description \"${t("Weekly automated safe dependency cleanup")}\"`,
                     "cron-task"
                   )}
                 >
@@ -867,9 +867,9 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
               <pre className="docs-code-pre">
                 {highlightBash(
 `# ${t("Configure autonomous task running every Sunday at 03:00 via PowerShell")}
-$Action = New-ScheduledTaskAction -Execute "dev-cleaner.exe" -Argument "s C:\\dev -c -m 100 -w https://n8n.company.com/cleanup"
+$Action = New-ScheduledTaskAction -Execute "detergo.exe" -Argument "s C:\\dev -c -m 100 -w https://n8n.company.com/cleanup"
 $Trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At 3am
-Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWeekly" -Description \"${t("Weekly automated safe dependency cleanup")}\"`
+Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DetergoWeekly" -Description \"${t("Weekly automated safe dependency cleanup")}\"`
                 )}
               </pre>
             </div>
@@ -886,7 +886,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             <h1 className="docs-title">{t("Model Context Protocol (MCP) Server")}</h1>
             <p className="docs-lead">
               
-              {t("Dev Cleaner natively hosts a")} <strong>{t("Model Context Protocol (MCP)")}</strong>  {t("server supported by Anthropic and the Linux Foundation. AI coding assistants (Cursor, Windsurf, Claude Code) can query workspace disk pressure and execute safe cleanups with your permission.")}
+              {t("Detergo natively hosts a")} <strong>{t("Model Context Protocol (MCP)")}</strong>  {t("server supported by Anthropic and the Linux Foundation. AI coding assistants (Cursor, Windsurf, Claude Code) can query workspace disk pressure and execute safe cleanups with your permission.")}
             </p>
 
             <div className="docs-callout docs-callout--success">
@@ -908,12 +908,12 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
                 {
                   id: "mcp-start",
                   label: "Start in standard read-only / preview mode",
-                  command: "dev-cleaner mcp",
+                  command: "detergo mcp",
                 },
                 {
                   id: "mcp-start-destructive",
                   label: "Start with destructive tools enabled (must also be enabled in Settings)",
-                  command: "dev-cleaner mcp --allow-destructive",
+                  command: "detergo mcp --allow-destructive",
                 },
               ]}
             />
@@ -943,7 +943,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
                 <div className="docs-cli-env-copy">
                   <strong>Using full executable path automatically</strong>
                   <span>
-                    Because <code>dev-cleaner</code> is not on your PATH yet, the snippet below points
+                    Because <code>detergo</code> is not on your PATH yet, the snippet below points
                     directly to <code>{cliEnv.executablePath}</code>. You can also add it to PATH in one click.
                   </span>
                 </div>
@@ -988,7 +988,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             <h1 className="docs-title">{t("Cursor & Claude Code System Prompt Library")}</h1>
             <p className="docs-lead">
               
-              {t("High-efficiency, battle-tested system prompt cards for instructing your AI coding assistant after connecting Dev Cleaner MCP:")}
+              {t("High-efficiency, battle-tested system prompt cards for instructing your AI coding assistant after connecting Detergo MCP:")}
             </p>
 
             <div className="docs-prompt-card">
@@ -1000,7 +1000,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
                 <button
                   type="button"
                   className="docs-copy-action"
-                  onClick={() => copyPrompt('Use Dev Cleaner MCP to inspect workspace projects. List node_modules, target, and build artifacts larger than 100 MB; with my confirmation, move them safely to the Recycle Bin.', 'pr-1')}
+                  onClick={() => copyPrompt('Use Detergo MCP to inspect workspace projects. List node_modules, target, and build artifacts larger than 100 MB; with my confirmation, move them safely to the Recycle Bin.', 'pr-1')}
                 >
                   {copiedKey === 'pr-1' ? <Check size={13} /> : <Copy size={13} />}
                   {copiedKey === 'pr-1' ? ui.docs.copied : ui.docs.copy}
@@ -1008,7 +1008,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
               </div>
               <div className="docs-prompt-body">
                 
-                {t("\"Use Dev Cleaner MCP to inspect workspace projects. List node_modules, target, and build artifacts larger than 100 MB; with my confirmation, move them safely to the Recycle Bin.\"")}
+                {t("\"Use Detergo MCP to inspect workspace projects. List node_modules, target, and build artifacts larger than 100 MB; with my confirmation, move them safely to the Recycle Bin.\"")}
               </div>
             </div>
 
@@ -1021,7 +1021,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
                 <button
                   type="button"
                   className="docs-copy-action"
-                  onClick={() => copyPrompt('Call devcleaner_list_caches. Inspect how much storage npm, pip, cargo and docker caches consume and provide a summary.', 'pr-2')}
+                  onClick={() => copyPrompt('Call detergo_list_caches. Inspect how much storage npm, pip, cargo and docker caches consume and provide a summary.', 'pr-2')}
                 >
                   {copiedKey === 'pr-2' ? <Check size={13} /> : <Copy size={13} />}
                   {copiedKey === 'pr-2' ? ui.docs.copied : ui.docs.copy}
@@ -1029,7 +1029,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
               </div>
               <div className="docs-prompt-body">
                 
-                {t("\"Call devcleaner_list_caches. Inspect how much storage npm, pip, cargo and docker caches consume and provide a summary.\"")}
+                {t("\"Call detergo_list_caches. Inspect how much storage npm, pip, cargo and docker caches consume and provide a summary.\"")}
               </div>
             </div>
 
@@ -1062,43 +1062,43 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             <div className="docs-badge-row">
               <span className="docs-category-pill">{t("MCP Tools")}</span>
             </div>
-            <h1 className="docs-title">{t("Dev Cleaner MCP Tools Reference")}</h1>
+            <h1 className="docs-title">{t("Detergo MCP Tools Reference")}</h1>
             <p className="docs-lead">
-              The Dev Cleaner MCP server exposes 11 tools: 8 read-only / preview tools plus 3 destructive tools
+              The Detergo MCP server exposes 11 tools: 8 read-only / preview tools plus 3 destructive tools
               that require <code>--allow-destructive</code> and a single-use preview token.
             </p>
 
-            <h2 className="docs-h2">{t("1. `devcleaner_scan_workspace`")}</h2>
+            <h2 className="docs-h2">{t("1. `detergo_scan_workspace`")}</h2>
             <p className="docs-p">{t("Scans the workspace and yields cleanable candidates as structured JSON.")}</p>
 
-            <h2 className="docs-h2">{t("2. `devcleaner_preview_cleanup`")}</h2>
+            <h2 className="docs-h2">{t("2. `detergo_preview_cleanup`")}</h2>
             <p className="docs-p">{t("Builds a cleanup plan, returns a single-use token and never deletes anything.")}</p>
 
-            <h2 className="docs-h2">{t("3. `devcleaner_list_caches`")}</h2>
+            <h2 className="docs-h2">{t("3. `detergo_list_caches`")}</h2>
             <p className="docs-p">{t("Reports cache metrics for 21 developer tools and package managers.")}</p>
 
-            <h2 className="docs-h2">4. `devcleaner_preview_cache`</h2>
+            <h2 className="docs-h2">4. `detergo_preview_cache`</h2>
             <p className="docs-p">Measures and previews an official package manager cache cleanup action and returns a single-use <code>preview_token</code>.</p>
 
-            <h2 className="docs-h2">5. `devcleaner_system_scan`</h2>
+            <h2 className="docs-h2">5. `detergo_system_scan`</h2>
             <p className="docs-p">Measures C: drive system cleanup actions, volume free space, and elevation requirements.</p>
 
-            <h2 className="docs-h2">6. `devcleaner_system_preview`</h2>
+            <h2 className="docs-h2">6. `detergo_system_preview`</h2>
             <p className="docs-p">Builds a single-use preview token for selected C: drive system cleanup actions or a profile.</p>
 
-            <h2 className="docs-h2">{t("7. `devcleaner_get_history`")}</h2>
+            <h2 className="docs-h2">{t("7. `detergo_get_history`")}</h2>
             <p className="docs-p">{t("Returns historical records of previous cleanup operations.")}</p>
 
-            <h2 className="docs-h2">{t("8. `devcleaner_inspect_target`")}</h2>
+            <h2 className="docs-h2">{t("8. `detergo_inspect_target`")}</h2>
             <p className="docs-p">{t("Inspects safety rules and classifications for a specific path.")}</p>
 
-            <h2 className="docs-h2">{t("9. `devcleaner_execute_cleanup` (destructive)")}</h2>
+            <h2 className="docs-h2">{t("9. `detergo_execute_cleanup` (destructive)")}</h2>
             <p className="docs-p">{t("Executes a previously previewed plan. Requires confirm:true, a single-use token, --allow-destructive and the MCP destructive setting.")}</p>
 
-            <h2 className="docs-h2">{t("10. `devcleaner_clean_cache` (destructive)")}</h2>
+            <h2 className="docs-h2">{t("10. `detergo_clean_cache` (destructive)")}</h2>
             <p className="docs-p">Executes a previewed package manager cache action using its <code>preview_token</code>. Requires <code>confirm:true</code>, <code>--allow-destructive</code>, and the MCP destructive setting.</p>
 
-            <h2 className="docs-h2">11. `devcleaner_system_execute` (destructive)</h2>
+            <h2 className="docs-h2">11. `detergo_system_execute` (destructive)</h2>
             <p className="docs-p">Executes a previewed C: drive system cleanup token and records the result in audit history.</p>
           </article>
         )}
@@ -1112,7 +1112,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             <h1 className="docs-title">{t("Universal Webhook & Automation Architecture")}</h1>
             <p className="docs-lead">
               
-              {t("Whether triggered via the desktop UI or CLI, Dev Cleaner dispatches HTTP POST payloads to your configured webhook URL upon scan or cleanup completion.")}
+              {t("Whether triggered via the desktop UI or CLI, Detergo dispatches HTTP POST payloads to your configured webhook URL upon scan or cleanup completion.")}
             </p>
 
             <div className="docs-callout docs-callout--success">
@@ -1197,7 +1197,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             <h1 className="docs-title">{t("TOCTOU & Process Lock Defense")}</h1>
             <p className="docs-lead">
               
-              {t("Defensive architectures applied by Dev Cleaner against Time-of-Check to Time-of-Use (TOCTOU) race conditions:")}
+              {t("Defensive architectures applied by Detergo against Time-of-Check to Time-of-Use (TOCTOU) race conditions:")}
             </p>
 
             <div className="docs-callout">
@@ -1258,12 +1258,12 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             <h2 className="docs-h2">{t("Command line")}</h2>
             <p className="docs-p">
               The same actions are available headlessly for scripts and CI with short commands:{" "}
-              <code>dev-cleaner sys</code>, <code>dev-cleaner sys quick -n</code>, or{" "}
-              <code>dev-cleaner sys quick -y</code> (legacy <code>system --clean</code> flags still
+              <code>detergo sys</code>, <code>detergo sys quick -n</code>, or{" "}
+              <code>detergo sys quick -y</code> (legacy <code>system --clean</code> flags still
               work).
             </p>
             <DocsCommandList
-              title="Dev Cleaner System Cleaner CLI"
+              title="Detergo System Cleaner CLI"
               copiedKey={copiedKey}
               onCopy={copyToClipboard}
               copyLabel={ui.docs.copy}
@@ -1273,34 +1273,34 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
                 {
                   id: "sys-cli-list",
                   label: "List all system actions and measurable sizes",
-                  command: "dev-cleaner sys",
+                  command: "detergo sys",
                 },
                 {
                   id: "sys-cli-dry",
                   label: "Preview quick cleanup without deleting anything",
-                  command: "dev-cleaner sys quick -n",
+                  command: "detergo sys quick -n",
                 },
                 {
                   id: "sys-cli-quick",
                   label: "Run quick cleanup (user temp + Windows Update leftovers)",
-                  command: "dev-cleaner sys quick -y",
+                  command: "detergo sys quick -y",
                 },
                 {
                   id: "sys-cli-standard",
                   label: "Run standard cleanup (Administrator: temp, Prefetch, WER)",
-                  command: "dev-cleaner sys standard -y",
+                  command: "detergo sys standard -y",
                 },
                 {
                   id: "sys-cli-deep",
                   label: "Run deep cleanup (includes Disk Cleanup & DISM WinSxS)",
-                  command: "dev-cleaner sys deep -y",
+                  command: "detergo sys deep -y",
                 },
               ]}
             />
 
             <h2 className="docs-h2">Windows CMD Reference Commands (Administrator)</h2>
             <p className="docs-p">
-              Dev Cleaner automates these tasks from the UI. If you prefer running them manually,
+              Detergo automates these tasks from the UI. If you prefer running them manually,
               open Command Prompt as Administrator and copy any command below with one click:
             </p>
             <DocsCommandList
@@ -1371,7 +1371,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
             <h1 className="docs-title">{t("Troubleshooting & Error Code Dictionary")}</h1>
             <p className="docs-lead">
               
-              {t("Warning codes and resolution steps encountered when Dev Cleaner defense mechanisms trigger:")}
+              {t("Warning codes and resolution steps encountered when Detergo defense mechanisms trigger:")}
             </p>
 
             <h2 className="docs-h2">{ui.overview.coverage}</h2>
@@ -1379,17 +1379,17 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
               <Info className="docs-callout-icon" size={18} />
               <div>
                 <p>
-                  <strong>{ui.overview.sectionSkipped}</strong> — {ui.overview.noticeInfoHint}
+                  <strong>{ui.overview.sectionSkipped}</strong> - {ui.overview.noticeInfoHint}
                 </p>
                 <p>
-                  <strong>{ui.overview.warnings}</strong> — {ui.overview.noticeIssueHint}
+                  <strong>{ui.overview.warnings}</strong> - {ui.overview.noticeIssueHint}
                 </p>
                 <p>
-                  <strong>{ui.overview.errors}</strong> — {ui.overview.sectionNoRoot} /{" "}
+                  <strong>{ui.overview.errors}</strong> - {ui.overview.sectionNoRoot} /{" "}
                   {ui.overview.sectionFailed}
                 </p>
                 <p>
-                  <strong>{ui.overview.sectionPartial}</strong> — {ui.overview.partial}{" "}
+                  <strong>{ui.overview.sectionPartial}</strong> - {ui.overview.partial}{" "}
                   {ui.overview.stopReason}: <code>stop_reason</code>
                 </p>
               </div>
@@ -1414,7 +1414,7 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "DevCleanerWe
               </div>
               <p className="docs-faq-a">
                   <strong>{t("Root Cause:")}</strong>  {t("A folder named")} <code>{t("build")}</code>, <code>{t("dist")}</code>{t(", or")} <code>{t("out")}</code>  {t("was found, but no root marker like")} <code>{t("package.json")}</code>  {t("or")} <code>{t("Cargo.toml")}</code>  {t("exists.")}<br />
-                  <strong>{t("Safety Guarantee:")}</strong>  {t("Dev Cleaner never deletes unverified directories that might contain personal user documents or photos.")}
+                  <strong>{t("Safety Guarantee:")}</strong>  {t("Detergo never deletes unverified directories that might contain personal user documents or photos.")}
 
               </p>
             </div>

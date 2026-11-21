@@ -318,6 +318,7 @@
   100% {
     opacity: 0.45;
   }
+
   50% {
     opacity: 0.9;
   }
@@ -374,7 +375,7 @@
   background: var(--warning-subtle);
 }
 
-/* Automation Form Grid — spans 100% evenly with zero empty right gap */
+/* Automation Form Grid - spans 100% evenly with zero empty right gap */
 .system-automation-form {
   display: grid;
   gap: var(--space-3);
@@ -419,7 +420,7 @@
   width: 100%;
   height: 36px;
   padding: 0 var(--space-3);
-  border: 1px solid var(--border-control);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   background: var(--surface-alt);
   color: var(--text-primary);

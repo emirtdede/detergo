@@ -37,7 +37,7 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($Exe)) {
-    $Exe = Join-Path $root "src-tauri\target\release\dev-cleaner.exe"
+    $Exe = Join-Path $root "src-tauri\target\release\detergo.exe"
 }
 if (-not (Test-Path $Exe)) {
     Write-Host "[FAIL] binary not found: $Exe"
@@ -59,7 +59,7 @@ function Record([string]$Id, [string]$Label, [bool]$Ok, [string]$Detail) {
 
 $sandbox = Join-Path ([System.IO.Path]::GetTempPath()) ("nc-smoke-" + [guid]::NewGuid().ToString("N").Substring(0, 8))
 $appdata = Join-Path $sandbox "appdata"
-$configDir = Join-Path $appdata "dev-cleaner"
+$configDir = Join-Path $appdata "detergo"
 $configPath = Join-Path $configDir "config.json"
 New-Item -ItemType Directory -Path $configDir -Force | Out-Null
 
@@ -211,7 +211,7 @@ finally {
         Stop-Process -Id $gui.Id -Force -ErrorAction SilentlyContinue
     }
     $env:APPDATA = $previousAppData
-    Get-Process -Name "dev-cleaner", "node-cleaner" -ErrorAction SilentlyContinue |
+    Get-Process -Name "detergo", "node-cleaner" -ErrorAction SilentlyContinue |
         Where-Object { $_.Path -eq $Exe } |
         Stop-Process -Force -ErrorAction SilentlyContinue
     Remove-Item $sandbox -Recurse -Force -ErrorAction SilentlyContinue

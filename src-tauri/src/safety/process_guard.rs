@@ -28,19 +28,31 @@ const T3CODE_PROCESSES: &[&str] = &["t3code", "t3code-v2"];
 const BIONIC_PROCESSES: &[&str] = &["bionic"];
 const CURSOR_PROCESSES: &[&str] = &["cursor"];
 const WINDSURF_PROCESSES: &[&str] = &["windsurf", "codeium"];
-const OLLAMA_PROCESSES: &[&str] = &["ollama", "ollama_app"];
+const OLLAMA_PROCESSES: &[&str] = &["ollama", "ollama app", "ollama_app"];
+const CLAUDE_DESKTOP_PROCESSES: &[&str] = &["claude"];
+const COPILOT_PROCESSES: &[&str] = &["copilot", "github-copilot", "copilot-language-server"];
+const IDE_EXTENSION_PROCESSES: &[&str] = &["code", "code - insiders", "cursor", "windsurf"];
+const AIDER_PROCESSES: &[&str] = &["aider"];
+const ZED_PROCESSES: &[&str] = &["zed"];
+const LM_STUDIO_PROCESSES: &[&str] = &["lm studio", "lm-studio", "lms"];
 
 pub fn provider_processes(provider: &str) -> &'static [&'static str] {
     match provider {
         "codex" => CODEX_PROCESSES,
         "claude-code" => CLAUDE_PROCESSES,
+        "claude-desktop" => CLAUDE_DESKTOP_PROCESSES,
         "antigravity" => ANTIGRAVITY_PROCESSES,
         "opencode" => OPENCODE_PROCESSES,
         "t3code" => T3CODE_PROCESSES,
         "bionic" => BIONIC_PROCESSES,
         "cursor" => CURSOR_PROCESSES,
         "windsurf" => WINDSURF_PROCESSES,
+        "copilot" => COPILOT_PROCESSES,
+        "cline" | "roo-code" | "continue" => IDE_EXTENSION_PROCESSES,
+        "aider" => AIDER_PROCESSES,
+        "zed" => ZED_PROCESSES,
         "ollama" => OLLAMA_PROCESSES,
+        "lm-studio" => LM_STUDIO_PROCESSES,
         _ => &[],
     }
 }

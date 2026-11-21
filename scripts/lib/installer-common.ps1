@@ -36,19 +36,19 @@ function Get-InstallerResults {
     return @($script:InstallerResults)
 }
 
-function Get-DevCleanerInstallDirs {
+function Get-DetergoInstallDirs {
     $candidates = @(
-        (Join-Path $env:LOCALAPPDATA "Programs\Dev Cleaner"),
-        (Join-Path $env:LOCALAPPDATA "Dev Cleaner"),
-        (Join-Path $env:ProgramFiles "Dev Cleaner")
+        (Join-Path $env:LOCALAPPDATA "Programs\Detergo"),
+        (Join-Path $env:LOCALAPPDATA "Detergo"),
+        (Join-Path $env:ProgramFiles "Detergo")
     )
     if (${env:ProgramFiles(x86)}) {
-        $candidates += (Join-Path ${env:ProgramFiles(x86)} "Dev Cleaner")
+        $candidates += (Join-Path ${env:ProgramFiles(x86)} "Detergo")
     }
     return @($candidates | Where-Object { $_ -and (Test-Path $_) })
 }
 
-function Get-DevCleanerUninstallEntries {
+function Get-DetergoUninstallEntries {
     $roots = @(
         "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*",
         "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*",
@@ -57,7 +57,7 @@ function Get-DevCleanerUninstallEntries {
     $found = @()
     foreach ($root in $roots) {
         $found += Get-ItemProperty $root -ErrorAction SilentlyContinue |
-            Where-Object { $_.DisplayName -like "*Dev Cleaner*" }
+            Where-Object { $_.DisplayName -like "*Detergo*" }
     }
     return @($found)
 }
@@ -78,7 +78,7 @@ function Wait-Until {
 function Stop-InstalledApp {
     # Kill the current binary and any legacy 2.2.1 install still running under the
     # pre-rename name, so a harness never measures a stale process.
-    Get-Process -Name "dev-cleaner", "node-cleaner" -ErrorAction SilentlyContinue |
+    Get-Process -Name "detergo", "node-cleaner" -ErrorAction SilentlyContinue |
         Where-Object { $_.Path -and $_.Path -notlike "*\target\*" } |
         Stop-Process -Force -ErrorAction SilentlyContinue
 }
@@ -95,10 +95,10 @@ function Test-IsElevated {
 }
 
 function Assert-NoExistingInstall {
-    $dirs = @(Get-DevCleanerInstallDirs)
-    $entries = @(Get-DevCleanerUninstallEntries)
+    $dirs = @(Get-DetergoInstallDirs)
+    $entries = @(Get-DetergoUninstallEntries)
     if ($dirs.Count -gt 0 -or $entries.Count -gt 0) {
-        Write-Host "[ABORT] Dev Cleaner is already installed on this machine."
+        Write-Host "[ABORT] Detergo is already installed on this machine."
         Write-Host "  dirs:    $($dirs -join ', ')"
         Write-Host "  entries: $($entries.DisplayName -join ', ')"
         Write-Host "Uninstall it first; these scripts will not overwrite a user installation."
@@ -108,8 +108,8 @@ function Assert-NoExistingInstall {
 }
 
 function Find-InstalledExe {
-    foreach ($dir in @(Get-DevCleanerInstallDirs)) {
-        foreach ($name in @("dev-cleaner.exe", "node-cleaner.exe")) {
+    foreach ($dir in @(Get-DetergoInstallDirs)) {
+        foreach ($name in @("detergo.exe", "node-cleaner.exe")) {
             $candidate = Join-Path $dir $name
             if (Test-Path $candidate) { return $candidate }
         }
@@ -153,7 +153,7 @@ function Invoke-ExeIconCheck {
 
 function Get-QueuedInstallDirCleanup {
     return (Get-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce" `
-            -ErrorAction SilentlyContinue).DevCleanerRemoveInstallDir
+            -ErrorAction SilentlyContinue).DetergoRemoveInstallDir
 }
 
 function Invoke-QueuedInstallDirCleanup {
@@ -164,12 +164,12 @@ function Invoke-QueuedInstallDirCleanup {
     if ([string]::IsNullOrEmpty($runOnce)) { return $false }
     cmd /c $runOnce | Out-Null
     Remove-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce" `
-        -Name DevCleanerRemoveInstallDir -ErrorAction SilentlyContinue
-    return (Wait-Until { @(Get-DevCleanerInstallDirs).Count -eq 0 } 30)
+        -Name DetergoRemoveInstallDir -ErrorAction SilentlyContinue
+    return (Wait-Until { @(Get-DetergoInstallDirs).Count -eq 0 } 30)
 }
 
-function Remove-DevCleanerLeftovers {
-    foreach ($entry in @(Get-DevCleanerUninstallEntries)) {
+function Remove-DetergoLeftovers {
+    foreach ($entry in @(Get-DetergoUninstallEntries)) {
         if (-not $entry.UninstallString) { continue }
         try {
             $command = $entry.UninstallString

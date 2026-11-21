@@ -62,21 +62,39 @@ impl SettingsRepository {
             }
             Err(_) => {
                 // Preserve the unreadable file for manual recovery instead of
-                // silently discarding the user's configuration.
-                let backup = self
-                    .config_path
-                    .with_extension(format!("corrupt.{}.json", chrono::Utc::now().timestamp()));
-                if let Err(err) = fs::copy(&self.config_path, &backup) {
-                    // The banner promises recovery; if the copy failed, say so
-                    // in the log instead of letting the next save destroy the
-                    // only copy of the user's hand-edited settings.
-                    crate::logging::warn(
-                        &format!(
-                            "could not back up the corrupt settings file {}",
-                            self.config_path.display()
-                        ),
-                        err,
-                    );
+                // silently discarding the user's configuration, without
+                // creating duplicate backups on repeated `load()` calls.
+                let parent = self.config_path.parent().unwrap_or_else(|| Path::new("."));
+                let already_backed_up = fs::read_dir(parent)
+                    .ok()
+                    .into_iter()
+                    .flatten()
+                    .flatten()
+                    .any(|entry| {
+                        let name = entry.file_name();
+                        let name = name.to_string_lossy();
+                        name.starts_with("config.corrupt.")
+                            && name.ends_with(".json")
+                            && fs::read_to_string(entry.path())
+                                .map(|existing| existing == content)
+                                .unwrap_or(false)
+                    });
+                if !already_backed_up {
+                    let backup = self
+                        .config_path
+                        .with_extension(format!("corrupt.{}.json", chrono::Utc::now().timestamp()));
+                    if let Err(err) = fs::copy(&self.config_path, &backup) {
+                        // The banner promises recovery; if the copy failed, say so
+                        // in the log instead of letting the next save destroy the
+                        // only copy of the user's hand-edited settings.
+                        crate::logging::warn(
+                            &format!(
+                                "could not back up the corrupt settings file {}",
+                                self.config_path.display()
+                            ),
+                            err,
+                        );
+                    }
                 }
                 // A single bad/legacy field must not wipe protected paths,
                 // exclusions or webhook settings. Merge the readable fields
@@ -205,31 +223,8 @@ fn remove_if_present(path: &Path) -> std::io::Result<()> {
 /// Replaces the destination with the fully written temp file. On Windows the
 /// replacement is done by the filesystem (`MoveFileExW` with replace + write
 /// through), so a failed save leaves the previous configuration untouched.
-#[cfg(windows)]
 fn replace_file(from: &Path, to: &Path) -> std::io::Result<()> {
-    use std::os::windows::ffi::OsStrExt;
-    use windows::core::PCWSTR;
-    use windows::Win32::Storage::FileSystem::{
-        MoveFileExW, MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH, MOVE_FILE_FLAGS,
-    };
-
-    fn wide(path: &Path) -> Vec<u16> {
-        path.as_os_str()
-            .encode_wide()
-            .chain(std::iter::once(0))
-            .collect()
-    }
-
-    let from_w = wide(from);
-    let to_w = wide(to);
-    let flags = MOVE_FILE_FLAGS(MOVEFILE_REPLACE_EXISTING.0 | MOVEFILE_WRITE_THROUGH.0);
-    unsafe { MoveFileExW(PCWSTR(from_w.as_ptr()), PCWSTR(to_w.as_ptr()), flags) }
-        .map_err(|e| std::io::Error::from_raw_os_error(e.code().0))
-}
-
-#[cfg(not(windows))]
-fn replace_file(from: &Path, to: &Path) -> std::io::Result<()> {
-    fs::rename(from, to)
+    crate::platform::atomic_replace_file(from, to)
 }
 
 impl Default for SettingsRepository {
@@ -260,10 +255,28 @@ fn recover_settings(content: &str) -> Option<AppSettings> {
 
 fn dirs_or_fallback() -> PathBuf {
     if let Ok(appdata) = std::env::var("APPDATA") {
-        return PathBuf::from(appdata);
+        if !appdata.trim().is_empty() {
+            return PathBuf::from(appdata);
+        }
     }
-    if let Ok(userprofile) = std::env::var("USERPROFILE") {
-        return PathBuf::from(userprofile).join(".config");
+    if let Ok(xdg) = std::env::var("XDG_CONFIG_HOME") {
+        if !xdg.trim().is_empty() {
+            return PathBuf::from(xdg);
+        }
+    }
+    if let Ok(userprofile) = std::env::var("USERPROFILE").or_else(|_| std::env::var("HOME")) {
+        if !userprofile.trim().is_empty() {
+            #[cfg(target_os = "macos")]
+            {
+                return PathBuf::from(userprofile)
+                    .join("Library")
+                    .join("Application Support");
+            }
+            #[cfg(not(target_os = "macos"))]
+            {
+                return PathBuf::from(userprofile).join(".config");
+            }
+        }
     }
     PathBuf::from(".")
 }

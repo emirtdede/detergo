@@ -8,7 +8,7 @@
  * `last-scan.json` from the old in-memory state. The flag below tells both
  * flush paths to stay quiet until the document is torn down.
  */
-const RESET_NOTICE_KEY = "dev_cleaner_reset_completed";
+const RESET_NOTICE_KEY = "detergo_reset_completed";
 
 let resetInProgress = false;
 

@@ -28,6 +28,7 @@ import { lifetimeCleanedBytes, normalizeDistributionWidths } from "@/lib/cleanup
 import { maskPath, truncatePath } from "@/lib/format/path";
 import { useThrottledValue, SCAN_AGGREGATE_THROTTLE_MS } from "@/lib/hooks/use-throttled-value";
 import { SafetyBadge } from "@/features/items/SafetyBadge";
+import { DiskTreemap } from "./DiskTreemap";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
 import { useSelectionStore } from "@/stores/selection-store";
@@ -55,16 +56,23 @@ export const OverviewView: React.FC = () => {
   const loadCacheProviders = useCacheStore((s) => s.loadProviders);
   const systemReport = useSystemStore((s) => s.report);
   const showToast = useUiStore((s) => s.showToast);
+  const setScopeSearchQuery = useUiStore((s) => s.setScopeSearchQuery);
   const restored = useScanStore((s) => s.restored);
   const lastSavedAt = useScanStore((s) => s.lastSavedAt);
   const persistedRevision = useScanStore((s) => s.persistedRevision);
 
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
-  const [hasLastSnapshot, setHasLastSnapshot] = useState(false);
+  const [hasLastSnapshot, setHasLastSnapshot] = useState(Boolean(lastSavedAt));
 
-  // The header button must not offer a restore that cannot succeed.
+  // The header button must not offer a restore that cannot succeed. Avoid
+  // re-reading a multi-MB snapshot file when the store already knows a fresh
+  // save exists.
   useEffect(() => {
+    if (lastSavedAt) {
+      setHasLastSnapshot(true);
+      return;
+    }
     let cancelled = false;
     scannerApi
       .getLastScan()
@@ -283,7 +291,7 @@ export const OverviewView: React.FC = () => {
         color: v.color,
         percent: (v.bytes / totals.cleanable) * 100,
       }));
-  }, [aggregateItems, own, totals.cleanable]);
+  }, [aggregateItems, own, totals.cleanable, ui.overview]);
 
   // Widths are normalized once so the bar never overflows: a 2% floor per
   // segment can push the raw percentages above 100.
@@ -295,7 +303,7 @@ export const OverviewView: React.FC = () => {
   const topItems = useMemo(
     () =>
       aggregateItems
-        .filter((item) => item.selectable && !item.protected)
+        .filter((item) => item.selectable && !item.protected && item.safetyClass !== "keep")
         .map((item) => ({ item, bytes: own.get(item.id)?.estimatedReclaimBytes ?? 0 }))
         .sort((a, b) => b.bytes - a.bytes)
         .slice(0, 5),
@@ -392,7 +400,7 @@ export const OverviewView: React.FC = () => {
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">
-              {items.length > 0 ? formatBytes(totals.cleanable, language) : "—"}
+              {items.length > 0 ? formatBytes(totals.cleanable, language) : "-"}
             </span>
             <div className="nc-kpi-card-sub">
               {hasComparison && items.length > 0 ? (
@@ -417,7 +425,7 @@ export const OverviewView: React.FC = () => {
           </div>
           <div className="nc-kpi-card-body">
             <span className="nc-kpi-card-value">
-              {items.length > 0 ? formatBytes(totals.safeReclaim, language) : "—"}
+              {items.length > 0 ? formatBytes(totals.safeReclaim, language) : "-"}
             </span>
             <div className="nc-kpi-card-sub">
               <span>{ui.overview.kpiSafeReclaimSub}</span>
@@ -585,6 +593,23 @@ export const OverviewView: React.FC = () => {
         )}
       </section>
 
+      {/* 3B. INTERACTIVE VISUAL DISK SPACE TREEMAP */}
+      {aggregateItems.length > 0 && (
+        <DiskTreemap
+          items={aggregateItems}
+          ownBytes={own}
+          language={language}
+          maskPaths={maskPaths}
+          title={ui.overview.treemapTitle}
+          subtitle={ui.overview.treemapSubtitle}
+          otherLabel={ui.overview.ecoOther}
+          onInspect={(targetView, query) => {
+            setScopeSearchQuery(targetView, query);
+            setView(targetView);
+          }}
+        />
+      )}
+
       {/* 4. DUAL BALANCED COLUMNS: Top 5 Targets + 4 Hubs (Same Height) */}
       <section className="overview-secondary-grid" aria-label={ui.overview.breakdown}>
         {/* Left: Top 5 Space Consumers */}
@@ -608,24 +633,46 @@ export const OverviewView: React.FC = () => {
 
           <div className="overview-top-items-list">
             {topItems.length > 0 ? (
-              topItems.map(({ item, bytes }, index) => (
-                <div key={item.id} className="overview-top-item-row">
-                  <span className="overview-top-item-rank">{index + 1}</span>
-                  <div className="overview-top-item-info">
-                    <div className="overview-top-item-header">
-                      <span className="overview-top-item-name">{item.displayName}</span>
-                      <SafetyBadge safety={item.safetyClass} />
+              topItems.map(({ item, bytes }, index) => {
+                const targetView = itemBucket(item) === "agent" ? "agents" : "projects";
+                const query = item.projectName || item.displayName;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className="overview-top-item-row"
+                    style={{
+                      width: "100%",
+                      textAlign: "start",
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => {
+                      setScopeSearchQuery(targetView, query);
+                      setView(targetView);
+                    }}
+                  >
+                    <span className="overview-top-item-rank">{index + 1}</span>
+                    <div className="overview-top-item-info">
+                      <div className="overview-top-item-header">
+                        <span className="overview-top-item-name">{item.displayName}</span>
+                        <SafetyBadge safety={item.safetyClass} />
+                      </div>
+                      <span
+                        className="overview-top-item-path"
+                        title={maskPaths ? maskPath(item.displayPath) : item.displayPath}
+                      >
+                        {truncatePath(
+                          maskPaths ? maskPath(item.displayPath) : item.displayPath,
+                          50,
+                        )}
+                      </span>
                     </div>
-                    <span
-                      className="overview-top-item-path"
-                      title={maskPaths ? maskPath(item.displayPath) : item.displayPath}
-                    >
-                      {truncatePath(maskPaths ? maskPath(item.displayPath) : item.displayPath, 50)}
-                    </span>
-                  </div>
-                  <span className="overview-top-item-size">{formatBytes(bytes, language)}</span>
-                </div>
-              ))
+                    <span className="overview-top-item-size">{formatBytes(bytes, language)}</span>
+                  </button>
+                );
+              })
             ) : (
               <div className="overview-zero-state overview-zero-state--fill">
                 <span className="overview-top-items-empty">{ui.overview.topItemsEmpty}</span>
@@ -645,7 +692,12 @@ export const OverviewView: React.FC = () => {
             role="button"
             tabIndex={0}
             onClick={() => setView("projects")}
-            onKeyDown={(e) => e.key === "Enter" && setView("projects")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setView("projects");
+              }
+            }}
           >
             <div className="overview-hub-left">
               <div className="overview-hub-icon overview-hub-icon--projects">
@@ -670,7 +722,12 @@ export const OverviewView: React.FC = () => {
             role="button"
             tabIndex={0}
             onClick={() => setView("agents")}
-            onKeyDown={(e) => e.key === "Enter" && setView("agents")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setView("agents");
+              }
+            }}
           >
             <div className="overview-hub-left">
               <div className="overview-hub-icon overview-hub-icon--ai">
@@ -695,7 +752,12 @@ export const OverviewView: React.FC = () => {
             role="button"
             tabIndex={0}
             onClick={() => setView("caches")}
-            onKeyDown={(e) => e.key === "Enter" && setView("caches")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setView("caches");
+              }
+            }}
           >
             <div className="overview-hub-left">
               <div className="overview-hub-icon overview-hub-icon--caches">
@@ -754,7 +816,12 @@ export const OverviewView: React.FC = () => {
             role="button"
             tabIndex={0}
             onClick={() => setView("history")}
-            onKeyDown={(e) => e.key === "Enter" && setView("history")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setView("history");
+              }
+            }}
           >
             <div className="overview-hub-left">
               <div className="overview-hub-icon overview-hub-icon--history">

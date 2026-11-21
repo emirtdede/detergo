@@ -18,7 +18,7 @@ export function highlightBash(code: string): React.ReactNode[] {
       );
     }
     const regex =
-      /(--[a-zA-Z0-9_-]+|\/[a-zA-Z0-9:_-]+|-[a-zA-Z0-9]+|"[^"]*"|'[^']*'|\b(?:dev-cleaner|cleanmgr|DISM\.exe|del|npm|nvm|pip|cargo|docker|powershell|git|New-ScheduledTaskAction|Register-ScheduledTask)\b|\d+)/g;
+      /(--[a-zA-Z0-9_-]+|\/[a-zA-Z0-9:_-]+|-[a-zA-Z0-9]+|"[^"]*"|'[^']*'|\b(?:detergo|cleanmgr|DISM\.exe|del|npm|nvm|pip|cargo|docker|powershell|git|New-ScheduledTaskAction|Register-ScheduledTask)\b|\d+)/g;
     const parts: React.ReactNode[] = [];
     let lastIndex = 0;
     let match: RegExpExecArray | null;

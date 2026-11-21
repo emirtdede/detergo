@@ -16,7 +16,7 @@
  *    destructuring, template interpolation and dynamic lookups, at the cost of
  *    being conservative: a key is only reported when its name appears nowhere.
  *
- * A conservative gate is the point — a false positive would block a release
+ * A conservative gate is the point - a false positive would block a release
  * for a key that is actually in use.
  *
  * Run with: npm run check:i18n:unused
@@ -83,12 +83,47 @@ async function loadEnglishDictionary() {
   return module.exports.EN;
 }
 
+/** Strips `export interface UIText { ... }` so type declarations never self-match dictionary keys. */
+function stripUiTextInterface(source) {
+  const start = source.indexOf("export interface UIText");
+  if (start === -1) return source;
+  const open = source.indexOf("{", start);
+  if (open === -1) return source;
+  let depth = 0;
+  for (let i = open; i < source.length; i++) {
+    if (source[i] === "{") depth++;
+    else if (source[i] === "}") {
+      depth--;
+      if (depth === 0) {
+        return source.slice(0, start) + source.slice(i + 1);
+      }
+    }
+  }
+  return source;
+}
+
+const EXCLUDED_DICTIONARIES = new Set(["src/lib/ui-text/en.ts", "src/lib/ui-text/tr.ts"]);
+
 const files = SOURCE_DIRS.flatMap((dir) => walk(join(root, dir), []));
 // Concatenating the sources once is dramatically cheaper than scanning every
-// file for every key (the dictionary has ~2,000 leaves).
+// file for every key (the dictionary has ~2,000 leaves). Exclude dictionary
+// definitions themselves and the `UIText` interface declaration so keys cannot
+// self-match against their own type or literal definitions.
 const corpus = files
-  .filter((file) => !file.replaceAll("\\", "/").includes("/lib/ui-text/locales/"))
-  .map((file) => readFileSync(file, "utf8"))
+  .filter((file) => {
+    const normalized = file.replaceAll("\\", "/");
+    if (normalized.includes("/lib/ui-text/locales/")) return false;
+    for (const excluded of EXCLUDED_DICTIONARIES) {
+      if (normalized.endsWith(`/${excluded}`)) return false;
+    }
+    return true;
+  })
+  .map((file) => {
+    const content = readFileSync(file, "utf8");
+    return file.replaceAll("\\", "/").endsWith("/src/lib/ui-text/index.ts")
+      ? stripUiTextInterface(content)
+      : content;
+  })
   .join("\n");
 
 const en = await loadEnglishDictionary();

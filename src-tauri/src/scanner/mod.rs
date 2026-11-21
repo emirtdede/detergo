@@ -9,7 +9,7 @@ pub mod session;
 mod tests;
 
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -286,7 +286,7 @@ where
     // Bounded on purpose: the walker runs on a blocking thread and produces
     // candidates faster than the WebView2 channel can drain them. With an
     // unbounded queue a suspended window (minimised, laptop asleep during a
-    // full-disk scan) accumulated every batch — up to a second copy of the whole
+    // full-disk scan) accumulated every batch - up to a second copy of the whole
     // result set. 256 events is ~25 600 items, and the producer now waits
     // instead of growing memory without limit.
     let (tx, mut rx) = mpsc::channel::<ScanEvent>(EVENT_QUEUE_CAPACITY);
@@ -482,6 +482,7 @@ where
             ));
         }
     }
+    let mut existing_roots = Vec::with_capacity(scan_roots.len());
     for root in &scan_roots {
         if !root.exists() {
             if combined {
@@ -506,7 +507,9 @@ where
             let _ = forwarder.await;
             return Err(AppError::PathNotFound(root.to_string_lossy().to_string()));
         }
+        existing_roots.push(root.clone());
     }
+    let scan_roots = existing_roots;
 
     for root in &scan_roots {
         if token.is_cancelled() {
@@ -883,12 +886,18 @@ where
                     // emitting events so the frontend never receives duplicate rows.
                     let existing: std::collections::HashSet<String> = items
                         .iter()
-                        .map(|item| item.display_path.to_lowercase())
+                        .map(|item| {
+                            crate::safety::path_guard::normalize_key(Path::new(&item.display_path))
+                        })
                         .collect();
                     let fresh: Vec<CleanupItem> = outcome
                         .items
                         .into_iter()
-                        .filter(|item| !existing.contains(&item.display_path.to_lowercase()))
+                        .filter(|item| {
+                            !existing.contains(&crate::safety::path_guard::normalize_key(
+                                Path::new(&item.display_path),
+                            ))
+                        })
                         .collect();
                     let fresh_ids: std::collections::HashSet<String> =
                         fresh.iter().map(|item| item.id.clone()).collect();
@@ -909,7 +918,7 @@ where
 
                     sections.push(ScanSectionResult {
                         scope: ScanScope::Agents,
-                        status: if token.is_cancelled() {
+                        status: if token.is_cancelled() || outcome.stop_reason.is_some() {
                             "partial"
                         } else {
                             "completed"
@@ -994,10 +1003,22 @@ where
 /// automation surface reported every target as 0 B and `--min-size` matched
 /// nothing. This helper keeps a single scan implementation for GUI, CLI and MCP.
 pub fn run_scan_blocking(
+    request: ScanRequest,
+    catalog: Arc<CatalogIndex>,
+    settings: &crate::settings::AppSettings,
+    policy: &crate::cleanup::CleanupPolicy,
+) -> Result<(ScanSummary, ScanSession), AppError> {
+    run_scan_blocking_with_token(request, catalog, settings, policy, CancellationToken::new())
+}
+
+/// Cancellable variant of [`run_scan_blocking`] used by the MCP server so
+/// `notifications/cancelled` aborts an in-flight scan promptly.
+pub fn run_scan_blocking_with_token(
     mut request: ScanRequest,
     catalog: Arc<CatalogIndex>,
     settings: &crate::settings::AppSettings,
     policy: &crate::cleanup::CleanupPolicy,
+    token: CancellationToken,
 ) -> Result<(ScanSummary, ScanSession), AppError> {
     // Backend-owned limits and safety settings, exactly like `start_scan`.
     request.exclusions = settings.excluded_names.clone();
@@ -1037,7 +1058,7 @@ pub fn run_scan_blocking(
                     allowed_roots.push(agent_root.path);
                 }
             }
-            if let Ok(profile) = std::env::var("USERPROFILE") {
+            if let Ok(profile) = std::env::var("USERPROFILE").or_else(|_| std::env::var("HOME")) {
                 let profile = PathBuf::from(profile);
                 if profile.is_dir() && !allowed_roots.contains(&profile) {
                     allowed_roots.push(profile);
@@ -1063,7 +1084,6 @@ pub fn run_scan_blocking(
         targets: HashMap::new(),
         summary: None,
     }));
-    let token = CancellationToken::new();
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()

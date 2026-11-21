@@ -41,6 +41,6 @@ allowed, and which test would fail if the guard were removed. If no, say "none".
 ## Checklist
 
 - [ ] I added or updated a regression test for every behavioural change.
-- [ ] I updated the documentation and, if needed, `docs/MASTER_SPEC.md`.
+- [ ] I updated the documentation (`docs/ARCHITECTURE.md`, `docs/CLI.md`, `docs/CHANGELOG.md`) if needed.
 - [ ] User-visible strings go through the localisation layer.
 - [ ] No secrets, tokens, personal paths or generated build output are included.

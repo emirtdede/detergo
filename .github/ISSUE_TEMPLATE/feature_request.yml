@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Good feature requests describe the problem first and the solution second.
-        Dev Cleaner deletes files, so new targets must have a documented,
+        Detergo deletes files, so new targets must have a documented,
         regenerable source.
 
   - type: textarea
@@ -23,7 +23,7 @@ body:
     id: proposal
     attributes:
       label: Proposed solution
-      description: What should Dev Cleaner do? Include the command or screen you imagine.
+      description: What should Detergo do? Include the command or screen you imagine.
     validations:
       required: true
 
@@ -67,5 +67,5 @@ body:
       options:
         - label: I searched existing issues and discussions.
           required: true
-        - label: This request is about Dev Cleaner itself, not a third-party tool.
+        - label: This request is about Detergo itself, not a third-party tool.
           required: true

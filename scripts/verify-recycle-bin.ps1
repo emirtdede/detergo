@@ -1,4 +1,4 @@
-# Recycle Bin round-trip verification for Dev Cleaner 2.2.
+# Recycle Bin round-trip verification for Detergo 2.2.
 #
 # Proves three things that source review alone cannot:
 #   1. The production guard + RecycleBinService really move a folder to the

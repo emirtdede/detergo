@@ -84,12 +84,12 @@
 
 .btn-secondary {
   background-color: var(--surface-alt);
-  border: 1px solid var(--border-control);
+  border: 1px solid var(--border-strong);
   color: var(--text-primary);
 }
 .btn-secondary:hover:not(:disabled) {
   background-color: var(--surface-hover);
-  border-color: var(--border-strong);
+  border-color: var(--text-muted);
 }
 .btn-secondary:active:not(:disabled) {
   background-color: var(--surface-active);
@@ -111,11 +111,12 @@
 
 .btn-danger-outline {
   background-color: transparent;
-  border-color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 48%, transparent);
   color: var(--danger-foreground);
 }
 .btn-danger-outline:hover:not(:disabled) {
   background-color: var(--danger-subtle);
+  border-color: color-mix(in srgb, var(--danger) 72%, transparent);
 }
 
 .btn-ghost {
@@ -226,7 +227,7 @@
   align-items: stretch;
   height: 32px;
   min-width: 0;
-  border: 1px solid var(--border-control);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-xs);
   background: var(--surface-alt);
   overflow: hidden;
@@ -332,7 +333,7 @@
   font-size: var(--text-sm);
   color: var(--text-primary);
   background-color: var(--surface);
-  border: 1px solid var(--border-control);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   transition: all var(--duration-fast) var(--ease-standard);
   appearance: none;
@@ -681,7 +682,7 @@
 }
 
 /* ==========================================================================
-   VELLIUM BENTO DESIGN SYSTEM — SHARED KPI & SURFACE PRIMITIVES
+   VELLIUM BENTO DESIGN SYSTEM - SHARED KPI & SURFACE PRIMITIVES
    Unified across Overview, Projects, Agents, Caches, History, Settings & About.
    ========================================================================== */
 
@@ -779,7 +780,7 @@
 .nc-kpi-card-icon--accent {
   background: var(--accent-subtle);
   color: var(--accent);
-  border-color: var(--border-control);
+  border-color: var(--border-strong);
 }
 
 .nc-kpi-card-icon--success {
@@ -858,7 +859,7 @@
   height: 32px;
   padding: 3px 12px 3px 5px;
   border-radius: var(--radius-full);
-  border: 1px solid var(--border-control);
+  border: 1px solid var(--border-strong);
   background: var(--surface-alt);
   cursor: pointer;
   user-select: none;

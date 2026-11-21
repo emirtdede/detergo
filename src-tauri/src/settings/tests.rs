@@ -11,12 +11,42 @@ mod tests {
         let temp = tempdir().unwrap();
         let repo = SettingsRepository::with_path(temp.path().join("config.json"));
         let settings = repo.load();
-        assert_eq!(settings.schema_version, 4);
+        assert_eq!(settings.schema_version, 5);
         assert_eq!(settings.theme, "dark-black");
+        assert_eq!(settings.custom_theme.base, "dark");
+        assert_eq!(settings.custom_theme.accent, "#3B82F6");
+        assert_eq!(settings.ui_scale, 100);
+        assert!(!settings.high_contrast);
+        assert!(!settings.onboarding_completed);
         assert!(!settings.reduce_motion);
         assert_eq!(settings.scan_profile, "balanced");
         assert_eq!(settings.sidebar_mode, "expanded");
         assert_eq!(settings.cache_measure_mode, "fast");
+    }
+
+    #[test]
+    fn normalizes_custom_theme_and_accessibility_bounds() {
+        let mut settings = AppSettings {
+            theme: "custom".to_string(),
+            custom_theme: CustomThemeConfig {
+                base: "LIGHT".to_string(),
+                accent: "#0f8".to_string(),
+            },
+            ui_scale: 999,
+            high_contrast: true,
+            onboarding_completed: true,
+            ..Default::default()
+        };
+        settings.normalize();
+        assert_eq!(settings.custom_theme.base, "light");
+        assert_eq!(settings.custom_theme.accent, "#00FF88");
+        assert_eq!(settings.ui_scale, 150);
+
+        settings.custom_theme.accent = "not-a-color".to_string();
+        settings.ui_scale = 10;
+        settings.normalize();
+        assert_eq!(settings.custom_theme.accent, "#3B82F6");
+        assert_eq!(settings.ui_scale, 80);
     }
 
     #[test]
@@ -112,7 +142,7 @@ mod tests {
         let repo = SettingsRepository::with_path(config_path.clone());
         let settings = repo.load();
 
-        assert_eq!(settings.schema_version, 4);
+        assert_eq!(settings.schema_version, 5);
         assert_eq!(settings.theme, "dark-black");
         let backups: Vec<_> = std::fs::read_dir(temp.path())
             .unwrap()
@@ -201,7 +231,7 @@ mod tests {
 
         let repo = SettingsRepository::with_path(config_path);
         let loaded = repo.load();
-        assert_eq!(loaded.schema_version, 4);
+        assert_eq!(loaded.schema_version, 5);
         assert!(!loaded.mcp_allow_destructive);
         assert_eq!(loaded.theme, "dark-gray");
         assert!(loaded.reduce_motion);

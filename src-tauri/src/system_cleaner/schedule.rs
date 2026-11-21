@@ -14,7 +14,7 @@ use chrono::{Datelike, Local, NaiveDate, NaiveDateTime, NaiveTime, Weekday};
 use crate::error::AppError;
 use crate::system_cleaner::SystemAutomationConfig;
 
-pub const TASK_NAME: &str = "Dev Cleaner System Cleanup";
+pub const TASK_NAME: &str = "Detergo System Cleanup";
 
 const CREATE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
 
@@ -65,17 +65,26 @@ impl SystemAutomationRepository {
         if let Some(parent) = self.path.parent() {
             fs::create_dir_all(parent).map_err(|e| AppError::SettingsWriteFailed(e.to_string()))?;
         }
-        let tmp = self.path.with_extension("json.tmp");
-        fs::write(&tmp, text).map_err(|e| AppError::SettingsWriteFailed(e.to_string()))?;
-        if let Err(err) = fs::rename(&tmp, &self.path) {
-            // Windows `MoveFile` fails if the destination exists; remove and retry.
-            let _ = fs::remove_file(&self.path);
-            if let Err(retry_err) = fs::rename(&tmp, &self.path) {
-                let _ = fs::remove_file(&tmp);
-                return Err(AppError::SettingsWriteFailed(format!(
-                    "{err}; retry failed: {retry_err}"
-                )));
-            }
+        let tmp = self.path.with_extension(format!(
+            "tmp.{}.{}.json",
+            std::process::id(),
+            uuid::Uuid::new_v4().simple()
+        ));
+        {
+            use std::io::Write;
+            let mut file =
+                fs::File::create(&tmp).map_err(|e| AppError::SettingsWriteFailed(e.to_string()))?;
+            file.write_all(text.as_bytes())
+                .and_then(|()| file.flush())
+                .and_then(|()| file.sync_all())
+                .map_err(|e| {
+                    let _ = fs::remove_file(&tmp);
+                    AppError::SettingsWriteFailed(e.to_string())
+                })?;
+        }
+        if let Err(err) = crate::platform::atomic_replace_file(&tmp, &self.path) {
+            let _ = fs::remove_file(&tmp);
+            return Err(AppError::SettingsWriteFailed(err.to_string()));
         }
         Ok(())
     }
@@ -95,10 +104,21 @@ impl Default for SystemAutomationRepository {
     }
 }
 
+fn schtasks_exe() -> String {
+    std::env::var_os("SystemRoot")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(r"C:\Windows"))
+        .join("System32")
+        .join("schtasks.exe")
+        .to_string_lossy()
+        .to_string()
+}
+
 /// True when the scheduled task exists.
 pub fn is_installed() -> bool {
+    let bin = schtasks_exe();
     let outcome = super::process::run(
-        "schtasks.exe",
+        &bin,
         &["/Query", "/TN", TASK_NAME],
         std::time::Duration::from_secs(10),
         &crate::scanner::cancellation::CancellationToken::new(),
@@ -114,13 +134,30 @@ pub fn install(config: &SystemAutomationConfig) -> Result<(), AppError> {
         .map_err(|e| AppError::Blocked(format!("Could not locate the application binary: {e}")))?;
 
     let xml = build_xml(config, &exe)?;
-    let temp = std::env::temp_dir().join(format!("dev-cleaner-task-{}.xml", std::process::id()));
-    fs::write(&temp, xml)
-        .map_err(|e| AppError::Blocked(format!("Could not write the scheduled task file: {e}")))?;
+    let temp = std::env::temp_dir().join(format!(
+        "detergo-task-{}-{}.xml",
+        std::process::id(),
+        uuid::Uuid::new_v4().simple()
+    ));
+    {
+        use std::io::Write;
+        let mut f = fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temp)
+            .map_err(|e| {
+                AppError::Blocked(format!("Could not create the scheduled task file: {e}"))
+            })?;
+        f.write_all(xml.as_bytes()).map_err(|e| {
+            let _ = fs::remove_file(&temp);
+            AppError::Blocked(format!("Could not write the scheduled task file: {e}"))
+        })?;
+    }
 
+    let bin = schtasks_exe();
     let temp_text = temp.to_string_lossy().to_string();
     let outcome = super::process::run(
-        "schtasks.exe",
+        &bin,
         &["/Create", "/TN", TASK_NAME, "/XML", &temp_text, "/F"],
         CREATE_TIMEOUT,
         &crate::scanner::cancellation::CancellationToken::new(),
@@ -142,8 +179,9 @@ pub fn uninstall() -> Result<(), AppError> {
     if !is_installed() {
         return Ok(());
     }
+    let bin = schtasks_exe();
     let outcome = super::process::run(
-        "schtasks.exe",
+        &bin,
         &["/Delete", "/TN", TASK_NAME, "/F"],
         CREATE_TIMEOUT,
         &crate::scanner::cancellation::CancellationToken::new(),
@@ -198,7 +236,7 @@ fn build_xml(config: &SystemAutomationConfig, exe: &Path) -> Result<String, AppE
         r#"<?xml version="1.0" encoding="UTF-8"?>
 <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <RegistrationInfo>
-    <Description>Dev Cleaner system cleanup. Created from the app; remove it from the app or Task Scheduler.</Description>
+    <Description>Detergo system cleanup. Created from the app; remove it from the app or Task Scheduler.</Description>
   </RegistrationInfo>
   <Triggers>{trigger}</Triggers>
   <Principals>
@@ -307,16 +345,16 @@ mod tests {
 
     #[test]
     fn xml_contains_the_profile_and_a_highest_runlevel() {
-        let xml = build_xml(&config(), Path::new(r"C:\Apps\Dev Cleaner.exe")).expect("xml");
+        let xml = build_xml(&config(), Path::new(r"C:\Apps\Detergo.exe")).expect("xml");
         assert!(xml.contains("system --clean standard --yes"));
         assert!(xml.contains("<RunLevel>HighestAvailable</RunLevel>"));
         assert!(xml.contains("<Monday />"));
-        assert!(xml.contains(r"C:\Apps\Dev Cleaner.exe"));
+        assert!(xml.contains(r"C:\Apps\Detergo.exe"));
     }
 
     #[test]
     fn xml_escapes_ampersands_in_the_path() {
-        let xml = build_xml(&config(), Path::new(r"C:\A & B\Dev Cleaner.exe")).expect("xml");
+        let xml = build_xml(&config(), Path::new(r"C:\A & B\Detergo.exe")).expect("xml");
         assert!(xml.contains("A &amp; B"));
         assert!(!xml.contains("A & B"));
     }
@@ -325,7 +363,7 @@ mod tests {
     fn daily_schedule_has_no_weekday() {
         let mut cfg = config();
         cfg.frequency = "daily".to_string();
-        let xml = build_xml(&cfg, Path::new(r"C:\Dev Cleaner.exe")).expect("xml");
+        let xml = build_xml(&cfg, Path::new(r"C:\Detergo.exe")).expect("xml");
         assert!(xml.contains("ScheduleByDay"));
         assert!(!xml.contains("DaysOfWeek"));
     }

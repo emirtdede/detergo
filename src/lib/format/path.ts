@@ -19,6 +19,21 @@ export function maskPath(path: string): string {
   return MASKED_HOME_SEGMENTS.reduce((masked, pattern) => masked.replace(pattern, "$1•••"), path);
 }
 
+/** Patterns that stop at whitespace or shell delimiters so free-form command output stays intact. */
+const MASKED_HOME_IN_TEXT = [
+  /([A-Za-z]:\\Users\\)([^\\/\r\n\s"'<>|;:]+)/gi,
+  /([A-Za-z]:\\Documents and Settings\\)([^\\/\r\n\s"'<>|;:]+)/gi,
+  /(\\Users\\)([^\\/\r\n\s"'<>|;:]+)/gi,
+  /(\/home\/)([^/\r\n\s"'<>|;:]+)/g,
+  /(\/Users\/)([^/\r\n\s"'<>|;:]+)/g,
+];
+
+/** Masks home-directory user names embedded anywhere inside logs or command output. */
+export function maskPathsInText(text: string): string {
+  if (!text) return text;
+  return MASKED_HOME_IN_TEXT.reduce((masked, pattern) => masked.replace(pattern, "$1•••"), text);
+}
+
 /**
  * Truncate a long path in the middle, preserving the separator style of the
  * input. Windows paths keep backslashes; POSIX inputs keep forward slashes so

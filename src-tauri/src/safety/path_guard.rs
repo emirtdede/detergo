@@ -78,6 +78,11 @@ impl PathGuard {
 
         validate_system_path(&target_key)?;
         validate_protected_paths(&target_key, ctx.protected_paths)?;
+        // Validate ancestors on BOTH the raw (pre-canonicalize) path and the
+        // canonical path: `canonicalize` resolves ancestor symlinks/junctions
+        // away, so inspecting the raw path catches an ancestor link pointing
+        // inside the scan root before it can ever be traversed.
+        validate_ancestors(target, &root_canonical)?;
         validate_ancestors(&canonical, &root_canonical)?;
 
         if is_remote_path(&canonical) {
@@ -172,32 +177,57 @@ pub(crate) fn validate_system_path(key: &str) -> Result<(), AppError> {
         ));
     }
 
-    let first_level_system_roots = ["users", "documents and settings", "config.msi"];
-    if parts.len() == 2 && first_level_system_roots.contains(&parts[1].as_str()) {
+    #[cfg(windows)]
+    {
+        // Top-level system roots (`C:\Windows`, `C:\Boot`, `C:\Recovery`, `C:\Users`).
+        // Checking these only at the drive root avoids falsely blocking legitimate
+        // developer folders like `D:\work\flutter-app\windows\build` or
+        // `D:\work\spring\boot\target`.
+        let root_only_exact = ["users", "documents and settings", "config.msi"];
+        let root_system_trees = ["windows", "boot", "recovery"];
+        if parts.len() >= 2 {
+            let first = parts[1].as_str();
+            if (root_only_exact.contains(&first) && parts.len() == 2)
+                || root_system_trees.contains(&first)
+            {
+                return Err(AppError::UnsafeDeleteTarget(format!(
+                    "System directory is protected: {}",
+                    key
+                )));
+            }
+        }
+    }
+
+    // Block `AppData\Windows` (and `AppData\Local\Windows`) specifically while
+    // keeping `<repo>\windows\build` usable.
+    if parts
+        .windows(2)
+        .any(|w| w[0] == "appdata" && w[1] == "windows")
+        || parts.windows(3).any(|w| {
+            w[0] == "appdata" && matches!(w[1].as_str(), "local" | "roaming") && w[2] == "windows"
+        })
+    {
         return Err(AppError::UnsafeDeleteTarget(format!(
             "System directory is protected: {}",
             key
         )));
     }
 
-    let system_roots = [
-        "windows",
+    // OS-unique directories that never legitimately contain user project builds
+    // at any depth.
+    let deep_system_traps = [
         "program files",
         "program files (x86)",
         "programdata",
         "system volume information",
         "$recycle.bin",
-        "recovery",
         "msocache",
-        "boot",
         "perflogs",
         "system32",
         "syswow64",
     ];
-    // Check every path component, not just the first one below the drive root:
-    // `C:\Users\me\AppData\Windows` must be rejected just like `C:\Windows`.
     for part in parts.iter().skip(1) {
-        if system_roots.contains(&part.as_str()) {
+        if deep_system_traps.contains(&part.as_str()) {
             return Err(AppError::UnsafeDeleteTarget(format!(
                 "System directory is protected: {}",
                 key
@@ -205,15 +235,62 @@ pub(crate) fn validate_system_path(key: &str) -> Result<(), AppError> {
         }
     }
 
-    if let Ok(profile) = std::env::var("USERPROFILE") {
+    #[cfg(not(windows))]
+    {
+        let unix_roots = [
+            "bin",
+            "sbin",
+            "usr",
+            "etc",
+            "var",
+            "lib",
+            "lib64",
+            "boot",
+            "dev",
+            "proc",
+            "sys",
+            "root",
+            "system",
+            "library",
+            "applications",
+        ];
+        if let Some(first) = parts.first() {
+            if unix_roots.contains(&first.as_str()) {
+                return Err(AppError::UnsafeDeleteTarget(format!(
+                    "System directory is protected: {}",
+                    key
+                )));
+            }
+            // On macOS, `/etc` and `/var` canonicalize to `/private/etc` and
+            // `/private/var`; block `/private` OS trees as well (excluding
+            // `/private/tmp` and `/private/var/folders` temp roots used by tests).
+            if first == "private" {
+                let second = parts.get(1).map(String::as_str);
+                if matches!(second, Some("etc") | None)
+                    || (second == Some("var")
+                        && parts.get(2).map(String::as_str) != Some("folders"))
+                {
+                    return Err(AppError::UnsafeDeleteTarget(format!(
+                        "System directory is protected: {}",
+                        key
+                    )));
+                }
+            }
+        }
+    }
+
+    if let Ok(profile) = std::env::var("USERPROFILE").or_else(|_| std::env::var("HOME")) {
         let profile_key = normalize_key(Path::new(&profile));
         if key == profile_key {
             return Err(AppError::UnsafeDeleteTarget(
                 "User profile root cannot be deleted.".to_string(),
             ));
         }
-        let parent = Path::new(key).parent().map(normalize_key);
-        if parent.as_deref() == Some(profile_key.as_str()) {
+        // Component-based direct-child check works identically on Windows and
+        // Unix (unlike `Path::new(key).parent()`, which fails on Unix because
+        // `normalize_key` normalizes separators to `\`).
+        let profile_parts = path_components(&profile_key);
+        if parts.len() == profile_parts.len() + 1 && is_within(key, &profile_key) {
             return Err(AppError::UnsafeDeleteTarget(
                 "Direct children of user profile root cannot be deleted.".to_string(),
             ));
@@ -251,12 +328,16 @@ fn validate_protected_paths(key: &str, protected: &[String]) -> Result<(), AppEr
 }
 
 pub(crate) fn validate_ancestors(target: &Path, scan_root: &Path) -> Result<(), AppError> {
+    let root_key = normalize_key(scan_root);
     let mut current = target.parent();
     while let Some(dir) = current {
+        if normalize_key(dir) == root_key {
+            break;
+        }
         if let Ok(meta) = fs::symlink_metadata(dir) {
-            if meta.file_type().is_symlink() {
+            if meta.file_type().is_symlink() || is_reparse_point(dir) {
                 return Err(AppError::UnsafeDeleteTarget(format!(
-                    "Parent directory is a symlink: {}",
+                    "Parent directory is a symlink or reparse point: {}",
                     dir.display()
                 )));
             }

@@ -1,4 +1,4 @@
-//! `dev-cleaner system` — the scheduled/automation entry point.
+//! `detergo system` - the scheduled/automation entry point.
 //!
 //! It shares [`super::execute`] with the GUI, so a task created by the app can
 //! never perform a deletion the GUI would refuse. `--yes` is mandatory for a
@@ -14,9 +14,9 @@ use super::SystemActionId;
 
 pub const USAGE: &str = "\
 Usage:
-  dev-cleaner sys                  (or `dev-cleaner sys -l`) List actions
-  dev-cleaner sys <profile|ids> -n Preview measured sizes (--dry-run)
-  dev-cleaner sys <profile|ids> -y Clean after confirmation (--yes)
+  detergo sys                  (or `detergo sys -l`) List actions
+  detergo sys <profile|ids> -n Preview measured sizes (--dry-run)
+  detergo sys <profile|ids> -y Clean after confirmation (--yes)
 
 Profiles: quick (user temp + Windows Update leftovers)
           standard (+ Windows temp, Prefetch, error reports)
@@ -25,7 +25,7 @@ Ids:      userTemp, windowsTemp, prefetch, windowsUpdate, errorReports,
           recycleBin, diskCleanup, componentStore
 
 Legacy form also supported:
-  dev-cleaner system --clean quick --yes [--scheduled]
+  detergo system --clean quick --yes [--scheduled]
 ";
 
 fn fail(message: &str) -> Result<(), AppError> {
@@ -42,8 +42,30 @@ pub fn run(args: &[String]) -> Result<(), AppError> {
     let mut profile: Option<String> = None;
 
     let mut i = 0;
+    let mut after_double_dash = false;
     while i < args.len() {
         let arg = &args[i];
+        if after_double_dash {
+            if profile.is_some() {
+                return fail(&format!("Unexpected positional argument '{arg}'."));
+            }
+            profile = Some(arg.clone());
+            i += 1;
+            continue;
+        }
+        if arg == "--" {
+            after_double_dash = true;
+            i += 1;
+            continue;
+        }
+        if let Some(value) = arg.strip_prefix("--clean=") {
+            if value.is_empty() {
+                return fail("Missing value after '--clean='.");
+            }
+            profile = Some(value.to_string());
+            i += 1;
+            continue;
+        }
         match arg.as_str() {
             "-h" | "--help" => help = true,
             "-l" | "--list" => list_only = true,
@@ -60,7 +82,7 @@ pub fn run(args: &[String]) -> Result<(), AppError> {
             }
             other if other.starts_with("--") => {
                 return fail(&format!(
-                    "Unknown flag '{other}'. Run `dev-cleaner sys -h` for usage."
+                    "Unknown flag '{other}'. Run `detergo sys -h` for usage."
                 ));
             }
             other if other.starts_with('-') && other.len() > 1 => {
@@ -73,7 +95,7 @@ pub fn run(args: &[String]) -> Result<(), AppError> {
                         'y' => confirmed = true,
                         unknown => {
                             return fail(&format!(
-                                "Unknown flag '-{unknown}'. Run `dev-cleaner sys -h` for usage."
+                                "Unknown flag '-{unknown}'. Run `detergo sys -h` for usage."
                             ));
                         }
                     }
@@ -149,21 +171,10 @@ pub fn run(args: &[String]) -> Result<(), AppError> {
     }
 
     let profile = profile.ok_or_else(|| {
-        AppError::InvalidPath(
-            "Missing <profile|ids> (e.g. `dev-cleaner sys quick -n`).".to_string(),
-        )
+        AppError::InvalidPath("Missing <profile|ids> (e.g. `detergo sys quick -n`).".to_string())
     })?;
 
     let ids = parse_selection(&profile)?;
-
-    let needs_admin = ids.iter().any(|id| spec(*id).requires_admin);
-    if needs_admin && !elevated {
-        return Err(AppError::Blocked(
-            "This selection needs administrator rights. Run the app and use \
-             'Restart as administrator', or start this command from an elevated terminal."
-                .to_string(),
-        ));
-    }
 
     if dry_run {
         let token = CancellationToken::new();
@@ -201,6 +212,15 @@ pub fn run(args: &[String]) -> Result<(), AppError> {
         }
         println!("\nTotal: {}", human_bytes(total));
         return Ok(());
+    }
+
+    let needs_admin = ids.iter().any(|id| spec(*id).requires_admin);
+    if needs_admin && !elevated {
+        return Err(AppError::Blocked(
+            "This selection needs administrator rights. Run the app and use \
+             'Restart as administrator', or start this command from an elevated terminal."
+                .to_string(),
+        ));
     }
 
     if !confirmed {

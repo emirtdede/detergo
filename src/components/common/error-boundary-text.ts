@@ -1,8 +1,8 @@
 /**
  * Static copy for the top-level error boundary.
  *
- * The boundary renders when the React tree — possibly the locale loader itself
- * — has failed, so it cannot call the async dictionary loader or any hook. It
+ * The boundary renders when the React tree - possibly the locale loader itself
+ * - has failed, so it cannot call the async dictionary loader or any hook. It
  * also must not import the UI dictionary bundle: that dragged all 73
  * translation files into the entry chunk (finding Y-1). These three strings per
  * language are the only ones the fallback screen needs.
@@ -381,7 +381,7 @@ export const ERROR_BOUNDARY_TEXT: Record<string, ErrorBoundaryText> = {
 };
 
 /** Keys the app has used for the persisted language at some point. */
-const LANGUAGE_KEYS = ["dev_cleaner_lang", "dev_cleaner_language", "node_cleaner_language"];
+const LANGUAGE_KEYS = ["detergo_lang", "detergo_language", "node_cleaner_language"];
 
 function readStoredLanguage(): string | null {
   try {

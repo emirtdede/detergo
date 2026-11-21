@@ -28,8 +28,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 /** Values that may legitimately stay identical to English in any locale. */
 const ALLOWED_IDENTICAL_VALUES = new Set([
   // Brand, product and platform names.
-  "Dev Cleaner",
-  "Dev Cleaner Terminal",
+  "Detergo",
+  "Detergo Terminal",
   "GitHub",
   "Sponsor",
   "Web / Node.js",
@@ -37,7 +37,8 @@ const ALLOWED_IDENTICAL_VALUES = new Set([
   "Rust / Cargo",
   "vellium.dev",
   // Code identifiers, technical labels and URLs.
-  "https://webhook.example.com/dev-cleaner",
+  "https://webhook.example.com/detergo",
+  "Microsoft Store (MSIX)",
   "Code",
   "Dev",
   "Desktop",
@@ -80,136 +81,16 @@ const ALLOWED_IDENTICAL_VALUES = new Set([
   "Version",
   "Workspace",
   "Web, Rust, Python, Agents...",
-  // Awaiting translation: the catalog explorer, update check and error log
-  // shipped in 1.0.0 with English source so no unreviewed machine translation
-  // reaches users. Turkish is translated (tr.ts is a source dictionary). Delete
-  // an entry here as soon as every locale file carries a real translation.
-  "Rule details",
-  "Pick an ecosystem to see every rule it contributes, what it matches and how safe it is.",
-  "Matches",
-  "Regenerate with",
-  "Note",
-  "This catalog has no rules.",
-  "Software updates",
-  "Ask GitHub for the newest release. Nothing is downloaded automatically.",
-  "Check for updates",
-  "Checking…",
-  "You are running the latest version.",
-  "Release notes",
-  "Open the download page",
-  "Could not reach the update server. Check your connection and try again.",
-  "Runs only when you press the button. It asks api.github.com for the latest release tag and sends nothing about your device.",
-  "Error log",
-  "Problems caught in this session. Stored only on this device, never uploaded.",
-  "No errors recorded.",
-  "Report an issue",
-  // Awaiting translation: the 1.0.0 settings dialogs, the support bundle flow
-  // and the About page's side navigation. Turkish is translated in tr.ts.
-  "Thorough",
-  "Maximum",
-  "Skips deep folders and stops early. Best for a quick estimate.",
-  "The default: matches the catalog everywhere without crawling the whole disk.",
-  "Wider and slower than Balanced. Useful after a large dependency install.",
-  "Crawls deeply nested monorepos and large drives.",
-  "No practical limit. Slow and disk-heavy; use it for a one-off audit.",
-  "A profile only pre-fills the limits below; you can still fine-tune them.",
-  "Default",
-  "Open security settings",
-  "System messages",
-  "Warnings and lifecycle messages written by the app on this device.",
-  "Error reports",
-  "Send diagnostics to support",
-  "Creates one ZIP with the logs below, the build details and a settings summary, then opens a ready mail draft to support@vellium.dev. Nothing is sent until you press Send in your mail app.",
-  "Create bundle and open draft",
-  "Creating bundle…",
-  "Bundle ready: {path}",
-  "Your mail app is open with the bundle attached. Press Send there.",
-  "The mail app did not accept the attachment automatically. The bundle is in Explorer and its path was copied; attach it to the draft.",
-  "Could not open a mail draft. The bundle is ready in Explorer.",
-  "Show in Explorer",
-  "Copy path",
-  "Recipient: {email}",
-  "Copy everything",
-  "Clear logs",
-  "No system messages recorded.",
-  "Never uploaded automatically.",
-  "On this page",
-  "Application",
-  "Rule catalog",
-  "Updates & health",
-  "Contact",
-  "Legal",
-  // Awaiting translation: the C: drive cleaner shipped in 1.0.0 with English
-  // source so no unreviewed machine translation reaches users. Turkish is
-  // translated in tr.ts. Delete these entries as each locale gains a real
-  // translation.
-  "C: drive cleaner",
-  "Clear Windows temp folders, Prefetch data and update leftovers. Your projects, documents and Downloads are never touched.",
-  "Quick clean",
-  "Clean selected",
-  "Select all",
-  "Clear selection",
-  "Reclaimable",
-  "Freed",
-  "Not measured",
-  "Reported by Windows",
-  "Administrator",
-  "Administrator rights are needed",
-  "Windows blocks system folders for standard users. Restart the app as administrator to clean them; your selection is kept.",
-  "Restart as administrator",
-  "Running as administrator",
-  "Delete the selected system files?",
-  "They are removed permanently, not moved to the Recycle Bin. Items marked as regenerable are rebuilt by Windows automatically.",
-  "Stop after the current Windows step",
-  "Show Windows output",
-  "Hide Windows output",
-  "Automatic cleanup",
-  "Windows Task Scheduler runs a quick cleanup on a schedule, with the highest rights your account allows and without any prompt. The app can remove the task again at any time.",
-  "Frequency",
-  "Daily",
-  "Weekly",
-  "Time",
-  "Day",
-  "Scope",
-  "Quick",
-  "Standard",
-  "Deep",
-  "Save schedule",
-  "Remove schedule",
-  "Scheduled task installed",
-  "Windows has no task for this schedule. Save again to repair it.",
-  "Schedule saved",
-  "Schedule removed",
-  "System cleaner",
-  "Run now",
-  "Last run",
-  "Never",
-  "Your temporary files",
-  "Windows temporary files",
-  "Prefetch data",
-  "Windows Update leftovers",
-  "Windows error reports",
-  "Recycle Bin",
-  "Windows Disk Cleanup",
-  "Component store cleanup",
-  // Awaiting translation: 1.0.0 settings sidebar groups, Full scan profile,
-  // About health heading, Update latest-version label, and native cleanmgr actions.
-  // Turkish is translated in tr.ts.
-  "Full",
-  "Scans complete workspaces and large repositories with generous limits.",
-  "Preferences",
-  "Safety & Integrations",
-  "Maintenance & Support",
-  "System health & storage",
-  "Audit totals, last snapshot age and local storage integrity.",
-  "Latest version",
-  "Free space",
-  "Windows Disk Cleanup (cleanmgr)",
-  "Launch the built-in Windows Disk Cleanup wizard or configure and run saved profile 1 without typing CMD commands.",
-  "Open Disk Cleanup (C:)",
-  "Configure profile 1",
-  "Run profile 1",
-  "Windows Disk Cleanup launched.",
+]);
+
+/**
+ * Per-locale UI cognates that legitimately match the English spelling only in
+ * the listed languages (never globally allowlisted so other locales must still
+ * translate them).
+ */
+const ALLOWED_UI_BY_LOCALE = new Map([
+  // Native dictionary & Windows UI spelling in Bosnian, Croatian, Polish, Romanian.
+  ["Administrator", new Set(["bs", "hr", "pl", "ro"])],
 ]);
 
 const findings = [];
@@ -234,26 +115,8 @@ const ALLOWED_SOURCE_KEYED_VALUES = new Set([
   "Plugin",
   "Type",
   "Privacy",
-  "3. Restrictions",
   "12. Contact",
   "13. Contact",
-  // Awaiting translation: the C: drive cleaner documentation shipped in 1.0.0
-  // with English source. Delete these as each docs locale gains a translation.
-  "C: Drive Cleaner & Scheduled Automation",
-  "Windows Maintenance",
-  "Guide",
-  "Reclaim space on the system drive without typing a single command. Every action is measured before anything is deleted.",
-  "What it cleans",
-  "The cleaner covers your temporary files, Windows temporary files, Prefetch data, Windows Update leftovers, Windows error reports, the Recycle Bin, the Windows Disk Cleanup profile and the component store (WinSxS). Project folders, documents and Downloads sit outside every audited root and can never be selected.",
-  "Administrator rights",
-  "Windows blocks system folders for standard users. When an action needs elevation the page offers a single restart button; the app reopens on the same page with your selection intact. The app itself still starts without administrator rights, so scanning and cleaning your own files never needs a prompt.",
-  "Safe by design",
-  "The interface only sends action identifiers; paths are resolved and re-verified on the native side against a fixed audited list. Deletion never follows junctions or symbolic links, locked files are skipped and reported, and every run is written to the local audit history.",
-  "Nothing is uploaded. Sizes, logs and audit records stay on this device.",
-  "Automatic cleanup",
-  "A Windows scheduled task can run the quick or standard profile daily or weekly. The task runs with the highest rights your account allows and asks nothing; remove the schedule from the same panel at any time. Prefetch, the Recycle Bin and the component store are never chosen automatically.",
-  "Command line",
-  "The same actions are available headlessly for scripts and CI: dev-cleaner system --list, dev-cleaner system --clean quick --yes, or --dry-run to measure only.",
 ]);
 
 /**
@@ -321,6 +184,7 @@ for (const name of readdirSync(dir)) {
     if (dict[key] !== source) continue;
     checkedLeaves++;
     if (ALLOWED_IDENTICAL_VALUES.has(source)) continue;
+    if (ALLOWED_UI_BY_LOCALE.get(source)?.has(locale)) continue;
     findings.push({ locale, key, value: source });
   }
 }

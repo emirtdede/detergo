@@ -56,18 +56,18 @@ describe("Desktop Guard & Edge WebView2 Hardening", () => {
       expect(isBrowserShortcutToBlock(createKeyEvent("f7"))).toBe(true);
     });
 
-    it("blocks viewport zoom hotkeys (Ctrl++, Ctrl+-, Ctrl+0, Ctrl+=)", () => {
-      expect(isBrowserShortcutToBlock(createKeyEvent("+", { ctrl: true }))).toBe(true);
-      expect(isBrowserShortcutToBlock(createKeyEvent("-", { ctrl: true }))).toBe(true);
-      expect(isBrowserShortcutToBlock(createKeyEvent("0", { ctrl: true }))).toBe(true);
-      expect(isBrowserShortcutToBlock(createKeyEvent("=", { ctrl: true }))).toBe(true);
-      expect(isBrowserShortcutToBlock(createKeyEvent("_", { ctrl: true }))).toBe(true);
+    it("preserves WCAG 1.4.4 viewport zoom hotkeys (Ctrl++, Ctrl+-, Ctrl+0, Ctrl+=)", () => {
+      expect(isBrowserShortcutToBlock(createKeyEvent("+", { ctrl: true }))).toBe(false);
+      expect(isBrowserShortcutToBlock(createKeyEvent("-", { ctrl: true }))).toBe(false);
+      expect(isBrowserShortcutToBlock(createKeyEvent("0", { ctrl: true }))).toBe(false);
+      expect(isBrowserShortcutToBlock(createKeyEvent("=", { ctrl: true }))).toBe(false);
+      expect(isBrowserShortcutToBlock(createKeyEvent("_", { ctrl: true }))).toBe(false);
       expect(isBrowserShortcutToBlock(createKeyEvent("+", { ctrl: true, code: "NumpadAdd" }))).toBe(
-        true,
+        false,
       );
       expect(
         isBrowserShortcutToBlock(createKeyEvent("-", { ctrl: true, code: "NumpadSubtract" })),
-      ).toBe(true);
+      ).toBe(false);
     });
 
     it("blocks history back/forward navigation keys (Alt+ArrowLeft, Alt+ArrowRight)", () => {
@@ -158,7 +158,7 @@ describe("Desktop Guard & Edge WebView2 Hardening", () => {
       expect(spy).toHaveBeenCalled();
     });
 
-    it("prevents Ctrl+Wheel zooming", () => {
+    it("allows Ctrl+Wheel zooming for WCAG 1.4.4 accessibility", () => {
       const event = new WheelEvent("wheel", {
         ctrlKey: true,
         bubbles: true,
@@ -166,7 +166,7 @@ describe("Desktop Guard & Edge WebView2 Hardening", () => {
       });
       const spy = vi.spyOn(event, "preventDefault");
       window.dispatchEvent(event);
-      expect(spy).toHaveBeenCalled();
+      expect(spy).not.toHaveBeenCalled();
     });
 
     it("prevents dragover and drop file navigation", () => {

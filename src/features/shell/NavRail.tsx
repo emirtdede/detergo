@@ -9,10 +9,10 @@ import {
   BookOpen,
   Settings,
   Info,
-  PanelLeftClose,
-  PanelLeftOpen,
   Heart,
 } from "lucide-react";
+import { Logo } from "@/components/brand/Logo";
+import { ScanHeader } from "@/features/scan/ScanHeader";
 import { useAppStore, AppView } from "@/stores/app-store";
 import { usePreferencesStore } from "@/stores/preferences-store";
 import { useUiStore } from "@/stores/ui-store";
@@ -29,8 +29,8 @@ import "./shell.css";
  */
 const GitHubMark: React.FC = () => (
   <svg
-    width={17}
-    height={17}
+    width={14}
+    height={14}
     viewBox="0 0 16 16"
     fill="currentColor"
     aria-hidden="true"
@@ -41,13 +41,13 @@ const GitHubMark: React.FC = () => (
 );
 
 const ITEMS: Array<{ view: AppView; icon: React.ReactNode; key: keyof UIText["nav"] }> = [
-  { view: "overview", icon: <LayoutDashboard size={17} />, key: "overview" },
-  { view: "projects", icon: <FolderTree size={17} />, key: "projects" },
-  { view: "agents", icon: <Bot size={17} />, key: "agents" },
-  { view: "caches", icon: <Package size={17} />, key: "caches" },
-  { view: "system", icon: <HardDrive size={17} />, key: "system" },
-  { view: "docs", icon: <BookOpen size={17} />, key: "docs" },
-  { view: "history", icon: <History size={17} />, key: "history" },
+  { view: "overview", icon: <LayoutDashboard size={18} />, key: "overview" },
+  { view: "projects", icon: <FolderTree size={18} />, key: "projects" },
+  { view: "agents", icon: <Bot size={18} />, key: "agents" },
+  { view: "caches", icon: <Package size={18} />, key: "caches" },
+  { view: "system", icon: <HardDrive size={18} />, key: "system" },
+  { view: "docs", icon: <BookOpen size={18} />, key: "docs" },
+  { view: "history", icon: <History size={18} />, key: "history" },
 ];
 
 export const NavRail: React.FC = () => {
@@ -91,9 +91,68 @@ export const NavRail: React.FC = () => {
   return (
     <nav
       id="primary-navigation"
-      className={`nav-rail ${railCollapsed ? "collapsed" : ""} ${isNarrow ? "is-narrow" : ""}`}
+      className={`nav-rail pp-sidebar ${railCollapsed ? "collapsed" : ""} ${isNarrow ? "is-narrow" : ""}`}
       aria-label={ui.nav.primary}
     >
+      {/* 1. Brand Header + Collapse Control */}
+      <div className="sidebar-brand" data-tauri-drag-region="deep">
+        <div className="sidebar-brand-identity">
+          <Logo size={18} showWordmark={false} />
+          <div className="brand-text">
+            <span className="sidebar-brand-title">Detergo</span>
+          </div>
+        </div>
+        <div className="sidebar-brand-actions" data-tauri-drag-region="false">
+          <button
+            type="button"
+            className="pp-sidebar-icon-btn nav-collapse-toggle"
+            onClick={toggleSidebar}
+            title={railCollapsed ? ui.settings.sidebarExpanded : ui.settings.sidebarCollapsed}
+            aria-label={ui.settings.sidebar}
+            aria-expanded={!railCollapsed}
+            aria-controls="primary-navigation-items"
+          >
+            {isCollapsed ? (
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect width="18" height="18" x="3" y="3" rx="2" />
+                <path d="M9 3v18" />
+                <path d="m14 9 3 3-3 3" />
+              </svg>
+            ) : (
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect width="18" height="18" x="3" y="3" rx="2" />
+                <path d="M9 3v18" />
+                <path d="m16 15-3-3 3-3" />
+              </svg>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Top-of-Sidebar Directory & Scan Controls */}
+      <ScanHeader collapsed={railCollapsed} />
+
+      {/* 3. Navigation Items */}
       <div id="primary-navigation-items" className="nav-rail-items">
         {ITEMS.map((item) => (
           <button
@@ -106,7 +165,9 @@ export const NavRail: React.FC = () => {
             aria-label={ui.nav[item.key]}
             aria-current={view === item.view ? "page" : undefined}
           >
-            {item.icon}
+            <span className="nav-item-icon" aria-hidden="true">
+              {item.icon}
+            </span>
             <span className="nav-item-label">{ui.nav[item.key]}</span>
           </button>
         ))}
@@ -120,7 +181,9 @@ export const NavRail: React.FC = () => {
           aria-label={ui.nav.settings}
           aria-current={view === "settings" ? "page" : undefined}
         >
-          <Settings size={17} />
+          <span className="nav-item-icon" aria-hidden="true">
+            <Settings size={18} />
+          </span>
           <span className="nav-item-label">{ui.nav.settings}</span>
         </button>
 
@@ -133,47 +196,39 @@ export const NavRail: React.FC = () => {
           aria-label={ui.nav.about}
           aria-current={view === "about" ? "page" : undefined}
         >
-          <Info size={17} />
+          <span className="nav-item-icon" aria-hidden="true">
+            <Info size={18} />
+          </span>
           <span className="nav-item-label">{ui.nav.about}</span>
         </button>
       </div>
 
-      <div className="nav-rail-links">
-        <button
-          type="button"
-          className="nav-item"
-          onClick={() => openExternal(REPOSITORY_URL)}
-          title={railCollapsed ? ui.nav.github : REPOSITORY_URL}
-          aria-label={ui.nav.github}
-        >
-          <GitHubMark />
-          <span className="nav-item-label">{ui.nav.github}</span>
-        </button>
+      {/* 4. Sidebar Footer: Side-by-side GitHub + Sponsor pills */}
+      <div className="nav-rail-links sidebar-footer">
+        <div className="sidebar-links">
+          <button
+            type="button"
+            className="sidebar-link-btn"
+            onClick={() => openExternal(REPOSITORY_URL)}
+            title={railCollapsed ? ui.nav.github : REPOSITORY_URL}
+            aria-label={ui.nav.github}
+          >
+            <GitHubMark />
+            <span className="nav-item-label sidebar-link-label">{ui.nav.github}</span>
+          </button>
 
-        <button
-          type="button"
-          className="nav-item"
-          onClick={() => openExternal(SPONSOR_URL)}
-          title={railCollapsed ? ui.nav.sponsor : SPONSOR_URL}
-          aria-label={ui.nav.sponsor}
-        >
-          <Heart size={17} />
-          <span className="nav-item-label">{ui.nav.sponsor}</span>
-        </button>
+          <button
+            type="button"
+            className="sidebar-link-btn"
+            onClick={() => openExternal(SPONSOR_URL)}
+            title={railCollapsed ? ui.nav.sponsor : SPONSOR_URL}
+            aria-label={ui.nav.sponsor}
+          >
+            <Heart size={14} />
+            <span className="nav-item-label sidebar-link-label">{ui.nav.sponsor}</span>
+          </button>
+        </div>
       </div>
-
-      <button
-        type="button"
-        className="nav-item nav-collapse-toggle"
-        onClick={toggleSidebar}
-        title={isCollapsed ? ui.settings.sidebarExpanded : ui.settings.sidebarCollapsed}
-        aria-label={ui.settings.sidebar}
-        aria-expanded={!isCollapsed}
-        aria-controls="primary-navigation-items"
-      >
-        {isCollapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
-        <span className="nav-item-label">{ui.settings.sidebar}</span>
-      </button>
     </nav>
   );
 };

@@ -94,11 +94,37 @@ export type AgentRootInfo = {
 
 export type AppError = { code: "InvalidPath"; message: string } | { code: "AccessDenied"; message: string } | { code: "PathNotFound"; message: string } | { code: "ScanCancelled"; message: string } | { code: "ScanFailed"; message: string } | { code: "UnsafeDeleteTarget"; message: string } | { code: "RecycleBinFailed"; message: string } | { code: "RecycleBinTooSmall"; message: string } | { code: "RecycleBinDisabled"; message: string } | { code: "RecycleBinNotFound"; message: string } | { code: "RecycleBinPathTooLong"; message: string } | { code: "RecycleBinSharingViolation"; message: string } | { code: "RecycleBinAccessDenied"; message: string } | { code: "RecycleBinAborted"; message: string } | { code: "RecycleBinComFailed"; message: string } | { code: "PermanentDeleteFailed"; message: string } | { code: "SettingsReadFailed"; message: string } | { code: "SettingsWriteFailed"; message: string } | { code: "PlatformUnsupported"; message: string } | { code: "SessionInvalid"; message: string } | { code: "SessionExpired"; message: string } | { code: "PlanInvalid"; message: string } | { code: "PlanExpired"; message: string } | { code: "PlanChanged"; message: string } | { code: "Blocked"; message: string } | { code: "Network"; message: string } | { code: "Unknown"; message: string };
 
+/**  Summary returned to the frontend after applying an application icon. */
+export type AppIconApplyResult = AppIconApplyResult_Serialize | AppIconApplyResult_Deserialize;
+
+/**  Summary returned to the frontend after applying an application icon. */
+export type AppIconApplyResult_Deserialize = {
+	resolvedId: string,
+	windowUpdated: boolean,
+	trayUpdated: boolean,
+	shortcutsUpdated: number,
+	iconPath?: string | null,
+};
+
+/**  Summary returned to the frontend after applying an application icon. */
+export type AppIconApplyResult_Serialize = {
+	resolvedId: string,
+	windowUpdated: boolean,
+	trayUpdated: boolean,
+	shortcutsUpdated: number,
+	iconPath: string | null,
+};
+
 export type AppSettings = AppSettings_Serialize | AppSettings_Deserialize;
 
 export type AppSettings_Deserialize = {
 	schemaVersion?: number,
 	theme?: string,
+	appIcon?: string,
+	customTheme?: CustomThemeConfig_Deserialize,
+	uiScale?: number,
+	highContrast?: boolean,
+	onboardingCompleted?: boolean,
 	reduceMotion?: boolean,
 	favorites?: FavoriteItem_Deserialize[],
 	recentLocations?: string[],
@@ -124,6 +150,12 @@ export type AppSettings_Deserialize = {
 	webhookUrl?: string | null,
 	webhookOnScan?: boolean,
 	webhookOnClean?: boolean,
+	/**
+	 *  Explicit opt-in allowing webhooks to target loopback or private LAN
+	 *  hosts (e.g. self-hosted n8n on localhost or 192.168.x.x). Off by
+	 *  default so strict SSRF protection remains enforced out of the box.
+	 */
+	allowPrivateWebhooks?: boolean,
 	shortcuts?: { [key in string]: string } | null,
 	/**
 	 *  Allows the MCP `execute` tool to run at all. Off by default: an agent
@@ -141,6 +173,11 @@ export type AppSettings_Deserialize = {
 export type AppSettings_Serialize = {
 	schemaVersion: number,
 	theme: string,
+	appIcon: string,
+	customTheme: CustomThemeConfig_Serialize,
+	uiScale: number,
+	highContrast: boolean,
+	onboardingCompleted: boolean,
 	reduceMotion: boolean,
 	favorites: FavoriteItem_Serialize[],
 	recentLocations: string[],
@@ -166,6 +203,12 @@ export type AppSettings_Serialize = {
 	webhookUrl: string | null,
 	webhookOnScan: boolean,
 	webhookOnClean: boolean,
+	/**
+	 *  Explicit opt-in allowing webhooks to target loopback or private LAN
+	 *  hosts (e.g. self-hosted n8n on localhost or 192.168.x.x). Off by
+	 *  default so strict SSRF protection remains enforced out of the box.
+	 */
+	allowPrivateWebhooks: boolean,
 	shortcuts: { [key in string]: string } | null,
 	/**
 	 *  Allows the MCP `execute` tool to run at all. Off by default: an agent
@@ -261,13 +304,10 @@ export type BuildInfo = {
 	builtAt: string,
 };
 
-/**  Progress events for the asynchronous cache measurement pass. */
 export type CacheMeasureEvent = CacheMeasureEvent_Serialize | CacheMeasureEvent_Deserialize;
 
-/**  Progress events for the asynchronous cache measurement pass. */
 export type CacheMeasureEvent_Deserialize = { type: "started"; providerCount: number } | { type: "pathMeasured"; providerId: string; path: string; exists: boolean; bytes?: number | null; unmeasuredReason?: string | null } | { type: "providerFinished"; providerId: string; totalBytes: number } | { type: "finished" } | { type: "cancelled" };
 
-/**  Progress events for the asynchronous cache measurement pass. */
 export type CacheMeasureEvent_Serialize = { type: "started"; providerCount: number } | { type: "pathMeasured"; providerId: string; path: string; exists: boolean; bytes: number | null; unmeasuredReason: string | null } | { type: "providerFinished"; providerId: string; totalBytes: number } | { type: "finished" } | { type: "cancelled" };
 
 export type CachePathInfo = CachePathInfo_Serialize | CachePathInfo_Deserialize;
@@ -276,11 +316,6 @@ export type CachePathInfo_Deserialize = {
 	path: string,
 	exists: boolean,
 	bytes?: number | null,
-	/**
-	 *  Why `bytes` is `None` even though the path exists (`readOnly`, `error`).
-	 *  Without this the UI could only say "not measured" and never explain that
-	 *  a read-only provider is intentionally never walked.
-	 */
 	unmeasuredReason?: string | null,
 };
 
@@ -288,11 +323,6 @@ export type CachePathInfo_Serialize = {
 	path: string,
 	exists: boolean,
 	bytes: number | null,
-	/**
-	 *  Why `bytes` is `None` even though the path exists (`readOnly`, `error`).
-	 *  Without this the UI could only say "not measured" and never explain that
-	 *  a read-only provider is intentionally never walked.
-	 */
 	unmeasuredReason: string | null,
 };
 
@@ -308,7 +338,6 @@ export type CacheProviderInfo_Deserialize = {
 	actions: OfficialActionInfo_Deserialize[],
 	readOnly: boolean,
 	note?: string | null,
-	/**  False until the streaming measurement pass has reported a value. */
 	measured: boolean,
 };
 
@@ -322,7 +351,6 @@ export type CacheProviderInfo_Serialize = {
 	actions: OfficialActionInfo_Serialize[],
 	readOnly: boolean,
 	note: string | null,
-	/**  False until the streaming measurement pass has reported a value. */
 	measured: boolean,
 };
 
@@ -590,7 +618,7 @@ export type CleanupTotals = {
 /**
  *  Snapshot of the current CLI & MCP executable environment so Docs and
  *  Settings can show the exact running executable path and let Portable users
- *  register a `dev-cleaner` shim in their per-user `PATH` with one click.
+ *  register a `detergo` shim in their per-user `PATH` with one click.
  */
 export type CliEnvironmentStatus = {
 	executablePath: string,
@@ -602,13 +630,13 @@ export type CliEnvironmentStatus = {
 export type Confidence = "high" | "medium" | "low";
 
 /**
- *  A user-defined AI tool. Dev Cleaner never invents cleanup rules for these
+ *  A user-defined AI tool. Detergo never invents cleanup rules for these
  *  roots: every discovered target is reported as `KEEP`.
  */
 export type CustomAgentProvider = CustomAgentProvider_Serialize | CustomAgentProvider_Deserialize;
 
 /**
- *  A user-defined AI tool. Dev Cleaner never invents cleanup rules for these
+ *  A user-defined AI tool. Detergo never invents cleanup rules for these
  *  roots: every discovered target is reported as `KEEP`.
  */
 export type CustomAgentProvider_Deserialize = {
@@ -619,7 +647,7 @@ export type CustomAgentProvider_Deserialize = {
 };
 
 /**
- *  A user-defined AI tool. Dev Cleaner never invents cleanup rules for these
+ *  A user-defined AI tool. Detergo never invents cleanup rules for these
  *  roots: every discovered target is reported as `KEEP`.
  */
 export type CustomAgentProvider_Serialize = {
@@ -627,6 +655,21 @@ export type CustomAgentProvider_Serialize = {
 	name: string,
 	rootPaths: string[],
 	createdAt: string,
+};
+
+/**  User-created custom accent theme (dark or light base + arbitrary `#RRGGBB` hex). */
+export type CustomThemeConfig = CustomThemeConfig_Serialize | CustomThemeConfig_Deserialize;
+
+/**  User-created custom accent theme (dark or light base + arbitrary `#RRGGBB` hex). */
+export type CustomThemeConfig_Deserialize = {
+	base?: string,
+	accent?: string,
+};
+
+/**  User-created custom accent theme (dark or light base + arbitrary `#RRGGBB` hex). */
+export type CustomThemeConfig_Serialize = {
+	base: string,
+	accent: string,
 };
 
 export type DeleteMode = "recycleBin" | "permanent";
@@ -641,6 +684,14 @@ export type DiskSpaceInfo = {
 	freeBytes: number,
 	totalBytes: number,
 	percentUsed: number | null,
+};
+
+export type DownloadedUpdate = {
+	path: string,
+	fileName: string,
+	bytes: number,
+	sha256: string,
+	signatureStatus: SignatureStatus,
 };
 
 export type FavoriteItem = FavoriteItem_Serialize | FavoriteItem_Deserialize;
@@ -677,6 +728,8 @@ export type GrowthEntry = {
 	ratePerHour: number | null,
 	level: string,
 };
+
+export type InstallChannel = "msixStore" | "installer" | "portable";
 
 export type ItemStatus = "discovered" | "measuring" | "ready" | "blocked" | "error" | "deleted";
 
@@ -813,11 +866,6 @@ export type OfficialActionPreview = {
 	executable: string,
 	args: string[],
 	beforeBytes: number,
-	/**
-	 *  True when the before-size measurement hit its time limit, so some paths
-	 *  are not included. This flag is the machine-readable source of truth; the
-	 *  old free-text `warning` duplicated it and was never rendered.
-	 */
 	measurementTruncated: boolean,
 	expiresMs: number,
 };
@@ -837,15 +885,7 @@ export type OfficialActionResult_Deserialize = {
 	stdoutTail: string,
 	stderrTail: string,
 	note?: string | null,
-	/**
-	 *  True when the post-action size measurement was cut short (time budget),
-	 *  so `delta_bytes` is a lower bound rather than a complete change value.
-	 */
 	measurementTruncated: boolean,
-	/**
-	 *  Set when the cleanup completed but the audit/history record could not be
-	 *  written. The command still succeeds, but the failure is surfaced.
-	 */
 	auditError?: string | null,
 };
 
@@ -862,15 +902,7 @@ export type OfficialActionResult_Serialize = {
 	stdoutTail: string,
 	stderrTail: string,
 	note: string | null,
-	/**
-	 *  True when the post-action size measurement was cut short (time budget),
-	 *  so `delta_bytes` is a lower bound rather than a complete change value.
-	 */
 	measurementTruncated: boolean,
-	/**
-	 *  Set when the cleanup completed but the audit/history record could not be
-	 *  written. The command still succeeds, but the failure is surfaced.
-	 */
 	auditError: string | null,
 };
 
@@ -1247,6 +1279,16 @@ export type ScanWarning_Serialize = {
 	root: string | null,
 };
 
+export type SignatureStatus = 
+/**  Authenticode signature verified cleanly by Windows WinVerifyTrust. */
+"valid" | 
+/**  Binary has no Authenticode signature (expected for unsigned dev/OSS builds). */
+"unsigned" | 
+/**  Signature is present but tampered, expired, or not trusted by OS policy. */
+"untrusted" | 
+/**  Signature verification is not available on this platform. */
+"unavailable";
+
 export type SortConfig = SortConfig_Serialize | SortConfig_Deserialize;
 
 export type SortConfig_Deserialize = {
@@ -1539,13 +1581,27 @@ export type TargetSnapshot_Serialize = {
 	fileId: string | null,
 };
 
-export type UpdateAsset = {
+export type UpdateAsset = UpdateAsset_Serialize | UpdateAsset_Deserialize;
+
+export type UpdateAsset_Deserialize = {
 	name: string,
 	size: number,
 	downloadUrl: string,
+	sha256?: string | null,
+	channel?: string | null,
 };
 
-export type UpdateInfo = {
+export type UpdateAsset_Serialize = {
+	name: string,
+	size: number,
+	downloadUrl: string,
+	sha256: string | null,
+	channel: string | null,
+};
+
+export type UpdateInfo = UpdateInfo_Serialize | UpdateInfo_Deserialize;
+
+export type UpdateInfo_Deserialize = {
 	/**  Version of the running binary. */
 	currentVersion: string,
 	/**  Newest published version, normalised without a leading `v`. */
@@ -1557,5 +1613,36 @@ export type UpdateInfo = {
 	/**  Markdown release notes as published, empty when the body has none. */
 	notes: string,
 	publishedAt: string,
-	assets: UpdateAsset[],
+	assets: UpdateAsset_Deserialize[],
+	/**  Detected distribution channel of the running instance. */
+	installChannel: InstallChannel,
+	/**  True when Microsoft Store manages updates (no external installer offered). */
+	managedByStore: boolean,
+	/**  Package matching `install_channel`, if present in the release. */
+	recommendedAsset?: UpdateAsset_Deserialize | null,
+	/**  Metadata source (`cdn-manifest` or `github-api`). */
+	source: string,
+};
+
+export type UpdateInfo_Serialize = {
+	/**  Version of the running binary. */
+	currentVersion: string,
+	/**  Newest published version, normalised without a leading `v`. */
+	latestVersion: string,
+	/**  `true` when the published release is strictly newer than the binary. */
+	available: boolean,
+	releaseName: string,
+	releaseUrl: string,
+	/**  Markdown release notes as published, empty when the body has none. */
+	notes: string,
+	publishedAt: string,
+	assets: UpdateAsset_Serialize[],
+	/**  Detected distribution channel of the running instance. */
+	installChannel: InstallChannel,
+	/**  True when Microsoft Store manages updates (no external installer offered). */
+	managedByStore: boolean,
+	/**  Package matching `install_channel`, if present in the release. */
+	recommendedAsset: UpdateAsset_Serialize | null,
+	/**  Metadata source (`cdn-manifest` or `github-api`). */
+	source: string,
 };

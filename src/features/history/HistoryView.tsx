@@ -7,13 +7,21 @@ import {
   TrendingDown,
   FolderTree,
   RotateCcw,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
 import { Checkbox } from "@/components/primitives/Checkbox";
 import { Dialog } from "@/components/primitives/Dialog";
 import { EmptyState } from "@/components/primitives/EmptyState";
 import { PageHeader } from "@/components/primitives/PageHeader";
-import { useUIText, localizeWarningCode, localizeStopReason } from "@/lib/ui-text";
+import { SearchField } from "@/components/primitives/SearchField";
+import {
+  useUIText,
+  getUIText,
+  localizeAppError,
+  localizeWarningCode,
+  localizeStopReason,
+} from "@/lib/ui-text";
 import { scannerApi } from "@/lib/tauri/scanner-api";
 import { formatBytes, formatSignedBytes } from "@/lib/formatters";
 import { usePreferencesStore } from "@/stores/preferences-store";
@@ -22,7 +30,6 @@ import { useScanStore, clearPersistedLastScan, viewForScanScope } from "@/stores
 import { useAppStore } from "@/stores/app-store";
 import { maskPath } from "@/lib/format/path";
 import { formatSavedAt, latestTimestampMs } from "@/lib/format/date";
-import { describeError } from "@/lib/errors/user-message";
 import { lifetimeCleanedBytes } from "@/lib/cleanup-totals";
 import { ActionAuditRecord, AuditRecord, CleanupTotals } from "@/types";
 import {
@@ -48,6 +55,7 @@ export const HistoryView: React.FC = () => {
   const [scanHistoryStatus, setScanHistoryStatus] = useState<ScanHistoryStatus>("empty");
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [cleanupTotals, setCleanupTotals] = useState<CleanupTotals | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -104,7 +112,7 @@ export const HistoryView: React.FC = () => {
         setCleanupTotals(nextTotals);
       })
       .catch((err) => {
-        if (current()) setError(describeError(err));
+        if (current()) setError(localizeAppError(err, getUIText()));
       })
       .finally(() => {
         if (current()) setLoading(false);
@@ -200,7 +208,7 @@ export const HistoryView: React.FC = () => {
         showToast(ui.history.toastScansCleared, "success");
       }
     } catch (err) {
-      setError(describeError(err));
+      setError(localizeAppError(err, ui));
     } finally {
       setLoading(false);
     }
@@ -231,7 +239,7 @@ export const HistoryView: React.FC = () => {
       setCleanupTotals(null);
       showToast(ui.history.toastAllCleared, "success");
     } catch (err) {
-      setError(describeError(err));
+      setError(localizeAppError(err, ui));
     } finally {
       setLoading(false);
     }
@@ -250,8 +258,35 @@ export const HistoryView: React.FC = () => {
         showToast(ui.overview.noLastScanToast, "error");
       }
     } catch (err) {
-      showToast(`${ui.history.loadError}: ${describeError(err)}`, "error");
+      showToast(`${ui.history.loadError}: ${localizeAppError(err, ui)}`, "error");
     }
+  };
+
+  const handleExportJson = () => {
+    const payload =
+      tab === "cleanups"
+        ? records.map((r) => ({
+            ...r,
+            entries: r.entries.map((e) => ({
+              ...e,
+              path: maskPaths ? maskPath(e.path) : e.path,
+            })),
+          }))
+        : tab === "actions"
+          ? actions
+          : scans.map((s) => ({
+              ...s,
+              rootPath: maskPaths ? maskPath(s.rootPath) : s.rootPath,
+            }));
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `detergo-${tab}-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const summary = useMemo(() => {
@@ -301,6 +336,41 @@ export const HistoryView: React.FC = () => {
     { id: "scans", label: ui.history.tabScans, icon: <FolderTree size={14} /> },
   ];
 
+  const normalizedFilter = searchQuery.trim().toLowerCase();
+  const filteredRecords = useMemo(() => {
+    if (!normalizedFilter) return records;
+    return records.filter(
+      (r) =>
+        r.mode.toLowerCase().includes(normalizedFilter) ||
+        r.timestamp.toLowerCase().includes(normalizedFilter) ||
+        r.entries.some(
+          (e) =>
+            e.ruleId.toLowerCase().includes(normalizedFilter) ||
+            e.path.toLowerCase().includes(normalizedFilter),
+        ),
+    );
+  }, [records, normalizedFilter]);
+
+  const filteredActions = useMemo(() => {
+    if (!normalizedFilter) return actions;
+    return actions.filter(
+      (a) =>
+        a.label.toLowerCase().includes(normalizedFilter) ||
+        a.providerId.toLowerCase().includes(normalizedFilter) ||
+        a.timestamp.toLowerCase().includes(normalizedFilter),
+    );
+  }, [actions, normalizedFilter]);
+
+  const filteredScans = useMemo(() => {
+    if (!normalizedFilter) return scans;
+    return scans.filter(
+      (s) =>
+        s.scope.toLowerCase().includes(normalizedFilter) ||
+        s.rootPath.toLowerCase().includes(normalizedFilter) ||
+        s.status.toLowerCase().includes(normalizedFilter),
+    );
+  }, [scans, normalizedFilter]);
+
   const activeEmpty =
     tab === "cleanups"
       ? ui.history.empty
@@ -308,7 +378,11 @@ export const HistoryView: React.FC = () => {
         ? ui.history.actionsEmpty
         : ui.history.emptyScans;
   const activeCount =
-    tab === "cleanups" ? records.length : tab === "actions" ? actions.length : scans.length;
+    tab === "cleanups"
+      ? filteredRecords.length
+      : tab === "actions"
+        ? filteredActions.length
+        : filteredScans.length;
 
   const moveTab = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
     let next = index;
@@ -372,6 +446,15 @@ export const HistoryView: React.FC = () => {
                 : tab === "actions"
                   ? ui.history.clearActionsBtn
                   : ui.history.clearScansBtn}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Download size={13} />}
+              onClick={handleExportJson}
+              disabled={loading || activeCount === 0}
+            >
+              JSON
             </Button>
             <Button
               variant="secondary"
@@ -475,6 +558,14 @@ export const HistoryView: React.FC = () => {
         })}
       </div>
 
+      <div className="items-toolbar" style={{ marginBottom: 8 }}>
+        <SearchField
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder={ui.table.searchPlaceholder}
+        />
+      </div>
+
       <p className="plan-note">{ui.history.clearHint}</p>
       {error && (
         <p className="items-warning">
@@ -522,7 +613,7 @@ export const HistoryView: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {records.map((record) => (
+                  {filteredRecords.map((record) => (
                     <React.Fragment key={record.id}>
                       <tr>
                         <td>{formatSavedAt(record.timestamp, language)}</td>
@@ -602,7 +693,7 @@ export const HistoryView: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {actions.map((action) => {
+                  {filteredActions.map((action) => {
                     const normalizedDelta =
                       action.providerId === "system" &&
                       action.beforeBytes === 0 &&
@@ -638,7 +729,7 @@ export const HistoryView: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {scans.map((scan) => (
+                  {filteredScans.map((scan) => (
                     <tr key={scan.id}>
                       <td>{formatSavedAt(scan.timestamp, language)}</td>
                       <td>

@@ -1,4 +1,4 @@
-use dev_cleaner_lib::commands::webhook_commands::{
+use detergo_lib::commands::webhook_commands::{
     post_webhook_blocking, post_webhook_blocking_unchecked, validate_webhook_url,
 };
 use httpmock::prelude::*;

@@ -39,7 +39,7 @@ describe("Ek 3 regressions", () => {
     storageMap.clear();
   });
 
-  describe("U5/U6 — locale-aware search normalization", () => {
+  describe("U5/U6 - locale-aware search normalization", () => {
     it("matches Turkish dotted/dotless İ and I", () => {
       expect(normalizeSearchText("İstanbul", "tr")).toBe("istanbul");
       expect(normalizeSearchText("ISTANBUL", "tr")).toBe("ıstanbul");
@@ -64,7 +64,7 @@ describe("Ek 3 regressions", () => {
     });
   });
 
-  describe("U7 — locale-aware sorting", () => {
+  describe("U7 - locale-aware sorting", () => {
     it("orders case-insensitively instead of by UTF-16 code units", () => {
       const collator = createTextCollator("en");
       expect(collator.compare("apple", "Zebra")).toBeLessThan(0);
@@ -103,7 +103,7 @@ describe("Ek 3 regressions", () => {
       const cached = createItemComparator({ field: "category", direction: "asc" }, collator, "tr");
       const sorted = [...rows].sort(cached).map((item) => item.category);
       // Turkish labels are "Bağımlılıklar" < "Önbellek", so dependencies come
-      // first — the cache must preserve exactly what the shared comparator does.
+      // first - the cache must preserve exactly what the shared comparator does.
       expect(sorted).toEqual(["dependencies", "cache", "cache"]);
 
       // Every non-category field must delegate to `compareItems` unchanged.
@@ -121,7 +121,7 @@ describe("Ek 3 regressions", () => {
     });
   });
 
-  describe("U3 — same-tab scan history notifications", () => {
+  describe("U3 - same-tab scan history notifications", () => {
     it("broadcasts append and clear, and keeps localStorage in sync", () => {
       let changes = 0;
       const listener = () => {
@@ -150,7 +150,7 @@ describe("Ek 3 regressions", () => {
     });
   });
 
-  describe("U2 — Ctrl+F does not escape an open modal", () => {
+  describe("U2 - Ctrl+F does not escape an open modal", () => {
     let modal: HTMLDivElement;
     let modalInput: HTMLInputElement;
     let backgroundInput: HTMLInputElement;
@@ -188,7 +188,7 @@ describe("Ek 3 regressions", () => {
     });
   });
 
-  describe("U13 — documentation body search index", () => {
+  describe("U13 - documentation body search index", () => {
     it("indexes English article body text, not only titles", () => {
       const index = getDocsBodyIndex("en");
       expect(index.quickstart).toContain("recycle bin");

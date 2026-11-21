@@ -20,7 +20,7 @@ pub struct DiskSpaceInfo {
 
 /// Snapshot of the current CLI & MCP executable environment so Docs and
 /// Settings can show the exact running executable path and let Portable users
-/// register a `dev-cleaner` shim in their per-user `PATH` with one click.
+/// register a `detergo` shim in their per-user `PATH` with one click.
 #[cfg_attr(feature = "bindings", derive(specta::Type))]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -36,12 +36,28 @@ fn cli_shim_dir() -> PathBuf {
         .map(PathBuf::from)
         .or_else(|_| std::env::var("APPDATA").map(PathBuf::from))
         .unwrap_or_else(|_| PathBuf::from("."));
-    base.join("dev-cleaner").join("bin")
+    base.join("detergo").join("bin")
 }
 
 fn build_cmd_shim_content(exe_path: &Path) -> String {
+    // Prefer the sibling console-subsystem companion (`detergo.com`) when
+    // present so CMD/PowerShell wait synchronously and pipes work natively.
+    let target = exe_path
+        .parent()
+        .and_then(|dir| {
+            let detergo_com = dir.join("detergo.com");
+            if detergo_com.is_file() {
+                return Some(detergo_com);
+            }
+            let legacy_com = dir.join("dev-cleaner.com");
+            if legacy_com.is_file() {
+                return Some(legacy_com);
+            }
+            None
+        })
+        .unwrap_or_else(|| exe_path.to_path_buf());
     // Escape `%` as `%%` so folders like `100%Work` are never expanded by cmd.
-    let escaped = exe_path.to_string_lossy().replace('%', "%%");
+    let escaped = target.to_string_lossy().replace('%', "%%");
     format!("@echo off\r\nsetlocal\r\n\"{escaped}\" %*\r\nexit /b %ERRORLEVEL%\r\n")
 }
 
@@ -76,7 +92,18 @@ fn read_user_path_registry() -> Option<String> {
             None,
             Some(&mut byte_len),
         );
-        if query_len.is_err() || byte_len == 0 {
+        if let Err(err) = query_len.ok() {
+            let _ = RegCloseKey(hkey);
+            // ERROR_FILE_NOT_FOUND (2): user has no per-user Path value yet.
+            // Any other error (access denied, transient failure) MUST return
+            // `None` so callers refuse to overwrite HKCU\Environment\Path.
+            let code = err.code().0 as u32 & 0xFFFF;
+            if code == 2 {
+                return Some(String::new());
+            }
+            return None;
+        }
+        if byte_len == 0 {
             let _ = RegCloseKey(hkey);
             return Some(String::new());
         }
@@ -180,15 +207,15 @@ fn path_contains_dir(path_env: &str, dir: &Path) -> bool {
 
 #[tauri::command]
 pub fn get_cli_environment_status() -> CliEnvironmentStatus {
-    let exe = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("dev-cleaner.exe"));
+    let exe = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("detergo.exe"));
     let shim_dir = cli_shim_dir();
-    let shim_file = shim_dir.join("dev-cleaner.cmd");
+    let shim_file = shim_dir.join("detergo.cmd");
     let expected_shim = build_cmd_shim_content(&exe);
 
     let exe_name_is_standard = exe
         .file_name()
         .and_then(|n| n.to_str())
-        .is_some_and(|n| n.eq_ignore_ascii_case("dev-cleaner.exe"));
+        .is_some_and(|n| n.eq_ignore_ascii_case("detergo.exe"));
 
     let user_path = read_user_path_registry()
         .or_else(|| std::env::var("PATH").ok())
@@ -223,12 +250,17 @@ pub fn register_cli_in_user_path() -> Result<CliEnvironmentStatus, AppError> {
     std::fs::create_dir_all(&shim_dir)
         .map_err(|e| AppError::Unknown(format!("Could not create CLI bin directory: {e}")))?;
 
-    let shim_file = shim_dir.join("dev-cleaner.cmd");
     let content = build_cmd_shim_content(&exe);
-    std::fs::write(&shim_file, content)
-        .map_err(|e| AppError::Unknown(format!("Could not write dev-cleaner.cmd shim: {e}")))?;
+    let primary_shim = shim_dir.join("detergo.cmd");
+    std::fs::write(&primary_shim, &content)
+        .map_err(|e| AppError::Unknown(format!("Could not write detergo.cmd shim: {e}")))?;
 
-    let current = read_user_path_registry().unwrap_or_default();
+    let current = read_user_path_registry().ok_or_else(|| {
+        AppError::Unknown(
+            "Could not safely read existing user PATH from Windows Registry; refusing to overwrite."
+                .to_string(),
+        )
+    })?;
     if !path_contains_dir(&current, &shim_dir) {
         let dir_text = shim_dir.to_string_lossy();
         let trimmed = current.trim_end_matches(';');
@@ -287,18 +319,18 @@ mod tests {
 
     #[test]
     fn cmd_shim_escapes_percent_signs_and_forwards_exit_code() {
-        let shim = build_cmd_shim_content(Path::new(r"C:\Users\100%Dev\Dev-Cleaner.exe"));
-        assert!(shim.contains(r#""C:\Users\100%%Dev\Dev-Cleaner.exe" %*"#));
+        let shim = build_cmd_shim_content(Path::new(r"C:\Users\100%Dev\Detergo.exe"));
+        assert!(shim.contains(r#""C:\Users\100%%Dev\Detergo.exe" %*"#));
         assert!(shim.contains("exit /b %ERRORLEVEL%"));
         assert!(!shim.contains("start "));
     }
 
     #[test]
     fn path_contains_dir_is_case_and_slash_insensitive() {
-        let env = r"C:\Windows\System32;C:\Users\emir\AppData\Local\dev-cleaner\bin\;D:\Tools";
+        let env = r"C:\Windows\System32;C:\Users\emir\AppData\Local\detergo\bin\;D:\Tools";
         assert!(path_contains_dir(
             env,
-            Path::new(r"c:\users\emir\appdata\local\dev-cleaner\bin")
+            Path::new(r"c:\users\emir\appdata\local\detergo\bin")
         ));
         assert!(!path_contains_dir(env, Path::new(r"C:\Other\bin")));
     }

@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.9.0.schema.json
+
+PackageIdentifier: Vellium.Detergo
+PackageVersion: 1.0.0
+PackageLocale: en-US
+Publisher: Vellium
+PublisherUrl: https://vellium.dev
+PublisherSupportUrl: https://github.com/emirtdede/detergo/issues
+PackageName: Detergo
+PackageUrl: https://github.com/emirtdede/detergo
+License: MIT
+LicenseUrl: https://github.com/emirtdede/detergo/blob/main/LICENSE
+ShortDescription: Safe, local-first multi-ecosystem developer artifact, AI agent storage, and package cache cleaner.
+Description: >-
+  Detergo by Vellium analyzes and safely reclaims disk space across 18 developer
+  ecosystems (82 rules), 17 AI coding agents, 27 global package manager caches,
+  and Windows C: drive maintenance. Runs 100% offline with Recycle Bin safety,
+  symlink/TOCTOU protection, CLI automation, and an MCP stdio server.
+Moniker: detergo
+Tags:
+  - developer-tools
+  - disk-cleaner
+  - node-modules
+  - rust
+  - ai-agents
+  - mcp
+  - cli
+ManifestType: defaultLocale
+ManifestVersion: 1.9.0

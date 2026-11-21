@@ -19,7 +19,7 @@ LangString uninstallApp ${LANG_HUNGARIAN} "Távolítsa el a ${PRODUCTNAME} fájl
 LangString uninstallBeforeInstalling ${LANG_HUNGARIAN} "Telepítés előtt távolítsa el"
 LangString unknown ${LANG_HUNGARIAN} "ismeretlen"
 LangString webview2AbortError ${LANG_HUNGARIAN} "Nem sikerült telepíteni a WebView2-t! Az alkalmazás nem tud működni nélküle. Próbáld meg újraindítani a telepítőt."
-LangString webview2DownloadError ${LANG_HUNGARIAN} "Hiba: A WebView2 letöltése nem sikerült – $0"
+LangString webview2DownloadError ${LANG_HUNGARIAN} "Hiba: A WebView2 letöltése nem sikerült - $0"
 LangString webview2DownloadSuccess ${LANG_HUNGARIAN} "WebView2 bootstrapper sikeresen letöltve"
 LangString webview2Downloading ${LANG_HUNGARIAN} "WebView2 bootstrapper letöltése..."
 LangString webview2InstallError ${LANG_HUNGARIAN} "Hiba: A WebView2 telepítése nem sikerült a $1 kilépési kóddal"

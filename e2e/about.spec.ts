@@ -1,17 +1,24 @@
+import fs from "node:fs";
+import path from "node:path";
 import { test, expect, type Page } from "@playwright/test";
 
 /**
  * The About page is where a reviewer checks what the app actually knows: the
  * catalog size, the rules behind it, the update channel and the local error log.
  *
- * These assertions exist because the page used to show a hand-written summary
- * ("3 rules / 3 ecosystems") that disagreed with the shipped catalog. The
- * browser preview now renders the generated catalog, so the numbers here are the
- * real ones (56 rules across 14 ecosystems) and drift fails the test.
+ * Counts are parsed directly from `src-tauri/assets/targets.toml` so adding
+ * rules to the real catalog never breaks the test with a stale literal while
+ * drift between `targets.toml` and the UI still fails immediately.
  */
-
-const CATALOG_RULES = 56;
-const CATALOG_ECOSYSTEMS = 14;
+const catalogToml = fs.readFileSync(
+  path.resolve(process.cwd(), "src-tauri/assets/targets.toml"),
+  "utf8",
+);
+const CATALOG_RULES = [...catalogToml.matchAll(/^id\s*=\s*"([^"]+)"/gm)].length;
+const CATALOG_ECOSYSTEMS = new Set(
+  [...catalogToml.matchAll(/^ecosystem\s*=\s*"([^"]+)"/gm)].map((m) => m[1]),
+).size;
+const JAVASCRIPT_RULES = [...catalogToml.matchAll(/^ecosystem\s*=\s*"javascript"/gm)].length;
 
 async function openAbout(page: Page) {
   await page.goto("/");
@@ -25,6 +32,7 @@ async function openAbout(page: Page) {
       await new Promise((r) => setTimeout(r, 20));
     }
     usePreferencesStore.getState().setLanguage("en");
+    usePreferencesStore.getState().setOnboardingCompleted(true);
   });
   await page
     .locator("#primary-navigation")
@@ -65,7 +73,7 @@ test("a catalog card opens the rules behind it", async ({ page }) => {
   await expect(javascriptCard).toHaveAttribute("aria-expanded", "true");
 
   const rules = explorer.locator(".about-rule-item");
-  await expect(rules).toHaveCount(24);
+  await expect(rules).toHaveCount(JAVASCRIPT_RULES);
 
   // A rule expands into the details a user needs before deleting anything.
   const first = rules.first();

@@ -4,8 +4,8 @@
   "libvips": "8.18.7",
   "platform": "win32",
   "arch": "x64",
-  "master": "assets/brand/dev-cleaner-icon.svg",
-  "masterSha256": "1d8a99a4ed36593614863b2f72f74705e3b08e78c49a733664066efca1e44fad",
+  "master": "assets/brand/detergo-icon.svg",
+  "masterSha256": "facb43c695d0bc552e2f9b01f17e781753a5c507c5a295c7c0d7b089cde9eda2",
   "icoSizes": [
     16,
     20,
@@ -56,13 +56,13 @@
     ]
   },
   "outputs": {
-    "assets/brand/dev-cleaner-icon-1024.png": "407cbd368fd9486041775ce9f54471c848d017df7a29db90affa5674c0e2ccd7",
-    "assets/brand/dev-cleaner-icon-256.png": "c06257d1256649256de3c8186f51c32b8a559e49e6906b1a8616dd5dec65710b",
+    "assets/brand/detergo-icon-1024.png": "407cbd368fd9486041775ce9f54471c848d017df7a29db90affa5674c0e2ccd7",
+    "assets/brand/detergo-icon-256.png": "c06257d1256649256de3c8186f51c32b8a559e49e6906b1a8616dd5dec65710b",
     "assets/brand/github/avatar-1024.png": "c337bd2f761ebdb0d2d08293fe5ba91262ffefe463e8c99d94225127d186dd0c",
-    "assets/brand/github/social-preview.png": "d7a731680bd680003816ec52c00ecdc82acd94b769948406fee59346d95253d8",
-    "docs/brand/dev-cleaner-icon.png": "438736f37745f3ef8c780458dc489227d86198aefcc4f795d4c3209c4b7586d2",
+    "assets/brand/github/social-preview.png": "c0d6335e227bfbeac031ece886e5dc930cc74ad31b7808a87371c834eb3cdfb7",
+    "docs/brand/detergo-icon.png": "438736f37745f3ef8c780458dc489227d86198aefcc4f795d4c3209c4b7586d2",
     "public/favicon.ico": "ecb0ea7def05cc10b859e4c72f2b8d19a3e85b2b3774dce4b84deec3cfaac2d9",
-    "public/favicon.svg": "802580e0188f721b6ac1b5bb12e7c8379eddb051fd1d77a0eb863771e47962b0",
+    "public/favicon.svg": "d0aa6b459f944c760ebca1d1fb348a6b9208961d1bd6677e9185b3c1761fb4b5",
     "public/icons/notification.png": "c06257d1256649256de3c8186f51c32b8a559e49e6906b1a8616dd5dec65710b",
     "src-tauri/icons/128x128.png": "63aed66d9d4888050414bf731b87bfdd39a124596bdac4745dc3398f0d74d5c7",
     "src-tauri/icons/128x128@2x.png": "c06257d1256649256de3c8186f51c32b8a559e49e6906b1a8616dd5dec65710b",
@@ -77,10 +77,10 @@
     "src-tauri/icons/tray-36.png": "75ba8d1e3d65e8aed51f38f37d9a65de48405d90804245270d07c12a3b501245",
     "src-tauri/icons/tray-40.png": "75fe58bcefd5864a318172a2389391a601125e3d4fade0de6248e452362c0ce4",
     "src-tauri/icons/tray-48.png": "2cd86ba6f2a2eca679f6c14d72b39bc3dae00cad3a791adfc2d2a7789f63a7e9",
-    "src-tauri/nsis/header.bmp": "91577b0d701978ca0ef44777b70254a635347852cdccbdae14182c6e5d722f3a",
-    "src-tauri/nsis/sidebar.bmp": "3cc3d5636c3842d60a3bd8662210254d2fc306e258d076be6226c553633d3a78",
-    "src-tauri/nsis/unheader.bmp": "4fc00ad9f2daa51b490b6682a250f38791a7d2cd53a1ca6e154ab38425dba120",
-    "src-tauri/wix/banner.bmp": "ebab8f9f7ebf1b4f1768c4340b301c8ebe8a8d2649ee8a248e5b92ed35bb14d9",
-    "src-tauri/wix/dialog.bmp": "a824f26a1140db15e8c0dcbc7767e59f5e3bf285bc75be7c13b3db999993e6a7"
+    "src-tauri/nsis/header.bmp": "2c8b30e00a9bc2bdd365131fe3ab66907a82b782338f7cc6d9c80c137db7072f",
+    "src-tauri/nsis/sidebar.bmp": "a9e104cdc3564ecb0e501db32489e3dbe131f9598122ad0f8ba579a03df475ba",
+    "src-tauri/nsis/unheader.bmp": "9b3e49f1920b4c1522e2f00a94851626703da5937cde1f7ff875850f806ebced",
+    "src-tauri/wix/banner.bmp": "21f4dc5f3eebe11b7c172d297ad427b7066f834b6d925803b2a98e9f1ddab850",
+    "src-tauri/wix/dialog.bmp": "2a6080c87a81fbc6628e48c98cc7d022d0352e6191b9bd4d97e62ed3314f1ded"
   }
 }

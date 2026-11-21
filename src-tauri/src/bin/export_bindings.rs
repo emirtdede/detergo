@@ -18,7 +18,7 @@ fn main() {
     let generated = target.with_extension("ts.generated");
 
     tauri_specta::Builder::<tauri::Wry>::new()
-        .types(&dev_cleaner_lib::bindings::collect())
+        .types(&detergo_lib::bindings::collect())
         .export(Typescript::default(), &generated)
         .expect("failed to export TypeScript bindings");
 

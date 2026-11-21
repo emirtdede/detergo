@@ -39,7 +39,7 @@ function outline(font, text, x, y, size, maxWidth) {
   return { pathData, width: width * scale, fontSize };
 }
 
-const wordmark = outline(bold, "Dev Cleaner", 420, 300, 92, 760);
+const wordmark = outline(bold, "Detergo", 420, 300, 96, 760);
 const tagline = outline(bold, "DEVELOPER ARTIFACT CLEANER", 424, 352, 21, 760);
 const line1 = outline(
   regular,
@@ -53,7 +53,7 @@ const line2 = outline(regular, "Go, Java, .NET and AI agent storage.", 424, 448,
 const domain = outline(bold, "VELLIUM.DEV", 424, 552, 16, 300);
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" fill="none">
-    <title>Dev Cleaner by Vellium</title>
+    <title>Detergo by Vellium</title>
     <defs>
         <linearGradient id="sp-bg" x1="0" y1="0" x2="1280" y2="640" gradientUnits="userSpaceOnUse">
             <stop stop-color="#101015"/>

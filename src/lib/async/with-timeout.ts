@@ -7,7 +7,7 @@
  * combined-run flag) cannot wait for that: a single stuck command used to make
  * the whole app unable to scan again until it was restarted.
  *
- * `withTimeout` never cancels the underlying work — it only stops the caller
+ * `withTimeout` never cancels the underlying work - it only stops the caller
  * from waiting for it. The operation is still expected to settle on its own
  * (or to be cancelled through its own token) so no state is left behind.
  */

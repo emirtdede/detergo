@@ -10,7 +10,7 @@ use windows::Win32::UI::WindowsAndMessaging::{
 // NOTE: There is deliberately no "zombie process killer" here.
 //
 // A previous implementation enumerated processes whose executable name looked
-// like Dev Cleaner and terminated every one without a *visible* window. That
+// like Detergo and terminated every one without a *visible* window. That
 // killed live MCP stdio servers and running CLI scans (they have no windows at
 // all) and it also killed a GUI hidden in the tray, breaking single-instance
 // behaviour.

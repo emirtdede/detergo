@@ -18,6 +18,7 @@ pub fn save_app_settings(
     state.settings.save(&settings)?;
     // Return what was actually persisted (migrated and clamped) so a caller
     // cannot keep showing values the backend silently normalised.
+    settings.recovered_from_corrupt = false;
     settings.migrate();
     // The tray menu is built at startup; rebuild its labels so a language
     // change is reflected without restarting the application.
@@ -42,6 +43,9 @@ pub fn reset_app_data(app: tauri::AppHandle, state: State<'_, AppState>) -> Resu
     state.audit.reset()?;
     state.last_scan.reset()?;
     state.settings.reset()?;
+    if let Some(dev_dir) = state.settings.path().parent() {
+        crate::platform::mark_legacy_migrated(dev_dir);
+    }
     let _ = crate::system_cleaner::schedule::uninstall();
     state.system_automation.clear()?;
     // The saved language is gone; the native tray must not keep the old labels.

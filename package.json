@@ -1,13 +1,13 @@
 {
-  "name": "dev-cleaner",
+  "name": "detergo",
   "private": true,
   "version": "1.0.0",
-  "description": "Dev Cleaner by Vellium - multi-ecosystem developer artifact and AI agent storage cleaner",
+  "description": "Detergo by Vellium - multi-ecosystem developer artifact and AI agent storage cleaner",
   "author": "Vellium",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/emirtdede/dev-cleaner.git"
+    "url": "git+https://github.com/emirtdede/detergo.git"
   },
   "type": "module",
   "scripts": {

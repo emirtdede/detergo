@@ -1,8 +1,11 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::time::{Duration, Instant};
 
 use crate::catalog::matcher::GitState;
+
+const GIT_CMD_TIMEOUT: Duration = Duration::from_secs(10);
 
 #[derive(Debug, Clone)]
 pub struct GitStatus {
@@ -34,7 +37,10 @@ fn command(repo: &Path, args: &[&str]) -> Result<std::process::Output, GitError>
     cmd.arg("-C")
         .arg(repo)
         .arg("-c")
-        .arg("core.quotepath=false");
+        .arg("core.quotepath=false")
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
     for a in args {
         cmd.arg(a);
     }
@@ -44,14 +50,85 @@ fn command(repo: &Path, args: &[&str]) -> Result<std::process::Output, GitError>
         const CREATE_NO_WINDOW: u32 = 0x0800_0000;
         cmd.creation_flags(CREATE_NO_WINDOW);
     }
-    cmd.output().map_err(|_| GitError::Unavailable)
+    let mut child = cmd.spawn().map_err(|_| GitError::Unavailable)?;
+    let mut stdout_pipe = child.stdout.take();
+    let mut stderr_pipe = child.stderr.take();
+
+    // Drain both pipes concurrently so large `git ls-files` outputs never
+    // fill the OS pipe buffer and stall `try_wait()`.
+    let out_reader = std::thread::spawn(move || {
+        use std::io::Read;
+        let mut buf = Vec::new();
+        if let Some(ref mut pipe) = stdout_pipe {
+            let _ = pipe.take(256 * 1024).read_to_end(&mut buf);
+        }
+        buf
+    });
+    let err_reader = std::thread::spawn(move || {
+        use std::io::Read;
+        let mut buf = Vec::new();
+        if let Some(ref mut pipe) = stderr_pipe {
+            let _ = pipe.take(64 * 1024).read_to_end(&mut buf);
+        }
+        buf
+    });
+
+    let deadline = Instant::now() + GIT_CMD_TIMEOUT;
+    let status = loop {
+        match child.try_wait() {
+            Ok(Some(status)) => break status,
+            Ok(None) => {
+                if Instant::now() >= deadline {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    let _ = out_reader.join();
+                    let _ = err_reader.join();
+                    return Err(GitError::Failure("git command timed out".to_string()));
+                }
+                std::thread::sleep(Duration::from_millis(15));
+            }
+            Err(e) => {
+                let _ = child.kill();
+                let _ = child.wait();
+                let _ = out_reader.join();
+                let _ = err_reader.join();
+                return Err(GitError::Failure(e.to_string()));
+            }
+        }
+    };
+    let stdout = out_reader.join().unwrap_or_default();
+    let stderr = err_reader.join().unwrap_or_default();
+    Ok(std::process::Output {
+        status,
+        stdout,
+        stderr,
+    })
+}
+
+/// True when `target` is itself a Git repository or directly contains a nested
+/// `.git` directory/file within 2 levels. An outer `git ls-files` reports
+/// nested repositories as untracked even when they hold uncommitted work.
+fn contains_nested_git_repo(target: &Path) -> bool {
+    if target.join(".git").exists() {
+        return true;
+    }
+    let Ok(entries) = std::fs::read_dir(target) else {
+        return false;
+    };
+    for entry in entries.flatten().take(256) {
+        let Ok(ft) = entry.file_type() else { continue };
+        if ft.is_dir() && !ft.is_symlink() && entry.path().join(".git").exists() {
+            return true;
+        }
+    }
+    false
 }
 
 pub fn find_repository_root(start: &Path) -> Option<PathBuf> {
     let mut current = Some(start);
     let mut depth = 0;
     while let Some(dir) = current {
-        if depth > 16 {
+        if depth > 64 {
             break;
         }
         if dir.join(".git").exists() {
@@ -152,6 +229,9 @@ pub fn git_state_for(path: &Path) -> GitState {
 /// `git status` and `git check-ignore` process spawns entirely, which cuts
 /// scan latency on Windows repositories by an order of magnitude.
 pub fn fast_git_state(path: &Path, repo_cache: &mut HashMap<PathBuf, Option<PathBuf>>) -> GitState {
+    if path.is_dir() && contains_nested_git_repo(path) {
+        return GitState::TrackedModified;
+    }
     let parent = path.parent().unwrap_or(path);
     let repo_root = if let Some(cached) = repo_cache.get(parent) {
         cached.clone()
@@ -188,17 +268,31 @@ pub fn fast_git_state(path: &Path, repo_cache: &mut HashMap<PathBuf, Option<Path
     }
 }
 
-/// Hard gate before deletion: tracked content must never be removed through a
-/// generic cleanup rule.
+/// Hard gate before deletion: tracked content or nested Git repositories must
+/// never be removed through a generic cleanup rule.
+///
+/// Uses a single `git ls-files` probe instead of spawning 3 separate `git`
+/// processes (`ls-files` + `status` + `check-ignore`).
 pub fn ensure_not_tracked(path: &Path) -> Result<(), String> {
-    match inspect_git(path) {
-        Err(e) => Err(e.to_string()),
-        Ok(status) => {
-            if status.tracked {
-                Err("Target is tracked by Git.".to_string())
-            } else {
-                Ok(())
-            }
-        }
+    if path.is_dir() && contains_nested_git_repo(path) {
+        return Err("Target contains a nested Git repository.".to_string());
+    }
+    let Some(root) = find_repository_root(path) else {
+        return Ok(());
+    };
+    let rel = path
+        .strip_prefix(&root)
+        .map(|r| r.to_string_lossy().replace('\\', "/"))
+        .map_err(|_| "target is outside repository root".to_string())?;
+    let tracked_out = command(&root, &["ls-files", "--", &rel]).map_err(|e| e.to_string())?;
+    if !tracked_out.status.success() {
+        return Err(
+            GitError::Failure(String::from_utf8_lossy(&tracked_out.stderr).to_string()).to_string(),
+        );
+    }
+    if !tracked_out.stdout.is_empty() {
+        Err("Target is tracked by Git.".to_string())
+    } else {
+        Ok(())
     }
 }

@@ -10,8 +10,8 @@ The 2.2.1 artifacts are not committed; copy them from the release share before
 running:
 
     New-Item -ItemType Directory release_output\baseline-2.2.1
-    Copy-Item <share>\Dev-Cleaner-2.2.1-x64-Setup.exe release_output\baseline-2.2.1\
-    Copy-Item <share>\Dev-Cleaner-2.2.1-x64.msi        release_output\baseline-2.2.1\
+    Copy-Item <share>\Detergo-2.2.1-x64-Setup.exe release_output\baseline-2.2.1\
+    Copy-Item <share>\Detergo-2.2.1-x64.msi        release_output\baseline-2.2.1\
 
 Usage:
     powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-upgrade.ps1 -Kind NSIS
@@ -56,9 +56,9 @@ if ($Kind -eq "MSI" -and -not (Test-IsElevated)) {
 function Get-OldArtifact {
     param([string]$Directory, [string]$Version, [string]$Type)
     if ($Type -eq "NSIS") {
-        return Join-Path $Directory "Dev-Cleaner-$Version-x64-Setup.exe"
+        return Join-Path $Directory "Detergo-$Version-x64-Setup.exe"
     }
-    return Join-Path $Directory "Dev-Cleaner-$Version-x64.msi"
+    return Join-Path $Directory "Detergo-$Version-x64.msi"
 }
 
 $oldArtifact = Get-OldArtifact -Directory $FromReleaseDir -Version $FromVersion -Type $Kind
@@ -82,7 +82,7 @@ try {
             $oldProc = Start-Process -FilePath $oldArtifact -ArgumentList "/S" -Wait -PassThru
         }
         else {
-            $oldLog = Join-Path $env:TEMP "dev-cleaner-upgrade-old.log"
+            $oldLog = Join-Path $env:TEMP "detergo-upgrade-old.log"
             $oldProc = Start-Process -FilePath "msiexec.exe" `
                 -ArgumentList @("/i", "`"$oldArtifact`"", "/qn", "/norestart", "/l*v", "`"$oldLog`"") `
                 -Wait -PassThru
@@ -90,7 +90,7 @@ try {
         Start-Sleep -Seconds 2
         Stop-InstalledApp
         $oldExe = Find-InstalledExe
-        $oldEntries = @(Get-DevCleanerUninstallEntries)
+        $oldEntries = @(Get-DetergoUninstallEntries)
         $oldOk = ($oldProc.ExitCode -eq 0) -and ($null -ne $oldExe) -and ($oldEntries.Count -eq 1)
         Record-InstallerResult "U-01" "baseline $Kind install" ($(if ($oldOk) { "PASS" } else { "FAIL" })) `
             ("exit=$($oldProc.ExitCode) exe=$oldExe entries=$($oldEntries.Count)")
@@ -113,7 +113,7 @@ try {
                 $newProc = Start-Process -FilePath $newArtifact -ArgumentList "/S" -Wait -PassThru
             }
             else {
-                $newLog = Join-Path $env:TEMP "dev-cleaner-upgrade-new.log"
+                $newLog = Join-Path $env:TEMP "detergo-upgrade-new.log"
                 $newProc = Start-Process -FilePath "msiexec.exe" `
                     -ArgumentList @("/i", "`"$newArtifact`"", "/qn", "/norestart", "/l*v", "`"$newLog`"") `
                     -Wait -PassThru
@@ -121,7 +121,7 @@ try {
             Start-Sleep -Seconds 2
             Stop-InstalledApp
             $newExe = Find-InstalledExe
-            $newEntries = @(Get-DevCleanerUninstallEntries)
+            $newEntries = @(Get-DetergoUninstallEntries)
             $upgradeOk = ($newProc.ExitCode -eq 0) -and ($null -ne $newExe) -and ($newEntries.Count -eq 1)
             Record-InstallerResult "U-03" "$Kind upgrade install" ($(if ($upgradeOk) { "PASS" } else { "FAIL" })) `
                 ("exit=$($newProc.ExitCode) exe=$newExe entries=$($newEntries.Count)")
@@ -178,7 +178,7 @@ try {
                     -not (Test-Path $removeDir) -or
                     ((Get-ChildItem $removeDir -Force -ErrorAction SilentlyContinue).Count -eq 0)
                 } 60
-                $registryGone = Wait-Until { @(Get-DevCleanerUninstallEntries).Count -eq 0 } 60
+                $registryGone = Wait-Until { @(Get-DetergoUninstallEntries).Count -eq 0 } 60
                 $pendingCleanup = (-not (Test-Path $removeDir)) -or
                     (-not [string]::IsNullOrEmpty((Get-QueuedInstallDirCleanup)))
                 $cleaned = $filesGone -and $registryGone -and $pendingCleanup
@@ -192,8 +192,8 @@ try {
         }
     }
 
-    $leftDirs = @(Get-DevCleanerInstallDirs)
-    $leftEntries = @(Get-DevCleanerUninstallEntries)
+    $leftDirs = @(Get-DetergoInstallDirs)
+    $leftEntries = @(Get-DetergoUninstallEntries)
     $clean = ($leftDirs.Count -eq 0) -and ($leftEntries.Count -eq 0)
     Record-InstallerResult "U-08" "no leftovers after upgrade test" `
         ($(if ($clean) { "PASS" } else { "FAIL" })) `
@@ -201,7 +201,7 @@ try {
 }
 finally {
     Stop-InstalledApp
-    Remove-DevCleanerLeftovers
+    Remove-DetergoLeftovers
 }
 
 exit (Complete-InstallerRun -Title "$Kind upgrade $FromVersion -> $toVersion")

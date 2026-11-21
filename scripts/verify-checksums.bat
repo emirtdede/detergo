@@ -1,10 +1,10 @@
 @echo off
 setlocal enabledelayedexpansion
-title Dev Cleaner - SHA256 Verification Tool
+title Detergo - SHA256 Verification Tool
 color 0B
 
 echo =========================================================
-echo       DEV CLEANER - SHA256 DOSYA DOGRULAMA ARACI
+echo       DETERGO - SHA256 DOSYA DOGRULAMA ARACI
 echo =========================================================
 echo.
 

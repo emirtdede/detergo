@@ -52,7 +52,8 @@ export const SelectionActionBar: React.FC = () => {
   const totalBytes = useMemo(() => {
     const own = ownBytesById(selectedItems);
     return selectedItems.reduce(
-      (acc, item) => acc + (own.get(item.id)?.allocatedBytes ?? item.estimatedReclaimBytes ?? 0),
+      (acc, item) =>
+        acc + (own.get(item.id)?.estimatedReclaimBytes ?? item.estimatedReclaimBytes ?? 0),
       0,
     );
   }, [selectedItems]);

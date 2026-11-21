@@ -1,7 +1,7 @@
-# Dev Cleaner Brand Guidelines
+# Detergo Brand Guidelines
 
-**Version:** 2.2.2
-**Canonical master:** `assets/brand/dev-cleaner-icon.svg`
+**Version:** 1.0.0
+**Canonical master:** `assets/brand/detergo-icon.svg`
 **Status:** shipping identity; earlier identities are superseded and must not be
 used.
 
@@ -25,10 +25,10 @@ icon.
 
 | File | Purpose |
 |---|---|
-| `assets/brand/dev-cleaner-icon.svg` | Canonical 512x512 master |
-| `assets/brand/dev-cleaner-glyph.svg` | Transparent, `currentColor` glyph |
-| `assets/brand/dev-cleaner-icon-256.png` | README, documentation |
-| `assets/brand/dev-cleaner-icon-1024.png` | Tauri icon source, GitHub |
+| `assets/brand/detergo-icon.svg` | Canonical 512x512 master |
+| `assets/brand/detergo-glyph.svg` | Transparent, `currentColor` glyph |
+| `assets/brand/detergo-icon-256.png` | README, documentation |
+| `assets/brand/detergo-icon-1024.png` | Tauri icon source, GitHub |
 | `assets/brand/installer/` | NSIS and WiX artwork sources |
 | `assets/brand/github/` | Social preview and avatar |
 | `assets/brand/icon-manifest.json` | Generator/toolchain metadata and hashes |
@@ -84,12 +84,12 @@ darken it: the stock WixUI text is black and would become unreadable.
 
 ### The scope line must name the whole product
 
-Dev Cleaner cleans 56 rules across 14 ecosystems (`src-tauri/assets/targets.toml`).
+Detergo ships 82 evidence-backed rules across 18 ecosystems (`src-tauri/assets/targets.toml`), plus 17 AI coding-agent providers and 27 developer tool cache providers.
 Artwork must never describe it as a cleaner for one ecosystem: `NODE_MODULES
 CLEANER`, `npm cleaner` and similar lines are wrong even when the type fits. Use
 `DEVELOPER ARTIFACT CLEANER`, the same wording as the GitHub social card, and
 only where it stays at 7 px or larger. Below that, drop the line rather than
-shrink it — a 5 px line is a smear, not a claim.
+shrink it - a 5 px line is a smear, not a claim.
 
 `npm run check:brand` enforces this: it fails if any SVG in
 `assets/brand/installer` mentions `node_modules` or `package.json` outside a
@@ -121,7 +121,7 @@ the same background colour is used for the details log.
   account exists, upload `assets/brand/github/avatar-1024.png`.
 - Social preview: `assets/brand/github/social-preview.png`, 1280x640, under
   1 MB, safe margin at least 64 px.
-- README: use `assets/brand/dev-cleaner-icon-256.png`, not a hotlinked SVG.
+- README: use `assets/brand/detergo-icon-256.png`, not a hotlinked SVG.
 
 ## 8. Generation and verification
 
@@ -135,9 +135,9 @@ npm run generate:icons:verify   # two consecutive runs, identical manifest
 `generate-icons.mjs` is Windows-only (Tauri icon + sharp). CI runs only the
 structural checks, so a Linux runner never needs to rasterise anything.
 
-The recorded visual inspection of the shipped frames lives in
-`docs/release/RELEASE_CHECKLIST.md` (G9). Inspection sheets were review-time
-outputs only, not generated shipping assets, and are not part of the repository.
+The built executables are verified on every release via `scripts/check-exe-icons.mjs`
+(all 15 ICO frames embedded). Inspection sheets were review-time outputs only,
+not generated shipping assets, and are not part of the repository.
 
 ## 9. Archive policy
 
@@ -147,4 +147,4 @@ reference it; the git history and the release changelog preserve the trail.
 ## 10. Legal
 
 See `docs/brand/TRADEMARK_CLEARANCE.md`. Do not use ® or claim exclusivity for
-"Dev Cleaner" until counsel signs the clearance record.
+"Detergo" until counsel signs the clearance record.

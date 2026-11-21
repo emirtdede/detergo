@@ -61,10 +61,9 @@ export const BridgeUnavailableScreen: React.FC<Props> = ({ onRetry }) => (
   >
     <h1 style={{ margin: 0, fontSize: "20px" }}>Backend bağlantısı kurulamadı</h1>
     <p style={{ margin: 0, maxWidth: "48ch", color: "var(--text-muted, #A4A4AA)" }}>
-      Dev Cleaner masaüstü çalışma zamanına bağlanamadı. Uygulamayı masaüstü penceresinde yeniden
-      açın.
+      Detergo masaüstü çalışma zamanına bağlanamadı. Uygulamayı masaüstü penceresinde yeniden açın.
       <br />
-      <span lang="en">Dev Cleaner could not connect to the desktop runtime. Reopen the app.</span>
+      <span lang="en">Detergo could not connect to the desktop runtime. Reopen the app.</span>
     </p>
     <code style={{ color: "var(--text-muted, #A4A4AA)", fontSize: "12px" }}>
       BRIDGE_UNAVAILABLE

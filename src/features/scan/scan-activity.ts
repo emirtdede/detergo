@@ -12,7 +12,7 @@ export const ALL_SCAN_TARGETS: readonly ScanTargetKey[] = [
   "system",
 ] as const;
 
-const TARGETS_STORAGE_KEY = "dev-cleaner.scan-targets.v1";
+const TARGETS_STORAGE_KEY = "detergo.scan-targets.v1";
 
 function normalizeTargets(raw: unknown): ScanTargetKey[] {
   if (!Array.isArray(raw)) return [...ALL_SCAN_TARGETS];

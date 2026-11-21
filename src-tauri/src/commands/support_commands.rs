@@ -76,23 +76,23 @@ fn bundle_dir() -> PathBuf {
         }
     }
     std::env::var("APPDATA")
-        .map(|appdata| Path::new(&appdata).join("dev-cleaner").join("support"))
-        .unwrap_or_else(|_| std::env::temp_dir().join("dev-cleaner-support"))
+        .map(|appdata| Path::new(&appdata).join("detergo").join("support"))
+        .unwrap_or_else(|_| std::env::temp_dir().join("detergo-support"))
 }
 
 fn unique_path(dir: &Path, stamp: &str) -> PathBuf {
-    let base = dir.join(format!("dev-cleaner-support-{stamp}.zip"));
+    let base = dir.join(format!("detergo-support-{stamp}.zip"));
     if !base.exists() {
         return base;
     }
     for index in 2..1000 {
-        let candidate = dir.join(format!("dev-cleaner-support-{stamp}-{index}.zip"));
+        let candidate = dir.join(format!("detergo-support-{stamp}-{index}.zip"));
         if !candidate.exists() {
             return candidate;
         }
     }
     dir.join(format!(
-        "dev-cleaner-support-{stamp}-{}.zip",
+        "detergo-support-{stamp}-{}.zip",
         std::process::id()
     ))
 }
@@ -102,20 +102,24 @@ fn append_backend_log<W: Write + std::io::Seek>(
     name: &str,
     path: &Path,
 ) -> Result<bool, AppError> {
+    use std::io::{Read, Seek, SeekFrom};
+
+    const MAX_LOG_TAIL_BYTES: u64 = 4 * 1024 * 1024;
     let Ok(metadata) = fs::metadata(path) else {
         return Ok(false);
     };
     if !metadata.is_file() {
         return Ok(false);
     }
-    let bytes = fs::read(path).map_err(|err| AppError::Unknown(err.to_string()))?;
-    // The logger rotates at 4 MiB; never read beyond that even if a user
-    // replaced the file.
-    let bytes = if bytes.len() > 4 * 1024 * 1024 {
-        bytes[bytes.len() - 4 * 1024 * 1024..].to_vec()
-    } else {
-        bytes
-    };
+    let mut file = fs::File::open(path).map_err(|err| AppError::Unknown(err.to_string()))?;
+    let len = metadata.len();
+    if len > MAX_LOG_TAIL_BYTES {
+        let _ = file.seek(SeekFrom::End(-(MAX_LOG_TAIL_BYTES as i64)));
+    }
+    let mut bytes = Vec::with_capacity(len.min(MAX_LOG_TAIL_BYTES) as usize);
+    file.take(MAX_LOG_TAIL_BYTES)
+        .read_to_end(&mut bytes)
+        .map_err(|err| AppError::Unknown(err.to_string()))?;
     zip.start_file(name, SimpleFileOptions::default())
         .map_err(|err| AppError::Unknown(err.to_string()))?;
     zip.write_all(&bytes)
@@ -137,6 +141,9 @@ pub async fn create_support_bundle(
 }
 
 fn create_bundle_in(dir: &Path, request: SupportBundleRequest) -> Result<SupportBundle, AppError> {
+    check_field("version", &request.version)?;
+    check_field("locale", &request.locale)?;
+    check_field("generatedAt", &request.generated_at)?;
     check_field("errorLog", &request.error_log)?;
     check_field("systemLog", &request.system_log)?;
     check_field("settingsSummary", &request.settings_summary)?;
@@ -151,8 +158,8 @@ fn create_bundle_in(dir: &Path, request: SupportBundleRequest) -> Result<Support
     let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
 
     let report = format!(
-        "Dev Cleaner support bundle\n\
-         ==========================\n\
+        "Detergo support bundle\n\
+         ======================\n\
          Version:    {}\n\
          Generated:  {}\n\
          Locale:     {}\n\
@@ -187,15 +194,16 @@ fn create_bundle_in(dir: &Path, request: SupportBundleRequest) -> Result<Support
 
     if let Ok(appdata) = std::env::var("APPDATA") {
         let log_dir = crate::platform::resolve_app_dir(Path::new(&appdata));
-        let _ = append_backend_log(
-            &mut zip,
-            "backend-log.txt",
-            &log_dir.join("dev-cleaner.log"),
-        )?;
+        let _ = append_backend_log(&mut zip, "backend-log.txt", &log_dir.join("detergo.log"))?;
         let _ = append_backend_log(
             &mut zip,
             "backend-log.1.txt",
-            &log_dir.join("dev-cleaner.log.1"),
+            &log_dir.join("detergo.log.1"),
+        )?;
+        let _ = append_backend_log(
+            &mut zip,
+            "legacy-backend-log.txt",
+            &log_dir.join("dev-cleaner.log"),
         )?;
     }
 
@@ -211,7 +219,7 @@ fn create_bundle_in(dir: &Path, request: SupportBundleRequest) -> Result<Support
         file_name: path
             .file_name()
             .map(|name| name.to_string_lossy().to_string())
-            .unwrap_or_else(|| "dev-cleaner-support.zip".to_string()),
+            .unwrap_or_else(|| "detergo-support.zip".to_string()),
         bytes,
         created_at: chrono::Local::now().to_rfc3339(),
     })
@@ -235,18 +243,27 @@ fn compose_support_mail_blocking(
     version: String,
 ) -> Result<SupportMailResult, AppError> {
     let path = PathBuf::from(&bundle_path);
+    let expected_dir = fs::canonicalize(bundle_dir()).unwrap_or_else(|_| bundle_dir());
+    let canonical_bundle = fs::canonicalize(&path).ok();
+    let inside_bundle_dir = canonical_bundle.as_ref().is_some_and(|canon| {
+        crate::safety::path_guard::is_within(
+            &crate::safety::path_guard::normalize_key(canon),
+            &crate::safety::path_guard::normalize_key(&expected_dir),
+        )
+    });
     let valid = path.is_file()
+        && inside_bundle_dir
         && path
             .extension()
             .map(|ext| ext.eq_ignore_ascii_case("zip"))
             .unwrap_or(false)
         && path
             .file_name()
-            .map(|name| name.to_string_lossy().starts_with("dev-cleaner-support-"))
+            .map(|name| name.to_string_lossy().starts_with("detergo-support-"))
             .unwrap_or(false);
     if !valid {
         return Err(AppError::InvalidPath(
-            "Support bundle is missing or was not created by Dev Cleaner.".to_string(),
+            "Support bundle is missing or was not created by Detergo.".to_string(),
         ));
     }
 
@@ -254,10 +271,10 @@ fn compose_support_mail_blocking(
         .chars()
         .filter(|c| c.is_ascii_alphanumeric() || *c == '.' || *c == '-' || *c == '+')
         .collect();
-    let subject = format!("Dev Cleaner support bundle ({safe_version})");
+    let subject = format!("Detergo support bundle ({safe_version})");
     let body = format!(
         "Hello Vellium support,\n\n\
-         I am sending the Dev Cleaner diagnostics bundle created from Settings > Diagnostics.\n\n\
+         I am sending the Detergo diagnostics bundle created from Settings > Diagnostics.\n\n\
          Version: {safe_version}\n\
          Bundle:  {}\n\n\
          The ZIP contains the in-app error log, recent system messages, the backend log and a settings summary. Paths and webhook credentials are masked.\n\n\
@@ -298,10 +315,19 @@ fn compose_support_mail_blocking(
 }
 
 #[cfg(windows)]
+fn system32_bin(relative: &str) -> PathBuf {
+    std::env::var_os("SystemRoot")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(r"C:\Windows"))
+        .join("System32")
+        .join(relative)
+}
+
+#[cfg(windows)]
 fn has_registered_outlook_com() -> bool {
     use std::os::windows::process::CommandExt;
     const CREATE_NO_WINDOW: u32 = 0x0800_0000;
-    std::process::Command::new("reg.exe")
+    std::process::Command::new(system32_bin("reg.exe"))
         .args(["query", r"HKCR\Outlook.Application\CLSID", "/ve"])
         .creation_flags(CREATE_NO_WINDOW)
         .output()
@@ -334,7 +360,11 @@ try {
   exit 2
 }
 "#;
-    let mut cmd = std::process::Command::new("powershell");
+    #[cfg(windows)]
+    let ps_bin = system32_bin(r"WindowsPowerShell\v1.0\powershell.exe");
+    #[cfg(not(windows))]
+    let ps_bin = PathBuf::from("powershell");
+    let mut cmd = std::process::Command::new(ps_bin);
     cmd.args([
         "-NoProfile",
         "-NonInteractive",
@@ -409,7 +439,7 @@ fn has_registered_mapi_client() -> bool {
     use std::os::windows::process::CommandExt;
     const CREATE_NO_WINDOW: u32 = 0x0800_0000;
     for key in [r"HKCU\SOFTWARE\Clients\Mail", r"HKLM\SOFTWARE\Clients\Mail"] {
-        if let Ok(output) = std::process::Command::new("reg.exe")
+        if let Ok(output) = std::process::Command::new(system32_bin("reg.exe"))
             .args(["query", key, "/ve"])
             .creation_flags(CREATE_NO_WINDOW)
             .output()
@@ -514,10 +544,16 @@ fn open_mapi_draft(path: &Path, subject: &str, body: &str) -> bool {
     ) -> u32;
 
     extern "system" {
-        fn LoadLibraryW(lp_lib_file_name: *const u16) -> *mut c_void;
+        fn LoadLibraryExW(
+            lp_lib_file_name: *const u16,
+            h_file: *mut c_void,
+            dw_flags: u32,
+        ) -> *mut c_void;
         fn GetProcAddress(h_module: *mut c_void, lp_proc_name: *const u8) -> *const c_void;
         fn FreeLibrary(h_lib_module: *mut c_void) -> i32;
     }
+
+    const LOAD_LIBRARY_SEARCH_SYSTEM32: u32 = 0x0000_0800;
 
     fn wide_z(text: &str) -> Vec<u16> {
         text.encode_utf16().chain(std::iter::once(0)).collect()
@@ -537,7 +573,7 @@ fn open_mapi_draft(path: &Path, subject: &str, body: &str) -> bool {
         &path
             .file_name()
             .map(|n| n.to_string_lossy().to_string())
-            .unwrap_or_else(|| "dev-cleaner-support.zip".to_string()),
+            .unwrap_or_else(|| "detergo-support.zip".to_string()),
     );
 
     const MAPI_LOGON_UI: u32 = 0x0000_0001;
@@ -549,7 +585,7 @@ fn open_mapi_draft(path: &Path, subject: &str, body: &str) -> bool {
     // SAFETY: All wide string buffers live for the duration of `MAPISendMailW`
     // and the library handle is freed before returning.
     unsafe {
-        let module = LoadLibraryW(dll_name.as_ptr());
+        let module = LoadLibraryExW(dll_name.as_ptr(), null_mut(), LOAD_LIBRARY_SEARCH_SYSTEM32);
         if module.is_null() {
             return false;
         }
@@ -664,7 +700,7 @@ mod tests {
         };
         let bundle = super::create_bundle_in(dir.path(), request).expect("bundle");
         assert!(bundle.bytes > 0);
-        assert!(bundle.file_name.starts_with("dev-cleaner-support-"));
+        assert!(bundle.file_name.starts_with("detergo-support-"));
 
         let file = fs::File::open(&bundle.path).expect("open bundle");
         let mut archive = zip::ZipArchive::new(file).expect("zip");

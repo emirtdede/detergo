@@ -297,7 +297,7 @@ mod tests {
         // shared system temp dir let one test delete another test's in-flight
         // temporary file and made `save` fail at random.
         let dir = std::env::temp_dir().join(format!(
-            "dev-cleaner-last-scan-{}",
+            "detergo-last-scan-{}",
             uuid::Uuid::new_v4().simple()
         ));
         let _ = fs::create_dir_all(&dir);

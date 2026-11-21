@@ -3,7 +3,7 @@
 //! The generic [`crate::safety::PathGuard`] is intentionally *not* relaxed for
 //! these paths: it exists to keep deletions inside a scan root. System cleanup
 //! is a different trust boundary, so it gets its own gate with a much smaller
-//! surface — a fixed set of roots and a refusal to touch anything that
+//! surface - a fixed set of roots and a refusal to touch anything that
 //! canonicalises outside them.
 
 use std::path::{Path, PathBuf};
@@ -72,9 +72,21 @@ pub fn root_for(id: SystemActionId) -> Option<PathBuf> {
 }
 
 fn normalize_for_compare(path: &Path) -> String {
-    path.to_string_lossy()
-        .trim_end_matches(['\\', '/'])
-        .to_lowercase()
+    let mut s = path.to_string_lossy().replace('/', "\\");
+    for prefix in [r"\\?\UNC\", r"\\?\", r"\\.\"] {
+        if let Some(stripped) = s.strip_prefix(prefix) {
+            s = if prefix == r"\\?\UNC\" {
+                format!(r"\\{stripped}")
+            } else {
+                stripped.to_string()
+            };
+            break;
+        }
+    }
+    while s.len() > 3 && s.ends_with('\\') {
+        s.pop();
+    }
+    s.to_lowercase()
 }
 
 fn is_forbidden(canonical: &Path) -> bool {
@@ -155,7 +167,15 @@ mod tests {
 
     #[test]
     fn rejects_drive_and_windows_roots() {
-        for bad in [r"C:\", r"C:\Windows", r"C:\Windows\System32", r"C:\Users"] {
+        for bad in [
+            r"C:\",
+            r"C:\Windows",
+            r"\\?\C:\Windows",
+            r"\\?\C:\Windows\System32",
+            r"C:\Windows\System32",
+            r"C:\Users",
+            r"\\?\C:\Users",
+        ] {
             assert!(is_forbidden(Path::new(bad)), "{bad} must be forbidden");
         }
     }
@@ -168,7 +188,7 @@ mod tests {
 
     #[test]
     fn rejects_a_root_that_does_not_exist() {
-        let missing = std::env::temp_dir().join("dev-cleaner-definitely-missing-root");
+        let missing = std::env::temp_dir().join("detergo-definitely-missing-root");
         let result = verify_root(&missing);
         assert!(matches!(result, Err(AppError::PathNotFound(_))));
     }

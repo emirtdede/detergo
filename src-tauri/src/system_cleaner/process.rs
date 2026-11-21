@@ -20,6 +20,29 @@ pub struct CommandOutcome {
     pub cancelled: bool,
 }
 
+/// Cap on bytes buffered per stream to avoid OOM on chatty tools while
+/// decoding non-UTF-8 OEM localized output lossily instead of dropping it.
+const MAX_STREAM_CAPTURE: usize = 256 * 1024;
+
+fn read_stream_bounded<R: Read>(mut pipe: R) -> String {
+    let mut ring = Vec::with_capacity(16 * 1024);
+    let mut chunk = [0u8; 4096];
+    loop {
+        match pipe.read(&mut chunk) {
+            Ok(0) => break,
+            Ok(n) => {
+                ring.extend_from_slice(&chunk[..n]);
+                if ring.len() > MAX_STREAM_CAPTURE {
+                    let drop_len = ring.len() - MAX_STREAM_CAPTURE;
+                    ring.drain(..drop_len);
+                }
+            }
+            Err(_) => break,
+        }
+    }
+    String::from_utf8_lossy(&ring).into_owned()
+}
+
 /// How much of the combined output is kept for the UI.
 const LOG_LIMIT: usize = 16 * 1024;
 
@@ -49,20 +72,8 @@ pub fn run(
 
     let stdout = child.stdout.take();
     let stderr = child.stderr.take();
-    let stdout_reader = stdout.map(|mut pipe| {
-        std::thread::spawn(move || {
-            let mut text = String::new();
-            let _ = pipe.read_to_string(&mut text);
-            text
-        })
-    });
-    let stderr_reader = stderr.map(|mut pipe| {
-        std::thread::spawn(move || {
-            let mut text = String::new();
-            let _ = pipe.read_to_string(&mut text);
-            text
-        })
-    });
+    let stdout_reader = stdout.map(|pipe| std::thread::spawn(move || read_stream_bounded(pipe)));
+    let stderr_reader = stderr.map(|pipe| std::thread::spawn(move || read_stream_bounded(pipe)));
 
     let started = Instant::now();
     let mut outcome = CommandOutcome::default();

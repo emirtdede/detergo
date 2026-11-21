@@ -30,12 +30,12 @@ export interface McpConfigItem {
   syntax?: "json" | "toml";
 }
 
-export function getMcpConfigList(command = "dev-cleaner"): McpConfigItem[] {
-  const cmd = command.trim() || "dev-cleaner";
+export function getMcpConfigList(command = "detergo"): McpConfigItem[] {
+  const cmd = command.trim() || "detergo";
   const stdJson = JSON.stringify(
     {
       mcpServers: {
-        "dev-cleaner": {
+        "detergo": {
           command: cmd,
           args: ["mcp"],
         },
@@ -96,7 +96,7 @@ export function getMcpConfigList(command = "dev-cleaner"): McpConfigItem[] {
       file: "%USERPROFILE%\\.codex\\config.toml",
       // Codex reads TOML, not JSON: a JSON body in config.toml is ignored.
       syntax: "toml",
-      json: ["[mcp_servers.dev-cleaner]", `command = ${tomlCmd}`, 'args = ["mcp"]'].join("\n"),
+      json: ["[mcp_servers.detergo]", `command = ${tomlCmd}`, 'args = ["mcp"]'].join("\n"),
     },
     {
       id: "t3code",
@@ -158,7 +158,7 @@ export function getMcpConfigList(command = "dev-cleaner"): McpConfigItem[] {
         {
           mcpServers: [
             {
-              name: "dev-cleaner",
+              name: "detergo",
               command: cmd,
               args: ["mcp"],
             },
@@ -178,7 +178,7 @@ export function getMcpConfigList(command = "dev-cleaner"): McpConfigItem[] {
         {
           context_servers: [
             {
-              id: "dev-cleaner",
+              id: "detergo",
               command: {
                 path: cmd,
                 args: ["mcp"],
@@ -193,10 +193,10 @@ export function getMcpConfigList(command = "dev-cleaner"): McpConfigItem[] {
   ];
 }
 
-export const mcpConfigList: McpConfigItem[] = getMcpConfigList("dev-cleaner");
+export const mcpConfigList: McpConfigItem[] = getMcpConfigList("detergo");
 
 export function getMcpConfigs(
-  command = "dev-cleaner",
+  command = "detergo",
 ): Record<McpIdeKey, { file: string; json: string; syntax: "json" | "toml" }> {
   return getMcpConfigList(command).reduce(
     (acc, item) => {
@@ -210,13 +210,13 @@ export function getMcpConfigs(
 export const mcpConfigs: Record<
   McpIdeKey,
   { file: string; json: string; syntax: "json" | "toml" }
-> = getMcpConfigs("dev-cleaner");
+> = getMcpConfigs("detergo");
 
 /**
  * The documented webhook body.
  *
- * It mirrors `WebhookPayload` in `src-tauri/src/cli/mod.rs` — the struct the
- * backend actually serialises — plus the envelope the GUI events are
+ * It mirrors `WebhookPayload` in `src-tauri/src/cli/mod.rs` - the struct the
+ * backend actually serialises - plus the envelope the GUI events are
  * canonicalised into. Fields that only exist in one of the two producers
  * (`scan_id`, `duration_ms`, `stop_reason`, `plan_id`, `success_count`,
  * `reclaim_bytes`) are documented in the surrounding text rather than invented
@@ -227,7 +227,7 @@ export const webhookSampleJson = JSON.stringify(
   {
     event: "clean",
     timestamp: "2026-11-17T02:30:00Z",
-    product: "Dev Cleaner by Vellium",
+    product: "Detergo by Vellium",
     version: APP_VERSION,
     scope: "projects",
     target_count: 24,

@@ -41,7 +41,7 @@ const dirty = execFileSync("git", ["status", "--porcelain"], {
 /**
  * A recorded build belongs to one commit. Right before publishing that commit is
  * HEAD, so the check is exact. Afterwards documentation and test commits keep
- * arriving, and demanding HEAD equality would leave the gate red forever — so a
+ * arriving, and demanding HEAD equality would leave the gate red forever - so a
  * build commit that is tagged and still an ancestor of HEAD is accepted too. The
  * provenance claim is unchanged: the artifacts trace back to that exact, clean,
  * tagged revision.

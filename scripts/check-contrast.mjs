@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * WCAG 2.2 contrast gate for the four verified themes.
+ * WCAG 2.2 AA contrast gate across ALL 16 themes.
  *
  * The palette lives in src/styles/tokens.css. This script parses that file
  * instead of duplicating the colours, so a token change is audited by the same
@@ -14,20 +14,42 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const cssPath = resolve(root, "src/styles/tokens.css");
 const css = readFileSync(cssPath, "utf8");
 
-const THEMES = ["dark-black", "dark-gray", "light-white", "light-gray"];
+const THEMES = [
+  "dark-black",
+  "dark-gray",
+  "dark-blue",
+  "dark-purple",
+  "dark-green",
+  "dark-red",
+  "dark-orange",
+  "dark-yellow",
+  "light-white",
+  "light-gray",
+  "light-blue",
+  "light-purple",
+  "light-green",
+  "light-red",
+  "light-orange",
+  "light-yellow",
+];
 
 function readBlock(marker) {
-  const markerIndex = css.indexOf(marker);
-  if (markerIndex === -1) throw new Error(`Token block not found: ${marker}`);
-  // The selector list may contain legacy aliases; the declaration block starts
-  // at the first opening brace after the verified theme marker.
-  const open = css.indexOf("{", markerIndex);
-  const close = css.indexOf("}", open);
-  const body = css.slice(open + 1, close);
   const tokens = {};
-  for (const match of body.matchAll(/--([\w-]+)\s*:\s*([^;]+);/g)) {
-    tokens[match[1]] = match[2].trim();
+  let searchFrom = 0;
+  let found = false;
+  while (true) {
+    const markerIndex = css.indexOf(marker, searchFrom);
+    if (markerIndex === -1) break;
+    found = true;
+    const open = css.indexOf("{", markerIndex);
+    const close = css.indexOf("}", open);
+    const body = css.slice(open + 1, close);
+    for (const match of body.matchAll(/--([\w-]+)\s*:\s*([^;]+);/g)) {
+      tokens[match[1]] = match[2].trim();
+    }
+    searchFrom = close + 1;
   }
+  if (!found) throw new Error(`Token block not found: ${marker}`);
   return tokens;
 }
 
@@ -218,4 +240,4 @@ if (failures > 0) {
   process.exit(1);
 }
 
-console.log("\nContrast audit passed for all four themes.");
+console.log(`\nContrast audit passed for all ${THEMES.length} themes.`);

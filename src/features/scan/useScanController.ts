@@ -439,7 +439,7 @@ export function useScanController() {
         return runScan(rootOverride, scope, hasCaches, hasSystem, targets);
       }
 
-      // Only caches and/or C: system cleaner selected — run without starting a
+      // Only caches and/or C: system cleaner selected - run without starting a
       // filesystem project/agent walk.
       useScanTargetsStore.getState().setActiveRun(targets, false);
       if (hasCaches || hasSystem) {

@@ -7,9 +7,9 @@
 //! crossed 32 MiB. This module keeps the same public API on top of one SQLite
 //! database:
 //!
-//! - `cleanup_runs`   — one row per executed cleanup plan (`entries` is JSON);
-//! - `storage_snapshots` — per-category bytes captured after each scan;
-//! - `action_runs`    — one row per official CLI tool action;
+//! - `cleanup_runs`   - one row per executed cleanup plan (`entries` is JSON);
+//! - `storage_snapshots` - per-category bytes captured after each scan;
+//! - `action_runs`    - one row per official CLI tool action;
 //! - legacy JSONL files are imported once (`PRAGMA user_version`), then renamed
 //!   to `*.bak` so the import can never run twice and the user keeps a copy.
 //!
@@ -578,26 +578,42 @@ fn open_database(path: &Path) -> rusqlite::Result<Connection> {
     // check the database opens "successfully" and every read fails soft, so the
     // user sees an empty history forever. Move the damaged file aside and start
     // clean; the original stays available as evidence.
-    if path.exists() && !integrity_ok(path) {
-        let backup = path.with_extension(format!("sqlite3.corrupt.{}", now_secs()));
-        match fs::rename(path, &backup) {
-            Ok(()) => crate::logging::info(&format!(
-                "audit database failed the integrity check; archived to {}",
-                backup.display()
-            )),
-            // If the file cannot be moved, continuing would fail every read
-            // anyway; report and let the open below surface the real error.
-            Err(err) => crate::logging::warn("could not archive the corrupt audit database", err),
+    if path.exists() {
+        match check_integrity(path) {
+            IntegrityCheck::Ok | IntegrityCheck::Busy => {}
+            IntegrityCheck::Corrupt => {
+                let stamp = now_secs();
+                let backup = path.with_extension(format!("sqlite3.corrupt.{stamp}"));
+                match fs::rename(path, &backup) {
+                    Ok(()) => {
+                        // Also move away WAL/SHM sidecars so orphaned frames
+                        // cannot corrupt the freshly created replacement DB.
+                        for suffix in ["-wal", "-shm"] {
+                            let sidecar = sidecar_path(path, suffix);
+                            if sidecar.exists() {
+                                let sidecar_backup = sidecar_path(&backup, suffix);
+                                let _ = fs::rename(&sidecar, &sidecar_backup);
+                            }
+                        }
+                        crate::logging::info(&format!(
+                            "audit database failed the integrity check; archived to {}",
+                            backup.display()
+                        ));
+                    }
+                    Err(err) => {
+                        crate::logging::warn("could not archive the corrupt audit database", err)
+                    }
+                }
+            }
         }
     }
     let connection = Connection::open(path)?;
-    // one fsync per commit for crash safety on process kill (not power loss) is
-    // the right trade for an audit log. 5s busy timeout covers two processes
-    // appending at once (CLI + GUI).
+    // Set `busy_timeout` BEFORE `journal_mode = WAL` so concurrent startups
+    // (GUI + CLI/MCP) queue cleanly instead of failing immediately with SQLITE_BUSY.
     connection.execute_batch(
-        "PRAGMA journal_mode = WAL;
+        "PRAGMA busy_timeout = 5000;
+         PRAGMA journal_mode = WAL;
          PRAGMA synchronous = NORMAL;
-         PRAGMA busy_timeout = 5000;
          PRAGMA foreign_keys = ON;
          CREATE TABLE IF NOT EXISTS cleanup_runs (
              seq INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -624,6 +640,8 @@ fn open_database(path: &Path) -> rusqlite::Result<Connection> {
              bytes INTEGER NOT NULL,
              item_count INTEGER NOT NULL
          );
+         CREATE INDEX IF NOT EXISTS idx_storage_snapshots_lookup
+             ON storage_snapshots(provider, category, timestamp);
          CREATE TABLE IF NOT EXISTS action_runs (
              seq INTEGER PRIMARY KEY AUTOINCREMENT,
              id TEXT NOT NULL UNIQUE,
@@ -640,6 +658,12 @@ fn open_database(path: &Path) -> rusqlite::Result<Connection> {
          );",
     )?;
     Ok(connection)
+}
+
+fn sidecar_path(db: &Path, suffix: &str) -> PathBuf {
+    let mut os = db.as_os_str().to_os_string();
+    os.push(suffix);
+    PathBuf::from(os)
 }
 
 /// Imports the pre-2.2.2 JSONL files exactly once.
@@ -661,7 +685,18 @@ fn migrate_legacy_jsonl(connection: &Connection, history: &Path, snapshots: &Pat
     let action_records: Vec<ActionAuditRecord> = read_jsonl(actions);
 
     let import = || -> rusqlite::Result<()> {
-        let transaction = connection.unchecked_transaction()?;
+        let transaction = rusqlite::Transaction::new_unchecked(
+            connection,
+            rusqlite::TransactionBehavior::Immediate,
+        )?;
+        // Re-check `user_version` inside the IMMEDIATE write lock so two
+        // processes launching concurrently cannot both import `snapshots.jsonl`.
+        let inside_version: i32 = transaction
+            .query_row("PRAGMA user_version", [], |row| row.get(0))
+            .unwrap_or(0);
+        if inside_version >= SCHEMA_VERSION {
+            return Ok(());
+        }
         for record in &history_records {
             let entries = serde_json::to_string(&record.entries).unwrap_or_else(|_| "[]".into());
             transaction.execute(
@@ -835,17 +870,33 @@ fn as_i64(value: u64) -> i64 {
     value.min(i64::MAX as u64) as i64
 }
 
+enum IntegrityCheck {
+    Ok,
+    Busy,
+    Corrupt,
+}
+
 /// Cheap structural check used before trusting an existing database file.
-/// `quick_check` skips the expensive index cross-verification `integrity_check`
-/// performs while still catching corrupt pages and broken btrees.
-fn integrity_ok(path: &Path) -> bool {
+/// Sets `busy_timeout` first and distinguishes `SQLITE_BUSY`/`SQLITE_LOCKED`
+/// from real corruption so concurrent GUI+CLI/MCP runs never archive a healthy DB.
+fn check_integrity(path: &Path) -> IntegrityCheck {
     let Ok(connection) = Connection::open(path) else {
-        return false;
+        return IntegrityCheck::Corrupt;
     };
-    connection
-        .query_row("PRAGMA quick_check", [], |row| row.get::<_, String>(0))
-        .map(|result| result == "ok")
-        .unwrap_or(false)
+    let _ = connection.busy_timeout(std::time::Duration::from_secs(5));
+    match connection.query_row("PRAGMA quick_check", [], |row| row.get::<_, String>(0)) {
+        Ok(result) if result == "ok" => IntegrityCheck::Ok,
+        Ok(_) => IntegrityCheck::Corrupt,
+        Err(rusqlite::Error::SqliteFailure(err, _))
+            if matches!(
+                err.code,
+                rusqlite::ErrorCode::DatabaseBusy | rusqlite::ErrorCode::DatabaseLocked
+            ) =>
+        {
+            IntegrityCheck::Busy
+        }
+        Err(_) => IntegrityCheck::Corrupt,
+    }
 }
 
 /// Seconds since the Unix epoch, used to name an archived corrupt database.

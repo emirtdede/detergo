@@ -34,8 +34,8 @@ import { AgentProviderInfo, AppSettings } from "@/types";
 
 import { ItemTable } from "@/features/items/ItemTable";
 import { maskPath } from "@/lib/format/path";
-import { describeError } from "@/lib/errors/user-message";
 import { ownBytesById } from "@/lib/item-totals";
+import { useThrottledValue, SCAN_AGGREGATE_THROTTLE_MS } from "@/lib/hooks/use-throttled-value";
 
 import { usePreferencesStore } from "@/stores/preferences-store";
 
@@ -46,23 +46,23 @@ import "../items/items.css";
 import "../shell/shell.css";
 
 const BUILTIN_NAMES: Record<string, string> = {
-  codex: "Codex",
-
+  codex: "OpenAI Codex",
   "claude-code": "Claude Code",
-
-  antigravity: "Antigravity",
-
+  "claude-desktop": "Claude Desktop",
+  antigravity: "Google Antigravity",
   opencode: "OpenCode",
-
   t3code: "T3 Code",
-
   bionic: "Bionic",
-
   cursor: "Cursor",
-
   windsurf: "Windsurf",
-
+  copilot: "GitHub Copilot",
+  cline: "Cline",
+  "roo-code": "Roo Code",
+  aider: "Aider",
+  continue: "Continue",
+  zed: "Zed",
   ollama: "Ollama",
+  "lm-studio": "LM Studio",
 };
 
 export const AgentsView: React.FC = () => {
@@ -157,7 +157,7 @@ export const AgentsView: React.FC = () => {
       } catch (err) {
         if (generation !== loadGenerationRef.current || unmountedRef.current) return;
 
-        const message = describeError(err);
+        const message = localizeAppError(err, getUIText());
 
         setLoadError(message);
 
@@ -209,27 +209,34 @@ export const AgentsView: React.FC = () => {
     void loadProviders();
   };
 
-  const items = useMemo(
-    () =>
-      itemIds
-
-        .map((id) => itemsById[id])
-
-        .filter((item) => item && item.provider !== "project" && item.status !== "deleted"),
-
+  const allAgentItems = useMemo(
+    () => itemIds.map((id) => itemsById[id]).filter((item) => item && item.provider !== "project"),
     [itemIds, itemsById],
   );
 
-  const ownBytes = useMemo(() => ownBytesById(items), [items]);
+  const items = useMemo(
+    () => allAgentItems.filter((item) => item.status !== "deleted"),
+    [allAgentItems],
+  );
+
+  const aggregateAll = useThrottledValue(allAgentItems, SCAN_AGGREGATE_THROTTLE_MS);
+  const aggregateItems = useMemo(
+    () => aggregateAll.filter((item) => item.status !== "deleted"),
+    [aggregateAll],
+  );
+
+  // Pass ALL agent rows (including deleted ones) so surviving parent folders
+  // shed the bytes of deleted children instead of double-counting them.
+  const ownBytes = useMemo(() => ownBytesById(aggregateAll), [aggregateAll]);
 
   const providerStats = useMemo(() => {
     const map: Record<string, { protectedBytes: number; cleanableBytes: number; active: boolean }> =
       {};
 
-    for (const item of items) {
+    for (const item of aggregateItems) {
       const entry = map[item.provider] ?? { protectedBytes: 0, cleanableBytes: 0, active: false };
 
-      const bytes = ownBytes.get(item.id)?.allocatedBytes ?? item.estimatedReclaimBytes ?? 0;
+      const bytes = ownBytes.get(item.id)?.estimatedReclaimBytes ?? item.estimatedReclaimBytes ?? 0;
 
       // Same rule as the page total and the backend summary: a target is only
       // cleanable when it is not protected, not a "keep" safety class and
@@ -247,7 +254,7 @@ export const AgentsView: React.FC = () => {
     }
 
     return map;
-  }, [items, ownBytes]);
+  }, [aggregateItems, ownBytes]);
 
   const resetAddForm = () => {
     setToolName("");
@@ -263,7 +270,7 @@ export const AgentsView: React.FC = () => {
         setToolRoots((prev) => [...prev, selected]);
       }
     } catch (err) {
-      showToast(describeError(err), "error");
+      showToast(localizeAppError(err, ui), "error");
     }
   };
 
@@ -285,7 +292,7 @@ export const AgentsView: React.FC = () => {
 
       resetAddForm();
     } catch (err) {
-      showToast(`${ui.agents.saveError}: ${describeError(err)}`, "error", 6000);
+      showToast(`${ui.agents.saveError}: ${localizeAppError(err, ui)}`, "error", 6000);
     } finally {
       setSaving(false);
     }
@@ -298,7 +305,7 @@ export const AgentsView: React.FC = () => {
       applySettings(settings);
       showToast(ui.agents.removed, "success");
     } catch (err) {
-      showToast(`${ui.agents.saveError}: ${describeError(err)}`, "error", 6000);
+      showToast(`${ui.agents.saveError}: ${localizeAppError(err, ui)}`, "error", 6000);
     }
   };
 
@@ -310,7 +317,7 @@ export const AgentsView: React.FC = () => {
 
       showToast(hidden ? ui.agents.hidden : ui.agents.shown, "success");
     } catch (err) {
-      showToast(`${ui.agents.saveError}: ${describeError(err)}`, "error", 6000);
+      showToast(`${ui.agents.saveError}: ${localizeAppError(err, ui)}`, "error", 6000);
     }
   };
 
@@ -350,10 +357,10 @@ export const AgentsView: React.FC = () => {
 
     let safe = 0;
 
-    for (const item of items) {
+    for (const item of aggregateItems) {
       if (item.protected || item.safetyClass === "keep" || !item.selectable) continue;
 
-      const b = ownBytes.get(item.id)?.allocatedBytes ?? item.estimatedReclaimBytes ?? 0;
+      const b = ownBytes.get(item.id)?.estimatedReclaimBytes ?? item.estimatedReclaimBytes ?? 0;
 
       cleanable += b;
 
@@ -363,7 +370,7 @@ export const AgentsView: React.FC = () => {
     const detectedCount = providers.filter((p) => p.installed).length;
 
     return { cleanable, safe, detectedCount };
-  }, [items, ownBytes, providers]);
+  }, [aggregateItems, ownBytes, providers]);
 
   return (
     <div className="page-view agents-page-view">
@@ -631,7 +638,7 @@ export const AgentsView: React.FC = () => {
         hidden={tab !== "items"}
       >
         {tab === "items" && items.length > 0 ? (
-          <ItemTable items={items} showProject={false} />
+          <ItemTable items={items} showProject={false} scopeKey="agents" />
         ) : tab === "items" ? (
           <EmptyState
             className="agents-empty-state"

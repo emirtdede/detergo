@@ -63,19 +63,27 @@ impl ScanSession {
         use std::collections::HashSet;
 
         let mut removed: HashSet<String> = target_ids.iter().cloned().collect();
-        let removed_paths: Vec<PathBuf> = target_ids
+        let removed_keys: Vec<String> = target_ids
             .iter()
-            .filter_map(|id| self.targets.get(id).map(|target| target.path.clone()))
+            .filter_map(|id| {
+                self.targets
+                    .get(id)
+                    .map(|target| crate::safety::path_guard::normalize_key(&target.path))
+            })
             .collect();
 
         let descendants: Vec<String> = self
             .targets
             .iter()
             .filter(|(id, target)| {
-                !removed.contains(*id)
-                    && removed_paths
-                        .iter()
-                        .any(|root| target.path != *root && target.path.starts_with(root))
+                if removed.contains(*id) {
+                    return false;
+                }
+                let target_key = crate::safety::path_guard::normalize_key(&target.path);
+                removed_keys.iter().any(|root_key| {
+                    target_key != *root_key
+                        && crate::safety::path_guard::is_within(&target_key, root_key)
+                })
             })
             .map(|(id, _)| id.clone())
             .collect();
@@ -388,13 +396,17 @@ impl ScanRegistry {
         let mut plans = crate::lock!(self.plans);
         plans.retain(|_, pending| !pending.plan.is_expired());
         if plans.len() >= MAX_PENDING_PLANS {
-            // Skip plans an execution already picked up: evicting one of those
-            // would fail a cleanup that was just confirmed. They are removed by
-            // `consume_plan` or by expiry, so the map still shrinks.
+            // Prefer evicting an un-peeked plan; if all slots are held by
+            // stale peeked plans, evict the oldest overall so the map stays bounded.
             let oldest = plans
                 .iter()
                 .filter(|(_, pending)| !pending.taken)
                 .min_by_key(|(_, pending)| pending.plan.created_ms)
+                .or_else(|| {
+                    plans
+                        .iter()
+                        .min_by_key(|(_, pending)| pending.plan.created_ms)
+                })
                 .map(|(id, _)| id.clone());
             if let Some(id) = oldest {
                 plans.remove(&id);

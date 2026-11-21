@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { Dialog } from "@/components/primitives/Dialog";
 import { Button } from "@/components/primitives/Button";
@@ -10,6 +11,7 @@ import { useCleanupRunStore } from "@/stores/cleanup-run-store";
 import {
   useUIText,
   localizeAppError,
+  localizeBackendNote,
   localizeWarningCode,
   isScanSessionError,
 } from "@/lib/ui-text";
@@ -73,6 +75,15 @@ export const CleanupPlanDialog: React.FC = () => {
   // Drops a late preview response after the dialog was closed or the user
   // switched mode/selection while the request was still running.
   const loadGenerationRef = useRef(0);
+  const planListRef = useRef<HTMLDivElement>(null);
+  const planItems = plan?.items ?? [];
+  const planVirtualizer = useVirtualizer({
+    count: planItems.length,
+    getScrollElement: () => planListRef.current,
+    estimateSize: () => 56,
+    overscan: 8,
+    initialRect: { width: 680, height: 320 },
+  });
 
   const load = useCallback(
     async (nextMode: DeleteMode, ids: string[]) => {
@@ -159,6 +170,11 @@ export const CleanupPlanDialog: React.FC = () => {
     const activePlan = plan;
     setBusy(true);
     runStart(activePlan.id, activePlan.eligibleCount, runInBackground);
+    // Dismiss the modal immediately when the user chose background execution so
+    // the workspace unlocks right away while CleanupProgressDock tracks progress.
+    if (runInBackground) {
+      hideModal();
+    }
 
     // A cleanup can fail mid-run (backend error, cancelled session, IO error).
     // `executeCleanup` then rejects without a report, so the rows already
@@ -432,36 +448,61 @@ export const CleanupPlanDialog: React.FC = () => {
                 </div>
               </div>
 
-              <div className="plan-list">
-                {plan.items.map((item) => (
-                  <div key={item.targetId} className={`plan-row ${item.eligible ? "" : "blocked"}`}>
-                    <div className="plan-row-main">
-                      <div className="plan-row-title">
-                        <strong>{item.displayName}</strong>
-                        {item.projectName && item.projectName !== item.displayName && (
-                          <span className="chip plan-row-provider">{item.projectName}</span>
-                        )}
+              <div className="plan-list" ref={planListRef}>
+                <div
+                  style={{
+                    height: planVirtualizer.getTotalSize(),
+                    position: "relative",
+                    width: "100%",
+                  }}
+                >
+                  {planVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const item = planItems[virtualRow.index];
+                    return (
+                      <div
+                        key={item.targetId}
+                        data-index={virtualRow.index}
+                        ref={planVirtualizer.measureElement}
+                        className={`plan-row ${item.eligible ? "" : "blocked"}`}
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }}
+                      >
+                        <div className="plan-row-main">
+                          <div className="plan-row-title">
+                            <strong>{item.displayName}</strong>
+                            {item.projectName && item.projectName !== item.displayName && (
+                              <span className="chip plan-row-provider">{item.projectName}</span>
+                            )}
+                          </div>
+                          <span className="items-path">
+                            {maskPaths ? maskPath(item.displayPath) : item.displayPath}
+                          </span>
+                          {item.regenerateHint && (
+                            <span className="plan-row-hint">
+                              {localizeBackendNote(item.regenerateHint, ui)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="plan-row-side">
+                          {item.eligible ? (
+                            <span className="items-size">
+                              {formatBytes(item.estimatedReclaimBytes, language)}
+                            </span>
+                          ) : (
+                            <span className="items-warning">
+                              {localizeWarningCode(item.blockedCode, ui)}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <span className="items-path">
-                        {maskPaths ? maskPath(item.displayPath) : item.displayPath}
-                      </span>
-                      {item.regenerateHint && (
-                        <span className="plan-row-hint">{item.regenerateHint}</span>
-                      )}
-                    </div>
-                    <div className="plan-row-side">
-                      {item.eligible ? (
-                        <span className="items-size">
-                          {formatBytes(item.estimatedReclaimBytes, language)}
-                        </span>
-                      ) : (
-                        <span className="items-warning">
-                          {localizeWarningCode(item.blockedCode, ui)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                    );
+                  })}
+                </div>
               </div>
 
               <p className="plan-note">{ui.plan.expires}</p>

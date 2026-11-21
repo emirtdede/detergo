@@ -54,6 +54,7 @@ const NARROWED: Record<string, string> = {
   "AppSettings.sidebarMode": "Rust stores a string; the UI only offers SidebarMode.",
   "AppSettings.cacheMeasureMode": "Rust stores a string; the UI only offers CacheMeasureMode.",
   "AppSettings.closeAction": "Rust stores a string; the UI only offers CloseAction.",
+  "CustomThemeConfig.base": "Rust stores a validated string; the UI only offers dark/light.",
   "BuildInfo.profile": "Rust stores a string; only debug/release exist.",
   "SortOption.field": "Rust stores a validated string; the UI knows the closed set.",
   "SortOption.direction": "Rust stores a validated string; the UI knows asc/desc.",

@@ -1,7 +1,7 @@
 /**
  * Han variant character data for the i18n script-integrity gate.
  *
- * GENERATED DATA — do not edit by hand.
+ * GENERATED DATA - do not edit by hand.
  *
  * The sets were derived from OpenCC 1.4.2's Simplified↔Traditional tables, filtered to
  * characters whose variant mapping is unambiguous:

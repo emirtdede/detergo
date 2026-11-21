@@ -29,7 +29,7 @@ export interface ErrorLogEntry {
 
 /** Newest-first ring buffer; the panel renders at most this many rows. */
 export const ERROR_LOG_LIMIT = 20;
-export const ERROR_LOG_STORAGE_KEY = "dev-cleaner.error-log.v1";
+export const ERROR_LOG_STORAGE_KEY = "detergo.error-log.v1";
 
 const MAX_MESSAGE_CHARS = 400;
 
