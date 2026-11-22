@@ -709,7 +709,7 @@ export const TR: UIText = {
     navTitle: "Bu sayfada",
     navOverview: "Uygulama",
     navCatalog: "Kural kataloğu",
-    navHealth: "Güncelleme ve sağlık",
+    navHealth: "Sürümler",
     navContacts: "İletişim",
     navLegal: "Yasal",
     healthTitle: "Sistem sağlığı ve depolama",

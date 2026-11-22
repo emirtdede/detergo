@@ -203,12 +203,13 @@ pub fn now_ms() -> u64 {
 /// Why a target cannot be deleted, independent of parent/child coverage.
 ///
 /// Coverage is decided separately so that a blocked parent (protected, active,
-/// too small, unmeasured) never hides an eligible child. The old single pass
-/// added every selected parent to `kept` before checking its eligibility, so a
-/// blocked parent marked its children `COVERED_BY_PARENT` even though it would
-/// never be deleted.
+/// too small, unmeasured, or containing a protected/active descendant target)
+/// never hides an eligible child. The old single pass added every selected
+/// parent to `kept` before checking its eligibility, so a blocked parent marked
+/// its children `COVERED_BY_PARENT` even though it would never be deleted.
 fn eligibility_block(
     target: &crate::scanner::models::StoredTarget,
+    session: &ScanSession,
     mode: DeleteMode,
     policy: &crate::cleanup::CleanupPolicy,
 ) -> Option<(String, String)> {
@@ -223,6 +224,33 @@ fn eligibility_block(
             "ACTIVE_USE".to_string(),
             "Target is currently in use or active status is unknown.".to_string(),
         ));
+    }
+    // A parent directory target must never be deleted as a whole tree if any
+    // discovered descendant target inside it is protected or actively in use.
+    if target.kind == TargetKind::Directory {
+        let target_key = crate::safety::path_guard::normalize_key(&target.path);
+        for other in session.targets.values() {
+            if other.id == target.id {
+                continue;
+            }
+            let other_key = crate::safety::path_guard::normalize_key(&other.path);
+            if other_key != target_key
+                && crate::safety::path_guard::is_within(&other_key, &target_key)
+            {
+                if other.protected || other.safety_class == SafetyClass::Keep {
+                    return Some((
+                        "PROTECTED".to_string(),
+                        "Contains a protected nested target that cannot be deleted.".to_string(),
+                    ));
+                }
+                if other.active_use.blocks_deletion() {
+                    return Some((
+                        "ACTIVE_USE".to_string(),
+                        "Contains a nested target that is currently in use.".to_string(),
+                    ));
+                }
+            }
+        }
     }
     if let Some((code, reason)) = policy.agent_policy_block(target) {
         return Some((code.to_string(), reason));
@@ -317,7 +345,7 @@ pub fn build_plan_with_options(
     let mut covered: std::collections::HashMap<String, String> = std::collections::HashMap::new();
 
     for target in &ordered {
-        if eligibility_block(target, mode, policy).is_some() {
+        if eligibility_block(target, session, mode, policy).is_some() {
             continue;
         }
         let target_key = crate::safety::path_guard::normalize_key(&target.path);
@@ -354,7 +382,7 @@ pub fn build_plan_with_options(
                     Some(format!("Parent target already selected ({})", parent_id)),
                 )
             } else {
-                match eligibility_block(target, mode, policy) {
+                match eligibility_block(target, session, mode, policy) {
                     Some((code, reason)) => (false, Some(code), Some(reason)),
                     None => (true, None, None),
                 }

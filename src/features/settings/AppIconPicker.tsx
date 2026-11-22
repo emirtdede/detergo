@@ -1,5 +1,5 @@
 import React from "react";
-import { Check, Layers, Sparkles } from "lucide-react";
+import { Check, Layers, Palette, Sparkles } from "lucide-react";
 import {
   APP_ICON_CUSTOM,
   APP_ICON_MATCH_THEME,
@@ -25,6 +25,7 @@ interface AppIconPickerProps {
   themeLabelFn: (theme: SelectableTheme | string, ui: UIText) => string;
   onSelectAppIcon: (icon: AppIconMode) => void;
   compact?: boolean;
+  hideHeader?: boolean;
 }
 
 export const AppIconPicker: React.FC<AppIconPickerProps> = ({
@@ -36,6 +37,7 @@ export const AppIconPicker: React.FC<AppIconPickerProps> = ({
   themeLabelFn,
   onSelectAppIcon,
   compact = false,
+  hideHeader = false,
 }) => {
   const resolvedId = resolveAppIconId(appIcon, activeTheme);
   const visibleThemes = compact ? COMPACT_ICON_THEMES : themes;
@@ -53,7 +55,7 @@ export const AppIconPicker: React.FC<AppIconPickerProps> = ({
       role="region"
       aria-label={ui.settings.appIconTitle}
     >
-      {!compact && (
+      {!compact && !hideHeader && (
         <div className="app-icon-picker-header">
           <div className="app-icon-live-preview">
             <AppIconPreview
@@ -83,82 +85,102 @@ export const AppIconPicker: React.FC<AppIconPickerProps> = ({
         </div>
       )}
 
-      <div
-        className={`app-icon-grid ${compact ? "app-icon-grid--compact" : ""}`}
-        role="group"
-        aria-label={ui.settings.appIconTitle}
-      >
-        <button
-          type="button"
-          className={`app-icon-option ${appIcon === APP_ICON_MATCH_THEME ? "is-active" : ""}`}
-          aria-pressed={appIcon === APP_ICON_MATCH_THEME}
-          data-testid="app-icon-match-theme"
-          onClick={() => onSelectAppIcon(APP_ICON_MATCH_THEME)}
-        >
-          <AppIconPreview
-            iconId={APP_ICON_MATCH_THEME}
-            activeTheme={activeTheme}
-            customTheme={customTheme}
-            size={compact ? 28 : 34}
-            className="app-icon-option-svg"
-          />
-          <span className="app-icon-option-copy">
-            <span className="app-icon-option-name">{ui.settings.appIconMatchTheme}</span>
+      {/* Section 1: Dynamic & Custom Color Icons */}
+      <div className="theme-section-group">
+        <div className="theme-section-header">
+          <span className="theme-section-label">
+            <Sparkles size={13} aria-hidden="true" />
+            <span>{ui.settings.themeCustom}</span>
           </span>
-          {appIcon === APP_ICON_MATCH_THEME && (
-            <Check size={13} className="app-icon-option-check" aria-hidden="true" />
-          )}
-        </button>
-
-        <button
-          type="button"
-          className={`app-icon-option app-icon-option--custom ${appIcon === APP_ICON_CUSTOM ? "is-active" : ""}`}
-          aria-pressed={appIcon === APP_ICON_CUSTOM}
-          data-testid="app-icon-custom"
-          onClick={() => onSelectAppIcon(APP_ICON_CUSTOM)}
-        >
-          <AppIconPreview
-            iconId={APP_ICON_CUSTOM}
-            activeTheme={activeTheme}
-            customTheme={customTheme}
-            size={compact ? 28 : 34}
-            className="app-icon-option-svg"
-          />
-          <span className="app-icon-option-copy">
-            <span className="app-icon-option-name">
-              {ui.settings.appIconCustom} ({customTheme.accent})
+        </div>
+        <div className="app-icon-dynamic-grid" role="group" aria-label={ui.settings.themeCustom}>
+          <button
+            type="button"
+            className={`app-icon-option ${appIcon === APP_ICON_MATCH_THEME ? "is-active" : ""}`}
+            aria-pressed={appIcon === APP_ICON_MATCH_THEME}
+            data-testid="app-icon-match-theme"
+            onClick={() => onSelectAppIcon(APP_ICON_MATCH_THEME)}
+          >
+            <AppIconPreview
+              iconId={APP_ICON_MATCH_THEME}
+              activeTheme={activeTheme}
+              customTheme={customTheme}
+              size={compact ? 28 : 32}
+              className="app-icon-option-svg"
+            />
+            <span className="app-icon-option-copy">
+              <span className="app-icon-option-name">{ui.settings.appIconMatchTheme}</span>
             </span>
-          </span>
-          {appIcon === APP_ICON_CUSTOM && (
-            <Check size={13} className="app-icon-option-check" aria-hidden="true" />
-          )}
-        </button>
+            {appIcon === APP_ICON_MATCH_THEME && (
+              <Check size={13} className="app-icon-option-check" aria-hidden="true" />
+            )}
+          </button>
 
-        {visibleThemes.map((candidate) => {
-          const active = appIcon === candidate;
-          return (
-            <button
-              key={candidate}
-              type="button"
-              className={`app-icon-option ${active ? "is-active" : ""}`}
-              aria-pressed={active}
-              data-testid={`app-icon-${candidate}`}
-              onClick={() => onSelectAppIcon(candidate)}
-            >
-              <AppIconPreview
-                iconId={candidate}
-                activeTheme={activeTheme}
-                customTheme={customTheme}
-                size={compact ? 28 : 34}
-                className="app-icon-option-svg"
-              />
-              <span className="app-icon-option-copy">
-                <span className="app-icon-option-name">{themeLabelFn(candidate, ui)}</span>
+          <button
+            type="button"
+            className={`app-icon-option app-icon-option--custom ${appIcon === APP_ICON_CUSTOM ? "is-active" : ""}`}
+            aria-pressed={appIcon === APP_ICON_CUSTOM}
+            data-testid="app-icon-custom"
+            onClick={() => onSelectAppIcon(APP_ICON_CUSTOM)}
+          >
+            <AppIconPreview
+              iconId={APP_ICON_CUSTOM}
+              activeTheme={activeTheme}
+              customTheme={customTheme}
+              size={compact ? 28 : 32}
+              className="app-icon-option-svg"
+            />
+            <span className="app-icon-option-copy">
+              <span className="app-icon-option-name">
+                {ui.settings.appIconCustom} ({customTheme.accent})
               </span>
-              {active && <Check size={13} className="app-icon-option-check" aria-hidden="true" />}
-            </button>
-          );
-        })}
+            </span>
+            {appIcon === APP_ICON_CUSTOM && (
+              <Check size={13} className="app-icon-option-check" aria-hidden="true" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Section 2: Built-In Preset Theme Icons */}
+      <div className="theme-section-group">
+        <div className="theme-section-header">
+          <span className="theme-section-label">
+            <Palette size={13} aria-hidden="true" />
+            <span>{ui.settings.theme}</span>
+          </span>
+        </div>
+        <div
+          className={`app-icon-grid ${compact ? "app-icon-grid--compact" : ""}`}
+          role="group"
+          aria-label={ui.settings.appIconTitle}
+        >
+          {visibleThemes.map((candidate) => {
+            const active = appIcon === candidate;
+            return (
+              <button
+                key={candidate}
+                type="button"
+                className={`app-icon-option ${active ? "is-active" : ""}`}
+                aria-pressed={active}
+                data-testid={`app-icon-${candidate}`}
+                onClick={() => onSelectAppIcon(candidate)}
+              >
+                <AppIconPreview
+                  iconId={candidate}
+                  activeTheme={activeTheme}
+                  customTheme={customTheme}
+                  size={compact ? 28 : 30}
+                  className="app-icon-option-svg"
+                />
+                <span className="app-icon-option-copy">
+                  <span className="app-icon-option-name">{themeLabelFn(candidate, ui)}</span>
+                </span>
+                {active && <Check size={13} className="app-icon-option-check" aria-hidden="true" />}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

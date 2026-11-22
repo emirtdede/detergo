@@ -277,6 +277,33 @@ mod win {
         }
     }
 
+    #[inline]
+    fn is_priority_lock_candidate(name: &std::ffi::OsStr) -> bool {
+        let s = name.to_string_lossy();
+        let lower = s.to_ascii_lowercase();
+        matches!(
+            Path::new(&lower).extension().and_then(|e| e.to_str()),
+            Some(
+                "exe"
+                    | "dll"
+                    | "node"
+                    | "pyd"
+                    | "so"
+                    | "dylib"
+                    | "pdb"
+                    | "db"
+                    | "sqlite"
+                    | "sqlite3"
+                    | "wal"
+                    | "shm"
+                    | "lock"
+                    | "pid"
+            )
+        ) || lower.ends_with(".cargo-lock")
+            || lower.ends_with(".db-wal")
+            || lower.ends_with(".db-shm")
+    }
+
     /// `Some(true)` means a process holds the target (or an active child file
     /// inside a directory) with an incompatible sharing mode, `Some(false)`
     /// means no lock was observed, and `None` means the state could not be
@@ -288,11 +315,6 @@ mod win {
             Some(false) => {}
         }
 
-        // For directories, NTFS lets us open the directory itself even when a
-        // process holds an open file inside it (e.g. a running Node binary,
-        // active build artifact, or SQLite lock). Probe a bounded sample of
-        // child files up to depth 2 so active lock conflicts are caught early
-        // without walking 150,000 files.
         let Ok(meta) = std::fs::symlink_metadata(path) else {
             return Some(false);
         };
@@ -300,16 +322,32 @@ mod win {
             return Some(false);
         }
 
-        const MAX_PROBED_FILES: usize = 64;
+        // Fast O(1) process image check against the 2-second cached process
+        // table: if any running process executable lives inside `path` (e.g.
+        // `target\debug\app.exe` or `node_modules\esbuild\esbuild.exe`), the
+        // directory is guaranteed to be in active use.
+        if super::has_running_process_under(path) {
+            return Some(true);
+        }
+
+        // For directories, NTFS lets us open the directory itself even when a
+        // process holds an open file inside it. Probe lock-prone binary,
+        // native-addon, and database/lock files first in every directory so an
+        // active `.exe`, `.dll`, `.node`, or `.db-wal` is never hidden behind
+        // dozens of unlocked `.js` or `.d.ts` source files.
+        const MAX_PRIORITY_PROBES: usize = 96;
+        const MAX_ORDINARY_PROBES: usize = 32;
         const MAX_PROBE_DEPTH: u8 = 4;
-        const MAX_QUEUED_DIRS: usize = 32;
-        let mut probed = 0usize;
+        const MAX_QUEUED_DIRS: usize = 48;
+        let mut priority_probed = 0usize;
+        let mut ordinary_probed = 0usize;
         let mut queue: std::collections::VecDeque<(PathBuf, u8)> =
             std::collections::VecDeque::from([(path.to_path_buf(), 0)]);
         while let Some((dir, depth)) = queue.pop_front() {
             let Ok(entries) = super::super::fast_walk::read_dir_fast(&dir) else {
                 return None;
             };
+            let mut ordinary_files: Vec<PathBuf> = Vec::new();
             for entry in entries {
                 if entry.is_redirecting_reparse {
                     continue;
@@ -321,15 +359,32 @@ mod win {
                     }
                     continue;
                 }
-                probed += 1;
+                if is_priority_lock_candidate(&entry.name) {
+                    if priority_probed < MAX_PRIORITY_PROBES {
+                        priority_probed += 1;
+                        match probe_handle_in_use(&child) {
+                            Some(true) => return Some(true),
+                            None => return None,
+                            Some(false) => {}
+                        }
+                    }
+                } else if ordinary_probed + ordinary_files.len() < MAX_ORDINARY_PROBES {
+                    ordinary_files.push(child);
+                }
+            }
+            for child in ordinary_files {
+                if ordinary_probed >= MAX_ORDINARY_PROBES {
+                    break;
+                }
+                ordinary_probed += 1;
                 match probe_handle_in_use(&child) {
                     Some(true) => return Some(true),
                     None => return None,
                     Some(false) => {}
                 }
-                if probed >= MAX_PROBED_FILES {
-                    return Some(false);
-                }
+            }
+            if priority_probed >= MAX_PRIORITY_PROBES && ordinary_probed >= MAX_ORDINARY_PROBES {
+                return Some(false);
             }
         }
         Some(false)
@@ -611,31 +666,44 @@ fn fetch_running_processes_raw() -> Vec<(String, Option<PathBuf>)> {
     }
 }
 
+fn cached_processes() -> Vec<(String, Option<PathBuf>)> {
+    let mut lock = PROCESS_CACHE.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some(entry) = &*lock {
+        if entry.timestamp.elapsed() < PROCESS_CACHE_TTL {
+            return entry.entries.clone();
+        }
+    }
+    let fresh = fetch_running_processes_raw();
+    *lock = Some(ProcessSnapshot {
+        timestamp: Instant::now(),
+        entries: fresh.clone(),
+    });
+    fresh
+}
+
+/// True when any running process has its executable image located under `dir`.
+#[cfg(windows)]
+fn has_running_process_under(dir: &Path) -> bool {
+    let dir_key = crate::safety::path_guard::normalize_key(dir);
+    if dir_key.is_empty() {
+        return false;
+    }
+    for (_, exe_path) in cached_processes() {
+        let Some(exe) = exe_path else { continue };
+        let exe_key = crate::safety::path_guard::normalize_key(&exe);
+        if !exe_key.is_empty()
+            && (exe_key == dir_key || crate::safety::path_guard::is_within(&exe_key, &dir_key))
+        {
+            return true;
+        }
+    }
+    false
+}
+
 /// Enumerates running processes whose executable file name matches one of the
 /// given names (case-insensitive, without `.exe`).
 pub fn running_process_names(names: &[&str]) -> Vec<(String, Option<PathBuf>)> {
-    let all_processes = {
-        let mut lock = PROCESS_CACHE.lock().unwrap_or_else(|e| e.into_inner());
-        if let Some(entry) = &*lock {
-            if entry.timestamp.elapsed() < PROCESS_CACHE_TTL {
-                entry.entries.clone()
-            } else {
-                let fresh = fetch_running_processes_raw();
-                *lock = Some(ProcessSnapshot {
-                    timestamp: Instant::now(),
-                    entries: fresh.clone(),
-                });
-                fresh
-            }
-        } else {
-            let fresh = fetch_running_processes_raw();
-            *lock = Some(ProcessSnapshot {
-                timestamp: Instant::now(),
-                entries: fresh.clone(),
-            });
-            fresh
-        }
-    };
+    let all_processes = cached_processes();
 
     all_processes
         .into_iter()

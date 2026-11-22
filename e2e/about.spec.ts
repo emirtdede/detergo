@@ -84,19 +84,28 @@ test("a catalog card opens the rules behind it", async ({ page }) => {
   await expect(body).toContainText("Regenerate with");
 });
 
-test("the error log and update check sit together in Updates & health", async ({ page }) => {
+test("Releases shows updates and health without Error log, while Error log lives in Settings", async ({
+  page,
+}) => {
   await openAbout(page);
-  await openAboutSection(page, "Updates & health");
+  await openAboutSection(page, "Releases");
 
   await expect(page.locator(".about-update-panel")).toBeVisible();
   await expect(page.locator(".about-health-panel")).toBeVisible();
-  await expect(page.locator(".about-diagnostics-panel")).toBeVisible();
-  // Local-only log: an untouched profile shows the "nothing recorded" state.
-  await expect(page.locator(".about-diagnostics-panel")).toContainText("No errors recorded.");
+  await expect(page.locator(".about-diagnostics-panel")).toHaveCount(0);
 
   // The check runs only on demand, so no request happens before the click.
   const check = page.locator(".about-update-panel").getByRole("button", {
     name: "Check for updates",
   });
   await expect(check).toBeEnabled();
+
+  // Error log belongs in Settings -> Error log.
+  await page
+    .locator("#primary-navigation")
+    .getByRole("button", { name: "Settings", exact: true })
+    .click();
+  await page.locator("#settings-tab-diagnostics").click();
+  await expect(page.locator(".settings-diagnostics")).toBeVisible();
+  await expect(page.locator(".settings-diagnostics")).toContainText("No errors recorded.");
 });

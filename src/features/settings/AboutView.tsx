@@ -32,7 +32,6 @@ import { getLegalDocMeta, LEGAL_REVISION } from "@/features/legal/legal-content"
 import { useLegalLocale } from "@/features/legal/use-legal-locale";
 import { LegalView } from "@/features/legal/LegalView";
 import { SystemHealthPanel } from "./SystemHealthPanel";
-import { DiagnosticsPanel } from "./DiagnosticsPanel";
 import { UpdatePanel } from "./UpdatePanel";
 import { CatalogExplorer, ecosystemMeta, groupRules } from "./CatalogExplorer";
 import "./about.css";
@@ -413,9 +412,8 @@ export const AboutView: React.FC<AboutViewProps> = ({
         {aboutNav === "health" && (
           <>
             <UpdatePanel version={appVersion} />
-            <div className="about-workspace-grid">
+            <div className="about-workspace-grid about-workspace-grid--full">
               <SystemHealthPanel />
-              <DiagnosticsPanel version={appVersion} />
             </div>
           </>
         )}

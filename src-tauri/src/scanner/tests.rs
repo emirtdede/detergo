@@ -1103,3 +1103,62 @@ fn scan_request_deserializes_include_agents_for_all_drives() {
     assert_eq!(req.scope, ScanScope::AllDrives);
     assert_eq!(req.include_agents, Some(true));
 }
+
+#[tokio::test]
+async fn cross_target_hardlinks_are_deduplicated_across_sibling_projects() {
+    let temp = tempfile::tempdir().unwrap();
+    let store_file = temp.path().join("pnpm_store_shared.bin");
+    fs::write(&store_file, vec![b'p'; 64 * 1024]).unwrap();
+
+    let nm_a = temp.path().join("proj-a/node_modules");
+    let nm_b = temp.path().join("proj-b/node_modules");
+    fs::create_dir_all(&nm_a).unwrap();
+    fs::create_dir_all(&nm_b).unwrap();
+
+    let link_a = nm_a.join("pkg.bin");
+    let link_b = nm_b.join("pkg.bin");
+    if fs::hard_link(&store_file, &link_a).is_err() || fs::hard_link(&store_file, &link_b).is_err()
+    {
+        return;
+    }
+
+    let entries = vec![
+        ("t-a".to_string(), nm_a, TargetKind::Directory),
+        ("t-b".to_string(), nm_b, TargetKind::Directory),
+    ];
+
+    let token = CancellationToken::new();
+    let engine = measurement::MeasurementEngine::new(token).with_concurrency(1);
+    let mut updates = Vec::new();
+    let stop = engine
+        .measure_entries(
+            entries,
+            2,
+            2,
+            |batch| {
+                updates.extend(batch);
+                async {}
+            },
+            |_| async {},
+        )
+        .await;
+
+    assert_eq!(stop, measurement::MeasurementStop::Completed);
+    assert_eq!(updates.len(), 2);
+    let total_logical: u64 = updates.iter().map(|u| u.logical_bytes).sum();
+    let total_allocated: u64 = updates
+        .iter()
+        .map(|u| u.allocated_bytes.unwrap_or(u.logical_bytes))
+        .sum();
+    let total_dedup: u64 = updates.iter().map(|u| u.hardlink_dedup_bytes).sum();
+
+    assert_eq!(total_logical, 128 * 1024);
+    assert!(
+        total_dedup >= 64 * 1024,
+        "second sibling project sharing the same hardlinked inode must record hardlink_dedup_bytes"
+    );
+    assert!(
+        total_allocated < total_logical,
+        "physical allocation across sibling projects must not double-count shared hardlinks"
+    );
+}

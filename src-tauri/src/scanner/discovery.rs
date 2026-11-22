@@ -298,6 +298,7 @@ impl<'a> DiscoveryEngine<'a> {
                     let mut resolver = ProjectResolver::new(catalog.project_markers());
                     resolver.set_boundary(scan_root);
                     let mut git_repo_cache: HashMap<PathBuf, Option<PathBuf>> = HashMap::new();
+                    let mut local_stack: Vec<DirJob> = Vec::with_capacity(16);
                     let mut last_ping = Instant::now();
 
                     loop {
@@ -312,15 +313,19 @@ impl<'a> DiscoveryEngine<'a> {
                             return;
                         }
 
-                        let job = match job_rx.recv_timeout(Duration::from_millis(4)) {
-                            Ok(j) => j,
-                            Err(channel::RecvTimeoutError::Timeout) => {
-                                if in_flight.load(Ordering::Acquire) == 0 {
-                                    return;
+                        let job = if let Some(local_job) = local_stack.pop() {
+                            local_job
+                        } else {
+                            match job_rx.recv_timeout(Duration::from_millis(1)) {
+                                Ok(j) => j,
+                                Err(channel::RecvTimeoutError::Timeout) => {
+                                    if in_flight.load(Ordering::Acquire) == 0 {
+                                        return;
+                                    }
+                                    continue;
                                 }
-                                continue;
+                                Err(channel::RecvTimeoutError::Disconnected) => return,
                             }
-                            Err(channel::RecvTimeoutError::Disconnected) => return,
                         };
 
                         directories_visited.fetch_add(1, Ordering::Relaxed);
@@ -716,7 +721,14 @@ impl<'a> DiscoveryEngine<'a> {
                             && !timeout_hit.load(Ordering::Relaxed)
                         {
                             in_flight.fetch_add(child_jobs.len(), Ordering::AcqRel);
-                            for child in child_jobs {
+                            // Keep one job on this worker's LIFO stack for depth-first
+                            // cache locality and zero channel contention; push sibling
+                            // directories to the shared channel for idle workers to steal.
+                            let mut iter = child_jobs.into_iter();
+                            if let Some(first) = iter.next() {
+                                local_stack.push(first);
+                            }
+                            for child in iter {
                                 let _ = job_tx.send(child);
                             }
                         }

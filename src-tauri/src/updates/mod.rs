@@ -21,8 +21,27 @@ pub mod sha256;
 mod tests;
 
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
+
+static PENDING_UPDATE_ON_QUIT: Mutex<Option<PathBuf>> = Mutex::new(None);
+
+/// Stages (or clears) a SHA-256-verified NSIS installer to be launched
+/// automatically when the user quits Detergo ("Install on Quit").
+pub fn set_pending_update_on_quit(path: Option<PathBuf>) {
+    if let Ok(mut guard) = PENDING_UPDATE_ON_QUIT.lock() {
+        *guard = path;
+    }
+}
+
+/// Takes any staged SHA-256-verified installer path queued for launch on exit.
+pub fn take_pending_update_on_quit() -> Option<PathBuf> {
+    PENDING_UPDATE_ON_QUIT
+        .lock()
+        .ok()
+        .and_then(|mut guard| guard.take())
+}
 
 use crate::error::AppError;
 pub use channel::{

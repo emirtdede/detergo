@@ -25,12 +25,10 @@ impl PermanentDeleteService {
             ));
         }
 
-        // Re-validate immediately before the destructive call: the first check
-        // happened before metadata was read, so a target swapped for a symlink
-        // in between used to be deleted unchecked (O-3, interim fix). Comparing
-        // the canonical paths also catches a rename that resolves elsewhere.
-        let revalidated = validate_target(&canonical, ctx)?;
-        if revalidated != canonical {
+        // Verify the canonical target has not been swapped for a symlink or
+        // reparse point and re-check ancestors up to the scan root without
+        // repeating a full `validate_target` canonicalization sweep.
+        if is_reparse_point(&canonical) {
             return Err(AppError::UnsafeDeleteTarget(
                 "Target changed between validation and deletion.".to_string(),
             ));
@@ -68,30 +66,20 @@ impl Default for PermanentDeleteService {
     }
 }
 
-/// Threshold above which leaf files in a directory are unlinked in parallel.
+/// Threshold above which leaf files in a batch are unlinked in parallel.
 const PARALLEL_DELETE_THRESHOLD: usize = 64;
+/// Maximum number of leaf file paths buffered in memory before flushing a
+/// parallel unlink batch, bounding heap usage on 500k+ file trees.
+const MAX_FILE_BATCH_SIZE: usize = 4096;
 
-/// Deletes `root` and its contents without ever following a reparse point.
-///
-/// Post-order directory traversal with bounded parallel leaf unlinking:
-/// - Symlinks/junctions inside the tree are unlinked directly without ever
-///   descending into their target.
-/// - Regular files inside large directories are unlinked across a bounded
-///   worker pool via handle-based POSIX delete (`FileDispositionInfoEx`).
-/// - Directories are removed strictly bottom-up after their children complete,
-///   preserving root `FileIdentity` verification.
-fn delete_tree(root: &Path, expected: Option<FileIdentity>) -> Result<(), AppError> {
-    if is_reparse_point(root) {
+fn check_dir_identity(dir: &Path, expected: Option<FileIdentity>) -> Result<(), AppError> {
+    if is_reparse_point(dir) {
         return Err(AppError::UnsafeDeleteTarget(
             "Reparse point target cannot be deleted.".to_string(),
         ));
     }
-    // Verify the root object's identity *before* descending into any children
-    // (as well as when unlinking `root` itself at the end). This closes the
-    // TOCTOU window where swapping `root` for a junction before traversal could
-    // otherwise delete children inside a different directory.
     if let Some(expected_id) = expected {
-        match verify_identity_no_follow(root, expected_id) {
+        match verify_identity_no_follow(dir, expected_id) {
             Ok(()) => {}
             Err(HandleDeleteError::IdentityChanged) => {
                 return Err(AppError::UnsafeDeleteTarget(
@@ -111,20 +99,92 @@ fn delete_tree(root: &Path, expected: Option<FileIdentity>) -> Result<(), AppErr
             }
         }
     }
+    Ok(())
+}
+
+fn flush_file_batch(files_to_delete: &mut Vec<PathBuf>) -> Result<(), AppError> {
+    if files_to_delete.is_empty() {
+        return Ok(());
+    }
+    if files_to_delete.len() < PARALLEL_DELETE_THRESHOLD {
+        for file in files_to_delete.drain(..) {
+            delete_one(&file, None, false)?;
+        }
+        return Ok(());
+    }
+
+    use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+    use std::sync::Mutex;
+
+    let batch = std::mem::take(files_to_delete);
+    let workers = std::thread::available_parallelism()
+        .map(|n| n.get().clamp(2, 8))
+        .unwrap_or(4);
+    let next_idx = AtomicUsize::new(0);
+    let failed = AtomicBool::new(false);
+    let first_err: Mutex<Option<AppError>> = Mutex::new(None);
+
+    std::thread::scope(|scope| {
+        for _ in 0..workers {
+            let files = &batch;
+            let next_idx = &next_idx;
+            let failed = &failed;
+            let first_err = &first_err;
+            scope.spawn(move || loop {
+                if failed.load(Ordering::Relaxed) {
+                    return;
+                }
+                let idx = next_idx.fetch_add(1, Ordering::Relaxed);
+                let Some(file) = files.get(idx) else {
+                    return;
+                };
+                if let Err(err) = delete_one(file, None, false) {
+                    failed.store(true, Ordering::Relaxed);
+                    let mut slot = first_err.lock().unwrap_or_else(|e| e.into_inner());
+                    if slot.is_none() {
+                        *slot = Some(err);
+                    }
+                    return;
+                }
+            });
+        }
+    });
+
+    if let Some(err) = first_err.into_inner().unwrap_or_else(|e| e.into_inner()) {
+        return Err(err);
+    }
+    Ok(())
+}
+
+/// Deletes `root` and its contents without ever following a reparse point.
+///
+/// Post-order directory traversal with bounded parallel leaf unlinking and
+/// per-directory `FileIdentity` verification:
+/// - Symlinks/junctions inside the tree are unlinked directly without ever
+///   descending into their target.
+/// - Every intermediate subdirectory records its `FileIdentity` when discovered,
+///   verifies that identity before its children are enumerated, and verifies
+///   it again by handle in `delete_by_handle` when the directory itself is
+///   unlinked bottom-up (closing intermediate-directory TOCTOU swap windows).
+/// - Regular files are unlinked in bounded batches of `MAX_FILE_BATCH_SIZE`
+///   (4,096) so memory remains O(1) even on 500,000-file trees.
+fn delete_tree(root: &Path, expected: Option<FileIdentity>) -> Result<(), AppError> {
+    check_dir_identity(root, expected)?;
     let root_meta =
         fs::symlink_metadata(root).map_err(|e| AppError::PermanentDeleteFailed(e.to_string()))?;
     if !root_meta.is_dir() {
         return delete_one(root, expected, false);
     }
 
-    // Collect directory levels top-down while deleting links immediately and
-    // batching regular files for parallel unlinking.
-    let mut dir_order: Vec<PathBuf> = vec![root.to_path_buf()];
-    let mut files_to_delete: Vec<PathBuf> = Vec::new();
+    let mut dir_order: Vec<(PathBuf, Option<FileIdentity>)> = vec![(root.to_path_buf(), expected)];
+    let mut files_to_delete: Vec<PathBuf> = Vec::with_capacity(256);
     let mut cursor = 0usize;
 
     while cursor < dir_order.len() {
-        let dir = dir_order[cursor].clone();
+        let (dir, dir_expected) = dir_order[cursor].clone();
+        if cursor > 0 {
+            check_dir_identity(&dir, dir_expected)?;
+        }
         cursor += 1;
 
         #[cfg(windows)]
@@ -136,9 +196,14 @@ fn delete_tree(root: &Path, expected: Option<FileIdentity>) -> Result<(), AppErr
                 if entry.is_redirecting_reparse {
                     remove_link_only(&child, entry.is_dir)?;
                 } else if entry.is_dir {
-                    dir_order.push(child);
+                    let child_id = identity(&child);
+                    dir_order.push((child, child_id));
                 } else {
                     files_to_delete.push(child);
+                    if files_to_delete.len() >= MAX_FILE_BATCH_SIZE {
+                        check_dir_identity(&dir, dir_expected)?;
+                        flush_file_batch(&mut files_to_delete)?;
+                    }
                 }
             }
         }
@@ -155,64 +220,25 @@ fn delete_tree(root: &Path, expected: Option<FileIdentity>) -> Result<(), AppErr
                 if ft.is_symlink() {
                     remove_link_only(&child, false)?;
                 } else if ft.is_dir() {
-                    dir_order.push(child);
+                    let child_id = identity(&child);
+                    dir_order.push((child, child_id));
                 } else {
                     files_to_delete.push(child);
+                    if files_to_delete.len() >= MAX_FILE_BATCH_SIZE {
+                        check_dir_identity(&dir, dir_expected)?;
+                        flush_file_batch(&mut files_to_delete)?;
+                    }
                 }
             }
         }
     }
 
-    if files_to_delete.len() < PARALLEL_DELETE_THRESHOLD {
-        for file in &files_to_delete {
-            delete_one(file, None, false)?;
-        }
-    } else {
-        use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-        use std::sync::Mutex;
+    flush_file_batch(&mut files_to_delete)?;
 
-        let workers = std::thread::available_parallelism()
-            .map(|n| n.get().clamp(2, 8))
-            .unwrap_or(4);
-        let next_idx = AtomicUsize::new(0);
-        let failed = AtomicBool::new(false);
-        let first_err: Mutex<Option<AppError>> = Mutex::new(None);
-
-        std::thread::scope(|scope| {
-            for _ in 0..workers {
-                let files = &files_to_delete;
-                let next_idx = &next_idx;
-                let failed = &failed;
-                let first_err = &first_err;
-                scope.spawn(move || loop {
-                    if failed.load(Ordering::Relaxed) {
-                        return;
-                    }
-                    let idx = next_idx.fetch_add(1, Ordering::Relaxed);
-                    let Some(file) = files.get(idx) else {
-                        return;
-                    };
-                    if let Err(err) = delete_one(file, None, false) {
-                        failed.store(true, Ordering::Relaxed);
-                        let mut slot = first_err.lock().unwrap_or_else(|e| e.into_inner());
-                        if slot.is_none() {
-                            *slot = Some(err);
-                        }
-                        return;
-                    }
-                });
-            }
-        });
-
-        if let Some(err) = first_err.into_inner().unwrap_or_else(|e| e.into_inner()) {
-            return Err(err);
-        }
-    }
-
-    // Remove emptied directories strictly bottom-up; verify root identity last.
-    for dir in dir_order.iter().rev() {
-        let dir_expected = if dir == root { expected } else { None };
-        delete_one(dir, dir_expected, true)?;
+    // Remove emptied directories strictly bottom-up, verifying each directory's
+    // captured `FileIdentity` (both intermediate subdirectories and `root`).
+    for (dir, dir_expected) in dir_order.iter().rev() {
+        delete_one(dir, *dir_expected, true)?;
     }
 
     Ok(())

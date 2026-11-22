@@ -1,11 +1,47 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use std::time::{Duration, Instant};
+use std::sync::{Arc, Mutex, OnceLock};
+use std::time::{Duration, Instant, UNIX_EPOCH};
 
 use crate::catalog::matcher::GitState;
 
 const GIT_CMD_TIMEOUT: Duration = Duration::from_secs(10);
+const REPO_INDEX_MAX_BYTES: u64 = 2 * 1024 * 1024;
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct GitIndexStamp {
+    len: u64,
+    modified_nanos: u128,
+}
+
+struct CachedRepoIndex {
+    stamp: Option<GitIndexStamp>,
+    /// Lowercase `/` separated relative paths of all tracked files and their
+    /// enclosing directory prefixes inside the repository. `None` when the
+    /// index output exceeded `REPO_INDEX_MAX_BYTES` and callers should fall
+    /// back to a targeted `git ls-files -- <rel>` query.
+    tracked_prefixes: Option<Arc<HashSet<String>>>,
+}
+
+static REPO_TRACKED_CACHE: OnceLock<Mutex<HashMap<PathBuf, CachedRepoIndex>>> = OnceLock::new();
+
+fn git_index_stamp(repo_root: &Path) -> Option<GitIndexStamp> {
+    let dot_git = repo_root.join(".git");
+    let meta = std::fs::metadata(dot_git.join("index"))
+        .or_else(|_| std::fs::metadata(&dot_git))
+        .ok()?;
+    let modified_nanos = meta
+        .modified()
+        .ok()?
+        .duration_since(UNIX_EPOCH)
+        .ok()?
+        .as_nanos();
+    Some(GitIndexStamp {
+        len: meta.len(),
+        modified_nanos,
+    })
+}
 
 #[derive(Debug, Clone)]
 pub struct GitStatus {
@@ -74,6 +110,7 @@ fn command(repo: &Path, args: &[&str]) -> Result<std::process::Output, GitError>
     });
 
     let deadline = Instant::now() + GIT_CMD_TIMEOUT;
+    let mut poll_ms = 1u64;
     let status = loop {
         match child.try_wait() {
             Ok(Some(status)) => break status,
@@ -85,7 +122,8 @@ fn command(repo: &Path, args: &[&str]) -> Result<std::process::Output, GitError>
                     let _ = err_reader.join();
                     return Err(GitError::Failure("git command timed out".to_string()));
                 }
-                std::thread::sleep(Duration::from_millis(15));
+                std::thread::sleep(Duration::from_millis(poll_ms));
+                poll_ms = (poll_ms * 2).min(8);
             }
             Err(e) => {
                 let _ = child.kill();
@@ -222,12 +260,131 @@ pub fn git_state_for(path: &Path) -> GitState {
     }
 }
 
-/// Discovery-time Git probe with per-directory repository-root caching.
+/// Loads or returns the `.git/index`-stamped set of tracked relative paths and
+/// their ancestor directory prefixes for `repo_root` using a single
+/// `git -C <root> ls-files -z` invocation.
+fn repo_tracked_prefixes(repo_root: &Path) -> Result<Option<Arc<HashSet<String>>>, GitError> {
+    let stamp = git_index_stamp(repo_root);
+    let cache = REPO_TRACKED_CACHE.get_or_init(|| Mutex::new(HashMap::new()));
+    if let Some(stamp_val) = stamp {
+        let guard = cache.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(entry) = guard.get(repo_root) {
+            if entry.stamp == Some(stamp_val) {
+                return Ok(entry.tracked_prefixes.clone());
+            }
+        }
+    }
+
+    let mut cmd = Command::new("git");
+    cmd.arg("-C")
+        .arg(repo_root)
+        .arg("-c")
+        .arg("core.quotepath=false")
+        .args(["ls-files", "-z"])
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    let mut child = cmd.spawn().map_err(|_| GitError::Unavailable)?;
+    let mut stdout_pipe = child.stdout.take();
+    let mut stderr_pipe = child.stderr.take();
+
+    let out_reader = std::thread::spawn(move || {
+        use std::io::Read;
+        let mut buf = Vec::new();
+        if let Some(ref mut pipe) = stdout_pipe {
+            let _ = pipe.take(REPO_INDEX_MAX_BYTES + 1).read_to_end(&mut buf);
+        }
+        buf
+    });
+    let err_reader = std::thread::spawn(move || {
+        use std::io::Read;
+        let mut buf = Vec::new();
+        if let Some(ref mut pipe) = stderr_pipe {
+            let _ = pipe.take(16 * 1024).read_to_end(&mut buf);
+        }
+        buf
+    });
+
+    let deadline = Instant::now() + GIT_CMD_TIMEOUT;
+    let mut poll_ms = 1u64;
+    let status = loop {
+        match child.try_wait() {
+            Ok(Some(s)) => break s,
+            Ok(None) => {
+                if Instant::now() >= deadline {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    let _ = out_reader.join();
+                    let _ = err_reader.join();
+                    return Err(GitError::Failure("git ls-files timed out".to_string()));
+                }
+                std::thread::sleep(Duration::from_millis(poll_ms));
+                poll_ms = (poll_ms * 2).min(8);
+            }
+            Err(e) => {
+                let _ = child.kill();
+                let _ = child.wait();
+                let _ = out_reader.join();
+                let _ = err_reader.join();
+                return Err(GitError::Failure(e.to_string()));
+            }
+        }
+    };
+    let stdout = out_reader.join().unwrap_or_default();
+    let stderr = err_reader.join().unwrap_or_default();
+    if !status.success() {
+        return Err(GitError::Failure(
+            String::from_utf8_lossy(&stderr).to_string(),
+        ));
+    }
+
+    let prefixes = if (stdout.len() as u64) > REPO_INDEX_MAX_BYTES {
+        None
+    } else {
+        let mut set = HashSet::new();
+        for raw_entry in stdout.split(|&b| b == 0) {
+            if raw_entry.is_empty() {
+                continue;
+            }
+            let norm = String::from_utf8_lossy(raw_entry)
+                .replace('\\', "/")
+                .to_lowercase();
+            let mut slice = norm.as_str();
+            set.insert(norm.clone());
+            while let Some(pos) = slice.rfind('/') {
+                slice = &slice[..pos];
+                if slice.is_empty() || !set.insert(slice.to_string()) {
+                    break;
+                }
+            }
+        }
+        Some(Arc::new(set))
+    };
+
+    let mut guard = cache.lock().unwrap_or_else(|e| e.into_inner());
+    guard.insert(
+        repo_root.to_path_buf(),
+        CachedRepoIndex {
+            stamp,
+            tracked_prefixes: prefixes.clone(),
+        },
+    );
+    Ok(prefixes)
+}
+
+/// Discovery-time Git probe with per-directory repository-root caching and
+/// repository-wide `.git/index`-stamped tracked-prefix lookup.
 ///
-/// The classifier only treats tracked or unknown states as blocking; when
-/// `git ls-files` confirms nothing under `path` is tracked we skip the extra
-/// `git status` and `git check-ignore` process spawns entirely, which cuts
-/// scan latency on Windows repositories by an order of magnitude.
+/// A single `git -C <root> ls-files -z` loads all tracked paths and ancestor
+/// directory prefixes for the repository, allowing subsequent `dist/`,
+/// `build/`, `out/`, and `target/` candidates in the same repository to be
+/// verified in O(1) memory time without spawning extra `git.exe` processes.
 pub fn fast_git_state(path: &Path, repo_cache: &mut HashMap<PathBuf, Option<PathBuf>>) -> GitState {
     if path.is_dir() && contains_nested_git_repo(path) {
         return GitState::TrackedModified;
@@ -249,15 +406,27 @@ pub fn fast_git_state(path: &Path, repo_cache: &mut HashMap<PathBuf, Option<Path
         return GitState::Unknown;
     };
     let rel = rel_path.to_string_lossy().replace('\\', "/");
+    let rel_lower = rel.trim_end_matches('/').to_lowercase();
 
-    let Ok(tracked_out) = command(&root, &["ls-files", "--", &rel]) else {
-        return GitState::Unknown;
-    };
-    if !tracked_out.status.success() {
-        return GitState::Unknown;
-    }
-    if tracked_out.stdout.is_empty() {
-        return GitState::UntrackedOnly;
+    match repo_tracked_prefixes(&root) {
+        Ok(Some(prefixes)) => {
+            if !prefixes.contains(&rel_lower) {
+                return GitState::UntrackedOnly;
+            }
+        }
+        Ok(None) => {
+            // Very large repository index (>2 MiB): fall back to per-path query.
+            let Ok(tracked_out) = command(&root, &["ls-files", "--", &rel]) else {
+                return GitState::Unknown;
+            };
+            if !tracked_out.status.success() {
+                return GitState::Unknown;
+            }
+            if tracked_out.stdout.is_empty() {
+                return GitState::UntrackedOnly;
+            }
+        }
+        Err(_) => return GitState::Unknown,
     }
 
     // Tracked files exist: check whether they have uncommitted modifications.

@@ -487,7 +487,9 @@ test("RTL Arabic locale sets dir=rtl and passes axe without horizontal overflow"
   expect(overflow.root, "RTL overview horizontal overflow").toBeLessThanOrEqual(1);
 });
 
-test("first-launch onboarding dialog completes all 4 steps and passes axe", async ({ page }) => {
+test("first-launch onboarding dialog completes all 6 sequential steps and passes axe", async ({
+  page,
+}) => {
   await page.evaluate(async () => {
     const { usePreferencesStore } = await import("/src/stores/preferences-store.ts");
     const { useUiStore } = await import("/src/stores/ui-store.ts");
@@ -497,17 +499,38 @@ test("first-launch onboarding dialog completes all 4 steps and passes axe", asyn
 
   const dialog = page.getByRole("dialog", { name: "Welcome to Detergo" });
   await expect(dialog).toBeVisible();
-  await expect(dialog).toContainText("Meet Detergo by Vellium");
-  await expectNoViolations(page, "onboarding step 1");
 
+  // Step 1: Language selection
+  await expect(dialog).toContainText("Step 1 of 6");
+  await expect(dialog).toContainText("Language");
+  await expectNoViolations(page, "onboarding step 1 - language");
+
+  // Step 2: Theme & display personalization
   await dialog.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(dialog).toContainText("Step 2 of 6");
+  await expect(dialog).toContainText("Personalize Your Workspace");
+  await expectNoViolations(page, "onboarding step 2 - theme");
+
+  // Step 3: Application icon selection
+  await dialog.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(dialog).toContainText("Step 3 of 6");
+  await expect(dialog).toContainText("Application icon");
+  await expectNoViolations(page, "onboarding step 3 - app icon");
+
+  // Step 4: Welcome to Detergo by Vellium
+  await dialog.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(dialog).toContainText("Step 4 of 6");
+  await expect(dialog).toContainText("Meet Detergo by Vellium");
+  await expectNoViolations(page, "onboarding step 4 - welcome");
+
+  // Step 5: Zero Data Loss Safety Architecture
+  await dialog.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(dialog).toContainText("Step 5 of 6");
   await expect(dialog).toContainText("Engineered for Zero Data Loss");
 
+  // Step 6: App walkthrough & quick start
   await dialog.getByRole("button", { name: "Next", exact: true }).click();
-  await expect(dialog).toContainText("Personalize Your Workspace");
-  await expectNoViolations(page, "onboarding step 3");
-
-  await dialog.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(dialog).toContainText("Step 6 of 6");
   await expect(dialog).toContainText("You Are Ready to Reclaim Space");
 
   await dialog.getByRole("button", { name: "Start using Detergo", exact: true }).click();

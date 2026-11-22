@@ -43,7 +43,7 @@ mod imp {
 
     use crate::platform::windows::fs_meta::is_transparent_reparse_tag;
     use crate::scanner::cancellation::CancellationToken;
-    use crate::scanner::measurement::PathSize;
+    use crate::scanner::measurement::{PathSize, SessionHardlinkTracker};
 
     const DIR_BUFFER_BYTES: usize = 64 * 1024;
     const FILE_ID_SHARDS: usize = 16;
@@ -247,7 +247,8 @@ mod imp {
             if file_id == 0 {
                 return true;
             }
-            let shard = (file_id as usize) & (FILE_ID_SHARDS - 1);
+            let shard = ((file_id.wrapping_mul(0x9E37_79B9_7F4A_7C15)) >> 60) as usize
+                & (FILE_ID_SHARDS - 1);
             let mut set = self.seen_shards[shard]
                 .lock()
                 .unwrap_or_else(|e| e.into_inner());
@@ -258,12 +259,14 @@ mod imp {
     /// Scans one directory handle using `FileIdBothDirectoryInfo`, accumulating
     /// file sizes into `shared` and pushing non-reparse subdirectories into
     /// `subdirs`.
+    #[allow(clippy::too_many_arguments)]
     fn scan_one_dir(
         dir: &Path,
         buf: &mut [u64],
         token: &CancellationToken,
         deadline: Option<Instant>,
         shared: &MeasureShared,
+        session_tracker: Option<(&SessionHardlinkTracker, u64)>,
         subdirs: &mut Vec<PathBuf>,
         is_root: bool,
     ) -> Result<(), FastMeasureError> {
@@ -382,11 +385,6 @@ mod imp {
                                 let logical = info.EndOfFile.max(0) as u64;
                                 local_logical = local_logical.saturating_add(logical);
 
-                                let needs_compressed = (attrs
-                                    & (FILE_ATTRIBUTE_COMPRESSED.0
-                                        | FILE_ATTRIBUTE_SPARSE_FILE.0
-                                        | FILE_ATTRIBUTE_REPARSE_POINT.0))
-                                    != 0;
                                 // NTFS `AllocationSize` reflects actual cluster
                                 // allocation on disk (rounded to cluster size) and
                                 // returns 0 for tiny MFT-resident files (<~700 B).
@@ -395,6 +393,21 @@ mod imp {
                                 let raw_alloc = info.AllocationSize.max(0) as u64;
                                 let fallback_alloc =
                                     if raw_alloc > 0 { raw_alloc } else { logical };
+                                // Only invoke `GetCompressedFileSizeW` for transparent
+                                // reparse points (WOF/CompactOS/Dedup) or > 4 KiB
+                                // compressed/sparse files whose directory entry still
+                                // reports the uncompressed size (`raw_alloc >= logical`).
+                                // Files <= 4 KiB occupy at most 1 NTFS cluster and cannot
+                                // compress smaller than 1 cluster, avoiding hundreds of
+                                // thousands of redundant path syscalls on compressed drives.
+                                let needs_compressed = (attrs & FILE_ATTRIBUTE_REPARSE_POINT.0)
+                                    != 0
+                                    || ((attrs
+                                        & (FILE_ATTRIBUTE_COMPRESSED.0
+                                            | FILE_ATTRIBUTE_SPARSE_FILE.0))
+                                        != 0
+                                        && logical > 4096
+                                        && raw_alloc >= logical);
                                 let alloc = if needs_compressed {
                                     let child_path = dir.join(OsString::from_wide(units));
                                     compressed_size_verbatim(&child_path).unwrap_or(fallback_alloc)
@@ -403,7 +416,12 @@ mod imp {
                                 };
 
                                 let file_id = info.FileId as u64;
-                                if !shared.mark_seen(file_id) {
+                                let first_in_target = shared.mark_seen(file_id);
+                                let first_in_session = first_in_target
+                                    && session_tracker
+                                        .map(|(tracker, group_id)| tracker.claim(file_id, group_id))
+                                        .unwrap_or(true);
+                                if !first_in_session {
                                     local_dedup = local_dedup.saturating_add(alloc);
                                 } else {
                                     local_allocated = local_allocated.saturating_add(alloc);
@@ -443,6 +461,16 @@ mod imp {
         deadline: Option<Instant>,
         max_workers: usize,
     ) -> Result<PathSize, FastMeasureError> {
+        measure_dir_fast_with_tracker(root, token, deadline, max_workers, None)
+    }
+
+    pub fn measure_dir_fast_with_tracker(
+        root: &Path,
+        token: &CancellationToken,
+        deadline: Option<Instant>,
+        max_workers: usize,
+        session_tracker: Option<(&SessionHardlinkTracker, u64)>,
+    ) -> Result<PathSize, FastMeasureError> {
         let shared = MeasureShared::new();
         let mut root_buf = vec![0u64; DIR_BUFFER_BYTES / 8];
         let mut initial_subdirs = Vec::new();
@@ -453,6 +481,7 @@ mod imp {
             token,
             deadline,
             &shared,
+            session_tracker,
             &mut initial_subdirs,
             true,
         )?;
@@ -466,6 +495,7 @@ mod imp {
                     token,
                     deadline,
                     &shared,
+                    session_tracker,
                     &mut stack,
                     false,
                 )?;
@@ -495,7 +525,7 @@ mod imp {
                                 shared.aborted.store(true, Ordering::Relaxed);
                                 return;
                             }
-                            match rx.recv_timeout(std::time::Duration::from_millis(5)) {
+                            match rx.recv_timeout(std::time::Duration::from_millis(2)) {
                                 Ok(dir) => {
                                     local_subs.clear();
                                     let _ = scan_one_dir(
@@ -504,6 +534,7 @@ mod imp {
                                         token,
                                         deadline,
                                         shared,
+                                        session_tracker,
                                         &mut local_subs,
                                         false,
                                     );
@@ -550,4 +581,6 @@ mod imp {
 }
 
 #[cfg(windows)]
-pub use imp::{measure_dir_fast, read_dir_fast, FastDirEntry, FastMeasureError};
+pub use imp::{
+    measure_dir_fast, measure_dir_fast_with_tracker, read_dir_fast, FastDirEntry, FastMeasureError,
+};

@@ -7,9 +7,10 @@ use crate::error::AppError;
 use crate::updates::{
     cleanup_stale_part_files, detect_install_channel, interpret_manifest,
     interpret_release_for_channel, is_trusted_release_url, normalize_sha256,
-    sanitize_update_filename, update_staging_dir, verify_authenticode_signature, DownloadedUpdate,
-    InstallChannel, Sha256, UpdateInfo, DOWNLOAD_TIMEOUT_SECS, MAX_BODY_BYTES, MAX_DOWNLOAD_BYTES,
-    RELEASES_API, RELEASES_MANIFEST_URL, REQUEST_TIMEOUT_SECS,
+    sanitize_update_filename, set_pending_update_on_quit, update_staging_dir,
+    verify_authenticode_signature, DownloadedUpdate, InstallChannel, Sha256, UpdateInfo,
+    DOWNLOAD_TIMEOUT_SECS, FALLBACK_RELEASE_URL, MAX_BODY_BYTES, MAX_DOWNLOAD_BYTES, RELEASES_API,
+    RELEASES_MANIFEST_URL, REQUEST_TIMEOUT_SECS,
 };
 
 const USER_AGENT: &str = concat!(
@@ -75,6 +76,25 @@ pub fn get_install_channel() -> InstallChannel {
 #[tauri::command]
 pub async fn check_for_updates() -> Result<UpdateInfo, AppError> {
     let channel = detect_install_channel();
+
+    // Microsoft Store installations are 100% managed by the Store; never make
+    // external update network requests in Store mode.
+    if channel == InstallChannel::MsixStore {
+        return Ok(UpdateInfo {
+            current_version: build_info::VERSION.to_string(),
+            latest_version: build_info::VERSION.to_string(),
+            available: false,
+            release_name: format!("Detergo {}", build_info::VERSION),
+            release_url: FALLBACK_RELEASE_URL.to_string(),
+            notes: String::new(),
+            published_at: String::new(),
+            assets: Vec::new(),
+            install_channel: InstallChannel::MsixStore,
+            managed_by_store: true,
+            recommended_asset: None,
+            source: "microsoft-store".to_string(),
+        });
+    }
 
     // 1. Primary: Static CDN manifest (0 API rate limit, includes SHA-256 digests).
     let cdn_client = reqwest::Client::builder()
@@ -262,6 +282,13 @@ pub async fn download_and_verify_update(
 
     let signature_status = verify_authenticode_signature(&final_path);
 
+    // For NSIS installer builds, stage the verified package for "Install on Quit"
+    // so if the user closes the app later without clicking "Run installer" now,
+    // the update launches cleanly on exit.
+    if detect_install_channel() == InstallChannel::Installer {
+        set_pending_update_on_quit(Some(final_path.clone()));
+    }
+
     Ok(DownloadedUpdate {
         path: final_path.to_string_lossy().to_string(),
         file_name: safe_name,
@@ -275,10 +302,18 @@ pub async fn download_and_verify_update(
 /// `%TEMP%\detergo-updates\` when the user explicitly clicks "Launch installer".
 #[tauri::command]
 pub fn launch_downloaded_update(path: String) -> Result<(), AppError> {
-    if detect_install_channel() == InstallChannel::MsixStore {
-        return Err(AppError::Blocked(
-            "Microsoft Store manages updates for this installation.".to_string(),
-        ));
+    match detect_install_channel() {
+        InstallChannel::MsixStore => {
+            return Err(AppError::Blocked(
+                "Microsoft Store manages updates for this installation.".to_string(),
+            ));
+        }
+        InstallChannel::Portable => {
+            return Err(AppError::Blocked(
+                "Portable builds do not run Setup installers in-place.".to_string(),
+            ));
+        }
+        InstallChannel::Installer => {}
     }
 
     let staging = fs::canonicalize(update_staging_dir()).map_err(|_| {
@@ -305,7 +340,26 @@ pub fn launch_downloaded_update(path: String) -> Result<(), AppError> {
         ));
     }
 
+    // Clear the on-quit slot so it is not launched a second time when the app exits.
+    set_pending_update_on_quit(None);
     launch_file_platform(&target)
+}
+
+/// Launches a staged update installer on application exit if it still resides
+/// inside `%TEMP%\detergo-updates\`.
+pub fn launch_staged_update_on_quit(target: &std::path::Path) {
+    if detect_install_channel() != InstallChannel::Installer {
+        return;
+    }
+    let Ok(staging) = fs::canonicalize(update_staging_dir()) else {
+        return;
+    };
+    let Ok(canonical) = fs::canonicalize(target) else {
+        return;
+    };
+    if canonical.starts_with(&staging) && canonical.is_file() {
+        let _ = launch_file_platform(&canonical);
+    }
 }
 
 #[cfg(windows)]

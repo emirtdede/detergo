@@ -1298,3 +1298,45 @@ fn incremental_plan_prunes_stale_slices_and_preserves_target_dir() {
         "parent target/ directory must remain intact"
     );
 }
+
+#[test]
+fn protected_descendant_blocks_whole_parent_deletion_while_allowing_sibling() {
+    let temp = tempfile::tempdir().unwrap();
+    let next = temp.path().join("app/.next");
+    let cache = next.join("cache");
+    let other = temp.path().join("app/dist");
+    fs::create_dir_all(&cache).unwrap();
+    fs::create_dir_all(&other).unwrap();
+    fs::write(cache.join("data.bin"), vec![b'x'; 512]).unwrap();
+    fs::write(other.join("bundle.js"), vec![b'y'; 512]).unwrap();
+
+    let session = make_session(
+        temp.path(),
+        vec![
+            target("t-parent", next.clone(), "js.next", SafetyClass::Regenerate),
+            target("t-child", cache.clone(), "js.next_cache", SafetyClass::Keep),
+            target("t-other", other.clone(), "js.dist", SafetyClass::Regenerate),
+        ],
+    );
+
+    let plan = build_plan(
+        &session,
+        &["t-parent".into(), "t-child".into(), "t-other".into()],
+        DeleteMode::Permanent,
+        &catalog(),
+        &policy(),
+    )
+    .unwrap();
+
+    let parent = plan
+        .items
+        .iter()
+        .find(|i| i.target_id == "t-parent")
+        .unwrap();
+    assert!(
+        !parent.eligible,
+        "parent containing a protected descendant target must be blocked"
+    );
+    assert_eq!(parent.blocked_code.as_deref(), Some("PROTECTED"));
+    assert_eq!(plan.eligible_count, 1);
+}

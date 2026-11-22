@@ -233,3 +233,20 @@ fn sanitizes_update_filenames_and_cleans_part_files() {
     assert!(!part.exists());
     assert!(keep.exists());
 }
+
+#[test]
+fn stages_and_consumes_pending_update_on_quit_once() {
+    use crate::updates::{set_pending_update_on_quit, take_pending_update_on_quit};
+    use std::path::PathBuf;
+
+    set_pending_update_on_quit(None);
+    assert!(take_pending_update_on_quit().is_none());
+
+    let sample = PathBuf::from(r"C:\Temp\detergo-updates\Detergo-1.2.0-x64-Setup.exe");
+    set_pending_update_on_quit(Some(sample.clone()));
+    assert_eq!(take_pending_update_on_quit(), Some(sample));
+    assert!(
+        take_pending_update_on_quit().is_none(),
+        "must consume on quit so installer never launches twice"
+    );
+}

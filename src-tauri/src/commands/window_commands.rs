@@ -57,6 +57,10 @@ pub async fn quit_app(app: AppHandle, state: State<'_, AppState>) -> Result<(), 
         tokio::time::sleep(QUIT_CLEANUP_POLL).await;
     }
 
+    if let Some(staged_installer) = crate::updates::take_pending_update_on_quit() {
+        crate::commands::update_commands::launch_staged_update_on_quit(&staged_installer);
+    }
+
     app.exit(0);
     Ok(())
 }

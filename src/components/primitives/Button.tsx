@@ -5,6 +5,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: "primary" | "secondary" | "danger" | "danger-outline" | "ghost";
   size?: "sm" | "md" | "lg";
   icon?: React.ReactNode;
+  iconRight?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -12,6 +13,7 @@ export const Button: React.FC<ButtonProps> = ({
   variant = "secondary",
   size = "md",
   icon,
+  iconRight,
   children,
   className = "",
   disabled,
@@ -25,7 +27,8 @@ export const Button: React.FC<ButtonProps> = ({
       {...props}
     >
       {icon && <span className="btn-icon">{icon}</span>}
-      <span>{children}</span>
+      <span className="btn-label">{children}</span>
+      {iconRight && <span className="btn-icon">{iconRight}</span>}
     </button>
   );
 };

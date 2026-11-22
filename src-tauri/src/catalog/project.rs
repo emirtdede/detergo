@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -30,6 +30,7 @@ fn default_true() -> bool {
 pub struct ProjectResolver {
     markers: Vec<String>,
     cache: HashMap<PathBuf, Option<ProjectInfo>>,
+    workspace_cache: HashMap<PathBuf, (Option<PathBuf>, Option<String>)>,
     /// Never resolve a project above the scan root. Prevents a stray
     /// `package.json` in an unrelated ancestor (e.g. the user profile) from
     /// lending evidence to a folder outside the scan.
@@ -76,6 +77,7 @@ impl ProjectResolver {
         Self {
             markers: all,
             cache: HashMap::new(),
+            workspace_cache: HashMap::new(),
             boundary: None,
         }
     }
@@ -83,6 +85,7 @@ impl ProjectResolver {
     pub fn set_boundary(&mut self, boundary: &Path) {
         self.boundary = Some(boundary.to_path_buf());
         self.cache.clear();
+        self.workspace_cache.clear();
     }
 
     fn at_boundary(&self, dir: &Path) -> bool {
@@ -115,7 +118,14 @@ impl ProjectResolver {
             let markers = find_matching_markers(candidate, &self.markers);
             if !markers.is_empty() {
                 let (workspace_root, workspace_kind) =
-                    find_workspace_root(candidate, self.boundary.as_deref());
+                    if let Some(cached_ws) = self.workspace_cache.get(candidate) {
+                        cached_ws.clone()
+                    } else {
+                        let found = find_workspace_root(candidate, self.boundary.as_deref());
+                        self.workspace_cache
+                            .insert(candidate.to_path_buf(), found.clone());
+                        found
+                    };
                 let detected_name = project_name(candidate);
                 let root_project_root = workspace_root
                     .clone()
@@ -170,17 +180,38 @@ pub fn normalized_key(path: &Path) -> String {
     s.to_lowercase()
 }
 
-/// Checks every configured project marker against `dir` in a single `read_dir`
-/// pass instead of issuing dozens of separate `exists` + `read_dir` syscalls.
+/// Checks every configured project marker against `dir` in a single directory
+/// enumeration pass (`FindFirstFileExW` on Windows, `read_dir` on Unix) using
+/// an O(1) HashSet for exact names instead of issuing dozens of separate
+/// `exists` + `read_dir` syscalls.
 fn find_matching_markers(dir: &Path, markers: &[String]) -> Vec<String> {
-    let Ok(entries) = fs::read_dir(dir) else {
-        return Vec::new();
-    };
-    let mut names: Vec<String> = Vec::new();
-    for entry in entries.flatten() {
-        names.push(entry.file_name().to_string_lossy().to_lowercase());
+    let mut exact_names: HashSet<String> = HashSet::new();
+    let mut name_list: Vec<String> = Vec::new();
+
+    #[cfg(windows)]
+    {
+        let Ok(entries) = crate::platform::windows::fast_walk::read_dir_fast(dir) else {
+            return Vec::new();
+        };
+        for entry in entries {
+            let lower = entry.name.to_string_lossy().to_lowercase();
+            exact_names.insert(lower.clone());
+            name_list.push(lower);
+        }
     }
-    if names.is_empty() {
+    #[cfg(not(windows))]
+    {
+        let Ok(entries) = fs::read_dir(dir) else {
+            return Vec::new();
+        };
+        for entry in entries.flatten() {
+            let lower = entry.file_name().to_string_lossy().to_lowercase();
+            exact_names.insert(lower.clone());
+            name_list.push(lower);
+        }
+    }
+
+    if exact_names.is_empty() {
         return Vec::new();
     }
 
@@ -194,9 +225,9 @@ fn find_matching_markers(dir: &Path, markers: &[String]) -> Vec<String> {
         }
         let lower = marker.to_lowercase();
         let hit = if lower.contains('*') {
-            names.iter().any(|name| pattern_matches(&lower, name))
+            name_list.iter().any(|name| pattern_matches(&lower, name))
         } else {
-            names.iter().any(|name| name == &lower)
+            exact_names.contains(&lower)
         };
         if hit {
             matched.push(marker.clone());

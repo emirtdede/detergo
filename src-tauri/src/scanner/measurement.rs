@@ -1,5 +1,6 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use tokio::task::JoinSet;
@@ -9,6 +10,48 @@ use crate::catalog::TargetKind;
 use crate::platform::{facts, FileIdentity};
 use crate::scanner::cancellation::CancellationToken;
 use crate::scanner::models::{ItemStatus, MeasurementUpdate, ScanProgress};
+
+const HARDLINK_SHARDS: usize = 16;
+
+/// Session-wide hardlink tracker that deduplicates physical disk allocations
+/// across disjoint sibling targets (for example multiple `pnpm` project
+/// `node_modules` directories hardlinked to the same global `.pnpm-store`
+/// inodes) while allowing nested parent/child targets (which share a
+/// `group_id`) to measure their own subtree normally for `own_bytes()`.
+pub struct SessionHardlinkTracker {
+    shards: [Mutex<HashMap<u64, u64>>; HARDLINK_SHARDS],
+}
+
+impl Default for SessionHardlinkTracker {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl SessionHardlinkTracker {
+    pub fn new() -> Self {
+        Self {
+            shards: std::array::from_fn(|_| Mutex::new(HashMap::new())),
+        }
+    }
+
+    #[inline]
+    pub fn claim(&self, file_id: u64, group_id: u64) -> bool {
+        if file_id == 0 {
+            return true;
+        }
+        let idx =
+            ((file_id.wrapping_mul(0x9E37_79B9_7F4A_7C15)) >> 60) as usize & (HARDLINK_SHARDS - 1);
+        let mut map = self.shards[idx].lock().unwrap_or_else(|e| e.into_inner());
+        match map.entry(file_id) {
+            std::collections::hash_map::Entry::Vacant(v) => {
+                v.insert(group_id);
+                true
+            }
+            std::collections::hash_map::Entry::Occupied(o) => *o.get() == group_id,
+        }
+    }
+}
 
 #[cfg(windows)]
 fn entry_is_reparse_point(entry: &walkdir::DirEntry) -> bool {
@@ -84,7 +127,7 @@ pub fn measure_path_with_deadline(
     let workers = std::thread::available_parallelism()
         .map(|n| n.get().clamp(2, 4))
         .unwrap_or(2);
-    measure_path_inner(path, kind, token, deadline, workers)
+    measure_path_inner(path, kind, token, deadline, workers, None)
 }
 
 fn measure_path_inner(
@@ -93,6 +136,7 @@ fn measure_path_inner(
     token: &CancellationToken,
     deadline: Option<Instant>,
     max_workers: usize,
+    session_tracker: Option<(&SessionHardlinkTracker, u64)>,
 ) -> Option<PathSize> {
     if !path.exists() {
         return None;
@@ -124,8 +168,10 @@ fn measure_path_inner(
     // measured and hardlink-deduplicated without opening a handle per file.
     #[cfg(windows)]
     {
-        use crate::platform::windows::fast_walk::{measure_dir_fast, FastMeasureError};
-        match measure_dir_fast(path, token, deadline, max_workers) {
+        use crate::platform::windows::fast_walk::{
+            measure_dir_fast_with_tracker, FastMeasureError,
+        };
+        match measure_dir_fast_with_tracker(path, token, deadline, max_workers, session_tracker) {
             Ok(size) => return Some(size),
             Err(FastMeasureError::CancelledOrExpired) => return None,
             Err(FastMeasureError::Unsupported) => {
@@ -164,7 +210,15 @@ fn measure_path_inner(
         match facts(entry.path()) {
             Some(f) => {
                 logical = logical.saturating_add(f.logical_bytes);
-                if f.link_count > 1 && !seen.insert(f.identity) {
+                let first_in_target = f.link_count <= 1 || seen.insert(f.identity);
+                let first_in_session = first_in_target
+                    && (f.link_count <= 1
+                        || session_tracker
+                            .map(|(tracker, group_id)| {
+                                tracker.claim(f.identity.file_index, group_id)
+                            })
+                            .unwrap_or(true));
+                if !first_in_session {
                     dedup = dedup.saturating_add(f.allocated_bytes);
                     continue;
                 }
@@ -246,18 +300,55 @@ impl MeasurementEngine {
         let deadline = self.deadline;
         let concurrency = self.concurrency_limit.max(1);
         let mut stop = MeasurementStop::Completed;
+        let tracker = Arc::new(SessionHardlinkTracker::new());
+
+        // Assign a shared `group_id` to any parent/child target pair so nested
+        // rules (e.g. `.next` and `.next/cache`) both measure their own tree
+        // while disjoint sibling targets (e.g. two `pnpm` project `node_modules`
+        // hardlinked to the same `.pnpm-store`) get distinct `group_id`s and
+        // deduplicate shared physical inodes across the scan session.
+        let mut norm_by_len: Vec<(String, u64)> = entries
+            .iter()
+            .enumerate()
+            .map(|(idx, (_, p, _))| {
+                (
+                    crate::safety::path_guard::normalize_key(p),
+                    (idx as u64) + 1,
+                )
+            })
+            .collect();
+        norm_by_len.sort_by_key(|(k, _)| k.len());
+
+        let tagged_entries: Vec<(String, PathBuf, TargetKind, u64)> = entries
+            .into_iter()
+            .enumerate()
+            .map(|(idx, (id, path, kind))| {
+                let key = crate::safety::path_guard::normalize_key(&path);
+                let group_id = norm_by_len
+                    .iter()
+                    .find(|(cand_key, _)| {
+                        cand_key.len() < key.len()
+                            && crate::safety::path_guard::is_within(&key, cand_key)
+                    })
+                    .map(|(_, gid)| *gid)
+                    .unwrap_or((idx as u64) + 1);
+                (id, path, kind, group_id)
+            })
+            .collect();
 
         // Streaming bounded JoinSet: at most `concurrency` measurement tasks
         // exist in memory at any time, and there is no intermediate bounded
         // channel that could deadlock when `entries.len() > channel_cap`.
         let mut join_set: JoinSet<Option<MeasurementUpdate>> = JoinSet::new();
-        let mut pending = entries.into_iter();
+        let mut pending = tagged_entries.into_iter();
 
         let spawn_one = |set: &mut JoinSet<Option<MeasurementUpdate>>,
                          id: String,
                          path: PathBuf,
                          kind: TargetKind,
-                         tok: CancellationToken| {
+                         group_id: u64,
+                         tok: CancellationToken,
+                         trk: Arc<SessionHardlinkTracker>| {
             set.spawn_blocking(move || {
                 if tok.is_cancelled() || past_deadline(deadline) {
                     return None;
@@ -265,7 +356,8 @@ impl MeasurementEngine {
                 // MeasurementEngine already runs targets in parallel across
                 // `concurrency` blocking tasks, so keep each target's fast walk
                 // single-threaded to avoid nested thread oversubscription.
-                let measured = measure_path_inner(&path, kind, &tok, deadline, 1);
+                let measured =
+                    measure_path_inner(&path, kind, &tok, deadline, 1, Some((&trk, group_id)));
                 if tok.is_cancelled() || past_deadline(deadline) {
                     return None;
                 }
@@ -309,7 +401,15 @@ impl MeasurementEngine {
                 break;
             }
             match pending.next() {
-                Some((id, path, kind)) => spawn_one(&mut join_set, id, path, kind, token.clone()),
+                Some((id, path, kind, group_id)) => spawn_one(
+                    &mut join_set,
+                    id,
+                    path,
+                    kind,
+                    group_id,
+                    token.clone(),
+                    tracker.clone(),
+                ),
                 None => break,
             }
         }
@@ -354,8 +454,16 @@ impl MeasurementEngine {
                 break;
             }
 
-            if let Some((id, path, kind)) = pending.next() {
-                spawn_one(&mut join_set, id, path, kind, token.clone());
+            if let Some((id, path, kind, group_id)) = pending.next() {
+                spawn_one(
+                    &mut join_set,
+                    id,
+                    path,
+                    kind,
+                    group_id,
+                    token.clone(),
+                    tracker.clone(),
+                );
             }
         }
 

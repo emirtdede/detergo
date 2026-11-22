@@ -701,7 +701,7 @@ export const EN: UIText = {
     navTitle: "On this page",
     navOverview: "Application",
     navCatalog: "Rule catalog",
-    navHealth: "Updates & health",
+    navHealth: "Releases",
     navContacts: "Contact",
     navLegal: "Legal",
     healthTitle: "System health & storage",

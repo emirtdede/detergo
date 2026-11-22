@@ -266,3 +266,36 @@ fn is_in_use_detects_exclusive_file_locks_and_locked_dir_children() {
     assert_eq!(crate::platform::is_in_use(&locked_file), Some(false));
     assert_eq!(crate::platform::is_in_use(&dir), Some(false));
 }
+
+#[cfg(windows)]
+#[test]
+fn is_in_use_prioritizes_locked_binaries_behind_many_unlocked_text_files() {
+    use std::os::windows::fs::OpenOptionsExt;
+
+    let temp = tempfile::tempdir().unwrap();
+    let dir = temp.path().join("node_modules");
+    fs::create_dir_all(&dir).unwrap();
+
+    // Create 50 unlocked `.js` files that sort alphabetically before `z_engine.exe`.
+    for idx in 0..50 {
+        fs::write(dir.join(format!("a_{idx:03}.js")), b"export default 1;").unwrap();
+    }
+    let locked_bin = dir.join("z_engine.exe");
+    fs::write(&locked_bin, b"MZ-binary").unwrap();
+
+    let handle = fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .share_mode(1)
+        .open(&locked_bin)
+        .unwrap();
+
+    assert_eq!(
+        crate::platform::is_in_use(&dir),
+        Some(true),
+        "priority lock probing must detect locked .exe/.dll/.node files even behind many .js files"
+    );
+
+    drop(handle);
+    assert_eq!(crate::platform::is_in_use(&dir), Some(false));
+}

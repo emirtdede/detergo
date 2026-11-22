@@ -81,23 +81,22 @@ impl Default for RecycleBinSession {
     }
 }
 
-/// Waits up to three seconds for the recycle operation to disappear from the
-/// filesystem. A path that is still present after that is a real failure.
+/// Waits up to ~550 ms with an exponential backoff for the recycle operation to
+/// disappear from the filesystem.
 ///
-/// `IFileOperation::PerformOperations` can return before the shell has fully
-/// released its handle on a very large tree; polling for three seconds avoids
-/// reporting a successful recycle as `VERIFY_FAILED`. The wait is per item and
-/// only happens while the path still exists, so a failed/locked item is not
-/// penalised more than the budget itself.
+/// `IFileOperation::PerformOperations` is synchronous, but Windows Explorer can
+/// hold a brief finalization handle on large trees. Starting at 5 ms and
+/// capping total wait at ~550 ms avoids 3-second UI stalls when an item could
+/// not be removed while still giving asynchronous handle release time to finish.
 fn wait_until_removed(path: &Path) -> bool {
-    const ATTEMPTS: u32 = 60;
-    const DELAY: std::time::Duration = std::time::Duration::from_millis(50);
-    for attempt in 0..ATTEMPTS {
+    const DELAYS_MS: [u64; 9] = [5, 10, 20, 35, 50, 75, 100, 100, 150];
+    if !path.exists() {
+        return true;
+    }
+    for delay_ms in DELAYS_MS {
+        std::thread::sleep(std::time::Duration::from_millis(delay_ms));
         if !path.exists() {
             return true;
-        }
-        if attempt + 1 < ATTEMPTS {
-            std::thread::sleep(DELAY);
         }
     }
     !path.exists()
@@ -214,6 +213,42 @@ impl Drop for StaRecycleWorker {
     }
 }
 
+/// Attempts to resolve an 8.3 short path (`GetShortPathNameW`) for a target
+/// exceeding the legacy 259-character Windows Shell `MAX_PATH` limit, verifying
+/// that the resulting short path refers to the exact same `FileIdentity` and
+/// fits within 259 UTF-16 code units.
+#[cfg(windows)]
+fn resolve_short_shell_path(target: &Path) -> Option<String> {
+    use std::ffi::OsString;
+    use std::os::windows::ffi::OsStringExt;
+    use windows::core::PCWSTR;
+    use windows::Win32::Storage::FileSystem::GetShortPathNameW;
+
+    let verbatim = crate::platform::windows::wide_verbatim(target);
+    let needed = unsafe { GetShortPathNameW(PCWSTR(verbatim.as_ptr()), None) };
+    if needed == 0 {
+        return None;
+    }
+    let mut buf = vec![0u16; (needed as usize) + 2];
+    let written = unsafe { GetShortPathNameW(PCWSTR(verbatim.as_ptr()), Some(&mut buf)) };
+    if written == 0 || (written as usize) >= buf.len() {
+        return None;
+    }
+    let short_os = OsString::from_wide(&buf[..written as usize]);
+    let short_path = PathBuf::from(&short_os);
+    let stripped = shell_path(&short_path);
+    if stripped.encode_utf16().count() > 259 {
+        return None;
+    }
+    // Verify the 8.3 path points to the exact same NTFS file/directory object.
+    let expected_id = crate::platform::identity(target)?;
+    let actual_id = crate::platform::identity(Path::new(&stripped))?;
+    if expected_id != actual_id {
+        return None;
+    }
+    Some(stripped)
+}
+
 #[cfg(windows)]
 fn perform_win32_recycle(target: &Path) -> Result<(), AppError> {
     use windows::core::{GUID, PCWSTR};
@@ -250,7 +285,11 @@ fn perform_win32_recycle(target: &Path) -> Result<(), AppError> {
     }
 
     let display = target.display().to_string();
-    let shell_target = shell_path(target);
+    let shell_target = if path_too_long(target) {
+        resolve_short_shell_path(target).unwrap_or_else(|| shell_path(target))
+    } else {
+        shell_path(target)
+    };
     let wide: Vec<u16> = shell_target
         .encode_utf16()
         .chain(std::iter::once(0))
