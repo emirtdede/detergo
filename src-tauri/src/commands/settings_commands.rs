@@ -15,11 +15,11 @@ pub fn save_app_settings(
     app: tauri::AppHandle,
     state: State<'_, AppState>,
 ) -> Result<AppSettings, AppError> {
-    state.settings.save(&settings)?;
-    // Return what was actually persisted (migrated and clamped) so a caller
-    // cannot keep showing values the backend silently normalised.
+    // Normalize and clear transient recovery flags once before persisting so
+    // the on-disk JSON, the tray menu, and the returned struct are identical.
     settings.recovered_from_corrupt = false;
     settings.migrate();
+    state.settings.save(&settings)?;
     // The tray menu is built at startup; rebuild its labels so a language
     // change is reflected without restarting the application.
     crate::refresh_tray_labels(&app, settings.language.as_deref());

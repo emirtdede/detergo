@@ -377,6 +377,28 @@ fn status_message(status: reqwest::StatusCode) -> String {
     }
 }
 
+fn build_webhook_status_result(
+    status: reqwest::StatusCode,
+    started: std::time::Instant,
+    exhausted_attempts: Option<usize>,
+) -> WebhookTestResult {
+    let latency_ms = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
+    let message = match exhausted_attempts {
+        Some(attempts) => format!(
+            "{} (gave up after {} attempts)",
+            status_message(status),
+            attempts
+        ),
+        None => status_message(status),
+    };
+    WebhookTestResult {
+        ok: exhausted_attempts.is_none() && status.is_success(),
+        status: status.as_u16(),
+        latency_ms,
+        message,
+    }
+}
+
 async fn post_json(
     client: reqwest::Client,
     url: reqwest::Url,
@@ -411,13 +433,7 @@ async fn post_json(
         };
 
         if !is_retryable_status(status) {
-            let latency_ms = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
-            return Ok(WebhookTestResult {
-                ok: status.is_success(),
-                status: status.as_u16(),
-                latency_ms,
-                message: status_message(status),
-            });
+            return Ok(build_webhook_status_result(status, started, None));
         }
 
         if let Some(delay) = WEBHOOK_RETRY_DELAYS_MS.get(attempt) {
@@ -428,17 +444,11 @@ async fn post_json(
 
         // Retries exhausted: report the last status instead of a timeout so the
         // user can see *what* kept failing.
-        let latency_ms = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
-        return Ok(WebhookTestResult {
-            ok: false,
-            status: status.as_u16(),
-            latency_ms,
-            message: format!(
-                "{} (gave up after {} attempts)",
-                status_message(status),
-                attempt + 1
-            ),
-        });
+        return Ok(build_webhook_status_result(
+            status,
+            started,
+            Some(attempt + 1),
+        ));
     }
 }
 
@@ -658,13 +668,7 @@ fn post_blocking_json(
         };
 
         if !is_retryable_status(status) {
-            let latency_ms = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
-            return Ok(WebhookTestResult {
-                ok: status.is_success(),
-                status: status.as_u16(),
-                latency_ms,
-                message: status_message(status),
-            });
+            return Ok(build_webhook_status_result(status, started, None));
         }
 
         if let Some(delay) = WEBHOOK_RETRY_DELAYS_MS.get(attempt) {
@@ -673,17 +677,11 @@ fn post_blocking_json(
             continue;
         }
 
-        let latency_ms = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
-        return Ok(WebhookTestResult {
-            ok: false,
-            status: status.as_u16(),
-            latency_ms,
-            message: format!(
-                "{} (gave up after {} attempts)",
-                status_message(status),
-                attempt + 1
-            ),
-        });
+        return Ok(build_webhook_status_result(
+            status,
+            started,
+            Some(attempt + 1),
+        ));
     }
 }
 

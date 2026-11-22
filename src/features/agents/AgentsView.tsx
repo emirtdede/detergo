@@ -87,6 +87,9 @@ export const AgentsView: React.FC = () => {
   const pruneItems = useScanStore((s) => s.pruneItems);
 
   const [providers, setProviders] = useState<AgentProviderInfo[]>([]);
+  // Remembers display names returned by the backend so hidden provider pills
+  // always render their authoritative name even after being removed from `providers`.
+  const knownProviderNamesRef = useRef<Record<string, string>>({ ...BUILTIN_NAMES });
 
   const [loading, setLoading] = useState(false);
 
@@ -151,6 +154,9 @@ export const AgentsView: React.FC = () => {
 
         if (generation !== loadGenerationRef.current || unmountedRef.current) return;
 
+        for (const p of list) {
+          knownProviderNamesRef.current[p.id] = p.name;
+        }
         setProviders(list);
 
         if (!silent) useUiStore.getState().showToast(getUIText().agents.toastRefreshed, "info");
@@ -538,7 +544,7 @@ export const AgentsView: React.FC = () => {
                 onClick={() => setHidden(id, false)}
                 title={ui.agents.showHidden}
               >
-                {BUILTIN_NAMES[id] ?? id}
+                {knownProviderNamesRef.current[id] ?? BUILTIN_NAMES[id] ?? id}
               </button>
             ))}
           </div>

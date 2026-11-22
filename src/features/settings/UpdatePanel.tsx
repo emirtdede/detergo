@@ -269,7 +269,7 @@ export const UpdatePanel: React.FC<UpdatePanelProps> = ({ version, hideHeader = 
             {ui.updates.available(info.latestVersion)}
           </p>
 
-          {effectiveChannel === "installer" && recommended && (
+          {!isStoreManaged && recommended && (
             <div className="update-package-card">
               <div className="update-package-meta">
                 <span className="update-package-name">{recommended.name}</span>

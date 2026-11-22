@@ -625,25 +625,105 @@ pub fn specs_for(kind: &str) -> &'static [AgentTargetSpec] {
     }
 }
 
+/// Single authoritative catalog of built-in AI providers (`(id, display_name, default_note)`).
+pub const BUILTIN_PROVIDER_CATALOG: &[(&str, &str, Option<&str>)] = &[
+    (
+        "codex",
+        "OpenAI Codex",
+        Some("Sessions, worktrees, and SQLite diagnostics are preserved; plain text diagnostic logs can be reviewed when idle."),
+    ),
+    (
+        "claude-code",
+        "Claude Code",
+        Some("Conversations and file-history are preserved; only verified cache and task outputs can be cleaned."),
+    ),
+    (
+        "claude-desktop",
+        "Claude Desktop",
+        Some("MCP config, conversations, and credentials are preserved; Chromium/Electron caches and logs can be cleaned."),
+    ),
+    (
+        "antigravity",
+        "Google Antigravity",
+        Some("Brain, skills, and conversations are preserved; browser recordings and Electron caches can be cleaned when idle."),
+    ),
+    (
+        "opencode",
+        "OpenCode",
+        Some("Configuration and opencode.db are preserved; task outputs, logs, and build caches can be cleaned."),
+    ),
+    (
+        "t3code",
+        "T3 Code",
+        Some("User profile is preserved; GPU/Code Cache and obsolete installer remnants can be cleaned."),
+    ),
+    (
+        "bionic",
+        "Bionic",
+        Some("User settings are preserved; temporary Web/Code Cache and log files can be cleaned."),
+    ),
+    (
+        "cursor",
+        "Cursor",
+        Some("Settings and workspace chat history are preserved; GPU, Code Cache, VSIX, and web caches can be cleaned."),
+    ),
+    (
+        "windsurf",
+        "Windsurf",
+        Some("Cascade chat history and workspace storage are preserved; Electron, VSIX, and GPU caches can be cleaned."),
+    ),
+    (
+        "copilot",
+        "GitHub Copilot",
+        Some("Credentials and config are preserved; Copilot caches and logs can be cleaned."),
+    ),
+    (
+        "cline",
+        "Cline",
+        Some("Tasks, settings, and checkpoints are preserved; browser and tool caches can be reviewed."),
+    ),
+    (
+        "roo-code",
+        "Roo Code",
+        Some("Tasks, settings, and checkpoints are preserved; browser and tool caches can be reviewed."),
+    ),
+    (
+        "aider",
+        "Aider",
+        Some("Config is preserved; repo-map caches and logs can be cleaned."),
+    ),
+    (
+        "continue",
+        "Continue",
+        Some("Config and sessions are preserved; index cache and logs can be cleaned."),
+    ),
+    (
+        "zed",
+        "Zed",
+        Some("Databases, conversations, prompts, and extensions are preserved; language-server and extension runtime caches can be reviewed."),
+    ),
+    (
+        "ollama",
+        "Ollama",
+        Some("Downloaded local models and identities are preserved read-only; temporary logs and update remnants can be cleaned."),
+    ),
+    (
+        "lm-studio",
+        "LM Studio",
+        Some("Local GGUF/MLX models, conversations, and credentials are preserved read-only; temp files, updates, and logs can be cleaned."),
+    ),
+];
+
+pub fn is_builtin_provider(provider: &str) -> bool {
+    BUILTIN_PROVIDER_CATALOG
+        .iter()
+        .any(|(id, _, _)| *id == provider)
+}
+
 pub fn provider_display_name(provider: &str) -> &'static str {
-    match provider {
-        "codex" => "OpenAI Codex",
-        "claude-code" => "Claude Code",
-        "antigravity" => "Google Antigravity",
-        "opencode" => "OpenCode",
-        "t3code" => "T3 Code",
-        "bionic" => "Bionic",
-        "cursor" => "Cursor",
-        "windsurf" => "Windsurf",
-        "ollama" => "Ollama",
-        "claude-desktop" => "Claude Desktop",
-        "copilot" => "GitHub Copilot",
-        "cline" => "Cline",
-        "roo-code" => "Roo Code",
-        "aider" => "Aider",
-        "continue" => "Continue",
-        "zed" => "Zed",
-        "lm-studio" => "LM Studio",
-        _ => "Unknown provider",
-    }
+    BUILTIN_PROVIDER_CATALOG
+        .iter()
+        .find(|(id, _, _)| *id == provider)
+        .map(|(_, name, _)| *name)
+        .unwrap_or("Unknown provider")
 }

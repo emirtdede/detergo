@@ -353,10 +353,10 @@ pub fn open_url(url: String) -> Result<(), AppError> {
             )
         };
         if (code.0 as isize) <= 32 {
-            return Err(AppError::Unknown(format!(
-                "Could not open URL (ShellExecuteW code {})",
-                code.0 as isize
-            )));
+            crate::logging::warn("ShellExecuteW failed to open URL", code.0 as isize);
+            return Err(AppError::Unknown(
+                "Could not open the requested link in the default application.".to_string(),
+            ));
         }
     }
     #[cfg(target_os = "macos")]

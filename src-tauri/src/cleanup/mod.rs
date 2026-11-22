@@ -37,6 +37,8 @@ pub struct CleanupPolicy {
     pub record_history: bool,
     /// User-defined AI tools. Their roots are reported as `KEEP` only.
     pub custom_agent_providers: Vec<crate::settings::CustomAgentProvider>,
+    /// Built-in AI providers hidden by the user in Settings / Agents view.
+    pub hidden_builtin_providers: Vec<String>,
 }
 
 impl Default for CleanupPolicy {
@@ -48,6 +50,7 @@ impl Default for CleanupPolicy {
             min_size_bytes: 0,
             record_history: true,
             custom_agent_providers: Vec::new(),
+            hidden_builtin_providers: Vec::new(),
         }
     }
 }
@@ -61,6 +64,7 @@ impl From<&crate::settings::AppSettings> for CleanupPolicy {
             min_size_bytes: settings.min_size_bytes,
             record_history: settings.history_enabled,
             custom_agent_providers: settings.custom_agent_providers.clone(),
+            hidden_builtin_providers: settings.hidden_builtin_providers.clone(),
         }
     }
 }

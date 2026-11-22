@@ -321,18 +321,30 @@ export function useScanController() {
           flushPendingWrites();
           const error = toAppError(err);
           useScanStore.getState().failScan(error);
-          // A failed walk must not leave the parallel measurement running
-          // unattended; the user can retry the combined action. Bounded like the
-          // stop path so a silent backend cannot keep the start slot held.
-          if (measureRun) {
-            await withTimeout(
-              abortCombinedCacheMeasure(),
-              CANCEL_SETTLE_TIMEOUT_MS,
-              "abort combined cache measure",
-            ).catch((err) => {
-              log.warn("Combined cache measurement could not be aborted", err);
-            });
-          }
+          // A failed walk must not leave the parallel measurement or system
+          // scan running unattended; the user can retry the combined action.
+          // Bounded like the stop path so a silent backend cannot keep the
+          // start slot held.
+          await Promise.all([
+            measureRun
+              ? withTimeout(
+                  abortCombinedCacheMeasure(),
+                  CANCEL_SETTLE_TIMEOUT_MS,
+                  "abort combined cache measure",
+                ).catch((abortErr) => {
+                  log.warn("Combined cache measurement could not be aborted", abortErr);
+                })
+              : Promise.resolve(),
+            systemRun
+              ? withTimeout(
+                  useSystemStore.getState().cancel(),
+                  CANCEL_SETTLE_TIMEOUT_MS,
+                  "abort combined system scan",
+                ).catch((abortErr) => {
+                  log.warn("Combined system scan could not be aborted", abortErr);
+                })
+              : Promise.resolve(),
+          ]);
           if (error.code !== "ScanCancelled") {
             useUiStore.getState().showToast(localizeAppError(error), "error", 6000);
           }
@@ -441,17 +453,22 @@ export function useScanController() {
 
       // Only caches and/or C: system cleaner selected - run without starting a
       // filesystem project/agent walk.
+      if (!useScanStore.getState().acquireScanStart()) {
+        return false;
+      }
       useScanTargetsStore.getState().setActiveRun(targets, false);
       if (hasCaches || hasSystem) {
         useScanStore.getState().setCombinedActive(true);
       }
       try {
+        useScanStore.getState().releaseScanStart();
         const tasks: Promise<void>[] = [];
         if (hasCaches) tasks.push(startCombinedCacheMeasure());
         if (hasSystem) tasks.push(useSystemStore.getState().load());
-        await Promise.allSettled(tasks);
-        return true;
+        const results = await Promise.allSettled(tasks);
+        return results.every((r) => r.status === "fulfilled");
       } finally {
+        useScanStore.getState().releaseScanStart();
         useScanStore.getState().setCombinedActive(false);
         useScanTargetsStore.getState().clearActiveRun();
       }

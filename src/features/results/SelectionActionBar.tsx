@@ -14,15 +14,18 @@ import { effectiveSelectedIds } from "@/features/items/selection-helpers";
 import { formatBytes } from "@/lib/formatters";
 import { formatSavedAt } from "@/lib/format/date";
 import { ownBytesById } from "@/lib/item-totals";
-import { DeleteMode } from "@/types";
+import { CleanupItem, DeleteMode } from "@/types";
 import "./results.css";
+
+const EMPTY_ITEMS_BY_ID: Record<string, CleanupItem> = {};
 
 export const SelectionActionBar: React.FC = () => {
   const ui = useUIText();
   const language = usePreferencesStore((s) => s.language);
   const selectedIds = useSelectionStore((s) => s.selectedIds);
+  const hasSelection = selectedIds.size > 0;
   const clearSelection = useSelectionStore((s) => s.clearSelection);
-  const itemsById = useScanStore((s) => s.itemsById);
+  const itemsById = useScanStore((s) => (hasSelection ? s.itemsById : EMPTY_ITEMS_BY_ID));
   const restored = useScanStore((s) => s.restored);
   const staleAcknowledged = useScanStore((s) => s.staleAcknowledged);
   const acknowledgeStale = useScanStore((s) => s.acknowledgeStale);

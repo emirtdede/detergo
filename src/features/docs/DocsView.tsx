@@ -121,7 +121,7 @@ export const DocsView: React.FC = () => {
     } finally {
       setCliPathBusy(false);
     }
-  }, [isTr, showToast, ui]);
+  }, [showToast, ui]);
 
   const mcpCommand =
     cliEnv && (!cliEnv.inPath || !cliEnv.shimUpToDate) && cliEnv.executablePath

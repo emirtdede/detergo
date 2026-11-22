@@ -6,6 +6,11 @@ import path from "path";
 export default defineConfig({
   base: "./",
   plugins: [react()],
+  define: {
+    "import.meta.env.VITE_DEMO_HARNESS": JSON.stringify(
+      process.env.VITE_DEMO_HARNESS === "true" ? "true" : "false",
+    ),
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

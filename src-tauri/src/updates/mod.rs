@@ -50,13 +50,17 @@ pub use channel::{
 pub use sha256::{normalize_sha256, Sha256};
 
 /// Rate-limit-free GitHub Releases CDN manifest URL (primary).
-pub(crate) const RELEASES_MANIFEST_URL: &str =
-    "https://github.com/emirtdede/detergo/releases/latest/download/latest-release.json";
+pub(crate) const RELEASES_MANIFEST_URL: &str = concat!(
+    "https://github.com/emirtdede/detergo",
+    "/releases/latest/download/latest-release.json"
+);
 /// Fallback REST API endpoint for releases published before `latest-release.json`.
-pub(crate) const RELEASES_API: &str =
-    "https://api.github.com/repos/emirtdede/detergo/releases/latest";
+pub(crate) const RELEASES_API: &str = concat!(
+    "https://api.github.com/repos/emirtdede/detergo",
+    "/releases/latest"
+);
 pub(crate) const FALLBACK_RELEASE_URL: &str =
-    "https://github.com/emirtdede/detergo/releases/latest";
+    concat!("https://github.com/emirtdede/detergo", "/releases/latest");
 
 pub(crate) const REQUEST_TIMEOUT_SECS: u64 = 12;
 pub(crate) const DOWNLOAD_TIMEOUT_SECS: u64 = 180;

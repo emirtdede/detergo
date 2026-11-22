@@ -20,7 +20,7 @@ use crate::scanner::measurement::measure_path_with_deadline;
 use crate::scanner::models::{CleanupItem, ItemStatus, StoredTarget};
 use crate::settings::AppSettings;
 
-use agent_spec::{provider_display_name, specs_for};
+use agent_spec::{provider_display_name, specs_for, BUILTIN_PROVIDER_CATALOG};
 use root_locator::{locate_agent_roots, root_exists};
 
 #[cfg_attr(feature = "bindings", derive(specta::Type))]
@@ -49,76 +49,7 @@ pub fn list_agent_providers(settings: &AppSettings) -> Vec<AgentProviderInfo> {
     let roots = locate_agent_roots();
     let hidden = &settings.hidden_builtin_providers;
     let mut providers = Vec::new();
-    for (id, note) in [
-        (
-            "codex",
-            Some("Sessions, worktrees, and SQLite diagnostics are preserved; plain text diagnostic logs can be reviewed when idle."),
-        ),
-        (
-            "claude-code",
-            Some("Conversations and file-history are preserved; only verified cache and task outputs can be cleaned."),
-        ),
-        (
-            "claude-desktop",
-            Some("MCP config, conversations, and credentials are preserved; Chromium/Electron caches and logs can be cleaned."),
-        ),
-        (
-            "antigravity",
-            Some("Brain, skills, and conversations are preserved; browser recordings and Electron caches can be cleaned when idle."),
-        ),
-        (
-            "opencode",
-            Some("Configuration and opencode.db are preserved; task outputs, logs, and build caches can be cleaned."),
-        ),
-        (
-            "t3code",
-            Some("User profile is preserved; GPU/Code Cache and obsolete installer remnants can be cleaned."),
-        ),
-        (
-            "bionic",
-            Some("User settings are preserved; temporary Web/Code Cache and log files can be cleaned."),
-        ),
-        (
-            "cursor",
-            Some("Settings and workspace chat history are preserved; GPU, Code Cache, VSIX, and web caches can be cleaned."),
-        ),
-        (
-            "windsurf",
-            Some("Cascade chat history and workspace storage are preserved; Electron, VSIX, and GPU caches can be cleaned."),
-        ),
-        (
-            "copilot",
-            Some("Credentials and config are preserved; Copilot caches and logs can be cleaned."),
-        ),
-        (
-            "cline",
-            Some("Tasks, settings, and checkpoints are preserved; browser and tool caches can be reviewed."),
-        ),
-        (
-            "roo-code",
-            Some("Tasks, settings, and checkpoints are preserved; browser and tool caches can be reviewed."),
-        ),
-        (
-            "aider",
-            Some("Config is preserved; repo-map caches and logs can be cleaned."),
-        ),
-        (
-            "continue",
-            Some("Config and sessions are preserved; index cache and logs can be cleaned."),
-        ),
-        (
-            "zed",
-            Some("Databases, conversations, prompts, and extensions are preserved; language-server and extension runtime caches can be reviewed."),
-        ),
-        (
-            "ollama",
-            Some("Downloaded local models and identities are preserved read-only; temporary logs and update remnants can be cleaned."),
-        ),
-        (
-            "lm-studio",
-            Some("Local GGUF/MLX models, conversations, and credentials are preserved read-only; temp files, updates, and logs can be cleaned."),
-        ),
-    ] {
+    for &(id, display_name, note) in BUILTIN_PROVIDER_CATALOG {
         if hidden.iter().any(|h| h == id) {
             continue;
         }
@@ -140,7 +71,7 @@ pub fn list_agent_providers(settings: &AppSettings) -> Vec<AgentProviderInfo> {
             .collect();
         providers.push(AgentProviderInfo {
             id: id.to_string(),
-            name: provider_display_name(id).to_string(),
+            name: display_name.to_string(),
             installed: provider_roots.iter().any(|r| r.exists),
             roots: provider_roots,
             read_only: !has_cleanable_spec,
@@ -216,8 +147,7 @@ pub fn scan_agents_with_deadline(
     exclusions: &[String],
     shared_deadline: Instant,
 ) -> AgentScanOutcome {
-    let settings = crate::settings::SettingsRepository::new().load();
-    let hidden = &settings.hidden_builtin_providers;
+    let hidden = &policy.hidden_builtin_providers;
     let roots = locate_agent_roots();
     let excluded: std::collections::HashSet<String> = exclusions
         .iter()

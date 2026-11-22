@@ -2,20 +2,9 @@ use tauri::State;
 
 use crate::commands::AppState;
 use crate::error::AppError;
+use crate::providers::agent_spec::is_builtin_provider;
 use crate::providers::AgentProviderInfo;
 use crate::settings::{AppSettings, CustomAgentProvider};
-
-const BUILTIN_PROVIDERS: &[&str] = &[
-    "codex",
-    "claude-code",
-    "antigravity",
-    "opencode",
-    "t3code",
-    "bionic",
-    "cursor",
-    "windsurf",
-    "ollama",
-];
 
 /// Lists built-in providers (minus hidden ones) plus user-defined tools.
 #[tauri::command]
@@ -82,7 +71,7 @@ pub fn set_agent_provider_hidden(
     state: State<'_, AppState>,
 ) -> Result<AppSettings, AppError> {
     let id = id.trim().to_lowercase();
-    if !BUILTIN_PROVIDERS.contains(&id.as_str()) {
+    if !is_builtin_provider(&id) {
         return Err(AppError::InvalidPath(format!(
             "Unknown built-in AI provider: {}",
             id

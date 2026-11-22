@@ -7,6 +7,8 @@
 use serde::Serialize;
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+pub const REPOSITORY_URL: &str = "https://github.com/emirtdede/detergo";
+pub const REPOSITORY_API_URL: &str = "https://api.github.com/repos/emirtdede/detergo";
 pub const COMMIT: &str = env!("NC_BUILD_COMMIT");
 pub const COMMIT_SHORT: &str = env!("NC_BUILD_COMMIT_SHORT");
 pub const DIRTY: &str = env!("NC_BUILD_DIRTY");

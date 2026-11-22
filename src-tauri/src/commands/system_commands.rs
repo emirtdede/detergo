@@ -158,16 +158,14 @@ fn write_user_path_registry(new_path: &str) -> Result<(), AppError> {
         )
         .ok()
         {
-            return Err(AppError::Unknown(format!(
-                "Could not open HKCU\\Environment: {err}"
-            )));
+            crate::logging::warn("Could not open HKCU\\Environment for PATH update", &err);
+            return Err(AppError::Unknown("Could not update user PATH.".to_string()));
         }
         let status = RegSetValueExW(hkey, w!("Path"), 0, REG_EXPAND_SZ, Some(bytes));
         let _ = RegCloseKey(hkey);
         if let Err(err) = status.ok() {
-            return Err(AppError::Unknown(format!(
-                "Could not update user PATH: {err}"
-            )));
+            crate::logging::warn("RegSetValueExW(HKCU\\Environment\\Path) failed", &err);
+            return Err(AppError::Unknown("Could not update user PATH.".to_string()));
         }
 
         let env_wide: Vec<u16> = "Environment"

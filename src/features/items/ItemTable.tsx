@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { AlertTriangle, ChevronDown, ChevronUp, FolderOpen, Search } from "lucide-react";
 import { Checkbox } from "@/components/primitives/Checkbox";
@@ -32,6 +32,8 @@ import {
 } from "./table-utils";
 import { createTextCollator, normalizeSearchText } from "@/lib/search";
 import "./items.css";
+
+const EMPTY_ITEMS_BY_ID: Record<string, CleanupItem> = {};
 
 interface ItemTableProps {
   items: CleanupItem[];
@@ -106,7 +108,8 @@ export const ItemTable: React.FC<ItemTableProps> = ({
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [ageFilter, setAgeFilter] = useState<"all" | "7" | "30" | "90" | "180">("all");
   const selectedIds = useSelectionStore((s) => s.selectedIds);
-  const itemsById = useScanStore((s) => s.itemsById);
+  const hasSelection = selectedIds.size > 0;
+  const itemsById = useScanStore((s) => (hasSelection ? s.itemsById : EMPTY_ITEMS_BY_ID));
   const toggleSelection = useSelectionStore((s) => s.toggleSelection);
   const deselectMany = useSelectionStore((s) => s.deselectMany);
   const selectMany = useSelectionStore((s) => s.selectMany);
@@ -180,12 +183,34 @@ export const ItemTable: React.FC<ItemTableProps> = ({
     [sort, collator, language, backendRevision],
   );
 
+  // On massive result sets (>2,000 rows), defer filter/sort state transitions so
+  // filter chip and sort header clicks paint their active state in <16 ms while
+  // smaller tables and unit tests stay 100% synchronous.
+  const deferredFilterCriteria = useDeferredValue({
+    safetyFilter,
+    projectFilter,
+    categoryFilter,
+    ageFilter,
+    sort,
+  });
+  const activeCriteria =
+    sortableItems.length > 2000
+      ? deferredFilterCriteria
+      : { safetyFilter, projectFilter, categoryFilter, ageFilter, sort };
+
   const filtered = useMemo(() => {
-    const minAgeCutoffMs = ageFilter === "all" ? null : Date.now() - Number(ageFilter) * 86_400_000;
+    const {
+      safetyFilter: activeSafety,
+      projectFilter: activeProject,
+      categoryFilter: activeCategory,
+      ageFilter: activeAge,
+      sort: activeSort,
+    } = activeCriteria;
+    const minAgeCutoffMs = activeAge === "all" ? null : Date.now() - Number(activeAge) * 86_400_000;
     const matches = sortableItems.filter((item) => {
-      if (safetyFilter !== "all" && item.safetyClass !== safetyFilter) return false;
-      if (projectFilter !== "all" && (item.projectName ?? "") !== projectFilter) return false;
-      if (categoryFilter !== "all" && item.category !== categoryFilter) return false;
+      if (activeSafety !== "all" && item.safetyClass !== activeSafety) return false;
+      if (activeProject !== "all" && (item.projectName ?? "") !== activeProject) return false;
+      if (activeCategory !== "all" && item.category !== activeCategory) return false;
       if (minAgeCutoffMs !== null) {
         const mtime =
           typeof item.lastModifiedMs === "number"
@@ -199,20 +224,9 @@ export const ItemTable: React.FC<ItemTableProps> = ({
       return searchIndex?.get(item.id)?.includes(normalizedQuery) ?? false;
     });
 
-    const direction = sort.direction === "asc" ? 1 : -1;
+    const direction = activeSort.direction === "asc" ? 1 : -1;
     return matches.sort((a, b) => comparator(a, b) * direction);
-  }, [
-    sortableItems,
-    searchIndex,
-    hasQuery,
-    normalizedQuery,
-    safetyFilter,
-    projectFilter,
-    categoryFilter,
-    ageFilter,
-    sort,
-    comparator,
-  ]);
+  }, [sortableItems, searchIndex, hasQuery, normalizedQuery, activeCriteria, comparator]);
 
   // Selecting rows is always an explicit user action. `autoSelectable` stays
   // false for provider/agent targets (safe default), but filtering must not
