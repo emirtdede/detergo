@@ -89,6 +89,10 @@ scan(join(root, "src-tauri/src"), new Set([".rs"]), (line, rel) => {
 // only fails when that code path runs in the packaged app.
 const libSource = readFileSync(join(root, "src-tauri/src/lib.rs"), "utf8");
 const handlerBlock = libSource.match(/generate_handler!\[([\s\S]*?)\]/);
+const setupSource = existsSync(join(root, "setup-tauri/src/main.rs"))
+  ? readFileSync(join(root, "setup-tauri/src/main.rs"), "utf8")
+  : "";
+const setupHandlerBlock = setupSource.match(/generate_handler!\[([\s\S]*?)\]/);
 if (!handlerBlock) {
   violations.push({
     file: "src-tauri/src/lib.rs",
@@ -103,19 +107,28 @@ if (!handlerBlock) {
       .map((name) => name.trim())
       .filter(Boolean),
   );
+  const setupRegistered = new Set(
+    (setupHandlerBlock?.[1] ?? "")
+      .split(/[\s,]+/)
+      .map((name) => name.trim())
+      .filter(Boolean),
+  );
   for (const file of walk(join(root, "src"))) {
     if (![".ts", ".tsx"].includes(extname(file))) continue;
     const rel = relative(root, file).replaceAll("\\", "/");
     if (isTestFile(rel)) continue;
+    const isSetupModule = rel.startsWith("src/setup/");
+    const allowedSet = isSetupModule ? setupRegistered : registered;
+    const ownerFile = isSetupModule ? "setup-tauri/src/main.rs" : "src-tauri/src/lib.rs";
     const lines = readFileSync(file, "utf8").split(/\r?\n/);
     lines.forEach((line, index) => {
       for (const match of line.matchAll(/invoke(?:<[^>]*>)?\(\s*["'`]([a-z0-9_]+)["'`]/g)) {
-        if (!registered.has(match[1])) {
+        if (!allowedSet.has(match[1])) {
           violations.push({
             file: rel,
             line: index + 1,
             text: line.trim(),
-            reason: `invoke("${match[1]}") is not registered in src-tauri/src/lib.rs.`,
+            reason: `invoke("${match[1]}") is not registered in ${ownerFile}.`,
           });
         }
       }
