@@ -584,30 +584,18 @@ pub fn schedule_self_delete(install_dir: &Path) {
     const CREATE_NO_WINDOW: u32 = 0x0800_0000;
     let temp_dir = std::env::temp_dir();
     let uninst = install_dir.join("uninstall.exe");
-    let temp_uninst = temp_dir.join(format!("detergo-uninst-{}.exe", std::process::id()));
-
-    // On NTFS a running executable can be renamed/moved across directories on
-    // the same volume while still executing. Moving `uninstall.exe` into `%TEMP%`
-    // lets us remove the empty installation directory synchronously before exit.
-    let active_uninst = if uninst.exists() && std::fs::rename(&uninst, &temp_uninst).is_ok() {
-        let _ = std::fs::remove_dir(install_dir);
-        temp_uninst
-    } else {
-        uninst
-    };
-
     let dir_str = install_dir.to_string_lossy();
-    let uninst_str = active_uninst.to_string_lossy();
+    let uninst_str = uninst.to_string_lossy();
 
     let _ = write_reg_string(
         RUN_ONCE_REG_SUBKEY,
         "DetergoRemoveInstallDir",
-        &format!("cmd.exe /c rmdir /q \"{dir_str}\""),
+        &format!("cmd.exe /c del /f /q \"{uninst_str}\" >nul 2>&1 & rmdir /q \"{dir_str}\""),
         false,
     );
 
     let raw_cmd = format!(
-        "/D /S /C \"for /L %i in (1,1,20) do (del /f /q \"{uninst_str}\" >nul 2>&1 & rmdir /q \"{dir_str}\" >nul 2>&1 & if not exist \"{uninst_str}\" exit /b 0 & ping 127.0.0.1 -n 2 >nul)\""
+        "/D /S /C \"for /L %i in (1,1,20) do (ping 127.0.0.1 -n 2 >nul & del /f /q \"{uninst_str}\" >nul 2>&1 & rmdir /q \"{dir_str}\" >nul 2>&1 & if not exist \"{uninst_str}\" exit /b 0)\""
     );
     let _ = Command::new("cmd.exe")
         .current_dir(&temp_dir)
