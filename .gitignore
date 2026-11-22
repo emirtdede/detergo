@@ -3,6 +3,7 @@ node_modules/
 
 # Build outputs
 dist/
+dist-setup/
 dist-ssr/
 release_output/
 *.local
@@ -11,6 +12,8 @@ release_output/
 # Rust & Cargo targets
 target/
 src-tauri/target/
+setup-tauri/target/
+setup-tauri/gen/
 **/*.rs.bk
 
 # IDE & OS files

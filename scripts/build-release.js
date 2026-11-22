@@ -131,12 +131,18 @@ execSync("npm run ensure:nsis-toolset", { cwd: rootDir, stdio: "inherit", env: b
 execSync("npm run sync:nsis-languages", { cwd: rootDir, stdio: "inherit" });
 execSync("npm run check:languages", { cwd: rootDir, stdio: "inherit" });
 
-console.log("\n[STEP 3/5] Building Tauri release and CLI console companion...");
-execSync("npm run tauri build", { cwd: rootDir, stdio: "inherit", env: buildEnv });
+console.log("\n[STEP 3/5] Building Tauri release, CLI console companion, and modern Setup.exe...");
+execSync("npm run tauri build -- --bundles msi", { cwd: rootDir, stdio: "inherit", env: buildEnv });
 // Build the Windows console-subsystem companion (`detergo.com` pattern,
 // identical to Visual Studio `devenv.com` / `devenv.exe`) so terminal callers
 // get synchronous stdout/stderr and clean exit codes without GUI flash.
 execSync("cargo build --release --manifest-path src-tauri/Cargo.toml --bin detergo-cli", {
+  cwd: rootDir,
+  stdio: "inherit",
+  env: buildEnv,
+});
+// Assemble the standalone frameless 640x420 monochrome Setup & Uninstaller EXE.
+execSync("node scripts/build-setup.mjs", {
   cwd: rootDir,
   stdio: "inherit",
   env: buildEnv,
@@ -183,7 +189,7 @@ const artifacts = [
     channel: "cli",
   },
   {
-    src: currentBundle(path.join(targetDir, "bundle", "nsis"), version, "-setup\\.exe"),
+    src: path.join(releaseOutputDir, `Detergo-${version}-x64-Setup.exe`),
     destName: `Detergo-${version}-x64-Setup.exe`,
     channel: "installer",
   },
@@ -205,7 +211,9 @@ for (const art of artifacts) {
       process.exit(1);
     }
     const destPath = path.join(releaseOutputDir, art.destName);
-    fs.copyFileSync(art.src, destPath);
+    if (path.resolve(art.src) !== path.resolve(destPath)) {
+      fs.copyFileSync(art.src, destPath);
+    }
     copiedFiles.push(art.destName);
     const sizeMb = (fs.statSync(destPath).size / (1024 * 1024)).toFixed(2);
     console.log(`  [OK] ${art.destName} (${sizeMb} MB)`);

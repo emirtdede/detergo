@@ -42,6 +42,7 @@
     "generate:icons": "node scripts/generate-icons.mjs",
     "generate:icons:verify": "node scripts/verify-icon-determinism.mjs",
     "build:social-preview": "node scripts/build-social-preview.mjs",
+    "build:setup": "node scripts/build-setup.mjs",
     "build:release": "node scripts/build-release.js",
     "verify:smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-smoke.ps1",
     "verify:installer": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-installer.ps1",

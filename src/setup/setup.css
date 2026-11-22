@@ -1,0 +1,730 @@
+:root {
+  color-scheme: dark;
+  --setup-bg: #111113;
+  --setup-surface: #1c1c1f;
+  --setup-surface-hover: #27272a;
+  --setup-border: rgba(255, 255, 255, 0.12);
+  --setup-border-soft: rgba(255, 255, 255, 0.08);
+  --setup-text: #fafafa;
+  --setup-text-secondary: #e4e4e7;
+  --setup-text-muted: #a1a1aa;
+  --setup-btn-bg: #fafafa;
+  --setup-btn-fg: #09090b;
+  --setup-close-hover: #dc2626;
+  font-family:
+    "Segoe UI Variable",
+    "Segoe UI",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#setup-root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+.setup-viewport {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.setup-card {
+  position: relative;
+  width: 640px;
+  height: 420px;
+  border-radius: 22px;
+  background: var(--setup-bg);
+  border: 1px solid var(--setup-border);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  color: var(--setup-text);
+}
+
+.setup-soft-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ------------------------------------------------------------------
+   TitleBar (42px height, draggable, minimal 34x28 Minimize + Close)
+   ------------------------------------------------------------------ */
+.setup-titlebar {
+  position: relative;
+  z-index: 30;
+  height: 42px;
+  min-height: 42px;
+  padding: 0 8px 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+[dir="rtl"] .setup-titlebar {
+  padding: 0 16px 0 8px;
+}
+
+.setup-titlebar-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--setup-text-muted);
+  letter-spacing: 0.01em;
+}
+
+.setup-window-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.setup-win-btn {
+  width: 34px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--setup-text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+.setup-win-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--setup-text);
+}
+
+.setup-win-btn--close:hover {
+  background: var(--setup-close-hover);
+  color: #ffffff;
+}
+
+.setup-win-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: -2px;
+}
+
+/* ------------------------------------------------------------------
+   Main Crossfade Stage
+   ------------------------------------------------------------------ */
+.setup-stage {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 32px 22px;
+  animation: setupCrossfade 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes setupCrossfade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.setup-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* ------------------------------------------------------------------
+   Monochrome Logo Badge
+   ------------------------------------------------------------------ */
+.setup-logo-badge {
+  background: linear-gradient(180deg, #1d1d21 0%, #141417 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 10px 24px rgba(0, 0, 0, 0.38);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ------------------------------------------------------------------
+   Welcome Screen
+   ------------------------------------------------------------------ */
+.setup-brand-row {
+  margin-top: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.setup-app-name {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--setup-text);
+}
+
+.setup-version-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--setup-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.setup-lead {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--setup-text-muted);
+  max-width: 480px;
+}
+
+.setup-primary-cta {
+  margin-top: 22px;
+  min-width: 200px;
+  min-height: 46px;
+  padding: 0 28px;
+  border: none;
+  border-radius: 999px;
+  background: var(--setup-btn-bg);
+  color: var(--setup-btn-fg);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition:
+    transform 120ms ease,
+    background-color 140ms ease,
+    opacity 140ms ease;
+}
+
+.setup-primary-cta:hover {
+  background: #ffffff;
+}
+
+.setup-primary-cta:active {
+  transform: scale(0.985);
+}
+
+.setup-primary-cta:focus-visible,
+.setup-soft-cta:focus-visible,
+.setup-options-link:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.65);
+  outline-offset: 2px;
+}
+
+.setup-soft-cta {
+  min-width: 140px;
+  min-height: 44px;
+  padding: 0 24px;
+  border: 1px solid var(--setup-border);
+  border-radius: 999px;
+  background: var(--setup-surface);
+  color: var(--setup-text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+
+.setup-soft-cta:hover {
+  background: var(--setup-surface-hover);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.setup-options-link {
+  margin-top: 12px;
+  padding: 5px 12px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--setup-text-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition:
+    color 140ms ease,
+    background-color 140ms ease;
+}
+
+.setup-options-link:hover {
+  color: var(--setup-text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.setup-footer-note {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--setup-text-muted);
+}
+
+/* ------------------------------------------------------------------
+   Slide-Up Options Sheet (#1C1C1F, top: 42px, 340ms cubic-bezier)
+   ------------------------------------------------------------------ */
+.setup-options-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 42px;
+  bottom: 0;
+  z-index: 25;
+  background: var(--setup-surface);
+  border-radius: 22px;
+  border-top: 1px solid var(--setup-border);
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  padding: 14px 24px 16px;
+  transform: translateY(105%);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 340ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 240ms ease;
+}
+
+.setup-options-sheet.is-open {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.setup-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.setup-sheet-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--setup-text);
+}
+
+.setup-sheet-hide {
+  padding: 4px 10px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--setup-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background-color 140ms ease;
+}
+
+.setup-sheet-hide:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.setup-sheet-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.setup-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.setup-field-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--setup-text-muted);
+}
+
+.setup-select,
+.setup-input {
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--setup-border);
+  background: #111113;
+  color: var(--setup-text);
+  font-size: 12.5px;
+  padding: 0 10px;
+  outline: none;
+  transition: border-color 140ms ease;
+}
+
+.setup-select:focus,
+.setup-input:focus {
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.setup-dir-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.setup-dir-row .setup-input {
+  flex: 1;
+  min-width: 0;
+  font-family: "Cascadia Mono", "Consolas", monospace;
+  font-size: 11.5px;
+}
+
+.setup-browse-btn {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--setup-border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--setup-text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 140ms ease;
+}
+
+.setup-browse-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.setup-tasks-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 14px;
+  margin-top: 2px;
+}
+
+.setup-checkbox-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--setup-text-secondary);
+  cursor: pointer;
+}
+
+.setup-checkbox-row input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: #111113;
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+
+.setup-checkbox-row input[type="checkbox"]:checked {
+  background: #fafafa;
+  border-color: #fafafa;
+}
+
+.setup-checkbox-row input[type="checkbox"]:checked::after {
+  content: "";
+  width: 9px;
+  height: 5px;
+  border-left: 2px solid #09090b;
+  border-bottom: 2px solid #09090b;
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+
+.setup-sheet-footer {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--setup-border-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.setup-disk-note {
+  font-size: 12px;
+  color: var(--setup-text-muted);
+}
+
+.setup-sheet-cta {
+  min-width: 156px;
+  height: 40px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 999px;
+  background: var(--setup-btn-bg);
+  color: var(--setup-btn-fg);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    transform 120ms ease;
+}
+
+.setup-sheet-cta:hover {
+  background: #ffffff;
+}
+
+.setup-sheet-cta:active {
+  transform: scale(0.985);
+}
+
+/* ------------------------------------------------------------------
+   Progress Screen + 7px Monochrome ShimmerBar
+   ------------------------------------------------------------------ */
+.setup-progress-title {
+  margin: 18px 0 0;
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--setup-text);
+  letter-spacing: -0.015em;
+}
+
+.setup-progress-footer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setup-progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--setup-text-muted);
+}
+
+.setup-progress-pct {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--setup-text-secondary);
+}
+
+.setup-shimmer-track {
+  width: 100%;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.11);
+  overflow: hidden;
+}
+
+.setup-shimmer-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #d4d4d8 0%, #ffffff 50%, #d4d4d8 100%);
+  background-size: 200% 100%;
+  animation: setupShimmer 1.3s linear infinite;
+  transition: width 180ms ease-out;
+}
+
+@keyframes setupShimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Done & Uninstalled Screens + CheckBurst
+   ------------------------------------------------------------------ */
+.setup-check-burst {
+  width: 88px;
+  height: 88px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.setup-check-circle {
+  transform-origin: 44px 44px;
+  animation: setupPopIn 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.setup-check-rays {
+  transform-origin: 44px 44px;
+  animation: setupBurstRays 460ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.setup-check-mark {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: setupDrawCheck 280ms 120ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes setupPopIn {
+  from {
+    transform: scale(0.75);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes setupBurstRays {
+  from {
+    transform: scale(0.72);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes setupDrawCheck {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.setup-done-title {
+  margin: 16px 0 0;
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--setup-text);
+}
+
+.setup-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.setup-action-row .setup-primary-cta {
+  margin-top: 0;
+  min-width: 184px;
+  min-height: 44px;
+}
+
+/* ------------------------------------------------------------------
+   Uninstall Screen (#1C1C1F inner card, border-radius: 14px)
+   ------------------------------------------------------------------ */
+.setup-uninstall-title {
+  margin: 12px 0 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--setup-text);
+}
+
+.setup-uninstall-card {
+  margin-top: 16px;
+  width: 100%;
+  max-width: 510px;
+  padding: 13px 16px;
+  border-radius: 14px;
+  background: var(--setup-surface);
+  border: 1px solid var(--setup-border);
+  text-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.setup-uninstall-path {
+  margin: 0;
+  padding-inline-start: 24px;
+  font-size: 11.5px;
+  font-family: "Cascadia Mono", "Consolas", monospace;
+  color: var(--setup-text-muted);
+  word-break: break-all;
+}
+
+/* ------------------------------------------------------------------
+   Error State
+   ------------------------------------------------------------------ */
+.setup-error-box {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(220, 38, 38, 0.32);
+  color: #fca5a5;
+  font-size: 12.5px;
+  max-width: 480px;
+  word-break: break-word;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .setup-stage,
+  .setup-shimmer-fill,
+  .setup-check-circle,
+  .setup-check-rays,
+  .setup-check-mark {
+    animation: none;
+  }
+  .setup-check-mark {
+    stroke-dashoffset: 0;
+  }
+  .setup-options-sheet {
+    transition: none;
+  }
+}
